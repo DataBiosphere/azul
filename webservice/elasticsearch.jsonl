@@ -1,0 +1,220 @@
+{"index":{"_id":"0","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"1","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"2","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"3","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"4","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"5","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"6","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"7","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"8","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"9","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"10","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"11","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"12","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"13","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"14","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"15","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"16","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"17","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"18","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"19","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"20","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"21","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"22","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"23","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"24","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"25","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"26","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"27","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"28","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"29","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"30","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"31","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"32","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"33","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"34","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"35","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"36","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"37","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"38","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"39","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"40","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"41","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"42","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"43","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"44","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"45","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"46","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"47","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"48","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"49","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"50","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"51","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"52","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"53","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"54","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"55","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"56","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"57","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"58","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"59","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"60","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"61","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"62","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"63","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"64","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"65","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"66","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"67","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"68","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"69","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"70","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"71","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"72","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"73","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"74","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"75","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"76","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"77","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"78","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"79","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"80","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"81","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"82","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"83","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"84","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"85","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"86","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"87","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"88","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"89","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"90","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"91","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"92","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"93","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"94","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"95","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"96","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"97","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"98","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"99","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
+{"index":{"_id":"100","_type":"meta"}}
+{"center_name": "UCSC", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "alignment.bam", "download_id": "5703400a-33a9-4524-b14a-0ea2cee30569", "program": "Test", "donor": "S176411"}
+{"index":{"_id":"101","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "65dea3ab-4dc9-4772-9a02-d4d80f300f43", "program": "Test", "donor": "S917367"}
+{"index":{"_id":"102","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "alignment.bam", "download_id": "1720d82a-98d7-4d69-8d98-281fa0df847c", "program": "Test", "donor": "S627291"}
+{"index":{"_id":"103","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "ee1c583f-c53c-4aa5-8a75-a4ad0b117844", "program": "Test", "donor": "S368291"}
+{"index":{"_id":"104","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "alignment.bam", "download_id": "4a7e424f-f8cc-494f-b18d-3d66633cdbe5", "program": "Test", "donor": "S019289"}
+{"index":{"_id":"105","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "BWA_Mem", "analysis_type": "alignment", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "bam", "title": "alignment.bam", "download_id": "aa155c84-7c49-4f7b-a11f-2b4c1d414526", "program": "Test", "donor": "S234254"}
+{"index":{"_id":"106","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "f0183322-fee6-427d-a1b9-61fe29a54b5a", "program": "Test", "donor": "S795325"}
+{"index":{"_id":"107","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "64a0b329-337b-44f4-ad44-6a6b08eb7799", "program": "Test", "donor": "S893253"}
+{"index":{"_id":"108","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "65497b81-dc1f-42ce-a347-37d1b852abb2", "program": "Test", "donor": "S254437"}
+{"index":{"_id":"109","_type":"meta"}}
+{"center_name": "Stanford", "project": "BD2K", "workflow": "RNAseq", "analysis_type": "alignment_qc_report", "specimen_type": "Primary_tumour_solid_tissue", "file_type": "zip", "title": "bamstats_report.zip", "download_id": "dccf7860-e014-446c-932b-e5090e97b3fb", "program": "Test", "donor": "S952896"}
