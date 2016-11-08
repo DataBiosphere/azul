@@ -188,6 +188,7 @@ def get_facets():
 	#Parse them
 	#Return it as a JSON output.
 	#Things I need to know: The final format of the indexes stored in ES
+	return "Test"
 
 
 
