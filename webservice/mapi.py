@@ -148,6 +148,7 @@ def get_data():
 	#return jsonify(mText)
 	return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
 
+#Get the manifest. You need to pass on the filters
 @app.route('/files/export')
 @cross_origin()
 def get_manifest():
@@ -177,5 +178,25 @@ def get_manifest():
 	print protoList
 	return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
 	#return jsonify(mText)
-	pass
+
+
+#This will return a summary of the facets
+@app.route('/files/facets')
+@cross_origin()
+def get_facets():
+	#Search the aggregates.
+	#Parse them
+	#Return it as a JSON output.
+	#Things I need to know: The final format of the indexes stored in ES
+
+
+
+
+
+
+
+
+
+
+
 
