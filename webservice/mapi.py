@@ -5,6 +5,8 @@ from flask.ext.elasticsearch import Elasticsearch
 import ast
 #import the cors tools
 from flask_cors import CORS, cross_origin
+#import the flask functionality
+import flask_excel as excel
 
 app = Flask(__name__)
 es = Elasticsearch()
@@ -52,7 +54,6 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 
 
 	return protoDict
-
 #This returns the agreggate terms and the list of hits from ElasticSearch
 @app.route('/files/')
 @cross_origin()
@@ -91,8 +92,6 @@ def get_data():
 		matchValues = lambda x,y: moreThanOne(x, y) if len(y['is']) > 1 else onlyOne(x, y)
 		filt_list = [{"match": matchValues(x, y)} for x,y in m_filters['file'].items()]
 		mQuery = {"bool":{"must":[filt_list]}}
-
-		print mQuery
 		#print filt_list	
 		#print mQuery	
 		#print m_filters['file']
@@ -148,4 +147,35 @@ def get_data():
     }, "fields":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order)
 	#return jsonify(mText)
 	return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
+
+@app.route('/files/export')
+@cross_origin()
+def get_manifest():
+	m_filters = request.args.get('filters')
+	mQuery = {}
+	try:
+		m_filters = ast.literal_eval(m_filters)
+		#Functions for calling the appropriates query filters
+		onlyOne = lambda x,y: {x:{"query": y['is'][0]}}
+		moreThanOne = lambda x,y: {x:{"query": ' '.join(y['is']), "operator": "or"}}
+		matchValues = lambda x,y: moreThanOne(x, y) if len(y['is']) > 1 else onlyOne(x, y)
+		filt_list = [{"match": matchValues(x, y)} for x,y in m_filters['file'].items()]
+		mQuery = {"bool":{"must":[filt_list]}}
+
+	except Exception, e:
+		print str(e)
+		m_filters = None
+		mQuery = {"match_all":{}}
+		pass
+	mText = es.search(index='analysis_index', body={"query": mQuery})
+
+	protoList = []
+	for hit in mText['hits']['hits']:
+		if '_source' in hit:
+			protoList.append(hit['_source'])
+		#protoDict['hits'].append(hit['_source'])
+	print protoList
+	return excel.make_response_from_records(protoList, 'tsv', 'manifest')
+	#return jsonify(mText)
+	pass
 
