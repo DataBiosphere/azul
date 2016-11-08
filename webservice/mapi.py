@@ -175,7 +175,7 @@ def get_manifest():
 			protoList.append(hit['_source'])
 		#protoDict['hits'].append(hit['_source'])
 	print protoList
-	return excel.make_response_from_records(protoList, 'tsv', 'manifest')
+	return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
 	#return jsonify(mText)
 	pass
 
