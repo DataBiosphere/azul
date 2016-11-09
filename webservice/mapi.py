@@ -153,6 +153,7 @@ def get_data():
 @cross_origin()
 def get_manifest():
 	m_filters = request.args.get('filters')
+	m_Size = request.args.get('size', 25, type=int)
 	mQuery = {}
 	try:
 		m_filters = ast.literal_eval(m_filters)
@@ -168,7 +169,7 @@ def get_manifest():
 		m_filters = None
 		mQuery = {"match_all":{}}
 		pass
-	mText = es.search(index='analysis_index', body={"query": mQuery})
+	mText = es.search(index='analysis_index', body={"query": mQuery}, size=m_Size)
 
 	protoList = []
 	for hit in mText['hits']['hits']:
