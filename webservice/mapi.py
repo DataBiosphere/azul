@@ -18,14 +18,89 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 	protoDict = {'hits':[]}
 	for hit in es_dict['hits']['hits']:
 		if '_source' in hit:
-			protoDict['hits'].append(hit['_source'])
-		#protoDict['hits'].append(hit['_source'])
+			protoDict['hits'].append({
+			'id' : 'DUMMY',
+			'objectID' : 'DUMMY',
+			'access' : 'DUMMY',
+			'center_name': hit['_source']['center_name'],
+			'study' : ['DUMMY'],
+			'dataCategorization' : {
+				'dataType' : hit['_source']['analysis_type'],
+				'experimentalStrategy' : hit['_source']['workflow']
+			},
+			'fileCopies' : [{
+				'repoDataBundleId' : 'DUMMY',
+				'repoDataSetIds' :[],
+				'repoCode' : 'DUMMY',
+				'repoOrg' : 'DUMMY',
+				'repoName' : 'DUMMY',
+				'repoType' : 'DUMMY',
+				'repoCountry' : 'DUMMY',
+				'repoBaseUrl' : 'DUMMY',
+				'repoDataPath' : 'DUMMY',
+				'repoMetadatapath' : 'DUMMY',
+				'indexFile' : {
+					'id' : 'DUMMY',
+					'objectId' : hit['_source']['download_id'],
+					'fileName' : hit['_source']['title'],
+					'fileFormat' : hit['_source']['file_type'],
+					'fileMd5sum' : 'DUMMY',
+					'fileSize' : 'DUMMY'
+				},
+				'fileName' : hit['_source']['title'],
+				'fileFormat' : hit['_source']['file_type'],
+				'fileMd5sum' : 'DUMMY',
+				'lastModified' : 'DUMMY'
+			}],
+			'donors' : [{
+				'donorId' : hit['_source']['donor'],
+				'primarySite' : 'DUMMY',
+				'projectCode' : hit['_source']['project'],
+				'study' : 'DUMMY',
+				'sampleId' : ['DUMMY'],
+				'specimenType' : [hit['_source']['specimen_type']],
+				'submittedDonorId' : "DUMMY",
+				'submittedSampleId' : ['DUMMY'],
+				'submittedSpecimenId' : ['DUMMY'],
+				'otherIdentifiers' : {
+					'tcgaSampleBarcode' : ['DUMMY'],
+					'tcgaAliquotBarcode' : ['DUMMY']
+				}
+
+			}],
+
+			'analysisMethod' : {
+				'analysisType' : hit['_source']['analysis_type'],
+				'software' : 'DUMMY'
+			},
+			'referenceGenome' : {
+				'genomeBuild' : 'DUMMY',
+				'referenceName' : 'DUMMY',
+				'downloadUrl' : 'DUMMY'
+			}
+		})
+
 		else:
 			try:
 				protoDict['hits'].append(hit['fields'])
 			#protoDict['hits'].append(hit['fields'])
 			except:
 				pass
+
+
+
+
+
+		######################################OLD PART OF THE CODE
+		# if '_source' in hit:
+		# 	protoDict['hits'].append(hit['_source'])
+		# #protoDict['hits'].append(hit['_source'])
+		# else:
+		# 	try:
+		# 		protoDict['hits'].append(hit['fields'])
+		# 	#protoDict['hits'].append(hit['fields'])
+		# 	except:
+		#		pass
 		#print hit
 	#print protoDict
 
@@ -191,7 +266,8 @@ def get_facets():
 	#Things I need to know: The final format of the indexes stored in ES
 	return "Test"
 
-
+if __name__ == '__main__':
+  app.run()
 
 
 
