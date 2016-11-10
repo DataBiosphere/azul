@@ -115,15 +115,17 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 		'order' : the_order
 	}
 
-	protoDict['termFacets'] = es_dict['aggregations']
+	protoDict['termFacets'] = {}#es_dict['aggregations']
+	for x, y in es_dict['aggregations'].items():
+		protoDict['termFacets'][x] = {'type':'terms', 'terms': map(lambda x:{"term":x["key"], 'count':x['doc_count']}, y['buckets'])}
 
 	#func_total = lambda x: x+x
 	#Get the total for all the terms
 	for section in protoDict['termFacets']:
 		m_sum = 0
 		#print section
-		for bucket in protoDict['termFacets'][section]['buckets']:
-			m_sum += bucket['doc_count']
+		for term in protoDict['termFacets'][section]['terms']:
+			m_sum += term['count']
 			#func_total(bucket['doc_count'])
 		protoDict['termFacets'][section]['total'] = m_sum
 
@@ -138,7 +140,7 @@ def get_data():
 	m_field = request.args.get('field')
 	m_filters = request.args.get('filters')
 	m_From = request.args.get('from', 1, type=int)
-	m_Size = request.args.get('size', 25, type=int)
+	m_Size = request.args.get('size', 10, type=int)
 	m_Sort = request.args.get('sort', 'center_name')
 	m_Order = request.args.get('order', 'desc')
 
