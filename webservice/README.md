@@ -89,7 +89,7 @@ Currently there are 6 parameters supported. They are as follows:<br>
     <tr>
       <td>size</td>
 
-      <td>Specifies how many hits to return. Defaults to 25</td>
+      <td>Specifies how many hits to return. Defaults to 10</td>
 
       <td>Integer</td>
 
