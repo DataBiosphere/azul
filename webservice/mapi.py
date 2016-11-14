@@ -155,7 +155,7 @@ def get_data():
 	try:
 		m_fields_List = [x.strip() for x in m_field.split(',')]
 	except:
-		m_fields_List = None
+		m_fields_List = [] #Changed it from None to an empty list
 	#print m_fields_List
 	#Get a list of all the Filters requested
 	try:
@@ -221,7 +221,7 @@ def get_data():
         }
 
 
-    }, "fields":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order)
+    }, "_source":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
 	#return jsonify(mText)
 	return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
 
