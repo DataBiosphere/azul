@@ -1,0 +1,31 @@
+{
+   "properties": {
+      "program" : {
+         "type":"keyword"
+      },
+      "project" : {
+         "type":"keyword"
+      },
+      "submitter_donor_id" : {
+         "type":"keyword"
+      },
+      "center_name" : {
+         "type":"keyword"
+      },
+      "workflow":{
+        "type":"keyword"
+      },
+      "analysis_type":{
+        "type":"keyword"
+      },
+      "download_id":{
+        "type":"keyword"
+      },
+      "file_type": {
+        "type":"keyword"
+      },
+      "specimen_type":{
+        "type":"keyword"
+      }
+    }
+}
