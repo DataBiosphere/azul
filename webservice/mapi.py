@@ -152,6 +152,7 @@ def get_data():
 	#print dict(m_filters)
 	#print m_filters['file']
 	#get a list of all the fields requested
+	print m_filters #TESTING
 	try:
 		m_fields_List = [x.strip() for x in m_field.split(',')]
 	except:
@@ -162,12 +163,18 @@ def get_data():
 		m_filters = ast.literal_eval(m_filters)
 		#filt_list = [{"match":{x:y['is'][0]}} for x,y in m_filters['file'].items()]
 		#mQuery = {"bool":{"must":filt_list}}
-
+		print m_filters #TEST
 		#Functions for calling the appropriates query filters
-		onlyOne = lambda x,y: {x:{"query": y['is'][0]}}
-		moreThanOne = lambda x,y: {x:{"query": ' '.join(y['is']), "operator": "or"}}
-		matchValues = lambda x,y: moreThanOne(x, y) if len(y['is']) > 1 else onlyOne(x, y)
-		filt_list = [{"match": matchValues(x, y)} for x,y in m_filters['file'].items()]
+		
+		#**********************************************************************************#
+		
+		###onlyOne = lambda x,y: {x:{"query": y['is'][0]}}
+		###moreThanOne = lambda x,y: {x:{"query": ' '.join(y['is']), "operator": "or"}}
+		###matchValues = lambda x,y: moreThanOne(x, y) if len(y['is']) > 1 else onlyOne(x, y)
+		###filt_list = [{"match": matchValues(x, y)} for x,y in m_filters['file'].items()]
+		
+		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
+		filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
 		mQuery = {"bool":{"must":[filt_list]}}
 		#print filt_list	
 		#print mQuery	
