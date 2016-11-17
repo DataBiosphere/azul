@@ -14,7 +14,6 @@ es = Elasticsearch()
 #Assumption: objectId is download_id
 #Parses the elasticSearch response 
 def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
-	#print es_dict
 	protoDict = {'hits':[]}
 	for hit in es_dict['hits']['hits']:
 		if '_source' in hit:
@@ -83,26 +82,8 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 		else:
 			try:
 				protoDict['hits'].append(hit['fields'])
-			#protoDict['hits'].append(hit['fields'])
 			except:
 				pass
-
-
-
-
-
-		######################################OLD PART OF THE CODE
-		# if '_source' in hit:
-		# 	protoDict['hits'].append(hit['_source'])
-		# #protoDict['hits'].append(hit['_source'])
-		# else:
-		# 	try:
-		# 		protoDict['hits'].append(hit['fields'])
-		# 	#protoDict['hits'].append(hit['fields'])
-		# 	except:
-		#		pass
-		#print hit
-	#print protoDict
 
 	protoDict['pagination'] = {
 		'count' : len(es_dict['hits']['hits']),#25,
@@ -119,14 +100,12 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 	for x, y in es_dict['aggregations'].items():
 		protoDict['termFacets'][x] = {'type':'terms', 'terms': map(lambda x:{"term":x["key"], 'count':x['doc_count']}, y['buckets'])}
 
-	#func_total = lambda x: x+x
 	#Get the total for all the terms
 	for section in protoDict['termFacets']:
 		m_sum = 0
 		#print section
 		for term in protoDict['termFacets'][section]['terms']:
 			m_sum += term['count']
-			#func_total(bucket['doc_count'])
 		protoDict['termFacets'][section]['total'] = m_sum
 
 
@@ -148,38 +127,18 @@ def get_data():
 	mQuery = {}
 	#Gets the index in [0 - (N-1)] form to communicate with ES
 	m_From -= 1 
-	#print m_filters
-	#print dict(m_filters)
-	#print m_filters['file']
-	#get a list of all the fields requested
-	print m_filters #TESTING
 	try:
 		m_fields_List = [x.strip() for x in m_field.split(',')]
 	except:
 		m_fields_List = [] #Changed it from None to an empty list
-	#print m_fields_List
 	#Get a list of all the Filters requested
 	try:
 		m_filters = ast.literal_eval(m_filters)
-		#filt_list = [{"match":{x:y['is'][0]}} for x,y in m_filters['file'].items()]
-		#mQuery = {"bool":{"must":filt_list}}
-		print m_filters #TEST
 		#Functions for calling the appropriates query filters
-		
-		#**********************************************************************************#
-		
-		###onlyOne = lambda x,y: {x:{"query": y['is'][0]}}
-		###moreThanOne = lambda x,y: {x:{"query": ' '.join(y['is']), "operator": "or"}}
-		###matchValues = lambda x,y: moreThanOne(x, y) if len(y['is']) > 1 else onlyOne(x, y)
-		###filt_list = [{"match": matchValues(x, y)} for x,y in m_filters['file'].items()]
-		
 		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
 		filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
 		mQuery = {"bool":{"must":[filt_list]}}
-		#print filt_list	
-		#print mQuery	
-		#print m_filters['file']
-		#pass
+
 	except Exception, e:
 		print str(e)
 		m_filters = None
@@ -229,7 +188,6 @@ def get_data():
 
 
     }, "_source":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
-	#return jsonify(mText)
 	return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
 
 #Get the manifest. You need to pass on the filters
@@ -259,10 +217,8 @@ def get_manifest():
 	for hit in mText['hits']['hits']:
 		if '_source' in hit:
 			protoList.append(hit['_source'])
-		#protoDict['hits'].append(hit['_source'])
 	print protoList
 	return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
-	#return jsonify(mText)
 
 
 #This will return a summary of the facets
