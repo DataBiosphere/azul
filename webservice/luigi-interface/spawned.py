@@ -12,3 +12,6 @@ class spawnFlop(luigi.Task):
 
 		if self.integer % 2:
 			exit()
+
+if __name__ == '__main__':
+    luigi.run(["--scheduler-remove-delay","604800"])
