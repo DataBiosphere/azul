@@ -144,7 +144,7 @@ def get_data():
 		m_filters = None
 		mQuery = {"match_all":{}}
 		pass
-	mText = es.search(index='analysis_index', body={"query": mQuery, "aggs" : {
+	mText = es.search(index='fb_index', body={"query": mQuery, "aggs" : {
         "centerName" : {
             "terms" : { "field" : "center_name",
             			"min_doc_count" : 0,
@@ -211,7 +211,7 @@ def get_manifest():
 		m_filters = None
 		mQuery = {"match_all":{}}
 		pass
-	mText = es.search(index='analysis_index', body={"query": mQuery}, size=m_Size)
+	mText = es.search(index='fb_index', body={"query": mQuery}, size=m_Size)
 
 	protoList = []
 	for hit in mText['hits']['hits']:
