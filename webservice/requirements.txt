@@ -1,0 +1,9 @@
+Flask==0.11.1
+Flask-APScheduler==1.5.0
+Flask-Cors==3.0.2
+Flask-Elasticsearch==0.2.5
+Flask-Excel==0.0.5
+Flask-Migrate==2.0.0
+Flask-Script==2.0.5
+Flask-SQLAlchemy==2.1
+lxml==3.6.4
