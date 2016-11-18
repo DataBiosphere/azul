@@ -8,11 +8,18 @@
 
 #This takes the "validated.jsonl" file produced by the many scripts in the Fall Demo Script
 import jsonlines, ast, json
+from elasticsearch import Elasticsearch
 
 counter = 0;
+es = Elasticsearch()
+
 with open("fb_index.jsonl", "w") as fb_index: 
    #metadata = open("validated.jsonl", "r")
-   with jsonlines.open("validated.jsonl") as reader:
+   #with jsonlines.open("validated.jsonl") as reader:
+   #Call ES instead of having the hardcoded file.
+      m_text = es.search(index='analysis_index', body={"query":{"match_all":{}}}, scroll="1m")
+      reader = [x['_source'] for x in m_text['hits']['hits']]
+      #print reader2   
       for obj in reader:
          #pull out center name, project, program, donor(submitter_donor_id)
          center_name = obj['center_name']
