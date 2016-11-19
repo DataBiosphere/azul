@@ -200,11 +200,9 @@ def get_manifest():
 	try:
 		m_filters = ast.literal_eval(m_filters)
 		#Functions for calling the appropriates query filters
-		onlyOne = lambda x,y: {x:{"query": y['is'][0]}}
-		moreThanOne = lambda x,y: {x:{"query": ' '.join(y['is']), "operator": "or"}}
-		matchValues = lambda x,y: moreThanOne(x, y) if len(y['is']) > 1 else onlyOne(x, y)
-		filt_list = [{"match": matchValues(x, y)} for x,y in m_filters['file'].items()]
-		mQuery = {"bool":{"must":[filt_list]}}
+		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
+                filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
+                mQuery = {"bool":{"must":[filt_list]}}
 
 	except Exception, e:
 		print str(e)
