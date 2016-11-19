@@ -12,19 +12,33 @@ The other endpoint (/files/export) returns a manifest file with the filters prov
 sudo easy_install virtualenv
 ```
 <br>
-1.-Download this repo by using `git clone https://github.com/caaespin/APITest.git`. Make sure you are on the "forBrowserTesting" branch by using `git checkout forBrowserTesting`<br>
-2.-The repo includes a sample jsonl file called elasticsearch.jsonl. It is a sample search index for testing purposes. Use `curl -XPOST "http://localhost:9200/mfiles/analysis_index/_bulk?pretty" --data-binary  @elasticsearch.jsonl` to index the data in elasticsearch.jsonl. <br>
-3.-Use `virtualenv venv` to set up your virtualenv. Activate it using `. venv/bin/activate`<br>
+1.-Download this repo by using `git clone https://github.com/caaespin/APITest.git`. Make sure you are on the "forBrowserTesting" branch by using `git checkout forBrowserTesting`
+
+2.-The repo includes a sample jsonl file called elasticsearch.jsonl. It is a sample search index for testing purposes. Use `curl -XPOST "http://localhost:9200/mfiles/analysis_index/_bulk?pretty" --data-binary  @elasticsearch.jsonl` to index the data in elasticsearch.jsonl. 
+
+3.-Use `virtualenv venv` to set up your virtualenv. Activate it using `. venv/bin/activate`
+
 4.-You need to install all the requirements for this project, run `pip install -r requirements.txt`
-5.-Once you have that, start your Elasticsearch copy in another terminal window. Back where you have your virtual environment, do:
+
+5.-Once you have that, start your Elasticsearch copy in another terminal
+window. For the billing application to be able to create invoices, you must use
+the example in metadata\_mapping and apply it to the metadata type in the
+analysis\_index. This can be done, assuming that the analysis index already exists, with the following command
+```
+curl -XPUT "http://localhost:9200/analysis_index/_mapping/metadata" --data-binary @elasticsearch.jsonl
+``` 
+Back where you have your virtual environment, do: 
 ```
 export FLASK_APP=mapi.py
-```
+```<br>
 6.-You also need to set up a SQL database so that SQLAlchemy can store and create invoices. Do this by setting the DATABASE\_URL environment variable. For example, to set up a connection to a local PostgreSQL database named billing, you would execute 
 `export DATABASE_URL="postgresql://localhost/billing"`
+
 7.- Next, you need to install the correct database driver so that python can interact with the database, if you linked this to a Postgres database, you would install psycopg2 using `pip install psycopg2`.  Otherwise, a list at https://wiki.python.org/moin/DatabaseInterfaces has helpful information for finding the correct driver.
-8.- Now, upgrade the schema of the database connection by running `flask db upgrade` 
-9.- Finally, execute `flask run` to launch the app.
+
+8.- Now, upgrade the schema of the database connection by running `flask db upgrade` <br>
+
+9.- Finally, execute `flask run` to launch the app. <br>
 
 <br>
 This will start the app. <br>
