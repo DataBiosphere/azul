@@ -1,10 +1,24 @@
 import json
 import urllib2
 
-"""
+from elasticsearch import Elasticsearch
+
+es = Elasticsearch()
+
+pass ''' 
+
 TODO:
+* How to run this script automatically?
+    - How often is it called?
+        : within ten minutes -> will add duplicates
+        : outside of ten minutes -> might miss jobs
+    - Means we'll probably have to deal with duplicates
 * How to capture stdout/stderr?
-"""
+* Create Elasticsearch index (outside of this repeating script)
+* Push queries to Elasticsearch without jsonl
+    - jsonl supported currently
+* Update running/pending jobs, remove duplicates
+'''
 
 def get_error(server, job_id):    
     error_url = server + "fetch_error?data=%7B%22task_id%22%3A%22" + job_id + "%22%7D"
@@ -89,10 +103,9 @@ for URL in list_of_URLs:
         header["index"] = {}
         header["index"]["_id"] = str(counter)
         header["index"]["_type"] = "meta"
+        # Elasticsearch queries instead of file writes
         esjson.write(json.dumps(header) + "\n")
         esjson.write(json.dumps(jobject) + "\n")
         counter += 1
-
-        # Now, we need to purge the records.
 
 esjson.close()

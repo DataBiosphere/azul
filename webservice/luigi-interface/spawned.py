@@ -2,11 +2,6 @@ import luigi
 from sys import exit
 from time import sleep
 
-from elasticsearch import Elasticsearch
-
-es = Elasticsearch()
-
-
 class spawnFlop(luigi.Task):
 	project = luigi.Parameter(default=None)
 	donor_id = luigi.Parameter(default=None)
