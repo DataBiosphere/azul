@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 #import the FlaskElasticsearch package
 from flask.ext.elasticsearch import Elasticsearch
 #import json
-import ast
+import ast, json
 #import the cors tools
 from flask_cors import CORS, cross_origin
 #import the flask functionality
@@ -227,7 +227,62 @@ def get_facets():
 	#Parse them
 	#Return it as a JSON output.
 	#Things I need to know: The final format of the indexes stored in ES
-	return "Test"
+	facets_list = {}
+	with open('supported_facets.json') as my_facets:
+		facets_list = json.load(my_facets)
+		mText = es.search(index='fb_index', body={"query": {"match_all":{}}, "aggs" : {
+        "centerName" : {
+            "terms" : { "field" : "center_name",
+            			"min_doc_count" : 0,
+                        "size" : 99999}           
+        },
+        "projectCode":{
+            "terms":{
+                "field" : "project",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "specimenType":{
+            "terms":{
+                "field" : "specimen_type",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "fileFormat":{
+            "terms":{
+                "field" : "file_type",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "workFlow":{
+            "terms":{
+                "field" : "workflow",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "analysisType":{
+            "terms":{
+                "field" : "analysis_type",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        }
+
+
+    }})
+	
+		facets_list["DonorLevel"]['project']['values'] = [x['key'] for x in mText['aggregations']['projectCode']['buckets']]
+		facets_list["DonorLevel"]['data_types_available']['values'] = [x['key'] for x in mText['aggregations']['fileFormat']['buckets']]
+		facets_list["DonorLevel"]['specimen_type']['values'] = [x['key'] for x in mText['aggregations']['specimenType']['buckets']]
+		facets_list["FileLevel"]['file_format']['values'] = [x['key'] for x in mText['aggregations']['fileFormat']['buckets']]
+		facets_list["FileLevel"]['specimen_type']['values'] = [x['key'] for x in mText['aggregations']['specimenType']['buckets']]
+		facets_list["FileLevel"]['workflow']['values'] = [x['key'] for x in mText['aggregations']['workFlow']['buckets']]
+
+	return jsonify(facets_list)
 
 if __name__ == '__main__':
   app.run(debug=True,host='0.0.0.0')
