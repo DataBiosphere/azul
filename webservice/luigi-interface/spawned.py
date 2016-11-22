@@ -9,6 +9,7 @@ class spawnFlop(luigi.Task):
 	pipeline_name = luigi.Parameter(default=None)
 
 	def run(self):
+		sleep(5)
 		print self.project
 		print self.donor_id
 		print self.sample_id

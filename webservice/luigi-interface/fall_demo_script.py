@@ -47,10 +47,11 @@ relevant_attributes = ["status", "name", "start_time", "params"]
 required_parameters = ["project", "donor_id", "sample_id", "pipeline_name"]
 
 es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
+jobject_list = []
 
-es_filename = "dummy.jsonl"
-esjson = open(es_filename, "w")
-counter = 0
+es_filename = "action_index.jsonl"
+esjson = open(es_filename,"w")
+esjson.write('{"data": [\n')
 
 for URL in list_of_URLs:
 
@@ -105,20 +106,16 @@ for URL in list_of_URLs:
         # Add unique run_id
         jobject['run_id'] = job_id[-10:]
 
-        header = {}
-        header["index"] = {}
-        header["index"]["_id"] = str(counter)
-        header["index"]["_type"] = "meta"
-        # Elasticsearch queries instead of file writes
-        #esjson.write(json.dumps(header) + "\n")
-        esjson.write(json.dumps(jobject) + "\n")
-        counter += 1
+        #print json.dumps(jobject)
 
+        esjson.write(json.dumps(jobject) + ',\n')
 
+esjson.write(']}')
 esjson.close()
-
-# Not a final part of the demo, DEBUG only
-with open(es_filename, 'r') as infile:
+'''
+with open(es_filename,'r') as infile:
     for line in infile:
         if line.strip():
             print line
+'''
+
