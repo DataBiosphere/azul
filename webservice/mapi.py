@@ -215,7 +215,6 @@ def get_manifest():
 	for hit in mText['hits']['hits']:
 		if '_source' in hit:
 			protoList.append(hit['_source'])
-			protoList[-1]["repository"] = "TEST"
 	print protoList
 	return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
 
