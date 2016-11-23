@@ -114,7 +114,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 @app.route('/files/')
 @cross_origin()
 def get_data():
-	print "I hate my life"
+	#print "I hate my life"
 	#Get all the parameters from the URL
 	m_field = request.args.get('field')
 	m_filters = request.args.get('filters')
@@ -215,7 +215,7 @@ def get_manifest():
 	for hit in mText['hits']['hits']:
 		if '_source' in hit:
 			protoList.append(hit['_source'])
-	print protoList
+	#print protoList
 	return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
 
 
