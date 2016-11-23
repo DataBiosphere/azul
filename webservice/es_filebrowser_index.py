@@ -7,7 +7,7 @@
 #produces a fb_index.jsonl file to be added to elasticsearch
 
 #This takes the "validated.jsonl" file produced by the many scripts in the Fall Demo Script
-import jsonlines, ast, json, luigi
+import jsonlines, ast, json, luigi, ssl
 from elasticsearch import Elasticsearch
 from urllib import urlopen
 
