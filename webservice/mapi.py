@@ -215,6 +215,10 @@ def get_manifest():
 	for hit in mText['hits']['hits']:
 		if '_source' in hit:
 			protoList.append(hit['_source'])
+			protoList[-1]['_analysis_type'] = protoList[-1].pop('analysis_type')
+			protoList[-1]['_center_name'] = protoList[-1].pop('center_name')
+			protoList[-1]['_file_id'] = protoList[-1].pop('file_id')
+
 	#print protoList
 	return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
 
