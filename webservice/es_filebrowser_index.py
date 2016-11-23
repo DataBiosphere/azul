@@ -74,7 +74,7 @@ with open("fb_index.jsonl", "w") as fb_index:
                      indexing = str(indexing).replace("'",'"')
                      counter += 1
                      #add all stuff to dictionary
-                     udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor, 'specimen_type': specimen_type, 'analysis_type': analysis_type, 'workflow': workflow, 'download_id': download_id, 'file_type': file_type, 'title': title}
+                     udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor, 'specimen_type': specimen_type, 'analysis_type': analysis_type, 'workflow': workflow, 'download_id': download_id, 'file_type': file_type, 'title': title, 'file_id':bundle_uuid_filename_to_file_uuid[download_id+'_'+title]}
                      adict = ast.literal_eval(json.dumps(udict))
                      adict = str(adict).replace("'",'"')
                      #push header and dictionary to .jsonl
