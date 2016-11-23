@@ -14,7 +14,7 @@ counter = 0;
 es = Elasticsearch()
 
 
-redwood_host = luigi.Parameter(default='storage.ucsc-cgl.org') # Put storage instead of storage2
+redwood_host = 'storage.ucsc-cgl.org'#redwood_host = luigi.Parameter(default='storage.ucsc-cgl.org') # Put storage instead of storage2
 bundle_uuid_filename_to_file_uuid = {}
 
 def requires():
