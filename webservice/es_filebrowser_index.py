@@ -17,23 +17,23 @@ es = Elasticsearch()
 redwood_host = luigi.Parameter(default='storage.ucsc-cgl.org') # Put storage instead of storage2
 bundle_uuid_filename_to_file_uuid = {}
 
-def requires():
+def requires(_redwood_host, _bundle_uuid_filename_to_file_uuid):
         print "** COORDINATOR **"
         # now query the metadata service so I have the mapping of bundle_uuid & file names -> file_uuid
-        print str("https://"+redwood_host+":8444/entities?page=0")
-        json_str = urlopen(str("https://"+redwood_host+":8444/entities?page=0")).read()
+        print str("https://"+_redwood_host+":8444/entities?page=0")
+        json_str = urlopen(str("https://"+_redwood_host+":8444/entities?page=0")).read()
         metadata_struct = json.loads(json_str)
         print "** METADATA TOTAL PAGES: "+str(metadata_struct["totalPages"])
         for i in range(0, metadata_struct["totalPages"]):
             print "** CURRENT METADATA TOTAL PAGES: "+str(i)
-            json_str = urlopen(str("https://"+redwood_host+":8444/entities?page="+str(i))).read()
+            json_str = urlopen(str("https://"+_redwood_host+":8444/entities?page="+str(i))).read()
             metadata_struct = json.loads(json_str)
             for file_hash in metadata_struct["content"]:
-                bundle_uuid_filename_to_file_uuid[file_hash["gnosId"]+"_"+file_hash["fileName"]] = file_hash["id"]
-        print bundle_uuid_filename_to_file_uuid        
+                _bundle_uuid_filename_to_file_uuid[file_hash["gnosId"]+"_"+file_hash["fileName"]] = file_hash["id"]
+        print _bundle_uuid_filename_to_file_uuid        
 
 print "Entering the method"
-requires()
+requires(redwood_host, bundle_uuid_filename_to_file_uuid)
 
 with open("fb_index.jsonl", "w") as fb_index: 
    #metadata = open("validated.jsonl", "r")
