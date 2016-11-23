@@ -9,6 +9,7 @@
 #This takes the "validated.jsonl" file produced by the many scripts in the Fall Demo Script
 import jsonlines, ast, json, luigi
 from elasticsearch import Elasticsearch
+from urllib import urlopen
 
 counter = 0;
 es = Elasticsearch()
