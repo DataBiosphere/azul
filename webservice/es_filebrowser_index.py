@@ -17,13 +17,17 @@ es = Elasticsearch()
 
 redwood_host = 'storage.ucsc-cgl.org'#redwood_host = luigi.Parameter(default='storage.ucsc-cgl.org') # Put storage instead of storage2
 bundle_uuid_filename_to_file_uuid = {}
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+
 
 def requires():
         print "** COORDINATOR **"
         print redwood_host
         # now query the metadata service so I have the mapping of bundle_uuid & file names -> file_uuid
         print str("https://"+redwood_host+":8444/entities?page=0")
-        json_str = urlopen(str("https://"+redwood_host+":8444/entities?page=0")).read()
+        json_str = urlopen(str("https://"+redwood_host+":8444/entities?page=0"), context=ctx).read()
         metadata_struct = json.loads(json_str)
         print "** METADATA TOTAL PAGES: "+str(metadata_struct["totalPages"])
         for i in range(0, metadata_struct["totalPages"]):
