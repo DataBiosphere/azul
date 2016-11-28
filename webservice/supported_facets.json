@@ -1,0 +1,119 @@
+{
+	"DonorLevel":{
+		"donorID": {
+			"type": "identifier",
+			"interface": "search box"
+		}, 
+
+		"primary_Site": {
+		   "values": [],
+		   "type": "category",
+		   "interface": "select button"
+		},
+		"project": {
+		   "values": [],
+		   "type": "category",
+		   "interface": "select button"
+		},
+		"study": {
+		   "values": [],
+		   "type": "category",
+		   "interface": "select button"
+		},
+		"gender": {
+		   "values": [],
+		   "type": "category",
+		   "interface": "select button"
+		},
+		"vital_status": {
+		   "values": [],
+		   "type": "category",
+		   "interface": "select button"
+		},
+		"days_to_death": {
+		   "max" : 0,
+		   "min": 0,
+		   "unit": "day",
+		   "type": "int",
+		   "interface": "slider"
+		},
+		"days_to_last_follow_up": {
+		   "max" : 0,
+		   "min": 0,
+		   "unit": "day",
+		   "type": "int",
+		   "interface": "slider"
+		},
+		"disease": {
+		   "values": [],
+		   "type": "category",
+		   "interface": "select button"
+		},
+		"age_at_diagnosis": {
+		   "max": 0,
+           "min": 0,
+           "unit": "year",
+           "type": "float",
+           "interface": "slider"
+		},
+		"data_types_available": {
+		   "values": [],
+		   "type": "cateogry",
+		   "interface": "select button"
+		},
+		"experimental_design": {
+		   "values": [],
+		   "type": "category",
+		   "interface": "select button"
+		},
+		"specimen_type": {
+		   "values": [],
+		   "type": "category",
+		   "interface": "select button"
+		}
+	},
+
+	"FileLevel":{
+		"fileID": {
+	    	"type": "identifier",
+	    	"interface": "search box"
+	    },
+	    "repository": {
+	       "values": [],
+	       "type": "category",
+	       "interface": "select button"
+	    },
+
+	    "data_type": {
+	       "values": [],
+	       "type": "category",
+	       "interface": "select button"
+	    },
+	    "experimental_design": {
+	       "values": [],
+	       "type": "category",
+	       "interface": "select button"
+	    },
+	    "specimen_type": {
+	       "values": [],
+	       "type": "category",
+	       "interface": "select button"
+	    },
+
+	    "file_format": {
+	       "values": [],
+	       "type": "category",
+	       "interface": "select button"
+	    },
+	    "workflow": {
+	       "values": [],
+	       "type": "category",
+	       "interface": "select button"
+	    },
+	    "access_type": {
+	       "values": [],
+	       "type": "category",
+	       "interface": "select button"
+	    }	
+	}
+}

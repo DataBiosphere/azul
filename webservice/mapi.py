@@ -1,6 +1,4 @@
-
 from flask import Flask
-# import the FlaskElasticsearch package
 import os
 from extensions import sqlalchemy, elasticsearch, scheduler, migrate
 from views import app_bp
@@ -33,7 +31,6 @@ class Config(object):
          }
     ]
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
-
 
 # start scheduler, this is an alternative to using celery, supports cron
 def create_app(config_object=Config):
