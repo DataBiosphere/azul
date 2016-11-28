@@ -152,6 +152,56 @@ def get_previous_file_sizes (timefrom, project):
     }, size=0)
     return es_resp
 
+def get_months_uploads(project, timefrom, timetil):
+    from app import app
+    with app.app_context():
+        timestartstring = timefrom.strftime('%Y-%m-%dT%H:%M:%S')
+        timeendstring = timetil.strftime('%Y-%m-%dT%H:%M:%S')
+        es_resp = elasticsearch.search(index='analysis_index', body =
+        {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "range": {
+                                "timestamp": {
+                                    "gte": timestartstring,
+                                    "lt": timeendstring
+                                }
+                            }
+                        },
+                        {
+                            "term": {
+                                "project.keyword": "TEST"
+                            }
+                        }
+                    ]
+                }
+            },
+            "aggs": {
+                "filtered_nested_timestamps": {
+                    "nested": {
+                        "path": "specimen.samples.analysis"
+                    },
+                    "aggs": {
+                        "times": {
+                            "terms": {
+                                "field": "specimen.samples.analysis.timestamp"
+                            },
+                            "aggs": {
+                                "sum_sizes": {
+                                    "sum": {
+                                        "field": "specimen.samples.analysis.workflow_outputs.file_size"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }, size=0)
+        return es_resp
+
 def generate_daily_reports():
     #need to pass app context around because of how flask works
 
@@ -166,7 +216,9 @@ def generate_daily_reports():
 
         for project in projects:
             file_size = get_previous_file_sizes(monthstart, project=project)
-            cost = make_bills(make_search_filter_query(monthstart, utcnow, project), file_size, portion_of_month)
+            this_months_files = get_months_uploads(project, monthstart, utcnow)
+            cost = make_bills(make_search_filter_query(monthstart, utcnow, project), file_size, portion_of_month,
+                              this_months_files, utcnow, daysinmonth*3600*24)
             bill = Billing.query.filter(Billing.project == project).filter(Billing.start_date == monthstart).first()
             if bill:
                 bill.update(cost=cost, end_date=utcnow)
