@@ -30,7 +30,8 @@ curl -XPUT "http://localhost:9200/analysis_index/_mapping/metadata" --data-binar
 Back where you have your virtual environment, do: 
 ```
 export FLASK_APP=mapi.py
-```<br>
+```
+<br>
 6.-You also need to set up a SQL database so that SQLAlchemy can store and create invoices. Do this by setting the DATABASE\_URL environment variable. For example, to set up a connection to a local PostgreSQL database named billing, you would execute 
 `export DATABASE_URL="postgresql://localhost/billing"`
 
@@ -44,8 +45,10 @@ export FLASK_APP=mapi.py
 This will start the app. <br>
 10.-Open your browser and go to `http://127.0.0.1:5000/files/` to see the API response.  
 <br>
-***API Instructions; /files/***<br>
-Currently there are 6 parameters supported. They are as follows:<br>
+***API Instructions; /files/***
+<br>
+Currently there are 6 parameters supported. They are as follows:
+
 <table width="100%">
   <tbody>
     <tr>
@@ -65,9 +68,8 @@ Currently there are 6 parameters supported. They are as follows:<br>
 
       <td>Array[String]</td>
 
-      <td>http://127.0.0.1:5000/files?field=analysis_type%2Cdownload_id <br>
-      This will return only the "analysis_type" and the "download_id" field from each hit. 
-</td>
+      <td>http://127.0.0.1:5000/files?field=analysis_type%2Cdownload_id
+      This will return only the "analysis_type" and the "download_id" field from each hit. </td>
     </tr>
 
     <tr>
