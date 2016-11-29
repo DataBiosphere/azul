@@ -300,8 +300,8 @@ def get_summary():
 		m_filters = ast.literal_eval(m_filters)
 		#Functions for calling the appropriates query filters
 		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
-        filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
-        mQuery = {"bool":{"must":[filt_list]}}
+		filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
+		mQuery = {"bool":{"must":[filt_list]}}
 
 	except Exception, e:
 		print str(e)

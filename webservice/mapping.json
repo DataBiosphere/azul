@@ -26,6 +26,9 @@
       },
       "specimen_type":{
         "type":"keyword"
+      },
+      "donor":{
+        "type":"keyword"
       }
     }
 }
