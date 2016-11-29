@@ -114,7 +114,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 @app.route('/files/')
 @cross_origin()
 def get_data():
-	#print "I hate my life"
+	print "Getting data"
 	#Get all the parameters from the URL
 	m_field = request.args.get('field')
 	m_filters = request.args.get('filters')
@@ -289,7 +289,7 @@ def get_facets():
 	return jsonify(facets_list)
 
 if __name__ == '__main__':
-  app.run(debug=True,host='0.0.0.0') #Quit the debu and added Threaded
+  app.run() #Quit the debu and added Threaded
 
 
 

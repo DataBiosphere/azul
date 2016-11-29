@@ -22,7 +22,7 @@ bundle_uuid_filename_to_file_uuid = {}
 
 def requires():
         print "** COORDINATOR **"
-        print redwood_host
+       # print redwood_host
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
@@ -37,7 +37,7 @@ def requires():
             metadata_struct = json.loads(json_str)
             for file_hash in metadata_struct["content"]:
                 bundle_uuid_filename_to_file_uuid[file_hash["gnosId"]+"_"+file_hash["fileName"]] = file_hash["id"]
-        print bundle_uuid_filename_to_file_uuid        
+        #print bundle_uuid_filename_to_file_uuid        
 
 print "Entering the method"
 requires()
