@@ -289,13 +289,85 @@ def get_facets():
 	return jsonify(facets_list)
 
 #This will return a summary as the one from the ICGC endpoint
+#Takes filters as parameter. 
 @app.route('/files/summary')
 @cross_origin()
 def get_summary():
 	my_summary = {"fileCount": None, "totalFileSize": "DUMMY", "donorCount": None, "projectCount":None, "primarySite":"DUMMY"}
+	m_filters = request.args.get('filters')
 	
+	try:
+		m_filters = ast.literal_eval(m_filters)
+		#Functions for calling the appropriates query filters
+		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
+        filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
+        mQuery = {"bool":{"must":[filt_list]}}
+
+	except Exception, e:
+		print str(e)
+		m_filters = None
+		mQuery = {"match_all":{}}
+		pass
+	#Need to pass on the arguments for this. 
+	mText = es.search(index='fb_index', body={"query": mQuery, "aggs":{
+        "centerName" : {
+            "terms" : { "field" : "center_name",
+            			"min_doc_count" : 0,
+                        "size" : 99999}           
+        },
+        "projectCode":{
+            "terms":{
+                "field" : "project",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "specimenType":{
+            "terms":{
+                "field" : "specimen_type",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "fileFormat":{
+            "terms":{
+                "field" : "file_type",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "workFlow":{
+            "terms":{
+                "field" : "workflow",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "analysisType":{
+            "terms":{
+                "field" : "analysis_type",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "donor":{
+        	"terms":{
+        		"field" : "donor",
+        		"min_doc_count" : 0,
+                "size" : 99999
+        	}
+        }
+        }})
+
+	
+	
+	my_summary['fileCount'] = mText['hits']['total'] 
+	my_summary['donorCount'] = len(mText['aggregations']['donor']['buckets'])
+	my_summary['projectCount'] = len(mText['aggregations']['projectCode']['buckets'])
+
 	#To remove once this endpoint has some functionality
-	return "still working on this endpoint, updates soon!!"
+	return jsonify(my_summary)
+	#return "still working on this endpoint, updates soon!!"
 	
 	
 
