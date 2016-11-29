@@ -232,7 +232,7 @@ def get_facets():
 	#Return it as a JSON output.
 	#Things I need to know: The final format of the indexes stored in ES
 	facets_list = {}
-	with open('supported_facets.json') as my_facets:
+	with open('/var/www/html/dcc-dashboard-service/supported_facets.json') as my_facets:
 		facets_list = json.load(my_facets)
 		mText = es.search(index='fb_index', body={"query": {"match_all":{}}, "aggs" : {
         "centerName" : {
@@ -287,6 +287,17 @@ def get_facets():
 		facets_list["FileLevel"]['workflow']['values'] = [x['key'] for x in mText['aggregations']['workFlow']['buckets']]
 
 	return jsonify(facets_list)
+
+#This will return a summary as the one from the ICGC endpoint
+@app.route('/files/summary')
+@cross_origin()
+def get_summary():
+	my_summary = {"fileCount": None, "totalFileSize": "DUMMY", "donorCount": None, "projectCount":None, "primarySite":"DUMMY"}
+	
+	#To remove once this endpoint has some functionality
+	return "still working on this endpoint, updates soon!!"
+	
+	
 
 if __name__ == '__main__':
   app.run() #Quit the debu and added Threaded
