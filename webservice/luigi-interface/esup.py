@@ -20,6 +20,8 @@ json_return = es.search(index='luigi_index', body=query_body)
 json_return = json_return["hits"]["hits"][0]["_source"]
 string_of_return = json.dumps(json_return)
 
+print string_of_return
+
 for key in json_return:
 	print key
 

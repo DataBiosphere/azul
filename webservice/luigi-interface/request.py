@@ -3,20 +3,7 @@ import urllib2
 
 from datetime import datetime, timedelta
 from elasticsearch import Elasticsearch
-
-''' 
-TODO:
-* How to run this script automatically?
-    - How often is it called?
-        : within ten minutes -> will add duplicates
-        : outside of ten minutes -> might miss jobs
-    - Means we'll probably have to deal with duplicates
-* How to capture stdout/stderr?
-* Create Elasticsearch index (outside of this repeating script)
-* Push queries to Elasticsearch without jsonl
-    - jsonl supported currently
-* Update running/pending jobs, remove duplicates
-'''
+from random import randint, choice
 
 def get_error(server, job_id):    
     error_url = server + "fetch_error?data=%7B%22task_id%22%3A%22" + job_id + "%22%7D"
@@ -27,6 +14,13 @@ def get_error(server, job_id):
 
     err_parameters = json_data["response"]
     return err_parameters["error"]
+
+def fake_id():
+    num = randint(1,10)
+    for i in range(1,7):
+        num = 10*num + randint(0,10)
+    string = str(num)
+    return "S" + string[:7]
 
 server = "http://localhost:8082/api/"
 
@@ -47,10 +41,11 @@ relevant_attributes = ["status", "name", "start_time", "params"]
 required_parameters = ["project", "donor_id", "sample_id", "pipeline_name"]
 
 es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
+jobject_list = []
 
-es_filename = "dummy.jsonl"
-esjson = open(es_filename, "w")
-counter = 0
+es_filename = "action_index.jsonl"
+esjson = open(es_filename,"w")
+esjson.write('{"data": [\n')
 
 for URL in list_of_URLs:
 
@@ -105,20 +100,39 @@ for URL in list_of_URLs:
         # Add unique run_id
         jobject['run_id'] = job_id[-10:]
 
-        header = {}
-        header["index"] = {}
-        header["index"]["_id"] = str(counter)
-        header["index"]["_type"] = "meta"
-        # Elasticsearch queries instead of file writes
-        #esjson.write(json.dumps(header) + "\n")
-        esjson.write(json.dumps(jobject) + "\n")
-        counter += 1
+        # Add the fake ID's
+        string = fake_id()
+        jobject['donor_id'] = string
+        jobject['sample_id'] = string + choice(['a','b','c']) + str(randint(1,5))
 
+        #print json.dumps(jobject)
 
+        # Name is irritating
+        del jobject['name']
+
+        esjson.write(json.dumps(jobject) + ',\n')
+
+esjson.write(']}')
 esjson.close()
-
-# Not a final part of the demo, DEBUG only
-with open(es_filename, 'r') as infile:
+'''
+with open(es_filename,'r') as infile:
     for line in infile:
         if line.strip():
             print line
+'''
+
+
+
+''' 
+TODO:
+* How to run this script automatically?
+    - How often is it called?
+        : within ten minutes -> will add duplicates
+        : outside of ten minutes -> might miss jobs
+    - Means we'll probably have to deal with duplicates
+* How to capture stdout/stderr?
+* Create Elasticsearch index (outside of this repeating script)
+* Push queries to Elasticsearch without jsonl
+    - jsonl supported currently
+* Update running/pending jobs, remove duplicates
+'''
