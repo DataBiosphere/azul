@@ -1,30 +1,6 @@
 from elasticsearch import Elasticsearch
 import json
 
-server_info = [{'host':'localhost','port':9200}]
-es = Elasticsearch(server_info)
-print "Elasticsearch server at %s:%s exists?: %s\n" % \
-		(server_info[0]['host'], str(server_info[0]['port']), str(es.ping()))
-
-query_body = {
-	'query': {
-		'match': {
-			'sample_id': 11
-		}
-	}
-}
-
-json_return = es.search(index='luigi_index', body=query_body)
-# hits hits 0 source gets through arbitrary elasticsearch juju to 
-# the returns from the Luigi Job
-json_return = json_return["hits"]["hits"]
-
-if not json_return:
-	print "This is empty!"
-
-#for key in json_return:
-#	print key
-
 # 
 # elasticsearch_server is a json dictionary of the form  
 # {
@@ -43,7 +19,7 @@ if not json_return:
 # 	* sample_id 
 # 	* error_text
 # 
-# Returns 0 if successful. 1 if 
+# Returns 0 if successful. 1 if the server is down
 # 
 def update_index(es_server, jobject):
 	server_info = [].append(es_server)
@@ -57,11 +33,14 @@ def update_index(es_server, jobject):
 	# DEBUG: Is server up?
 	# print "Elasticsearch server at %s:%s exists?: %s\n" % (es_server['host'], str(es_server['port']), )
 
+	# DEBUG: Why doesn't the jobject have a jobid?
+	print jobject
+
 	# Okay, now we have a jobject to add to the es_server
 	query_body = {
 		'query': {
 			'match': {
-				'job_id': jobject['job_id']
+				'run_id': jobject['run_id']
 			}
 		}
 	}
@@ -71,9 +50,9 @@ def update_index(es_server, jobject):
 
 	if json_return:
 		# The job exists! 
-		 es.update(index='luigi_index', doc_type='job', id=jobject['job_id'], body={"doc": jobject})
+		 es.update(index='luigi_index', doc_type='job', id=jobject['run_id'], body={"doc": jobject})
 	else:
 		 # Job doesn't exist. Insert the jobject, go on your merry way
-		 es.index(index='luigi_index', doc_type='job', id=jobject['job_id'], body=jobject)
+		 es.index(index='luigi_index', doc_type='job', id=jobject['run_id'], body=jobject)
 
 
