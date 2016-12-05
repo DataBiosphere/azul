@@ -17,6 +17,7 @@ es = Elasticsearch()
 
 redwood_host = 'storage.ucsc-cgl.org'#redwood_host = luigi.Parameter(default='storage.ucsc-cgl.org') # Put storage instead of storage2
 bundle_uuid_filename_to_file_uuid = {}
+#index_size = 0
 
 
 
@@ -37,7 +38,9 @@ def requires():
             metadata_struct = json.loads(json_str)
             for file_hash in metadata_struct["content"]:
                 bundle_uuid_filename_to_file_uuid[file_hash["gnosId"]+"_"+file_hash["fileName"]] = file_hash["id"]
-        #print bundle_uuid_filename_to_file_uuid        
+        # print bundle_uuid_filename_to_file_uuid
+        # index_size = len(bundle_uuid_filename_to_file_uuid)
+        # print index_size #TEST        
 
 print "Entering the method"
 requires()
@@ -46,9 +49,11 @@ with open("fb_index.jsonl", "w") as fb_index:
    #metadata = open("validated.jsonl", "r")
    #with jsonlines.open("validated.jsonl") as reader:
    #Call ES instead of having the hardcoded file.
-      m_text = es.search(index='analysis_index', body={"query":{"match_all":{}}}, scroll="1m")
+      # print "The index size is: ", len(bundle_uuid_filename_to_file_uuid)
+      m_text = es.search(index='analysis_index', body={"query":{"match_all":{}}}, size=len(bundle_uuid_filename_to_file_uuid) )
       reader = [x['_source'] for x in m_text['hits']['hits']]
-      #print reader2   
+      # print reader #TEST
+      # print len(reader)   
       for obj in reader:
          #pull out center name, project, program, donor(submitter_donor_id)
          center_name = obj['center_name']
@@ -74,7 +79,12 @@ with open("fb_index.jsonl", "w") as fb_index:
                      indexing = str(indexing).replace("'",'"')
                      counter += 1
                      #add all stuff to dictionary
-                     udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor, 'specimen_type': specimen_type, 'analysis_type': analysis_type, 'workflow': workflow, 'download_id': download_id, 'file_type': file_type, 'title': title, 'file_id':bundle_uuid_filename_to_file_uuid[download_id+'_'+title]}
+                     try:
+                        udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor, 'specimen_type': specimen_type, 'analysis_type': analysis_type, 'workflow': workflow, 'download_id': download_id, 'file_type': file_type, 'title': title, 'file_id':bundle_uuid_filename_to_file_uuid[download_id+'_'+title]}
+                     except Exception, e:
+                        print "Error with key:", str(e)
+                        continue
+                          
                      adict = ast.literal_eval(json.dumps(udict))
                      adict = str(adict).replace("'",'"')
                      #push header and dictionary to .jsonl
