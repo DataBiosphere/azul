@@ -19,7 +19,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 		if '_source' in hit:
 			protoDict['hits'].append({
 			'id' : 'DUMMY',
-			'objectID' : 'DUMMY',
+			'objectID' : hit['_source']['file_id'],
 			'access' : 'DUMMY',
 			'center_name': hit['_source']['center_name'],
 			'study' : ['DUMMY'],
