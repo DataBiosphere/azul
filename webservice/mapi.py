@@ -144,7 +144,7 @@ def get_data():
 		m_filters = None
 		mQuery = {"match_all":{}}
 		pass
-	mText = es.search(index='fb_index', body={"query": mQuery, "aggs" : {
+	mText = es.search(index='fb_alias', body={"query": mQuery, "aggs" : {
         "centerName" : {
             "terms" : { "field" : "center_name",
             			"min_doc_count" : 0,
@@ -209,7 +209,7 @@ def get_manifest():
 		m_filters = None
 		mQuery = {"match_all":{}}
 		pass
-	mText = es.search(index='fb_index', body={"query": mQuery}, size=m_Size)
+	mText = es.search(index='fb_alias', body={"query": mQuery}, size=m_Size)
 
 	protoList = []
 	for hit in mText['hits']['hits']:
@@ -234,7 +234,7 @@ def get_facets():
 	facets_list = {}
 	with open('/var/www/html/dcc-dashboard-service/supported_facets.json') as my_facets:
 		facets_list = json.load(my_facets)
-		mText = es.search(index='fb_index', body={"query": {"match_all":{}}, "aggs" : {
+		mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "aggs" : {
         "centerName" : {
             "terms" : { "field" : "center_name",
             			"min_doc_count" : 0,
@@ -309,7 +309,7 @@ def get_summary():
 		mQuery = {"match_all":{}}
 		pass
 	#Need to pass on the arguments for this. 
-	mText = es.search(index='fb_index', body={"query": mQuery, "aggs":{
+	mText = es.search(index='fb_alias', body={"query": mQuery, "aggs":{
         "centerName" : {
             "terms" : { "field" : "center_name",
             			"min_doc_count" : 0,

@@ -50,7 +50,7 @@ with open("fb_index.jsonl", "w") as fb_index:
    #with jsonlines.open("validated.jsonl") as reader:
    #Call ES instead of having the hardcoded file.
       # print "The index size is: ", len(bundle_uuid_filename_to_file_uuid)
-      m_text = es.search(index='analysis_index', body={"query":{"match_all":{}}}, scroll='2m')
+      m_text = es.search(index='analysis_index', body={"query":{"match_all":{}}}, size=9999, scroll='2m')
       #Get the scroll id and total scroll size
       sid = m_text['_scroll_id']
       scroll_size = m_text['hits']['total']
