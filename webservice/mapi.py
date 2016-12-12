@@ -209,7 +209,27 @@ def get_manifest():
 		m_filters = None
 		mQuery = {"match_all":{}}
 		pass
-	mText = es.search(index='fb_alias', body={"query": mQuery}, size=m_Size)
+	#Added the scroll variable. Need to put the scroll variable in a config file. 	
+	mText = es.search(index='fb_alias', body={"query": mQuery}, size=9999, scroll='2m')
+
+	#Set the variables to do scrolling. This should fix the problem with the small amount of
+	sid = mText['_scroll_id']
+	scroll_size = mText['hits']['total']
+	#reader = [x['_source'] for x in mText['hits']['hits']]
+
+	#MAKE SURE YOU TEST THIS 
+	while(scroll_size > 0):
+		print "Scrolling..."
+		page = es.scroll(scroll_id = sid, scroll = '2m')
+		#Update the Scroll ID
+		sid = page['_scroll_id']
+		#Get the number of results that we returned in the last scroll
+		scroll_size = len(page['hits']['hits'])
+		#Extend the result list
+		#reader.extend([x['_source'] for x in page['hits']['hits']])
+		mText['hits']['hits'].extend([x for x in page['hits']['hits']])
+		print len(mText['hits']['hits'])
+		print "Scroll Size: " + str(scroll_size)	
 
 	protoList = []
 	for hit in mText['hits']['hits']:
