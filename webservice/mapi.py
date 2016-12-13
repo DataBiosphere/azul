@@ -153,8 +153,8 @@ def get_data():
 	inverseAggs = {"center_name":"centerName", "project":"projectCode", "specimen_type":"specimenType", "file_type":"fileFormat", "workflow":"workFlow", "analysis_type":"analysisType"}
 	#The json with aggs to call ES
 	aggs_list = {}
-	#with open('/var/www/html/dcc-dashboard-service/aggs.json') as my_aggs:
-	with open('aggs.json') as my_aggs:
+	with open('/var/www/html/dcc-dashboard-service/aggs.json') as my_aggs:
+	#with open('aggs.json') as my_aggs:
 		aggs_list = json.load(my_aggs)
 	#Add the appropriate filters to the aggs_list
 	if "match_all" not in mQuery:
@@ -172,7 +172,7 @@ def get_data():
 					if len(aggs_list[key]['filter']['bool']['must']) == 0:
 						aggs_list[key]['filter'] = {}
 
-	print aggs_list
+	#print aggs_list
 
 
 		# for agg_filter in mQuery['bool']['must']:
@@ -189,7 +189,7 @@ def get_data():
 
 
 
-	print "This is what get's into ES", {"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}
+	#print "This is what get's into ES", {"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}
 	mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
 	return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
 
