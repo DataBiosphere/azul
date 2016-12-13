@@ -212,8 +212,14 @@ def get_manifest():
 		m_filters = None
 		mQuery = {"match_all":{}}
 		pass
-	#Added the scroll variable. Need to put the scroll variable in a config file. 	
-	mText = es.search(index='fb_alias', body={"query": mQuery}, size=9999, scroll='2m')
+	#Added the scroll variable. Need to put the scroll variable in a config file.
+	scroll_config = '' 	
+	with open('/var/www/html/dcc-dashboard-service/scroll_config') as _scroll_config:
+	#with open('scroll_config') as _scroll_config:
+		scroll_config = _scroll_config.readline().strip()
+		#print scroll_config
+
+	mText = es.search(index='fb_alias', body={"query": mQuery}, size=9999, scroll=scroll_config) #'2m'
 
 	#Set the variables to do scrolling. This should fix the problem with the small amount of
 	sid = mText['_scroll_id']
