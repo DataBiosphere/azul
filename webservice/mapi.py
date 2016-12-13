@@ -8,6 +8,8 @@ from flask_cors import CORS, cross_origin
 #import the flask functionality
 import flask_excel as excel
 
+import copy
+
 app = Flask(__name__)
 es = Elasticsearch()
 
@@ -98,7 +100,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 
 	protoDict['termFacets'] = {}#es_dict['aggregations']
 	for x, y in es_dict['aggregations'].items():
-		protoDict['termFacets'][x] = {'type':'terms', 'terms': map(lambda x:{"term":x["key"], 'count':x['doc_count']}, y['buckets'])}
+		protoDict['termFacets'][x] = {'type':'terms', 'terms': map(lambda x:{"term":x["key"], 'count':x['doc_count']}, y['myTerms']['buckets'])} #Added myTerms key
 
 	#Get the total for all the terms
 	for section in protoDict['termFacets']:
@@ -137,57 +139,58 @@ def get_data():
 		#Functions for calling the appropriates query filters
 		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
 		filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
-		mQuery = {"bool":{"must":[filt_list]}}
+		mQuery = {"bool":{"must":filt_list}} #Removed the brackets; Make sure it doesn't break anything down the line
+		mQuery2 = {"bool":{"must":filt_list}}
 
 	except Exception, e:
 		print str(e)
 		m_filters = None
 		mQuery = {"match_all":{}}
+		mQuery2 = {}
 		pass
-	mText = es.search(index='fb_alias', body={"query": mQuery, "aggs" : {
-        "centerName" : {
-            "terms" : { "field" : "center_name",
-            			"min_doc_count" : 0,
-                        "size" : 99999}           
-        },
-        "projectCode":{
-            "terms":{
-                "field" : "project",
-                "min_doc_count" : 0,
-                "size" : 99999
-            }
-        },
-        "specimenType":{
-            "terms":{
-                "field" : "specimen_type",
-                "min_doc_count" : 0,
-                "size" : 99999
-            }
-        },
-        "fileFormat":{
-            "terms":{
-                "field" : "file_type",
-                "min_doc_count" : 0,
-                "size" : 99999
-            }
-        },
-        "workFlow":{
-            "terms":{
-                "field" : "workflow",
-                "min_doc_count" : 0,
-                "size" : 99999
-            }
-        },
-        "analysisType":{
-            "terms":{
-                "field" : "analysis_type",
-                "min_doc_count" : 0,
-                "size" : 99999
-            }
-        }
+	#Didctionary for getting a reference to the aggs key
+	referenceAggs = {"centerName":"center_name", "projectCode":"project", "specimenType":"specimen_type", "fileFormat":"file_type", "workFlow":"workflow", "analysisType":"analysis_type"}
+	inverseAggs = {"center_name":"centerName", "project":"projectCode", "specimen_type":"specimenType", "file_type":"fileFormat", "workflow":"workFlow", "analysis_type":"analysisType"}
+	#The json with aggs to call ES
+	aggs_list = {}
+	with open('/var/www/html/dcc-dashboard-service/aggs.json') as my_aggs:
+	#with open('aggs.json') as my_aggs:
+		aggs_list = json.load(my_aggs)
+	#Add the appropriate filters to the aggs_list
+	if "match_all" not in mQuery:
+		for key, value in aggs_list.items():
+			aggs_list[key]['filter'] = copy.deepcopy(mQuery2)
+			#print "Printing mQuery2", mQuery2
+			#print "Printing filter field", aggs_list[key]['filter']
+			for index, single_filter in enumerate(aggs_list[key]['filter']['bool']['must']):
+				#print single_filter
+				one_item_list = single_filter['constant_score']['filter']['terms'].items()
+				if inverseAggs[one_item_list[0][0]] == key:
+					#print aggs_list[key]['filter']['bool']['must']
+					aggs_list[key]['filter']['bool']['must'].pop(index)
+					#In case there is no filter condition present
+					if len(aggs_list[key]['filter']['bool']['must']) == 0:
+						aggs_list[key]['filter'] = {}
+
+	#print aggs_list
 
 
-    }, "_source":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
+		# for agg_filter in mQuery['bool']['must']:
+		# 	#agg_filter['constant_score']['filter']['terms']
+		# 	for key, value in agg_filter['constant_score']['filter']['terms'].items():
+		# 		if inverseAggs[key] in aggs_list:
+		# 			aggs_list[inverseAggs[key]]['filter'] = mQuery
+		# 				for agg_little_filter in aggs_list[inverseAggs[key]]['filter']['bool']['must']:
+		# 					#agg_filter['constant_score']['filter']['terms']
+		# 					#Check if the field is the same as your aggregate.
+		# 					for key2, value2 in agg_little_filter['constant_score']['filter']['terms'].items():
+
+		# 					for key, value in agg_filter['constant_score']['filter']['terms'].items():
+
+
+
+	#print "This is what get's into ES", {"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}
+	mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
 	return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
 
 #Get the manifest. You need to pass on the filters
