@@ -149,8 +149,8 @@ def get_data():
 		mQuery2 = {}
 		pass
 	#Didctionary for getting a reference to the aggs key
-	referenceAggs = {"centerName":"center_name", "projectCode":"project", "specimenType":"specimen_type", "fileFormat":"file_type", "workFlow":"workflow", "analysisType":"analysis_type"}
-	inverseAggs = {"center_name":"centerName", "project":"projectCode", "specimen_type":"specimenType", "file_type":"fileFormat", "workflow":"workFlow", "analysis_type":"analysisType"}
+	referenceAggs = {"centerName":"center_name", "projectCode":"project", "specimenType":"specimen_type", "fileFormat":"file_type", "workFlow":"workflow", "analysisType":"analysis_type", "program":"program"}
+	inverseAggs = {"center_name":"centerName", "project":"projectCode", "specimen_type":"specimenType", "file_type":"fileFormat", "workflow":"workFlow", "analysis_type":"analysisType", "program":"program"}
 	#The json with aggs to call ES
 	aggs_list = {}
 	with open('/var/www/html/dcc-dashboard-service/aggs.json') as my_aggs:
