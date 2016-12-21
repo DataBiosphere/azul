@@ -87,6 +87,9 @@ with open("fb_index.jsonl", "w") as fb_index:
                   # pull out analysis_type, workflow(workflow_name), download_id(bundle_uuid)
                   analysis_type = analys['analysis_type']
                   workflow = analys['workflow_name']
+                  workflow_version = analys['workflow_version']
+                 #TEST WORKFLOW CONCATENATION
+                  workflow = workflow+':'+workflow_version #DELETE IF IT CRASHES
                   download_id = analys['bundle_uuid']
                   for file in analys['workflow_outputs']:
                      #pull out file_type, title(file_path)
