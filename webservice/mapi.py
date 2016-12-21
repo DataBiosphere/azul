@@ -121,7 +121,7 @@ def get_data():
 	m_field = request.args.get('field')
 	m_filters = request.args.get('filters')
 	m_From = request.args.get('from', 1, type=int)
-	m_Size = request.args.get('size', 10, type=int)
+	m_Size = request.args.get('size', 5, type=int)
 	m_Sort = request.args.get('sort', 'center_name')
 	m_Order = request.args.get('order', 'desc')
 
