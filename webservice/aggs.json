@@ -81,6 +81,20 @@
                 }
               }
             }
+        },
+        "program":{
+
+            "filter":{
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field" : "program",
+                     
+                        "size" : 99999
+                }
+              }
+            }
         }
 
 
