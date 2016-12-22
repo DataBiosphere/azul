@@ -268,7 +268,7 @@ def get_data_pie():
 
 
 	#print "This is what get's into ES", {"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}
-	mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
+	mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
 	return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
 
 ##*********************************************************************************************************************************##
