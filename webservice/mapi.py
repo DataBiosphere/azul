@@ -197,7 +197,7 @@ def get_data():
 ###********************************TEST FOR THE PIECHARTS FACETS ENDPOINT**********************************************##
 @app.route('/files/piecharts')
 @cross_origin()
-def get_data():
+def get_data_pie():
 	print "Getting data"
 	#Get the filters from the URL
 	m_filters = request.args.get('filters')
