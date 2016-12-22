@@ -1,1 +1,1 @@
-00 10 * * * ./dcc-dashboard-service/instructions.sh  
+00 * * * * ./dcc-dashboard-service/instructions.sh  
