@@ -50,5 +50,3 @@ curl -XPOST http://localhost:9200/_aliases?pretty -d' { "actions" : [ { "remove"
 ####MISSING THE INDEXING ON ELASTICSEARCH####
 
 #touch myTest/$now.txt
-
-
