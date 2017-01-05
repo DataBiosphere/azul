@@ -125,6 +125,21 @@ def get_data():
 	m_Sort = request.args.get('sort', 'center_name')
 	m_Order = request.args.get('order', 'desc')
 
+	#Didctionary for getting a reference to the aggs key
+	#referenceAggs = {"centerName":"center_name", "projectCode":"project", "specimenType":"specimen_type", "fileFormat":"file_type", "workFlow":"workflow", "analysisType":"analysis_type", "program":"program"}
+	#inverseAggs = {"center_name":"centerName", "project":"projectCode", "specimen_type":"specimenType", "file_type":"fileFormat", "workflow":"workFlow", "analysis_type":"analysisType", "program":"program"}
+	#Dictionary for getting a reference to the aggs key
+	referenceAggs = {}
+	inverseAggs = {}
+	with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+	#with open('reference_aggs.json') as my_aggs:
+		referenceAggs = json.load(my_aggs)
+
+	with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+	#with open('inverse_aggs.json') as my_aggs:
+		inverseAggs = json.load(my_aggs)
+
+
 	#Will hold the query that will be used when calling ES
 	mQuery = {}
 	#Gets the index in [0 - (N-1)] form to communicate with ES
@@ -136,6 +151,14 @@ def get_data():
 	#Get a list of all the Filters requested
 	try:
 		m_filters = ast.literal_eval(m_filters)
+		#Check if the string is in the other format. Change it as appropriate. #TESTING
+		for key, value in m_filters['file'].items():
+			if key in referenceAggs:
+				corrected_term = referenceAggs[key]
+				#print corrected_term
+				m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+				#print m_filters
+
 		#Functions for calling the appropriates query filters
 		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
 		filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
@@ -148,9 +171,6 @@ def get_data():
 		mQuery = {"match_all":{}}
 		mQuery2 = {}
 		pass
-	#Didctionary for getting a reference to the aggs key
-	referenceAggs = {"centerName":"center_name", "projectCode":"project", "specimenType":"specimen_type", "fileFormat":"file_type", "workFlow":"workflow", "analysisType":"analysis_type", "program":"program"}
-	inverseAggs = {"center_name":"centerName", "project":"projectCode", "specimen_type":"specimenType", "file_type":"fileFormat", "workflow":"workFlow", "analysis_type":"analysisType", "program":"program"}
 	#The json with aggs to call ES
 	aggs_list = {}
 	with open('/var/www/html/dcc-dashboard-service/aggs.json') as my_aggs:
@@ -210,9 +230,28 @@ def get_data_pie():
 	mQuery = {}
 	#Gets the index in [0 - (N-1)] form to communicate with ES
 	m_From -= 1 
+
+	#Dictionary for getting a reference to the aggs key
+	referenceAggs = {}
+	inverseAggs = {}
+	with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+	#with open('reference_aggs.json') as my_aggs:
+		referenceAggs = json.load(my_aggs)
+
+	with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+	#with open('inverse_aggs.json') as my_aggs:
+		inverseAggs = json.load(my_aggs)
+
 	#Get a list of all the Filters requested
 	try:
 		m_filters = ast.literal_eval(m_filters)
+		#Change the keys to the appropriate values. 
+		for key, value in m_filters['file'].items():
+			if key in referenceAggs:
+				#This performs the change.
+				corrected_term = referenceAggs[key]
+				m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+
 		#Functions for calling the appropriates query filters
 		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
 		filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
@@ -287,8 +326,27 @@ def get_manifest():
 	m_filters = request.args.get('filters')
 	m_Size = request.args.get('size', 25, type=int)
 	mQuery = {}
+
+	#Dictionary for getting a reference to the aggs key
+	referenceAggs = {}
+	inverseAggs = {}
+	with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+	#with open('reference_aggs.json') as my_aggs:
+		referenceAggs = json.load(my_aggs)
+
+	with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+	#with open('inverse_aggs.json') as my_aggs:
+		inverseAggs = json.load(my_aggs)
+
 	try:
 		m_filters = ast.literal_eval(m_filters)
+		#Change the keys to the appropriate values. 
+		for key, value in m_filters['file'].items():
+			if key in referenceAggs:
+				#This performs the change.
+				corrected_term = referenceAggs[key]
+				m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+
 		#Functions for calling the appropriates query filters
 		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
                 filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
@@ -412,8 +470,26 @@ def get_summary():
 	my_summary = {"fileCount": None, "totalFileSize": "DUMMY", "donorCount": None, "projectCount":None, "primarySite":"DUMMY"}
 	m_filters = request.args.get('filters')
 	
+	#Dictionary for getting a reference to the aggs key
+	referenceAggs = {}
+	inverseAggs = {}
+	with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+	#with open('reference_aggs.json') as my_aggs:
+		referenceAggs = json.load(my_aggs)
+
+	with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+	#with open('inverse_aggs.json') as my_aggs:
+		inverseAggs = json.load(my_aggs)	
+	
 	try:
 		m_filters = ast.literal_eval(m_filters)
+		#Change the keys to the appropriate values. 
+		for key, value in m_filters['file'].items():
+			if key in referenceAggs:
+				#This performs the change.
+				corrected_term = referenceAggs[key]
+				m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+
 		#Functions for calling the appropriates query filters
 		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
 		filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
