@@ -40,14 +40,6 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 				'repoBaseUrl' : 'DUMMY',
 				'repoDataPath' : 'DUMMY',
 				'repoMetadatapath' : 'DUMMY',
-				'indexFile' : {
-					'id' : 'DUMMY',
-					'objectId' : hit['_source']['download_id'],
-					'fileName' : hit['_source']['title'],
-					'fileFormat' : hit['_source']['file_type'],
-					'fileMd5sum' : 'DUMMY',
-					'fileSize' : 'DUMMY'
-				},
 				'fileName' : hit['_source']['title'],
 				'fileFormat' : hit['_source']['file_type'],
 				'fileMd5sum' : 'DUMMY',
