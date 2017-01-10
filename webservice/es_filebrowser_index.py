@@ -90,7 +90,7 @@ with open("fb_index.jsonl", "w") as fb_index:
             for sample in speci['samples']:
               sampleId = sample['sample_uuid']
               submittedSampleId = sample['submitter_sample_id']
-               for analys in sample['analysis']:
+              for analys in sample['analysis']:
                   # pull out analysis_type, workflow(workflow_name), download_id(bundle_uuid)
                   analysis_type = analys['analysis_type']
                   workflow = analys['workflow_name']
