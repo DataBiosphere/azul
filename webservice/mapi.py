@@ -57,7 +57,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 				'submittedSampleId' : [hit['_source']['submittedSampleId']], ###
 				'submittedSpecimenId' : [hit['_source']['submittedSpecimenId']], ###
 				'otherIdentifiers' : {
-					'RedwoodDonorUUID' : ['redwoodDonorUUID'], ###
+					'RedwoodDonorUUID' : [hit['_source']['redwoodDonorUUID']], ###
 				}
 
 			}],

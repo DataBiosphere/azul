@@ -100,7 +100,7 @@ with open("fb_index.jsonl", "w") as fb_index:
                   if 'bundle_uuid' in analys:
                     repoDataBundleId = analys['bundle_uuid']
                   #Timestamp / lastModified; Empty if not present
-                  lastModified = ''
+                  lastModified = None
                   if 'timestamp' in analys:
                     lastModified = analys['timestamp']
 
@@ -137,7 +137,8 @@ with open("fb_index.jsonl", "w") as fb_index:
                         print "Error with key:", str(e)
                         continue
                           
-                     adict = ast.literal_eval(json.dumps(udict))
+                     # adict = ast.literal_eval(json.dumps(udict))
+                     adict = json.dumps(udict)
                      adict = str(adict).replace("'",'"')
                      #push header and dictionary to .jsonl
                      fb_index.write(indexing+"\n"+adict+"\n")
