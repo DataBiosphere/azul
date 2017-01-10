@@ -24,7 +24,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 			'objectID' : hit['_source']['file_id'],
 			'access' : 'DUMMY',
 			'center_name': hit['_source']['center_name'],
-			'study' : hit['_source']['study'],
+			'study' : [hit['_source']['study']],
 			'dataCategorization' : {
 				'dataType' : hit['_source']['analysis_type'],
 				'experimentalStrategy' : hit['_source']['workflow']
