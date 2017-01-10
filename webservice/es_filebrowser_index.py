@@ -131,7 +131,7 @@ with open("fb_index.jsonl", "w") as fb_index:
                         'redwoodDonorUUID': redwoodDonorUUID, 'study':study, 'sampleId':sampleId, 'submittedSampleId':submittedSampleId,
                         'submittedDonorId': submittedDonorId, 'submittedSpecimenId':submittedSpecimenId,
                         'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
-                        'lastModified':lastModified
+                        'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId
                         }
                      except Exception, e:
                         print "Error with key:", str(e)

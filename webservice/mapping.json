@@ -29,6 +29,9 @@
       },
       "donor":{
         "type":"keyword"
+      },
+      "lastModified":{
+        "type":"date"
       }
     }
 }
