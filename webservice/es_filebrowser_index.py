@@ -76,18 +76,34 @@ with open("fb_index.jsonl", "w") as fb_index:
          #pull out center name, project, program, donor(submitter_donor_id)
          center_name = obj['center_name']
          project = obj['project']
+         study = obj['project']
          program = obj['program']
-         donor = obj['submitter_donor_id']
+         donor = obj['donor_uuid']#obj['submitter_donor_id']
+         redwoodDonorUUID = obj['donor_uuid']
+         submittedDonorId = obj['submitter_donor_id']
          #go to specimen
          for speci in obj['specimen']:
             #pull out specimen_type(submitter_specimen_type)
             specimen_type = speci['submitter_specimen_type']
+            submitter_experimental_design = speci['submitter_experimental_design'] #Get the 'experimentalStrategy'
+            submittedSpecimenId = speci['submitter_specimen_id']
             for sample in speci['samples']:
+              sampleId = sample['sample_uuid']
+              submittedSampleId = sample['submitter_sample_id']
                for analys in sample['analysis']:
                   # pull out analysis_type, workflow(workflow_name), download_id(bundle_uuid)
                   analysis_type = analys['analysis_type']
                   workflow = analys['workflow_name']
                   workflow_version = analys['workflow_version']
+                  #Bundle UUID
+                  repoDataBundleId = ''
+                  if 'bundle_uuid' in analys:
+                    repoDataBundleId = analys['bundle_uuid']
+                  #Timestamp / lastModified; Empty if not present
+                  lastModified = ''
+                  if 'timestamp' in analys:
+                    lastModified = analys['timestamp']
+
                  #TEST WORKFLOW CONCATENATION
                   workflow = workflow+':'+workflow_version #DELETE IF IT CRASHES
                   download_id = analys['bundle_uuid']
@@ -95,13 +111,28 @@ with open("fb_index.jsonl", "w") as fb_index:
                      #pull out file_type, title(file_path)
                      file_type = file['file_type']
                      title = file['file_path']
+                     #Doing ifs because I don't know if it is in all the workflow outputs
+                     fileSize = 0
+                     fileMd5sum = ''
+                     if 'file_size' in file:
+                      fileSize = file['file_size']
+                     if 'file_checksum' in file:
+                      fileMd5sum = file['file_checksum']
                      #creating the header
                      indexing = {"index":{"_id": counter, "_type":"meta"}}
                      indexing = str(indexing).replace("'",'"')
                      counter += 1
                      #add all stuff to dictionary
                      try:
-                        udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor, 'specimen_type': specimen_type, 'analysis_type': analysis_type, 'workflow': workflow, 'download_id': download_id, 'file_type': file_type, 'title': title, 'file_id':bundle_uuid_filename_to_file_uuid[download_id+'_'+title]}
+                        udict = {'center_name': center_name, 'project': project, 
+                        'program': program, 'donor': donor, 'specimen_type': specimen_type, 'analysis_type': analysis_type, 
+                        'workflow': workflow, 'download_id': download_id, 'file_type': file_type, 'title': title, 
+                        'file_id':bundle_uuid_filename_to_file_uuid[download_id+'_'+title], 'experimentalStrategy': submitter_experimental_design,
+                        'redwoodDonorUUID': redwoodDonorUUID, 'study':study, 'sampleId':sampleId, 'submittedSampleId':submittedSampleId,
+                        'submittedDonorId': submittedDonorId, 'submittedSpecimenId':submittedSpecimenId,
+                        'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
+                        'lastModified':lastModified
+                        }
                      except Exception, e:
                         print "Error with key:", str(e)
                         continue

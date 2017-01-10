@@ -20,17 +20,17 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 	for hit in es_dict['hits']['hits']:
 		if '_source' in hit:
 			protoDict['hits'].append({
-			'id' : 'DUMMY',
+			'id' : hit['_source']['file_id'],
 			'objectID' : hit['_source']['file_id'],
 			'access' : 'DUMMY',
 			'center_name': hit['_source']['center_name'],
-			'study' : ['DUMMY'],
+			'study' : hit['_source']['study'],
 			'dataCategorization' : {
 				'dataType' : hit['_source']['analysis_type'],
 				'experimentalStrategy' : hit['_source']['workflow']
 			},
 			'fileCopies' : [{
-				'repoDataBundleId' : 'DUMMY',
+				'repoDataBundleId' : hit['_source']['repoDataBundleId'],
 				'repoDataSetIds' :[],
 				'repoCode' : 'DUMMY',
 				'repoOrg' : 'DUMMY',
@@ -38,26 +38,26 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 				'repoType' : 'DUMMY',
 				'repoCountry' : 'DUMMY',
 				'repoBaseUrl' : 'DUMMY',
-				'repoDataPath' : 'DUMMY',
-				'repoMetadatapath' : 'DUMMY',
+				'repoDataPath' : '', ###Empty String
+				'repoMetadatapath' : '', ###Empty String
 				'fileName' : hit['_source']['title'],
 				'fileFormat' : hit['_source']['file_type'],
-				'fileMd5sum' : 'DUMMY',
-				'lastModified' : 'DUMMY'
+				'fileSize' : hit['_source']['fileSize'],
+				'fileMd5sum' : hit['_source']['fileMd5sum'],
+				'lastModified' : hit['_source']['lastModified']
 			}],
 			'donors' : [{
 				'donorId' : hit['_source']['donor'],
 				'primarySite' : 'DUMMY',
 				'projectCode' : hit['_source']['project'],
-				'study' : 'DUMMY',
-				'sampleId' : ['DUMMY'],
+				'study' : hit['_source']['study'], ###
+				'sampleId' : hit['_source']['sampleId'], ###
 				'specimenType' : [hit['_source']['specimen_type']],
-				'submittedDonorId' : "DUMMY",
-				'submittedSampleId' : ['DUMMY'],
-				'submittedSpecimenId' : ['DUMMY'],
+				'submittedDonorId' : hit['_source']['submittedDonorId'], ###
+				'submittedSampleId' : [hit['_source']['submittedSampleId']], ###
+				'submittedSpecimenId' : [hit['_source']['submittedSpecimenId']], ###
 				'otherIdentifiers' : {
-					'tcgaSampleBarcode' : ['DUMMY'],
-					'tcgaAliquotBarcode' : ['DUMMY']
+					'RedwoodDonorUUID' : ['redwoodDonorUUID'], ###
 				}
 
 			}],
@@ -67,9 +67,9 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 				'software' : 'DUMMY'
 			},
 			'referenceGenome' : {
-				'genomeBuild' : 'DUMMY',
-				'referenceName' : 'DUMMY',
-				'downloadUrl' : 'DUMMY'
+				'genomeBuild' : '', ###Blank String
+				'referenceName' : '', ###Blank String
+				'downloadUrl' : ''###Blank String
 			}
 		})
 
