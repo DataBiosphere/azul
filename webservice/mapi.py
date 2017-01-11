@@ -459,7 +459,7 @@ def get_facets():
 @app.route('/files/summary')
 @cross_origin()
 def get_summary():
-	my_summary = {"fileCount": None, "totalFileSize": "DUMMY", "donorCount": None, "projectCount":None, "primarySite":"DUMMY"}
+	my_summary = {"fileCount": None, "totalFileSize": None, "donorCount": None, "projectCount":None, "primarySiteCount":"DUMMY"}
 	m_filters = request.args.get('filters')
 	
 	#Dictionary for getting a reference to the aggs key
@@ -540,6 +540,9 @@ def get_summary():
         		"min_doc_count" : 0,
                 "size" : 99999
         	}
+        },
+        "total_size":{
+                "sum" : { "field" : "fileSize" }
         }
         }})
 
@@ -548,7 +551,7 @@ def get_summary():
 	my_summary['fileCount'] = mText['hits']['total'] 
 	my_summary['donorCount'] = len(mText['aggregations']['donor']['buckets'])
 	my_summary['projectCount'] = len(mText['aggregations']['projectCode']['buckets'])
-
+        my_summary['totalFileSize'] = mText['aggregations']['total_size']['value']
 	#To remove once this endpoint has some functionality
 	return jsonify(my_summary)
 	#return "still working on this endpoint, updates soon!!"
