@@ -22,22 +22,22 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 			protoDict['hits'].append({
 			'id' : hit['_source']['file_id'],
 			'objectID' : hit['_source']['file_id'],
-			'access' : 'DUMMY',
+			'access' : hit['_source']['access'],
 			'center_name': hit['_source']['center_name'],
 			'study' : [hit['_source']['study']],
 			'dataCategorization' : {
-				'dataType' : hit['_source']['analysis_type'],
-				'experimentalStrategy' : hit['_source']['workflow']
+				'dataType' : hit['_source']['file_type'],
+				'experimentalStrategy' : hit['_source']['experimentalStrategy']#['workflow']
 			},
 			'fileCopies' : [{
 				'repoDataBundleId' : hit['_source']['repoDataBundleId'],
 				'repoDataSetIds' :[],
-				'repoCode' : 'DUMMY',
-				'repoOrg' : 'DUMMY',
-				'repoName' : 'DUMMY',
-				'repoType' : 'DUMMY',
-				'repoCountry' : 'DUMMY',
-				'repoBaseUrl' : 'DUMMY',
+				'repoCode' : hit['_source']['repoCode'],
+				'repoOrg' : hit['_source']['repoOrg'],
+				'repoName' : hit['_source']['repoName'],
+				'repoType' : hit['_source']['repoType'],
+				'repoCountry' : hit['_source']['repoCountry'],
+				'repoBaseUrl' : hit['_source']['repoBaseUrl'],
 				'repoDataPath' : '', ###Empty String
 				'repoMetadatapath' : '', ###Empty String
 				'fileName' : hit['_source']['title'],
@@ -51,7 +51,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 				'primarySite' : 'DUMMY',
 				'projectCode' : hit['_source']['project'],
 				'study' : hit['_source']['study'], ###
-				'sampleId' : hit['_source']['sampleId'], ###
+				'sampleId' : [hit['_source']['sampleId']], ###
 				'specimenType' : [hit['_source']['specimen_type']],
 				'submittedDonorId' : hit['_source']['submittedDonorId'], ###
 				'submittedSampleId' : [hit['_source']['submittedSampleId']], ###
@@ -64,7 +64,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 
 			'analysisMethod' : {
 				'analysisType' : hit['_source']['analysis_type'],
-				'software' : 'DUMMY'
+				'software' : hit['_source']['software']###
 			},
 			'referenceGenome' : {
 				'genomeBuild' : '', ###Blank String

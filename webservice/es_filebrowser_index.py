@@ -7,7 +7,7 @@
 #produces a fb_index.jsonl file to be added to elasticsearch
 
 #This takes the "validated.jsonl" file produced by the many scripts in the Fall Demo Script
-import jsonlines, ast, json, luigi, ssl
+import jsonlines, ast, json, luigi, ssl, argparse
 from elasticsearch import Elasticsearch
 from urllib import urlopen
 
@@ -18,6 +18,25 @@ es = Elasticsearch()
 redwood_host = 'storage.ucsc-cgl.org'#redwood_host = luigi.Parameter(default='storage.ucsc-cgl.org') # Put storage instead of storage2
 bundle_uuid_filename_to_file_uuid = {}
 #index_size = 0
+
+
+parser = argparse.ArgumentParser(description='Process options for the remaining index fields.')
+parser.add_argument('--access', dest='access', action='store',
+                    default='public', help='The access type for the files; <controlled | public>. Defaults to public.')
+parser.add_argument('--repoBaseUrl', dest='repoBaseUrl', action='store',
+                    default='storage.ucsc-cgl.org', help='The url for the storage system. Defaults to storage.ucsc-cgl.org')
+parser.add_argument('--repoCode', dest='repoCode', action='store',
+                    default='Redwood-AWS-Oregon', help='The code for the repo. Defaults to Redwood-AWS-Oregon')
+parser.add_argument('--repoCountry', dest='repoCountry', action='store',
+                    default='US', help='The country for the repo. Defaults to US')
+parser.add_argument('--repoName', dest='repoName', action='store',
+                    default='Redwood-AWS-Oregon', help='The name for the repo. Defaults to Redwood-AWS-Oregon')
+parser.add_argument('--repoOrg', dest='repoOrg', action='store',
+                    default='UCSC', help='The organization for the repo. Defaults to UCSC')
+parser.add_argument('--repoType', dest='repoType', action='store',
+                    default='Redwood', help='The type for the repo. Defaults to Redwood')
+#Get the arguments into args
+args = parser.parse_args()
 
 
 
@@ -95,6 +114,7 @@ with open("fb_index.jsonl", "w") as fb_index:
                   analysis_type = analys['analysis_type']
                   workflow = analys['workflow_name']
                   workflow_version = analys['workflow_version']
+                  software = analys['workflow_name']
                   #Bundle UUID
                   repoDataBundleId = ''
                   if 'bundle_uuid' in analys:
@@ -131,7 +151,9 @@ with open("fb_index.jsonl", "w") as fb_index:
                         'redwoodDonorUUID': redwoodDonorUUID, 'study':study, 'sampleId':sampleId, 'submittedSampleId':submittedSampleId,
                         'submittedDonorId': submittedDonorId, 'submittedSpecimenId':submittedSpecimenId,
                         'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
-                        'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId
+                        'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId, 'software':software,
+                        'access':args.access, 'repoBaseUrl':args.repoBaseUrl, 'repoCode':args.repoCode, 'repoCountry':args.repoCountry,
+                        'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType
                         }
                      except Exception, e:
                         print "Error with key:", str(e)

@@ -1,11 +1,104 @@
 #!/bin/bash
 #now=$(date +"%T")
+#Add shell script code
+
+access_token(){
+    access_token=$1
+}
+access(){
+    access=$1
+}
+repoBaseUrl(){
+    repoBaseUrl=$1
+}
+repoCode(){
+    repoCode=$1
+}
+repoCountry(){
+    repoCountry=$1
+}
+repoName(){
+    repoName=$1
+}
+repoOrg(){
+    repoOrg=$1
+}
+repoType(){
+    repoType=$1
+}
+helpmenu(){
+    echo "--help | -h for help 
+--access_token | -t for the access token 
+--access | -a for the access value 
+--repoBaseUrl | -u for the repo base url
+--repoCode | -c for the repo code
+--repoCountry | -u for the repo country
+--repoName | -n for the repo name
+--repoOrg | -o for the repo org
+--repoType | -y for the repo type
+"
+}
+ARGS=()
+empty_arg(){
+    if [[ -z "$1" ]]
+    then
+        echo "Missing value. Please enter a non-empty value"
+        exit
+    fi
+    ARGS+=($2 $1)
+    #echo ${ARGS[@]}
+}
+while [ ! $# -eq 0 ]
+do
+    case "$1" in
+        --help | -h)
+            helpmenu
+            exit
+            ;;
+        --access_token | -t)
+            # empty_arg $2 $1
+            access_token $2
+
+            ;;
+        --access | -a)
+            empty_arg $2 $1
+            access $2
+            ;;
+        --repoBaseUrl | -u)
+            empty_arg $2 $1
+            repoBaseUrl $2
+            ;;
+        --repoCode | -c)
+            empty_arg $2 $1
+            repoCode $2
+            ;;
+        --repoCountry | -u)
+            empty_arg $2 $1
+            repoCountry $2
+            ;;
+        --repoName | -n)
+            empty_arg $2 $1
+            repoName $2
+            ;;
+        --repoOrg | -o)
+            empty_arg $2 $1
+            repoOrg $2
+            ;;
+        --repoType | -y)
+            empty_arg $2 $1
+            repoType $2
+            ;;
+    esac
+    shift
+done
+
+
 #Go into the appropriate folder
 cd dcc-metadata-indexer
 #Activate the virtualenv
 source metadaindex/bin/activate
 #Download new data from Redwood; create ES .jsonl file
-python metadata_indexer.py --skip-program TEST --skip-project TEST  --storage-access-token 5f1017f0-d7e9-41c9-b9c4-b013b2ea3015  --client-path ../redwood-client/ucsc-storage-client/ --metadata-schema metadata_schema.json --server-host storage.ucsc-cgl.org > testfile.txt
+python metadata_indexer.py --skip-program TEST --skip-project TEST  --storage-access-token $access_token  --client-path ../redwood-client/ucsc-storage-client/ --metadata-schema metadata_schema.json --server-host storage.ucsc-cgl.org > testfile.txt
 deactivate
 ####Index the data in analysis_index. NOTE: Should check first that the schema will match.
 #curl -XDELETE http://localhost:9200/analysis_index
@@ -26,7 +119,7 @@ curl -XPOST http://localhost:9200/_aliases?pretty -d' { "actions" : [ { "remove"
 #Run the python script
 cd ../dcc-dashboard-service
 . env/bin/activate
-python2.7 es_filebrowser_index.py
+python2.7 es_filebrowser_index.py ${ARGS[@]}
 deactivate
 ###Store data in fb_buffer.
 #Delete and Create the fb_buffer, storing the mapping in it as well. 
