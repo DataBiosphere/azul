@@ -381,11 +381,14 @@ def get_manifest():
 	for hit in mText['hits']['hits']:
 		if '_source' in hit:
 			protoList.append(hit['_source'])
-			protoList[-1]['_analysis_type'] = protoList[-1].pop('analysis_type')
-			protoList[-1]['_center_name'] = protoList[-1].pop('center_name')
-			protoList[-1]['_file_id'] = protoList[-1].pop('file_id')
+			#protoList[-1]['_analysis_type'] = protoList[-1].pop('analysis_type')
+			#protoList[-1]['_center_name'] = protoList[-1].pop('center_name')
+			#protoList[-1]['_file_id'] = protoList[-1].pop('file_id')
 
 	#print protoList
+        with open("manifest.tsv", "w") as manifest:
+		manifest.write("Program\tProject\tCenter Name\tSubmitter Donor ID\tDonor UUID\tSubmitter Specimen ID\tSpecimen UUID\tSubmitter Specimen Type\tSubmitter Experimental Design\tSubmitter Sample ID\tSample UUID\tAnalysis Type\tWorkflow Name\tWorkflow Version\tFile Type\tFile Path\n")
+
 	return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
 
 
