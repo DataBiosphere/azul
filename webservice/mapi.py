@@ -632,6 +632,14 @@ def get_summary():
 	return jsonify(my_summary)
 	#return "still working on this endpoint, updates soon!!"
 	
+
+
+#This will return a search list 
+#Takes filters as parameter.
+@app.route('/keywords')
+@cross_origin()
+def get_search():
+	return "Comming soon!"
 	
 
 if __name__ == '__main__':
