@@ -64,7 +64,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 
 			'analysisMethod' : {
 				'analysisType' : hit['_source']['analysis_type'],
-				'software' : hit['_source']['software']###
+				'software' : hit['_source']['software']+':'+hit['_source']['workflowVersion']###  #Concatenated the version for the software/workflow
 			},
 			'referenceGenome' : {
 				'genomeBuild' : '', ###Blank String
@@ -105,7 +105,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 
 	return protoDict
 #This returns the agreggate terms and the list of hits from ElasticSearch
-@app.route('/files/')
+@app.route('/repository/files/')
 @cross_origin()
 def get_data():
 	print "Getting data"
@@ -207,7 +207,7 @@ def get_data():
 
 
 ###********************************TEST FOR THE PIECHARTS FACETS ENDPOINT**********************************************##
-@app.route('/files/piecharts')
+@app.route('/repository/files/piecharts')
 @cross_origin()
 def get_data_pie():
 	print "Getting data"
@@ -312,7 +312,7 @@ def get_data_pie():
 
 
 #Get the manifest. You need to pass on the filters
-@app.route('/files/export')
+@app.route('/repository/files/export')
 @cross_origin()
 def get_manifest():
 	m_filters = request.args.get('filters')
@@ -390,9 +390,21 @@ def get_manifest():
 
 
 #This will return a summary of the facets
-@app.route('/files/facets')
+@app.route('/repository/files/facets')
 @cross_origin()
 def get_facets():
+	
+	#Get the order of the keys for the facet list
+	f_order = []
+	d_order = []
+	with open('/var/www/html/dcc-dashboard-service/order_file') as file_order:
+		f_order = file_order.readlines()
+		f_order = [x.strip() for x in f_order]
+	with open('/var/www/html/dcc-dashboard-service/order_donor') as donor_order:
+                d_order = donor_order.readlines()
+                d_order = [x.strip() for x in d_order]
+	
+	 
 	#Search the aggregates.
 	#Parse them
 	#Return it as a JSON output.
@@ -440,7 +452,43 @@ def get_facets():
                 "min_doc_count" : 0,
                 "size" : 99999
             }
+        },
+        "study":{
+            "terms":{
+                "field" : "study",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "experimental_design":{
+            "terms":{
+                "field" : "experimentalStrategy",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "data_type":{
+            "terms":{
+                "field" : "file_type",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "repository":{
+            "terms":{
+                "field" : "repoName",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
+        },
+        "access_type":{
+            "terms":{
+                "field" : "access",
+                "min_doc_count" : 0,
+                "size" : 99999
+            }
         }
+
 
 
     }})
@@ -448,15 +496,30 @@ def get_facets():
 		facets_list["DonorLevel"]['project']['values'] = [x['key'] for x in mText['aggregations']['projectCode']['buckets']]
 		facets_list["DonorLevel"]['data_types_available']['values'] = [x['key'] for x in mText['aggregations']['fileFormat']['buckets']]
 		facets_list["DonorLevel"]['specimen_type']['values'] = [x['key'] for x in mText['aggregations']['specimenType']['buckets']]
+                facets_list["DonorLevel"]['study']['values'] = [x['key'] for x in mText['aggregations']['study']['buckets']]
+                facets_list["DonorLevel"]['experimental_design']['values'] = [x['key'] for x in mText['aggregations']['experimental_design']['buckets']]
+
 		facets_list["FileLevel"]['file_format']['values'] = [x['key'] for x in mText['aggregations']['fileFormat']['buckets']]
 		facets_list["FileLevel"]['specimen_type']['values'] = [x['key'] for x in mText['aggregations']['specimenType']['buckets']]
 		facets_list["FileLevel"]['workflow']['values'] = [x['key'] for x in mText['aggregations']['workFlow']['buckets']]
+                facets_list["FileLevel"]['repository']['values'] = [x['key'] for x in mText['aggregations']['repository']['buckets']]
+                facets_list["FileLevel"]['data_type']['values'] = [x['key'] for x in mText['aggregations']['data_type']['buckets']]
+                facets_list["FileLevel"]['experimental_design']['values'] = [x['key'] for x in mText['aggregations']['experimental_design']['buckets']]
+                facets_list["FileLevel"]['access_type']['values'] = [x['key'] for x in mText['aggregations']['access_type']['buckets']]
 
-	return jsonify(facets_list)
+
+	array_facet_list = {'DonorLevel':[], 'FileLevel':[]}
+	for x in f_order:
+		array_facet_list['FileLevel'].append({x:facets_list["FileLevel"][x]})
+	for x in d_order:
+                array_facet_list['DonorLevel'].append({x:facets_list["DonorLevel"][x]})
+		 
+	return jsonify(array_facet_list)
+	#return jsonify(facets_list)
 
 #This will return a summary as the one from the ICGC endpoint
 #Takes filters as parameter. 
-@app.route('/files/summary')
+@app.route('/repository/files/summary')
 @cross_origin()
 def get_summary():
 	my_summary = {"fileCount": None, "totalFileSize": None, "donorCount": None, "projectCount":None, "primarySiteCount":"DUMMY"}
