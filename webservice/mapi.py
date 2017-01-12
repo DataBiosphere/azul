@@ -384,12 +384,22 @@ def get_manifest():
 			#protoList[-1]['_analysis_type'] = protoList[-1].pop('analysis_type')
 			#protoList[-1]['_center_name'] = protoList[-1].pop('center_name')
 			#protoList[-1]['_file_id'] = protoList[-1].pop('file_id')
+	goodFormatList = []
+	goodFormatList.append(['Program', 'Project', 'File ID','Center Name', 'Submitter Donor ID', 'Donor UUID', 'Submitter Specimen ID', 'Specimen UUID', 'Submitter Specimen Type', 'Submitter Experimental Design', 'Submitter Sample ID', 'Sample UUID', 'Analysis Type', 'Workflow Name', 'Workflow Version', 'File Type', 'File Path'])
+	for row in protoList:
+		currentRow = [row['program'], row['project'], row['file_id'], row['center_name'], row['submittedDonorId'], row['donor'], row['submittedSpecimenId'], row['specimenUUID'], row['specimen_type'], row['experimentalStrategy'], row['submittedSampleId'], row['sampleId'], row['analysis_type'], row['software'], row['workflowVersion'], row['file_type'], row['title']]
+		goodFormatList.append(currentRow)
+		#pass
+	
 
 	#print protoList
-        with open("manifest.tsv", "w") as manifest:
-		manifest.write("Program\tProject\tCenter Name\tSubmitter Donor ID\tDonor UUID\tSubmitter Specimen ID\tSpecimen UUID\tSubmitter Specimen Type\tSubmitter Experimental Design\tSubmitter Sample ID\tSample UUID\tAnalysis Type\tWorkflow Name\tWorkflow Version\tFile Type\tFile Path\n")
+        #with open("manifest.tsv", "w") as manifest:
+		#manifest.write("Program\tProject\tCenter Name\tSubmitter Donor ID\tDonor UUID\tSubmitter Specimen ID\tSpecimen UUID\tSubmitter Specimen Type\tSubmitter Experimental Design\tSubmitter Sample ID\tSample UUID\tAnalysis Type\tWorkflow Name\tWorkflow Version\tFile Type\tFile Path\n")
+		#my_file = manifest
 
-	return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
+	return excel.make_response_from_array(goodFormatList, 'tsv', file_name='manifest')
+
+	#return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
 
 
 #This will return a summary of the facets

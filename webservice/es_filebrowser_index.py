@@ -106,6 +106,7 @@ with open("fb_index.jsonl", "w") as fb_index:
             specimen_type = speci['submitter_specimen_type']
             submitter_experimental_design = speci['submitter_experimental_design'] #Get the 'experimentalStrategy'
             submittedSpecimenId = speci['submitter_specimen_id']
+            specimenUUID = speci['specimen_uuid']
             for sample in speci['samples']:
               sampleId = sample['sample_uuid']
               submittedSampleId = sample['submitter_sample_id']
@@ -153,7 +154,7 @@ with open("fb_index.jsonl", "w") as fb_index:
                         'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
                         'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId, 'software':software,
                         'access':args.access, 'repoBaseUrl':args.repoBaseUrl, 'repoCode':args.repoCode, 'repoCountry':args.repoCountry,
-                        'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType
+                        'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID
                         }
                      except Exception, e:
                         print "Error with key:", str(e)
