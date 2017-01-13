@@ -634,11 +634,111 @@ def get_summary():
 	
 
 
+###Methods for executing the search endpoint
+#Searches keywords in the fb_alias index 
+def searchFile(_query, _filters, _from, _size):
+	#Body of the query search
+	query_body = {"query_string":{"query":_query}}
+	if not bool(_filters):
+		body = {"query": query_body}
+	else:
+		body = {"query": query_body, "post_filter":_filters}
+	
+	mResult = es.search(index='fb_alias', body=body, from_=_from, size=_size)
+
+	#Now you have the brute results from the ES query. All you need to do now is to parse the data 
+	#and put it in a pretty dictionary, and return the sucker.
+
+	#This variable will hold the response to be returned
+	searchResults = {"hits":[], "pagination":{}}
+
+	for hit in mResult['hits']['hits']:
+		if '_source' in hit:
+			searchResults['hits'].append({
+					"id": hit['_source']['file_id'],
+					"type": "file",
+					"donorId":[hit['_source']['redwoodDonorUUID']],
+					"fileName":[hit['_source']['title']],
+					"dataType": hit['_source']['file_type'],
+					"projectCode":[hit['_source']['project']],
+					#"fileObjectId": hit['_source']['file_type'], #Probabbly we don't have this
+					"fileBundleId": hit['_source']['repoDataBundleId']
+				})
+
+
+#Searches keywords in the analysis_index
+def searchDonors(_query, _filters, _from, _size):
+	#Body of the query search
+	query_body = {"query_string":{"query":_query}}
+	if not bool(_filters):
+		body = {"query": query_body}
+	else:
+		body = {"query": query_body, "post_filter":_filters}
+	
+	mResult = es.search(index='analysis_index', body=body, from_=_from, size=_size)
+
+	#Now you have the brute results from the ES query. All you need to do now is to parse the data 
+	#and put it in a pretty dictionary, and return the sucker.
+
+
 #This will return a search list 
 #Takes filters as parameter.
 @app.route('/keywords')
 @cross_origin()
 def get_search():
+	#Get the parameters
+	m_Query = request.args.get('q')
+	m_filters = request.args.get('filters')
+	m_From = request.args.get('from', 1, type=int)
+	m_Size = request.args.get('size', 5, type=int)
+	m_Type = request.args.get('type', 'file')
+	#Won't implement this one just yet. 
+	m_Field = request.args.get('field', 'file')
+
+	#References 
+	referenceAggs = {}
+	inverseAggs = {}
+	with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+	#with open('reference_aggs.json') as my_aggs:
+		referenceAggs = json.load(my_aggs)
+
+	with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+	#with open('inverse_aggs.json') as my_aggs:
+		inverseAggs = json.load(my_aggs)
+	#Get the filters in an appropriate format
+	try:
+		m_filters = ast.literal_eval(m_filters)
+		#Check if the string is in the other format. Change it as appropriate.
+		for key, value in m_filters['file'].items():
+			if key in referenceAggs:
+				corrected_term = referenceAggs[key]
+				#print corrected_term
+				m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+				#print m_filters
+
+		#Functions for calling the appropriates query filters
+		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
+		filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
+		filterQuery = {"bool":{"must":filt_list}} #Removed the brackets; Make sure it doesn't break anything down the line
+
+
+	except Exception, e:
+		print str(e)
+		m_filters = None
+		filterQuery = {}
+
+
+	if not m_Query:
+		return "Query is Empty. Change this to an empty array"
+	if m_Type == 'file':
+		searchFile(m_Query, filterQuery, m_From, m_Size)
+
+	elif m_Type == 'file-donor':
+		searchDonors(m_Query, filterQuery, m_From, m_Size)
+
+	#Need to have two methods. One executes depending on whether the type is either 'file' or 'file-donor'
+	
+
 	return "Comming soon!"
 	
 
