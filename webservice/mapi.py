@@ -647,7 +647,7 @@ def searchFile(_query, _filters, _from, _size):
 	mResult = es.search(index='fb_alias', body=body, from_=_from, size=_size)
 
 	#Now you have the brute results from the ES query. All you need to do now is to parse the data 
-	#and put it in a pretty dictionary, and return the sucker.
+	#and put it in a pretty dictionary, and return it.
 
 	#This variable will hold the response to be returned
 	searchResults = {"hits":[], "pagination":{}}
@@ -665,6 +665,17 @@ def searchFile(_query, _filters, _from, _size):
 					"fileBundleId": hit['_source']['repoDataBundleId']
 				})
 
+	searchResults['pagination']['count'] = len(mResult['hits']['hits'])
+	searchResults['pagination']['total'] = mResult['hits']['total']
+	searchResults['pagination']['size'] = _size
+	searchResults['pagination']['from'] = _from
+	searchResults['pagination']['page'] = (_from/(_size))+1
+	searchResults['pagination']['pages'] = -(-mResult['hits']['total'] // _size)
+	searchResults['pagination']['sort'] = "_score" #Will alaways be sorted by score
+	searchResults['pagination']['order'] = "desc" #Will always be descendent order
+
+	return searchResults
+
 
 #Searches keywords in the analysis_index
 def searchDonors(_query, _filters, _from, _size):
@@ -678,7 +689,40 @@ def searchDonors(_query, _filters, _from, _size):
 	mResult = es.search(index='analysis_index', body=body, from_=_from, size=_size)
 
 	#Now you have the brute results from the ES query. All you need to do now is to parse the data 
-	#and put it in a pretty dictionary, and return the sucker.
+	#and put it in a pretty dictionary, and return it.
+	searchResults = {"hits":[]}
+	reader = [x['_source'] for x in mResult['hits']['hits']]
+	for obj in reader:
+		donorEntry = {}
+		donor_id = obj['donor_uuid'] #This is the id
+		donor_type = 'donor' #this is the type
+		donor_submitteId = obj['submitter_donor_id'] #This is the submittedId
+		#This are the scpecimen and sample lists. 
+		donor_specimenIds = []
+		donor_submitteSpecimenIds = []
+		donor_sampleIds = []
+		donor_submitteSampleIds = []
+		#Iterate through the specimens
+		for speci in obj['specimen']:
+			donor_specimenIds.append(speci['specimen_uuid'])
+			donor_submitteSpecimenIds.append(speci['submitter_specimen_id'])
+			for sample in speci['samples']:
+				donor_sampleIds.append(sample['sample_uuid'])
+				donor_submitteSampleIds.append(sample['submitter_sample_id'])
+
+		donorEntry['id'] = donor_id
+		donorEntry['type'] = donor_type
+		donorEntry['submittedId'] = donor_submitteId
+		donorEntry['specimenIds'] = donor_specimenIds
+		donorEntry['submittedSpecimenIds'] = donor_submitteSpecimenIds
+		donorEntry['sampleIds'] = donor_sampleIds
+		donorEntry['submittedSampleIds'] = donor_submitteSampleIds
+
+		searchResults['hits'].append(donorEntry)
+
+	return searchResults
+
+
 
 
 #This will return a search list 
@@ -698,6 +742,10 @@ def get_search():
 	#References 
 	referenceAggs = {}
 	inverseAggs = {}
+
+	#Holder for the keyword result
+	keywordResult = {}
+
 	with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
 	#with open('reference_aggs.json') as my_aggs:
 		referenceAggs = json.load(my_aggs)
@@ -727,19 +775,22 @@ def get_search():
 		m_filters = None
 		filterQuery = {}
 
-
+	#If the query is empty
 	if not m_Query:
-		return "Query is Empty. Change this to an empty array"
+		keywordResult = {'hits':[]}
+		#return "Query is Empty. Change this to an empty array"
+	#If the query is for files
 	if m_Type == 'file':
-		searchFile(m_Query, filterQuery, m_From, m_Size)
+		keywordResult = searchFile(m_Query, filterQuery, m_From, m_Size)
 
+	#If the query is for donors
 	elif m_Type == 'file-donor':
-		searchDonors(m_Query, filterQuery, m_From, m_Size)
+		keywordResult = searchDonors(m_Query, filterQuery, m_From, m_Size)
 
 	#Need to have two methods. One executes depending on whether the type is either 'file' or 'file-donor'
 	
-
-	return "Comming soon!"
+	return jsonify(keywordResult)
+	#return "Comming soon!"
 	
 
 if __name__ == '__main__':
