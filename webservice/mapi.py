@@ -648,7 +648,7 @@ def searchFile(_query, _filters, _from, _size):
 
 	#Now you have the brute results from the ES query. All you need to do now is to parse the data 
 	#and put it in a pretty dictionary, and return it.
-
+		
 	#This variable will hold the response to be returned
 	searchResults = {"hits":[], "pagination":{}}
 
@@ -742,7 +742,7 @@ def get_search():
 	#References 
 	referenceAggs = {}
 	inverseAggs = {}
-
+	m_From -=1
 	#Holder for the keyword result
 	keywordResult = {}
 
