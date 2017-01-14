@@ -791,6 +791,19 @@ def get_search():
 	
 	return jsonify(keywordResult)
 	#return "Comming soon!"
+
+
+#This will simply return the desired order of the facets 
+#Takes filters as parameter.
+@app.route('/repository/files/order')
+@cross_origin()
+def get_order2():
+        with open('/var/www/html/dcc-dashboard-service/order_config') as my_aggs:
+        #with open('reference_aggs.json') as my_aggs:
+                #referenceAggs = json.load(my_aggs)
+		order = [line.rstrip('\n') for line in my_aggs]
+	return jsonify({'order': order })
+
 	
 
 if __name__ == '__main__':

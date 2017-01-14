@@ -57,7 +57,8 @@ def requires():
             metadata_struct = json.loads(json_str)
             for file_hash in metadata_struct["content"]:
                 bundle_uuid_filename_to_file_uuid[file_hash["gnosId"]+"_"+file_hash["fileName"]] = file_hash["id"]
-        # print bundle_uuid_filename_to_file_uuid
+
+        #print bundle_uuid_filename_to_file_uuid
         # index_size = len(bundle_uuid_filename_to_file_uuid)
         # print index_size #TEST        
 
