@@ -98,7 +98,7 @@ cd dcc-metadata-indexer
 #Activate the virtualenv
 source metadaindex/bin/activate
 #Download new data from Redwood; create ES .jsonl file
-python metadata_indexer.py --skip-program TEST --skip-project TEST  --storage-access-token $access_token  --client-path ../redwood-client/ucsc-storage-client/ --metadata-schema metadata_schema.json --server-host storage.ucsc-cgl.org > testfile.txt
+python metadata_indexer.py --skip-program TEST --skip-project TEST  --storage-access-token $access_token  --client-path ../redwood-client/ucsc-storage-client/ --metadata-schema metadata_schema.json --server-host storage.ucsc-cgl.org --skip-uuid-directory redacted > testfile.txt
 deactivate
 ####Index the data in analysis_index. NOTE: Should check first that the schema will match.
 #curl -XDELETE http://localhost:9200/analysis_index
