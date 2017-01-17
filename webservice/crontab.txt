@@ -1,1 +1,1 @@
-00 * * * * ./dcc-dashboard-service/instructions.sh  
+00 * * * * ./dcc-dashboard-service/instructions.sh && cd && cp `pwd`/dcc-metadata-indexer/validated.jsonl `pwd`/dcc-dashboard/ && gzip `pwd`/dcc-dashboard/validated.jsonl 
