@@ -814,7 +814,7 @@ def get_order3():
                	order_donor = [{'name':line.rstrip('\n'), 'category':'donor'} for line in my_aggs]
 			#order = [line.rstrip('\n') for line in my_aggs]
 
-		with open('/var/www/html/dcc-dashboard-service/f_file') as my_aggs:
+	with open('/var/www/html/dcc-dashboard-service/f_file') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
                 #referenceAggs = json.load(my_aggs)
                 order_file = [{'name':line.rstrip('\n'), 'category':'file'} for line in my_aggs]
