@@ -801,9 +801,28 @@ def get_order2():
         with open('/var/www/html/dcc-dashboard-service/order_config') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
                 #referenceAggs = json.load(my_aggs)
-		order = [line.rstrip('\n') for line in my_aggs]
+			order = [line.rstrip('\n') for line in my_aggs]
 	return jsonify({'order': order })
 
+
+@app.route('/repository/files/meta')
+@cross_origin()
+def get_order3():
+        with open('/var/www/html/dcc-dashboard-service/f_donor') as my_aggs:
+        #with open('reference_aggs.json') as my_aggs:
+                #referenceAggs = json.load(my_aggs)
+               	order_donor = [{'name':line.rstrip('\n'), 'category':'donor'} for line in my_aggs]
+			#order = [line.rstrip('\n') for line in my_aggs]
+
+		with open('/var/www/html/dcc-dashboard-service/f_file') as my_aggs:
+        #with open('reference_aggs.json') as my_aggs:
+                #referenceAggs = json.load(my_aggs)
+                order_file = [{'name':line.rstrip('\n'), 'category':'file'} for line in my_aggs]
+			#order = [line.rstrip('\n') for line in my_aggs]
+
+	order_final = order_file + order_donor
+
+	return jsonify(order_final)
 	
 
 if __name__ == '__main__':
