@@ -25,6 +25,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 			'access' : hit['_source']['access'],
 			'center_name': hit['_source']['center_name'],
 			'study' : [hit['_source']['study']],
+			'program': hit['_source']['program'], ###Added source
 			'dataCategorization' : {
 				'dataType' : hit['_source']['file_type'],
 				'experimentalStrategy' : hit['_source']['experimentalStrategy']#['workflow']
@@ -116,6 +117,7 @@ def get_data():
 	m_Size = request.args.get('size', 5, type=int)
 	m_Sort = request.args.get('sort', 'center_name')
 	m_Order = request.args.get('order', 'desc')
+	m_Include = request.args.get('include', 'facets') #Need to work on this parameter
 
 	#Didctionary for getting a reference to the aggs key
 	#referenceAggs = {"centerName":"center_name", "projectCode":"project", "specimenType":"specimen_type", "fileFormat":"file_type", "workFlow":"workflow", "analysisType":"analysis_type", "program":"program"}
