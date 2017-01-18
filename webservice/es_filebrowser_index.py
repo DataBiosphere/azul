@@ -59,6 +59,17 @@ def requires():
                 bundle_uuid_filename_to_file_uuid[file_hash["gnosId"]+"_"+file_hash["fileName"]] = file_hash["id"]
 
         #print bundle_uuid_filename_to_file_uuid
+                # HACK!!!  Please remove once the behavior has been fixed in the workflow!!
+                if file_hash["fileName"].endswith(".sortedByCoord.md.bam"):
+                    bundle_uuid_filename_to_file_uuid[file_hash["gnosId"] + "_sortedByCoord.md.bam"] = file_hash[
+                        "id"]
+                if file_hash["fileName"].endswith(".tar.gz"):
+                    bundle_uuid_filename_to_file_uuid[file_hash["gnosId"] + "_tar.gz"] = file_hash[
+                        "id"]
+                if file_hash["fileName"].endswith(".wiggle.bg"):
+                    bundle_uuid_filename_to_file_uuid[file_hash["gnosId"] + "_wiggle.bg"] = file_hash[
+                        "id"]
+        # print bundle_uuid_filename_to_file_uuid
         # index_size = len(bundle_uuid_filename_to_file_uuid)
         # print index_size #TEST        
 
@@ -159,7 +170,50 @@ with open("fb_index.jsonl", "w") as fb_index:
                         }
                      except Exception, e:
                         print "Error with key:", str(e)
-                        continue
+                        try:
+                            # HACK!!!! needs to be removed once the workflow is fixed
+                            if title.endswith(".sortedByCoord.md.bam"):
+                                udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor,
+                                         'specimen_type': specimen_type, 'analysis_type': analysis_type,
+                                         'workflow': workflow, 'download_id': download_id, 'file_type': file_type,
+                                         'title': title,
+                                         'file_id': bundle_uuid_filename_to_file_uuid[download_id + '_sortedByCoord.md.bam'], 'experimentalStrategy': submitter_experimental_design,
+                                         'redwoodDonorUUID': redwoodDonorUUID, 'study':study, 'sampleId':sampleId, 'submittedSampleId':submittedSampleId,
+                                         'submittedDonorId': submittedDonorId, 'submittedSpecimenId':submittedSpecimenId,
+                                         'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
+                                         'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId, 'software':software,
+                                         'access':args.access, 'repoBaseUrl':args.repoBaseUrl, 'repoCode':args.repoCode, 'repoCountry':args.repoCountry,
+                                         'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID
+                                         }
+                            if title.endswith(".tar.gz"):
+                                udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor,
+                                         'specimen_type': specimen_type, 'analysis_type': analysis_type,
+                                         'workflow': workflow, 'download_id': download_id, 'file_type': file_type,
+                                         'title': title,
+                                         'file_id': bundle_uuid_filename_to_file_uuid[download_id + '_tar.gz'], 'experimentalStrategy': submitter_experimental_design,
+                                         'redwoodDonorUUID': redwoodDonorUUID, 'study':study, 'sampleId':sampleId, 'submittedSampleId':submittedSampleId,
+                                         'submittedDonorId': submittedDonorId, 'submittedSpecimenId':submittedSpecimenId,
+                                         'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
+                                         'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId, 'software':software,
+                                         'access':args.access, 'repoBaseUrl':args.repoBaseUrl, 'repoCode':args.repoCode, 'repoCountry':args.repoCountry,
+                                         'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID
+                                         }
+                            if title.endswith(".wiggle.bg"):
+                                udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor,
+                                         'specimen_type': specimen_type, 'analysis_type': analysis_type,
+                                         'workflow': workflow, 'download_id': download_id, 'file_type': file_type,
+                                         'title': title,
+                                         'file_id': bundle_uuid_filename_to_file_uuid[download_id + '_wiggle.bg'], 'experimentalStrategy': submitter_experimental_design,
+                                         'redwoodDonorUUID': redwoodDonorUUID, 'study':study, 'sampleId':sampleId, 'submittedSampleId':submittedSampleId,
+                                         'submittedDonorId': submittedDonorId, 'submittedSpecimenId':submittedSpecimenId,
+                                         'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
+                                         'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId, 'software':software,
+                                         'access':args.access, 'repoBaseUrl':args.repoBaseUrl, 'repoCode':args.repoCode, 'repoCountry':args.repoCountry,
+                                         'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID
+                                         }
+                        except Exception, e:
+                            print "Second Error with key, giving up:", str(e)
+                            continue
                           
                      # adict = ast.literal_eval(json.dumps(udict))
                      adict = json.dumps(udict)
