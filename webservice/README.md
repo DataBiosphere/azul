@@ -290,7 +290,7 @@ Currently there are 6 parameters supported. They are as follows:<br>
 <br>
 
 ***API Instructions; /keywords***<br>
-Currently there are 6 parameters supported. They are as follows:<br>
+Currently there are 5 parameters supported. They are as follows:<br>
 <table width="100%">
   <tbody>
     <tr>
