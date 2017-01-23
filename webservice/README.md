@@ -2,17 +2,19 @@
 Simple Flask web service to communicate with ElasticSearch and output the list of results in JSON format. <br>
 There are currently five working endpoints:
 <ul>
-<li>/repository/files/ returns the index search results along with a count of the terms available for the facets.</li>
-<li>/repository/files/summary returns a summary of the current data stored.</li>
-<li>/repository/files/export returns a manifest file with the filters provided.</li>
-<li>/repository/files/meta returns the desired order for the facets.</li>
-<li>/keywords returns a list of search results for some search query.</li>
+<li>"<code>/repository/files/</code>" returns the index search results along with a count of the terms available for the facets.</li>
+<li>"<code>/repository/files/summary</code>" returns a summary of the current data stored.</li>
+<li>"<code>/repository/files/export</code>" returns a manifest file with the filters provided.</li>
+<li>"<code>/repository/files/meta</code>" returns the desired order for the facets.</li>
+<li>"<code>/keywords</code>" returns a list of search results for some search query.</li>
 </ul>
 
 <h2>Developer Installation Instructions</h2>
 ##Assumptions 
--You have Elasticsearch 5.0.0 installed in your machine.
--You have virtualenv installed in your machine. 
+<ul>
+<li>You have Elasticsearch 5.0.0 installed in your machine.</li>
+<li>You have virtualenv installed in your machine. </li>
+</ul>
 
 If you don’t have virtualenv installed, you can do so by running:
 ```
