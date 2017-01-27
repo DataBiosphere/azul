@@ -1,0 +1,101 @@
+{
+        "centerName" : {
+            "filter":{
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field" : "center_name",
+            
+                        "size" : 99999
+                }
+              }
+            }
+       
+        },
+        "projectCode":{
+
+            "filter":{
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field" : "project",
+                       
+                        "size" : 99999
+                }
+              }
+            }
+        },
+        "specimenType":{
+            "filter":{
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field" : "specimen_type",
+                       
+                        "size" : 99999
+                }
+              }
+            }
+        },
+        "fileFormat":{
+
+            "filter":{
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field" : "file_type",
+                     
+                        "size" : 99999
+                }
+              }
+            }
+        },
+        "workFlow":{
+
+            "filter":{
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field" : "workflow",
+                 
+                        "size" : 99999
+                }
+              }
+            }
+        },
+        "analysisType":{
+
+            "filter":{
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field" : "analysis_type",
+                     
+                        "size" : 99999
+                }
+              }
+            }
+        },
+        "program":{
+
+            "filter":{
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field" : "program",
+                     
+                        "size" : 99999
+                }
+              }
+            }
+        }
+
+
+}
