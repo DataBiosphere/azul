@@ -2,34 +2,13 @@ from flask import Flask
 import os
 from extensions import sqlalchemy, elasticsearch, scheduler, migrate
 from views import app_bp
-from tasks import *
+import tasks
 
 import logging
 logging.basicConfig()
 
 # import json
 class Config(object):
-    JOBS = [
-        # Runs once a day at 12:02 AM, is responsible for daily
-        # integrating budgets and updating them
-        {'id': 'closeMonthlyBills',
-         'func': '{}:close_out_billings'.format(__name__),
-         'trigger': 'cron',
-         'args': (),
-         'minute': '2',
-         # run this 2 minutes later than updateDailyBilling so we close things out correctly
-         'hour': '0',
-         'day': '1'},
-
-        # Runs once a month at midnight UTC on the first day of the month
-        {'id': 'updateDailyBilling',
-         'func': '{}:generate_daily_reports'.format(__name__),
-         'trigger': 'cron',
-         'args': (),
-         'minute': '0',
-         'hour': '0',
-         }
-    ]
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
 
 # start scheduler, this is an alternative to using celery, supports cron
@@ -43,6 +22,7 @@ def create_app(config_object=Config):
     app.config.from_object(config_object)
     register_extensions(app)
     register_blueprints(app)
+    add_commands(app)
     return app
 
 def register_extensions(app):
@@ -54,3 +34,7 @@ def register_extensions(app):
 
 def register_blueprints(app):
     app.register_blueprint(app_bp)
+
+def add_commands(app):
+    app.cli.add_command(tasks.generate_daily_reports)
+    app.cli.add_command(tasks.close_out_billings)

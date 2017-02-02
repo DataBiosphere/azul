@@ -90,3 +90,7 @@ ENV/
 
 # Pycharm
 .idea/
+
+validated.jsonl
+.*.swp
+.*.swo

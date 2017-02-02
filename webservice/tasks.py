@@ -1,17 +1,18 @@
 from extensions import sqlalchemy, elasticsearch
 import datetime
 from datetime import timedelta
-from utility import make_bills
+from utility import get_compute_costs, get_storage_costs
 from models import Billing
 import calendar
 from decimal import Decimal
 import logging
+import click
 
 
 def get_projects_list():
     from app import app
     with app.app_context():
-        es_resp = elasticsearch.search(index='analysis_index', body={"query": {"match_all": {}}, "aggs": {
+        es_resp = elasticsearch.search(index='billing_idx', body={"query": {"match_all": {}}, "aggs": {
             "projects":{
                 "terms":{
                     "field": "project.keyword",
@@ -37,9 +38,7 @@ def make_search_filter_query(timefrom, timetil, project):
     with app.app_context():
         timestartstring = timefrom.strftime('%Y-%m-%dT%H:%M:%S')
         timeendstring = timetil.strftime('%Y-%m-%dT%H:%M:%S')
-        print(timestartstring)
-        print(timeendstring)
-        es_resp = elasticsearch.search(index='analysis_index', body={
+        es_resp = elasticsearch.search(index='billing_idx', body={
             "query": {
                 "bool": {
                     "must": [
@@ -115,7 +114,7 @@ def make_search_filter_query(timefrom, timetil, project):
 
 def get_previous_file_sizes (timefrom, project):
     timestartstring = timefrom.strftime('%Y-%m-%dT%H:%M:%S')
-    es_resp = elasticsearch.search(index='analysis_index', body={
+    es_resp = elasticsearch.search(index='billing_idx', body={
         "query": {
             "bool": {
                 "must": [
@@ -157,7 +156,7 @@ def get_months_uploads(project, timefrom, timetil):
     with app.app_context():
         timestartstring = timefrom.strftime('%Y-%m-%dT%H:%M:%S')
         timeendstring = timetil.strftime('%Y-%m-%dT%H:%M:%S')
-        es_resp = elasticsearch.search(index='analysis_index', body =
+        es_resp = elasticsearch.search(index='billing_idx', body =
         {
             "query": {
                 "bool": {
@@ -172,7 +171,7 @@ def get_months_uploads(project, timefrom, timetil):
                         },
                         {
                             "term": {
-                                "project.keyword": "TEST"
+                                "project.keyword": project
                             }
                         }
                     ]
@@ -202,6 +201,7 @@ def get_months_uploads(project, timefrom, timetil):
         }, size=0)
         return es_resp
 
+@click.command()
 def generate_daily_reports():
     #need to pass app context around because of how flask works
 
@@ -217,15 +217,18 @@ def generate_daily_reports():
         for project in projects:
             file_size = get_previous_file_sizes(monthstart, project=project)
             this_months_files = get_months_uploads(project, monthstart, utcnow)
-            cost = make_bills(make_search_filter_query(monthstart, utcnow, project), file_size, portion_of_month,
+            compute_costs = get_compute_costs(make_search_filter_query(monthstart,utcnow,project))
+            storage_costs = get_storage_costs( file_size, portion_of_month,
                               this_months_files, utcnow, daysinmonth*3600*24)
             bill = Billing.query.filter(Billing.project == project).filter(Billing.start_date == monthstart).first()
             if bill:
-                bill.update(cost=cost, end_date=utcnow)
+                bill.update(compute_cost=compute_costs, storage_cost=storage_costs, end_date=utcnow)
             else:
-                Billing.create(cost=cost, start_date=monthstart, end_date=utcnow, project=project, closed_out=False)
+                Billing.create(compute_cost=compute_costs, storage_cost=storage_costs, start_date=monthstart,\
+                               end_date=utcnow, project=project, closed_out=False)
 
 
+@click.command()
 def close_out_billings():
     #need to pass app context around because of how flask works
     from app import app
