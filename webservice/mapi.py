@@ -1,6 +1,6 @@
 from flask import Flask
 import os
-from extensions import sqlalchemy, elasticsearch, scheduler, migrate
+from extensions import sqlalchemy, elasticsearch, migrate
 from views import app_bp
 import tasks
 
@@ -27,8 +27,6 @@ def create_app(config_object=Config):
 
 def register_extensions(app):
     sqlalchemy.init_app(app)
-    scheduler.init_app(app)
-    scheduler.start()
     migrate.init_app(app, sqlalchemy)
     elasticsearch.init_app(app)
 
