@@ -35,4 +35,3 @@ def register_blueprints(app):
 
 def add_commands(app):
     app.cli.add_command(tasks.generate_daily_reports)
-    app.cli.add_command(tasks.close_out_billings)
