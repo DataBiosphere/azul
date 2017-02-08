@@ -166,7 +166,7 @@ with open("fb_index.jsonl", "w") as fb_index:
                         'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
                         'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId, 'software':software,
                         'access':args.access, 'repoBaseUrl':args.repoBaseUrl, 'repoCode':args.repoCode, 'repoCountry':args.repoCountry,
-                        'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID
+                        'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID, 'metadataJson':bundle_uuid_filename_to_file_uuid[download_id+'_metadata.json']
                         }
                      except Exception, e:
                         print "Error with key:", str(e)
@@ -183,7 +183,7 @@ with open("fb_index.jsonl", "w") as fb_index:
                                          'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
                                          'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId, 'software':software,
                                          'access':args.access, 'repoBaseUrl':args.repoBaseUrl, 'repoCode':args.repoCode, 'repoCountry':args.repoCountry,
-                                         'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID
+                                         'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID, 'metadataJson':bundle_uuid_filename_to_file_uuid[download_id+'_metadata.json']
                                          }
                             if title.endswith(".tar.gz"):
                                 udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor,
@@ -196,7 +196,7 @@ with open("fb_index.jsonl", "w") as fb_index:
                                          'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
                                          'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId, 'software':software,
                                          'access':args.access, 'repoBaseUrl':args.repoBaseUrl, 'repoCode':args.repoCode, 'repoCountry':args.repoCountry,
-                                         'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID
+                                         'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID, 'metadataJson':bundle_uuid_filename_to_file_uuid[download_id+'_metadata.json']
                                          }
                             if title.endswith(".wiggle.bg"):
                                 udict = {'center_name': center_name, 'project': project, 'program': program, 'donor': donor,
@@ -209,7 +209,7 @@ with open("fb_index.jsonl", "w") as fb_index:
                                          'fileSize':fileSize, 'fileMd5sum':fileMd5sum, 'workflowVersion': workflow_version,
                                          'lastModified':lastModified, 'repoDataBundleId':repoDataBundleId, 'software':software,
                                          'access':args.access, 'repoBaseUrl':args.repoBaseUrl, 'repoCode':args.repoCode, 'repoCountry':args.repoCountry,
-                                         'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID
+                                         'repoName':args.repoName, 'repoOrg':args.repoOrg, 'repoType':args.repoType, 'specimenUUID':specimenUUID, 'metadataJson':bundle_uuid_filename_to_file_uuid[download_id+'_metadata.json']
                                          }
                         except Exception, e:
                             print "Second Error with key, giving up:", str(e)

@@ -387,9 +387,9 @@ def get_manifes_newt():
 			#protoList[-1]['_center_name'] = protoList[-1].pop('center_name')
 			#protoList[-1]['_file_id'] = protoList[-1].pop('file_id')
 	goodFormatList = []
-	goodFormatList.append(['Program', 'Project', 'File ID','Center Name', 'Submitter Donor ID', 'Donor UUID', 'Submitter Specimen ID', 'Specimen UUID', 'Submitter Specimen Type', 'Submitter Experimental Design', 'Submitter Sample ID', 'Sample UUID', 'Analysis Type', 'Workflow Name', 'Workflow Version', 'File Type', 'File Path'])
+	goodFormatList.append(['Program', 'Project', 'File ID','Center Name', 'Submitter Donor ID', 'Donor UUID', 'Submitter Specimen ID', 'Specimen UUID', 'Submitter Specimen Type', 'Submitter Experimental Design', 'Submitter Sample ID', 'Sample UUID', 'Analysis Type', 'Workflow Name', 'Workflow Version', 'File Type', 'File Path', 'Bundle UUID'])
 	for row in protoList:
-		currentRow = [row['program'], row['project'], row['file_id'], row['center_name'], row['submittedDonorId'], row['donor'], row['submittedSpecimenId'], row['specimenUUID'], row['specimen_type'], row['experimentalStrategy'], row['submittedSampleId'], row['sampleId'], row['analysis_type'], row['software'], row['workflowVersion'], row['file_type'], row['title']]
+		currentRow = [row['program'], row['project'], row['file_id'], row['center_name'], row['submittedDonorId'], row['donor'], row['submittedSpecimenId'], row['specimenUUID'], row['specimen_type'], row['experimentalStrategy'], row['submittedSampleId'], row['sampleId'], row['analysis_type'], row['software'], row['workflowVersion'], row['file_type'], row['title'], row['repoDataBundleId']]
 		goodFormatList.append(currentRow)
 		#pass
 	
@@ -993,6 +993,98 @@ def get_manifest():
 
 	return excel.make_response_from_array(goodFormatList, 'tsv', file_name='manifest')
 
+
+
+
+#Get the manifest. You need to pass on the filters
+@app.route('/repository/files/exportFull')
+@cross_origin()
+def get_manifes_full():
+        m_filters = request.args.get('filters')
+        m_Size = request.args.get('size', 25, type=int)
+        mQuery = {}
+
+        #Dictionary for getting a reference to the aggs key
+        referenceAggs = {}
+        inverseAggs = {}
+        with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+        #with open('reference_aggs.json') as my_aggs:
+                referenceAggs = json.load(my_aggs)
+
+        with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+        #with open('inverse_aggs.json') as my_aggs:
+                inverseAggs = json.load(my_aggs)
+
+        try:
+                m_filters = ast.literal_eval(m_filters)
+                #Change the keys to the appropriate values. 
+                for key, value in m_filters['file'].items():
+                        if key in referenceAggs:
+                                #This performs the change.
+                                corrected_term = referenceAggs[key]
+                                m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+
+                #Functions for calling the appropriates query filters
+                matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
+                filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
+                mQuery = {"bool":{"must":[filt_list]}}
+
+        except Exception, e:
+                print str(e)
+                m_filters = None
+                mQuery = {"match_all":{}}
+                pass
+        #Added the scroll variable. Need to put the scroll variable in a config file.
+        scroll_config = ''
+        with open('/var/www/html/dcc-dashboard-service/scroll_config') as _scroll_config:
+        #with open('scroll_config') as _scroll_config:
+                scroll_config = _scroll_config.readline().strip()
+                #print scroll_config
+
+        mText = es.search(index='fb_alias', body={"query": mQuery}, size=9999, scroll=scroll_config) #'2m'
+
+        #Set the variables to do scrolling. This should fix the problem with the small amount of
+        sid = mText['_scroll_id']
+        scroll_size = mText['hits']['total']
+        #reader = [x['_source'] for x in mText['hits']['hits']]
+
+        #MAKE SURE YOU TEST THIS 
+        while(scroll_size > 0):
+                print "Scrolling..."
+                page = es.scroll(scroll_id = sid, scroll = '2m')
+                #Update the Scroll ID
+                sid = page['_scroll_id']
+                #Get the number of results that we returned in the last scroll
+                scroll_size = len(page['hits']['hits'])
+                #Extend the result list
+                #reader.extend([x['_source'] for x in page['hits']['hits']])
+                mText['hits']['hits'].extend([x for x in page['hits']['hits']])
+                print len(mText['hits']['hits'])
+                print "Scroll Size: " + str(scroll_size)
+
+        protoList = []
+        for hit in mText['hits']['hits']:
+                if '_source' in hit:
+                        protoList.append(hit['_source'])
+                        #protoList[-1]['_analysis_type'] = protoList[-1].pop('analysis_type')
+                        #protoList[-1]['_center_name'] = protoList[-1].pop('center_name')
+                        #protoList[-1]['_file_id'] = protoList[-1].pop('file_id')
+        goodFormatList = []
+        goodFormatList.append(['Program', 'Project', 'Center Name', 'Submitter Donor ID', 'Donor UUID', 'Submitter Specimen ID', 'Specimen UUID', 'Submitter Specimen Type', 'Submitter Experimental Design', 'Submitter Sample ID', 'Sample UUID', 'Analysis Type', 'Workflow Name', 'Workflow Version', 'File Type', 'File Path', 'Upload File ID' ,'Data Bundle UUID', 'Metadata.json'])
+        for row in protoList:
+                currentRow = [row['program'], row['project'], row['center_name'], row['submittedDonorId'], row['donor'], row['submittedSpecimenId'], row['specimenUUID'], row['specimen_type'], row['experimentalStrategy'], row['submittedSampleId'], row['sampleId'], row['analysis_type'], row['software'], row['workflowVersion'], row['file_type'], row['title'], row['file_id'], row['repoDataBundleId'], row['metadataJson']]
+                goodFormatList.append(currentRow)
+                #pass
+
+
+        #print protoList
+        #with open("manifest.tsv", "w") as manifest:
+                #manifest.write("Program\tProject\tCenter Name\tSubmitter Donor ID\tDonor UUID\tSubmitter Specimen ID\tSpecimen UUID\tSubmitter Specimen Type\tSubmitter Experimental Design\tSubmitter Sample ID\tSample UUID\tAnalysis Type\tWorkflow Name\tWorkflow Version\tFile Type\tFile Path\n")
+                #my_file = manifest
+
+        return excel.make_response_from_array(goodFormatList, 'tsv', file_name='manifest')
+
+        #return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
 
 
 
