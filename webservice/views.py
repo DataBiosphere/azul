@@ -12,6 +12,7 @@ from flask_cors import CORS, cross_origin
 app_bp = Blueprint('app_bp', __name__, url_prefix='')
 
 @app_bp.route('/invoices')
+@cross_origin()
 def find_invoices():
     project = str(request.args.get('project'))
     if project:
@@ -20,6 +21,23 @@ def find_invoices():
         return jsonify(invoices)
     else:
         return None, 401
+
+@app_bp.route('/projects')
+@cross_origin()
+def get_projects():
+	es_resp = es.search(index='billing_idx', body={"query": {"match_all": {}}, "aggs": {
+		"projects":{
+			"terms":{
+				"field": "project.keyword",
+				"size": 9999
+			}
+		}
+	}}, size=0)
+
+	projects = []
+	for project in es_resp['aggregations']['projects']['buckets']:
+		projects.append(project['key'])
+	return jsonify(projects)
 
 
 

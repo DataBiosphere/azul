@@ -1,7 +1,6 @@
-from extensions import sqlalchemy, elasticsearch
+from extensions import elasticsearch
 import datetime
-from datetime import timedelta
-from utility import get_compute_costs, get_storage_costs
+from utility import get_compute_costs, get_storage_costs, create_analysis_costs_json
 from models import Billing
 import calendar
 from decimal import Decimal
@@ -107,10 +106,9 @@ def make_search_filter_query(timefrom, timetil, project):
                     }
                 }
             }
-        }, size=0)
+        }, size=9999)
 
         return es_resp
-
 
 def get_previous_file_sizes (timefrom, project):
     timestartstring = timefrom.strftime('%Y-%m-%dT%H:%M:%S')
@@ -148,7 +146,7 @@ def get_previous_file_sizes (timefrom, project):
                 }
             }
         }
-    }, size=0)
+    }, size=9999)
     return es_resp
 
 def get_months_uploads(project, timefrom, timetil):
@@ -198,7 +196,7 @@ def get_months_uploads(project, timefrom, timetil):
                     }
                 }
             }
-        }, size=0)
+        }, size=9999)
         return es_resp
 
 @click.command()
@@ -215,7 +213,6 @@ def generate_daily_reports(date):
             timeend = datetime.datetime.strptime(date, '%Y/%m/%d')
         except:
             timeend = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-
 
 
         # HANDLE CLOSING OUT BILLINGS at end of month
@@ -238,12 +235,17 @@ def generate_daily_reports(date):
             print(project)
             file_size = get_previous_file_sizes(monthstart, project=project)
             this_months_files = get_months_uploads(project, monthstart, timeend)
-            compute_costs = get_compute_costs(make_search_filter_query(monthstart,timeend,project))
+            compute_cost_search =  make_search_filter_query(monthstart,timeend,project)
+            compute_costs = get_compute_costs(compute_cost_search)
+            analysis_compute_json = create_analysis_costs_json(compute_cost_search['hits']['hits'])
             storage_costs = get_storage_costs( file_size, portion_of_month,
                               this_months_files, timeend, daysinmonth*3600*24)
+
             bill = Billing.query.filter(Billing.project == project).filter(Billing.start_date == monthstart).first()
             if bill:
-                bill.update(compute_cost=compute_costs, storage_cost=storage_costs, end_date=timeend)
+                bill.update(compute_cost=compute_costs, storage_cost=storage_costs, end_date=timeend,
+                            cost_by_analysis=analysis_compute_json)
             else:
                 Billing.create(compute_cost=compute_costs, storage_cost=storage_costs, start_date=monthstart,\
-                               end_date=timeend, project=project, closed_out=False)
+                               end_date=timeend, project=project, closed_out=False,
+                               cost_by_analysis=analysis_compute_json)

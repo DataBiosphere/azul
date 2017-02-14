@@ -165,5 +165,5 @@ curl -XPUT http://localhost:9200/billing_idx/_bulk?pretty --data-binary @elastic
 
 
 # now run the command, need to have FLASK_APP env var set to app.py
-# flask generate_daily_reports
+flask generate_daily_reports
 
