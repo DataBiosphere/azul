@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from elasticsearch import Elasticsearch
 from random import randint, choice
 
+from esup import update_index
+
 def get_error(server, job_id):    
     error_url = server + "fetch_error?data=%7B%22task_id%22%3A%22" + job_id + "%22%7D"
     req_data = urllib2.Request(error_url)
@@ -37,15 +39,14 @@ list_of_URLs = [running_url, batch_url, failed_url, upfail_url,
                 disable_url, updisable_url, pending_url, done_url]
 
 relevant_attributes = ["status", "name", "start_time", "params"]
-
 required_parameters = ["project", "donor_id", "sample_id", "pipeline_name"]
 
-es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 jobject_list = []
-
-es_filename = "action_index.jsonl"
-esjson = open(es_filename,"w")
-esjson.write('{"data": [\n')
+es_server = {
+    'host': 'localhost',
+    'port': 9200
+}
+es_server = [].append(es_server)
 
 for URL in list_of_URLs:
 
@@ -95,7 +96,7 @@ for URL in list_of_URLs:
 
         # Format time properly
         input_time = datetime.fromtimestamp(jobject['start_time']) + timedelta(hours=8)
-        jobject['start_time'] = input_time.strftime('%y-%m-%d %H:%M:%S')
+        jobject['start_time'] = input_time.strftime('20%y-%m-%d %H:%M:%S')
 
         # Add unique run_id
         jobject['run_id'] = job_id[-10:]
@@ -110,17 +111,7 @@ for URL in list_of_URLs:
         # Name is irritating
         del jobject['name']
 
-        esjson.write(json.dumps(jobject) + ',\n')
-
-esjson.write(']}')
-esjson.close()
-'''
-with open(es_filename,'r') as infile:
-    for line in infile:
-        if line.strip():
-            print line
-'''
-
+        update_index(es_server, jobject)
 
 
 ''' 
