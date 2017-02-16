@@ -237,7 +237,7 @@ def generate_daily_reports(date):
             this_months_files = get_months_uploads(project, monthstart, timeend)
             compute_cost_search =  make_search_filter_query(monthstart,timeend,project)
             compute_costs = get_compute_costs(compute_cost_search)
-            analysis_compute_json = create_analysis_costs_json(compute_cost_search['hits']['hits'])
+            analysis_compute_json = create_analysis_costs_json(compute_cost_search['hits']['hits'], monthstart, timeend)
             storage_costs = get_storage_costs( file_size, portion_of_month,
                               this_months_files, timeend, daysinmonth*3600*24)
 

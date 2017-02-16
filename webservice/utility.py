@@ -10,6 +10,8 @@ SECONDS_IN_HR = 3600
 BYTES_IN_GB = 1000000000
 STORAGE_PRICE_GB_MONTH = 0.03
 
+def get_datetime_from_es(timestr):
+    return datetime.datetime.strptime(timestr, "%Y-%m-%dT%H:%M:%S.%f")
 
 def calculate_compute_cost(total_seconds, vm_cost_hr):
     return Decimal(Decimal(total_seconds)/Decimal(SECONDS_IN_HR)*Decimal(vm_cost_hr)*Decimal(EXTRA_MONEY))
@@ -74,9 +76,9 @@ def get_compute_costs(comp_aggregations):
     return compute_costs
 
 
-def create_analysis_costs_json(this_month_comp_hits):
-    analysis_dict = {"itemized_compute_costs": []}
+def create_analysis_costs_json(this_month_comp_hits, bill_time_start, bill_time_end):
     analysis_costs = []
+    analysis_cost_actual = 0
     for donor_doc in this_month_comp_hits:
         donor = donor_doc.get("_source")
         for specimen in donor.get("specimen"):
@@ -85,20 +87,23 @@ def create_analysis_costs_json(this_month_comp_hits):
                     timing_stats = analysis.get("timing_metrics")
                     if timing_stats:
                         time = timing_stats["overall_walltime_seconds"]
-
-                        host_metrics = analysis.get("host_metrics")
-                        if host_metrics:
-                            cost = calculate_compute_cost(time, pricing.get(get_vm_string(host_metrics)))
-                            analysis_costs.append(
-                                {
-                                    "donor": donor.get("submitter_donor_id"),
-                                    "specimen": specimen.get("submitter_specimen_id"),
-                                    "sample": sample.get("submitter_sample_id"),
-                                    "workflow": analysis.get("analysis_type"),
-                                    "version": analysis.get("workflow_version"),
-                                    "cost": str(cost)
-                                }
-                            )
+                        analysis_endtime = get_datetime_from_es(timing_stats["overall_stop_time_utc"])
+                        analysis_starttime = get_datetime_from_es(timing_stats["overall_start_time_utc"])
+                        if analysis_endtime < bill_time_end and analysis_starttime >= bill_time_start:
+                            host_metrics = analysis.get("host_metrics")
+                            if host_metrics:
+                                cost = calculate_compute_cost(time, pricing.get(get_vm_string(host_metrics)))
+                                analysis_costs.append(
+                                    {
+                                        "donor": donor.get("submitter_donor_id"),
+                                        "specimen": specimen.get("submitter_specimen_id"),
+                                        "sample": sample.get("submitter_sample_id"),
+                                        "workflow": analysis.get("analysis_type"),
+                                        "version": analysis.get("workflow_version"),
+                                        "cost": str(cost)
+                                    }
+                                )
+                                analysis_cost_actual += cost
 
     return {"itemized_compute_costs": analysis_costs}
 
