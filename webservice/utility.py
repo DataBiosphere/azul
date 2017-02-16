@@ -16,6 +16,10 @@ def get_datetime_from_es(timestr):
 def calculate_compute_cost(total_seconds, vm_cost_hr):
     return Decimal(Decimal(total_seconds)/Decimal(SECONDS_IN_HR)*Decimal(vm_cost_hr)*Decimal(EXTRA_MONEY))
 
+def calculate_storage_cost(portion_month_stored, file_size_gb):
+    return Decimal(portion_month_stored)*Decimal(file_size_gb)*Decimal(STORAGE_PRICE_GB_MONTH)*Decimal(EXTRA_MONEY)
+
+
 
 def get_vm_string(host_metrics):
     return str(host_metrics.get("vm_region")) + str(host_metrics.get("vm_instance_type"))
@@ -87,9 +91,9 @@ def create_analysis_costs_json(this_month_comp_hits, bill_time_start, bill_time_
                     timing_stats = analysis.get("timing_metrics")
                     if timing_stats:
                         time = timing_stats["overall_walltime_seconds"]
-                        analysis_endtime = get_datetime_from_es(timing_stats["overall_stop_time_utc"])
-                        analysis_starttime = get_datetime_from_es(timing_stats["overall_start_time_utc"])
-                        if analysis_endtime < bill_time_end and analysis_starttime >= bill_time_start:
+                        analysis_end_time = get_datetime_from_es(timing_stats["overall_stop_time_utc"])
+                        analysis_start_time = get_datetime_from_es(timing_stats["overall_start_time_utc"])
+                        if analysis_end_time < bill_time_end and analysis_start_time >= bill_time_start:
                             host_metrics = analysis.get("host_metrics")
                             if host_metrics:
                                 cost = calculate_compute_cost(time, pricing.get(get_vm_string(host_metrics)))
@@ -108,15 +112,56 @@ def create_analysis_costs_json(this_month_comp_hits, bill_time_start, bill_time_
     return {"itemized_compute_costs": analysis_costs}
 
 
+def workflow_output_total_size(workflow_outputs_array):
+    size = 0
+    if workflow_outputs_array:
+        for output in workflow_outputs_array:
+            this_size = output.get("file_size")
+            if this_size:
+                size+=this_size
+    return size
 
+def get_gb_size(byte_size):
+    return Decimal(byte_size)/Decimal(BYTES_IN_GB)
 
+def create_storage_costs_json(project_files_hits, bill_time_start, bill_time_end, month_total_seconds):
+
+    storage_costs = []
+    storage_cost_actual = 0
+    for donor_doc in project_files_hits:
+        donor = donor_doc.get("_source")
+        for specimen in donor.get("specimen"):
+            for sample in specimen.get("samples"):
+                for analysis in sample.get("analysis"):
+                    timing_stats = analysis.get("timing_metrics")
+                    if timing_stats:
+                        analysis_end_time = get_datetime_from_es(timing_stats["overall_stop_time_utc"])
+                        if analysis_end_time < bill_time_end:
+                            this_size = get_gb_size(workflow_output_total_size(analysis.get("workflow_outputs")))
+                            if analysis_end_time >= bill_time_start: #means it's from this month
+                                seconds = (bill_time_end - analysis_end_time).total_seconds()
+                            else:#it's from previous month, charge it portion of month
+                                seconds = (bill_time_end - bill_time_start).total_seconds()
+                            cost = calculate_storage_cost(Decimal(seconds)/Decimal(month_total_seconds), this_size)
+                            storage_costs.append(
+                                {
+                                    "donor": donor.get("submitter_donor_id"),
+                                    "specimen": specimen.get("submitter_specimen_id"),
+                                    "sample": sample.get("submitter_sample_id"),
+                                    "workflow": analysis.get("analysis_type"),
+                                    "version": analysis.get("workflow_version"),
+                                    "cost": str(cost)
+                                }
+                            )
+                            storage_cost_actual += cost
+
+    return {"itemized_storage_costs": storage_costs}
 
 def get_storage_costs(previous_month_bytes, portion_of_month, this_month_timestamps_sizes, curr_time, seconds_in_month):
     storage_costs = Decimal(0)
     storage_size_bytes = previous_month_bytes['aggregations']['filtered_nested_timestamps']['sum_sizes']['value']
     storage_size_gb = Decimal(storage_size_bytes)/Decimal(BYTES_IN_GB)
-    storage_costs += Decimal(STORAGE_PRICE_GB_MONTH)*storage_size_gb*portion_of_month*Decimal(EXTRA_MONEY)
-
+    storage_costs += calculate_storage_cost(portion_of_month, storage_size_gb)
 
     # calculate the money spent on storing workflow outputs which were uploaded during this month
     this_month_timestamps = this_month_timestamps_sizes['aggregations']['filtered_nested_timestamps']['times'][
@@ -131,8 +176,7 @@ def get_storage_costs(previous_month_bytes, portion_of_month, this_month_timesta
         storage_size_bytes = ts_sum['sum_sizes']['value']
         storage_size_gb = Decimal(storage_size_bytes)/Decimal(BYTES_IN_GB)
 
-        analysis_cost = storage_size_gb * month_portion
-        storage_costs += analysis_cost
+        storage_costs += calculate_storage_cost(month_portion, storage_size_gb)
 
     return storage_costs
 
