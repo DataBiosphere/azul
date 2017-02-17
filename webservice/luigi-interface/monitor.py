@@ -88,7 +88,7 @@ def proxyConversion(resultProxy):
 # When ended:
 # Last touched:
 # Time elapsed:
-db = create_engine('postgresql:///hancock', echo=False)
+db = create_engine('postgresql:///monitor', echo=False)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
@@ -99,7 +99,7 @@ luigi = Table('luigi', metadata,
 	Column("workflow_name", String(40)),
 	Column("center_name", String(40)),
 	Column("submitter_donor_id", String(40)),
-	Column("consonance_id", String(40)),
+	Column("consonance_job_uuid", String(40)),
 	Column("submitter_donor_primary_site", String(40)),
 	Column("project", String(40)),
 	Column("analysis_type", String(40)),
@@ -148,7 +148,7 @@ for job in jobList:
 						workflow_name=jsonMetadata['workflow_name'],
 						center_name=jsonMetadata['center_name'],
 						submitter_donor_id=jsonMetadata['submitter_donor_id'],
-						consonance_id=jsonMetadata['consonance_id'],
+						consonance_job_uuid=jsonMetadata['consonance_job_uuid'],
 						submitter_donor_primary_site=jsonMetadata['submitter_donor_primary_site'],
 						project=jsonMetadata['project'],
 						analysis_type=jsonMetadata['analysis_type'],
@@ -166,8 +166,9 @@ for job in jobList:
 		# There should probably be something
 	else:
 		row = select_exist_result[0]
-		if (row['status'] == job_dict['status']):
-			if row['status'] == "RUNNING":
+		# row[1] is the status of the job
+		if (row[1] == job_dict['status']):
+			if row[1] == "RUNNING":
 				stmt = luigi.update().\
 					   where(luigi.c.luigi_job == job).\
 					   values(last_updated=job_dict['last_updated'])
