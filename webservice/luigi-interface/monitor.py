@@ -73,19 +73,29 @@ def getJobList():
 
 	return local_job_list
 
+def proxyConversion(resultProxy):
+	save = []
+	for row in resultProxy:
+		save.append(row)
+	return save
+
 #
 # Database initialization, creation if table doesn't exist
 #
 # Change echo to True to show SQL code... unnecessary
+# Any time facets?
+# When started:
+# When ended:
+# Last touched:
+# Time elapsed:
 db = create_engine('postgresql:///hancock', echo=False)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
-	Column("luigi_job", String(40), primary_key=True)
-	Column("status", String(20))
-
+	Column("luigi_job", String(100), primary_key=True),
+	Column("status", String(20)),
 	Column("submitter_specimen_id", String(40)),
-	Column("specimen_uuid", String(40)),
+	Column("specimen_uuid", String(60)),
 	Column("workflow_name", String(40)),
 	Column("center_name", String(40)),
 	Column("submitter_donor_id", String(40)),
@@ -94,20 +104,15 @@ luigi = Table('luigi', metadata,
 	Column("project", String(40)),
 	Column("analysis_type", String(40)),
 	Column("program", String(40)),
-	Column("donor_uuid", String(40)),
+	Column("donor_uuid", String(60)),
 	Column("submitter_sample_id", String(40)),
 	Column("submitter_experimental_design", String(40)),
 	Column("submitter_specimen_type", String(40)),
-	Column("workflow_version": "3.0.", String(40)),
-	Column("sample_uuid", String(40))
+	Column("workflow_version", String(40)),
+	Column("sample_uuid", String(60)),
 
-	# Any time facets?
-	Column("start_time", Double)
-	Column("last_updated", Double)
-	# When started:
-	# When ended:
-	# Last touched:
-	# Time elapsed:
+	Column("start_time", Float),
+	Column("last_updated", Float)
 )
 if not db.dialect.has_table(db, luigi):
 	luigi.create()
@@ -126,10 +131,14 @@ for job in jobList:
 	touchfile_name = job_dict['params']['touch_file_path'] + '/' + \
 					 job_dict['params']['submitter_sample_id'] + \
 					 '_meta_data.json'
+	print touchfile_name
 	stringContents = getTouchfile(touchfile_name)
 	jsonMetadata = json.loads(stringContents)
 
-	select_exist_result = select([luigi]).where(luigi.c.luigi_job == job)
+	select_query = select([luigi]).where(luigi.c.luigi_job == job)
+	select_exist_result = proxyConversion(conn.execute(select_query))
+	print type(select_exist_result)
+	print "RESULT:", select_exist_result
 	if len(select_exist_result) == 0:
 		#	insert into db	
 		ins_query = luigi.insert().values(luigi_job=job,
@@ -156,11 +165,11 @@ for job in jobList:
 		# Uhhh... some error throwing on exec_result? 
 		# There should probably be something
 	else:
-		row = select_exist_result.fetchone()
+		row = select_exist_result[0]
 		if (row['status'] == job_dict['status']):
 			if row['status'] == "RUNNING":
 				stmt = luigi.update().\
-					   where(users.c.luigi_job == job).\
+					   where(luigi.c.luigi_job == job).\
 					   values(last_updated=job_dict['last_updated'])
 				exec_result = conn.execute(stmt)
 			else:
@@ -169,7 +178,7 @@ for job in jobList:
 		else: 
 			# Status has changed
 			stmt = luigi.update().\
-				   where(users.c.luigi_job == job).\
+				   where(luigi.c.luigi_job == job).\
 				   values(status=job_dict['status'], last_updated=job_dict['last_updated'])
 			exec_result = conn.execute(stmt)
 			# Update status change, time finished, time elapsed
