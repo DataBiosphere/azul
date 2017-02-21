@@ -1,6 +1,5 @@
 import json
 from decimal import Decimal
-import calendar
 import datetime
 pricing = json.load(open("/var/www/html/dcc-dashboard-service/region_instance_prices.json"))
 EXTRA_MONEY = 1.2  # if you want to tune billings, this is the dial. 1.2 means add 20% on top of what is calculated
