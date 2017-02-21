@@ -25,6 +25,6 @@ def application(req_environ, start_response):
     for key in ENV_VAR:
        os.environ[key] = req_environ.get(key, '')
     ## has to import my app inside of application def block.
-    from app import app as _application   
+    from mapi import app as _application
 
     return _application(req_environ, start_response)
