@@ -8,7 +8,6 @@ import ast
 from decimal import Decimal
 import copy
 import os
-from extensions import elasticsearch
 from models import Billing,db
 from utility import get_compute_costs, get_storage_costs, create_analysis_costs_json, create_storage_costs_json
 import datetime
@@ -1038,9 +1037,8 @@ def get_manifest():
 
     return excel.make_response_from_array(goodFormatList, 'tsv', file_name='manifest')
 def get_projects_list():
-    from app import app
     with app.app_context():
-        es_resp = elasticsearch.search(index='billing_idx', body={"query": {"match_all": {}}, "aggs": {
+        es_resp = es.search(index='billing_idx', body={"query": {"match_all": {}}, "aggs": {
             "projects":{
                 "terms":{
                     "field": "project.keyword",
@@ -1062,11 +1060,10 @@ def make_search_filter_query(timefrom, timetil, project):
     :param project: string, this is the name of the particular project that we are trying to generate for
     :return:
     """
-    from app import app
     with app.app_context():
         timestartstring = timefrom.strftime('%Y-%m-%dT%H:%M:%S')
         timeendstring = timetil.strftime('%Y-%m-%dT%H:%M:%S')
-        es_resp = elasticsearch.search(index='billing_idx', body={
+        es_resp = es.search(index='billing_idx', body={
             "query": {
                 "bool": {
                     "must": [
@@ -1141,7 +1138,7 @@ def make_search_filter_query(timefrom, timetil, project):
 
 def get_previous_file_sizes (timeend, project):
     timeendstring = timeend.strftime('%Y-%m-%dT%H:%M:%S')
-    es_resp = elasticsearch.search(index='billing_idx', body={
+    es_resp = es.search(index='billing_idx', body={
         "query": {
             "bool": {
                 "must": [
@@ -1179,11 +1176,10 @@ def get_previous_file_sizes (timeend, project):
     return es_resp
 
 def get_months_uploads(project, timefrom, timetil):
-    from app import app
     with app.app_context():
         timestartstring = timefrom.strftime('%Y-%m-%dT%H:%M:%S')
         timeendstring = timetil.strftime('%Y-%m-%dT%H:%M:%S')
-        es_resp = elasticsearch.search(index='billing_idx', body =
+        es_resp = es.search(index='billing_idx', body =
         {
             "query": {
                 "bool": {
@@ -1236,7 +1232,6 @@ def generate_daily_reports(date):
     # flask generate_daily_reports --date 2017/01/31 will compute the billings for jan 2017, up to the 31st day of
     # January
 
-    from app import app
     with app.app_context():
         try:
             timeend = datetime.datetime.strptime(date, '%Y/%m/%d')
