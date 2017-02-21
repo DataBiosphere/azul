@@ -159,7 +159,7 @@ deactivate
 
 curl -XDELETE http://localhost:9200/billing_idx/
 curl -XPUT http://localhost:9200/billing_idx/
-curl -XPUT http://localhost:9200/billing_idx/_mapping/meta?update_all_types  -d @billing_mapping.json
+curl -XPUT http://localhost:9200/billing_idx/_mapping/meta?update_all_types  -d @../billing_mapping.json
 curl -XPUT http://localhost:9200/billing_idx/_bulk?pretty --data-binary @elasticsearch.jsonl
 cd ../dcc-dashboard-service
 
