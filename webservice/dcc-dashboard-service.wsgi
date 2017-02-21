@@ -8,16 +8,6 @@ sys.path.insert(0, '/var/www/html/dcc-dashboard-service')
 def application(req_environ, start_response):
 
     ENV_VAR =[
-       'GOOGLE_CLIENT_ID',
-       'GOOGLE_CLIENT_SECRET',
-       'REDWOOD_ADMIN',
-       'REDWOOD_ADMIN_PASSWORD',
-       'REDWOOD_SERVER',
-       'REDWOOD_ADMIN_PORT',
-       'DCC_DASHBOARD_HOST',
-       'DCC_DASHBOARD_PORT',
-       'DCC_DASHBOARD_PROTOCOL',
-       'DCC_DASHBOARD_SERVICE',
        'DATABASE_URL'
     ]
     for key in ENV_VAR:
