@@ -1,0 +1,7 @@
+jsonlines
+elasticsearch
+Flask
+Flask-Elasticsearch
+flask-cors
+flask_excel
+luigi

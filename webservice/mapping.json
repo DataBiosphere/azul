@@ -1,0 +1,97 @@
+{
+   "properties": {
+      "program" : {
+         "type":"keyword"
+      },
+      "project" : {
+         "type":"keyword"
+      },
+      "submitter_donor_id" : {
+         "type":"keyword"
+      },
+      "center_name" : {
+         "type":"keyword"
+      },
+      "workflow":{
+        "type":"keyword"
+      },
+      "analysis_type":{
+        "type":"keyword"
+      },
+      "download_id":{
+        "type":"keyword"
+      },
+      "file_type": {
+        "type":"keyword"
+      },
+      "specimen_type":{
+        "type":"keyword"
+      },
+      "donor":{
+        "type":"keyword"
+      },
+      "lastModified":{
+        "type":"date"
+      },
+      "title":{
+        "type":"keyword"
+      },
+      "file_id":{
+        "type":"keyword"
+      },
+      "experimentalStrategy":{
+        "type":"keyword"
+      },
+      "redwoodDonorUUID":{
+        "type":"keyword"
+      },
+      "study":{
+        "type":"keyword"
+      },
+      "sampleId":{
+        "type":"keyword"
+      },
+      "submittedSampleId":{
+        "type":"keyword"
+      },
+      "submittedDonorId":{
+        "type":"keyword"
+      },
+      "submittedSpecimenId":{
+        "type":"keyword"
+      },
+      "fileMd5sum":{
+        "type":"keyword"
+      },
+      "workflowVersion":{
+        "type":"keyword"
+      },
+      "repoDataBundleId":{
+        "type":"keyword"
+      },
+      "software":{
+        "type":"keyword"
+      },
+      "access":{
+        "type":"keyword"
+      },
+      "repoBaseUrl":{
+        "type":"keyword"
+      },
+      "repoCode":{
+        "type":"keyword"
+      },
+      "repoCountry":{
+        "type":"keyword"
+      },
+      "repoName":{
+        "type":"keyword"
+      },
+      "repoOrg":{
+        "type":"keyword"
+      },
+      "repoType":{
+        "type":"keyword"
+      }
+    }
+}
