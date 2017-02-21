@@ -9,6 +9,8 @@ from flask_cors import CORS, cross_origin
 import flask_excel as excel
 
 import copy
+#TEST database call
+from sqlalchemy import create_engine, MetaData, String, Table, Float, Column, select
 
 app = Flask(__name__)
 es = Elasticsearch()
@@ -1070,9 +1072,9 @@ def get_manifes_full():
                         #protoList[-1]['_center_name'] = protoList[-1].pop('center_name')
                         #protoList[-1]['_file_id'] = protoList[-1].pop('file_id')
         goodFormatList = []
-        goodFormatList.append(['Program', 'Project', 'Center Name', 'Submitter Donor ID', 'Donor UUID', 'Submitter Specimen ID', 'Specimen UUID', 'Submitter Specimen Type', 'Submitter Experimental Design', 'Submitter Sample ID', 'Sample UUID', 'Analysis Type', 'Workflow Name', 'Workflow Version', 'File Type', 'File Path', 'Upload File ID' ,'Data Bundle UUID', 'Metadata.json'])
+        goodFormatList.append(['Program', 'Project', 'Center Name', 'Submitter Donor ID', 'Donor UUID', "Submitter Donor Primary Site", 'Submitter Specimen ID', 'Specimen UUID', 'Submitter Specimen Type', 'Submitter Experimental Design', 'Submitter Sample ID', 'Sample UUID', 'Analysis Type', 'Workflow Name', 'Workflow Version', 'File Type', 'File Path', 'Upload File ID' ,'Data Bundle UUID', 'Metadata.json'])
         for row in protoList:
-                currentRow = [row['program'], row['project'], row['center_name'], row['submittedDonorId'], row['donor'], row['submittedSpecimenId'], row['specimenUUID'], row['specimen_type'], row['experimentalStrategy'], row['submittedSampleId'], row['sampleId'], row['analysis_type'], row['software'], row['workflowVersion'], row['file_type'], row['title'], row['file_id'], row['repoDataBundleId'], row['metadataJson']]
+                currentRow = [row['program'], row['project'], row['center_name'], row['submittedDonorId'], row['donor'], row['submitterDonorPrimarySite'],row['submittedSpecimenId'], row['specimenUUID'], row['specimen_type'], row['experimentalStrategy'], row['submittedSampleId'], row['sampleId'], row['analysis_type'], row['software'], row['workflowVersion'], row['file_type'], row['title'], row['file_id'], row['repoDataBundleId'], row['metadataJson']]
                 goodFormatList.append(currentRow)
                 #pass
 
@@ -1085,8 +1087,6 @@ def get_manifes_full():
         return excel.make_response_from_array(goodFormatList, 'tsv', file_name='manifest')
 
         #return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
-
-
 
 if __name__ == '__main__':
   app.run() #Quit the debu and added Threaded
