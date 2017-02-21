@@ -74,10 +74,7 @@ def getJobList():
 	return local_job_list
 
 def proxyConversion(resultProxy):
-	save = []
-	for row in resultProxy:
-		save.append(row)
-	return save
+	return [row for row in resultProxy]
 
 #
 # Database initialization, creation if table doesn't exist
@@ -88,12 +85,13 @@ def proxyConversion(resultProxy):
 # When ended:
 # Last touched:
 # Time elapsed:
-db = create_engine('postgresql:///monitor', echo=False)
+db = create_engine('postgresql:///monitor', echo=True)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
 	Column("luigi_job", String(100), primary_key=True),
 	Column("status", String(20)),
+
 	Column("submitter_specimen_id", String(40)),
 	Column("specimen_uuid", String(60)),
 	Column("workflow_name", String(40)),
@@ -122,23 +120,20 @@ for job in jobList:
 	job_dict = jobList[job]	
 	#print job
 	#print job_dict['status']
-	#print job_dict['start_time']
-	#print job_dict['time_running']
-
 	#
 	# S3 Scraping below
 	#
 	touchfile_name = job_dict['params']['touch_file_path'] + '/' + \
 					 job_dict['params']['submitter_sample_id'] + \
 					 '_meta_data.json'
-	print touchfile_name
+	#print touchfile_name
 	stringContents = getTouchfile(touchfile_name)
 	jsonMetadata = json.loads(stringContents)
 
 	select_query = select([luigi]).where(luigi.c.luigi_job == job)
 	select_exist_result = proxyConversion(conn.execute(select_query))
-	print type(select_exist_result)
-	print "RESULT:", select_exist_result
+	#print type(select_exist_result)
+	#print "RESULT:", select_exist_result
 	if len(select_exist_result) == 0:
 		#	insert into db	
 		ins_query = luigi.insert().values(luigi_job=job,
@@ -163,7 +158,6 @@ for job in jobList:
 						last_updated=job_dict['last_updated'])
 		exec_result = conn.execute(ins_query)	
 		# Uhhh... some error throwing on exec_result? 
-		# There should probably be something
 	else:
 		row = select_exist_result[0]
 		# row[1] is the status of the job
