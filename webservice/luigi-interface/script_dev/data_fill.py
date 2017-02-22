@@ -3,12 +3,14 @@
 # Luigi Monitor
 
 import json
-import urllib2
 import boto
 
 from boto.s3.key import Key
-from datetime 	 import datetime, timedelta
 from sqlalchemy  import *
+
+unique_job = 'spawnFlop_SRR1988343_demo__consonance_jobs__0992701f6f'
+sample_id = 'DTB-116_Baseline_1' 
+topfolder = 'UCSF_SU2C_WCDT_DTB-116_DTB-116_Baseline'
 
 def getTouchfile(touchfile_name):
 	s3 = boto.connect_s3()
@@ -24,35 +26,29 @@ def getTouchfile(touchfile_name):
 #
 # Database initialization, creation if table doesn't exist
 #
-# Change echo to True to show SQL code... unnecessary
-# Any time facets?
-# When started:
-# When ended:
-# Last touched:
-# Time elapsed:
-db = create_engine('postgresql:///monitor', echo=True)
+db = create_engine('postgresql:///monitor', echo=False)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
 	Column("luigi_job", String(100), primary_key=True),
 	Column("status", String(20)),
 
-	Column("submitter_specimen_id", String(40)),
-	Column("specimen_uuid", String(60)),
-	Column("workflow_name", String(40)),
-	Column("center_name", String(40)),
-	Column("submitter_donor_id", String(40)),
-	Column("consonance_job_uuid", String(40)),
-	Column("submitter_donor_primary_site", String(40)),
-	Column("project", String(40)),
-	Column("analysis_type", String(40)),
-	Column("program", String(40)),
-	Column("donor_uuid", String(60)),
-	Column("submitter_sample_id", String(40)),
-	Column("submitter_experimental_design", String(40)),
-	Column("submitter_specimen_type", String(40)),
-	Column("workflow_version", String(40)),
-	Column("sample_uuid", String(60)),
+	Column("submitter_specimen_id", String(100)),
+	Column("specimen_uuid", String(100)),
+	Column("workflow_name", String(100)),
+	Column("center_name", String(100)),
+	Column("submitter_donor_id", String(100)),
+	Column("consonance_job_uuid", String(100)),
+	Column("submitter_donor_primary_site", String(100)),
+	Column("project", String(100)),
+	Column("analysis_type", String(100)),
+	Column("program", String(100)),
+	Column("donor_uuid", String(100)),
+	Column("submitter_sample_id", String(100)),
+	Column("submitter_experimental_design", String(100)),
+	Column("submitter_specimen_type", String(100)),
+	Column("workflow_version", String(100)),
+	Column("sample_uuid", String(100)),
 
 	Column("start_time", Float),
 	Column("last_updated", Float)
@@ -61,14 +57,15 @@ luigi = Table('luigi', metadata,
 #
 # S3 Scraping below
 #
-touchfile_name = 'consonance-jobs/RNASeq_3_1_x_Coordinator/3_1_3/NCI-PHS000900_Treehouse_Prospective_SU-DIPG-IX_demo_test_SU-DIPG-IX-Normal-RNA_demo_test' + '/' + \
-				 'SRR1988343_demo_test' + \
+filepath = 'consonance-jobs/RNASeq_3_1_x_Coordinator/3_1_3/' + topfolder
+touchfile_name = filepath + '/' + \
+				 sample_id + \
 				 '_meta_data.json'
 
-stringContents = getTouchfile(touchfile_name)
+stringContents = getTouschfile(touchfile_name)
 jsonMetadata = json.loads(stringContents)
 
-ins_query = luigi.insert().values(luigi_job='spawnFlop_SRR1988343_demo__consonance_jobs__0992701f1f',
+ins_query = luigi.insert().values(luigi_job=unique_job,
 				status="DONE",
 				submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
 				specimen_uuid=jsonMetadata['specimen_uuid'],
@@ -89,3 +86,4 @@ ins_query = luigi.insert().values(luigi_job='spawnFlop_SRR1988343_demo__consonan
 				start_time=1487716334.29525,
 				last_updated=1487716634.38815)
 exec_result = conn.execute(ins_query)
+print exec_result
