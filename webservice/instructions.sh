@@ -2,6 +2,8 @@
 #now=$(date +"%T")
 #Add shell script code
 
+set -o errexit
+
 access_token(){
     access_token=$1
 }
@@ -99,12 +101,15 @@ cd dcc-metadata-indexer
 #source metadaindex/bin/activate
 source env/bin/activate
 #Download new data from Redwood; create ES .jsonl file
-python metadata_indexer.py --skip-program TEST --skip-project TEST  --storage-access-token $access_token  --client-path ../redwood-client/ucsc-storage-client/ --metadata-schema metadata_schema.json --server-host storage.ucsc-cgl.org --skip-uuid-directory redacted > testfile.txt
+
+echo "Starting the metadata_indexer.py; Stdout on log_metadata_indexer.txt"
+python metadata_indexer.py --skip-program TEST --skip-project TEST  --storage-access-token $access_token  --client-path ../redwood-client/ucsc-storage-client/ --metadata-schema metadata_schema.json --server-host storage.ucsc-cgl.org --skip-uuid-directory redacted > log_metadata_indexer.txt
 
 deactivate
 ####Index the data in analysis_index. NOTE: Should check first that the schema will match.
 #curl -XDELETE http://localhost:9200/analysis_index
 #curl -XPUT http://localhost:9200/analysis_index/_bulk?pretty --data-binary @elasticsearch.jsonl
+echo "Updating analysis_index"
 curl -XDELETE http://localhost:9200/analysis_buffer/
 curl -XPUT http://localhost:9200/analysis_buffer/_bulk?pretty --data-binary @elasticsearch.jsonl
 
@@ -121,10 +126,12 @@ curl -XPOST http://localhost:9200/_aliases?pretty -d' { "actions" : [ { "remove"
 #Run the python script
 cd ../dcc-dashboard-service
 . env/bin/activate
-python2.7 es_filebrowser_index.py ${ARGS[@]}
+echo "Starting es_filebrowser_index.py; Stdout on log_es_fb_index.txt"
+python2.7 es_filebrowser_index.py ${ARGS[@]} > log_es_fb_index.txt
 deactivate
 ###Store data in fb_buffer.
 #Delete and Create the fb_buffer, storing the mapping in it as well. 
+echo "Updating fb_index"
 curl -XDELETE http://localhost:9200/fb_buffer/
 curl -XPUT http://localhost:9200/fb_buffer/
 curl -XPUT http://localhost:9200/fb_buffer/_mapping/meta?update_all_types  -d @mapping.json
