@@ -10,10 +10,8 @@ from boto.s3.key import Key
 from datetime 	 import datetime, timedelta
 from sqlalchemy  import *
 
-def getTouchfile(touchfile_name):
+def getTouchfile(bucket_name, touchfile_name):
 	s3 = boto.connect_s3()
-	bucket_name = 'cgl-core-analysis-run-touch-files'
-
 	bucket = s3.get_bucket(bucket_name)
 
 	k = Key(bucket)
@@ -120,14 +118,16 @@ for job in jobList:
 	job_dict = jobList[job]	
 	#print job
 	#print job_dict['status']
+	
 	#
 	# S3 Scraping below
 	#
-	touchfile_name = job_dict['params']['touch_file_path'] + '/' + \
+	s3string = job_dict['params']['touch_file_path']
+	bucket_name, filepath = job_dict['params']['touch_file_path'].split('/', 1)
+	touchfile_name = filepath + '/' + \
 					 job_dict['params']['submitter_sample_id'] + \
 					 '_meta_data.json'
-	#print touchfile_name
-	stringContents = getTouchfile(touchfile_name)
+	stringContents = getTouchfile(bucket_name, touchfile_name)
 	jsonMetadata = json.loads(stringContents)
 
 	select_query = select([luigi]).where(luigi.c.luigi_job == job)
@@ -135,7 +135,7 @@ for job in jobList:
 	#print type(select_exist_result)
 	#print "RESULT:", select_exist_result
 	if len(select_exist_result) == 0:
-		#	insert into db	
+		# insert into db	
 		ins_query = luigi.insert().values(luigi_job=job,
 						status=job_dict['status'],
 						submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
