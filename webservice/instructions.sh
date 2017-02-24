@@ -28,6 +28,9 @@ repoOrg(){
 repoType(){
     repoType=$1
 }
+flaskApp(){
+    flaskApp=$1
+}
 helpmenu(){
     echo "--help | -h for help 
 --access_token | -t for the access token 
@@ -90,6 +93,15 @@ do
             empty_arg $2 $1
             repoType $2
             ;;
+        --flaskApp | -f)
+            #empty_arg $2 $1
+            if [[ -z "$2" ]]
+                 then
+                      echo "Missing value. Please enter a non-empty value"
+                      exit
+            fi
+            flaskApp $2
+            ;;
     esac
     shift
 done
@@ -111,6 +123,8 @@ deactivate
 #curl -XPUT http://localhost:9200/analysis_index/_bulk?pretty --data-binary @elasticsearch.jsonl
 echo "Updating analysis_index"
 curl -XDELETE http://localhost:9200/analysis_buffer/
+curl -XPUT http://localhost:9200/analysis_buffer/ -d @analysis_settings.json
+curl -XPUT http://localhost:9200/analysis_buffer/_mapping/meta?update_all_types  -d @mapping.json
 curl -XPUT http://localhost:9200/analysis_buffer/_bulk?pretty --data-binary @elasticsearch.jsonl
 
 #####Change buffer to point to alias
@@ -118,6 +132,8 @@ curl -XPOST http://localhost:9200/_aliases?pretty -d' { "actions" : [ { "remove"
 
 ##Update real index analysis
 curl -XDELETE http://localhost:9200/analysis_real/
+curl -XPUT http://localhost:9200/analysis_real/ -d @analysis_settings.json
+curl -XPUT http://localhost:9200/analysis_real/_mapping/meta?update_all_types  -d @mapping.json
 curl -XPUT http://localhost:9200/analysis_real/_bulk?pretty --data-binary @elasticsearch.jsonl
 
 #Change alias one last time from buffer to real
@@ -172,5 +188,6 @@ cd $HOME/dcc-dashboard-service
 
 
 # now run the command, need to have FLASK_APP env var set to app.py
+export FLASK_APP=$flaskApp
 flask generate_daily_reports
 

@@ -729,7 +729,7 @@ def searchFile(_query, _filters, _from, _size):
 #Searches keywords in the analysis_index
 def searchDonors(_query, _filters, _from, _size):
     #Body of the query search
-    query_body = {"query_string":{"query":_query}}
+    query_body = {"prefix":{"donor_uuid":_query}} #{"query_string":{"query":_query}}
     if not bool(_filters):
         body = {"query": query_body}
     else:
@@ -746,6 +746,7 @@ def searchDonors(_query, _filters, _from, _size):
         donor_id = obj['donor_uuid'] #This is the id
         donor_type = 'donor' #this is the type
         donor_submitteId = obj['submitter_donor_id'] #This is the submittedId
+	donor_projectId = obj['project']
         #This are the scpecimen and sample lists.
         donor_specimenIds = []
         donor_submitteSpecimenIds = []
@@ -760,7 +761,7 @@ def searchDonors(_query, _filters, _from, _size):
                 donor_submitteSampleIds.append(sample['submitter_sample_id'])
 
         donorEntry['id'] = donor_id
-        #MISSING PROJECT_ID (projectId)
+        donorEntry['projectId'] = donor_projectId
         donorEntry['type'] = donor_type
         donorEntry['submittedId'] = donor_submitteId
         donorEntry['specimenIds'] = donor_specimenIds
