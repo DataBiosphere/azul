@@ -133,7 +133,7 @@ deactivate
 #Delete and Create the fb_buffer, storing the mapping in it as well. 
 echo "Updating fb_index"
 curl -XDELETE http://localhost:9200/fb_buffer/
-curl -XPUT http://localhost:9200/fb_buffer/
+curl -XPUT http://localhost:9200/fb_buffer/ -d @fb_settings.json
 curl -XPUT http://localhost:9200/fb_buffer/_mapping/meta?update_all_types  -d @mapping.json
 curl -XPUT http://localhost:9200/fb_buffer/_bulk?pretty --data-binary @fb_index.jsonl
 
@@ -142,7 +142,7 @@ curl -XPOST http://localhost:9200/_aliases?pretty -d' { "actions" : [ { "remove"
 
 ####Index/Update the data in fb_index
 curl -XDELETE http://localhost:9200/fb_index/
-curl -XPUT http://localhost:9200/fb_index/
+curl -XPUT http://localhost:9200/fb_index/ -d @fb_settings.json
 curl -XPUT http://localhost:9200/fb_index/_mapping/meta?update_all_types  -d @mapping.json
 curl -XPUT http://localhost:9200/fb_index/_bulk?pretty --data-binary @fb_index.jsonl
 
