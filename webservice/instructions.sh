@@ -155,10 +155,10 @@ curl -XPOST http://localhost:9200/_aliases?pretty -d' { "actions" : [ { "remove"
 
 ###NOW HANDLE CREATING THE NEW BILLINGINDEX###
 
-cd dcc-metadata-indexer
+cd $HOME/dcc-metadata-indexer
 #Activate the virtualenv
 #source metadaindex/bin/activate
-source env/bin/activate
+. env/bin/activate
 #Download new data from Redwood; create ES .jsonl file
 python metadata_indexer.py -preserve-version --skip-program TEST --skip-project TEST  --storage-access-token $access_token --client-path ../redwood-client/ucsc-storage-client/ --metadata-schema metadata_schema.json --server-host storage.ucsc-cgl.org
 
@@ -166,9 +166,9 @@ deactivate
 
 curl -XDELETE http://localhost:9200/billing_idx/
 curl -XPUT http://localhost:9200/billing_idx/
-curl -XPUT http://localhost:9200/billing_idx/_mapping/meta?update_all_types  -d @../billing_mapping.json
+curl -XPUT http://localhost:9200/billing_idx/_mapping/meta?update_all_types  -d @$HOME/dcc-dashboard-service/billing_mapping.json
 curl -XPUT http://localhost:9200/billing_idx/_bulk?pretty --data-binary @elasticsearch.jsonl
-cd ../dcc-dashboard-service
+cd $HOME/dcc-dashboard-service
 
 
 # now run the command, need to have FLASK_APP env var set to app.py

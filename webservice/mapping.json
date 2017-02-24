@@ -1,4 +1,4 @@
-{
+{  
    "properties": {
       "program" : {
          "type":"keyword"
@@ -28,7 +28,7 @@
         "type":"keyword"
       },
       "donor":{
-        "type":"keyword"
+        "type":"text"
       },
       "lastModified":{
         "type":"date"
@@ -37,7 +37,8 @@
         "type":"keyword"
       },
       "file_id":{
-        "type":"keyword"
+        "type":"text",
+	"analyzer":"autocomplete"
       },
       "experimentalStrategy":{
         "type":"keyword"

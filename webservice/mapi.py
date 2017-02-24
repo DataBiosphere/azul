@@ -687,7 +687,7 @@ def get_summary():
 #Searches keywords in the fb_alias index
 def searchFile(_query, _filters, _from, _size):
     #Body of the query search
-    query_body = {"query_string":{"query":_query}}
+    query_body = {"prefix":{"file_id":_query}}   #{"query_string":{"query":_query, "default_field":"file_id", "analyzer":"my_analyzer"}}
     if not bool(_filters):
         body = {"query": query_body}
     else:
@@ -739,7 +739,7 @@ def searchDonors(_query, _filters, _from, _size):
 
     #Now you have the brute results from the ES query. All you need to do now is to parse the data
     #and put it in a pretty dictionary, and return it.
-    searchResults = {"hits":[]}
+    searchResults = {"hits":[], "pagination":{}}
     reader = [x['_source'] for x in mResult['hits']['hits']]
     for obj in reader:
         donorEntry = {}
@@ -760,6 +760,7 @@ def searchDonors(_query, _filters, _from, _size):
                 donor_submitteSampleIds.append(sample['submitter_sample_id'])
 
         donorEntry['id'] = donor_id
+        #MISSING PROJECT_ID (projectId)
         donorEntry['type'] = donor_type
         donorEntry['submittedId'] = donor_submitteId
         donorEntry['specimenIds'] = donor_specimenIds
@@ -768,6 +769,16 @@ def searchDonors(_query, _filters, _from, _size):
         donorEntry['submittedSampleIds'] = donor_submitteSampleIds
 
         searchResults['hits'].append(donorEntry)
+
+    searchResults['pagination']['count'] = len(mResult['hits']['hits'])
+    searchResults['pagination']['total'] = mResult['hits']['total']
+    searchResults['pagination']['size'] = _size
+    searchResults['pagination']['from'] = _from
+    searchResults['pagination']['page'] = (_from/(_size))+1
+    searchResults['pagination']['pages'] = -(-mResult['hits']['total'] // _size)
+    searchResults['pagination']['sort'] = "_score" #Will alaways be sorted by score
+    searchResults['pagination']['order'] = "desc" #Will always be descendent order
+
 
     return searchResults
 
@@ -833,7 +844,7 @@ def get_search():
         keywordResult = searchFile(m_Query, filterQuery, m_From, m_Size)
 
     #If the query is for donors
-    elif m_Type == 'file-donor':
+    elif m_Type == 'donor':
         keywordResult = searchDonors(m_Query, filterQuery, m_From, m_Size)
 
     #Need to have two methods. One executes depending on whether the type is either 'file' or 'file-donor'
@@ -1375,6 +1386,42 @@ def get_manifes_full():
         return excel.make_response_from_array(goodFormatList, 'tsv', file_name='manifest')
 
         #return excel.make_response_from_records(protoList, 'tsv', file_name = 'manifest')
+
+#Get the manifest. You need to pass on the filters
+@app.route('/action/service')
+@cross_origin()
+def get_action_service():
+	db = create_engine('postgresql:///monitor', echo=False)
+	conn = db.connect()
+	metadata = MetaData(db)
+	luigi = Table('luigi', metadata,
+		Column("luigi_job", String(100), primary_key=True),
+		Column("status", String(20)),
+		Column("submitter_specimen_id", String(100)),
+		Column("specimen_uuid", String(100)),
+		Column("workflow_name", String(100)),
+		Column("center_name", String(100)),
+		Column("submitter_donor_id", String(100)),
+		Column("consonance_job_uuid", String(100)),
+		Column("submitter_donor_primary_site", String(100)),
+		Column("project", String(100)),
+		Column("analysis_type", String(100)),
+		Column("program", String(100)),
+		Column("donor_uuid", String(100)),
+		Column("submitter_sample_id", String(100)),
+		Column("submitter_experimental_design", String(100)),
+		Column("submitter_specimen_type", String(100)),
+		Column("workflow_version", String(100)),
+		Column("sample_uuid", String(100)),
+		Column("start_time", Float),
+		Column("last_updated", Float)
+	)
+	select_query = select([luigi])
+	select_result = conn.execute(select_query)
+	result_list = [dict(row) for row in select_result]
+	return jsonify(result_list)
+
+#app.cli.add_command(generate_daily_reports)
 
 if __name__ == '__main__':
   app.run() #Quit the debu and added Threaded
