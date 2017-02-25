@@ -61,7 +61,7 @@ def get_projects():
 
 
 
-def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
+def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_search=False):
     protoDict = {'hits':[]}
     for hit in es_dict['hits']['hits']:
         if '_source' in hit:
@@ -125,6 +125,9 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
                 protoDict['hits'].append(hit['fields'])
             except:
                 pass
+    #If returning only one term based on file_id, break and return. 
+    if key_search:
+        return protoDict
 
     protoDict['pagination'] = {
         'count' : len(es_dict['hits']['hits']),#25,
@@ -151,10 +154,15 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order):
 
 
     return protoDict
+
+
+
 #This returns the agreggate terms and the list of hits from ElasticSearch
+@app.route('/repository/files')
 @app.route('/repository/files/')
+@app.route('/repository/files/<file_id>')
 @cross_origin()
-def get_data():
+def get_data(file_id=None):
     print "Getting data"
     #Get all the parameters from the URL
     m_field = request.args.get('field')
@@ -250,7 +258,15 @@ def get_data():
 
 
     #print "This is what get's into ES", {"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}
-    mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
+
+    if file_id:
+        query_body = {"prefix":{"file_id":file_id}}
+        body = {"query": query_body}
+        mText = es.search(index='fb_alias', body=body, from_=0, size=5)
+        result = parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order, key_search=True)
+        return jsonify(result['hits'][0])
+    else: 
+        mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
     return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
 
 
@@ -780,7 +796,6 @@ def searchDonors(_query, _filters, _from, _size):
     searchResults['pagination']['sort'] = "_score" #Will alaways be sorted by score
     searchResults['pagination']['order'] = "desc" #Will always be descendent order
 
-
     return searchResults
 
 
@@ -845,7 +860,7 @@ def get_search():
         keywordResult = searchFile(m_Query, filterQuery, m_From, m_Size)
 
     #If the query is for donors
-    elif m_Type == 'donor':
+    elif m_Type == 'donor' or m_Type == 'file-donor':
         keywordResult = searchDonors(m_Query, filterQuery, m_From, m_Size)
 
     #Need to have two methods. One executes depending on whether the type is either 'file' or 'file-donor'

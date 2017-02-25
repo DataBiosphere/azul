@@ -180,12 +180,32 @@ python metadata_indexer.py -preserve-version --skip-program TEST --skip-project 
 
 deactivate
 
-curl -XDELETE http://localhost:9200/billing_idx/
-curl -XPUT http://localhost:9200/billing_idx/
-curl -XPUT http://localhost:9200/billing_idx/_mapping/meta?update_all_types  -d @$HOME/dcc-dashboard-service/billing_mapping.json
-curl -XPUT http://localhost:9200/billing_idx/_bulk?pretty --data-binary @elasticsearch.jsonl
-cd $HOME/dcc-dashboard-service
+#Populate the billing index
+#Change the Buffer index
+echo "Updating billing_idx"
+curl -XDELETE http://localhost:9200/billing_buffer/
+curl -XPUT http://localhost:9200/billing_buffer/
+curl -XPUT http://localhost:9200/billing_buffer/_mapping/meta?update_all_types  -d @$HOME/dcc-dashboard-service/billing_mapping.json
+curl -XPUT http://localhost:9200/billing_buffer/_bulk?pretty --data-binary @duped_elasticsearch.jsonl
 
+#Change aliases
+curl -XPOST http://localhost:9200/_aliases?pretty -d' { "actions" : [ { "remove" : { "index" : "billing_real", "alias" : "billing_idx" } }, { "add" : { "index" : "billing_buffer", "alias" : "billing_idx" } } ] }'
+
+#Update real billing_index
+
+curl -XDELETE http://localhost:9200/billing_real/
+curl -XPUT http://localhost:9200/billing_real/
+curl -XPUT http://localhost:9200/billing_real/_mapping/meta?update_all_types  -d @$HOME/dcc-dashboard-service/billing_mapping.json
+curl -XPUT http://localhost:9200/billing_real/_bulk?pretty --data-binary @duped_elasticsearch.jsonl
+
+#Change the alias again, so that billing_idx points again to the real billing_real index
+curl -XPOST http://localhost:9200/_aliases?pretty -d' { "actions" : [ { "remove" : { "index" : "billing_buffer", "alias" : "billing_idx" } }, { "add" : { "index" : "billing_real", "alias" : "billing_idx" } } ] }'
+
+
+
+cd $HOME/dcc-dashboard-service
+#Activate the virtual environment
+. env/bin/activate
 
 # now run the command, need to have FLASK_APP env var set to app.py
 export FLASK_APP=$flaskApp
