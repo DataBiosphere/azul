@@ -682,6 +682,13 @@ def get_summary():
                 "size" : 99999
             }
         },
+        "submitterDonorPrimarySite":{
+            "terms":{
+                "field": "submitterDonorPrimarySite",
+                "min_doc_count": 0,
+                "size" : 99999
+            }
+        },
         "total_size":{
             "sum" : { "field" : "fileSize" }
         }
@@ -693,6 +700,7 @@ def get_summary():
     my_summary['donorCount'] = len(mText['aggregations']['donor']['buckets'])
     my_summary['projectCount'] = len(mText['aggregations']['projectCode']['buckets'])
     my_summary['totalFileSize'] = mText['aggregations']['total_size']['value']
+    my_summary['primarySiteCount'] = len(mText['aggregations']['submitterDonorPrimarySite']['buckets'])
     #To remove once this endpoint has some functionality
     return jsonify(my_summary)
 #return "still working on this endpoint, updates soon!!"

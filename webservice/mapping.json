@@ -28,7 +28,7 @@
         "type":"keyword"
       },
       "donor":{
-        "type":"text"
+        "type":"keyword"
       },
       "lastModified":{
         "type":"date"
@@ -56,6 +56,9 @@
         "type":"keyword"
       },
       "submittedDonorId":{
+        "type":"keyword"
+      },
+      "submitterDonorPrimarySite":{
         "type":"keyword"
       },
       "submittedSpecimenId":{
