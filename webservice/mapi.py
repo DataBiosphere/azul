@@ -95,7 +95,7 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_sear
                 }],
                 'donors' : [{
                     'donorId' : hit['_source']['donor'],
-                    'primarySite' : 'DUMMY',
+                    'primarySite' : hit['_source']['submitterDonorPrimarySite'],
                     'projectCode' : hit['_source']['project'],
                     'study' : hit['_source']['study'], ###
                     'sampleId' : [hit['_source']['sampleId']], ###
@@ -177,6 +177,8 @@ def get_data(file_id=None):
     #referenceAggs = {"centerName":"center_name", "projectCode":"project", "specimenType":"specimen_type", "fileFormat":"file_type", "workFlow":"workflow", "analysisType":"analysis_type", "program":"program"}
     #inverseAggs = {"center_name":"centerName", "project":"projectCode", "specimen_type":"specimenType", "file_type":"fileFormat", "workflow":"workFlow", "analysis_type":"analysisType", "program":"program"}
     #Dictionary for getting a reference to the aggs key
+    idSearch = None #To use when searching a FileID using the regular endpoint structure i.e. file:{is:"x"}
+    idDonorSearch = None
     referenceAggs = {}
     inverseAggs = {}
     with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
@@ -205,6 +207,10 @@ def get_data(file_id=None):
                 corrected_term = referenceAggs[key]
                 #print corrected_term
                 m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+            if key == "fileId" or key =="id":
+                idSearch = m_filters['file'].pop(key)["is"]
+            if key == "donorId":
+                idDonorSearch = m_filters['file'].pop(key)["is"]
             #print m_filters
 
         #Functions for calling the appropriates query filters
@@ -265,6 +271,17 @@ def get_data(file_id=None):
         mText = es.search(index='fb_alias', body=body, from_=0, size=5)
         result = parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order, key_search=True)
         return jsonify(result['hits'][0])
+    elif idSearch:
+        mText = es.search(index='fb_alias', body={"query": {
+                                            "constant_score":{"filter":{"terms":{"file_id":idSearch}}}}, 
+                                            "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}, 
+                                            from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order)
+    elif idDonorSearch:
+        mText = es.search(index='fb_alias', body={"query": {
+                                            "constant_score":{"filter":{"terms":{"donor":idDonorSearch}}}},
+                                            "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List},
+                                            from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order)
+
     else: 
         mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
     return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
@@ -288,6 +305,8 @@ def get_data_pie():
     m_From -= 1
 
     #Dictionary for getting a reference to the aggs key
+    idSearch = None
+    idDonorSearch = None
     referenceAggs = {}
     inverseAggs = {}
     with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
@@ -307,6 +326,11 @@ def get_data_pie():
                 #This performs the change.
                 corrected_term = referenceAggs[key]
                 m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+            if key == "fileId" or key =="id":
+                idSearch = m_filters['file'].pop(key)["is"]
+            if key == "donorId":
+                idDonorSearch = m_filters['file'].pop(key)["is"]
+            #print m_filters
 
         #Functions for calling the appropriates query filters
         matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
@@ -363,7 +387,18 @@ def get_data_pie():
 
 
     #print "This is what get's into ES", {"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}
-    mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
+    if idSearch:
+        mText = es.search(index='fb_alias', body={"query": {
+                                            "constant_score":{"filter":{"terms":{"file_id":idSearch}}}}, 
+                                            "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}, 
+                                            from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order)
+    elif idDonorSearch:
+        mText = es.search(index='fb_alias', body={"query": {
+                                            "constant_score":{"filter":{"terms":{"donor":idDonorSearch}}}},
+                                            "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List},
+                                            from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order)
+    else:
+        mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list}, from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order) #Changed "fields" to "_source"
     return jsonify(parse_ES_response(mText, m_Size, m_From, m_Sort, m_Order))
 
 ##*********************************************************************************************************************************##
@@ -385,6 +420,7 @@ def get_manifes_newt():
 	mQuery = {}
 
 	#Dictionary for getting a reference to the aggs key
+	idSearch = None
 	referenceAggs = {}
 	inverseAggs = {}
 	with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
@@ -403,6 +439,8 @@ def get_manifes_newt():
 				#This performs the change.
 				corrected_term = referenceAggs[key]
 				m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+			if key == "fileId" or key =="id":
+				idSearch = m_filters['file'].pop(key)["is"]
 
 		#Functions for calling the appropriates query filters
 		matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
@@ -421,7 +459,14 @@ def get_manifes_newt():
 		scroll_config = _scroll_config.readline().strip()
 		#print scroll_config
 
-	mText = es.search(index='fb_alias', body={"query": mQuery}, size=9999, scroll=scroll_config) #'2m'
+	if idSearch:
+		mText = es.search(index='fb_alias', body={"query": {
+						"constant_score":{"filter":{"terms":{"file_id":idSearch}}}}, 
+						"post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}, 
+						from_=m_From, size=m_Size, sort=m_Sort+":"+m_Order)
+		
+	else:
+		mText = es.search(index='fb_alias', body={"query": mQuery}, size=9999, scroll=scroll_config) #'2m'
 
 	#Set the variables to do scrolling. This should fix the problem with the small amount of
 	sid = mText['_scroll_id']
@@ -604,6 +649,7 @@ def get_summary():
     m_filters = request.args.get('filters')
 
     #Dictionary for getting a reference to the aggs key
+    idSearch = None
     referenceAggs = {}
     inverseAggs = {}
     with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
@@ -622,70 +668,79 @@ def get_summary():
                 #This performs the change.
                 corrected_term = referenceAggs[key]
                 m_filters['file'][corrected_term] = m_filters['file'].pop(key)
-
+            if key == "fileId" or key =="id":
+                #idSearch = m_filters['file'].pop(key)["is"]
+                m_filters['file']["file_id"] = m_filters['file'].pop(key)
+            if key == "donorId":
+                #idSearch = m_filters['file'].pop(key)["is"]
+                m_filters['file']["donor"] = m_filters['file'].pop(key)
         #Functions for calling the appropriates query filters
         matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
         filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
         mQuery = {"bool":{"must":[filt_list]}}
-
+        #Add the mechanism to incorporate idSearch. See if it works!
+        #if idSearch:
+            #mQuery["constant_score"] = {"filter":{"terms":{"file_id":idSearch}}}
+            #mQuery["bool"]["filter"] = {"terms":{"file_id":idSearch}}
     except Exception, e:
         print str(e)
         m_filters = None
         mQuery = {"match_all":{}}
         pass
     #Need to pass on the arguments for this.
+    print mQuery
     mText = es.search(index='fb_alias', body={"query": mQuery, "aggs":{
         "centerName" : {
             "terms" : { "field" : "center_name",
-                        "min_doc_count" : 0,
+                        #"min_doc_count" : 0,
                         "size" : 99999}
         },
         "projectCode":{
             "terms":{
                 "field" : "project",
-                "min_doc_count" : 0,
+                #"min_doc_count" : 0,
                 "size" : 99999
             }
         },
         "specimenType":{
             "terms":{
                 "field" : "specimen_type",
-                "min_doc_count" : 0,
+                #"min_doc_count" : 0,
                 "size" : 99999
             }
         },
         "fileFormat":{
             "terms":{
                 "field" : "file_type",
-                "min_doc_count" : 0,
+                #"min_doc_count" : 0,
                 "size" : 99999
             }
         },
         "workFlow":{
             "terms":{
                 "field" : "workflow",
-                "min_doc_count" : 0,
+                #"min_doc_count" : 0,
                 "size" : 99999
             }
         },
         "analysisType":{
             "terms":{
                 "field" : "analysis_type",
-                "min_doc_count" : 0,
+                #"min_doc_count" : 0,
                 "size" : 99999
             }
         },
         "donor":{
             "terms":{
                 "field" : "donor",
-                "min_doc_count" : 0,
+                #"min_doc_count" : 0,
                 "size" : 99999
             }
         },
         "submitterDonorPrimarySite":{
             "terms":{
                 "field": "submitterDonorPrimarySite",
-                "min_doc_count": 0,
+                #"min_doc_count": 0,
                 "size" : 99999
             }
         },
@@ -694,7 +749,7 @@ def get_summary():
         }
     }})
 
-
+    print mText['aggregations']['donor']
 
     my_summary['fileCount'] = mText['hits']['total']
     my_summary['donorCount'] = len(mText['aggregations']['donor']['buckets'])
@@ -749,6 +804,31 @@ def searchFile(_query, _filters, _from, _size):
 
     return searchResults
 
+def searchFilesDonors(_query, _filters, _from, _size):
+    #Body of the query search
+    query_body = {"prefix":{"donor_uuid":_query}} #{"query_string":{"query":_query}}
+    if not bool(_filters):
+        body = {"query": query_body}
+    else:
+        body = {"query": query_body, "post_filter":_filters}
+
+    mResult = es.search(index='analysis_index', body=body, from_=_from, size=_size)
+
+    #Now you have the brute results from the ES query. All you need to do now is to parse the data
+    #and put it in a pretty dictionary, and return it.
+    searchResults = {"hits":[]}
+    reader = [x['_source'] for x in mResult['hits']['hits']]
+    for obj in reader:
+        donorEntry = {}
+        donor_id = obj['donor_uuid'] #This is the id
+        donor_type = 'donor' #this is the type
+        #Iterate through the specimens
+        donorEntry['id'] = donor_id
+        donorEntry['type'] = donor_type
+
+        searchResults['hits'].append(donorEntry)
+
+    return searchResults
 
 #Searches keywords in the analysis_index
 def searchDonors(_query, _filters, _from, _size):
@@ -846,6 +926,14 @@ def get_search():
                 corrected_term = referenceAggs[key]
                 #print corrected_term
                 m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+            #Adding the filters from before, just in case the do keyword search combining donor and file ids
+            if key == "fileId" or key =="id":
+                #idSearch = m_filters['file'].pop(key)["is"]
+                m_filters['file']["file_id"] = m_filters['file'].pop(key)
+            if key == "donorId":
+                #idSearch = m_filters['file'].pop(key)["is"]
+                m_filters['file']["donor"] = m_filters['file'].pop(key)
+
             #print m_filters
 
         #Functions for calling the appropriates query filters
@@ -868,8 +956,10 @@ def get_search():
         keywordResult = searchFile(m_Query, filterQuery, m_From, m_Size)
 
     #If the query is for donors
-    elif m_Type == 'donor' or m_Type == 'file-donor':
+    elif m_Type == 'donor': #or m_Type == 'file-donor':
         keywordResult = searchDonors(m_Query, filterQuery, m_From, m_Size)
+    elif m_Type == 'file-donor':
+        keywordResult = searchFilesDonors(m_Query, filterQuery, m_From, m_Size)
 
     #Need to have two methods. One executes depending on whether the type is either 'file' or 'file-donor'
 
@@ -918,6 +1008,7 @@ def get_manifest_old():
     mQuery = {}
 
     #Dictionary for getting a reference to the aggs key
+    idSearch = None 
     referenceAggs = {}
     inverseAggs = {}
     with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
@@ -936,6 +1027,8 @@ def get_manifest_old():
                 #This performs the change.
                 corrected_term = referenceAggs[key]
                 m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+            if key == "fileId" or key =="id":
+                idSearch = m_filters['file'].pop(key)["is"]
 
         #Functions for calling the appropriates query filters
         matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
@@ -996,6 +1089,7 @@ def get_manifest():
     mQuery = {}
 
     #Dictionary for getting a reference to the aggs key
+    idSearch = None
     referenceAggs = {}
     inverseAggs = {}
     with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
@@ -1014,11 +1108,19 @@ def get_manifest():
                 #This performs the change.
                 corrected_term = referenceAggs[key]
                 m_filters['file'][corrected_term] = m_filters['file'].pop(key)
+            if key == "fileId" or key =="id":
+                #idSearch = m_filters['file'].pop(key)["is"]
+                m_filters['file']["file_id"] = m_filters['file'].pop(key)
+            if key == "donorId":
+                #idSearch = m_filters['file'].pop(key)["is"]
+                m_filters['file']["donor"] = m_filters['file'].pop(key)
 
         #Functions for calling the appropriates query filters
         matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
         filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
         mQuery = {"bool":{"must":[filt_list]}}
+        #if idSearch:
+        #    mQuery["constant_score"] = {"filter":{"terms":{"file_id":idSearch}}}
 
     except Exception, e:
         print str(e)
@@ -1330,6 +1432,7 @@ def get_manifes_full():
         mQuery = {}
 
         #Dictionary for getting a reference to the aggs key
+	idSearch = None
         referenceAggs = {}
         inverseAggs = {}
         with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
@@ -1348,12 +1451,18 @@ def get_manifes_full():
                                 #This performs the change.
                                 corrected_term = referenceAggs[key]
                                 m_filters['file'][corrected_term] = m_filters['file'].pop(key)
-
+			if key == "fileId" or key =="id":
+				#idSearch = m_filters['file'].pop(key)["is"]
+				m_filters['file']["file_id"] = m_filters['file'].pop(key)
+			if key == "donorId":
+				m_filters['file']["donor"] = m_filters['file'].pop(key)
                 #Functions for calling the appropriates query filters
                 matchValues = lambda x,y: {"filter":{"terms": {x:y['is']}}}
                 filt_list = [{"constant_score": matchValues(x, y)} for x,y in m_filters['file'].items()]
                 mQuery = {"bool":{"must":[filt_list]}}
-
+		#if idSearch:
+			#mQuery["constant_score"] = {"filter":{"terms":{"file_id":idSearch}}}
+			
         except Exception, e:
                 print str(e)
                 m_filters = None
