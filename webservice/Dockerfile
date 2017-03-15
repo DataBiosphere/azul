@@ -42,6 +42,9 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 #Add the app code
 COPY . /app
 
+#Assign env variable
+ENV FLASK_APP /app/mapi.py
+
 #Remove the current uwsgi.ini
 RUN rm /app/uwsgi.ini
 #Add the in app uwsgi
