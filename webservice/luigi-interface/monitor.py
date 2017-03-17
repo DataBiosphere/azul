@@ -23,7 +23,9 @@ def getTouchfile(bucket_name, touchfile_name):
 # Luigi Scraping below
 # 
 def getJobList():
-	server = "http://localhost:8082/api/"
+	#server = "http://localhost:8082/api/"
+	#server = "http://35.164.225.222:8082/api/"
+	server = "http://ec2-35-164-225-222.us-west-2.compute.amazonaws.com:8082/api/"
 
 	running_url   = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	batch_url     = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
@@ -83,7 +85,7 @@ def proxyConversion(resultProxy):
 # When ended:
 # Last touched:
 # Time elapsed:
-db = create_engine('postgresql:///monitor', echo=True)
+db = create_engine('postgresql:///monitor', echo=False)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
@@ -122,16 +124,21 @@ for job in jobList:
 	#
 	# S3 Scraping below
 	#
-	s3string = job_dict['params']['touch_file_path']
-	bucket_name, filepath = job_dict['params']['touch_file_path'].split('/', 1)
-	touchfile_name = filepath + '/' + \
-					 job_dict['params']['submitter_sample_id'] + \
-					 '_meta_data.json'
-	stringContents = getTouchfile(bucket_name, touchfile_name)
-	jsonMetadata = json.loads(stringContents)
+	try:
+		s3string = job_dict['params']['touch_file_path']
+		bucket_name, filepath = job_dict['params']['touch_file_path'].split('/', 1)
+		touchfile_name = filepath + '/' + \
+						 job_dict['params']['submitter_sample_id'] + \
+						 '_meta_data.json'
+		stringContents = getTouchfile(bucket_name, touchfile_name)
+		jsonMetadata = json.loads(stringContents)
+	except:
+		# Hardcoded jsonMetadata
+		continue
 
 	select_query = select([luigi]).where(luigi.c.luigi_job == job)
 	select_exist_result = proxyConversion(conn.execute(select_query))
+
 	#print type(select_exist_result)
 	#print "RESULT:", select_exist_result
 	if len(select_exist_result) == 0:
