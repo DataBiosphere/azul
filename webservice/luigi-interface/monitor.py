@@ -5,6 +5,7 @@
 import boto
 import json
 import os
+import subprocess
 import urllib2
 
 from boto.s3.key import Key
@@ -75,6 +76,11 @@ def getJobList():
 def proxyConversion(resultProxy):
 	return [row for row in resultProxy]
 
+def get_consonance_status(consonance_uuid):
+	cmd = ['consonance', 'status', '--job_uuid', consonance_uuid, '|', 'python', '-m', 'json.tool']
+	status_text = subprocess.check_output(cmd)
+	return json.loads(status_text)
+
 #
 # Database initialization, creation if table doesn't exist
 #
@@ -138,12 +144,19 @@ for job in jobList:
 	select_query = select([luigi]).where(luigi.c.luigi_job == job)
 	select_exist_result = proxyConversion(conn.execute(select_query))
 
+	status_json = get_consonance_status(jsonMetadata['consonance_job_uuid'])
+
 	#print type(select_exist_result)
 	#print "RESULT:", select_exist_result
 	if len(select_exist_result) == 0:
+		# From the Consonance Status, use the following values
+		# to grab stdout and stderr IF THE JOB HAS SUCCESS/FAILED
+		# 	status_json['stdout']
+		# 	status_json['stderr']
+		# 
 		# insert into db	
 		ins_query = luigi.insert().values(luigi_job=job,
-						status=job_dict['status'],
+						status=status_json['state'],
 						submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
 						specimen_uuid=jsonMetadata['specimen_uuid'],
 						workflow_name=jsonMetadata['workflow_name'],
@@ -160,8 +173,8 @@ for job in jobList:
 						submitter_specimen_type=jsonMetadata['submitter_specimen_type'],
 						workflow_version=jsonMetadata['workflow_version'],
 						sample_uuid=jsonMetadata['sample_uuid'],
-						start_time=job_dict['start_time'],
-						last_updated=job_dict['last_updated'])
+						start_time=status_json['create_timestamp'],
+						last_updated=status_json['update_timestamp'])
 		exec_result = conn.execute(ins_query)	
 		# Uhhh... some error throwing on exec_result? 
 	else:
