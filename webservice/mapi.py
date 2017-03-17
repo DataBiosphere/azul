@@ -24,7 +24,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
 
 
-apache_path = os.environ.get("APACHE_PATH")
+apache_path = os.environ.get("APACHE_PATH", "")
 es_service = os.environ.get("ES_SERVICE", "localhost")
 
 app = Flask(__name__)
