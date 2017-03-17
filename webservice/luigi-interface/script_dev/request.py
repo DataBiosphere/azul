@@ -2,10 +2,7 @@ import json
 import urllib2
 
 from datetime import datetime, timedelta
-from elasticsearch import Elasticsearch
 from random import randint, choice
-
-from esup import update_index
 
 def get_error(server, job_id):    
     error_url = server + "fetch_error?data=%7B%22task_id%22%3A%22" + job_id + "%22%7D"
@@ -42,11 +39,6 @@ relevant_attributes = ["status", "name", "start_time", "params"]
 required_parameters = ["project", "donor_id", "sample_id", "pipeline_name"]
 
 jobject_list = []
-es_server = {
-    'host': 'localhost',
-    'port': 9200
-}
-es_server = [].append(es_server)
 
 for URL in list_of_URLs:
 
@@ -73,6 +65,10 @@ for URL in list_of_URLs:
     if not job_list:
         # Just skip an empty response
         continue
+
+    print job_list
+
+    continue
 
     jobject = {}
     #print "\n", jobject["name"]
@@ -111,8 +107,7 @@ for URL in list_of_URLs:
         # Name is irritating
         del jobject['name']
 
-        update_index(es_server, jobject)
-
+    print jobject
 
 ''' 
 TODO:
