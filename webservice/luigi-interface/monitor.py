@@ -77,7 +77,7 @@ def proxyConversion(resultProxy):
 	return [row for row in resultProxy]
 
 def get_consonance_status(consonance_uuid):
-	cmd = ['consonance', 'status', '--job_uuid', consonance_uuid, '|', 'python', '-m', 'json.tool']
+	cmd = ['consonance', 'status', '--job_uuid', str(consonance_uuid)]
 	status_text = subprocess.check_output(cmd)
 	return json.loads(status_text)
 
@@ -144,7 +144,16 @@ for job in jobList:
 	select_query = select([luigi]).where(luigi.c.luigi_job == job)
 	select_exist_result = proxyConversion(conn.execute(select_query))
 
-	status_json = get_consonance_status(jsonMetadata['consonance_job_uuid'])
+	try:
+		status_json = get_consonance_status(jsonMetadata['consonance_job_uuid'])
+	except:
+		# Add consonance job uuid print to stderr,
+		# print job uuid and time when it happeneds
+		status_json = {
+			'create_timestamp' : job_dict['start_time'],
+			'update_timestamp' : job_dict['last_updated'],
+			'state' : 'LUIGI:' + job_dict['status']
+		}
 
 	#print type(select_exist_result)
 	#print "RESULT:", select_exist_result
