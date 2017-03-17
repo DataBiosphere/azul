@@ -1,0 +1,248 @@
+{
+  "missing_items": {
+    "tumor_sequence": [],
+    "normal_alignment_qc_report": [
+      "3634f9bc-b6fe-5882-a1dd-1ff7dd54fdae"
+    ],
+    "tumor_somatic_variants": [
+      "c84b7f04-7e48-5965-83be-a145409a5663"
+    ],
+    "tumor_alignment": [
+      "c84b7f04-7e48-5965-83be-a145409a5663"
+    ],
+    "normal_sequence": [],
+    "tumor_alignment_qc_report": [
+      "c84b7f04-7e48-5965-83be-a145409a5663"
+    ],
+    "normal_alignment": [
+      "3634f9bc-b6fe-5882-a1dd-1ff7dd54fdae"
+    ],
+    "normal_sequence_qc_report": [
+      "3634f9bc-b6fe-5882-a1dd-1ff7dd54fdae"
+    ],
+    "tumor_rnaseq_variants": [
+      "c84b7f04-7e48-5965-83be-a145409a5663"
+    ],
+    "normal_rnaseq_variants": [
+      "3634f9bc-b6fe-5882-a1dd-1ff7dd54fdae"
+    ],
+    "normal_germline_variants": [
+      "3634f9bc-b6fe-5882-a1dd-1ff7dd54fdae"
+    ],
+    "tumor_sequence_qc_report": [
+      "c84b7f04-7e48-5965-83be-a145409a5663"
+    ]
+  },
+  "center_name": "Stanford",
+  "timestamp": "2016-10-15T20:58:56.526164",
+  "specimen": [
+    {
+      "submitter_specimen_type": "Primary tumour - solid tissue",
+      "submitter_specimen_id": "S019289b",
+      "specimen_uuid": "d18c8afa-497d-5974-bac2-fa4d9dccf98c",
+      "samples": [
+        {
+          "submitter_sample_id": "S019289b1",
+          "analysis": [
+            {
+              "version" : "1.0.0",
+              "timestamp" : "2016-11-17T02:35:08.475804",
+              "parent_uuids" : [
+                "id"
+              ],
+              "workflow_url" : "https://dockstore.org/containers/quay.io/wshands/fastqc",
+              "workflow_name" : "quay.io/wshands/fastqc",
+              "workflow_version" : "latest",
+              "analysis_type" : "qc",
+              "bundle_uuid" : "19c605c7-0a83-4d19-9192-b3105c5eeb41",
+              "workflow_params" : {
+
+              },
+              "workflow_outputs" : [
+                {
+                  "file_path": "ERR030886_2_fastqc.zip",
+                  "file_type": "zip",
+                  "file_checksum": "sha1$f57bc5f399b216d159df478b1cecea0a75c3cd10",
+                  "file_size": 494406
+                }
+              ,{
+                  "file_path": "ERR030886_1_fastqc.zip",
+                  "file_type": "zip",
+                  "file_checksum": "sha1$27fa7c14318ecd7852ca8ecdf96ca6b83fcd4932",
+                  "file_size": 425451
+                }
+              ,{
+                  "file_path": "ERR030886_2_fastqc.html",
+                  "file_type": "html",
+                  "file_checksum": "sha1$6bb71b3f39c66f5e8664003312b274c53e9e2160",
+                  "file_size": 391261
+                }
+              ,{
+                  "file_path": "ERR030886_1_fastqc.html",
+                  "file_type": "html",
+                  "file_checksum": "sha1$d8645a7fe676245481971a7592130f34a6492397",
+                  "file_size": 349721
+                }
+
+              ],
+              "workflow_inputs" :
+              [{"file_storage_bundle_files": [{"file_type": "fastq.gz", "file_name": "fastq_file", "file_storage_bundle_id": "8ebdb03a-3c99-5f32-811c-9d74b88151ec", "file_path": "ERR030886_1.fastq.gz", "file_storage_id": "2eadcc65-44af-527c-a1a7-22c3a55d736e"}, {"file_type": "fastq.gz", "file_name": "fastq_file", "file_storage_bundle_id": "8ebdb03a-3c99-5f32-811c-9d74b88151ec", "file_path": "ERR030886_2.fastq.gz", "file_storage_id": "834523f3-7ddf-5086-a173-108060aeee77"}], "file_storage_bundle_id": "8ebdb03a-3c99-5f32-811c-9d74b88151ec"}]
+            ,
+
+              "qc_metrics" : {
+              },
+              "timing_metrics" : {
+                "step_timing" : {
+                  "download" : {
+                    "stop_time_utc" : "2016-11-17T02:35:00.910081",
+                    "walltime_seconds" : 7,
+                    "start_time_utc" : "2016-11-17T02:35:08.475753"
+                  },
+                  "tool_run" : {
+                    "stop_time_utc" : "2016-11-17T02:35:08.475793",
+                    "walltime_seconds" : 0,
+                    "start_time_utc" : "2016-11-17T02:35:08.475802"
+                  }
+                },
+                "overall_stop_time_utc" : "2016-11-17T02:35:08.475804",
+                "overall_start_time_utc" : "2016-11-17T02:35:00.910081",
+                "overall_walltime_seconds" : 7
+              },
+              "host_metrics" : {
+                "vm_instance_type" : "m1.xlarge",
+                "vm_region" : "oregon",
+                "vm_instance_cores" : 16,
+                "vm_instance_mem_gb" : 256,
+                "vm_location" : "aws"
+              }
+            }
+
+          ],
+          "sample_uuid": "c84b7f04-7e48-5965-83be-a145409a5663"
+        }
+      ]
+    },
+    {
+      "submitter_specimen_type": "Normal - blood derived",
+      "submitter_specimen_id": "S019289a",
+      "specimen_uuid": "78d054f5-e0c9-523a-827d-47f9da6850f8",
+      "samples": [
+        {
+          "submitter_sample_id": "S019289a1",
+          "analysis": [
+            {
+              "version" : "1.0.0",
+              "timestamp" : "2016-10-13T02:35:08.475804",
+              "parent_uuids" : [
+                "id"
+              ],
+              "workflow_url" : "https://dockstore.org/containers/quay.io/wshands/fastqc",
+              "workflow_name" : "quay.io/wshands/fastqc",
+              "workflow_version" : "latest",
+              "analysis_type" : "qc",
+              "bundle_uuid" : "19c605c7-0a83-4d19-9192-b3105c5eeb41",
+              "workflow_params" : {
+
+              },
+              "workflow_outputs" : [
+                {
+                  "file_path": "ERR030886_2_fastqc.zip",
+                  "file_type": "zip",
+                  "file_checksum": "sha1$f57bc5f399b216d159df478b1cecea0a75c3cd10",
+                  "file_size": 494406
+                }
+              ,{
+                  "file_path": "ERR030886_1_fastqc.zip",
+                  "file_type": "zip",
+                  "file_checksum": "sha1$27fa7c14318ecd7852ca8ecdf96ca6b83fcd4932",
+                  "file_size": 425451
+                }
+              ,{
+                  "file_path": "ERR030886_2_fastqc.html",
+                  "file_type": "html",
+                  "file_checksum": "sha1$6bb71b3f39c66f5e8664003312b274c53e9e2160",
+                  "file_size": 391261
+                }
+              ,{
+                  "file_path": "ERR030886_1_fastqc.html",
+                  "file_type": "html",
+                  "file_checksum": "sha1$d8645a7fe676245481971a7592130f34a6492397",
+                  "file_size": 349721
+                }
+
+              ],
+              "workflow_inputs" :
+              [{"file_storage_bundle_files": [{"file_type": "fastq.gz", "file_name": "fastq_file", "file_storage_bundle_id": "8ebdb03a-3c99-5f32-811c-9d74b88151ec", "file_path": "ERR030886_1.fastq.gz", "file_storage_id": "2eadcc65-44af-527c-a1a7-22c3a55d736e"}, {"file_type": "fastq.gz", "file_name": "fastq_file", "file_storage_bundle_id": "8ebdb03a-3c99-5f32-811c-9d74b88151ec", "file_path": "ERR030886_2.fastq.gz", "file_storage_id": "834523f3-7ddf-5086-a173-108060aeee77"}], "file_storage_bundle_id": "8ebdb03a-3c99-5f32-811c-9d74b88151ec"}]
+            ,
+
+              "qc_metrics" : {
+              },
+              "timing_metrics" : {
+                "step_timing" : {
+                  "download" : {
+                    "stop_time_utc" : "2016-11-17T02:35:00.910081",
+                    "walltime_seconds" : 7,
+                    "start_time_utc" : "2016-11-17T02:35:08.475753"
+                  },
+                  "tool_run" : {
+                    "stop_time_utc" : "2016-11-17T02:35:08.475793",
+                    "walltime_seconds" : 0,
+                    "start_time_utc" : "2016-11-17T02:35:08.475802"
+                  }
+                },
+                "overall_stop_time_utc" : "2016-11-17T02:35:08.475804",
+                "overall_start_time_utc" : "2016-11-17T02:35:00.910081",
+                "overall_walltime_seconds" : 7
+              },
+              "host_metrics" : {
+                "vm_instance_type" : "m1.xlarge",
+                "vm_region" : "oregon",
+                "vm_instance_cores" : 16,
+                "vm_instance_mem_gb" : 256,
+                "vm_location" : "aws"
+              }
+            }
+          ],
+          "sample_uuid": "3634f9bc-b6fe-5882-a1dd-1ff7dd54fdae"
+        }
+      ]
+    }
+  ],
+  "schema_version": "0.0.3",
+  "present_items": {
+    "tumor_sequence": [
+      "c84b7f04-7e48-5965-83be-a145409a5663"
+    ],
+    "normal_alignment_qc_report": [],
+    "tumor_somatic_variants": [],
+    "tumor_alignment": [],
+    "normal_sequence": [
+      "3634f9bc-b6fe-5882-a1dd-1ff7dd54fdae"
+    ],
+    "tumor_alignment_qc_report": [],
+    "normal_alignment": [],
+    "normal_sequence_qc_report": [],
+    "tumor_rnaseq_variants": [],
+    "normal_rnaseq_variants": [],
+    "normal_germline_variants": [],
+    "tumor_sequence_qc_report": []
+  },
+  "project": "TEST",
+  "program": "TEST",
+  "flags": {
+    "tumor_sequence": true,
+    "normal_alignment_qc_report": false,
+    "tumor_somatic_variants": false,
+    "tumor_alignment": false,
+    "normal_sequence": true,
+    "tumor_alignment_qc_report": false,
+    "normal_alignment": false,
+    "normal_sequence_qc_report": false,
+    "tumor_rnaseq_variants": false,
+    "normal_rnaseq_variants": false,
+    "normal_germline_variants": false,
+    "tumor_sequence_qc_report": false
+  },
+  "donor_uuid": "8d5628e1-5ce3-545f-bec2-2824a32f7be0",
+  "submitter_donor_id": "S019289"
+}
