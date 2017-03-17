@@ -2,9 +2,10 @@
 # 
 # Luigi Monitor
 
-import json
-import urllib2
 import boto
+import json
+import os
+import urllib2
 
 from boto.s3.key import Key
 from datetime 	 import datetime, timedelta
@@ -23,9 +24,7 @@ def getTouchfile(bucket_name, touchfile_name):
 # Luigi Scraping below
 # 
 def getJobList():
-	#server = "http://localhost:8082/api/"
-	#server = "http://35.164.225.222:8082/api/"
-	server = "http://ec2-35-164-225-222.us-west-2.compute.amazonaws.com:8082/api/"
+	server = os.environ['LUIGI_SERVER'] + ":8082/api/"
 
 	running_url   = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	batch_url     = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
