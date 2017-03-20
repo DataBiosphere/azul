@@ -90,7 +90,7 @@ def get_consonance_status(consonance_uuid):
 # When ended:
 # Last touched:
 # Time elapsed:
-db = create_engine('postgresql:///monitor', echo=False)
+db = create_engine('postgresql://{}:{}@db/monitor'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD")), echo=False)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
