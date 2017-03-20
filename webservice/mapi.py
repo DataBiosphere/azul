@@ -1527,7 +1527,7 @@ def get_manifes_full():
 @app.route('/action/service')
 @cross_origin()
 def get_action_service():
-	db = create_engine('postgresql:///monitor', echo=False)
+	db = create_engine('postgresql://{}:{}@db/monitor'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD")), echo=False)
 	conn = db.connect()
 	metadata = MetaData(db)
 	luigi = Table('luigi', metadata,

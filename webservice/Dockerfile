@@ -2,7 +2,7 @@ FROM nginx:1.10
 # upgrade pip and install required python packages
 RUN apt-get update
 RUN apt-get install -y build-essential libpq-dev libssl-dev libffi-dev python-dev
-RUN apt-get install -y python-pip
+RUN apt-get install -y python-pip postgresql
 RUN pip install -U pip
 RUN pip install uwsgi
 RUN pip install --upgrade cffi
@@ -30,11 +30,17 @@ ENV APACHE_PATH=""
 
 # Add app code
 COPY . /app
+#Make the runnable executable
+RUN chmod a+x /app/run.sh
 #Remove the current uwsgi.ini
 RUN rm /app/uwsgi.ini
 #Add the in app uwsgi
 ADD ./uwsgi/uwsgi.ini app/
 #Make the working directory /app
 WORKDIR /app
+#Add log folder
+RUN mkdir /app/log
+#Add crontab file
+ADD crontab /etc/cron.d/action-cron
 
 CMD ["/usr/bin/supervisord"]
