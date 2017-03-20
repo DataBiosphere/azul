@@ -1,0 +1,4 @@
+# Added by Alex Hancock
+*/4 * * * * . /home/env.txt; python /app/luigi-interface/monitor.py >>/app/log/output.txt 2>/app/log/temp_err.txt
+*/4 * * * * . /home/env.txt; python /app/luigi-interface/error_append.py
+
