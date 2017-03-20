@@ -8,7 +8,8 @@ sys.path.insert(0, '/var/www/html/dcc-dashboard-service')
 def application(req_environ, start_response):
 
     ENV_VAR =[
-       'DATABASE_URL'
+       'DATABASE_URL',
+       'APACHE_PATH'
     ]
     for key in ENV_VAR:
        os.environ[key] = req_environ.get(key, '')

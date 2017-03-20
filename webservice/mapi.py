@@ -24,12 +24,15 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
 
 
+apache_path = os.environ.get("APACHE_PATH", "")
+es_service = os.environ.get("ES_SERVICE", "localhost")
+
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 migrate = Migrate(app, db)
-es = Elasticsearch()
-
+#es = Elasticsearch()
+es = Elasticsearch(['http://'+es_service+':9200/'])
 @app.route('/invoices')
 @cross_origin()
 def find_invoices():
@@ -181,11 +184,11 @@ def get_data(file_id=None):
     idDonorSearch = None
     referenceAggs = {}
     inverseAggs = {}
-    with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+    with open(apache_path+'reference_aggs.json') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
         referenceAggs = json.load(my_aggs)
 
-    with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+    with open(apache_path+'inverse_aggs.json') as my_aggs:
         #with open('inverse_aggs.json') as my_aggs:
         inverseAggs = json.load(my_aggs)
 
@@ -227,7 +230,7 @@ def get_data(file_id=None):
         pass
     #The json with aggs to call ES
     aggs_list = {}
-    with open('/var/www/html/dcc-dashboard-service/aggs.json') as my_aggs:
+    with open(apache_path+'aggs.json') as my_aggs:
         #with open('aggs.json') as my_aggs:
         aggs_list = json.load(my_aggs)
     #Add the appropriate filters to the aggs_list
@@ -309,11 +312,11 @@ def get_data_pie():
     idDonorSearch = None
     referenceAggs = {}
     inverseAggs = {}
-    with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+    with open(apache_path+'reference_aggs.json') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
         referenceAggs = json.load(my_aggs)
 
-    with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+    with open(apache_path+'inverse_aggs.json') as my_aggs:
         #with open('inverse_aggs.json') as my_aggs:
         inverseAggs = json.load(my_aggs)
 
@@ -349,7 +352,7 @@ def get_data_pie():
     inverseAggs = {"center_name":"centerName", "project":"projectCode", "specimen_type":"specimenType", "file_type":"fileFormat", "workflow":"workFlow", "analysis_type":"analysisType", "program":"program"}
     #The json with aggs to call ES
     aggs_list = {}
-    with open('/var/www/html/dcc-dashboard-service/aggs.json') as my_aggs:
+    with open(apache_path+'aggs.json') as my_aggs:
         #with open('aggs.json') as my_aggs:
         aggs_list = json.load(my_aggs)
     #Add the appropriate filters to the aggs_list
@@ -423,11 +426,11 @@ def get_manifes_newt():
 	idSearch = None
 	referenceAggs = {}
 	inverseAggs = {}
-	with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+	with open(apache_path+'reference_aggs.json') as my_aggs:
 	#with open('reference_aggs.json') as my_aggs:
 		referenceAggs = json.load(my_aggs)
 
-	with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+	with open(apache_path+'inverse_aggs.json') as my_aggs:
 	#with open('inverse_aggs.json') as my_aggs:
 		inverseAggs = json.load(my_aggs)
 
@@ -454,7 +457,7 @@ def get_manifes_newt():
 		pass
 	#Added the scroll variable. Need to put the scroll variable in a config file.
 	scroll_config = '' 	
-	with open('/var/www/html/dcc-dashboard-service/scroll_config') as _scroll_config:
+	with open(apache_path+'scroll_config') as _scroll_config:
 	#with open('scroll_config') as _scroll_config:
 		scroll_config = _scroll_config.readline().strip()
 		#print scroll_config
@@ -520,10 +523,10 @@ def get_facets():
     #Get the order of the keys for the facet list
     f_order = []
     d_order = []
-    with open('/var/www/html/dcc-dashboard-service/order_file') as file_order:
+    with open(apache_path+'order_file') as file_order:
         f_order = file_order.readlines()
         f_order = [x.strip() for x in f_order]
-    with open('/var/www/html/dcc-dashboard-service/order_donor') as donor_order:
+    with open(apache_path+'order_donor') as donor_order:
         d_order = donor_order.readlines()
         d_order = [x.strip() for x in d_order]
 
@@ -533,7 +536,7 @@ def get_facets():
     #Return it as a JSON output.
     #Things I need to know: The final format of the indexes stored in ES
     facets_list = {}
-    with open('/var/www/html/dcc-dashboard-service/supported_facets.json') as my_facets:
+    with open(apache_path+'supported_facets.json') as my_facets:
         facets_list = json.load(my_facets)
         mText = es.search(index='fb_alias', body={"query": {"match_all":{}}, "aggs" : {
             "centerName" : {
@@ -652,11 +655,11 @@ def get_summary():
     idSearch = None
     referenceAggs = {}
     inverseAggs = {}
-    with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+    with open(apache_path+'reference_aggs.json') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
         referenceAggs = json.load(my_aggs)
 
-    with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+    with open(apache_path+'inverse_aggs.json') as my_aggs:
         #with open('inverse_aggs.json') as my_aggs:
         inverseAggs = json.load(my_aggs)
 
@@ -910,11 +913,11 @@ def get_search():
     #Holder for the keyword result
     keywordResult = {}
 
-    with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+    with open(apache_path+'reference_aggs.json') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
         referenceAggs = json.load(my_aggs)
 
-    with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+    with open(apache_path+'inverse_aggs.json') as my_aggs:
         #with open('inverse_aggs.json') as my_aggs:
         inverseAggs = json.load(my_aggs)
     #Get the filters in an appropriate format
@@ -972,7 +975,7 @@ def get_search():
 @app.route('/repository/files/order')
 @cross_origin()
 def get_order2():
-    with open('/var/www/html/dcc-dashboard-service/order_config') as my_aggs:
+    with open(apache_path+'order_config') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
         #referenceAggs = json.load(my_aggs)
         order = [line.rstrip('\n') for line in my_aggs]
@@ -982,13 +985,13 @@ def get_order2():
 @app.route('/repository/files/meta')
 @cross_origin()
 def get_order3():
-    with open('/var/www/html/dcc-dashboard-service/f_donor') as my_aggs:
+    with open(apache_path+'f_donor') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
         #referenceAggs = json.load(my_aggs)
         order_donor = [{'name':line.rstrip('\n'), 'category':'donor'} for line in my_aggs]
     #order = [line.rstrip('\n') for line in my_aggs]
 
-    with open('/var/www/html/dcc-dashboard-service/f_file') as my_aggs:
+    with open(apache_path+'f_file') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
         #referenceAggs = json.load(my_aggs)
         order_file = [{'name':line.rstrip('\n'), 'category':'file'} for line in my_aggs]
@@ -1011,11 +1014,11 @@ def get_manifest_old():
     idSearch = None 
     referenceAggs = {}
     inverseAggs = {}
-    with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+    with open(apache_path+'reference_aggs.json') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
         referenceAggs = json.load(my_aggs)
 
-    with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+    with open(apache_path+'inverse_aggs.json') as my_aggs:
         #with open('inverse_aggs.json') as my_aggs:
         inverseAggs = json.load(my_aggs)
 
@@ -1042,7 +1045,7 @@ def get_manifest_old():
         pass
     #Added the scroll variable. Need to put the scroll variable in a config file.
     scroll_config = ''
-    with open('/var/www/html/dcc-dashboard-service/scroll_config') as _scroll_config:
+    with open(apache_path+'scroll_config') as _scroll_config:
         #with open('scroll_config') as _scroll_config:
         scroll_config = _scroll_config.readline().strip()
     #print scroll_config
@@ -1092,11 +1095,11 @@ def get_manifest():
     idSearch = None
     referenceAggs = {}
     inverseAggs = {}
-    with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+    with open(apache_path+'reference_aggs.json') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
         referenceAggs = json.load(my_aggs)
 
-    with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+    with open(apache_path+'inverse_aggs.json') as my_aggs:
         #with open('inverse_aggs.json') as my_aggs:
         inverseAggs = json.load(my_aggs)
 
@@ -1129,7 +1132,7 @@ def get_manifest():
         pass
     #Added the scroll variable. Need to put the scroll variable in a config file.
     scroll_config = ''
-    with open('/var/www/html/dcc-dashboard-service/scroll_config') as _scroll_config:
+    with open(apache_path+'scroll_config') as _scroll_config:
         #with open('scroll_config') as _scroll_config:
         scroll_config = _scroll_config.readline().strip()
     #print scroll_config
@@ -1435,11 +1438,11 @@ def get_manifes_full():
 	idSearch = None
         referenceAggs = {}
         inverseAggs = {}
-        with open('/var/www/html/dcc-dashboard-service/reference_aggs.json') as my_aggs:
+        with open(apache_path+'reference_aggs.json') as my_aggs:
         #with open('reference_aggs.json') as my_aggs:
                 referenceAggs = json.load(my_aggs)
 
-        with open('/var/www/html/dcc-dashboard-service/inverse_aggs.json') as my_aggs:
+        with open(apache_path+'inverse_aggs.json') as my_aggs:
         #with open('inverse_aggs.json') as my_aggs:
                 inverseAggs = json.load(my_aggs)
 
@@ -1470,7 +1473,7 @@ def get_manifes_full():
                 pass
         #Added the scroll variable. Need to put the scroll variable in a config file.
         scroll_config = ''
-        with open('/var/www/html/dcc-dashboard-service/scroll_config') as _scroll_config:
+        with open(apache_path+'scroll_config') as _scroll_config:
         #with open('scroll_config') as _scroll_config:
                 scroll_config = _scroll_config.readline().strip()
                 #print scroll_config

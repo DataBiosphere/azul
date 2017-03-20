@@ -1,7 +1,9 @@
 import json
 from decimal import Decimal
 import datetime
-pricing = json.load(open("/var/www/html/dcc-dashboard-service/region_instance_prices.json"))
+import os
+apache_path = os.environ.get("APACHE_PATH")
+pricing = json.load(open(apache_path+"region_instance_prices.json"))
 EXTRA_MONEY = 1.2  # if you want to tune billings, this is the dial. 1.2 means add 20% on top of what is calculated
 # that we pay to AWS or whichever host
 SECONDS_IN_HR = 3600
