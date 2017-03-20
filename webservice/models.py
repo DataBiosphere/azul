@@ -1,6 +1,8 @@
 from datetime import datetime
-from active_alchemy import ActiveAlchemy
-db = ActiveAlchemy()
+#from active_alchemy import ActiveAlchemy
+#db = ActiveAlchemy()
+from flask_sqlalchemy import SQLAlchemy
+db = SQLAlchemy()
 
 class CRUDMixin(object):
     """Mixin that adds convenience methods for CRUD (create, read, update, delete) operations."""
