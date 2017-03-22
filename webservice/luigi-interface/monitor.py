@@ -6,6 +6,7 @@ import boto
 import json
 import os
 import subprocess
+import sys
 import urllib2
 
 from boto.s3.key import Key
@@ -14,19 +15,18 @@ from sqlalchemy  import *
 
 def getTouchfile(bucket_name, touchfile_name):
 	s3 = boto.connect_s3()
-	bucket = s3.get_bucket(bucket_name)
+	bucket = s3.get_bucket(bucket_name, validate=False)
 
-	k = Key(bucket)
-	k.key = touchfile_name
-	contents = k.get_contents_as_string()
+	key = bucket.new_key(touchfile_name)
+	contents = key.get_contents_as_string()
 	return contents
 
 # 
 # Luigi Scraping below
 # 
 def getJobList():
-	server = os.environ['LUIGI_SERVER'] + ":8082/api/"
-
+	server = os.getenv("LUIGI_SERVER") + ":8082/api/"
+	print "SERVER:", server
 	running_url   = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	batch_url     = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	failed_url    = server + "task_list?data=%7B%22status%22%3A%22FAILED%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
@@ -43,9 +43,7 @@ def getJobList():
 	required_parameters = ["project", "donor_id", "sample_id", "pipeline_name"]
 
 	local_job_list = {}
-
 	for URL in list_of_URLs:
-
 	    name = URL[62:]
 	    suffix = ""
 	    if "UPSTREAM" in name:
@@ -57,9 +55,11 @@ def getJobList():
 	        name = name.split("%")[0] + suffix
 
 	    # Retrieve api tool dump from URL and read it into json_tools
+	    #print "URL: ", URL
 	    req = urllib2.Request(URL)
 	    response = urllib2.urlopen(req)
 	    text_tools = response.read()
+	    #print "TEXT TOOLS:", text_tools
 	    json_tools = json.loads(text_tools)
 
 	    luigi_job_list = json_tools["response"]
@@ -79,17 +79,13 @@ def proxyConversion(resultProxy):
 def get_consonance_status(consonance_uuid):
 	cmd = ['consonance', 'status', '--job_uuid', str(consonance_uuid)]
 	status_text = subprocess.check_output(cmd)
+	print "CONSONANCE OUTPUT:", status_text
 	return json.loads(status_text)
 
 #
 # Database initialization, creation if table doesn't exist
 #
 # Change echo to True to show SQL code... unnecessary
-# Any time facets?
-# When started:
-# When ended:
-# Last touched:
-# Time elapsed:
 db = create_engine('postgresql://{}:{}@db/monitor'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD")), echo=False)
 conn = db.connect()
 metadata = MetaData(db)
@@ -121,6 +117,8 @@ if not db.dialect.has_table(db, luigi):
 	luigi.create()
 
 jobList = getJobList()
+print jobList
+
 for job in jobList:
 	job_dict = jobList[job]	
 	#print job
@@ -135,12 +133,15 @@ for job in jobList:
 		touchfile_name = filepath + '/' + \
 						 job_dict['params']['submitter_sample_id'] + \
 						 '_meta_data.json'
+		print "GOING INTO S3 RETRIEVAL"
 		stringContents = getTouchfile(bucket_name, touchfile_name)
 		jsonMetadata = json.loads(stringContents)
 	except:
 		# Hardcoded jsonMetadata
+		print >>sys.stderr, "Problems with s3 retrieval"
 		continue
 
+	print "DEBUG SURVIVED S3 RETRIEVAL"
 	select_query = select([luigi]).where(luigi.c.luigi_job == job)
 	select_exist_result = proxyConversion(conn.execute(select_query))
 

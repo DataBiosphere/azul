@@ -42,5 +42,11 @@ WORKDIR /app
 RUN mkdir /app/log
 #Add crontab file
 ADD crontab /etc/cron.d/action-cron
+RUN chmod 0644 /etc/cron.d/action-cron
+
+# Commented out by Alex Hancock, 
+# trying to pass credentials through 
+# environment variables
+#COPY ./.boto/credentials /etc/boto.cfg/
 
 CMD ["/usr/bin/supervisord"]
