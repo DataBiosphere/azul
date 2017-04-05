@@ -49,4 +49,8 @@ RUN chmod 0644 /etc/cron.d/action-cron
 # environment variables
 #COPY ./.boto/credentials /etc/boto.cfg/
 
+# Install Consonance
+RUN wget https://github.com/Consonance/consonance/releases/download/2.0-alpha.4/consonance -O /bin/consonance 
+RUN chmod a+x /bin/consonance
+
 CMD ["/usr/bin/supervisord"]
