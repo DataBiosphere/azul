@@ -44,12 +44,9 @@ RUN mkdir /app/log
 ADD crontab /etc/cron.d/action-cron
 RUN chmod 0644 /etc/cron.d/action-cron
 
-# Commented out by Alex Hancock, 
-# trying to pass credentials through 
-# environment variables
-#COPY ./.boto/credentials /etc/boto.cfg/
-
 # Install Consonance
+RUN apt-get -qq update
+RUN apt-get -qq -y install wget
 RUN wget https://github.com/Consonance/consonance/releases/download/2.0-alpha.4/consonance -O /bin/consonance 
 RUN chmod a+x /bin/consonance
 
