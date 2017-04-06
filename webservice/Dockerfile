@@ -44,10 +44,32 @@ RUN mkdir /app/log
 ADD crontab /etc/cron.d/action-cron
 RUN chmod 0644 /etc/cron.d/action-cron
 
+# Install Java
+FROM ubuntu:16.04
+
+# Update the APT cache
+# prepare for Java download
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y \
+    python-software-properties \
+    software-properties-common \
+    telnet \
+    && apt-get clean
+
+# grab oracle java (auto accept licence)
+RUN add-apt-repository -y ppa:webupd8team/java \
+    && apt-get update \
+    && echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections \
+    && apt-get install -y oracle-java8-installer
+
 # Install Consonance
 RUN apt-get -qq update
 RUN apt-get -qq -y install wget
-RUN wget https://github.com/Consonance/consonance/releases/download/2.0-alpha.4/consonance -O /bin/consonance 
+RUN wget https://github.com/Consonance/consonance/releases/download/2.0-alpha.10/consonance -O /bin/consonance 
 RUN chmod a+x /bin/consonance
+
+# Place the config in $HOME
+COPY consonance_config /root/.consonance/config
 
 CMD ["/usr/bin/supervisord"]
