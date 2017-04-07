@@ -1,0 +1,4 @@
+[webservice]
+base_path = ___CONSONANCE_ADDRESS___
+token = ___CONSONANCE_TOKEN___
+
