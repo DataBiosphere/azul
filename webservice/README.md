@@ -143,7 +143,7 @@ export REDWOOD_ACCESS_TOKEN=<your_token>
 ```
 Save the file, and then start the cron job. It also assumes that you have the dcc-dashboard setup. In case you don’t, simply edit your cron job so it only executes the first command from the crontab.txt file. 
 
-***API Instructions; /repository/files/***<br>
+***API Instructions; /repository/files***<br>
 Currently there are 6 parameters supported. They are as follows:<br>
 
 |Parameter|Description|Data Type|Example|
