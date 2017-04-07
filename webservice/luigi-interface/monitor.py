@@ -78,6 +78,7 @@ def proxyConversion(resultProxy):
 
 def get_consonance_status(consonance_uuid):
 	cmd = ['consonance', 'status', '--job_uuid', str(consonance_uuid)]
+	print "Trying Consonance..."
 	status_text = subprocess.check_output(cmd)
 	print "CONSONANCE OUTPUT:", status_text
 	return json.loads(status_text)
