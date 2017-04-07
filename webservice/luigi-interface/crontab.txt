@@ -1,0 +1,1 @@
+*/5 * * * * root python ~/luigi-monitor/luigi-interface/monitor.py

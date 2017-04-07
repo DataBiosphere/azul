@@ -1,0 +1,5 @@
+# Added by Alex Hancock
+*/5 * * * * root env - `cat /app/log/env.txt` python /app/luigi-interface/monitor.py >> /app/log/output.txt 2> /app/log/temp_err.txt
+# This is bad code. Delete this, Nephew.
+*/4 * * * * root cat /app/log/temp_err.txt >>error.txt
+
