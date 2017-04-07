@@ -44,24 +44,18 @@ RUN mkdir /app/log
 ADD crontab /etc/cron.d/action-cron
 RUN chmod 0644 /etc/cron.d/action-cron
 
-# Install Java
-FROM ubuntu:16.04
+# Debian Jessie install java
+#RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" | tee /etc/apt/sources.list.d/webupd8team-java.list
+#RUN echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list
+#RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+#RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+#RUN apt-get update
+#RUN apt-get install oracle-java8-installer
 
-# Update the APT cache
-# prepare for Java download
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get install -y \
-    python-software-properties \
-    software-properties-common \
-    telnet \
-    && apt-get clean
-
-# grab oracle java (auto accept licence)
-RUN add-apt-repository -y ppa:webupd8team/java \
-    && apt-get update \
-    && echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections \
-    && apt-get install -y oracle-java8-installer
+RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
+RUN echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886 && apt-get update && apt-get install -y curl dnsutils oracle-java8-installer ca-certificates
 
 # Install Consonance
 RUN apt-get -qq update
