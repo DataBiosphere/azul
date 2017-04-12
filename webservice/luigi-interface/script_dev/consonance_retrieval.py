@@ -6,7 +6,8 @@ def get_consonance_status(consonance_uuid):
 	status_text = subprocess.check_output(cmd)
 	return json.loads(status_text)
 
-consonance_uuid = '550db4d9-06b5-490e-ac73-b21126c6acea'
+#consonance_uuid = '550db4d9-06b5-490e-ac73-b21126c6acea'
+consonance_uuid = "f5523781-2e1c-485d-a46b-c5b64e0f6cf8"
 
 status_json = get_consonance_status(consonance_uuid)
 

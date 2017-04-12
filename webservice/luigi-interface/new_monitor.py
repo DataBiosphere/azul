@@ -149,7 +149,7 @@ for job in jobList:
 	try:
 		status_json = get_consonance_status(jsonMetadata['consonance_job_uuid'])
 	except:
-		# Add consonance job uuid print to stderr,
+		# Add consonance job uuid print t ocstderr,
 		# print job uuid and time when it happeneds
 		status_json = {
 			'create_timestamp' : job_dict['start_time'],
@@ -167,7 +167,9 @@ for job in jobList:
 		# 
 		# insert into db	
 		ins_query = luigi.insert().values(luigi_job=job,
-						status=status_json['state'],
+
+						#status=status_json['state'],
+			
 						submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
 						specimen_uuid=jsonMetadata['specimen_uuid'],
 						workflow_name=jsonMetadata['workflow_name'],
@@ -183,28 +185,60 @@ for job in jobList:
 						submitter_experimental_design=jsonMetadata['submitter_experimental_design'],
 						submitter_specimen_type=jsonMetadata['submitter_specimen_type'],
 						workflow_version=jsonMetadata['workflow_version'],
-						sample_uuid=jsonMetadata['sample_uuid'],
-						start_time=status_json['create_timestamp'],
-						last_updated=status_json['update_timestamp'])
+						sample_uuid=jsonMetadata['sample_uuid']
+						
+						#start_time=status_json['create_timestamp'],
+						#last_updated=status_json['update_timestamp']
+						)
 		exec_result = conn.execute(ins_query)	
 		# Uhhh... some error throwing on exec_result? 
-	else:
-		row = select_exist_result[0]
-		# row[1] is the status of the job
-		if (row[1] == job_dict['status']):
-			if row[1] == "RUNNING":
-				stmt = luigi.update().\
-					   where(luigi.c.luigi_job == job).\
-					   values(last_updated=job_dict['last_updated'])
-				exec_result = conn.execute(stmt)
-			else:
-				# STILL DONE OR FAILED
-				continue
-		else: 
-			# Status has changed
+
+# Okay, now we have all of our Luigi jobs
+# in a database, and they all have Consonance
+# UUID's. We need to grab Consonance statuses,
+# because Luigi's information is misleading.
+# 
+# This should be accomplished by:
+# 
+# Select all from the table, pipe it into a list
+# 
+# for job in list
+#     consonance status using job.consonance_uuid
+#     update that job using the information from status return
+select_query = select([luigi])
+select_result = conn.execute(select_query)
+result_list = [dict(row) for row in select_result]
+for job in result_list:
+	try:
+		job_name = job['luigi_job']
+		job_uuid = job['consonance_job_uuid']
+
+		if job_uuid == "no consonance id in test mode":
+			# Skip test mode Consonance ID's
+			# and force next job
+			print "Test ID, skipping"
+			continue
+		else:
+			# Consonace job id is real
+			print "\nJOB NAME:", job_uuid
+
+			status_json = get_consonance_status(job_uuid)
+
+			state = status_json['state']
+			created = status_json['create_timestamp']
+			updated = status_json['update_timestamp']
+
+			print "STATE:", state
+			print "CREATED:", created
+			print "UPDATED:", updated
+			# DEBUG, comment when testing
+			continue
+
 			stmt = luigi.update().\
-				   where(luigi.c.luigi_job == job).\
-				   values(status=job_dict['status'], last_updated=job_dict['last_updated'])
+				   where(luigi.c.luigi_job == job_name).\
+				   values(status=state, 
+				   		  last_updated=updated,
+				   		  start_time=created)
 			exec_result = conn.execute(stmt)
-			# Update status change, time finished, time elapsed
-			# Update with logs and auth later
+	except Exception as e:
+		print >>sys.stderr, "ERROR:", str(e)

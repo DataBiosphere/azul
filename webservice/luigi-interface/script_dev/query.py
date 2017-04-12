@@ -1,7 +1,14 @@
 # Alex Hancock, UCSC CGL
 
 import json
+import subprocess
+import sys
 from sqlalchemy import create_engine, MetaData, String, Table, Float, Column, select
+
+def get_consonance_status(consonance_uuid):
+	cmd = ['consonance', 'status', '--job_uuid', consonance_uuid]
+	status_text = subprocess.check_output(cmd)
+	return json.loads(status_text)
 
 db = create_engine('postgresql:///monitor', echo=False)
 conn = db.connect()
@@ -34,4 +41,37 @@ luigi = Table('luigi', metadata,
 select_query = select([luigi])
 select_result = conn.execute(select_query)
 result_list = [dict(row) for row in select_result]
-print result_list
+for job in result_list:
+	try:
+		job_name = job['luigi_job']
+		job_uuid = job['consonance_job_uuid']
+
+		if job_uuid == "no consonance id in test mode":
+			# Skip test mode Consonance ID's
+			# and force next job
+			print "Test ID, skipping"
+			continue
+		else:
+			# Consonace job id is real
+			print "\nJOB NAME:", job_uuid
+
+			status_json = get_consonance_status(job_uuid)
+
+			state = status_json['state']
+			created = status_json['create_timestamp']
+			updated = status_json['update_timestamp']
+
+			print "STATE:", state
+			print "CREATED:", created
+			print "UPDATED:", updated
+			# DEBUG, comment when testing
+			continue
+
+			stmt = luigi.update().\
+				   where(luigi.c.luigi_job == job_name).\
+				   values(status=state, 
+				   		  last_updated=updated,
+				   		  start_time=created)
+			exec_result = conn.execute(stmt)
+	except Exception as e:
+		print >>sys.stderr, "ERROR:", str(e)
