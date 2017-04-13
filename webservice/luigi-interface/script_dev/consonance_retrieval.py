@@ -2,7 +2,7 @@ import subprocess
 import json
 
 def get_consonance_status(consonance_uuid):
-	cmd = ['consonance', 'status', '--job_uuid', consonance_uuid, '|', 'python', '-m', 'json.tool']
+	cmd = ['consonance', 'status', '--job_uuid', consonance_uuid]
 	status_text = subprocess.check_output(cmd)
 	return json.loads(status_text)
 
