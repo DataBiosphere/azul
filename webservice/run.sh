@@ -15,3 +15,14 @@ echo "$(date) - waiting for database to start"
     sleep 2
 done
 
+echo "Action Service Database Ready "
+
+while ! pg_isready -U ${B_POSTGRES_USER} -h boardwalk-billing
+do
+echo "$(date) - waiting for database to start"
+    sleep 2
+done
+
+echo "Billing Service Database Ready"
+
+flask db upgrade

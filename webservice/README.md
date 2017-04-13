@@ -9,8 +9,12 @@ There are currently five working endpoints:
 <li>"<code>/keywords</code>" returns a list of search results for some search query.</li>
 </ul>
 
-<h2>Developer Installation Instructions</h2>
-##Assumptions 
+<h2>Installation Instructions</h2>
+
+Please refer to [dcc-ops](https://github.com/BD2KGenomics/dcc-ops) for installing the the dashboard-service and all its required components. This will automatically set up the dashboard service using an NGINX server.
+
+<h2>Developer Installation Instructions; Apache Install</h2>
+## Assumptions 
 <ul>
 <li>You have Elasticsearch 5.0.0 installed in your machine.</li>
 <li>You have virtualenv installed in your machine. </li>
@@ -20,7 +24,7 @@ If you don’t have virtualenv installed, you can do so by running:
 ```
 sudo easy_install virtualenv
 ```
-##Setting up the Directory Structure
+## Setting up the Directory Structure
 The following directory structure should be set up:
 
 ```
@@ -49,7 +53,7 @@ wget https://s3-us-west-2.amazonaws.com/beni-dcc-storage-dev/20161216_ucsc-stora
 ```
 To set up the dashboard, follow the instructions https://github.com/BD2KGenomics/dcc-dashboard
 
-##Installing Apache
+## Installing Apache
 To deploy the Flask application, we will use Apache. To install Apache and the required components in your machine, run the following commands:
 ```
 # Install the apache webserver and mod_wsgi.
@@ -59,13 +63,13 @@ sudo apt-get install libapache2-mod-wsgi
 sudo a2enmod headers
 sudo service apache2 restart
 ```
-##Make the Soft Link
+## Make the Soft Link
 We will set the soft link for Apache to access the web service
 ```
 #Make the soft-links for apache to use
 sudo ln -sT ~/dcc-dashboard-service /var/www/html/dcc-dashboard-service
 ```
-##Setting Up the Apache Configuration
+## Setting Up the Apache Configuration
 Edit the configuration file /etc/apache2/sites-enabled/000-default.conf as follows:
 ```
 <VirtualHost *:80>
@@ -94,7 +98,7 @@ Save it and run
 ```
 sudo service apache2 restart
 ```
-##Setting Up HTTPS Using 'LetsEncrypt'
+## Setting Up HTTPS Using 'LetsEncrypt'
 If you want to set up HTTPS for the web service, you can do so by using LetsEncrypt. 
 Before starting however, you must comment out the `WSGIDaemonProcess` line. Not doing so will cause an error when trying to install the SSL certificates via Certbot.  
 Go to https://certbot.eff.org/ and for software, choose Apache. For the system, choose as appropriate. Follow their installation instructions. 
@@ -103,7 +107,7 @@ Finally, run:
 ```
 sudo service apache2 restart
 ```
-##Installing Pip and Flask (If you don't have them)
+## Installing Pip and Flask (If you don't have them)
 You want to have pip installed so you can install various python packages:
 ```
 #Install pip
@@ -114,7 +118,7 @@ Then, to install Flask, do:
 #Install flask
 sudo pip install flask
 ```
-##Setting up the virtualenv for the Flask App
+## Setting up the virtualenv for the Flask App
 The Web Service Flask app requires various python packages. To avoid any conflicts with other web applications within the same machine, we will create a virtual environment with the required packages to run. Assuming you are in the root directory of your machine, you can set up the virtual environment as follows:
 ```
 #Make the virtual environment and install requirements
@@ -123,12 +127,12 @@ virtualenv env
 . env/bin/activate 
 pip install -r requirements
 ```
-##Enabling the 'instructions.sh' Script
+## Enabling the 'instructions.sh' Script
 To enable the instructions.sh script, which contains the commands to run and update the Elasticsearch indicies that the web service uses, do:
 ```
 chmod +x dcc-dashboard-service/instructions.sh
 ```
-##Setting the 'instructions.sh' as a cron job
+## Setting the 'instructions.sh' as a cron job
 To start the cron job, simply do:
 ```
 crontab dcc-dashboard-service/crontab.txt
@@ -139,230 +143,47 @@ export REDWOOD_ACCESS_TOKEN=<your_token>
 ```
 Save the file, and then start the cron job. It also assumes that you have the dcc-dashboard setup. In case you don’t, simply edit your cron job so it only executes the first command from the crontab.txt file. 
 
-
-***API Instructions; /repository/files/***<br>
+***API Instructions; /repository/files***<br>
 Currently there are 6 parameters supported. They are as follows:<br>
-<table width="100%">
-  <tbody>
-    <tr>
-      <th>Parameter</th>
 
-      <th>Description</th>
+|Parameter|Description|Data Type|Example|
+|--- |--- |--- |--- |
+|filters|Specifies which filters to use to return only the files with the matching criteria. Supplied as a string with the format: {"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}|String|http://ucsc-cgl.org/api/v1/repository/files/?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return only those files who have a file format of type "bam"|
+|from|Specifies the start index. Defaults to 1 if not specified:|Integer|http://ucsc-cgl.org/api/v1/repository/files/?from=26  This will return the next 25 results starting at index 26|
+|size|Specifies how many hits to return. Defaults to 10|Integer|http://ucsc-cgl.org/api/v1/repository/files/?size=50  This will return 50 hits starting from 1|
+|sort|Specifies the field under which the list of hits should be sorted. Defaults to "center_name"|String|http://ucsc-cgl.org/api/v1/repository/files/?sort=donor  This will return the hits sorted by the "donor" field.|
+|order|Specifies the order in which the hits should be sorted; two options, "asc" and "desc". Defaults to "desc".|String|http://ucsc-cgl.org/api/v1/repository/files/?order=desc  This will return the hits in descending order.|
 
-      <th>Data Type</th>
-
-      <th>Example</th>
-    </tr>
-
-    <tr>
-      <td>field</td>
-
-      <td>Specifies which fields to return. Supplied as a series of strings separated by a comma</td>
-
-      <td>Array[String]</td>
-
-      <td>http://ucsc-cgl.org/api/v1/repository/files?field=analysis_type%2Cdownload_id <br>
-      This will return only the "analysis_type" and the "download_id" field from each hit. 
-</td>
-    </tr>
-
-    <tr>
-      <td>filters</td>
-
-      <td>Specifies which filters to use to return only the files with the matching criteria. Supplied as a string with the format:
-      {"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}
-      </td>
-
-      <td>String</td>
-
-      <td>http://ucsc-cgl.org/api/v1/repository/files/?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D<br>
-      This will return only those files who have a file format of type "bam"</td>
-    </tr>
-
-    <tr>
-      <td>from</td>
-
-      <td>Specifies the start index. Defaults to 1 if not specified:</td>
-
-      <td>Integer</td>
-
-      <td>http://ucsc-cgl.org/api/v1/repository/files/?from=26 <br>
-      This will return the next 25 results starting at index 26</td>
-    </tr>
-
-    <tr>
-      <td>size</td>
-
-      <td>Specifies how many hits to return. Defaults to 10</td>
-
-      <td>Integer</td>
-
-      <td>http://ucsc-cgl.org/api/v1/repository/files/?size=50 <br>
-      This will return 50 hits starting from 1</td>
-    </tr>
-
-    <tr>
-      <td>sort</td>
-
-      <td>Specifies the field under which the list of hits should be sorted. Defaults to "center_name"</td>
-
-      <td>String</td>
-
-      <td>http://ucsc-cgl.org/api/v1/repository/files/?sort=donor <br>
-      This will return the hits sorted by the "donor" field.
-      </td>
-    </tr>
-
-    <tr>
-      <td>order</td>
-
-      <td>Specifies the order in which the hits should be sorted; two options, "asc" and "desc". Defaults to "desc".</td>
-
-      <td>String</td>
-
-      <td>http://ucsc-cgl.org/api/v1/repository/files/?order=desc <br>
-      This will return the hits in descending order.</td>
-    </tr>
-  </tbody>
-</table>
 <br>
+
 
 ***API Instructions; /repository/files/export***<br>
 
-<table width="100%">
-  <tbody>
-    <tr>
-      <th>Parameter</th>
-
-      <th>Description</th>
-
-      <th>Data Type</th>
-
-      <th>Example</th>
-    </tr>
-
-    <tr>
-      <td>filters</td>
-
-      <td>Specifies which filters to use to return only the manifest with of the files that matching the criteria. Supplied as a string with the format:
-      {"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}
-      </td>
-
-      <td>String</td>
-
-      <td>http://ucsc-cgl.org/api/v1/repository/files/?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D<br>
-      This will return a manifest with only those files who have a file format of type "bam"</td>
-    </tr>
+|Parameter|Description|Data Type|Example|
+|--- |--- |--- |--- |
+|filters|Specifies which filters to use to return only the manifest with of the files that matching the criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgl.org/api/v1/repository/files/export?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
 
 
-  </tbody>
-</table>
 <br>
 
 ***API Instructions; /repository/files/summary***<br>
 
-<table width="100%">
-  <tbody>
-    <tr>
-      <th>Parameter</th>
+|Parameter|Description|Data Type|Example|
+|--- |--- |--- |--- |
+|filters|Specifies which filters to use to return only the summary with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgl.org/api/v1/repository/files/summary?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
 
-      <th>Description</th>
-
-      <th>Data Type</th>
-
-      <th>Example</th>
-    </tr>
-
-    <tr>
-      <td>filters</td>
-
-      <td>Specifies which filters to use to return only the summary with the matching criteria. Supplied as a string with the format:
-      {"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}
-      </td>
-
-      <td>String</td>
-
-      <td>http://ucsc-cgl.org/api/v1/repository/files/?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D<br>
-      This will return a manifest with only those files who have a file format of type "bam"</td>
-    </tr>
-
-
-  </tbody>
-</table>
 <br>
 
 ***API Instructions; /keywords***<br>
+
 Currently there are 5 parameters supported. They are as follows:<br>
-<table width="100%">
-  <tbody>
-    <tr>
-      <th>Parameter</th>
 
-      <th>Description</th>
+|Parameter|Description|Data Type|Example|
+|--- |--- |--- |--- |
+|type|Specifies which type to return (file or file-donor). Supplied as a string. Defaults to 'file'.|String|http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153 This will return files based on the search query 84f153.|
+|filters|Specifies which filters to use to return only the search results with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153&filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return only those files who have a file format of type "bam" for the query 84f153 .|
+|from|Specifies the start index. Defaults to 1 if not specified:|Integer|http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153&from=26 This will return the search results from result 26 onwards|
+|size|Specifies how many hits to return. Defaults to 5|Integer|http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153&size=5 This will return at most 5 hits.|
+|q|Specifies the query for search|String|http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153&size=5 This will return at most 5 hits for the query 84f153.|
 
-      <th>Data Type</th>
-
-      <th>Example</th>
-    </tr>
-
-    <tr>
-      <td>type</td>
-
-      <td>Specifies which type to return (file or file-donor). Supplied as a string. Defaults to 'file'.</td>
-
-      <td>String</td>
-
-      <td>http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153 <br>
-      This will return files based on the search query 84f153. 
-</td>
-    </tr>
-
-    <tr>
-      <td>filters</td>
-
-      <td>Specifies which filters to use to return only the search results with the matching criteria. Supplied as a string with the format:
-      {"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}
-      </td>
-
-      <td>String</td>
-
-      <td>http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153&filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D<br>
-      This will return only those files who have a file format of type "bam" for the query 84f153 .</td>
-    </tr>
-
-    <tr>
-      <td>from</td>
-
-      <td>Specifies the start index. Defaults to 1 if not specified:</td>
-
-      <td>Integer</td>
-
-      <td>http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153&from=26 <br>
-      This will return the search results from result 26 onwards</td>
-    </tr>
-
-    <tr>
-      <td>size</td>
-
-      <td>Specifies how many hits to return. Defaults to 5</td>
-
-      <td>Integer</td>
-
-      <td>http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153&size=5 <br>
-      This will return at most 5 hits.</td>
-    </tr>
-
-    <tr>
-      <td>q</td>
-
-      <td>Specifies the query for search</td>
-
-      <td>String</td>
-
-      <td>http://ucsc-cgl.org/api/v1/keywords?type=file&q=84f153&size=5 <br>
-      This will return at most 5 hits for the query 84f153.
-      </td>
-    </tr>
-  </tbody>
-</table>
 
