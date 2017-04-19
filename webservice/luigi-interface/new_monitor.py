@@ -216,7 +216,7 @@ for job in result_list:
 		if job_uuid == "no consonance id in test mode":
 			# Skip test mode Consonance ID's
 			# and force next job
-			print "Test ID, skipping"
+			print "\nTest ID, skipping"
 			continue
 		else:
 			# Consonace job id is real
@@ -231,8 +231,9 @@ for job in result_list:
 			print "STATE:", state
 			print "CREATED:", created
 			print "UPDATED:", updated
+			
 			# DEBUG, comment when testing
-			continue
+			#continue
 
 			stmt = luigi.update().\
 				   where(luigi.c.luigi_job == job_name).\
