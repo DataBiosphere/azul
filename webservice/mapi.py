@@ -1538,8 +1538,8 @@ def get_action_service():
 		Column("submitter_specimen_type", String(100)),
 		Column("workflow_version", String(100)),
 		Column("sample_uuid", String(100)),
-		Column("start_time", Float),
-		Column("last_updated", Float)
+		Column("start_time", String(100)),
+		Column("last_updated", String(100))
 	)
 	select_query = select([luigi])
 	select_result = conn.execute(select_query)

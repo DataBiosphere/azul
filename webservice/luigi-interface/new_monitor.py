@@ -111,8 +111,8 @@ luigi = Table('luigi', metadata,
 	Column("workflow_version", String(100)),
 	Column("sample_uuid", String(100)),
 
-	Column("start_time", Float),
-	Column("last_updated", Float)
+	Column("start_time", String(100)),
+	Column("last_updated", String(100))
 )
 if not db.dialect.has_table(db, luigi):
 	luigi.create()
