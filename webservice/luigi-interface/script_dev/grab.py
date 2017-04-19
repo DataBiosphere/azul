@@ -10,9 +10,13 @@ def get_consonance_status(consonance_uuid):
 URL = "https://dev.ucsc-cgl.org/api/v1/action/service"
 
 # Retrieve api tool dump from URL and read it into json_tools
+print "Step 1"
 req = urllib2.Request(URL)
+print "Step 2"
 response = urllib2.urlopen(req)
+print "Step 3"
 text_tools = response.read()
+print "Step 4"
 json_tools = json.loads(text_tools)
 
 for dictionary in json_tools:
@@ -21,4 +25,5 @@ for dictionary in json_tools:
         try:
             print get_consonance_status(consonance_uuid)
         except:
+	    print "Something failed."
             continue
