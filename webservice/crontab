@@ -1,4 +1,2 @@
 # Added by Alex Hancock
-*/1 * * * * root env - 'cat /app/log/env.txt' python /app/luigi-interface/new_monitor.py >> /app/log/output.txt 2> /app/log/error.txt
-*/1 * * * * root env - 'cat /app/log/env.txt' python /app/luigi-interface/script_dev/grab.py >> /app/log/grab_output.txt 2> /app/log/grab_error.txt
-*/1 * * * * root env - 'cat /app/log/env.txt' python /app/luigi-interface/script_dev/consonance_retrieval.py >> /app/log/consonance_output.txt 2> /app/log/consonance_error.txt
+*/2 * * * * root env - 'cat /app/log/env.txt' python /app/luigi-interface/new_monitor.py >> /app/log/output.txt 2> /app/log/error.txt
