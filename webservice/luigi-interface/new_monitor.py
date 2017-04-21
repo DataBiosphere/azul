@@ -247,7 +247,7 @@ for job in result_list:
 	except Exception as e:
 		print >>sys.stderr, "ERROR:", str(e)
 
-		state = status_json['JOB NOT FOUND']
+		state = 'JOB NOT FOUND'
 
 		stmt = luigi.update().\
 			   where(luigi.c.luigi_job == job_name).\
