@@ -43,6 +43,8 @@ RUN mkdir /app/log
 #Add crontab file
 ADD crontab /etc/cron.d/action-cron
 RUN chmod 0644 /etc/cron.d/action-cron
+# Testing cron fixes
+CMD cron
 
 # Java install
 RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
