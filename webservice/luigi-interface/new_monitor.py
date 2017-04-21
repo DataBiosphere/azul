@@ -246,3 +246,10 @@ for job in result_list:
 			exec_result = conn.execute(stmt)
 	except Exception as e:
 		print >>sys.stderr, "ERROR:", str(e)
+
+		state = status_json['JOB NOT FOUND']
+
+		stmt = luigi.update().\
+			   where(luigi.c.luigi_job == job_name).\
+			   values(status=state)
+		exec_result = conn.execute(stmt)
