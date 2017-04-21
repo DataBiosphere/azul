@@ -217,7 +217,10 @@ for job in result_list:
 			# Skip test mode Consonance ID's
 			# and force next job
 			print "\nTest ID, skipping"
-			continue
+
+			stmt = luigi.delete().\
+				   where(luigi.c.luigi_job == job_name)
+			exec_result = conn.execute(stmt)
 		else:
 			# Consonace job id is real
 			print "\nJOB NAME:", job_uuid
