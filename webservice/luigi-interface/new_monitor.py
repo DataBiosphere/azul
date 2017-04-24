@@ -10,7 +10,6 @@ import sys
 import urllib2
 
 from boto.s3.key import Key
-from datetime 	 import datetime, timedelta
 from sqlalchemy  import *
 
 def getTouchfile(bucket_name, touchfile_name):
@@ -242,6 +241,7 @@ for job in result_list:
 				   		  last_updated=updated,
 				   		  start_time=created)
 			exec_result = conn.execute(stmt)
+
 	except Exception as e:
 		print >>sys.stderr, "ERROR:", str(e)
 
@@ -251,3 +251,4 @@ for job in result_list:
 			   where(luigi.c.luigi_job == job_name).\
 			   values(status=state)
 		exec_result = conn.execute(stmt)
+
