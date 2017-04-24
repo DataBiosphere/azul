@@ -1541,7 +1541,7 @@ def get_action_service():
 		Column("start_time", String(100)),
 		Column("last_updated", String(100))
 	)
-	select_query = select([luigi])
+	select_query = select([luigi]).order_by("last_updated")
 	select_result = conn.execute(select_query)
 	result_list = [dict(row) for row in select_result]
 	return jsonify(result_list)
