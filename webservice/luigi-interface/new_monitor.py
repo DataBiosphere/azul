@@ -26,7 +26,7 @@ def getTouchfile(bucket_name, touchfile_name):
 # 
 def getJobList():
 	server = os.getenv("LUIGI_SERVER") + ":8082/api/"
-	print "SERVER:", server
+	#print "SERVER:", server
 	running_url   = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	batch_url     = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	failed_url    = server + "task_list?data=%7B%22status%22%3A%22FAILED%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
@@ -116,7 +116,7 @@ if not db.dialect.has_table(db, luigi):
 	luigi.create()
 
 jobList = getJobList()
-print jobList
+#print jobList
 
 for job in jobList:
 	job_dict = jobList[job]	
@@ -132,7 +132,7 @@ for job in jobList:
 		touchfile_name = filepath + '/' + \
 						 job_dict['params']['submitter_sample_id'] + \
 						 '_meta_data.json'
-		print "GOING INTO S3 RETRIEVAL"
+		#print "GOING INTO S3 RETRIEVAL"
 		stringContents = getTouchfile(bucket_name, touchfile_name)
 		jsonMetadata = json.loads(stringContents)
 	except:
@@ -140,7 +140,7 @@ for job in jobList:
 		print >>sys.stderr, "Problems with s3 retrieval"
 		continue
 
-	print "DEBUG SURVIVED S3 RETRIEVAL"
+	#print "DEBUG SURVIVED S3 RETRIEVAL"
 	select_query = select([luigi]).where(luigi.c.luigi_job == job)
 	select_exist_result = proxyConversion(conn.execute(select_query))
 
@@ -221,7 +221,7 @@ for job in result_list:
 			exec_result = conn.execute(stmt)
 		else:
 			# Consonace job id is real
-			print "\nJOB NAME:", job_uuid
+			#print "\nJOB NAME:", job_uuid
 
 			status_json = get_consonance_status(job_uuid)
 
@@ -229,9 +229,9 @@ for job in result_list:
 			created = status_json['create_timestamp']
 			updated = status_json['update_timestamp']
 
-			print "STATE:", state
-			print "CREATED:", created
-			print "UPDATED:", updated
+			#print "STATE:", state
+			#print "CREATED:", created
+			#print "UPDATED:", updated
 			
 			# DEBUG, comment when testing
 			#continue
