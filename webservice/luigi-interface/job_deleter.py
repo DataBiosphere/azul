@@ -1,16 +1,19 @@
 # Alex Hancock, UCSC CGL
+# 
+# Luigi Monitor
 
 import json
-import subprocess
+import os
 import sys
-from sqlalchemy import create_engine, MetaData, String, Table, Float, Column, select
 
-def get_consonance_status(consonance_uuid):
-	cmd = ['consonance', 'status', '--job_uuid', consonance_uuid]
-	status_text = subprocess.check_output(cmd)
-	return json.loads(status_text)
+from datetime 	 import datetime
+from sqlalchemy  import *
 
-db = create_engine('postgresql:///monitor', echo=False)
+#
+# Database initialization, creation if table doesn't exist
+#
+# Change echo to True to show SQL code... unnecessary
+db = create_engine('postgresql://{}:{}@db/monitor'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD")), echo=False)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
@@ -34,10 +37,16 @@ luigi = Table('luigi', metadata,
 	Column("workflow_version", String(100)),
 	Column("sample_uuid", String(100)),
 
-	Column("start_time", Float),
-	Column("last_updated", Float)
+	Column("start_time", String(100)),
+	Column("last_updated", String(100))
 )
+if not db.dialect.has_table(db, luigi):
+	luigi.create()
 
+# 
+# for job in list
+#     consonance status using job.consonance_uuid
+#     update that job using the information from status return
 select_query = select([luigi])
 select_result = conn.execute(select_query)
 result_list = [dict(row) for row in select_result]
@@ -47,31 +56,19 @@ for job in result_list:
 		job_uuid = job['consonance_job_uuid']
 
 		if job_uuid == "no consonance id in test mode":
-			# Skip test mode Consonance ID's
-			# and force next job
-			print "Test ID, skipping"
 			continue
 		else:
-			# Consonace job id is real
-			print "\nJOB NAME:", job_uuid
+			# Delete old jobs
+			current_month = datetime.now().month
+			job_month = int(updated[5:7])
 
-			status_json = get_consonance_status(job_uuid)
+			# Delete jobs older than one month old, ignore if 
+			# jobs were updated in December and it's January
+			if ((abs(job_month - current_month) > 1)
+				and (job_month + current_month != 13)):
+				stmt = luigi.delete().\
+					   where(luigi.c.luigi_job == job_name)
+				exec_result = conn.execute(stmt)
 
-			state = status_json['state']
-			created = status_json['create_timestamp']
-			updated = status_json['update_timestamp']
-
-			print "STATE:", state
-			print "CREATED:", created
-			print "UPDATED:", updated
-			# DEBUG, comment when testing
-			continue
-
-			stmt = luigi.update().\
-				   where(luigi.c.luigi_job == job_name).\
-				   values(status=state, 
-				   		  last_updated=updated,
-				   		  start_time=created)
-			exec_result = conn.execute(stmt)
 	except Exception as e:
 		print >>sys.stderr, "ERROR:", str(e)
