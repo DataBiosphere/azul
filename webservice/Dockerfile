@@ -43,10 +43,21 @@ RUN mkdir /app/log
 #Add crontab file
 ADD crontab /etc/cron.d/action-cron
 RUN chmod 0644 /etc/cron.d/action-cron
+RUN cron
 
-# Commented out by Alex Hancock, 
-# trying to pass credentials through 
-# environment variables
-#COPY ./.boto/credentials /etc/boto.cfg/
+# Java install
+RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
+RUN echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886 && apt-get update && apt-get install -y curl dnsutils oracle-java8-installer ca-certificates
+
+# Install Consonance
+RUN apt-get -qq update
+RUN apt-get -qq -y install wget
+RUN wget https://github.com/Consonance/consonance/releases/download/2.0-alpha.10/consonance -O /bin/consonance 
+RUN chmod a+x /bin/consonance
+
+# Place the config in $HOME
+COPY consonance_config /root/.consonance/config
 
 CMD ["/usr/bin/supervisord"]
