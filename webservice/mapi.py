@@ -1,5 +1,8 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
+from flask_login import LoginManager, login_required, \
+     current_user, UserMixin
 import json
+from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
 from flask_migrate import Migrate
 import flask_excel as excel
@@ -22,18 +25,44 @@ logging.basicConfig()
 # import json
 class Config(object):
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
-
+    SQLALCHEMY_BINDS = {
+       login-db = 'postgresql://{}:{}@login-db/{}'.format(os.getenv("L_POSTGRES_USER"), os.getenv("L_POSTGRES_PASSWORD"), os.getenv("L_POSTGRES_DB"))
+    }
+    SECRET_KEY = os.environ.get("SECRET_KEY") or "somethingsecret"
 
 apache_path = os.environ.get("APACHE_PATH", "")
 es_service = os.environ.get("ES_SERVICE", "localhost")
 
 app = Flask(__name__)
 app.config.from_object(Config)
+login_db = SQLAlchemy(app)
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
+login_manager.session_protection = "strong"
 db.init_app(app)
 migrate = Migrate(app, db)
 #es = Elasticsearch()
 es = Elasticsearch(['http://'+es_service+':9200/'])
+
+""" DB Models """
+class User(login_db.Model, UserMixin):
+    __tablename__ = "users"
+    __bind_key__ = "login-db"
+    id = login_db.Column(login_db.Integer, primary_key=True)
+    email = login_db.Column(login_db.String(100), unique=True, nullable=False)
+    name = login_db.Column(login_db.String(100), nullable=True)
+    avatar = login_db.Column(login_db.String(200))
+    access_token = login_db.Column(login_db.String(5000))
+    redwood_token = login_db.Column(login_db.String(5000))
+    tokens = login_db.Column(login_db.Text)
+    created_at = login_db.Column(login_db.DateTime, default=datetime.datetime.utcnow())
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 @app.route('/invoices')
+@login_required
 @cross_origin()
 def find_invoices():
     project = str(request.args.get('project'))
@@ -1514,6 +1543,7 @@ def get_manifes_full():
 
 #Get the manifest. You need to pass on the filters
 @app.route('/action/service')
+@login_required
 @cross_origin()
 def get_action_service():
 	db = create_engine('postgresql://{}:{}@db/monitor'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD")), echo=False)
