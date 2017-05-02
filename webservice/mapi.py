@@ -61,6 +61,13 @@ class User(login_db.Model, UserMixin):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+@app.route('/login')
+def login(): 
+    if current_user.is_authenticated:
+        redirect('https://{}'.format(os.getenv('DCC_DASHBOARD_HOST')))
+    else:
+        redirect('https://{}/login'.format(os.getenv('DCC_DASHBOARD_HOST')))
+
 @app.route('/invoices')
 @login_required
 @cross_origin()
