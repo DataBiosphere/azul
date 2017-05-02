@@ -26,7 +26,7 @@ logging.basicConfig()
 class Config(object):
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     SQLALCHEMY_BINDS = {
-       login-db = 'postgresql://{}:{}@login-db/{}'.format(os.getenv("L_POSTGRES_USER"), os.getenv("L_POSTGRES_PASSWORD"), os.getenv("L_POSTGRES_DB"))
+       'login-db': 'postgresql://{}:{}@login-db/{}'.format(os.getenv("L_POSTGRES_USER"), os.getenv("L_POSTGRES_PASSWORD"), os.getenv("L_POSTGRES_DB"))
     }
     SECRET_KEY = os.environ.get("SECRET_KEY") or "somethingsecret"
 
