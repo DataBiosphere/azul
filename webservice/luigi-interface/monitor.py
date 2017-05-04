@@ -24,7 +24,7 @@ def getTouchfile(bucket_name, touchfile_name):
 # Luigi Scraping below
 # 
 def getJobList():
-	server = os.getenv("LUIGI_SERVER") + ":8082/api/"
+	server = os.getenv("LUIGI_SERVER") + ":" + os.getenv("LUIGI_PORT") + "/api/"
 	#print "SERVER:", server
 	running_url   = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	batch_url     = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
