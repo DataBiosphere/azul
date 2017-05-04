@@ -84,7 +84,7 @@ def get_consonance_status(consonance_uuid):
 # Database initialization, creation if table doesn't exist
 #
 # Change echo to True to show SQL code... unnecessary
-db = create_engine('postgresql://{}:{}@db/monitor'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD")), echo=False)
+db = create_engine('postgresql://{}:{}@db/{}'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD"), os.getenv("POSTGRES_ROLE")), echo=False)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
