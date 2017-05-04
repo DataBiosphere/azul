@@ -146,7 +146,7 @@ for job in jobList:
 	try:
 		status_json = get_consonance_status(jsonMetadata['consonance_job_uuid'])
 	except:
-		# Add consonance job uuid print t ocstderr,
+		# Add consonance job uuid print to stderr,
 		# print job uuid and time when it happeneds
 		status_json = {
 			'create_timestamp' : job_dict['start_time'],
@@ -197,11 +197,12 @@ for job in jobList:
 # 
 # This should be accomplished by:
 # 
-# Select all from the table, pipe it into a list
+# Select all from the table, pipe results into a list
 # 
 # for job in list
 #     consonance status using job.consonance_uuid
 #     update that job using the information from status return
+#
 select_query = select([luigi])
 select_result = conn.execute(select_query)
 result_list = [dict(row) for row in select_result]
@@ -228,6 +229,7 @@ for job in result_list:
 			created = status_json['create_timestamp']
 			updated = status_json['update_timestamp']
 
+			# DEBUG to check if state, created, and updated are collected
 			#print "STATE:", state
 			#print "CREATED:", created
 			#print "UPDATED:", updated
