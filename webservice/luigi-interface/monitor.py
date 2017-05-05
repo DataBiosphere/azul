@@ -24,7 +24,7 @@ def getTouchfile(bucket_name, touchfile_name):
 # Luigi Scraping below
 # 
 def getJobList():
-	server = os.getenv("LUIGI_SERVER") + ":" + os.getenv("LUIGI_PORT") + "/api/"
+	server = os.getenv("LUIGI_SERVER") + ":" + os.getenv("LUIGI_PORT", "8082") + "/api/"
 	#print "SERVER:", server
 	running_url   = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	batch_url     = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
@@ -84,7 +84,7 @@ def get_consonance_status(consonance_uuid):
 # Database initialization, creation if table doesn't exist
 #
 # Change echo to True to show SQL code... unnecessary
-db = create_engine('postgresql://{}:{}@db/{}'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD"), os.getenv("POSTGRES_ROLE")), echo=False)
+db = create_engine('postgresql://{}:{}@db/{}'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD"), os.getenv("POSTGRES_DB")), echo=False)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
