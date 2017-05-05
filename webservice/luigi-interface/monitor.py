@@ -24,7 +24,7 @@ def getTouchfile(bucket_name, touchfile_name):
 # Luigi Scraping below
 # 
 def getJobList():
-	server = os.getenv("LUIGI_SERVER") + ":8082/api/"
+	server = os.getenv("LUIGI_SERVER") + ":" + os.getenv("LUIGI_PORT") + "/api/"
 	#print "SERVER:", server
 	running_url   = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	batch_url     = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
@@ -84,7 +84,7 @@ def get_consonance_status(consonance_uuid):
 # Database initialization, creation if table doesn't exist
 #
 # Change echo to True to show SQL code... unnecessary
-db = create_engine('postgresql://{}:{}@db/monitor'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD")), echo=False)
+db = create_engine('postgresql://{}:{}@db/{}'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD"), os.getenv("POSTGRES_ROLE")), echo=False)
 conn = db.connect()
 metadata = MetaData(db)
 luigi = Table('luigi', metadata,
@@ -146,7 +146,7 @@ for job in jobList:
 	try:
 		status_json = get_consonance_status(jsonMetadata['consonance_job_uuid'])
 	except:
-		# Add consonance job uuid print t ocstderr,
+		# Add consonance job uuid print to stderr,
 		# print job uuid and time when it happeneds
 		status_json = {
 			'create_timestamp' : job_dict['start_time'],
@@ -197,11 +197,12 @@ for job in jobList:
 # 
 # This should be accomplished by:
 # 
-# Select all from the table, pipe it into a list
+# Select all from the table, pipe results into a list
 # 
 # for job in list
 #     consonance status using job.consonance_uuid
 #     update that job using the information from status return
+#
 select_query = select([luigi])
 select_result = conn.execute(select_query)
 result_list = [dict(row) for row in select_result]
@@ -228,6 +229,7 @@ for job in result_list:
 			created = status_json['create_timestamp']
 			updated = status_json['update_timestamp']
 
+			# DEBUG to check if state, created, and updated are collected
 			#print "STATE:", state
 			#print "CREATED:", created
 			#print "UPDATED:", updated
