@@ -220,14 +220,28 @@ for job in result_list:
 				   where(luigi.c.luigi_job == job_name)
 			exec_result = conn.execute(stmt)
 		else:
+			# DEBUG
 			# Consonace job id is real
-			#print "\nJOB NAME:", job_uuid
+			# print "\nJOB NAME:", job_uuid
 
 			status_json = get_consonance_status(job_uuid)
 
 			state = status_json['state']
 			created = status_json['create_timestamp']
 			updated = status_json['update_timestamp']
+
+			# Timestamp format: 2017-03-10T18:37:06.230+0000
+			# Date = str[:10] to get only YYYY-MM-DD
+			created_date = created[:10]
+			updated_date = updated[:10]
+
+			# Time = str[11:16] shaves the timestamp 
+			# to just hours and minutes
+			created_time = created[11:16]
+			updated_time = updated[11:16]
+
+			created = created_date + " " + created_time
+			updated = updated_date + " " + updated_time
 
 			# DEBUG to check if state, created, and updated are collected
 			#print "STATE:", state
