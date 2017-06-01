@@ -232,13 +232,13 @@ for job in result_list:
 
 			# Timestamp format: 2017-03-10T18:37:06.230+0000
 			# Date = str[:10] to get only YYYY-MM-DD
-			create_date = created[:10]
-			update_date = updated[:10]
+			created_date = created[:10]
+			updated_date = updated[:10]
 
 			# Time = str[11:16] shaves the timestamp 
 			# to just hours and minutes
-			create_time = created[11:16]
-			update_time = updated[11:16]
+			created_time = created[11:16]
+			updated_time = updated[11:16]
 
 			created = created_date + " " + created_time
 			updated = updated_date + " " + updated_time
