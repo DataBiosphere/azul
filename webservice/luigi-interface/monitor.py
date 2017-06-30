@@ -233,8 +233,8 @@ for job in result_list:
 		state = 'JOB NOT FOUND'
 
 		stmt = luigi.update().\
-			   where(luigi.c.luigi_job == job_name and 
-			   		 luigi.c.status != 'SUCCESS' and 
-			   		 luigi.c.status != 'FAILED').\
+			   where((and_(luigi.c.luigi_job == job_name, 
+			   		 	   luigi.c.status != 'SUCCESS',
+			   		 	   luigi.c.status != 'FAILED'))).\
 			   values(status=state)
 		exec_result = conn.execute(stmt)
