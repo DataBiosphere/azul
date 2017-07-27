@@ -1,18 +1,19 @@
 from flask import Flask, jsonify, request, session, Blueprint
 from flask_login import LoginManager, login_required, \
     current_user, UserMixin
+# from flask import current_app as app
 import json
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
-from flask_migrate import Migrate
+# from flask_migrate import Migrate
 import flask_excel as excel
-from flask.ext.elasticsearch import Elasticsearch
+# from flask.ext.elasticsearch import Elasticsearch
 import ast
 # from decimal import Decimal
 import copy
 
 import os
-from models import Billing, db
+# from models import Billing, db
 # from utility import get_compute_costs, get_storage_costs, create_analysis_costs_json, create_storage_costs_json
 import datetime
 # import calendar
@@ -20,25 +21,36 @@ import datetime
 # TEST database call
 # from sqlalchemy import create_engine, MetaData, String, Table, Float, Column, select
 import logging
+from database import db, login_db, login_manager
 
 logging.basicConfig()
 
 webservicebp = Blueprint('webservicebp', 'webservicebp', url_prefix='/webservicebp')
 
-""" DB Models """
-
-
-class User(login_db.Model, UserMixin):
-    __tablename__ = "users"
-    __bind_key__ = "login-db"
-    id = login_db.Column(login_db.Integer, primary_key=True)
-    email = login_db.Column(login_db.String(100), unique=True, nullable=False)
-    name = login_db.Column(login_db.String(100), nullable=True)
-    avatar = login_db.Column(login_db.String(200))
-    access_token = login_db.Column(login_db.String(5000))
-    redwood_token = login_db.Column(login_db.String(5000))
-    tokens = login_db.Column(login_db.Text)
-    created_at = login_db.Column(login_db.DateTime, default=datetime.datetime.utcnow())
+# """ DB Models """
+#
+# class Config(object):
+#     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+#     SQLALCHEMY_BINDS = {
+#         'login-db': 'postgresql://{}:{}@login-db/{}'.format(os.getenv("L_POSTGRES_USER"),
+#                                                             os.getenv("L_POSTGRES_PASSWORD"),
+#                                                             os.getenv("L_POSTGRES_DB"))
+#     }
+#     SECRET_KEY = os.environ.get("SECRET_KEY") or "somethingsecret"
+#
+# login_db = SQLAlchemy(webservicebp)
+#
+# class User(login_db.Model, UserMixin):
+#     __tablename__ = "users"
+#     __bind_key__ = "login-db"
+#     id = login_db.Column(login_db.Integer, primary_key=True)
+#     email = login_db.Column(login_db.String(100), unique=True, nullable=False)
+#     name = login_db.Column(login_db.String(100), nullable=True)
+#     avatar = login_db.Column(login_db.String(200))
+#     access_token = login_db.Column(login_db.String(5000))
+#     redwood_token = login_db.Column(login_db.String(5000))
+#     tokens = login_db.Column(login_db.Text)
+#     created_at = login_db.Column(login_db.DateTime, default=datetime.datetime.utcnow())
 
 
 @login_manager.user_loader
