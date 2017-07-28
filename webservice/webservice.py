@@ -7,7 +7,7 @@ import json
 from flask_cors import CORS, cross_origin
 # from flask_migrate import Migrate
 import flask_excel as excel
-# from flask.ext.elasticsearch import Elasticsearch
+from flask.ext.elasticsearch import Elasticsearch
 import ast
 # from decimal import Decimal
 import copy
@@ -25,7 +25,7 @@ from database import db, login_db, login_manager
 
 logging.basicConfig()
 
-webservicebp = Blueprint('webservicebp', 'webservicebp', url_prefix='/webservicebp')
+webservicebp = Blueprint('webservicebp', 'webservicebp')
 
 # """ DB Models """
 #
@@ -52,6 +52,105 @@ webservicebp = Blueprint('webservicebp', 'webservicebp', url_prefix='/webservice
 #     tokens = login_db.Column(login_db.Text)
 #     created_at = login_db.Column(login_db.DateTime, default=datetime.datetime.utcnow())
 
+apache_path = os.environ.get("APACHE_PATH", "")
+es_service = os.environ.get("ES_SERVICE", "localhost")
+es = Elasticsearch(['http://' + es_service + ':9200/'])
+
+def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_search=False):
+    protoDict = {'hits': []}
+    for hit in es_dict['hits']['hits']:
+        if '_source' in hit:
+            protoDict['hits'].append({
+                'id': hit['_source']['file_id'],
+                'objectID': hit['_source']['file_id'],
+                'access': hit['_source']['access'],
+                'center_name': hit['_source']['center_name'],
+                'study': [hit['_source']['study']],
+                'program': hit['_source']['program'],  ###Added source
+                'dataCategorization': {
+                    'dataType': hit['_source']['file_type'],
+                    'experimentalStrategy': hit['_source']['experimentalStrategy']  # ['workflow']
+                },
+                'fileCopies': [{
+                    'repoDataBundleId': hit['_source']['repoDataBundleId'],
+                    'repoDataSetIds': [],
+                    'repoCode': hit['_source']['repoCode'],
+                    'repoOrg': hit['_source']['repoOrg'],
+                    'repoName': hit['_source']['repoName'],
+                    'repoType': hit['_source']['repoType'],
+                    'repoCountry': hit['_source']['repoCountry'],
+                    'repoBaseUrl': hit['_source']['repoBaseUrl'],
+                    'repoDataPath': '',  ###Empty String
+                    'repoMetadatapath': '',  ###Empty String
+                    'fileName': hit['_source']['title'],
+                    'fileFormat': hit['_source']['file_type'],
+                    'fileSize': hit['_source']['fileSize'],
+                    'fileMd5sum': hit['_source']['fileMd5sum'],
+                    'lastModified': hit['_source']['lastModified']
+                }],
+                'donors': [{
+                    'donorId': hit['_source']['donor'],
+                    'primarySite': hit['_source']['submitterDonorPrimarySite'],
+                    'projectCode': hit['_source']['project'],
+                    'study': hit['_source']['study'],  ###
+                    'sampleId': [hit['_source']['sampleId']],  ###
+                    'specimenType': [hit['_source']['specimen_type']],
+                    'submittedDonorId': hit['_source']['submittedDonorId'],  ###
+                    'submittedSampleId': [hit['_source']['submittedSampleId']],  ###
+                    'submittedSpecimenId': [hit['_source']['submittedSpecimenId']],  ###
+                    'otherIdentifiers': {
+                        'RedwoodDonorUUID': [hit['_source']['redwoodDonorUUID']],  ###
+                    }
+
+                }],
+
+                'analysisMethod': {
+                    'analysisType': hit['_source']['analysis_type'],
+                    'software': hit['_source']['software'] + ':' + hit['_source']['workflowVersion']
+                ###  #Concatenated the version for the software/workflow
+                },
+                'referenceGenome': {
+                    'genomeBuild': '',  ###Blank String
+                    'referenceName': '',  ###Blank String
+                    'downloadUrl': ''  ###Blank String
+                }
+            })
+
+        else:
+            try:
+                protoDict['hits'].append(hit['fields'])
+            except:
+                pass
+    # If returning only one term based on file_id, break and return.
+    if key_search:
+        return protoDict
+
+    protoDict['pagination'] = {
+        'count': len(es_dict['hits']['hits']),  # 25,
+        'total': es_dict['hits']['total'],
+        'size': the_size,
+        'from': the_from + 1,
+        'page': (the_from / (the_size)) + 1,  # (the_from/(the_size+1))+1
+        'pages': -(-es_dict['hits']['total'] // the_size),
+        'sort': the_sort,
+        'order': the_order
+    }
+
+    protoDict['termFacets'] = {}  # es_dict['aggregations']
+    for x, y in es_dict['aggregations'].items():
+        protoDict['termFacets'][x] = {'type': 'terms',
+                                      'terms': map(lambda x: {"term": x["key"], 'count': x['doc_count']},
+                                                   y['myTerms']['buckets'])}  # Added myTerms key
+
+    # Get the total for all the terms
+    for section in protoDict['termFacets']:
+        m_sum = 0
+        # print section
+        for term in protoDict['termFacets'][section]['terms']:
+            m_sum += term['count']
+        protoDict['termFacets'][section]['total'] = m_sum
+
+    return protoDict
 
 @login_manager.user_loader
 def load_user(user_id):

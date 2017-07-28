@@ -6,7 +6,7 @@ from flask_login import LoginManager, login_required, \
 from flask_cors import CORS, cross_origin
 # from flask_migrate import Migrate
 # import flask_excel as excel
-# from flask.ext.elasticsearch import Elasticsearch
+from flask.ext.elasticsearch import Elasticsearch
 # import ast
 # from decimal import Decimal
 # import copy
@@ -21,9 +21,16 @@ import os
 from sqlalchemy import create_engine, MetaData, String, Table, Float, Column, select
 import logging
 
-actionbp = Blueprint('actionbp', 'actionbp', url_prefix='/actionbp')
+actionbp = Blueprint('actionbp', 'actionbp')
 
 logging.basicConfig()
+
+es_service = os.environ.get("ES_SERVICE", "localhost")
+es = Elasticsearch(['http://' + es_service + ':9200/'])
+
+#@login_manager.user_loader
+#def load_user(user_id):
+#    return User.query.get(int(user_id))
 
 @actionbp.route('/action/service')
 @login_required
@@ -60,8 +67,7 @@ def get_action_service():
     result_list = [dict(row) for row in select_result]
     return jsonify(result_list)
 
-@actionbp.route('/action/service/hello')
-@login_required
+@actionbp.route('/')
 @cross_origin()
 def hello():
     return 'Hello World!'

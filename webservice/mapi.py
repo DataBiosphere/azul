@@ -14,28 +14,31 @@ import datetime
 import os
 from models import Billing, db
 
+
+
+
 logging.basicConfig()
 
 
-def create_app(config_obj):
-    app = Flask(__name__)
-    app.config['DEBUG'] = True
-    app.config.from_object(config_obj)
-    app.register_blueprint(actionbp)
-    app.register_blueprint(webservicebp)
-    app.register_blueprint(billingbp)
-    db.init_app(app)
-    login_db.init_app(app)
-    login_manager.init_app(app)
-    apache_path = os.environ.get("APACHE_PATH", "")
-    es_service = os.environ.get("ES_SERVICE", "localhost")
-    login_manager = LoginManager(app)
-    login_manager.login_view = "login"
-    login_manager.session_protection = "strong"
-    migrate = Migrate(app, db)
-    # es = Elasticsearch()
-    es = Elasticsearch(['http://' + es_service + ':9200/'])
-    return app
+# def create_app(config_obj):
+#     app = Flask(__name__)
+#     app.config['DEBUG'] = True
+#     app.config.from_object(config_obj)
+#     app.register_blueprint(actionbp)
+#     app.register_blueprint(webservicebp)
+#     app.register_blueprint(billingbp)
+#     db.init_app(app)
+#     login_db.init_app(app)
+#     login_manager.init_app(app)
+#     apache_path = os.environ.get("APACHE_PATH", "")
+#     es_service = os.environ.get("ES_SERVICE", "localhost")
+#     login_manager = LoginManager(app)
+#     login_manager.login_view = "login"
+#     login_manager.session_protection = "strong"
+#     migrate = Migrate(app, db)
+#     # es = Elasticsearch()
+#     es = Elasticsearch(['http://' + es_service + ':9200/'])
+#     return app
 
 class Config(object):
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
@@ -67,25 +70,25 @@ class User(login_db.Model, UserMixin):
     created_at = login_db.Column(login_db.DateTime, default=datetime.datetime.utcnow())
 
 app = Flask(__name__)
+app.config['DEBUG'] = True
+app.config.from_object(Config)
+app.register_blueprint(actionbp)
+app.register_blueprint(webservicebp)
+app.register_blueprint(billingbp)
+db.init_app(app)
+login_db.init_app(app)
+login_manager.init_app(app)
+apache_path = os.environ.get("APACHE_PATH", "")
+es_service = os.environ.get("ES_SERVICE", "localhost")
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
+login_manager.session_protection = "strong"
+migrate = Migrate(app, db)
+# es = Elasticsearch()
+es = Elasticsearch(['http://' + es_service + ':9200/'])
+app.app_context()
+
 if __name__ == '__main__':
-#    app = create_app(Config)
-#    app = Flask(__name__)
-    app.config['DEBUG'] = True
-    app.config.from_object(config_obj)
-    app.register_blueprint(actionbp)
-    app.register_blueprint(webservicebp)
-    app.register_blueprint(billingbp)
-    db.init_app(app)
-    login_db.init_app(app)
-    login_manager.init_app(app)
-    apache_path = os.environ.get("APACHE_PATH", "")
-    es_service = os.environ.get("ES_SERVICE", "localhost")
-    login_manager = LoginManager(app)
-    login_manager.login_view = "login"
-    login_manager.session_protection = "strong"
-    migrate = Migrate(app, db)
-    # es = Elasticsearch()
-    es = Elasticsearch(['http://' + es_service + ':9200/'])
-    app.app_context()
     app.run()  # Quit the debu and added Threaded
+
 
