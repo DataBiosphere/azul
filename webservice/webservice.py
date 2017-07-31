@@ -152,17 +152,17 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_sear
 
     return protoDict
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
-@webservicebp.route('/login')
-def login():
-    if current_user.is_authenticated:
-        redirect('https://{}'.format(os.getenv('DCC_DASHBOARD_HOST')))
-    else:
-        redirect('https://{}/login'.format(os.getenv('DCC_DASHBOARD_HOST')))
+#@login_manager.user_loader
+#def load_user(user_id):
+#    return User.query.get(int(user_id))
+#
+#
+#@webservicebp.route('/login')
+#def login():
+#    if current_user.is_authenticated:
+#        redirect('https://{}'.format(os.getenv('DCC_DASHBOARD_HOST')))
+#    else:
+#        redirect('https://{}/login'.format(os.getenv('DCC_DASHBOARD_HOST')))
 
 
 

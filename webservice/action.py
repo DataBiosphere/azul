@@ -14,12 +14,13 @@ from flask.ext.elasticsearch import Elasticsearch
 import os
 # from models import Billing, db
 # from utility import get_compute_costs, get_storage_costs, create_analysis_costs_json, create_storage_costs_json
-# import datetime
+import datetime
 # import calendar
 # import click
 # TEST database call
 from sqlalchemy import create_engine, MetaData, String, Table, Float, Column, select
 import logging
+from database import db, login_db, login_manager, User
 
 actionbp = Blueprint('actionbp', 'actionbp')
 
@@ -28,9 +29,16 @@ logging.basicConfig()
 es_service = os.environ.get("ES_SERVICE", "localhost")
 es = Elasticsearch(['http://' + es_service + ':9200/'])
 
-#@login_manager.user_loader
-#def load_user(user_id):
-#    return User.query.get(int(user_id))
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@actionbp.route('/login')
+def login():
+    if current_user.is_authenticated:
+        redirect('https://{}'.format(os.getenv('DCC_DASHBOARD_HOST')))
+    else:
+        redirect('https://{}/login'.format(os.getenv('DCC_DASHBOARD_HOST')))
 
 @actionbp.route('/action/service')
 @login_required
