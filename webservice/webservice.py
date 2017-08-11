@@ -27,31 +27,6 @@ logging.basicConfig()
 
 webservicebp = Blueprint('webservicebp', 'webservicebp')
 
-# """ DB Models """
-#
-# class Config(object):
-#     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
-#     SQLALCHEMY_BINDS = {
-#         'login-db': 'postgresql://{}:{}@login-db/{}'.format(os.getenv("L_POSTGRES_USER"),
-#                                                             os.getenv("L_POSTGRES_PASSWORD"),
-#                                                             os.getenv("L_POSTGRES_DB"))
-#     }
-#     SECRET_KEY = os.environ.get("SECRET_KEY") or "somethingsecret"
-#
-# login_db = SQLAlchemy(webservicebp)
-#
-# class User(login_db.Model, UserMixin):
-#     __tablename__ = "users"
-#     __bind_key__ = "login-db"
-#     id = login_db.Column(login_db.Integer, primary_key=True)
-#     email = login_db.Column(login_db.String(100), unique=True, nullable=False)
-#     name = login_db.Column(login_db.String(100), nullable=True)
-#     avatar = login_db.Column(login_db.String(200))
-#     access_token = login_db.Column(login_db.String(5000))
-#     redwood_token = login_db.Column(login_db.String(5000))
-#     tokens = login_db.Column(login_db.Text)
-#     created_at = login_db.Column(login_db.DateTime, default=datetime.datetime.utcnow())
-
 apache_path = os.environ.get("APACHE_PATH", "")
 es_service = os.environ.get("ES_SERVICE", "localhost")
 es = Elasticsearch(['http://' + es_service + ':9200/'])
