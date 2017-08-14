@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import abc
 from jsonobject import *
 
 
@@ -93,3 +94,41 @@ class ApiResponse(JsonObject):
     hits = ListProperty(HitEntry)
     pagination = ObjectProperty(PaginationObj, exclude_if_none=True)
     termFacets = DictProperty(FacetObj, exclude_if_none=True)
+
+
+class AbstractResponse(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def return_response(self):
+        raise NotImplementedError('users must define return_response to use this base class')
+
+
+class SummaryResponse(AbstractResponse):
+    """
+    Class for the summary response
+    """
+    def return_response(self):
+        pass
+
+
+class KeywordSearchResponse(AbstractResponse):
+    """
+    Class for the keyword search response
+    """
+    def return_response(self):
+        pass
+
+    def map_entries(self):
+        pass
+
+
+class FileSearchResponse(KeywordSearchResponse):
+    """
+    Class for the file search response.
+    """
+    def add_facets(self):
+        pass
+
+    def add_paging(self):
+        pass
