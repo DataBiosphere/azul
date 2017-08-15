@@ -155,8 +155,31 @@ class KeywordSearchResponse(AbstractResponse):
     def return_response(self):
         pass
 
-    def map_entries(self):
-        pass
+    def fetch_entry_value(self, mapping, entry, key):
+        return entry[mapping[key]]
+
+    def map_entries(self, mapping, entry):
+        """
+        Returns a HitEntry Object. Takes the mapping and maps the appropriate fields from entry to
+        the corresponding entry in the mapping
+        :param mapping: Takes in a Json object with the mapping to the corresponding field in the entry object
+        :param entry: A 1 dimensional dictionary corresponding to a single hit from ElasticSearch
+        :return: A HitEntry Object with the appropriate fields mapped
+        """
+        mapped_entry = HitEntry(
+            _id=self.fetch_entry_value(mapping, entry, 'id')
+
+        )
+        return mapped_entry
+
+    def __init__(self, mapping, hits):
+        """
+        Constructs the object and initializes the apiResponse attribute
+        :param mapping: A JSON with the mapping for the field
+        :param hits: A list of hits from ElasticSearch
+        """
+        class_entries = {'hits': [self.map_entries(mapping, x) for x in hits]}
+        self.apiResponse = ApiResponse(**class_entries)
 
 
 class FileSearchResponse(KeywordSearchResponse):
@@ -168,3 +191,4 @@ class FileSearchResponse(KeywordSearchResponse):
 
     def add_paging(self):
         pass
+
