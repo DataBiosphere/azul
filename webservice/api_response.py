@@ -8,7 +8,7 @@ class FileCopyObj(JsonObject):
     Class defining a FileCopy Object in the HitEntry Object
     """
     repoDataBundleId = StringProperty()
-    repoDataSetIds = StringProperty()
+    repoDataSetIds = ListProperty(StringProperty)
     repoCode = StringProperty()
     repoOrg = StringProperty()
     repoName = StringProperty()
@@ -156,7 +156,35 @@ class KeywordSearchResponse(AbstractResponse):
         pass
 
     def fetch_entry_value(self, mapping, entry, key):
-        return entry[mapping[key]]
+        if mapping[key]:
+            return entry[mapping[key]]
+        else:
+            return None
+
+    def make_data_categorization(self, mapping, entry):
+        return DataCategorizationObj(
+            dataType=self.fetch_entry_value(mapping, entry, 'dataType'),
+            experimentalStrategy=self.fetch_entry_value(mapping, entry, 'experimentalStrategy')
+        )
+
+    def make_file_copy(self, mapping, entry):
+        return FileCopyObj(
+            repoDataBundleId=self.fetch_entry_value(mapping, entry, 'repoDataBundleId'),
+            repoDataSetIds=[self.fetch_entry_value(mapping, entry, 'repoDataSetIds')],
+            repoCode=self.fetch_entry_value(mapping, entry, 'repoCode'),
+            repoOrg=self.fetch_entry_value(mapping, entry, 'repoOrg'),
+            repoName=self.fetch_entry_value(mapping, entry, 'repoName'),
+            repoType=self.fetch_entry_value(mapping, entry, 'repoType'),
+            repoCountry=self.fetch_entry_value(mapping, entry, 'repoCountry'),
+            repoBaseUrl=self.fetch_entry_value(mapping, entry, 'repoBaseUrl'),
+            repoDataPath=self.fetch_entry_value(mapping, entry, 'repoDataPath'),
+            repoMetadataPath=self.fetch_entry_value(mapping, entry, 'repoMetadataPath'),
+            fileName=self.fetch_entry_value(mapping, entry, 'fileName'),
+            fileFormat=self.fetch_entry_value(mapping, entry, 'fileFormat'),
+            fileSize=self.fetch_entry_value(mapping, entry, 'fileSize'),
+            fileMd5Sum=self.fetch_entry_value(mapping, entry, 'fileMd5Sum'),
+            lastModified=self.fetch_entry_value(mapping, entry, 'lastModified')
+        )
 
     def map_entries(self, mapping, entry):
         """
@@ -167,7 +195,12 @@ class KeywordSearchResponse(AbstractResponse):
         :return: A HitEntry Object with the appropriate fields mapped
         """
         mapped_entry = HitEntry(
-            _id=self.fetch_entry_value(mapping, entry, 'id')
+            _id=self.fetch_entry_value(mapping, entry, 'id'),
+            objectId=self.fetch_entry_value(mapping, entry, 'objectId'),
+            access=self.fetch_entry_value(mapping, entry, 'access'),
+            study=[self.fetch_entry_value(mapping, entry, 'study')],
+            dataCategorization=self.make_data_categorization(mapping, entry),
+            fileCopies=[self.make_file_copy(mapping, entry)],
 
         )
         return mapped_entry
