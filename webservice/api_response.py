@@ -4,6 +4,9 @@ from jsonobject import *
 
 
 class FileCopyObj(JsonObject):
+    """
+    Class defining a FileCopy Object in the HitEntry Object
+    """
     repoDataBundleId = StringProperty()
     repoDataSetIds = StringProperty()
     repoCode = StringProperty()
@@ -22,38 +25,59 @@ class FileCopyObj(JsonObject):
 
 
 class DataCategorizationObj(JsonObject):
+    """
+    Class defining the data categorization in the HitEntry object
+    """
     dataType = StringProperty()
     experimentalStrategy = StringProperty()
 
 
 class AnalysisObj(JsonObject):
+    """
+    Class defining an AnalysisObj in the HitEntry object
+    """
     analysisType = StringProperty()
     software = StringProperty()
 
 
 class ReferenceGenomeObj(JsonObject):
+    """
+    Class defining a reference genome object in the HitEntry object
+    """
     genomeBuild = StringProperty()
     referenceName = StringProperty()
     downloadUrl = StringProperty()
 
 
 class TermObj(JsonObject):
+    """
+    Class defining a term object in the FacetObj
+    """
     count = IntegerProperty()
     term = StringProperty()
 
 
 class FacetObj(JsonObject):
+    """
+    Class defining the facet entry in the ApiResponse object
+    """
     terms = ListProperty(TermObj)
     total = IntegerProperty()
     type = StringProperty()
 
 
 class OtherObj(JsonObject):
+    """
+    Class defining OtherObj in the HitEntry object
+    """
     tcgaSampleBarcode = ListProperty(StringProperty)
     tcgaAliquotBarcode = ListProperty(StringProperty)
 
 
 class DonorObj(JsonObject):
+    """
+    Class defining a Donor Object in the HitEntry Object
+    """
     donorId = StringProperty()
     primarySite = StringProperty()
     projectCode = StringProperty()
@@ -68,6 +92,9 @@ class DonorObj(JsonObject):
 
 
 class PaginationObj(JsonObject):
+    """
+    Class defining the pagination attribute in the ApiResponse class
+    """
     count = IntegerProperty()
     total = IntegerProperty()
     size = IntegerProperty()
@@ -77,6 +104,9 @@ class PaginationObj(JsonObject):
 
 
 class HitEntry(JsonObject):
+    """
+    Class defining a hit entry in the Api response
+    """
     _id = StringProperty()
     objectId = StringProperty()
     access = StringProperty()
@@ -91,12 +121,18 @@ class HitEntry(JsonObject):
 
 
 class ApiResponse(JsonObject):
+    """
+    Class defining an API response
+    """
     hits = ListProperty(HitEntry)
     pagination = ObjectProperty(PaginationObj, exclude_if_none=True)
     termFacets = DictProperty(FacetObj, exclude_if_none=True)
 
 
 class AbstractResponse(object):
+    """
+    Abstract class to be used for each /files API response.
+    """
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
@@ -106,7 +142,7 @@ class AbstractResponse(object):
 
 class SummaryResponse(AbstractResponse):
     """
-    Class for the summary response
+    Class for the summary response. Based on the AbstractResponse class
     """
     def return_response(self):
         pass
@@ -114,7 +150,7 @@ class SummaryResponse(AbstractResponse):
 
 class KeywordSearchResponse(AbstractResponse):
     """
-    Class for the keyword search response
+    Class for the keyword search response. Based on the AbstractResponse class
     """
     def return_response(self):
         pass
@@ -125,7 +161,7 @@ class KeywordSearchResponse(AbstractResponse):
 
 class FileSearchResponse(KeywordSearchResponse):
     """
-    Class for the file search response.
+    Class for the file search response. Inherits from KeywordSearchResponse
     """
     def add_facets(self):
         pass
