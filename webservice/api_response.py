@@ -162,8 +162,9 @@ class KeywordSearchResponse(AbstractResponse):
         :param key: Key to be used to get the right value
         :return: Returns entry[mapping[key]] if present. Other
         """
-        if mapping[key]:
-            return entry[mapping[key]]
+        m = mapping[key]
+        if m:
+            return entry[m] if isinstance(m, list) else entry[m[0]]
         else:
             return None
 

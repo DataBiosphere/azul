@@ -1,3 +1,68 @@
 {
-  "null":null
+  "access": "ESKEY",
+  "analysisMethod": {
+    "analysisType": "ESKEY",
+    "software": "ESKEY"
+  },
+  "center_name": "ESKEY",
+  "dataCategorization": {
+    "dataType": "ESKEY",
+    "experimentalStrategy": "ESKEY"
+  },
+  "donors": [
+    {
+      "donorId": "ESKEY",
+      "otherIdentifiers": {
+        "RedwoodDonorUUID": [
+          "ESKEY"
+        ]
+      },
+      "primarySite": "ESKEY",
+      "projectCode": "ESKEY",
+      "sampleId": [
+        "ESKEY"
+      ],
+      "specimenType": [
+        "ESKEY"
+      ],
+      "study": "ESKEY",
+      "submittedDonorId": "ESKEY",
+      "submittedSampleId": [
+        "ESKEY"
+      ],
+      "submittedSpecimenId": [
+        "ESKEY"
+      ]
+    }
+  ],
+  "fileCopies": [
+    {
+      "fileFormat": "ESKEY",
+      "fileMd5sum": "ESKEY",
+      "fileName": "ESKEY",
+      "fileSize": "ESKEY",
+      "lastModified": "ESKEY",
+      "repoBaseUrl": "ESKEY",
+      "repoCode": "ESKEY",
+      "repoCountry": "ESKEY",
+      "repoDataBundleId": "ESKEY",
+      "repoDataPath": "ESKEY",
+      "repoDataSetIds": [null],
+      "repoMetadatapath": "ESKEY",
+      "repoName": "ESKEY",
+      "repoOrg": "ESKEY",
+      "repoType": "ESKEY"
+    }
+  ],
+  "id": "ESKEY",
+  "objectID": "ESKEY",
+  "program": "ESKEY",
+  "referenceGenome": {
+    "downloadUrl": null,
+    "genomeBuild": null,
+    "referenceName": null
+  },
+  "study": [
+    "ESKEY"
+  ]
 }
