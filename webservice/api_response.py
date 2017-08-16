@@ -305,3 +305,12 @@ class FileSearchResponse(KeywordSearchResponse):
     def add_paging(self):
         pass
 
+    def __init__(self, mapping, hits):
+        """
+        Constructs the object and initializes the apiResponse attribute
+        :param mapping: A JSON with the mapping for the field
+        :param hits: A list of hits from ElasticSearch
+        """
+        class_entries = {'hits': [self.map_entries(mapping, x) for x in hits]}
+        # Need to still add the facets and paging.
+        self.apiResponse = ApiResponse(**class_entries)
