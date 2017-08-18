@@ -305,20 +305,23 @@ class FileSearchResponse(KeywordSearchResponse):
     """
     Class for the file search response. Inherits from KeywordSearchResponse
     """
-    def add_facets(self):
+    def add_facets(self, facets):
+        """
+        This function takes a list from ES of the facets. Process them and create the FaceObj to be added
+        :param facets_config:
+        :return:
+        """
         pass
 
-    def add_paging(self):
-        pass
-
-    def __init__(self, mapping, hits):
+    def __init__(self, mapping, hits, pagination, facets):
         """
         Constructs the object and initializes the apiResponse attribute
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
-        # class_entries = {'hits': [self.map_entries(mapping, x) for x in hits]}
+        # This should initialize the self.apiResponse attribute of the object
         KeywordSearchResponse.__init__(self, mapping, hits)
-        # Need to still add the facets and paging.
-        self.apiResponse.pagination = PaginationObj()  # <- Still need to work this out
-        # self.apiResponse = ApiResponse(**class_entries)
+        # Add the paging via **kwargs of dictionary 'pagination'
+        self.apiResponse.pagination = PaginationObj(**pagination)
+        # Do the pagination
+        self.add_facets(facets)
