@@ -20,8 +20,8 @@ class FileCopyObj(JsonObject):
     fileName = StringProperty()
     fileFormat = StringProperty()
     fileSize = IntegerProperty()
-    fileMd5Sum = StringProperty()
-    lastModified = IntegerProperty()  # DateTimeProperty Int given the ICGC format uses an int and not DateTimeProperty
+    fileMd5sum = StringProperty()
+    lastModified = StringProperty()  # DateTimeProperty Int given the ICGC format uses an int and not DateTimeProperty
 
 
 class DataCategorizationObj(JsonObject):
@@ -82,7 +82,6 @@ class DonorObj(JsonObject):
     projectCode = StringProperty()
     study = StringProperty()
     sampleId = ListProperty(StringProperty)
-    specimenId = ListProperty(StringProperty)
     specimenType = ListProperty(StringProperty)
     submittedDonorId = StringProperty()
     submittedSampleId = ListProperty(StringProperty)
@@ -106,8 +105,8 @@ class HitEntry(JsonObject):
     """
     Class defining a hit entry in the Api response
     """
-    _id = StringProperty()
-    objectId = StringProperty()
+    _id = StringProperty(name='id')
+    objectID = StringProperty()
     access = StringProperty()
     centerName = StringProperty()
     study = ListProperty(StringProperty)
@@ -124,7 +123,7 @@ class ApiResponse(JsonObject):
     Class defining an API response
     """
     hits = ListProperty(HitEntry)
-    pagination = ObjectProperty(PaginationObj, exclude_if_none=True)
+    pagination = ObjectProperty(PaginationObj, exclude_if_none=True, default=None)
     termFacets = DictProperty(FacetObj, exclude_if_none=True)
 
 
@@ -151,10 +150,15 @@ class KeywordSearchResponse(AbstractResponse):
     """
     Class for the keyword search response. Based on the AbstractResponse class
     """
+    @staticmethod
+    def handle_list(value):
+        return [value] if value is not None else []
+
     def return_response(self):
         return self.apiResponse
 
-    def fetch_entry_value(self, mapping, entry, key):
+    @staticmethod
+    def fetch_entry_value(mapping, entry, key):
         """
         Helper method for getting the value of key on the mapping
         :param mapping: Mapping in question. Values should be at the root level
@@ -163,8 +167,11 @@ class KeywordSearchResponse(AbstractResponse):
         :return: Returns entry[mapping[key]] if present. Other
         """
         m = mapping[key]
-        if m:
-            return entry[m] if isinstance(m, list) else entry[m[0]]
+        if m is not None:
+            if isinstance(m, list):
+                return entry[m[0]] if m[0] is not None else None
+            else:
+                return entry[m] if m in entry else None
         else:
             return None
 
@@ -225,7 +232,7 @@ class KeywordSearchResponse(AbstractResponse):
         """
         return FileCopyObj(
             repoDataBundleId=self.fetch_entry_value(mapping, entry, 'repoDataBundleId'),
-            repoDataSetIds=[self.fetch_entry_value(mapping, entry, 'repoDataSetIds')],
+            repoDataSetIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'repoDataSetIds')),
             repoCode=self.fetch_entry_value(mapping, entry, 'repoCode'),
             repoOrg=self.fetch_entry_value(mapping, entry, 'repoOrg'),
             repoName=self.fetch_entry_value(mapping, entry, 'repoName'),
@@ -237,7 +244,7 @@ class KeywordSearchResponse(AbstractResponse):
             fileName=self.fetch_entry_value(mapping, entry, 'fileName'),
             fileFormat=self.fetch_entry_value(mapping, entry, 'fileFormat'),
             fileSize=self.fetch_entry_value(mapping, entry, 'fileSize'),
-            fileMd5Sum=self.fetch_entry_value(mapping, entry, 'fileMd5Sum'),
+            fileMd5sum=self.fetch_entry_value(mapping, entry, 'fileMd5sum'),
             lastModified=self.fetch_entry_value(mapping, entry, 'lastModified')
         )
 
@@ -254,12 +261,11 @@ class KeywordSearchResponse(AbstractResponse):
             projectCode=self.fetch_entry_value(mapping, entry, 'projectCode'),
             study=self.fetch_entry_value(mapping, entry, 'study'),
             sampleId=[self.fetch_entry_value(mapping, entry, 'sampleId')],
-            specimenId=[self.fetch_entry_value(mapping, entry, 'specimenId')],
             specimenType=[self.fetch_entry_value(mapping, entry, 'specimenType')],
             submittedDonorId=self.fetch_entry_value(mapping, entry, 'submittedDonorId'),
             submittedSampleId=[self.fetch_entry_value(mapping, entry, 'submittedSampleId')],
             submittedSpecimenId=[self.fetch_entry_value(mapping, entry, 'submittedSpecimenId')],
-            otherIdentifiers=self.make_other_obj(mapping, entry)
+            otherIdentifiers=self.make_other_obj(mapping['otherIdentifiers'], entry)
         )
 
     def map_entries(self, mapping, entry):
@@ -272,7 +278,7 @@ class KeywordSearchResponse(AbstractResponse):
         """
         mapped_entry = HitEntry(
             _id=self.fetch_entry_value(mapping, entry, 'id'),
-            objectId=self.fetch_entry_value(mapping, entry, 'objectId'),
+            objectID=self.fetch_entry_value(mapping, entry, 'objectID'),
             access=self.fetch_entry_value(mapping, entry, 'access'),
             study=[self.fetch_entry_value(mapping, entry, 'study')],
             dataCategorization=self.make_data_categorization(mapping['dataCategorization'], entry),
@@ -291,7 +297,7 @@ class KeywordSearchResponse(AbstractResponse):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
-        class_entries = {'hits': [self.map_entries(mapping, x) for x in hits]}
+        class_entries = {'hits': [self.map_entries(mapping, x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
 
 
@@ -311,6 +317,8 @@ class FileSearchResponse(KeywordSearchResponse):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
-        class_entries = {'hits': [self.map_entries(mapping, x) for x in hits]}
+        # class_entries = {'hits': [self.map_entries(mapping, x) for x in hits]}
+        KeywordSearchResponse.__init__(self, mapping, hits)
         # Need to still add the facets and paging.
-        self.apiResponse = ApiResponse(**class_entries)
+        self.apiResponse.pagination = PaginationObj()  # <- Still need to work this out
+        # self.apiResponse = ApiResponse(**class_entries)
