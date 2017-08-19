@@ -21,14 +21,15 @@ class MyTestCase(unittest.TestCase):
             json_test.close()
 
         with open('keyword_test1.json') as test1:
-            keywordtest = json.load(test1)
+            keyword_test = json.load(test1)
             test1.close()
         # Still need a way to test the response.
         keyword_response = KeywordSearchResponse(test_mapping, test_json)
         print(json.dumps(keyword_response.return_response().to_json()))
         # Use cmp() method for comparing two dictionaries
-        cmp(keywordtest, keyword_response.return_response().to_json())
-        self.assertDictEqual(keywordtest, keyword_response.return_response().to_json())
+        print type(keyword_test)
+        cmp(keyword_test, keyword_response.return_response().to_json())
+        self.assertEqual(keyword_test, keyword_response.return_response().to_json())
         self.assertEqual('test', 'test')
 
 if __name__ == '__main__':

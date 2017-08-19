@@ -70,7 +70,7 @@ class OtherObj(JsonObject):
     """
     Class defining OtherObj in the HitEntry object
     """
-    redwoodDonorUUID = ListProperty(StringProperty)
+    redwoodDonorUUID = ListProperty(StringProperty, name='RedwoodDonorUUID')
 
 
 class DonorObj(JsonObject):
