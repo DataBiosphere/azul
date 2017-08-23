@@ -108,7 +108,7 @@ class HitEntry(JsonObject):
     _id = StringProperty(name='id')
     objectID = StringProperty()
     access = StringProperty()
-    centerName = StringProperty()
+    centerName = StringProperty(name='center_name')
     study = ListProperty(StringProperty)
     program = StringProperty()
     dataCategorization = ObjectProperty(DataCategorizationObj)
