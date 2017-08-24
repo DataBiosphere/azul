@@ -53,11 +53,14 @@ def get_bundles(bundle_uuid):
     app.log.info("get_bundle %s", bundle_uuid)
     json_str = urlopen(str(bb_host+('v1/bundles/')+bundle_uuid)).read()
     bundle = json.loads(json_str)
-    file_uuids = []
+    json_files = []
+    data_files = []
     for file in bundle['bundle']['files']:
-        file_uuids.append({file["name"]:file["uuid"]})
-        #maybe make a call to get_files?
-    return {'file_uuids': file_uuids}
+        if file["name"].endswith(".json"):
+            json_files.append({file["name"]:file["uuid"]})
+        else:
+            data_files.append({file["name"]: file["uuid"]})
+    return {'json_files': json_files, 'data_files': data_files}
 
 
 @app.route('/file/{file_uuid}', methods=['GET'])
@@ -69,3 +72,36 @@ def get_files(file_uuid):
     #not flattened
     file = json.loads(aws_response.content)
     return file
+
+@app.route('/write/{bundle_uuid}')
+def write_index(bundle_uuid):
+    bundle = json.loads(get_bundles(bundle_uuid))
+    app.log.info("0")
+    fcount = len(bundle['data_files'])
+    app.log.info("1")
+    json_files = bundle['json_files']
+    app.log.info("2")
+    with open('config.json') as f:
+        config = json.loads(f.read())
+    app.log.info("config is %s", config)
+    file_uuid = ""
+    for i in range (fcount):
+        for d_key, d_value in bundle['data_files'][i].items():
+            file_uuid = d_key
+        es_json = []
+        for c_key, c_value in config.items():
+            for j in range (len(json_files)):
+                if c_key in json_files[j]:
+                    file = json.loads(get_file(json_files[j][c_key]))
+                    for c_item in c_value:
+                        if c_item in file:
+                            file_value = file[c_item]
+                            if not isinstance(file_value, list):
+                                es_json.append({c_item:file_value})
+        write_es(es_json, file_uuid)
+    return bundle['data_files']
+
+def write_es(es_json, file_uuid):
+    app.log.info("write_es %s", file_uuid)
+    res = es.index(index="test-index", doc_type='tweet', id=file_uuid, body=es_json)
+    return(res['created'])
