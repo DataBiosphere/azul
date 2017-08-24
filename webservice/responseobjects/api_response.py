@@ -149,6 +149,7 @@ class SummaryResponse(AbstractResponse):
 class KeywordSearchResponse(AbstractResponse):
     """
     Class for the keyword search response. Based on the AbstractResponse class
+    Not to be confused with the 'keywords' endpoint
     """
     @staticmethod
     def handle_list(value):
@@ -305,9 +306,11 @@ class FileSearchResponse(KeywordSearchResponse):
     """
     Class for the file search response. Inherits from KeywordSearchResponse
     """
-    def add_facets(self, facets):
+    @staticmethod
+    def add_facets(facets):
         """
         This function takes a list from ES of the facets. Process them and create the FaceObj to be added
+        :param facets: List of
         :param facets_config:
         :return:
         """

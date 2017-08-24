@@ -245,7 +245,7 @@ def get_data(file_id=None):
 
                         # 					for key, value in agg_filter['constant_score']['filter']['terms'].items():
 
-    # print "This is what get's into ES", {"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}
+    print "This is what get's into ES", {"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}
 
     if file_id:
         query_body = {"prefix": {"file_id": file_id}}
