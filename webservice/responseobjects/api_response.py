@@ -307,11 +307,10 @@ class FileSearchResponse(KeywordSearchResponse):
     Class for the file search response. Inherits from KeywordSearchResponse
     """
     @staticmethod
-    def add_facets(facets):
+    def add_facets(facets_response):
         """
         This function takes a list from ES of the facets. Process them and create the FaceObj to be added
-        :param facets: List of
-        :param facets_config:
+        :param facets_response: Facets response from ElasticSearch
         :return:
         """
         pass
