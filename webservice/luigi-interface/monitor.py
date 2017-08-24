@@ -137,8 +137,7 @@ for job in jobList:
 		s3string = job_dict['params']['touch_file_path']
 		bucket_name, filepath = s3string.split('/', 1)
 		touchfile_name = filepath + '/' + \
-						 job_dict['params']['submitter_sample_id'] + \
-						 '_meta_data.json'
+                                                 job_dict['params']['metadata_json_file_name']
 		stringContents = get_touchfile(bucket_name, touchfile_name)
 		jsonMetadata = json.loads(stringContents)
 	except:
