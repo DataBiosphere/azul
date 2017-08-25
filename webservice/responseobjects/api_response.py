@@ -349,7 +349,6 @@ class FileSearchResponse(KeywordSearchResponse):
         facets = {}
         for facet, contents in facets_response.items():
             facets[facet] = FileSearchResponse.create_facet(contents)
-
         return facets
 
     def __init__(self, mapping, hits, pagination, facets):
@@ -363,6 +362,4 @@ class FileSearchResponse(KeywordSearchResponse):
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)
         # Add the facets
-        self.apiResponse = self.add_facets(facets)
-
-
+        self.apiResponse.termFacets = self.add_facets(facets)
