@@ -9,6 +9,7 @@ click==6.7
 cryptography==1.7.2
 docutils==0.13.1
 elasticsearch==5.0.1
+elasticsearch-dsl>=5.0.0,<6.0.0
 enum34==1.1.6
 Flask==0.11.1
 Flask-APScheduler==1.5.0

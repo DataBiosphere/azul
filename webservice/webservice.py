@@ -23,7 +23,7 @@ import datetime
 import logging
 from database import db, login_db, login_manager
 
-logging.basicConfig()
+logging.basicConfig(level=logging.DEBUG)
 
 webservicebp = Blueprint('webservicebp', 'webservicebp')
 
