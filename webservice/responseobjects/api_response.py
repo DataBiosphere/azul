@@ -307,13 +307,50 @@ class FileSearchResponse(KeywordSearchResponse):
     Class for the file search response. Inherits from KeywordSearchResponse
     """
     @staticmethod
+    def create_facet(contents):
+        """
+        This function creates a FacetObj. It takes in the contents of a particular aggregate from ElasticSearch
+        with the format
+        '
+        {
+          "doc_count": 2,
+          "myTerms": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 0,
+            "buckets": [
+              {
+                "key": "spinnaker:1.0.2",
+                "doc_count": 2
+              }
+            ]
+          }
+        }
+        '
+        :param contents: A dictionary from a particular ElasticSearch aggregate
+        :return: A FacetObj constructed out of the ElasticSearch aggregate
+        """
+        term_list = [TermObj(**{"term": term['key'], "count":term['doc_count']})
+                     for term in contents['myTerms']['buckets']]
+        facet = FacetObj(
+            terms=term_list,
+            total=contents['doc_count'],
+            type='terms'  # This has to change once we on-board more types of contents.
+        )
+        return facet
+
+    @staticmethod
     def add_facets(facets_response):
         """
-        This function takes a list from ES of the facets. Process them and create the FaceObj to be added
-        :param facets_response: Facets response from ElasticSearch
-        :return:
+        This function takes the 'aggregations' dictionary from ElasticSearch
+        Processes the aggregates and creates a dictionary of FacetObj
+        :param facets_response: Facets response dictionary from ElasticSearch
+        :return: A dictionary containing the FacetObj
         """
-        pass
+        facets = {}
+        for facet, contents in facets_response.items():
+            facets[facet] = FileSearchResponse.create_facet(contents)
+
+        return facets
 
     def __init__(self, mapping, hits, pagination, facets):
         """
@@ -325,5 +362,7 @@ class FileSearchResponse(KeywordSearchResponse):
         KeywordSearchResponse.__init__(self, mapping, hits)
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)
-        # Do the pagination
-        self.add_facets(facets)
+        # Add the facets
+        self.apiResponse = self.add_facets(facets)
+
+
