@@ -98,7 +98,8 @@ class PaginationObj(JsonObject):
     size = IntegerProperty()
     _from = IntegerProperty(name='from')
     page = IntegerProperty()
-    sort = StringProperty(choices=['asc', 'desc'])
+    sort = StringProperty()
+    order = StringProperty(choices=['asc', 'desc'])
 
 
 class HitEntry(JsonObject):
@@ -155,9 +156,6 @@ class KeywordSearchResponse(AbstractResponse):
     def handle_list(value):
         return [value] if value is not None else []
 
-    def return_response(self):
-        return self.apiResponse
-
     @staticmethod
     def fetch_entry_value(mapping, entry, key):
         """
@@ -175,6 +173,9 @@ class KeywordSearchResponse(AbstractResponse):
                 return entry[m] if m in entry else None
         else:
             return None
+
+    def return_response(self):
+        return self.apiResponse
 
     def make_data_categorization(self, mapping, entry):
         """
