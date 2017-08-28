@@ -10,6 +10,7 @@ import boto3
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 import os
 from aws_requests_auth import boto_utils
+import collections
 
 app = Chalice(app_name='notifications_test')
 app.log.setLevel(logging.DEBUG)
@@ -17,7 +18,9 @@ app.log.setLevel(logging.DEBUG)
 #set env on lambda, chalice config and profile
 es_host = os.environ['ES_ENDPOINT']
 bb_host = "https://"+os.environ['BLUE_BOX_ENDPOINT']
+in_host = "https://"+os.environ['INDEXER_ENDPOINT']
 
+#need to have the AWS CLI and $aws configure
 awsauth = AWSRequestsAuth(
     aws_host=es_host,
     aws_region='us-west-2',
@@ -34,12 +37,13 @@ es = Elasticsearch(
     connection_class=RequestsHttpConnection
 )
 
-
 es.indices.create(index='test-index', ignore=400)
+
 @app.route('/')
 def es_check():
     return es.info()
 
+#to be deleted
 @app.route('/index/{file_uuid}')
 def get_index(file_uuid):
     file = get_files(file_uuid)
@@ -48,6 +52,7 @@ def get_index(file_uuid):
 
 #note: Support CORS by adding app.route('/', cors=True)
 
+#returns the name and file uuids sorted by data and json files
 @app.route('/bundle/{bundle_uuid}', methods=['GET'])
 def get_bundles(bundle_uuid):
     app.log.info("get_bundle %s", bundle_uuid)
@@ -63,6 +68,7 @@ def get_bundles(bundle_uuid):
     return {'json_files': json_files, 'data_files': data_files}
 
 
+#returns the file
 @app.route('/file/{file_uuid}', methods=['GET'])
 def get_files(file_uuid):
     app.log.info("get_file %s", file_uuid)
@@ -73,35 +79,87 @@ def get_files(file_uuid):
     file = json.loads(aws_response.content)
     return file
 
+#indexes the files in the bundle
 @app.route('/write/{bundle_uuid}')
 def write_index(bundle_uuid):
-    bundle = json.loads(get_bundles(bundle_uuid))
-    app.log.info("0")
+    app.log.info("write_index %s", bundle_uuid)
+    try:
+        bundle_url = urlopen(str(in_host+'/bundle/'+ bundle_uuid)).read()
+    except Exception as e:
+        app.log.info(e)
+    bundle = json.loads(bundle_url)
     fcount = len(bundle['data_files'])
-    app.log.info("1")
     json_files = bundle['json_files']
-    app.log.info("2")
-    with open('config.json') as f:
-        config = json.loads(f.read())
+    try:
+        with open('chalicelib/config.json') as f:
+            config = json.loads(f.read())
+    except Exception as e:
+        app.log.info(e)
     app.log.info("config is %s", config)
     file_uuid = ""
-    for i in range (fcount):
+    for i in range(fcount): #in the case of no data_files, this doesn't run
         for d_key, d_value in bundle['data_files'][i].items():
             file_uuid = d_key
         es_json = []
         for c_key, c_value in config.items():
             for j in range (len(json_files)):
                 if c_key in json_files[j]:
-                    file = json.loads(get_file(json_files[j][c_key]))
+                    try:
+                        file_url = urlopen(str(
+                            in_host+'/file/' + json_files[j][c_key])).read()
+                        file = json.loads(file_url)
+                    except Exception as e:
+                        app.log.info(e)
                     for c_item in c_value:
-                        if c_item in file:
-                            file_value = file[c_item]
-                            if not isinstance(file_value, list):
-                                es_json.append({c_item:file_value})
+                        to_append = look_file(c_item,file,"")
+                        if to_append is not None:
+                            if isinstance (to_append, list):
+                                to_append = flatten(to_append)
+                                for item in to_append:
+                                    es_json.append(item)
+                            else:
+                                es_json.append(to_append)
+                    app.log.info("write_index es_json %s", str(es_json))
         write_es(es_json, file_uuid)
     return bundle['data_files']
 
+#used by write_index to recursively return values of items in config file
+def look_file(c_item, file, name):
+    app.log.info("look_file %s", c_item)
+    if isinstance(c_item, dict):
+        es_array = []
+        for key, value in c_item.items():
+            if key in file:
+                name = str(name)+str(key)+"|"
+                for item in value:
+                    es_array.append( look_file(item, file[key], name))
+                return es_array
+    elif c_item in file:
+        file_value = file[c_item]
+        if not isinstance(file_value, list):
+            name = str(name)+str(c_item)
+            return ({name:file_value})
+
+#used by write_index to flatten nested arrays
+#from https://stackoverflow.com/a/2158532
+def flatten(l):
+    for el in l:
+        if isinstance(el, collections.Sequence) and not isinstance(el, (str, bytes)):
+            yield from flatten(el)
+        else:
+            yield el
+
+#used by write_index to add to ES
 def write_es(es_json, file_uuid):
     app.log.info("write_es %s", file_uuid)
-    res = es.index(index="test-index", doc_type='tweet', id=file_uuid, body=es_json)
+    es_keys = []
+    es_values = []
+    app.log.info("write_es es_json %s", str(es_json))
+    for item in es_json:
+        for key, value in item.items():
+            es_keys.append(key)
+            es_values.append(value)
+    es_file = dict(zip(es_keys, es_values))
+    app.log.info("write_es es_file %s", str(es_file))
+    res = es.index(index="test-index", doc_type='tweet', id=file_uuid, body=es_file)
     return(res['created'])
