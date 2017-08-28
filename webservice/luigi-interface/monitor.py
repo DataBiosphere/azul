@@ -11,8 +11,9 @@ import urllib2
 
 from boto.s3.key import Key
 from sqlalchemy  import *
+from datetime import datetime
 
-def getTouchfile(bucket_name, touchfile_name):
+def get_touchfile(bucket_name, touchfile_name):
 	s3 = boto.connect_s3()
 	bucket = s3.get_bucket(bucket_name, validate=False)
 
@@ -23,9 +24,9 @@ def getTouchfile(bucket_name, touchfile_name):
 # 
 # Luigi Scraping below
 # 
-def getJobList():
+def get_job_list():
 	server = os.getenv("LUIGI_SERVER") + ":" + os.getenv("LUIGI_PORT", "8082") + "/api/"
-	#print "SERVER:", server
+	
 	running_url   = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	batch_url     = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
 	failed_url    = server + "task_list?data=%7B%22status%22%3A%22FAILED%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
@@ -72,18 +73,27 @@ def getJobList():
 
 	return local_job_list
 
-def proxyConversion(resultProxy):
-	return [row for row in resultProxy]
+def query_to_list(result_proxy):
+	# Can use iterator to create list,
+	# but result from SQLAlchemy isn't
+	# great for other techniques used here
+	return [row for row in result_proxy]
 
 def get_consonance_status(consonance_uuid):
 	cmd = ['consonance', 'status', '--job_uuid', str(consonance_uuid)]
 	status_text = subprocess.check_output(cmd)
 	return json.loads(status_text)
 
+# This was exported to a method to avoid duplication
+# for both the creation and update timestamps
+def format_consonance_timestamp(consonance_timestamp):
+	datetime_obj = datetime.strptime(consonance_timestamp, '%Y-%m-%dT%H:%M:%S.%f+0000')
+	return datetime.strftime(datetime_obj, '%Y-%m-%d %H:%M')
+
 #
 # Database initialization, creation if table doesn't exist
 #
-# Change echo to True to show SQL code... unnecessary
+# Change echo to True to show SQL code... unnecessary for production
 db = create_engine('postgresql://{}:{}@db/{}'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD"), os.getenv("POSTGRES_DB")), echo=False)
 conn = db.connect()
 metadata = MetaData(db)
@@ -114,59 +124,43 @@ luigi = Table('luigi', metadata,
 if not db.dialect.has_table(db, luigi):
 	luigi.create()
 
-jobList = getJobList()
+jobList = get_job_list()
 #print jobList
 
 for job in jobList:
 	job_dict = jobList[job]	
-	#print job
-	#print job_dict['status']
 	
 	#
 	# S3 Scraping below
 	#
 	try:
 		s3string = job_dict['params']['touch_file_path']
-		bucket_name, filepath = job_dict['params']['touch_file_path'].split('/', 1)
+		bucket_name, filepath = s3string.split('/', 1)
 		touchfile_name = filepath + '/' + \
-						 job_dict['params']['submitter_sample_id'] + \
-						 '_meta_data.json'
-		#print "GOING INTO S3 RETRIEVAL"
-		stringContents = getTouchfile(bucket_name, touchfile_name)
+                                                 job_dict['params']['metadata_json_file_name']
+		stringContents = get_touchfile(bucket_name, touchfile_name)
 		jsonMetadata = json.loads(stringContents)
 	except:
 		# Hardcoded jsonMetadata
 		print >>sys.stderr, "Problems with s3 retrieval"
 		continue
 
-	#print "DEBUG SURVIVED S3 RETRIEVAL"
 	select_query = select([luigi]).where(luigi.c.luigi_job == job)
-	select_exist_result = proxyConversion(conn.execute(select_query))
+	select_exist_result = query_to_list(conn.execute(select_query))
 
 	try:
 		status_json = get_consonance_status(jsonMetadata['consonance_job_uuid'])
 	except:
-		# Add consonance job uuid print to stderr,
-		# print job uuid and time when it happeneds
+		# Default to Luigi statusand timestamps
 		status_json = {
 			'create_timestamp' : job_dict['start_time'],
 			'update_timestamp' : job_dict['last_updated'],
 			'state' : 'LUIGI:' + job_dict['status']
 		}
 
-	#print type(select_exist_result)
-	#print "RESULT:", select_exist_result
 	if len(select_exist_result) == 0:
-		# From the Consonance Status, use the following values
-		# to grab stdout and stderr IF THE JOB HAS SUCCESS/FAILED
-		# 	status_json['stdout']
-		# 	status_json['stderr']
-		# 
 		# insert into db	
 		ins_query = luigi.insert().values(luigi_job=job,
-
-						#status=status_json['state'],
-			
 						submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
 						specimen_uuid=jsonMetadata['specimen_uuid'],
 						workflow_name=jsonMetadata['workflow_name'],
@@ -183,19 +177,10 @@ for job in jobList:
 						submitter_specimen_type=jsonMetadata['submitter_specimen_type'],
 						workflow_version=jsonMetadata['workflow_version'],
 						sample_uuid=jsonMetadata['sample_uuid']
-						
-						#start_time=status_json['create_timestamp'],
-						#last_updated=status_json['update_timestamp']
-						)
+					)
 		exec_result = conn.execute(ins_query)	
-		# Uhhh... some error throwing on exec_result? 
 
-# Okay, now we have all of our Luigi jobs
-# in a database, and they all have Consonance
-# UUID's. We need to grab Consonance statuses,
-# because Luigi's information is misleading.
-# 
-# This should be accomplished by:
+# Get Consonance status for each entry in our db
 # 
 # Select all from the table, pipe results into a list
 # 
@@ -226,36 +211,19 @@ for job in result_list:
 
 			status_json = get_consonance_status(job_uuid)
 
-			state = status_json['state']
-			created = status_json['create_timestamp']
-			updated = status_json['update_timestamp']
-
-			# Timestamp format: 2017-03-10T18:37:06.230+0000
-			# Date = str[:10] to get only YYYY-MM-DD
-			created_date = created[:10]
-			updated_date = updated[:10]
-
-			# Time = str[11:16] shaves the timestamp 
-			# to just hours and minutes
-			created_time = created[11:16]
-			updated_time = updated[11:16]
-
-			created = created_date + " " + created_time
-			updated = updated_date + " " + updated_time
+			created = format_consonance_timestamp(status_json['create_timestamp'])
+			updated = format_consonance_timestamp(status_json['update_timestamp'])
 
 			# DEBUG to check if state, created, and updated are collected
 			#print "STATE:", state
 			#print "CREATED:", created
 			#print "UPDATED:", updated
-			
-			# DEBUG, comment when testing
-			#continue
 
 			stmt = luigi.update().\
 				   where(luigi.c.luigi_job == job_name).\
-				   values(status=state, 
-				   		  last_updated=updated,
-				   		  start_time=created)
+				   values(status=status_json['state'], 
+				   		  start_time=created,
+				   		  last_updated=updated)
 			exec_result = conn.execute(stmt)
 
 	except Exception as e:
@@ -264,7 +232,8 @@ for job in result_list:
 		state = 'JOB NOT FOUND'
 
 		stmt = luigi.update().\
-			   where(luigi.c.luigi_job == job_name).\
+			   where((and_(luigi.c.luigi_job == job_name, 
+			   		 	   luigi.c.status != 'SUCCESS',
+			   		 	   luigi.c.status != 'FAILED'))).\
 			   values(status=state)
 		exec_result = conn.execute(stmt)
-
