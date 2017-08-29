@@ -7,7 +7,9 @@ import json
 from flask_cors import CORS, cross_origin
 # from flask_migrate import Migrate
 import flask_excel as excel
-from flask.ext.elasticsearch import Elasticsearch
+# from flask.ext.elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch
+from elasticsearch_dsl import Search, Q
 import ast
 # from decimal import Decimal
 import copy
@@ -30,6 +32,47 @@ webservicebp = Blueprint('webservicebp', 'webservicebp')
 apache_path = os.environ.get("APACHE_PATH", "")
 es_service = os.environ.get("ES_SERVICE", "localhost")
 es = Elasticsearch(['http://' + es_service + ':9200/'])
+
+
+def translate_filters(filters, field_mapping):
+    # Translate the fields to the appropriate ElasticSearch Index.
+    for key, value in filters['file'].items():
+        if key in field_mapping:
+            # Get the corrected term within ElasticSearch
+            corrected_term = field_mapping[key]
+            # Replace the key in the filter with the name within ElasticSearch
+            filters['file'][corrected_term] = filters['file'].pop(key)
+
+    return filters
+
+
+def create_query(filters):
+    # List that will hold the queries
+    query_list = []
+    # Each iteration will AND the contents of the list
+    for facet, values in filters['file']:
+        # Create the appropriate 'OR' queries per facet
+        q = Q('constant_score', filter=[Q('terms', **{facet:values['is']})])
+        query_list.append(q)
+    # Return a Query object
+    return Q('bool', must=[query_list])
+
+
+def create_aggregates(filters, facet_config):
+    pass
+
+
+def create_request(filters, es_client, facet_config, field_mapping):
+    es_search = Search(using=es_client)
+    # Translate the filters keys
+    filters = translate_filters(filters, field_mapping)
+    # Get the query from 'create_query'
+    es_query = create_query(filters)
+    # Do a post_filter using the returned query
+    es_search.post_filter(es_query)
+    # Search for the aggregates
+    es_aggregates = create_aggregates(filters, facet_config)
+
 
 def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_search=False):
     protoDict = {'hits': []}
