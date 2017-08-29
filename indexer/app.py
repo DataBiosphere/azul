@@ -39,7 +39,16 @@ es = Elasticsearch(
 
 es.indices.create(index='test-index', ignore=400)
 
-@app.route('/')
+#for blue box notification
+@app.route('/', methods=['GET', 'POST'])
+def post_notification():
+    request = app.current_request.json_body
+    app.log.info("Received notification %s", request)
+    bundle_uuid = request['match']['bundle_uuid']
+    urlopen(str(in_host + '/write/' + bundle_uuid))
+    return {"bundle_uuid":bundle_uuid}
+
+@app.route('/escheck')
 def es_check():
     return es.info()
 
