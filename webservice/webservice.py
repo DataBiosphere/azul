@@ -59,6 +59,9 @@ def create_query(filters):
 
 
 def create_aggregates(filters, facet_config):
+    # Invert the mapping so you have {es_key: portalName}
+    inv_map = {v: k for k, v in facet_config.iteritems()}
+
     pass
 
 
