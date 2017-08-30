@@ -55,11 +55,11 @@ def get_job_list():
 	        name = name.split("%")[0] + suffix
 
 	    # Retrieve api tool dump from URL and read it into json_tools
-	    #print "URL: ", URL
+	    print "URL: ", URL
 	    req = urllib2.Request(URL)
 	    response = urllib2.urlopen(req)
 	    text_tools = response.read()
-	    #print "TEXT TOOLS:", text_tools
+	    print "TEXT TOOLS:", text_tools
 	    json_tools = json.loads(text_tools)
 
 	    luigi_job_list = json_tools["response"]
@@ -138,11 +138,13 @@ for job in jobList:
 		bucket_name, filepath = s3string.split('/', 1)
 		touchfile_name = filepath + '/' + \
                                                  job_dict['params']['metadata_json_file_name']
+                print "TOUCH FILE NAME:", touchfile_name
 		stringContents = get_touchfile(bucket_name, touchfile_name)
 		jsonMetadata = json.loads(stringContents)
 	except:
 		# Hardcoded jsonMetadata
 		print >>sys.stderr, "Problems with s3 retrieval"
+                print >>sys.stderr, job_dict
 		continue
 
 	select_query = select([luigi]).where(luigi.c.luigi_job == job)
@@ -159,8 +161,9 @@ for job in jobList:
 		}
 
 	if len(select_exist_result) == 0:
-		# insert into db	
-		ins_query = luigi.insert().values(luigi_job=job,
+        	try:
+			# insert into db	
+			ins_query = luigi.insert().values(luigi_job=job,
 						submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
 						specimen_uuid=jsonMetadata['specimen_uuid'],
 						workflow_name=jsonMetadata['workflow_name'],
@@ -178,7 +181,11 @@ for job in jobList:
 						workflow_version=jsonMetadata['workflow_version'],
 						sample_uuid=jsonMetadata['sample_uuid']
 					)
-		exec_result = conn.execute(ins_query)	
+			exec_result = conn.execute(ins_query)	
+		except Exception as e:
+			print >>sys.stderr, e.message, e.args
+			print "Dumping jsonMetadata to aid debug:\n", jsonMetadata
+			continue
 
 # Get Consonance status for each entry in our db
 # 
@@ -207,17 +214,17 @@ for job in result_list:
 		else:
 			# DEBUG
 			# Consonace job id is real
-			# print "\nJOB NAME:", job_uuid
+			print "\nJOB NAME:", job_uuid
 
 			status_json = get_consonance_status(job_uuid)
-
+                        state = status_json['state']
 			created = format_consonance_timestamp(status_json['create_timestamp'])
 			updated = format_consonance_timestamp(status_json['update_timestamp'])
 
 			# DEBUG to check if state, created, and updated are collected
-			#print "STATE:", state
-			#print "CREATED:", created
-			#print "UPDATED:", updated
+			print "STATE:", state
+			print "CREATED:", created
+			print "UPDATED:", updated
 
 			stmt = luigi.update().\
 				   where(luigi.c.luigi_job == job_name).\
