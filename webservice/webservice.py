@@ -47,20 +47,22 @@ def translate_filters(filters, field_mapping):
 
 
 def create_query(filters):
-    # List that will hold the queries
-    query_list = []
     # Each iteration will AND the contents of the list
-    for facet, values in filters['file']:
-        # Create the appropriate 'OR' queries per facet
-        q = Q('constant_score', filter=[Q('terms', **{facet:values['is']})])
-        query_list.append(q)
+    query_list = [Q('constant_score', filter=Q('terms', **{facet: values['is']})) for facet, values in filters['file']]
     # Return a Query object
-    return Q('bool', must=[query_list])
+    return Q('bool', must=query_list)
 
 
-def create_aggregates(filters, facet_config):
+def create_aggregate(filters, facet_config):
+    """
+    Creates the aggregation to be used in ElasticSearch
+    :param filters: Translated filters from 'files/' endpoint call
+    :param facet_config: Configuration for the facets (i.e. facets on which to construct the aggregate
+    :return: returns an aggregate
+    """
     # Invert the mapping so you have {es_key: portalName}
     inv_map = {v: k for k, v in facet_config.iteritems()}
+    # Do something like this s.aggs.bucket('workflow', A('filter', Q('bool', must=[Q('constant_score', filter=Q('terms', **{"project": ["CGL"]}))])))
 
     pass
 
@@ -74,7 +76,10 @@ def create_request(filters, es_client, facet_config, field_mapping):
     # Do a post_filter using the returned query
     es_search.post_filter(es_query)
     # Search for the aggregates
-    es_aggregates = create_aggregates(filters, facet_config)
+    # es_aggregates = create_aggregates(filters, facet_config)
+    # es_search = reduce(partial(lambda s, x: create_aggregate()), facet_config.iteritems(), es_search)
+    for agg, translation in facet_config.iteritems():
+        es_search.aggs.bucket(filters, facet_config)
 
 
 def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_search=False):
