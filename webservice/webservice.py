@@ -35,56 +35,81 @@ es = Elasticsearch(['http://' + es_service + ':9200/'])
 
 
 def translate_filters(filters, field_mapping):
+    """
+    Function for translating the filters
+    :param filters: Raw filters from the filters /files param. That is, in 'browserForm'
+    :param field_mapping: Mapping config json with '{'browserKey': 'es_key'}' format
+    :return: Returns translated filters with 'es_keys'
+    """
     # Translate the fields to the appropriate ElasticSearch Index.
-    for key, value in filters['file'].items():
+    for key, value in filters['file'].items():  # Probably can be edited later to do not just files but donors, etc.
         if key in field_mapping:
             # Get the corrected term within ElasticSearch
             corrected_term = field_mapping[key]
             # Replace the key in the filter with the name within ElasticSearch
             filters['file'][corrected_term] = filters['file'].pop(key)
-
     return filters
 
 
 def create_query(filters):
+    """
+    Creates a query object based on the filters argument
+    :param filters: filter parameter from the /files endpoint with translated (es_keys) keys
+    :return: Returns Query object with appropriate filters
+    """
     # Each iteration will AND the contents of the list
-    query_list = [Q('constant_score', filter=Q('terms', **{facet: values['is']})) for facet, values in filters['file']]
-    # Return a Query object
-    return Q('bool', must=query_list) # NOTE: I think you should return match_all if query_list is empty
+    query_list = [Q('constant_score', filter=Q('terms', **{facet: values['is']}))
+                  for facet, values in filters['file'].iteritems()]
+    # Return a Query object. Make it match_all
+    return Q('bool', must=query_list) if len(query_list) > 0 else Q()
 
 
 def create_aggregate(filters, facet_config, agg):
     """
     Creates the aggregation to be used in ElasticSearch
     :param filters: Translated filters from 'files/' endpoint call
-    :param facet_config: Configuration for the facets (i.e. facets on which to construct the aggregate
-    :param agg: Current aggregate where this aggregation is occurring
-    :return: returns an aggregate
+    :param facet_config: Configuration for the facets (i.e. facets on which to construct the aggregate)
+    in '{browser:es_key}' form
+    :param agg: Current aggregate where this aggregation is occurring. Syntax in browser form
+    :return: returns an Aggregate object to be used in a Search query
     """
+    # Pop filter of current Aggregate
     excluded_filter = filters['file'].pop(facet_config[agg], None)
+    # Create the appropriate filters
     filter_query = create_query(filters)
+    # Create the filter aggregate
     aggregate = A('filter', filter_query)
+    # Make an inner aggregate that will contain the terms in question
     aggregate.bucket('myTerms', 'terms', field=facet_config[agg], size=99999)
+    # If the aggregate in question didn't have any filter on the API call, skip it. Otherwise insert the popped
+    # value back in
     if excluded_filter is not None:
-        filters['file'][agg] = excluded_filter
+        filters['file'][facet_config[agg]] = excluded_filter
     return aggregate
-
-    # Do something like this s.aggs.bucket('workflow', A('filter', Q('bool', must=[Q('constant_score', filter=Q('terms', **{"project": ["CGL"]}))])))
 
 
 def create_request(filters, es_client, facet_config, field_mapping):
+    """
+    This function will create an ElasticSearch request based on the filters and facet_config passed into the function
+    :param filters: The 'filters' parameter from '/files'. Assumes to be translated into es_key terms
+    :param es_client: The ElasticSearch client object used to configure the Search object
+    :param facet_config: The {'broserKey': 'es_key'} config dictionary for facets
+    :param field_mapping: The {'browserKey': 'es_key'} config dictionary for mapping terms in the filter
+    :return: Returns the Search object that can be used for executing the request
+    """
+    # NOTE: I think facet_config and field_mapping are exactly the same at this point, and should either
+    # delete one or merge them into one file
     es_search = Search(using=es_client)
     # Translate the filters keys
     filters = translate_filters(filters, field_mapping)
     # Get the query from 'create_query'
     es_query = create_query(filters)
     # Do a post_filter using the returned query
-    es_search.post_filter(es_query)
-    # Search for the aggregates
-    # es_aggregates = create_aggregates(filters, facet_config)
-    # es_search = reduce(partial(lambda s, x: create_aggregate()), facet_config.iteritems(), es_search)
+    es_search.post_filter(es_query)  # This should be eventually handled depending on what endpoint is being hit
+    # Iterate over the aggregates in the facet_config
     for agg, translation in facet_config.iteritems():
-        es_search.aggs.bucket(filters, facet_config)
+        # Create a bucket aggregate for the 'agg'. Call create_aggregate() to return the appropriate aggregate query
+        es_search.aggs.bucket(agg, create_aggregate(filters, facet_config, agg))
 
 
 def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_search=False):
