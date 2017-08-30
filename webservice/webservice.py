@@ -9,7 +9,7 @@ from flask_cors import CORS, cross_origin
 import flask_excel as excel
 # from flask.ext.elasticsearch import Elasticsearch
 from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Search, Q
+from elasticsearch_dsl import Search, Q, A
 import ast
 # from decimal import Decimal
 import copy
@@ -50,21 +50,26 @@ def create_query(filters):
     # Each iteration will AND the contents of the list
     query_list = [Q('constant_score', filter=Q('terms', **{facet: values['is']})) for facet, values in filters['file']]
     # Return a Query object
-    return Q('bool', must=query_list)
+    return Q('bool', must=query_list) # NOTE: I think you should return match_all if query_list is empty
 
 
-def create_aggregate(filters, facet_config):
+def create_aggregate(filters, facet_config, agg):
     """
     Creates the aggregation to be used in ElasticSearch
     :param filters: Translated filters from 'files/' endpoint call
     :param facet_config: Configuration for the facets (i.e. facets on which to construct the aggregate
+    :param agg: Current aggregate where this aggregation is occurring
     :return: returns an aggregate
     """
-    # Invert the mapping so you have {es_key: portalName}
-    inv_map = {v: k for k, v in facet_config.iteritems()}
-    # Do something like this s.aggs.bucket('workflow', A('filter', Q('bool', must=[Q('constant_score', filter=Q('terms', **{"project": ["CGL"]}))])))
+    excluded_filter = filters['file'].pop(facet_config[agg], None)
+    filter_query = create_query(filters)
+    aggregate = A('filter', filter_query)
+    aggregate.bucket('myTerms', 'terms', field=facet_config[agg], size=99999)
+    if excluded_filter is not None:
+        filters['file'][agg] = excluded_filter
+    return aggregate
 
-    pass
+    # Do something like this s.aggs.bucket('workflow', A('filter', Q('bool', must=[Q('constant_score', filter=Q('terms', **{"project": ["CGL"]}))])))
 
 
 def create_request(filters, es_client, facet_config, field_mapping):
