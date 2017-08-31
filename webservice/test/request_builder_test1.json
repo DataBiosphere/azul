@@ -1,0 +1,91 @@
+{
+  "query": {
+    "match_all": {}
+  },
+  "post_filter": {
+    "bool": {
+      "must": [
+        {
+          "constant_score": {
+            "filter": {
+              "terms": {
+                "project": [
+                  "CGL"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "workFlow": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "workflow",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "program": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "program",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "projectCode": {
+      "filter": {
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "project",
+            "size": 99999
+          }
+        }
+      }
+    }
+  },
+  "_source": []
+}

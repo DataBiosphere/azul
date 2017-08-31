@@ -88,17 +88,19 @@ def create_aggregate(filters, facet_config, agg):
     return aggregate
 
 
-def create_request(filters, es_client, facet_config, field_mapping):
+def create_request(filters, es_client, config):
     """
     This function will create an ElasticSearch request based on the filters and facet_config passed into the function
     :param filters: The 'filters' parameter from '/files'. Assumes to be translated into es_key terms
     :param es_client: The ElasticSearch client object used to configure the Search object
-    :param facet_config: The {'broserKey': 'es_key'} config dictionary for facets
-    :param field_mapping: The {'browserKey': 'es_key'} config dictionary for mapping terms in the filter
+    :param config: The {'translation: {'browserKey': 'es_key'}, 'facets': ['facet1', ...]} config
     :return: Returns the Search object that can be used for executing the request
     """
     # NOTE: I think facet_config and field_mapping are exactly the same at this point, and should either
     # delete one or merge them into one file
+    facet_config = config['translation']
+    field_mapping = {key: facet_config[key] for key in config['facets']}
+    # Create the Search Object
     es_search = Search(using=es_client)
     # Translate the filters keys
     filters = translate_filters(filters, field_mapping)
@@ -110,6 +112,7 @@ def create_request(filters, es_client, facet_config, field_mapping):
     for agg, translation in facet_config.iteritems():
         # Create a bucket aggregate for the 'agg'. Call create_aggregate() to return the appropriate aggregate query
         es_search.aggs.bucket(agg, create_aggregate(filters, facet_config, agg))
+    return es_search
 
 
 def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_search=False):

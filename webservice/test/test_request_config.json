@@ -1,0 +1,10 @@
+{
+  "translation": {
+    "browserKey1": "es_key1",
+    "browserKey2": "es_key2"
+  },
+  "facets": [
+    "browserKey1",
+    "browserKey2"
+  ]
+}
