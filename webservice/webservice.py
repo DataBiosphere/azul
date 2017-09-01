@@ -98,8 +98,9 @@ def create_request(filters, es_client, config):
     """
     # NOTE: I think facet_config and field_mapping are exactly the same at this point, and should either
     # delete one or merge them into one file
-    facet_config = config['translation']
-    field_mapping = {key: facet_config[key] for key in config['facets']}
+    #
+    field_mapping = config['translation']
+    facet_config = {key: field_mapping[key] for key in config['facets']}
     # Create the Search Object
     es_search = Search(using=es_client)
     # Translate the filters keys
