@@ -102,7 +102,7 @@ class ElasticTransformDump(object):
         # Get the query from 'create_query'
         es_query = ElasticTransformDump.create_query(filters)
         # Do a post_filter using the returned query
-        es_search.query(es_query) if not post_filter else es_search.post_filter(es_query)
+        es_search = es_search.query(es_query) if not post_filter else es_search.post_filter(es_query)
         # Iterate over the aggregates in the facet_config
         for agg, translation in facet_config.iteritems():
             # Create a bucket aggregate for the 'agg'. Call create_aggregate() to return the appropriate aggregate query
@@ -177,6 +177,3 @@ class ElasticTransformDump(object):
             final_response = FileSearchResponse(mapping_config, hits, pagination, facets)
 
         return final_response
-
-
-

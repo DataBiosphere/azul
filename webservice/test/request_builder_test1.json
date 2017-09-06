@@ -76,6 +76,7 @@
     },
     "projectCode": {
       "filter": {
+        "match_all":{}
       },
       "aggs": {
         "myTerms": {
