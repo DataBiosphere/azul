@@ -1,7 +1,9 @@
 #!/usr/bin/python
+import config
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q, A
-import sys
+import json
+import os
 from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse
 
 
@@ -80,17 +82,19 @@ class ElasticTransformDump(object):
         return aggregate
 
     @staticmethod
-    def create_request(filters, es_client, config):
+    def create_request(filters, es_client, req_config, post_filter=False):
         """
-        This function will create an ElasticSearch request based on the filters and facet_config passed into the function
+        This function will create an ElasticSearch request based on the filters and facet_config
+        passed into the function
         :param filters: The 'filters' parameter from '/files'. Assumes to be translated into es_key terms
         :param es_client: The ElasticSearch client object used to configure the Search object
-        :param config: The {'translation: {'browserKey': 'es_key'}, 'facets': ['facet1', ...]} config
+        :param req_config: The {'translation: {'browserKey': 'es_key'}, 'facets': ['facet1', ...]} config
+        :param post_filter: Flag for doing either post_filter or regular querying (i.e. faceting or not)
         :return: Returns the Search object that can be used for executing the request
         """
         # Get the field mapping and facet configuration from the config
-        field_mapping = config['translation']
-        facet_config = {key: field_mapping[key] for key in config['facets']}
+        field_mapping = req_config['translation']
+        facet_config = {key: field_mapping[key] for key in req_config['facets']}
         # Create the Search Object
         es_search = Search(using=es_client)
         # Translate the filters keys
@@ -98,27 +102,81 @@ class ElasticTransformDump(object):
         # Get the query from 'create_query'
         es_query = ElasticTransformDump.create_query(filters)
         # Do a post_filter using the returned query
-        es_search.post_filter(es_query)  # This should be eventually handled depending on what endpoint is being hit
+        es_search.query(es_query) if not post_filter else es_search.post_filter(es_query)
         # Iterate over the aggregates in the facet_config
         for agg, translation in facet_config.iteritems():
             # Create a bucket aggregate for the 'agg'. Call create_aggregate() to return the appropriate aggregate query
             es_search.aggs.bucket(agg, ElasticTransformDump.create_aggregate(filters, facet_config, agg))
         return es_search
 
-    def transform_request(self, request_config_path='request_config.json',
-                          mapping_config_path='config',filters=None, pagination=None):
+    @staticmethod
+    def open_and_return_json(file_path):
+        """
+        Opens and returns the contents of the json file given in file_path
+        :param file_path: Path of a json file to be opened
+        :return: Returns an obj with the contents of the json file
+        """
+        with open(file_path) as file_:
+            loaded_file = json.load(file_)
+            file_.close()
+        return loaded_file
+
+    def transform_request(self, request_config_file='request_config.json',
+                          mapping_config_file='mapping_config.json', filters=None, pagination=None,
+                          post_filter=False):
         """
         This function does the whole transformation process. It takes the path of the config file, the filters, and
         pagination, if any. Excluding filters will do a match_all request. Excluding pagination will exclude pagination
         from the output.
         :param filters: Filter parameter from the API to be used in the query. Defaults to None
-        :param request_config_path: Path containing the requests config to be used for aggregates
-        :param mapping_config_path: Path containing the mapping to the API response fields.
-        :param pagination: Pagination to be used for
-        :return:
+        :param request_config_file: Path containing the requests config to be used for aggregates. Relative to the
+            'config' folder.
+        :param mapping_config_file: Path containing the mapping to the API response fields. Relative to the
+            'config' folder.
+        :param pagination: Pagination to be used for the API
+        :param post_filter: Flag to indicate whether to do a post_filter call instead of the regular query.
+        :return: Returns the transformed request
         """
+        # Use this as the base to construct the paths
+        # https://stackoverflow.com/questions/247770/retrieving-python-module-path
+        # Use that to get the path of the config module
+        config_folder = os.path.dirname(config.__file__)
+        # Create the path for the mapping config file
+        mapping_config_path = "{}/{}".format(config_folder, mapping_config_file)
+        # Create the path for the config_path
+        request_config_path = "{}/{}".format(config_folder, request_config_file)
+        # Get the Json Objects from the mapping_config and the request_config
+        mapping_config = self.open_and_return_json(mapping_config_path)
+        request_config = self.open_and_return_json(request_config_path)
+        # Handle empty filters
+        if filters is None:
+            filters = {"file": {}}
+        # Handle empty pagination
+        if pagination is None:
+            pagination = {}
+        # No faceting (i.e. do the faceting on the filtered query
+        if post_filter is False:
+            # Create request structure
+            es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
+        # It's a full faceted search
+        else:
+            # Create request structure
+            es_search = self.create_request(filters, self.es_client, request_config)
+        # Execute request. Ignore cache so we don't have caching problems downstream
+        es_response = es_search.execute(ignore_cache=True)
+        # Transform to a dictionary for easier manipulation
+        es_response_dict = es_response.to_dict()
+        # Pass on to the mapper
+        if pagination is None:
+            # Get a single search response
+            final_response = KeywordSearchResponse(mapping_config, es_response_dict['hits']['hits'])
+        else:
+            # Get a full blown file search response
+            hits = es_response_dict['hits']['hits']
+            facets = es_response_dict['aggregations']
+            final_response = FileSearchResponse(mapping_config, hits, pagination, facets)
 
-        # https://stackoverflow.com/questions/247770/retrieving-python-module-path Use that to get the path of the config module.
+        return final_response
 
 
 
