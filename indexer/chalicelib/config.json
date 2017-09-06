@@ -1,0 +1,28 @@
+{
+  "assay.json": [
+    "sra_run",
+    "sra_experiment",
+    {
+      "seq": [
+        "machine",
+        "molecule"
+      ]
+    }
+  ],
+  "project.json": [
+    "geo_series",
+    {
+      "contact": [
+        "address",
+        "city",
+        "country",
+        "department",
+        "email",
+        "institute",
+        "name",
+        "postal_code",
+        "street_address"
+      ]
+    }
+  ]
+}
