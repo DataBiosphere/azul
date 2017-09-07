@@ -2,12 +2,13 @@
 
 import json
 import difflib
+import os
 import unittest
-from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse
 from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 
 
 class MyTestCase(unittest.TestCase):
+
     def test_create_request(self):
         """
         Tests creation of a simple request
@@ -89,7 +90,7 @@ class MyTestCase(unittest.TestCase):
         # Load files required for this test
         request_config = EsTd.open_and_return_json('test_request_config.json')
         expected_output = EsTd.open_and_return_json('request_builder_test3.json')
-        # Create empty filter
+        # Create sample filter
         sample_filter = {"file": {"project": {"is": ["CGP", "CAR", "CGL"]}, "analysis_type": {
             "is": ["sequence_upload", "rna_seq_quantification"]}, "file_type": {"is": ["fastq.gz", "bam"]}}}
         # Create ElasticTransformDump instance
@@ -116,8 +117,54 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(actual_output, expected_output)
 
     def test_transform_request(self):
-        mapping_config = EsTd.open_and_return_json('test_mapping_config.json')
-        pass
+        """
+        Testes the transform request function from ElasticTransformDump. This test assumes that ElasticSearch is
+        operational, and that the domain and port for ElasticSearch are provided in the form of environmental
+        variables. It must be loaded with known test data
+        :return: True or false depending on the assertion
+        """
+        # Get the parameters to be used to the EsTd
+        mapping_config = '../test/test_mapping_config.json'
+        request_config = '../test/test_request_config.json'
+        sample_filter = {"file": {"project": {"is": ["CGP", "CAR", "CGL"]}, "analysis_type": {
+            "is": ["sequence_upload", "rna_seq_quantification"]}, "file_type": {"is": ["fastq.gz", "bam"]}}}
+        post_filter = True
+        pagination = {
+            "from": 1,
+            "order": "desc",
+            "size": 5,
+            "sort": "center_name",
+        }
+        # Set up the ElasticTransformDump  instance
+        es_domain = os.getenv('ES_DOMAIN', 'localhost')
+        es_port = os.getenv('ES_PORT', 9200)
+        es_requester = EsTd(es_domain=es_domain, es_port=es_port)
+
+        actual_output = es_requester.transform_request(request_config_file=request_config,
+                                                       mapping_config_file=mapping_config,
+                                                       filters=sample_filter,
+                                                       pagination=pagination,
+                                                       post_filter=post_filter)
+        expected_output = EsTd.open_and_return_json('test_transform_request_test1.json')
+        # Convert objects to be compared to strings
+        expected_output = json.dumps(expected_output, sort_keys=True)
+        actual_output = json.dumps(actual_output, sort_keys=True)
+        # Print the 2 strings for reference
+        print "Printing expected output: \n %s" % expected_output
+        print "Printing actual output: \n %s" % actual_output
+        # Now show differences so message is helpful
+        print "Comparing the two dictionaries built."
+        print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
+        for i, s in enumerate(difflib.ndiff(actual_output, expected_output)):
+            if s[0] == ' ':
+                continue
+            elif s[0] == '-':
+                print(u'Delete "{}" from position {}'.format(s[-1], i))
+            elif s[0] == '+':
+                print(u'Add "{}" to position {}'.format(s[-1], i))
+        # Testing first case with 1 filter
+        self.assertEqual(actual_output, expected_output)
+
 
 if __name__ == '__main__':
     unittest.main()

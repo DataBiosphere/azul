@@ -121,6 +121,45 @@ class ElasticTransformDump(object):
             file_.close()
         return loaded_file
 
+    @staticmethod
+    def apply_paging(es_search, pagination):
+        """
+        Applies the pagination to the ES Search object
+        :param es_search: The ES Search object
+        :param pagination: Dictionary with raw entries from the GET Request. It has: 'from', 'size', 'sort', 'order'
+        :return: An ES Search object where pagination has been applied
+        """
+        # Extract the fields for readability (and slight manipulation)
+        _from = pagination['from'] - 1
+        _to = pagination['size'] + _from
+        _sort = pagination['sort']
+        _order = pagination['order']
+        # Apply order
+        es_search = es_search.sort({_sort: {"order": _order}})
+        # Apply paging
+        es_search = es_search[_from:_to]
+        return es_search
+
+    @staticmethod
+    def generate_paging_dict(es_response, pagination):
+        """
+        Generates the right dictionary for the final response.
+        :param es_response: The raw dictionary response from ElasticSearch
+        :param pagination: The pagination as coming from the GET request (or the defaults)
+        :return: Modifies and returns the pagination updated with the new required entries.
+        """
+        page_field = {
+            'count': len(es_response['hits']['hits']),
+            'total': es_response['hits']['total'],
+            'size': pagination['size'],
+            'from': pagination['from'],
+            'page': ((pagination['from'] - 1) / pagination['size']) + 1,
+            'pages': -(-es_response['hits']['total'] // pagination['size']),
+            'sort': pagination['sort'],
+            'order': pagination['order']
+        }
+        return page_field
+
     def transform_request(self, request_config_file='request_config.json',
                           mapping_config_file='mapping_config.json', filters=None, pagination=None,
                           post_filter=False):
@@ -151,9 +190,6 @@ class ElasticTransformDump(object):
         # Handle empty filters
         if filters is None:
             filters = {"file": {}}
-        # Handle empty pagination
-        if pagination is None:
-            pagination = {}
         # No faceting (i.e. do the faceting on the filtered query
         if post_filter is False:
             # Create request structure
@@ -161,19 +197,22 @@ class ElasticTransformDump(object):
         # It's a full faceted search
         else:
             # Create request structure
-            es_search = self.create_request(filters, self.es_client, request_config)
-        # Execute request. Ignore cache so we don't have caching problems downstream
-        es_response = es_search.execute(ignore_cache=True)
-        # Transform to a dictionary for easier manipulation
-        es_response_dict = es_response.to_dict()
-        # Pass on to the mapper
+            es_search = self.create_request(filters, self.es_client, request_config, post_filter=post_filter)
+        # Handle pagination
         if pagination is None:
-            # Get a single search response
-            final_response = KeywordSearchResponse(mapping_config, es_response_dict['hits']['hits'])
+            # It's a single file search
+            es_response = es_search.execute(ignore_cache=True)
+            es_response_dict = es_response.to_dict()
+            hits = [x['_source'] for x in es_response_dict['hits']['hits']]
+            final_response = KeywordSearchResponse(mapping_config, hits)
         else:
-            # Get a full blown file search response
-            hits = es_response_dict['hits']['hits']
+            # It's a full file search
+            es_search = self.apply_paging(es_search, pagination)
+            es_response = es_search.execute(ignore_cache=True)
+            es_response_dict = es_response.to_dict()
+            hits = [x['_source'] for x in es_response_dict['hits']['hits']]
             facets = es_response_dict['aggregations']
-            final_response = FileSearchResponse(mapping_config, hits, pagination, facets)
-
+            paging = self.generate_paging_dict(es_response_dict, pagination)
+            final_response = FileSearchResponse(mapping_config, hits, paging, facets)
+        final_response = final_response.apiResponse.to_json()
         return final_response

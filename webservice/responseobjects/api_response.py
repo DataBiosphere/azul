@@ -299,6 +299,8 @@ class KeywordSearchResponse(AbstractResponse):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
+        # TODO: This is actually wrong. The Response from a single fileId call isn't under hits. It is actually not
+        # wrapped under anything
         class_entries = {'hits': [self.map_entries(mapping, x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
 
