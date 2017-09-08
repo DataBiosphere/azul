@@ -96,7 +96,7 @@ class ElasticTransformDump(object):
         field_mapping = req_config['translation']
         facet_config = {key: field_mapping[key] for key in req_config['facets']}
         # Create the Search Object
-        es_search = Search(using=es_client)
+        es_search = Search(using=es_client, index=os.getenv('ES_FILE_INDEX', 'fb_index'))
         # Translate the filters keys
         filters = ElasticTransformDump.translate_filters(filters, field_mapping)
         # Get the query from 'create_query'
@@ -207,6 +207,9 @@ class ElasticTransformDump(object):
             final_response = KeywordSearchResponse(mapping_config, hits)
         else:
             # It's a full file search
+            # Translate the sort field if there is any translation available
+            if pagination['sort'] in request_config['translation']:
+                pagination['sort'] = request_config['translation'][pagination['sort']]
             es_search = self.apply_paging(es_search, pagination)
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()

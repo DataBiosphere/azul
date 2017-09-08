@@ -24,13 +24,15 @@ import datetime
 import logging
 from database import db, login_db, login_manager
 
+from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+
 logging.basicConfig(level=logging.DEBUG)
 
 webservicebp = Blueprint('webservicebp', 'webservicebp')
 
 apache_path = os.environ.get("APACHE_PATH", "")
-es_service = os.environ.get("ES_SERVICE", "localhost")
-es = Elasticsearch(['http://' + es_service + ':9200/'])
+#es_service = os.environ.get("ES_SERVICE", "localhost")
+#es = Elasticsearch(['http://' + es_service + ':9200/'])
 
 
 def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_search=False):
@@ -152,12 +154,38 @@ def get_data(file_id=None):
     print "Getting data"
     # Get all the parameters from the URL
     m_field = request.args.get('field')
-    m_filters = request.args.get('filters')
+    m_filters = request.args.get('filters', {"file": {}})
     m_from = request.args.get('from', 1, type=int)
     m_size = request.args.get('size', 5, type=int)
     m_sort = request.args.get('sort', 'center_name')
     m_order = request.args.get('order', 'desc')
     m_include = request.args.get('include', 'facets')  # Need to work on this parameter
+    # NEW WORK
+    fields = request.args.get('field')
+    filters = request.args.get('filters', '{"file": {}}')
+    # TODO: This try except block should be logged appropriately
+    try:
+        filters = ast.literal_eval(filters)
+    except Exception, e:
+        print str(e)
+        return "Malformed filters parameters"
+    include = request.args.get('include', 'facets')
+    pagination = {
+        "from": request.args.get('from', 1, type=int),
+        "order": request.args.get('order', 'desc'),
+        "size": request.args.get('size', 5, type=int),
+        "sort":    request.args.get('sort', 'center_name'),
+    }
+    # Need to handle different cases
+    response = EsTd.transform_request(filters=filters, pagination=pagination, post_filter=True)
+
+
+
+
+    ###################################################################################
+
+
+
 
     # Didctionary for getting a reference to the aggs key
     # referenceAggs = {"centerName":"center_name", "projectCode":"project", "specimenType":"specimen_type", "fileFormat":"file_type", "workFlow":"workflow", "analysisType":"analysis_type", "program":"program"}
