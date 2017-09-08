@@ -1,68 +1,68 @@
 {
-  "access": "ESKEY",
+  "access": "access",
   "analysisMethod": {
-    "analysisType": "ESKEY",
-    "software": "ESKEY"
+    "analysisType": "analysis_type",
+    "software": "software"
   },
-  "center_name": "ESKEY",
+  "center_name": "center_name",
   "dataCategorization": {
-    "dataType": "ESKEY",
-    "experimentalStrategy": "ESKEY"
+    "dataType": "file_type",
+    "experimentalStrategy": "experimentalStrategy"
   },
   "donors": [
     {
-      "donorId": "ESKEY",
+      "donorId": "donor",
       "otherIdentifiers": {
         "RedwoodDonorUUID": [
-          "ESKEY"
+          "redwoodDonorUUID"
         ]
       },
-      "primarySite": "ESKEY",
-      "projectCode": "ESKEY",
+      "primarySite": "submitterDonorPrimarySite",
+      "projectCode": "project",
       "sampleId": [
-        "ESKEY"
+        "sampleId"
       ],
       "specimenType": [
-        "ESKEY"
+        "specimen_type"
       ],
-      "study": "ESKEY",
-      "submittedDonorId": "ESKEY",
+      "study": "study",
+      "submittedDonorId": "submittedDonorId",
       "submittedSampleId": [
-        "ESKEY"
+        "submittedSampleId"
       ],
       "submittedSpecimenId": [
-        "ESKEY"
+        "submittedSpecimenId"
       ]
     }
   ],
   "fileCopies": [
     {
-      "fileFormat": "ESKEY",
-      "fileMd5sum": "ESKEY",
-      "fileName": "ESKEY",
-      "fileSize": "ESKEY",
-      "lastModified": "ESKEY",
-      "repoBaseUrl": "ESKEY",
-      "repoCode": "ESKEY",
-      "repoCountry": "ESKEY",
-      "repoDataBundleId": "ESKEY",
-      "repoDataPath": "ESKEY",
+      "fileFormat": "file_type",
+      "fileMd5sum": "fileMd5sum",
+      "fileName": "title",
+      "fileSize": "fileSize",
+      "lastModified": "lastModified",
+      "repoBaseUrl": "repoBaseUrl",
+      "repoCode": "repoCode",
+      "repoCountry": "repoCountry",
+      "repoDataBundleId": "repoDataBundleId",
+      "repoDataPath": null,
       "repoDataSetIds": [null],
-      "repoMetadataPath": "ESKEY",
-      "repoName": "ESKEY",
-      "repoOrg": "ESKEY",
-      "repoType": "ESKEY"
+      "repoMetadataPath": null,
+      "repoName": "repoName",
+      "repoOrg": "repoOrg",
+      "repoType": "repoType"
     }
   ],
-  "id": "ESKEY",
-  "objectID": "ESKEY",
-  "program": "ESKEY",
+  "id": "file_id",
+  "objectID": "file_id",
+  "program": "program",
   "referenceGenome": {
     "downloadUrl": null,
     "genomeBuild": null,
     "referenceName": null
   },
   "study": [
-    "ESKEY"
+    "study"
   ]
 }

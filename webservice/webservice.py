@@ -31,8 +31,8 @@ logging.basicConfig(level=logging.DEBUG)
 webservicebp = Blueprint('webservicebp', 'webservicebp')
 
 apache_path = os.environ.get("APACHE_PATH", "")
-#es_service = os.environ.get("ES_SERVICE", "localhost")
-#es = Elasticsearch(['http://' + es_service + ':9200/'])
+es_service = os.environ.get("ES_SERVICE", "localhost")
+es = Elasticsearch(['http://' + es_service + ':9200/'])
 
 
 def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_search=False):
@@ -131,36 +131,13 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_sear
 
     return protoDict
 
-#@login_manager.user_loader
-#def load_user(user_id):
-#    return User.query.get(int(user_id))
-#
-#
-#@webservicebp.route('/login')
-#def login():
-#    if current_user.is_authenticated:
-#        redirect('https://{}'.format(os.getenv('DCC_DASHBOARD_HOST')))
-#    else:
-#        redirect('https://{}/login'.format(os.getenv('DCC_DASHBOARD_HOST')))
 
-
-
-# This returns the agreggate terms and the list of hits from ElasticSearch
 @webservicebp.route('/repository/files')
 @webservicebp.route('/repository/files/')
 @webservicebp.route('/repository/files/<file_id>')
 @cross_origin()
 def get_data(file_id=None):
-    print "Getting data"
     # Get all the parameters from the URL
-    m_field = request.args.get('field')
-    m_filters = request.args.get('filters', {"file": {}})
-    m_from = request.args.get('from', 1, type=int)
-    m_size = request.args.get('size', 5, type=int)
-    m_sort = request.args.get('sort', 'center_name')
-    m_order = request.args.get('order', 'desc')
-    m_include = request.args.get('include', 'facets')  # Need to work on this parameter
-    # NEW WORK
     fields = request.args.get('field')
     filters = request.args.get('filters', '{"file": {}}')
     # TODO: This try except block should be logged appropriately
@@ -170,256 +147,48 @@ def get_data(file_id=None):
         print str(e)
         return "Malformed filters parameters"
     include = request.args.get('include', 'facets')
+    # Make the default pagination
     pagination = {
         "from": request.args.get('from', 1, type=int),
         "order": request.args.get('order', 'desc'),
         "size": request.args.get('size', 5, type=int),
         "sort":    request.args.get('sort', 'center_name'),
     }
-    # Need to handle different cases
+    # Handle <file_id> request form
+    if file_id is not None:
+        filters['file']['fileId'] = {"is": [file_id]}
+    # Get the response back
     response = EsTd.transform_request(filters=filters, pagination=pagination, post_filter=True)
+    # Returning a single response if <file_id> request form is used
+    if file_id is not None:
+        response = response['hits'][0]
+    return jsonify(response)
 
 
-
-
-    ###################################################################################
-
-
-
-
-    # Didctionary for getting a reference to the aggs key
-    # referenceAggs = {"centerName":"center_name", "projectCode":"project", "specimenType":"specimen_type", "fileFormat":"file_type", "workFlow":"workflow", "analysisType":"analysis_type", "program":"program"}
-    # inverseAggs = {"center_name":"centerName", "project":"projectCode", "specimen_type":"specimenType", "file_type":"fileFormat", "workflow":"workFlow", "analysis_type":"analysisType", "program":"program"}
-    # Dictionary for getting a reference to the aggs key
-    idSearch = None  # To use when searching a FileID using the regular endpoint structure i.e. file:{is:"x"}
-    idDonorSearch = None
-    referenceAggs = {}
-    inverseAggs = {}
-    with open(apache_path + 'reference_aggs.json') as my_aggs:
-        # with open('reference_aggs.json') as my_aggs:
-        referenceAggs = json.load(my_aggs)
-
-    with open(apache_path + 'inverse_aggs.json') as my_aggs:
-        # with open('inverse_aggs.json') as my_aggs:
-        inverseAggs = json.load(my_aggs)
-
-    # Will hold the query that will be used when calling ES
-    mQuery = {}
-    # Gets the index in [0 - (N-1)] form to communicate with ES
-    m_from -= 1
-    try:
-        m_fields_List = [x.strip() for x in m_field.split(',')]
-    except:
-        m_fields_List = []  # Changed it from None to an empty list
-    # Get a list of all the Filters requested
-    try:
-        m_filters = ast.literal_eval(m_filters)
-        # Check if the string is in the other format. Change it as appropriate. #TESTING
-        for key, value in m_filters['file'].items():
-            if key in referenceAggs:
-                corrected_term = referenceAggs[key]
-                # print corrected_term
-                m_filters['file'][corrected_term] = m_filters['file'].pop(key)
-            if key == "fileId" or key == "id":
-                idSearch = m_filters['file'].pop(key)["is"]
-            if key == "donorId":
-                idDonorSearch = m_filters['file'].pop(key)["is"]
-                # print m_filters
-
-        # Functions for calling the appropriates query filters
-        matchValues = lambda x, y: {"filter": {"terms": {x: y['is']}}}
-        filt_list = [{"constant_score": matchValues(x, y)} for x, y in m_filters['file'].items()]
-        mQuery = {
-            "bool": {"must": filt_list}}  # Removed the brackets; Make sure it doesn't break anything down the line
-        mQuery2 = {"bool": {"must": filt_list}}
-
-    except Exception, e:
-        print str(e)
-        m_filters = None
-        mQuery = {"match_all": {}}
-        mQuery2 = {}
-        pass
-    # The json with aggs to call ES
-    aggs_list = {}
-    with open(apache_path + 'aggs.json') as my_aggs:
-        # with open('aggs.json') as my_aggs:
-        aggs_list = json.load(my_aggs)
-    # Add the appropriate filters to the aggs_list
-    if "match_all" not in mQuery:
-        for key, value in aggs_list.items():
-            aggs_list[key]['filter'] = copy.deepcopy(mQuery2)
-            # print "Printing mQuery2", mQuery2
-            # print "Printing filter field", aggs_list[key]['filter']
-            for index, single_filter in enumerate(aggs_list[key]['filter']['bool']['must']):
-                # print single_filter
-                one_item_list = single_filter['constant_score']['filter']['terms'].items()
-                if inverseAggs[one_item_list[0][0]] == key:
-                    # print aggs_list[key]['filter']['bool']['must']
-                    aggs_list[key]['filter']['bool']['must'].pop(index)
-                    # In case there is no filter condition present
-                    if len(aggs_list[key]['filter']['bool']['must']) == 0:
-                        aggs_list[key]['filter'] = {}
-
-                        # print aggs_list
-
-
-                        # for agg_filter in mQuery['bool']['must']:
-                        # 	#agg_filter['constant_score']['filter']['terms']
-                        # 	for key, value in agg_filter['constant_score']['filter']['terms'].items():
-                        # 		if inverseAggs[key] in aggs_list:
-                        # 			aggs_list[inverseAggs[key]]['filter'] = mQuery
-                        # 				for agg_little_filter in aggs_list[inverseAggs[key]]['filter']['bool']['must']:
-                        # 					#agg_filter['constant_score']['filter']['terms']
-                        # 					#Check if the field is the same as your aggregate.
-                        # 					for key2, value2 in agg_little_filter['constant_score']['filter']['terms'].items():
-
-                        # 					for key, value in agg_filter['constant_score']['filter']['terms'].items():
-
-    print "This is what get's into ES", json.dumps({"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List})
-
-    if file_id:
-        query_body = {"prefix": {"file_id": file_id}}
-        body = {"query": query_body}
-        mText = es.search(index='fb_alias', body=body, from_=0, size=5)
-        result = parse_ES_response(mText, m_size, m_from, m_sort, m_order, key_search=True)
-        return jsonify(result['hits'][0])
-    elif idSearch:
-        mText = es.search(index='fb_alias', body={"query": {
-            "constant_score": {"filter": {"terms": {"file_id": idSearch}}}},
-            "post_filter": mQuery2, "aggs": aggs_list, "_source": m_fields_List},
-                          from_=m_from, size=m_size, sort=m_sort + ":" + m_order)
-    elif idDonorSearch:
-        mText = es.search(index='fb_alias', body={"query": {
-            "constant_score": {"filter": {"terms": {"donor": idDonorSearch}}}},
-            "post_filter": mQuery2, "aggs": aggs_list, "_source": m_fields_List},
-                          from_=m_from, size=m_size, sort=m_sort + ":" + m_order)
-
-    else:
-        mText = es.search(index='fb_alias', body={"query": {"match_all": {}}, "post_filter": mQuery2, "aggs": aggs_list,
-                                                  "_source": m_fields_List}, from_=m_from, size=m_size,
-                          sort=m_sort + ":" + m_order)  # Changed "fields" to "_source"
-    return jsonify(parse_ES_response(mText, m_size, m_from, m_sort, m_order))
-
-
-###********************************TEST FOR THE PIECHARTS FACETS ENDPOINT**********************************************##
 @webservicebp.route('/repository/files/piecharts')
 @cross_origin()
 def get_data_pie():
-    print "Getting data"
-    # Get the filters from the URL
-    m_filters = request.args.get('filters')
-    # Just add these filters so it doesn't break the application for now.
-    m_from = request.args.get('from', 1, type=int)
-    m_size = request.args.get('size', 5, type=int)
-    m_sort = request.args.get('sort', 'center_name')
-    m_order = request.args.get('order', 'desc')
-    # Will hold the query that will be used when calling ES
-    mQuery = {}
-    # Gets the index in [0 - (N-1)] form to communicate with ES
-    m_from -= 1
-
-    # Dictionary for getting a reference to the aggs key
-    idSearch = None
-    idDonorSearch = None
-    referenceAggs = {}
-    inverseAggs = {}
-    with open(apache_path + 'reference_aggs.json') as my_aggs:
-        # with open('reference_aggs.json') as my_aggs:
-        referenceAggs = json.load(my_aggs)
-
-    with open(apache_path + 'inverse_aggs.json') as my_aggs:
-        # with open('inverse_aggs.json') as my_aggs:
-        inverseAggs = json.load(my_aggs)
-
-    # Get a list of all the Filters requested
+    # Get all the parameters from the URL
+    fields = request.args.get('field')
+    filters = request.args.get('filters', '{"file": {}}')
+    # TODO: This try except block should be logged appropriately
     try:
-        m_filters = ast.literal_eval(m_filters)
-        # Change the keys to the appropriate values.
-        for key, value in m_filters['file'].items():
-            if key in referenceAggs:
-                # This performs the change.
-                corrected_term = referenceAggs[key]
-                m_filters['file'][corrected_term] = m_filters['file'].pop(key)
-            if key == "fileId" or key == "id":
-                idSearch = m_filters['file'].pop(key)["is"]
-            if key == "donorId":
-                idDonorSearch = m_filters['file'].pop(key)["is"]
-                # print m_filters
-
-        # Functions for calling the appropriates query filters
-        matchValues = lambda x, y: {"filter": {"terms": {x: y['is']}}}
-        filt_list = [{"constant_score": matchValues(x, y)} for x, y in m_filters['file'].items()]
-        mQuery = {
-            "bool": {"must": filt_list}}  # Removed the brackets; Make sure it doesn't break anything down the line
-        mQuery2 = {"bool": {"must": filt_list}}
-
+        filters = ast.literal_eval(filters)
     except Exception, e:
         print str(e)
-        m_filters = None
-        mQuery = {"match_all": {}}
-        mQuery2 = {}
-        pass
-    # Didctionary for getting a reference to the aggs key
-    referenceAggs = {"centerName": "center_name", "projectCode": "project", "specimenType": "specimen_type",
-                     "fileFormat": "file_type", "workFlow": "workflow", "analysisType": "analysis_type",
-                     "program": "program"}
-    inverseAggs = {"center_name": "centerName", "project": "projectCode", "specimen_type": "specimenType",
-                   "file_type": "fileFormat", "workflow": "workFlow", "analysis_type": "analysisType",
-                   "program": "program"}
-    # The json with aggs to call ES
-    aggs_list = {}
-    with open(apache_path + 'aggs.json') as my_aggs:
-        # with open('aggs.json') as my_aggs:
-        aggs_list = json.load(my_aggs)
-    # Add the appropriate filters to the aggs_list
-    if "match_all" not in mQuery:
-        for key, value in aggs_list.items():
-            aggs_list[key]['filter'] = copy.deepcopy(mQuery2)
-            # Remove these lines below, since the numbering in the piecharts is exclusively what's present in the table result.
-            # print "Printing mQuery2", mQuery2
-            # print "Printing filter field", aggs_list[key]['filter']
-            # for index, single_filter in enumerate(aggs_list[key]['filter']['bool']['must']):
-            # print single_filter
-            # one_item_list = single_filter['constant_score']['filter']['terms'].items()
-            # if inverseAggs[one_item_list[0][0]] == key:
-            # 	#print aggs_list[key]['filter']['bool']['must']
-            # 	aggs_list[key]['filter']['bool']['must'].pop(index)
-            # 	#In case there is no filter condition present
-            # 	if len(aggs_list[key]['filter']['bool']['must']) == 0:
-            # 		aggs_list[key]['filter'] = {}
-
-            # print aggs_list
-
-
-            # for agg_filter in mQuery['bool']['must']:
-            # 	#agg_filter['constant_score']['filter']['terms']
-            # 	for key, value in agg_filter['constant_score']['filter']['terms'].items():
-            # 		if inverseAggs[key] in aggs_list:
-            # 			aggs_list[inverseAggs[key]]['filter'] = mQuery
-            # 				for agg_little_filter in aggs_list[inverseAggs[key]]['filter']['bool']['must']:
-            # 					#agg_filter['constant_score']['filter']['terms']
-            # 					#Check if the field is the same as your aggregate.
-            # 					for key2, value2 in agg_little_filter['constant_score']['filter']['terms'].items():
-
-            # 					for key, value in agg_filter['constant_score']['filter']['terms'].items():
-
-    # print "This is what get's into ES", {"query": {"match_all":{}}, "post_filter": mQuery2, "aggs" : aggs_list, "_source":m_fields_List}
-    if idSearch:
-        mText = es.search(index='fb_alias', body={"query": {
-            "constant_score": {"filter": {"terms": {"file_id": idSearch}}}},
-            "post_filter": mQuery2, "aggs": aggs_list, "_source": m_fields_List},
-                          from_=m_from, size=m_size, sort=m_sort + ":" + m_order)
-    elif idDonorSearch:
-        mText = es.search(index='fb_alias', body={"query": {
-            "constant_score": {"filter": {"terms": {"donor": idDonorSearch}}}},
-            "post_filter": mQuery2, "aggs": aggs_list, "_source": m_fields_List},
-                          from_=m_from, size=m_size, sort=m_sort + ":" + m_order)
-    else:
-        mText = es.search(index='fb_alias',
-                          body={"query": {"match_all": {}}, "post_filter": mQuery2, "aggs": aggs_list}, from_=m_from,
-                          size=m_size, sort=m_sort + ":" + m_order)  # Changed "fields" to "_source"
-    return jsonify(parse_ES_response(mText, m_size, m_from, m_sort, m_order))
-
+        return "Malformed filters parameters"
+    include = request.args.get('include', 'facets')
+    # Make the default pagination
+    pagination = {
+        "from": request.args.get('from', 1, type=int),
+        "order": request.args.get('order', 'desc'),
+        "size": request.args.get('size', 5, type=int),
+        "sort":    request.args.get('sort', 'center_name'),
+    }
+    # Get the response back
+    response = EsTd.transform_request(filters=filters, pagination=pagination, post_filter=False)
+    # Returning a single response if <file_id> request form is used
+    return jsonify(response)
 
 ##*********************************************************************************************************************************##
 
