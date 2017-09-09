@@ -157,8 +157,12 @@ def get_data(file_id=None):
     # Handle <file_id> request form
     if file_id is not None:
         filters['file']['fileId'] = {"is": [file_id]}
+    # Create and instance of the ElasticTransformDump
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN"),
+                 es_port=os.getenv("ES_PORT", 9200),
+                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
-    response = EsTd.transform_request(filters=filters, pagination=pagination, post_filter=True)
+    response = es_td.transform_request(filters=filters, pagination=pagination, post_filter=True)
     # Returning a single response if <file_id> request form is used
     if file_id is not None:
         response = response['hits'][0]
@@ -185,8 +189,12 @@ def get_data_pie():
         "size": request.args.get('size', 5, type=int),
         "sort":    request.args.get('sort', 'center_name'),
     }
+    # Create and instance of the ElasticTransformDump
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN"),
+                 es_port=os.getenv("ES_PORT", 9200),
+                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
-    response = EsTd.transform_request(filters=filters, pagination=pagination, post_filter=False)
+    response = es_td.transform_request(filters=filters, pagination=pagination, post_filter=False)
     # Returning a single response if <file_id> request form is used
     return jsonify(response)
 
