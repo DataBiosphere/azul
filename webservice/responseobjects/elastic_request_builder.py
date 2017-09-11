@@ -212,10 +212,10 @@ class ElasticTransformDump(object):
                 pagination['sort'] = request_config['translation'][pagination['sort']]
             es_search = self.apply_paging(es_search, pagination)
             # TODO: NEED TO APPROPRIATELY LOG, PLEASE DELETE PRINT STATEMENT
-            print "Printing ES_SEARCH request dict:\n {}".format(es_search.to_dict())
+            print "Printing ES_SEARCH request dict:\n {}".format(json.dumps(es_search.to_dict()))
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()
-            print "Printing ES_SEARCH response dict:\n {}".format(es_response_dict)
+            print "Printing ES_SEARCH response dict:\n {}".format(json.dumps(es_response_dict))
             hits = [x['_source'] for x in es_response_dict['hits']['hits']]
             facets = es_response_dict['aggregations']
             paging = self.generate_paging_dict(es_response_dict, pagination)
