@@ -7,19 +7,35 @@ services:
         APACHE_PATH: ""
         ES_SERVICE: "elasticsearch"
         ES_DOMAIN: "elasticsearch"
+        ES_PORT: 9200
+        ES_PROTOCOL: "http"
         FLASK_APP: "/app/mapi.py"
       networks:
         - server
       restart: always
 
+    boardwalk:
+      image: quay.io/ucsc_cgl/boardwalk:1.0.0
+      environment:
+        - BOARDWALK_HOST=dcc-dashboard-service
+      networks:
+        - server
+      ports:
+        - "80:80"
+        - "443:443"
+        - "3000:3000"
+      restart: always
+
     elasticsearch:
+      image: docker.elastic.co/elasticsearch/elasticsearch:5.2.2
       ports:
         - "9200"
       environment:
         - xpack.security.enabled=false
       networks:
         - server
+      restart: always
 
 networks:
   server:
-    driver: local
+    driver: bridge

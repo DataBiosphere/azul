@@ -143,6 +143,7 @@ def get_data(file_id=None):
     # TODO: This try except block should be logged appropriately
     try:
         filters = ast.literal_eval(filters)
+        filters = {"file": {}} if filters == {} else filters
     except Exception, e:
         print str(e)
         return "Malformed filters parameters"
