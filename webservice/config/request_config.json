@@ -6,6 +6,7 @@
     "projectCode": "project",
     "analysisType": "analysis_type",
     "fileFormat": "file_type",
+    "fileSize": "fileSize",
     "specimenType": "specimen_type",
     "software": "software",
     "fileId": "file_id",

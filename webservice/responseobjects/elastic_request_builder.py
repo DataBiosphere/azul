@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q, A
 import json
 import os
-from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse
+from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse, SummaryResponse
 
 
 class ElasticTransformDump(object):
@@ -160,6 +160,25 @@ class ElasticTransformDump(object):
         }
         return page_field
 
+    def transform_summary(self, request_config_file='request_config.json', filters=None):
+        # Use this as the base to construct the paths
+        # https://stackoverflow.com/questions/247770/retrieving-python-module-path
+        # Use that to get the path of the config module
+        config_folder = os.path.dirname(config.__file__)
+        # Create the path for the request_config_file
+        request_config_path = "{}/{}".format(config_folder, request_config_file)
+        # Get the Json Objects from the mapping_config and the request_config
+        request_config = self.open_and_return_json(request_config_path)
+        # Handle empty filters
+        if filters is None:
+            filters = {"file": {}}
+        # Create a request to ElasticSearch
+        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
+        es_search.aggs.metric('total_size', 'sum', field=request_config['translation']['fileSize'])
+        es_response = es_search.execute(ignore_cache=True)
+        final_response = SummaryResponse(es_response.to_dict())
+        return final_response.apiResponse.to_json()
+
     def transform_request(self, request_config_file='request_config.json',
                           mapping_config_file='mapping_config.json', filters=None, pagination=None,
                           post_filter=False):
@@ -190,7 +209,7 @@ class ElasticTransformDump(object):
         # Handle empty filters
         if filters is None:
             filters = {"file": {}}
-        # No faceting (i.e. do the faceting on the filtered query
+        # No faceting (i.e. do the faceting on the filtered query)
         if post_filter is False:
             # Create request structure
             es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)

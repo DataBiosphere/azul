@@ -155,15 +155,32 @@ class SummaryResponse(AbstractResponse):
     Class for the summary response. Based on the AbstractResponse class
     """
     def return_response(self):
-        pass
+        return self.apiResponse
 
-    def __init__(self, hits, aggs):
-        # You might want to pass it through the FileSearch class. Might be easier that way.
+    @staticmethod
+    def agg_contents(aggs_dict, agg_name, agg_form="buckets"):
+        """
+        Helper function for parsing aggregate dictionary and returning the contents of the aggregation
+        :param aggs_dict: ES dictionary response containing the aggregates
+        :param agg_name: Name of aggregate to inspect
+        :param agg_form: Part of the aggregate to return.
+        :return: Returns the agg_form within the aggregate agg_name
+        """
+        # Return the specified content of the aggregate. Otherwise return an empty string
+        return aggs_dict[agg_name][agg_form] if agg_name in aggs_dict else ""
+
+    def __init__(self, raw_response):
+        # Separate the raw_response into hits and aggregates
+        hits = raw_response['hits']
+        aggregates = raw_response['aggregations']
+        # Create a SummaryRepresentation object
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
-            donorCount=len(aggs['donor']['buckets'])
+            donorCount=len(self.agg_contents(aggregates, 'donor')),
+            projectCount=len(self.agg_contents(aggregates, 'projectCode')),
+            totalFileSize=self.agg_contents(aggregates, 'projectCode', agg_form='value'),
+            primarySiteCount=len(self.agg_contents(aggregates, 'submitterDonorPrimarySite'))
         )
-
 
 
 class KeywordSearchResponse(AbstractResponse):
