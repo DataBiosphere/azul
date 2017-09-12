@@ -173,7 +173,7 @@ class SummaryResponse(AbstractResponse):
         except Exception as e:
             print e
             # If for whatever reason it can't do it, just assign contents as an empty string
-            contents = ""
+            contents = None
         return contents
 
     def __init__(self, raw_response):
