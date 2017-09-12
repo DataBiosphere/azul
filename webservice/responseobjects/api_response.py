@@ -170,10 +170,12 @@ class SummaryResponse(AbstractResponse):
         # return aggs_dict[agg_name][agg_form] if agg_name in aggs_dict else ""
         try:
             contents = aggs_dict[agg_name][agg_form]
+            if agg_form == "buckets":
+                contents = len(contents)
         except Exception as e:
             print e
-            # If for whatever reason it can't do it, just assign contents as an empty string
-            contents = None
+            # If for whatever reason it can't do it, just return a negative number
+            contents = -1
         return contents
 
     def __init__(self, raw_response):
@@ -183,10 +185,10 @@ class SummaryResponse(AbstractResponse):
         # Create a SummaryRepresentation object
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
-            donorCount=len(self.agg_contents(aggregates, 'donor')),
-            projectCount=len(self.agg_contents(aggregates, 'projectCode')),
+            donorCount=self.agg_contents(aggregates, 'donor'),
+            projectCount=self.agg_contents(aggregates, 'projectCode'),
             totalFileSize=self.agg_contents(aggregates, 'projectCode', agg_form='value'),
-            primarySiteCount=len(self.agg_contents(aggregates, 'submitterDonorPrimarySite'))
+            primarySiteCount=self.agg_contents(aggregates, 'submitterDonorPrimarySite')
         )
 
 
