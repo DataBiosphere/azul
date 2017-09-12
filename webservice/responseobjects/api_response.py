@@ -128,6 +128,17 @@ class ApiResponse(JsonObject):
     termFacets = DictProperty(FacetObj, exclude_if_none=True)
 
 
+class SummaryRepresentation(JsonObject):
+    """
+    Class defining the Summary Response
+    """
+    fileCount = IntegerProperty()
+    totalFileSize = IntegerProperty()
+    donorCount = IntegerProperty()
+    projectCount = IntegerProperty()
+    primarySiteCount = IntegerProperty()
+
+
 class AbstractResponse(object):
     """
     Abstract class to be used for each /files API response.
@@ -145,6 +156,14 @@ class SummaryResponse(AbstractResponse):
     """
     def return_response(self):
         pass
+
+    def __init__(self, hits, aggs):
+        # You might want to pass it through the FileSearch class. Might be easier that way.
+        self.apiResponse = SummaryRepresentation(
+            fileCount=hits['total'],
+            donorCount=len(aggs['donor']['buckets'])
+        )
+
 
 
 class KeywordSearchResponse(AbstractResponse):

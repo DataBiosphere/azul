@@ -199,8 +199,6 @@ def get_data_pie():
     # Returning a single response if <file_id> request form is used
     return jsonify(response)
 
-##*********************************************************************************************************************************##
-
 
 # This will return a summary of the facets
 @webservicebp.route('/repository/files/facets')
