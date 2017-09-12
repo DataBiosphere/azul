@@ -81,3 +81,5 @@ class Billing(Model):
     @property
     def cost(self):
         return self.compute_cost+self.storage_cost
+
+
