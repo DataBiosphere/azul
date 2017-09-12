@@ -162,11 +162,19 @@ for job in jobList:
     # Find if current job is already listed in
     # job database, insert if absent
     #
-    select_query = select([luigi]).where(luigi.c.luigi_job == job)
+    # use the Consonance job uuid instead of the Luigi job id because
+    # Luigi sometimes reuses job ids for different runs
+    # The Consonance job uuid is always unique
+#    select_query = select([luigi]).where(luigi.c.luigi_job == job)
+    job_uuid = jsonMetadata['consonance_job_uuid']
+    print "QUERYING DB FOR JOB UUID:", job_uuid
+    select_query = select([luigi]).where(luigi.c.consonance_job_uuid == job_uuid)
     select_result = query_to_list(conn.execute(select_query))
+    print "JOB RESULT:", select_result
     if len(select_result) == 0:
         try:
-            ins_query = luigi.insert().values(luigi_job=job,
+            #ins_query = luigi.insert().values(luigi_job=job,
+            ins_query = luigi.insert().values(luigi_job=job_uuid,
                                               submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
                                               specimen_uuid=jsonMetadata['specimen_uuid'],
                                               workflow_name=jsonMetadata['workflow_name'],
