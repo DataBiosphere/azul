@@ -176,7 +176,6 @@ class SummaryResponse(AbstractResponse):
             contents = ""
         return contents
 
-
     def __init__(self, raw_response):
         # Separate the raw_response into hits and aggregates
         hits = raw_response['hits']
