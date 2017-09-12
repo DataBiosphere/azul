@@ -336,131 +336,30 @@ def get_facets():
     return jsonify(array_facet_list)
 
 
-# return jsonify(facets_list)
-
-# This will return a summary as the one from the ICGC endpoint
-# Takes filters as parameter.
 @webservicebp.route('/repository/files/summary')
 @cross_origin()
 def get_summary():
-    my_summary = {"fileCount": None, "totalFileSize": None, "donorCount": None, "projectCount": None,
-                  "primarySiteCount": "DUMMY"}
-    m_filters = request.args.get('filters')
-
-    # Dictionary for getting a reference to the aggs key
-    idSearch = None
-    referenceAggs = {}
-    inverseAggs = {}
-    with open(apache_path + 'reference_aggs.json') as my_aggs:
-        # with open('reference_aggs.json') as my_aggs:
-        referenceAggs = json.load(my_aggs)
-
-    with open(apache_path + 'inverse_aggs.json') as my_aggs:
-        # with open('inverse_aggs.json') as my_aggs:
-        inverseAggs = json.load(my_aggs)
-
+    """
+    Returns a summary based on the filters passed on to the call. Based on the
+    ICGC endpoint.
+    :return: returns a jsonified Summary API response
+    """
+    # Get the filters from the URL
+    filters = request.args.get('filters', '{"file": {}}')
+    # TODO: This try except block should be logged appropriately
     try:
-        m_filters = ast.literal_eval(m_filters)
-        # Change the keys to the appropriate values.
-        for key, value in m_filters['file'].items():
-            if key in referenceAggs:
-                # This performs the change.
-                corrected_term = referenceAggs[key]
-                m_filters['file'][corrected_term] = m_filters['file'].pop(key)
-            if key == "fileId" or key == "id":
-                # idSearch = m_filters['file'].pop(key)["is"]
-                m_filters['file']["file_id"] = m_filters['file'].pop(key)
-            if key == "donorId":
-                # idSearch = m_filters['file'].pop(key)["is"]
-                m_filters['file']["donor"] = m_filters['file'].pop(key)
-        # Functions for calling the appropriates query filters
-        matchValues = lambda x, y: {"filter": {"terms": {x: y['is']}}}
-        filt_list = [{"constant_score": matchValues(x, y)} for x, y in m_filters['file'].items()]
-        mQuery = {"bool": {"must": [filt_list]}}
-        # Add the mechanism to incorporate idSearch. See if it works!
-        # if idSearch:
-        # mQuery["constant_score"] = {"filter":{"terms":{"file_id":idSearch}}}
-        # mQuery["bool"]["filter"] = {"terms":{"file_id":idSearch}}
+        filters = ast.literal_eval(filters)
     except Exception, e:
         print str(e)
-        m_filters = None
-        mQuery = {"match_all": {}}
-        pass
-    # Need to pass on the arguments for this.
-    print mQuery
-    mText = es.search(index='fb_alias', body={"query": mQuery, "aggs": {
-        "centerName": {
-            "terms": {"field": "center_name",
-                      # "min_doc_count" : 0,
-                      "size": 99999}
-        },
-        "projectCode": {
-            "terms": {
-                "field": "project",
-                # "min_doc_count" : 0,
-                "size": 99999
-            }
-        },
-        "specimenType": {
-            "terms": {
-                "field": "specimen_type",
-                # "min_doc_count" : 0,
-                "size": 99999
-            }
-        },
-        "fileFormat": {
-            "terms": {
-                "field": "file_type",
-                # "min_doc_count" : 0,
-                "size": 99999
-            }
-        },
-        "workFlow": {
-            "terms": {
-                "field": "workflow",
-                # "min_doc_count" : 0,
-                "size": 99999
-            }
-        },
-        "analysisType": {
-            "terms": {
-                "field": "analysis_type",
-                # "min_doc_count" : 0,
-                "size": 99999
-            }
-        },
-        "donor": {
-            "terms": {
-                "field": "donor",
-                # "min_doc_count" : 0,
-                "size": 99999
-            }
-        },
-        "submitterDonorPrimarySite": {
-            "terms": {
-                "field": "submitterDonorPrimarySite",
-                # "min_doc_count": 0,
-                "size": 99999
-            }
-        },
-        "total_size": {
-            "sum": {"field": "fileSize"}
-        }
-    }})
-
-    print mText['aggregations']['donor']
-
-    my_summary['fileCount'] = mText['hits']['total']
-    my_summary['donorCount'] = len(mText['aggregations']['donor']['buckets'])
-    my_summary['projectCount'] = len(mText['aggregations']['projectCode']['buckets'])
-    my_summary['totalFileSize'] = mText['aggregations']['total_size']['value']
-    my_summary['primarySiteCount'] = len(mText['aggregations']['submitterDonorPrimarySite']['buckets'])
-    # To remove once this endpoint has some functionality
-    return jsonify(my_summary)
-
-
-# return "still working on this endpoint, updates soon!!"
-
+        return "Malformed filters parameters"
+    # Create and instance of the ElasticTransformDump
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN"),
+                 es_port=os.getenv("ES_PORT", 9200),
+                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
+    # Get the response back
+    response = es_td.transform_summary(filters=filters)
+    # Returning a single response if <file_id> request form is used
+    return jsonify(response)
 
 
 ###Methods for executing the search endpoint
