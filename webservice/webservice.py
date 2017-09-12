@@ -179,6 +179,7 @@ def get_data_pie():
     # TODO: This try except block should be logged appropriately
     try:
         filters = ast.literal_eval(filters)
+        filters = {"file": {}} if filters == {} else filters
     except Exception, e:
         print str(e)
         return "Malformed filters parameters"
@@ -349,6 +350,7 @@ def get_summary():
     # TODO: This try except block should be logged appropriately
     try:
         filters = ast.literal_eval(filters)
+        filters = {"file": {}} if filters == {} else filters
     except Exception, e:
         print str(e)
         return "Malformed filters parameters"
