@@ -167,7 +167,15 @@ class SummaryResponse(AbstractResponse):
         :return: Returns the agg_form within the aggregate agg_name
         """
         # Return the specified content of the aggregate. Otherwise return an empty string
-        return aggs_dict[agg_name][agg_form] if agg_name in aggs_dict else ""
+        # return aggs_dict[agg_name][agg_form] if agg_name in aggs_dict else ""
+        try:
+            contents = aggs_dict[agg_name][agg_form]
+        except Exception as e:
+            print e
+            # If for whatever reason it can't do it, just assign contents as an empty string
+            contents = ""
+        return contents
+
 
     def __init__(self, raw_response):
         # Separate the raw_response into hits and aggregates
