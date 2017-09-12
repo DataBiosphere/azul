@@ -16,9 +16,14 @@ from datetime import datetime
 def get_touchfile(bucket_name, touchfile_name):
     s3 = boto.connect_s3()
     bucket = s3.get_bucket(bucket_name, validate=False)
+    print "GOT S3 BUCKET" 
 
     key = bucket.new_key(touchfile_name)
+    print "CREATED NEW S3 KEY"
+
     contents = key.get_contents_as_string()
+    print "GOT S3 FILE CONTENTS"
+
     return contents
 
 
@@ -134,10 +139,12 @@ for job in jobList:
         s3string = job_dict['params']['touch_file_path']
         bucket_name, filepath = s3string.split('/', 1)
         touchfile_name = filepath + '/' + job_dict['params']['metadata_json_file_name']
-
+        print "BUCKET_NAME:", bucket_name
         print "TOUCH FILE NAME:", touchfile_name
         stringContents = get_touchfile(bucket_name, touchfile_name)
+        print "GOT STRING CONTENTS", stringContents
         jsonMetadata = json.loads(stringContents)
+        print "LOADED JSON DATA", jsonMetadata
     except Exception as e:
         # Hardcoded jsonMetadata
         print >>sys.stderr, e.message, e.args
@@ -147,11 +154,14 @@ for job in jobList:
     #
     # Consonance scraping below
     #
+    print "GETTING CONSONANCE STATUS FOR METADATA:", jsonMetadata
+    print "and job:", job
     try:
         # Use uuid from S3
         status_json = get_consonance_status(jsonMetadata['consonance_job_uuid'])
     except:
         # Default to Luigi status and timestamps
+        print "EXCEPT STATEMENT IN GETTING CONSONANCE STATUS FOR JOB WITH METADATA", job
         status_json = {
             'create_timestamp': job_dict['start_time'],
             'update_timestamp': job_dict['last_updated'],
@@ -162,6 +172,8 @@ for job in jobList:
     # Find if current job is already listed in
     # job database, insert if absent
     #
+
+    print "SELECTING JOB:", job
     # use the Consonance job uuid instead of the Luigi job id because
     # Luigi sometimes reuses job ids for different runs
     # The Consonance job uuid is always unique
