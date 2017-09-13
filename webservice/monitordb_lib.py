@@ -1,6 +1,10 @@
 from sqlalchemy import create_engine, MetaData, Table, String, Float, Column
 
 def luigiDBInit():
+	# Initializes luigi database with the appropriate env variables
+	#
+	# Returns the connection and luigi table for SQL operations,
+	# but abstracts the table's columns, db engine, and metadata.
 	db = create_engine('postgresql://{}:{}@db/{}'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD"), os.getenv("POSTGRES_DB")), echo=False)
 	conn = db.connect()
 	luigi = Table('luigi', MetaData(db),
