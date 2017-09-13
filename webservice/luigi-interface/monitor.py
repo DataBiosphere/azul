@@ -158,7 +158,7 @@ for job in jobList:
     if len(select_result) == 0:
         try:
             #ins_query = monitordb_table.insert().values(luigi_job=job,
-            ins_query = monitordb_table.insert().values(luigi_job=job_uuid,
+            ins_query = monitordb_table.insert().values(luigi_job=job,
                                               submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
                                               specimen_uuid=jsonMetadata['specimen_uuid'],
                                               workflow_name=jsonMetadata['workflow_name'],
