@@ -5,6 +5,7 @@
 import boto
 import json
 import os
+import re
 import subprocess
 import sys
 import urllib2
@@ -87,11 +88,17 @@ def get_consonance_status(consonance_uuid):
     return json.loads(status_text)
 
 
-# This was exported to a method to avoid duplication
-# for both the creation and update timestamps
 def format_consonance_timestamp(consonance_timestamp):
+    # This was exported to a method to avoid duplication
+    # for both the creation and update timestamps
     datetime_obj = datetime.strptime(consonance_timestamp, '%Y-%m-%dT%H:%M:%S.%f+0000')
     return datetime.strftime(datetime_obj, '%Y-%m-%d %H:%M')
+
+
+def validateConsonanceUUID(consonance_uuid):
+    # Return if consonance uuid only contains hex characters and "-" 
+    uuid_pattern = re.compile("[a-f,A-F,0-9,-]+")
+    return bool(uuid_pattern.match(consonance_uuid))
 
 
 #
@@ -226,7 +233,7 @@ for job in result_list:
         job_name = job['luigi_job']
         job_uuid = job['consonance_job_uuid']
 
-        if job_uuid == "no consonance id in test mode":
+        if not validateConsonanceUUID(job_uuid):
             # Skip test mode Consonance ID's
             # and force next job
             print "\nTest ID, skipping"
