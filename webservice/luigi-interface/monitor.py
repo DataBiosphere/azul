@@ -1,7 +1,3 @@
-# Alex Hancock, UCSC CGL
-#
-# Luigi Monitor
-
 import boto
 import json
 import os
