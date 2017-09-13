@@ -94,7 +94,7 @@ def format_consonance_timestamp(consonance_timestamp):
 
 def validateConsonanceUUID(consonance_uuid):
     # Return if consonance uuid only contains hex characters and "-" 
-    uuid_pattern = re.compile("[a-f,A-F,0-9,-]+")
+    uuid_pattern = re.compile("\b[a-f,A-F,0-9,-]+\b")
     return bool(uuid_pattern.match(consonance_uuid))
 
 
