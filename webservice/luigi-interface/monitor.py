@@ -94,7 +94,7 @@ def format_consonance_timestamp(consonance_timestamp):
 
 def validateConsonanceUUID(consonance_uuid):
     # Return if consonance uuid only contains hex characters and "-" 
-    uuid_pattern = re.compile("\b[a-f,A-F,0-9,-]+\b")
+    uuid_pattern = re.compile("[a-f,A-F,0-9,-]+")
     return bool(uuid_pattern.match(consonance_uuid))
 
 
@@ -220,7 +220,7 @@ for job in result_list:
             print "UPDATED:", updated
 
             stmt = monitordb_table.update().\
-                where(monitordb_table.c.luigi_job == job_name).\
+                where(monitordb_table.c.consonance_job_uuid == job_uuid).\
                 values(status=status_json['state'],
                        start_time=created,
                        last_updated=updated)
