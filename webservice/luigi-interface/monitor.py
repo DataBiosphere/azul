@@ -6,7 +6,7 @@ import subprocess
 import sys
 import urllib2
 
-from sqlalchemy import create_engine, MetaData, Table, Column, String, select, and_
+from sqlalchemy import select, and_
 from datetime import datetime
 from monitordb_lib import luigiDBInit
 
@@ -98,7 +98,7 @@ def validateConsonanceUUID(consonance_uuid):
     return bool(uuid_pattern.match(consonance_uuid))
 
 
-monitordb_connection, luigi_table = luigiDBInit()
+monitordb_connection, monitordb_table = luigiDBInit()
 jobList = get_job_list()
 
 for job in jobList:
@@ -149,16 +149,16 @@ for job in jobList:
     # use the Consonance job uuid instead of the Luigi job id because
     # Luigi sometimes reuses job ids for different runs
     # The Consonance job uuid is always unique
-    # select_query = select([luigi_table]).where(luigi_table.c.luigi_job == job)
+    # select_query = select([monitordb_table]).where(monitordb_table.c.luigi_job == job)
     job_uuid = jsonMetadata['consonance_job_uuid']
     print "QUERYING DB FOR JOB UUID:", job_uuid
-    select_query = select([luigi_table]).where(luigi_table.c.consonance_job_uuid == job_uuid)
+    select_query = select([monitordb_table]).where(monitordb_table.c.consonance_job_uuid == job_uuid)
     select_result = query_to_list(monitordb_connection.execute(select_query))
     print "JOB RESULT:", select_result
     if len(select_result) == 0:
         try:
-            #ins_query = luigi_table.insert().values(luigi_job=job,
-            ins_query = luigi_table.insert().values(luigi_job=job_uuid,
+            #ins_query = monitordb_table.insert().values(luigi_job=job,
+            ins_query = monitordb_table.insert().values(luigi_job=job_uuid,
                                               submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
                                               specimen_uuid=jsonMetadata['specimen_uuid'],
                                               workflow_name=jsonMetadata['workflow_name'],
@@ -190,7 +190,7 @@ for job in jobList:
 #     consonance status using job.consonance_uuid
 #     update that job using the information from status return
 #
-select_query = select([luigi_table])
+select_query = select([monitordb_table])
 select_result = monitordb_connection.execute(select_query)
 result_list = [dict(row) for row in select_result]
 for job in result_list:
@@ -203,7 +203,7 @@ for job in result_list:
             # and force next job
             print "\nTest ID, skipping"
 
-            stmt = luigi_table.delete().where(luigi_table.c.luigi_job == job_name)
+            stmt = monitordb_table.delete().where(monitordb_table.c.luigi_job == job_name)
             exec_result = monitordb_connection.execute(stmt)
         else:
             # Consonace job id is real
@@ -219,8 +219,8 @@ for job in result_list:
             print "CREATED:", created
             print "UPDATED:", updated
 
-            stmt = luigi_table.update().\
-                where(luigi_table.c.luigi_job == job_name).\
+            stmt = monitordb_table.update().\
+                where(monitordb_table.c.luigi_job == job_name).\
                 values(status=status_json['state'],
                        start_time=created,
                        last_updated=updated)
@@ -230,9 +230,9 @@ for job in result_list:
         print >>sys.stderr, e.message, e.args
         print >>sys.stderr, "Dumping job entry:", job
 
-        stmt = luigi_table.update().\
-            where((and_(luigi_table.c.luigi_job == job_name,
-                        luigi_table.c.status != 'SUCCESS',
-                        luigi_table.c.status != 'FAILED'))).\
+        stmt = monitordb_table.update().\
+            where((and_(monitordb_table.c.luigi_job == job_name,
+                        monitordb_table.c.status != 'SUCCESS',
+                        monitordb_table.c.status != 'FAILED'))).\
             values(status='JOB NOT FOUND')
         exec_result = monitordb_connection.execute(stmt)
