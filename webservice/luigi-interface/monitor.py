@@ -8,6 +8,7 @@ import urllib2
 
 from sqlalchemy import create_engine, MetaData, Table, Column, String, select, and_
 from datetime import datetime
+from monitordb_lib import luigiDBInit
 
 
 def get_touchfile(bucket_name, touchfile_name):
@@ -97,39 +98,7 @@ def validateConsonanceUUID(consonance_uuid):
     return bool(uuid_pattern.match(consonance_uuid))
 
 
-#
-# Database initialization, creation if table doesn't exist
-#
-# Change echo to True to show SQL code... unnecessary for production
-#
-db = create_engine('postgresql://{}:{}@db/{}'.format(os.getenv("POSTGRES_USER"), os.getenv("POSTGRES_PASSWORD"), os.getenv("POSTGRES_DB")), echo=False)
-conn = db.connect()
-metadata = MetaData(db)
-luigi = Table('luigi', metadata,
-              Column("luigi_job", String(100)),
-              Column("status", String(20)),
-              Column("submitter_specimen_id", String(100)),
-              Column("specimen_uuid", String(100)),
-              Column("workflow_name", String(100)),
-              Column("center_name", String(100)),
-              Column("submitter_donor_id", String(100)),
-              Column("consonance_job_uuid", String(100), primary_key=True),
-              Column("submitter_donor_primary_site", String(100)),
-              Column("project", String(100)),
-              Column("analysis_type", String(100)),
-              Column("program", String(100)),
-              Column("donor_uuid", String(100)),
-              Column("submitter_sample_id", String(100)),
-              Column("submitter_experimental_design", String(100)),
-              Column("submitter_specimen_type", String(100)),
-              Column("workflow_version", String(100)),
-              Column("sample_uuid", String(100)),
-              Column("start_time", String(100)),
-              Column("last_updated", String(100)))
-
-if not db.dialect.has_table(db, luigi):
-    luigi.create()
-
+monitordb_connection, luigi_table = luigiDBInit()
 jobList = get_job_list()
 
 for job in jobList:
@@ -180,16 +149,16 @@ for job in jobList:
     # use the Consonance job uuid instead of the Luigi job id because
     # Luigi sometimes reuses job ids for different runs
     # The Consonance job uuid is always unique
-#    select_query = select([luigi]).where(luigi.c.luigi_job == job)
+    # select_query = select([luigi_table]).where(luigi_table.c.luigi_job == job)
     job_uuid = jsonMetadata['consonance_job_uuid']
     print "QUERYING DB FOR JOB UUID:", job_uuid
-    select_query = select([luigi]).where(luigi.c.consonance_job_uuid == job_uuid)
-    select_result = query_to_list(conn.execute(select_query))
+    select_query = select([luigi_table]).where(luigi_table.c.consonance_job_uuid == job_uuid)
+    select_result = query_to_list(monitordb_connection.execute(select_query))
     print "JOB RESULT:", select_result
     if len(select_result) == 0:
         try:
-            #ins_query = luigi.insert().values(luigi_job=job,
-            ins_query = luigi.insert().values(luigi_job=job_uuid,
+            #ins_query = luigi_table.insert().values(luigi_job=job,
+            ins_query = luigi_table.insert().values(luigi_job=job_uuid,
                                               submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
                                               specimen_uuid=jsonMetadata['specimen_uuid'],
                                               workflow_name=jsonMetadata['workflow_name'],
@@ -206,7 +175,7 @@ for job in jobList:
                                               submitter_specimen_type=jsonMetadata['submitter_specimen_type'],
                                               workflow_version=jsonMetadata['workflow_version'],
                                               sample_uuid=jsonMetadata['sample_uuid'])
-            exec_result = conn.execute(ins_query)
+            exec_result = monitordb_connection.execute(ins_query)
         except Exception as e:
             print >>sys.stderr, e.message, e.args
             print "Dumping jsonMetadata to aid debug:\n", jsonMetadata
@@ -221,8 +190,8 @@ for job in jobList:
 #     consonance status using job.consonance_uuid
 #     update that job using the information from status return
 #
-select_query = select([luigi])
-select_result = conn.execute(select_query)
+select_query = select([luigi_table])
+select_result = monitordb_connection.execute(select_query)
 result_list = [dict(row) for row in select_result]
 for job in result_list:
     try:
@@ -234,8 +203,8 @@ for job in result_list:
             # and force next job
             print "\nTest ID, skipping"
 
-            stmt = luigi.delete().where(luigi.c.luigi_job == job_name)
-            exec_result = conn.execute(stmt)
+            stmt = luigi_table.delete().where(luigi_table.c.luigi_job == job_name)
+            exec_result = monitordb_connection.execute(stmt)
         else:
             # Consonace job id is real
             print "\nJOB NAME:", job_uuid
@@ -250,20 +219,20 @@ for job in result_list:
             print "CREATED:", created
             print "UPDATED:", updated
 
-            stmt = luigi.update().\
-                where(luigi.c.luigi_job == job_name).\
+            stmt = luigi_table.update().\
+                where(luigi_table.c.luigi_job == job_name).\
                 values(status=status_json['state'],
                        start_time=created,
                        last_updated=updated)
-            exec_result = conn.execute(stmt)
+            exec_result = monitordb_connection.execute(stmt)
 
     except Exception as e:
         print >>sys.stderr, e.message, e.args
         print >>sys.stderr, "Dumping job entry:", job
 
-        stmt = luigi.update().\
-            where((and_(luigi.c.luigi_job == job_name,
-                        luigi.c.status != 'SUCCESS',
-                        luigi.c.status != 'FAILED'))).\
+        stmt = luigi_table.update().\
+            where((and_(luigi_table.c.luigi_job == job_name,
+                        luigi_table.c.status != 'SUCCESS',
+                        luigi_table.c.status != 'FAILED'))).\
             values(status='JOB NOT FOUND')
-        exec_result = conn.execute(stmt)
+        exec_result = monitordb_connection.execute(stmt)
