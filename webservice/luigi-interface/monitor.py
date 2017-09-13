@@ -8,13 +8,16 @@ import urllib2
 
 from sqlalchemy import select, and_
 from datetime import datetime
+
+# Add parent directory to get luigidb init
+sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 from monitordb_lib import luigiDBInit
 
 
 def get_touchfile(bucket_name, touchfile_name):
     s3 = boto.connect_s3()
     bucket = s3.get_bucket(bucket_name, validate=False)
-    print "GOT S3 BUCKET" 
+    print "GOT S3 BUCKET"
 
     key = bucket.new_key(touchfile_name)
     print "CREATED NEW S3 KEY"
