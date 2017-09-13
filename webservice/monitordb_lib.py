@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine, MetaData, Table, String, Float, Column
+import os
 
 def luigiDBInit():
     # Initializes luigi database with the appropriate env variables
