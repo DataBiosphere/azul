@@ -21,7 +21,7 @@ import datetime
 import logging
 from database import db, login_db, login_manager, User
 from monitordb_lib import luigiDBInit
-from sqlalchemy import select
+from sqlalchemy import select, desc
 
 actionbp = Blueprint('actionbp', 'actionbp')
 
