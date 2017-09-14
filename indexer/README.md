@@ -6,11 +6,12 @@ This is the indexer that consumes events from the blue box and indexes them into
 
 ### Blue Box 
 
-It is required to know the blue box endpoint.
+It is required to know the blue box endpoint. See here for instructions: https://github.com/HumanCellAtlas/data-store/tree/master
 
 ### Elasticsearch (ES)
 
-Create an Elasticsearch box on AWS. Take note of the endpoint.
+Create an Elasticsearch box on AWS. [Read more about AWS Elasticsearch Service.](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/what-is-amazon-elasticsearch-service.html "Elasticsearch Service") 
+Take note of the endpoint.
 
 ### Create a Virtualenv and configure AWS
 It is recommended to have python3 and create a virtual environment with `virtualenv -p python3 envname` and activate with `source envname/bin/activate`.
@@ -22,6 +23,8 @@ aws configure
 ```
 
 ### Chalice
+
+Chalice is similar to Flask but is serverless and uses AWS Lambda.
 ```
 pip install chalice
 chalice new-project
@@ -202,3 +205,5 @@ Note: Manual loading creates mappings for ES, has some list parsing capability, 
     * We need something that will generate POSTS to the lambda, such as a shell script.
     * Flask has endpoints for looking up bundles, and get a particular manifest.
     * Assume  bundles uuid always exist. generate a request to download anything indexable ? 
+* config for turning on/off debug
+* not hard code urls (like the https in bb_host or in_host)
