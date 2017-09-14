@@ -32,9 +32,78 @@ When prompted for project name, input `azul_indexer`.
 
 This will create an AWS Lambda function called `azul_indexer` which will be updated using `chalice deploy`.
 
-`cd azul_indexer` and then `rm app.py` and `rm requirements.txt`
-add `app.py`, `requirements.txt` and `chalicelib/config.json` to the azul_indexer folder.
+`cd azul_indexer` and then `rm app.py` and `rm requirements.txt` (in other words, remove the files that chalice automatically generated).
+ Then, copy `app.py`, `requirements.txt` and `chalicelib/config.json` from this repo and add to the azul_indexer folder.
 
+### Config File
+
+`chalicelib/config.json` should contain the keys that you wish to add to the index documents. The structure of the config.json should mimic the metadata json file being looked at.
+
+For example, the following metadata for assay.json:
+```
+{
+  "rna": {
+    "primer": "random"
+  },
+  "seq": {
+    "machine": "Illumina HiSeq 2000",
+    "molecule": "total RNA",
+    "paired_ends": "no",
+    "prep": "TruSeq"
+  },
+  "single_cell": {
+    "method": "mouth pipette"
+  },
+  "sra_experiment": "SRX129997",
+  "sra_run": [
+    "SRR445718"
+  ],
+  "files": [
+    {
+      "name": "SRR445718_1.fastq.gz",
+      "format": ".fastq.gz",
+      "type": "reads",
+      "lane": 1
+    }
+  ]
+}
+```
+and this cell.json
+```
+{
+  "type": "oocyte",
+  "ontology": "CL_0000023",
+  "id": "oocyte #1"
+}
+```
+Could have a config like such:
+```
+{
+  "assay.json": [
+    {
+      "rna": [
+        "primer"
+      ]
+    },
+    {
+      "single_cell": [
+        "method"
+      ]
+    },
+    "sra_experiment",
+    {
+      "files":[
+        "format"
+      ]
+    }
+  ],
+  "cell.json":[
+    "type",
+    "ontology",
+    "id"
+  ]
+ }
+```
 
 ### Environmental Variables
 In order to add environmental variables to Chalice, the variable must be added to three locations.
@@ -121,3 +190,11 @@ Run `local-import.py`. Open Kibana to see your files appear. The
 
 Note: Manual loading creates mappings for ES, has some list parsing capability, and if `key` in config.json does not exist, returns a value of "no `key`". (This functionality is not present in the Chalice function yet)
 
+### Todo List
+
+* add mappings to Chalice
+* test with Blue Box
+* list handling in json files
+* cron deduplication
+* capibility to download files that are not json
+* multiple version handling (per file version or per file?)
