@@ -46,7 +46,7 @@ def login():
 @cross_origin()
 def get_action_service():
     monitordb_connection, monitordb_table = luigiDBInit()
-    select_query = select([monitordb_table]).distinct("last_updated").order_by("last_updated")
+    select_query = select([monitordb_table]).order_by("last_updated")
     select_result = monitordb_connection.execute(select_query)
     result_list = [dict(row) for row in select_result]
     return jsonify(result_list)
