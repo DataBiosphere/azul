@@ -198,3 +198,7 @@ Note: Manual loading creates mappings for ES, has some list parsing capability, 
 * cron deduplication
 * capibility to download files that are not json
 * multiple version handling (per file version or per file?)
+* Unit testing: Flask mock up of the Blue Box endpoints
+    * We need something that will generate POSTS to the lambda, such as a shell script.
+    * Flask has endpoints for looking up bundles, and get a particular manifest.
+    * Assume  bundles uuid always exist. generate a request to download anything indexable ? 
