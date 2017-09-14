@@ -9,7 +9,7 @@ import os
 from aws_requests_auth import boto_utils
 import collections
 
-app = Chalice(app_name='notifications_test')
+app = Chalice(app_name='azul_indexer')
 app.debug = True
 app.log.setLevel(logging.DEBUG)
 
