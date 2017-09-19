@@ -48,6 +48,7 @@ def get_action_service():
     monitordb_connection, monitordb_table = luigiDBInit()
     select_query = select([monitordb_table]).order_by(desc("last_updated"))
     select_result = monitordb_connection.execute(select_query)
+    monitordb_connection.close()
     result_list = [dict(row) for row in select_result]
     return jsonify(result_list)
 

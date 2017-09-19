@@ -239,3 +239,5 @@ for job in result_list:
                         monitordb_table.c.status != 'FAILED'))).\
             values(status='JOB NOT FOUND')
         exec_result = monitordb_connection.execute(stmt)
+monitordb_connection.close()
+
