@@ -2,6 +2,7 @@
   "assay.json": [
     "sra_run",
     "sra_experiment",
+    "files",
     {
       "seq": [
         "machine",

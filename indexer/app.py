@@ -8,8 +8,9 @@ from aws_requests_auth.aws_auth import AWSRequestsAuth
 import os
 from aws_requests_auth import boto_utils
 import collections
+import random
 
-app = Chalice(app_name='azul_indexer')
+app = Chalice(app_name='test-indexer')
 app.debug = True
 app.log.setLevel(logging.DEBUG)
 
@@ -17,6 +18,10 @@ app.log.setLevel(logging.DEBUG)
 es_host = os.environ['ES_ENDPOINT']
 bb_host = "https://"+os.environ['BLUE_BOX_ENDPOINT']
 in_host = "https://"+os.environ['INDEXER_ENDPOINT']
+try:
+    es_index = os.environ['ES_INDEX']
+except KeyError:
+    es_index = 'test-chalice'
 
 # need to have the AWS CLI and $aws configure
 awsauth = AWSRequestsAuth(
@@ -27,6 +32,7 @@ awsauth = AWSRequestsAuth(
 )
 
 if es_host.endswith('.es.amazonaws.com'):
+
     # use the requests connection_class and pass in our custom auth class
     es = Elasticsearch(
         hosts=[{'host': es_host, 'port': 443}],
@@ -43,7 +49,58 @@ else:
         use_ssl=False
     )
 
-es.indices.create(index='test-index', ignore=[400])
+es.indices.create(index=es_index, ignore=[400])
+
+# used by write_index to flatten nested arrays, also used for mapping
+# from https://stackoverflow.com/a/2158532
+def flatten(l):
+    for el in l:
+        if isinstance(el, collections.Sequence) and not isinstance(el, (str, bytes)):
+            yield from flatten(el)
+        else:
+            yield el
+
+def es_config(c_item, name):
+    if isinstance(c_item, dict):
+        es_array = []
+        for key, value in c_item.items():
+            name = str(name) + str(key) + "|"
+            for item in value:
+                es_array.append(es_config(item, name))
+            return es_array
+    else:
+        name = str(name) + str(c_item)
+        return (name)
+
+# ES mapping
+try:
+    with open('chalicelib/config.json') as f:
+        config = json.loads(f.read())
+except Exception as e:
+    print(e)
+    raise NotFoundError("chalicelib/config.json file does not exist")
+key_names = ['bundle_uuid', 'dirpath', 'file_name']
+for c_key, c_value in config.items():
+    for c_item in c_value:
+        key_names.append(es_config(c_item, ""))
+key_names = flatten(key_names)
+es_mappings = []
+for item in key_names:
+    es_mappings.append({item : {"type":"keyword"}})
+es_keys = []
+es_values = []
+for item in es_mappings:
+    if item is not None:
+        for key, value in item.items():
+            es_keys.append(key)
+            es_values.append(value)
+    es_file = dict(zip(es_keys, es_values))
+final_mapping = '{"properties":'+json.dumps(es_file)+'}'
+print(final_mapping)
+es.indices.put_mapping(index=es_index,
+    doc_type="document", body = final_mapping)
+
+
 
 
 # for blue box notification
@@ -53,7 +110,7 @@ def post_notification():
     app.log.info("Received notification %s", request)
     bundle_uuid = request['match']['bundle_uuid']
     urlopen(str(in_host + '/write/' + bundle_uuid))
-    return {"bundle_uuid": bundle_uuid}
+    return {"bundle_uuid":bundle_uuid}
 
 
 @app.route('/escheck')
@@ -61,7 +118,6 @@ def es_check():
     return json.dumps(es.info())
 
 # note: Support CORS by adding app.route('/', cors=True)
-
 
 # returns the name and file uuids sorted by data and json files
 @app.route('/bundle/{bundle_uuid}', methods=['GET'])
@@ -98,21 +154,26 @@ def get_file(file_uuid):
         raise NotFoundError("File '%s' does not exist" % file_uuid)
     return json.dumps(file)
 
-
 # indexes the files in the bundle
 @app.route('/write/{bundle_uuid}')
 def write_index(bundle_uuid):
     app.log.info("write_index %s", bundle_uuid)
     try:
+        app.log.info("get_bundle1")
         # bundle_url = urlopen(str(in_host+'/bundle/'+ bundle_uuid)).read()
         bundle_url = get_bundles(bundle_uuid)
+        app.log.info("get_bundle2")
     except Exception as e:
         app.log.info(e)
         raise NotFoundError("Bundle '%s' does not exist" % bundle_uuid)
+    app.log.info("-1")
     bundle = json.loads(bundle_url)
     # bundle = json.loads(get_bundles(bundle_uuid))
+    app.log.info("0")
     fcount = len(bundle['data_files'])
+    app.log.info("1")
     json_files = bundle['json_files']
+    app.log.info("2")
     try:
         with open('chalicelib/config.json') as f:
             config = json.loads(f.read())
@@ -121,34 +182,54 @@ def write_index(bundle_uuid):
         raise NotFoundError("chalicelib/config.json file does not exist")
     app.log.info("config is %s", config)
     file_uuid = ""
-    for i in range(fcount):  # in the case of no data_files, this doesn't run
-        for d_key, d_value in bundle['data_files'][i].items():
-            file_uuid = d_key
+    for i in range(2):  # in the case of no data_files, this doesn't run
+        file_uuid = random.randint(100, 999)
+        app.log.info("3")
+        # for d_key, d_value in bundle['data_files'][i].items():
+        #     file_uuid = d_key
+        #     app.log.info("4")
         es_json = []
+        app.log.info("4.5")
         for c_key, c_value in config.items():
-            for j in range(len(json_files)):
+            app.log.info("5")
+            for j in range (len(json_files)):
+                app.log.info("6")
                 if c_key in json_files[j]:
+                    app.log.info("7")
                     try:
+                        app.log.info("get_file1")
+                        # file_url = urlopen(str(in_host+'/file/' + json_files[j][c_key])).read()
                         file_url = get_file(json_files[j][c_key])
+                        app.log.info("get_file2")
                         file = json.loads(file_url)
                     except Exception as e:
                         app.log.info(e)
                         raise NotFoundError("File '%s' does not exist"
                                             % file_uuid)
+                    app.log.info("8")
                     for c_item in c_value:
+                        app.log.info("9")
                         to_append = look_file(c_item, file, "")
+                        app.log.info("10")
                         if to_append is not None:
+                            app.log.info("11")
                             if isinstance(to_append, list):
+                                app.log.info("11.1")
                                 to_append = flatten(to_append)
+                                app.log.info("11.2")
                                 for item in to_append:
+                                    app.log.info("11.3")
                                     es_json.append(item)
+                                app.log.info("11.4")
                             else:
+                                app.log.info("12")
                                 es_json.append(to_append)
-                    app.log.info("write_index es_json %s", str(es_json))
+                    app.log.info("es12.15 %s", str(es_json))
+        app.log.info("12")
         es_json.append({'bundle_uuid': bundle_uuid})
         write_es(es_json, file_uuid)
+    app.log.info("13")
     return json.dumps(bundle['data_files'])
-
 
 # used by write_index to recursively return values of items in config file
 def look_file(c_item, file, name):
@@ -168,39 +249,33 @@ def look_file(c_item, file, name):
             return ({name: file_value})
 
 
-# used by write_index to flatten nested arrays
-# from https://stackoverflow.com/a/2158532
-def flatten(l):
-    for el in l:
-        if isinstance(el, collections.Sequence) and not isinstance(el, (str, bytes)):
-            yield from flatten(el)
-        else:
-            yield el
-
 
 # used by write_index to add to ES
 def write_es(es_json, file_uuid):
     app.log.info("write_es %s", file_uuid)
     es_keys = []
     es_values = []
+    app.log.info("es12.1")
     app.log.info("write_es es_json %s", str(es_json))
     for item in es_json:
-        for key, value in item.items():
-            es_keys.append(key)
-            es_values.append(value)
+        if item is not None:
+            app.log.info("es12.2")
+            for key, value in item.items():
+                app.log.info("es12.3")
+                es_keys.append(key)
+                es_values.append(value)
+    app.log.info("es12.4")
     es_file = dict(zip(es_keys, es_values))
     app.log.info("write_es es_file %s", str(es_file))
-    res = es.index(index="test-index", doc_type='document',
+    res = es.index(index=es_index, doc_type='document',
                    id=file_uuid, body=es_file)
+    app.log.info("es12.6")
     return(res['created'])
-
 
 # daily scan of the blue box
 @app.schedule('rate(1 day)')
 def every_day(event, context):
     pass
-
-
 @app.route('/cron')
 def cron_look():
     headers = {"content-type": "application/json",
@@ -217,4 +292,3 @@ def cron_look():
         write_index(bundle_mod)
     app.log.info({"bundle_id": bundle_ids})
     return {"bundle_id": bundle_ids}
-
