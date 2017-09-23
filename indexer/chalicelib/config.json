@@ -1,29 +1,63 @@
 {
   "assay.json": [
-    "sra_run",
-    "sra_experiment",
-    "files",
+    {
+      "single_cell": [
+        "cell_handling"
+      ]
+    },
+    {
+      "rna": [
+        "library_construction",
+        "spike_in"
+      ]
+    },
     {
       "seq": [
-        "machine",
-        "molecule"
+        "paired_ends",
+        "instrument_platform",
+        "library_construction"
       ]
     }
   ],
   "project.json": [
-    "geo_series",
+    "id",
     {
-      "contact": [
-        "address",
-        "city",
-        "country",
-        "department",
-        "email",
-        "institute",
+      "submitter": [
         "name",
-        "postal_code",
-        "street_address"
+        "institution",
+        "country"
       ]
     }
+  ],
+  "sample.json": [
+    {
+      "body_part": [
+        "text"
+      ]
+    },
+    {
+      "donor": [
+        {
+          "species": [
+            "text",
+            "ontology"
+          ]
+        },
+        "is_living"
+      ]
+    },
+    "name",
+    {
+      "organ": [
+        "text"
+      ]
+    },
+    "project_id",
+    {
+      "cell_cycle": [
+        "text"
+      ]
+    },
+    "culture_type"
   ]
 }
