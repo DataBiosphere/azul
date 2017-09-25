@@ -267,7 +267,7 @@ class KeywordSearchResponse(AbstractResponse):
         :return: Returns an OtherObj
         """
         return OtherObj(
-            redwoodDonorUUID=[self.fetch_entry_value(mapping, entry, 'RedwoodDonorUUID')]
+            redwoodDonorUUID=self.handle_list(self.fetch_entry_value(mapping, entry, 'RedwoodDonorUUID'))
         )
 
     def make_file_copy(self, mapping, entry):
@@ -307,11 +307,11 @@ class KeywordSearchResponse(AbstractResponse):
             primarySite=self.fetch_entry_value(mapping, entry, 'primarySite'),
             projectCode=self.fetch_entry_value(mapping, entry, 'projectCode'),
             study=self.fetch_entry_value(mapping, entry, 'study'),
-            sampleId=[self.fetch_entry_value(mapping, entry, 'sampleId')],
-            specimenType=[self.fetch_entry_value(mapping, entry, 'specimenType')],
+            sampleId=self.handle_list(self.fetch_entry_value(mapping, entry, 'sampleId')),
+            specimenType=self.handle_list(self.fetch_entry_value(mapping, entry, 'specimenType')),
             submittedDonorId=self.fetch_entry_value(mapping, entry, 'submittedDonorId'),
-            submittedSampleId=[self.fetch_entry_value(mapping, entry, 'submittedSampleId')],
-            submittedSpecimenId=[self.fetch_entry_value(mapping, entry, 'submittedSpecimenId')],
+            submittedSampleId=self.handle_list(self.fetch_entry_value(mapping, entry, 'submittedSampleId')),
+            submittedSpecimenId=self.handle_list(self.fetch_entry_value(mapping, entry, 'submittedSpecimenId')),
             otherIdentifiers=self.make_other_obj(mapping['otherIdentifiers'], entry)
         )
 
@@ -327,12 +327,12 @@ class KeywordSearchResponse(AbstractResponse):
             _id=self.fetch_entry_value(mapping, entry, 'id'),
             objectID=self.fetch_entry_value(mapping, entry, 'objectID'),
             access=self.fetch_entry_value(mapping, entry, 'access'),
-            study=[self.fetch_entry_value(mapping, entry, 'study')],
+            study=self.handle_list(self.fetch_entry_value(mapping, entry, 'study')),
             dataCategorization=self.make_data_categorization(mapping['dataCategorization'], entry),
-            fileCopies=[self.make_file_copy(mapping['fileCopies'][0], entry)],
+            fileCopies=self.handle_list(self.make_file_copy(mapping['fileCopies'][0], entry)),
             centerName=self.fetch_entry_value(mapping, entry, 'center_name'),
             program=self.fetch_entry_value(mapping, entry, 'program'),
-            donors=[self.make_donor(mapping['donors'][0], entry)],
+            donors=self.handle_list(self.make_donor(mapping['donors'][0], entry)),
             analysisMethod=self.make_analysis_method(mapping['analysisMethod'], entry),
             referenceGenome=self.make_reference_genome(mapping['referenceGenome'], entry)
         )

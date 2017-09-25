@@ -1,0 +1,340 @@
+{
+  "hits": [
+    {
+      "access": null,
+      "analysisMethod": {
+        "analysisType": null,
+        "software": null
+      },
+      "center_name": null,
+      "dataCategorization": {
+        "dataType": null,
+        "experimentalStrategy": null
+      },
+      "donors": [
+        {
+          "donorId": null,
+          "otherIdentifiers": {
+            "RedwoodDonorUUID": []
+          },
+          "primarySite": null,
+          "projectCode": null,
+          "sampleId": [],
+          "specimenType": [],
+          "study": null,
+          "submittedDonorId": null,
+          "submittedSampleId": [],
+          "submittedSpecimenId": []
+        }
+      ],
+      "fileCopies": [
+        {
+          "fileFormat": null,
+          "fileMd5sum": null,
+          "fileName": null,
+          "fileSize": null,
+          "lastModified": null,
+          "repoBaseUrl": null,
+          "repoCode": null,
+          "repoCountry": null,
+          "repoDataBundleId": null,
+          "repoDataPath": null,
+          "repoDataSetIds": [],
+          "repoMetadataPath": null,
+          "repoName": null,
+          "repoOrg": null,
+          "repoType": null
+        }
+      ],
+      "id": null,
+      "objectID": null,
+      "program": null,
+      "referenceGenome": {
+        "downloadUrl": null,
+        "genomeBuild": null,
+        "referenceName": null
+      },
+      "study": []
+    },
+    {
+      "access": null,
+      "analysisMethod": {
+        "analysisType": null,
+        "software": null
+      },
+      "center_name": null,
+      "dataCategorization": {
+        "dataType": null,
+        "experimentalStrategy": null
+      },
+      "donors": [
+        {
+          "donorId": null,
+          "otherIdentifiers": {
+            "RedwoodDonorUUID": []
+          },
+          "primarySite": null,
+          "projectCode": null,
+          "sampleId": [],
+          "specimenType": [],
+          "study": null,
+          "submittedDonorId": null,
+          "submittedSampleId": [],
+          "submittedSpecimenId": []
+        }
+      ],
+      "fileCopies": [
+        {
+          "fileFormat": null,
+          "fileMd5sum": null,
+          "fileName": null,
+          "fileSize": null,
+          "lastModified": null,
+          "repoBaseUrl": null,
+          "repoCode": null,
+          "repoCountry": null,
+          "repoDataBundleId": null,
+          "repoDataPath": null,
+          "repoDataSetIds": [],
+          "repoMetadataPath": null,
+          "repoName": null,
+          "repoOrg": null,
+          "repoType": null
+        }
+      ],
+      "id": null,
+      "objectID": null,
+      "program": null,
+      "referenceGenome": {
+        "downloadUrl": null,
+        "genomeBuild": null,
+        "referenceName": null
+      },
+      "study": []
+    },
+    {
+      "access": null,
+      "analysisMethod": {
+        "analysisType": null,
+        "software": null
+      },
+      "center_name": null,
+      "dataCategorization": {
+        "dataType": null,
+        "experimentalStrategy": null
+      },
+      "donors": [
+        {
+          "donorId": null,
+          "otherIdentifiers": {
+            "RedwoodDonorUUID": []
+          },
+          "primarySite": null,
+          "projectCode": null,
+          "sampleId": [],
+          "specimenType": [],
+          "study": null,
+          "submittedDonorId": null,
+          "submittedSampleId": [],
+          "submittedSpecimenId": []
+        }
+      ],
+      "fileCopies": [
+        {
+          "fileFormat": null,
+          "fileMd5sum": null,
+          "fileName": null,
+          "fileSize": null,
+          "lastModified": null,
+          "repoBaseUrl": null,
+          "repoCode": null,
+          "repoCountry": null,
+          "repoDataBundleId": null,
+          "repoDataPath": null,
+          "repoDataSetIds": [],
+          "repoMetadataPath": null,
+          "repoName": null,
+          "repoOrg": null,
+          "repoType": null
+        }
+      ],
+      "id": null,
+      "objectID": null,
+      "program": null,
+      "referenceGenome": {
+        "downloadUrl": null,
+        "genomeBuild": null,
+        "referenceName": null
+      },
+      "study": []
+    },
+    {
+      "access": null,
+      "analysisMethod": {
+        "analysisType": null,
+        "software": null
+      },
+      "center_name": null,
+      "dataCategorization": {
+        "dataType": null,
+        "experimentalStrategy": null
+      },
+      "donors": [
+        {
+          "donorId": null,
+          "otherIdentifiers": {
+            "RedwoodDonorUUID": []
+          },
+          "primarySite": null,
+          "projectCode": null,
+          "sampleId": [],
+          "specimenType": [],
+          "study": null,
+          "submittedDonorId": null,
+          "submittedSampleId": [],
+          "submittedSpecimenId": []
+        }
+      ],
+      "fileCopies": [
+        {
+          "fileFormat": null,
+          "fileMd5sum": null,
+          "fileName": null,
+          "fileSize": null,
+          "lastModified": null,
+          "repoBaseUrl": null,
+          "repoCode": null,
+          "repoCountry": null,
+          "repoDataBundleId": null,
+          "repoDataPath": null,
+          "repoDataSetIds": [],
+          "repoMetadataPath": null,
+          "repoName": null,
+          "repoOrg": null,
+          "repoType": null
+        }
+      ],
+      "id": null,
+      "objectID": null,
+      "program": null,
+      "referenceGenome": {
+        "downloadUrl": null,
+        "genomeBuild": null,
+        "referenceName": null
+      },
+      "study": []
+    },
+    {
+      "access": null,
+      "analysisMethod": {
+        "analysisType": null,
+        "software": null
+      },
+      "center_name": null,
+      "dataCategorization": {
+        "dataType": null,
+        "experimentalStrategy": null
+      },
+      "donors": [
+        {
+          "donorId": null,
+          "otherIdentifiers": {
+            "RedwoodDonorUUID": []
+          },
+          "primarySite": null,
+          "projectCode": null,
+          "sampleId": [],
+          "specimenType": [],
+          "study": null,
+          "submittedDonorId": null,
+          "submittedSampleId": [],
+          "submittedSpecimenId": []
+        }
+      ],
+      "fileCopies": [
+        {
+          "fileFormat": null,
+          "fileMd5sum": null,
+          "fileName": null,
+          "fileSize": null,
+          "lastModified": null,
+          "repoBaseUrl": null,
+          "repoCode": null,
+          "repoCountry": null,
+          "repoDataBundleId": null,
+          "repoDataPath": null,
+          "repoDataSetIds": [],
+          "repoMetadataPath": null,
+          "repoName": null,
+          "repoOrg": null,
+          "repoType": null
+        }
+      ],
+      "id": null,
+      "objectID": null,
+      "program": null,
+      "referenceGenome": {
+        "downloadUrl": null,
+        "genomeBuild": null,
+        "referenceName": null
+      },
+      "study": []
+    },
+    {
+      "access": null,
+      "analysisMethod": {
+        "analysisType": null,
+        "software": null
+      },
+      "center_name": null,
+      "dataCategorization": {
+        "dataType": null,
+        "experimentalStrategy": null
+      },
+      "donors": [
+        {
+          "donorId": null,
+          "otherIdentifiers": {
+            "RedwoodDonorUUID": []
+          },
+          "primarySite": null,
+          "projectCode": null,
+          "sampleId": [],
+          "specimenType": [],
+          "study": null,
+          "submittedDonorId": null,
+          "submittedSampleId": [],
+          "submittedSpecimenId": []
+        }
+      ],
+      "fileCopies": [
+        {
+          "fileFormat": null,
+          "fileMd5sum": null,
+          "fileName": null,
+          "fileSize": null,
+          "lastModified": null,
+          "repoBaseUrl": null,
+          "repoCode": null,
+          "repoCountry": null,
+          "repoDataBundleId": null,
+          "repoDataPath": null,
+          "repoDataSetIds": [],
+          "repoMetadataPath": null,
+          "repoName": null,
+          "repoOrg": null,
+          "repoType": null
+        }
+      ],
+      "id": null,
+      "objectID": null,
+      "program": null,
+      "referenceGenome": {
+        "downloadUrl": null,
+        "genomeBuild": null,
+        "referenceName": null
+      },
+      "study": []
+    }
+  ]
+}

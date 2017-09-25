@@ -2,8 +2,10 @@ program
 projectCode
 centerName
 analysisType
+userId
 fileFormat
 fileId
 workFlow
 donorId
 specimenType
+sampleId
