@@ -1,6 +1,7 @@
 import logging
 from chalice import Chalice, NotFoundError
 from urllib.request import urlopen
+from urllib.error import URLError, HTTPError
 import json
 import requests
 from elasticsearch import Elasticsearch, RequestsHttpConnection
@@ -46,12 +47,16 @@ else:
 es.indices.create(index=es_index, ignore=[400])
 # used by write_index to flatten nested arrays, also used for mapping
 # from https://stackoverflow.com/a/2158532
+
+
 def flatten(l):
     for el in l:
         if isinstance(el, collections.Sequence) and not isinstance(el, (str, bytes)):
             yield from flatten(el)
         else:
             yield el
+
+
 def es_config(c_item, name):
     if isinstance(c_item, dict):
         es_array = []
@@ -97,8 +102,11 @@ def post_notification():
     request = app.current_request.json_body
     app.log.info("Received notification %s", request)
     bundle_uuid = request['match']['bundle_uuid']
-    urlopen(str(in_host + '/write/' + bundle_uuid))
+    #urlopen(str(in_host + '/write/' + bundle_uuid))
+    write_index(bundle_uuid)
     return {"bundle_uuid":bundle_uuid}
+
+
 @app.route('/escheck')
 def es_check():
     return json.dumps(es.info())
@@ -107,12 +115,36 @@ def es_check():
 @app.route('/bundle/{bundle_uuid}', methods=['GET'])
 def get_bundles(bundle_uuid):
     app.log.info("get_bundle %s", bundle_uuid)
-    try:
-        json_str = urlopen(str(bb_host+('v1/bundles/')+bundle_uuid)).read()
-        bundle = json.loads(json_str)
-    except Exception as e:
-        app.log.info(e)
-        raise NotFoundError("Bundle '%s' does not exist" % bundle_uuid)
+#    try:
+#        json_str = urlopen(str(bb_host+('v1/bundles/')+bundle_uuid)).read()
+#        bundle = json.loads(json_str)
+#    except Exception as e:
+#        app.log.info(e)
+#        raise NotFoundError("Bundle '%s' does not exist" % bundle_uuid)
+    retries = 0
+    while retries < 3:
+        try:
+            json_str = urlopen(str(bb_host + ('v1/bundles/') + bundle_uuid)).read()
+            bundle = json.loads(json_str)
+            break
+        except HTTPError as er:
+            app.log.info("Error on try {}\n:{}".format(retries, er))
+            # if er.code == 504:
+            #    retries += 1
+            #    continue
+            #else:
+            #   raise
+            retries += 1
+            continue
+        except URLError as er:
+            app.log.info("Error on try {}\n:{}".format(retries, er))
+            retries += 1
+            continue
+    else:
+        app.log.error("Maximum number of retries reached: {}".format(retries))
+        raise Exception("Unable to access bundle '%s'" % bundle_uuid)
+
+
     json_files = []
     data_files = []
     for file in bundle['bundle']['files']:
