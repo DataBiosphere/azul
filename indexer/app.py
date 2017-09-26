@@ -254,7 +254,9 @@ def write_index(bundle_uuid):
         es_json.append({'file_uuid': file_uuid})
         es_json.append({'file_version': file_version})
         # Add the file format
-        es_json.append({'file_format': '.'.join(file_name.split('.')[1:])})
+        file_format = '.'.join(file_name.split('.')[1:])
+        file_format = file_format if file_format != '' else 'None'
+        es_json.append({'file_format': file_format})
         # Carlos using set theory to handle non-present keys
         all_keys = es_file.keys()
         present_keys = [list(x.keys())[0] for x in es_json]
