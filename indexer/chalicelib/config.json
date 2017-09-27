@@ -59,5 +59,8 @@
       ]
     },
     "culture_type"
+  ],
+  "analysis.json": [
+    "computational_method"
   ]
 }
