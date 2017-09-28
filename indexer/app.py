@@ -45,7 +45,7 @@ else:
         http_auth=('elastic', 'changeme'),
         use_ssl=False
     )
-es.indices.delete(index=es_index, ignore=[400])
+#es.indices.delete(index=es_index, ignore=[400])
 es.indices.create(index=es_index, ignore=[400])
 # used by write_index to flatten nested arrays, also used for mapping
 # from https://stackoverflow.com/a/2158532
