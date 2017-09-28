@@ -187,7 +187,7 @@ class SummaryResponse(AbstractResponse):
             fileCount=hits['total'],
             donorCount=self.agg_contents(aggregates, 'donor'),
             projectCount=self.agg_contents(aggregates, 'projectCode'),
-            totalFileSize=self.agg_contents(aggregates, 'projectCode', agg_form='value'),
+            totalFileSize=self.agg_contents(aggregates, 'total_size', agg_form='value'),
             primarySiteCount=self.agg_contents(aggregates, 'submitterDonorPrimarySite')
         )
 
