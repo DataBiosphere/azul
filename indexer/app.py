@@ -268,7 +268,7 @@ def write_index(bundle_uuid):
         file_format = file_format if file_format != '' else 'None'
         es_json.append({'file_format': file_format})
         # Emily adding bundle_type
-        if 'analysis.json' in json_files:
+        if 'analysis.json' in [list(x.keys())[0] for x in json_files]:
             es_json.append({'bundle_type': 'Analysis'})
         elif re.search(r'(tiff)', str(file_extensions)):
             es_json.append({'bundle_type': 'Imaging'})
