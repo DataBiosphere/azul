@@ -133,7 +133,7 @@ class SummaryRepresentation(JsonObject):
     Class defining the Summary Response
     """
     fileCount = IntegerProperty()
-    totalFileSize = IntegerProperty()
+    totalFileSize = FloatProperty()
     donorCount = IntegerProperty()
     projectCount = IntegerProperty()
     primarySiteCount = IntegerProperty()
