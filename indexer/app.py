@@ -9,6 +9,7 @@ from aws_requests_auth.aws_auth import AWSRequestsAuth
 import os
 from aws_requests_auth import boto_utils
 import collections
+import re
 import random
 app = Chalice(app_name='test-indexer')
 app.debug = True
@@ -44,6 +45,7 @@ else:
         http_auth=('elastic', 'changeme'),
         use_ssl=False
     )
+es.indices.delete(index=es_index, ignore=[400])
 es.indices.create(index=es_index, ignore=[400])
 # used by write_index to flatten nested arrays, also used for mapping
 # from https://stackoverflow.com/a/2158532
@@ -76,7 +78,7 @@ except Exception as e:
     print(e)
     raise NotFoundError("chalicelib/config.json file does not exist")
 # key_names = ['bundle_uuid', 'dirpath', 'file_name']
-key_names = ['bundle_uuid', 'file_name', 'file_name', 'file_uuid', 'file_version', 'file_format']
+key_names = ['bundle_uuid', 'file_name', 'file_name', 'file_uuid', 'file_version', 'file_format','bundle_type']
 for c_key, c_value in config.items():
     for c_item in c_value:
         key_names.append(es_config(c_item, ""))
@@ -84,6 +86,8 @@ key_names = flatten(key_names)
 es_mappings = []
 for item in key_names:
     es_mappings.append({item : {"type":"keyword"}})
+# file size is different than other key names
+es_mappings.append({"file_size" : {"type":"long"}})
 es_keys = []
 es_values = []
 for item in es_mappings:
@@ -202,12 +206,18 @@ def write_index(bundle_uuid):
         # for d_key, d_value in bundle['data_files'][i].items():
         #     file_uuid = d_key
         #     app.log.info("4")
+    file_extensions = set()
+    for data_file in bundle['data_files']:
+        file_name, values = list(data_file.items())[0]
+        file_format = '.'.join(file_name.split('.')[1:])
+        file_format = file_format if file_format != '' else 'None'
+        file_extensions.add(file_format)
     # Carlos's addition
     for _file in bundle['data_files']:
         file_name, values = list(_file.items())[0]
         file_uuid = values['uuid']
         file_version = values['version']
-        # Make the ES uuid be a concatenation of: 
+        # Make the ES uuid be a concatenation of:
         # bundle_uuid:file_uuid:file_version
         es_uuid = "{}:{}:{}".format(bundle_uuid, file_uuid, file_version)
         es_json = []
@@ -257,6 +267,17 @@ def write_index(bundle_uuid):
         file_format = '.'.join(file_name.split('.')[1:])
         file_format = file_format if file_format != '' else 'None'
         es_json.append({'file_format': file_format})
+        # Emily adding bundle_type
+        if 'analysis.json' in json_files:
+            es_json.append({'bundle_type': 'Analysis'})
+        elif re.search(r'(tiff)', str(file_extensions)):
+            es_json.append({'bundle_type': 'Imaging'})
+        elif re.search(r'(fastq.gz)', str(file_extensions)):
+            es_json.append({'bundle_type': 'scRNA-Seq Upload'})
+        else:
+            es_json.append({'bundle_type': 'Unknown'})
+        # fake file size
+        es_json.append({'file_size': 500000})
         # Carlos using set theory to handle non-present keys
         all_keys = es_file.keys()
         present_keys = [list(x.keys())[0] for x in es_json]
