@@ -158,7 +158,7 @@ class ManifestResponse(AbstractResponse):
     def return_response(self):
         return self.apiResponse
 
-    def __init__(self, raw_response, mapping, manifest_entries):
+    def __init__(self, raw_response, manifest_entries, mapping):
         """
         The constructor takes the raw response from ElasticSearch and creates a tsv file based on
         the columns from the manifest_entries
