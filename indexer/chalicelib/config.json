@@ -43,7 +43,12 @@
             "ontology"
           ]
         },
-        "is_living"
+        "is_living",
+        {
+          "core": [
+            "uuid"
+          ]
+        }
       ]
     },
     "name",
@@ -58,7 +63,8 @@
         "text"
       ]
     },
-    "culture_type"
+    "culture_type",
+    "donor_id"
   ],
   "analysis.json": [
     "computational_method"
