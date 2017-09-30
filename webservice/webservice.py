@@ -5,8 +5,6 @@ from flask_login import LoginManager, login_required, \
 import json
 # from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
-# from flask_migrate import Migrate
-import flask_excel as excel
 # from flask.ext.elasticsearch import Elasticsearch
 from elasticsearch import Elasticsearch
 import ast
@@ -608,91 +606,19 @@ def get_order3():
 @webservicebp.route('/repository/files/export')
 @cross_origin()
 def get_manifest():
-    m_filters = request.args.get('filters')
-    m_size = request.args.get('size', 25, type=int)
-    mQuery = {}
-
-    # Dictionary for getting a reference to the aggs key
-    idSearch = None
-    referenceAggs = {}
-    inverseAggs = {}
-    with open(apache_path + 'reference_aggs.json') as my_aggs:
-        # with open('reference_aggs.json') as my_aggs:
-        referenceAggs = json.load(my_aggs)
-
-    with open(apache_path + 'inverse_aggs.json') as my_aggs:
-        # with open('inverse_aggs.json') as my_aggs:
-        inverseAggs = json.load(my_aggs)
-
+    filters = request.args.get('filters', '{"file": {}}')
+    # TODO: This try except block should be logged appropriately
     try:
-        m_filters = ast.literal_eval(m_filters)
-        # Change the keys to the appropriate values.
-        for key, value in m_filters['file'].items():
-            if key in referenceAggs:
-                # This performs the change.
-                corrected_term = referenceAggs[key]
-                m_filters['file'][corrected_term] = m_filters['file'].pop(key)
-            if key == "fileId" or key == "id":
-                # idSearch = m_filters['file'].pop(key)["is"]
-                m_filters['file']["file_id"] = m_filters['file'].pop(key)
-            if key == "donorId":
-                m_filters['file']["donor"] = m_filters['file'].pop(key)
-        # Functions for calling the appropriates query filters
-        matchValues = lambda x, y: {"filter": {"terms": {x: y['is']}}}
-        filt_list = [{"constant_score": matchValues(x, y)} for x, y in m_filters['file'].items()]
-        mQuery = {"bool": {"must": [filt_list]}}
-    # if idSearch:
-    # mQuery["constant_score"] = {"filter":{"terms":{"file_id":idSearch}}}
-
+        filters = ast.literal_eval(filters)
+        filters = {"file": {}} if filters == {} else filters
     except Exception, e:
         print str(e)
-        m_filters = None
-        mQuery = {"match_all": {}}
-        pass
-    # Added the scroll variable. Need to put the scroll variable in a config file.
-    scroll_config = ''
-    with open(apache_path + 'scroll_config') as _scroll_config:
-        # with open('scroll_config') as _scroll_config:
-        scroll_config = _scroll_config.readline().strip()
-        # print scroll_config
-
-    mText = es.search(index='fb_alias', body={"query": mQuery}, size=9999, scroll=scroll_config)  # '2m'
-
-    # Set the variables to do scrolling. This should fix the problem with the small amount of
-    sid = mText['_scroll_id']
-    scroll_size = mText['hits']['total']
-    # reader = [x['_source'] for x in mText['hits']['hits']]
-
-    # MAKE SURE YOU TEST THIS
-    while (scroll_size > 0):
-        print "Scrolling..."
-        page = es.scroll(scroll_id=sid, scroll='2m')
-        # Update the Scroll ID
-        sid = page['_scroll_id']
-        # Get the number of results that we returned in the last scroll
-        scroll_size = len(page['hits']['hits'])
-        # Extend the result list
-        # reader.extend([x['_source'] for x in page['hits']['hits']])
-        mText['hits']['hits'].extend([x for x in page['hits']['hits']])
-        print len(mText['hits']['hits'])
-        print "Scroll Size: " + str(scroll_size)
-
-    protoList = []
-    for hit in mText['hits']['hits']:
-        if '_source' in hit:
-            protoList.append(hit['_source'])
-    goodFormatList = []
-    goodFormatList.append(
-        ['Program', 'Project', 'Center Name', 'Submitter Donor ID', 'Donor UUID', "Submitter Donor Primary Site",
-         'Submitter Specimen ID', 'Specimen UUID', 'Submitter Specimen Type', 'Submitter Experimental Design',
-         'Submitter Sample ID', 'Sample UUID', 'Analysis Type', 'Workflow Name', 'Workflow Version', 'File Type',
-         'File Path', 'Upload File ID', 'Data Bundle UUID', 'Metadata.json'])
-    for row in protoList:
-        currentRow = [row['program'], row['project'], row['center_name'], row['submittedDonorId'], row['donor'],
-                      row['submitterDonorPrimarySite'], row['submittedSpecimenId'], row['specimenUUID'],
-                      row['specimen_type'], row['experimentalStrategy'], row['submittedSampleId'], row['sampleId'],
-                      row['analysis_type'], row['software'], row['workflowVersion'], row['file_type'], row['title'],
-                      row['file_id'], row['repoDataBundleId'], row['metadataJson']]
-        goodFormatList.append(currentRow)
-
-    return excel.make_response_from_array(goodFormatList, 'tsv', file_name='manifest')
+        return "Malformed filters parameters"
+    # Create and instance of the ElasticTransformDump
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN"),
+                 es_port=os.getenv("ES_PORT", 9200),
+                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
+    # Get the response back
+    response = es_td.transform_manifest(filters=filters)
+    # Return the excel file
+    return response

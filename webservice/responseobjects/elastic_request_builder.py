@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q, A
 import json
 import os
-from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse, SummaryResponse
+from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse, SummaryResponse, ManifestResponse
 
 
 class ElasticTransformDump(object):
@@ -242,16 +242,12 @@ class ElasticTransformDump(object):
         final_response = final_response.apiResponse.to_json()
         return final_response
 
-    def transform_manifest(self, request_config_file='request_config.json', mapping_config_file='mapping_config.json',
-                           filters=None):
+    def transform_manifest(self, request_config_file='request_config.json', filters=None):
         """
-        This function does the whole transformation process. It takes the path of the config file, the filters, and
-        pagination, if any. Excluding filters will do a match_all request. Excluding pagination will exclude pagination
-        from the output.
+        This function does the whole transformation process for a manifest request. It takes the path of the
+        config file and the filters Excluding filters will do a match_all request.
         :param filters: Filter parameter from the API to be used in the query. Defaults to None
         :param request_config_file: Path containing the requests config to be used for aggregates. Relative to the
-            'config' folder.
-        :param mapping_config_file: Path containing the mapping to the API response fields. Relative to the
             'config' folder.
         :return: Returns the transformed manifest request
         """
@@ -259,14 +255,20 @@ class ElasticTransformDump(object):
         # https://stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
         config_folder = os.path.dirname(config.__file__)
-        # Create the path for the mapping config file
-        mapping_config_path = "{}/{}".format(config_folder, mapping_config_file)
         # Create the path for the config_path
         request_config_path = "{}/{}".format(config_folder, request_config_file)
-        # Get the Json Objects from the mapping_config and the request_config
-        mapping_config = self.open_and_return_json(mapping_config_path)
+        # Get the Json Objects from the request_config
         request_config = self.open_and_return_json(request_config_path)
         # Handle empty filters
         if filters is None:
             filters = {"file": {}}
-        pass
+        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
+        # TODO: This will break beyond 10,000 entries in ElasticSearch. This needs to be addressed in the near future
+        # Get as many files as simple paging allows
+        es_search = es_search[0:9999]
+        # Execute the ElasticSearch Request
+        es_response = es_search.execute(ignore_cache=True)
+        # Transform to a raw dictionary
+        es_response_dict = es_response.to_dict()
+        manifest = ManifestResponse(es_response_dict, request_config['manifest'], request_config['translation'])
+        return manifest.return_response()
