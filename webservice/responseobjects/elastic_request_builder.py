@@ -270,5 +270,6 @@ class ElasticTransformDump(object):
         es_response = es_search.execute(ignore_cache=True)
         # Transform to a raw dictionary
         es_response_dict = es_response.to_dict()
+        # Get the ManifestResponse object
         manifest = ManifestResponse(es_response_dict, request_config['manifest'], request_config['translation'])
         return manifest.return_response()

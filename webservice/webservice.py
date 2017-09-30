@@ -602,7 +602,7 @@ def get_order3():
 
     return jsonify(order_final)
 
-# Get the manifest. You need to pass on the filters
+
 @webservicebp.route('/repository/files/export')
 @cross_origin()
 def get_manifest():

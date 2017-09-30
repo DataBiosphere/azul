@@ -152,12 +152,20 @@ class AbstractResponse(object):
 
 
 class ManifestResponse(AbstractResponse):
-
+    """
+    Class for the Manifest response. Based on the AbstractionResponse class
+    """
     def return_response(self):
         return self.apiResponse
 
     def __init__(self, raw_response, mapping, manifest_entries):
-
+        """
+        The constructor takes the raw response from ElasticSearch and creates a tsv file based on
+        the columns from the manifest_entries
+        :param raw_response: The raw response from ElasticSearch
+        :param mapping: The mapping between the columns to values within ElasticSearch
+        :param manifest_entries: The columns that will be present in the tsv
+        """
         # Get a list of the hits in the raw response
         hits = [x['_source'] for x in raw_response['hits']['hits']]
         # Create the body of the entries in the manifest
