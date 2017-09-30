@@ -211,7 +211,7 @@ class SummaryResponse(AbstractResponse):
         # Create a SummaryRepresentation object
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
-            donorCount=self.agg_contents(aggregates, 'donor'),
+            donorCount=self.agg_contents(aggregates, 'donor', agg_form='value'),
             projectCount=self.agg_contents(aggregates, 'projectCode'),
             totalFileSize=self.agg_contents(aggregates, 'total_size', agg_form='value'),
             primarySiteCount=self.agg_contents(aggregates, 'submitterDonorPrimarySite')
