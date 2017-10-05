@@ -17,7 +17,7 @@ app.log.setLevel(logging.DEBUG)
 # set env on lambda, chalice config and profile
 es_host = os.environ['ES_ENDPOINT']
 bb_host = "https://"+os.environ['BLUE_BOX_ENDPOINT']
-in_host = "https://"+os.environ['INDEXER_ENDPOINT']
+#in_host = "https://"+os.environ['INDEXER_ENDPOINT']
 try:
     es_index = os.environ['ES_INDEX']
 except KeyError:
