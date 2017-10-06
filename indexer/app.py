@@ -11,7 +11,7 @@ from aws_requests_auth import boto_utils
 import collections
 import re
 import random
-app = Chalice(app_name='test-indexer')
+app = Chalice(app_name=os.getenv('INDEXER_NAME', 'dss-indigo'))
 app.debug = True
 app.log.setLevel(logging.DEBUG)
 # set env on lambda, chalice config and profile
