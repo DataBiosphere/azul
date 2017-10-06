@@ -10,17 +10,22 @@ It is required to know the blue box endpoint. See here for instructions: https:/
 
 ### Elasticsearch (ES)
 
-Create an Elasticsearch box on AWS. [Read more about AWS Elasticsearch Service.](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/what-is-amazon-elasticsearch-service.html "Elasticsearch Service") 
-Take note of the endpoint.
+Create an Elasticsearch box on AWS. 
+On the AWS console click "Services," then click "Elasticsearch Service." Then click "Create a new domain." Assign a domain name to the ES instance (eg: "dss-sapphire"). Choose your configuration for your requirements.
+For the Access Policy, copy the contents of policies/elasticsearch-policy.json and edit the places with `<>`
+To find your `<AWS-account-ID>`, click "Select a Template" and click "Allow or deny access to one or more AWS accounts or IAM users". Then a pop-up will appear with your "AWS account ID".
+Take note of the Elasticsearch endpoint.
 
-### Create a Virtualenv and configure AWS
-It is recommended to have python3 and create a virtual environment with `virtualenv -p python3 envname` and activate with `source envname/bin/activate`.
+### Configure AWS and create a Virtual Environment
+Install python3.
 
 Install and configure the AWS CLI with your information
 ```
 pip install awscli --upgrade --user
 aws configure
 ```
+
+Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
 
 ### Chalice
 
@@ -29,14 +34,15 @@ Chalice is similar to Flask but is serverless and uses AWS Lambda.
 pip install chalice
 chalice new-project
 ```
-When prompted for project name, input `azul_indexer`.
+When prompted for project name, input `<your-indexer-lambda-application-name>`, (eg dss-indigo).
 
-`chalice deploy`. Record the url returned in the last line of stdout returned by this command - henceforth referred to as `<callback_url>`. 
+Enter the newly created repo `<your-indexer-lambda-application-name>` (eg dss-indigo) and `chalice deploy`. Record the url returned in the last line of stdout returned by this command - henceforth referred to as `<callback_url>`. 
+This will create an AWS Lambda function called `dss-indigo` which will be updated using `chalice deploy`.
 
-This will create an AWS Lambda function called `azul_indexer` which will be updated using `chalice deploy`.
+`rm app.py` and `rm requirements.txt` (in other words, remove the files that chalice automatically generated).
+ Then, copy `app.py`, `requirements.txt` and `chalicelib/config.json` from this repo and add to the dss-indigo folder.
 
-`cd azul_indexer` and then `rm app.py` and `rm requirements.txt` (in other words, remove the files that chalice automatically generated).
- Then, copy `app.py`, `requirements.txt` and `chalicelib/config.json` from this repo and add to the azul_indexer folder.
+`pip install -r requirements.txt`
 
 ### Config File
 
@@ -109,7 +115,8 @@ Could have a config like such:
 ```
 
 ### Environmental Variables
-In order to add environmental variables to Chalice, the variable must be added to three locations.
+In order to add environmental variables to Chalice, the variables must be added to three locations.
+Do not add protocols to any of the Endpoints. Make sure the ES_ENDPOINT does not have any trailing slashes.
 
 1) Edit Chalice  
 open `.chalice/config.json`  
@@ -117,22 +124,22 @@ Replace the current file with the following, making sure to replace the <> with 
 ```
 {
   "version": "2.0",
-  "app_name": "azul_indexer",
+  "app_name": "<your-indexer-lambda-application-name>",
   "stages": {
     "dev": {
       "api_gateway_stage": "api",
       "manage_iam_role":false,
-      "iam_role_arn":"arn:aws:iam::<your arn>:role/azul_indexer-dev",
+      "iam_role_arn":"arn:aws:iam::<AWS-account-ID>:role/<your-indexer-lambda-application-name>-dev",
       "environment_variables": {
-         "ES_ENDPOINT":<your elasticsearch endpoint>,
-         "BLUE_BOXENDPOINT":<your blue box>,
-         "INDEXER_ENDPOINT":<your <callback_url>>
+         "ES_ENDPOINT":"<your elasticsearch endpoint>",
+         "BLUE_BOX_ENDPOINT":"<your blue box>",
+         "ES_INDEX":"<elasticsearch index to use>",
+         "INDEXER_NAME":"<your-indexer-lambda-application-name>"
       }
     }
   }
 }
 ```   
-ARN: your ARN is found on the AWS console, under Lambda. Click on the `functions` on the left menu bar. Click on `azul_indexer-dev`. Your ARN is found on the top right corner of the console.
 
 2) Edit .profile
 open `~/.profile` and add the following items.
@@ -140,7 +147,8 @@ open `~/.profile` and add the following items.
 ```
 export ES_ENDPOINT=<your elasticsearch endpoint>
 export BLUE_BOX_ENDPOINT=<your blue box>
-export INDEXER_ENDPOINT=<your <callback_url>>
+export ES_INDEX=<elasticsearch index to use>
+export INDEXER_NAME=<your-indexer-lambda-application-name>
 ```
 
 run `. ~/.profile` to load the variables
@@ -150,20 +158,21 @@ run `. ~/.profile` to load the variables
 Go to the AWS console, and then to your Lambda function and add the following environmental variables:
 
 ```
-ES_ENDPOINT  -->   your elasticsearch endpoint
-BLUE_BOX_ENDPOINT   -->   your blue box
-INDEXER_ENDPOINT    -->   your <callback_url>
+ES_ENDPOINT  -->   <your elasticsearch endpoint>
+BLUE_BOX_ENDPOINT   -->   <your blue box>
+ES_INDEX  -->  <elasticsearch index to use>
+INDEXER_NAME  -->  <your-indexer-lambda-application-name>
 ```
 
 ### Elasticsearch & Lambda
 
 Given the current configuration, a deployment will result in errors when attempting to reach Elasticsearch. This is because Lambda is not configured to allow ES actions.
 
-Open the AWS console and go to IAM. On the side menu bar, chose roles, then choose your lambda function, `azul_indexer` and click on `attach policy` add the policy found in policy-template.json, making sure to change the `Resource` value to the ARN of your elasticsearch box.
+Open the AWS console and go to IAM. On the side menu bar, chose roles, then choose your lambda function, `<your-indexer-lambda-application-name>` and under "Policy name" click the drop down, then click on "Edit Policy". Add the policy found in policy-template.json, making sure to change the `Resource` value to the ARN of your elasticsearch box.
 
 ### Deploy Chalice
 
-Enter your directory of your chalice function and `deploy chalice --no-autogen-policy`. Since we have created a policy in AWS we do not want chalice to automatically create a policy for us.
+Enter your directory of your chalice function and `chalice deploy --no-autogen-policy`. Since we have created a policy in AWS we do not want chalice to automatically create a policy for us.
 
 Your `<callback_url>` should be able to take post requests from the Blue Box and index the resulting files 
 This is untested, but can take in a simulated curl request of the following format.
@@ -171,16 +180,16 @@ This is untested, but can take in a simulated curl request of the following form
 curl -H "Content-Type: application/json" -X POST -d '{ "query": { "query": { "bool": { "must": [ { "match": { "files.sample_json.donor.species": "Homo sapiens" } }, { "match": { "files.assay_json.single_cell.method": "Fluidigm C1" } }, { "match": { "files.sample_json.ncbi_biosample": "SAMN04303778" } } ] } } }, "subscription_id": "ba50df7b-5a97-4e87-b9ce-c0935a817f0b", "transaction_id": "ff6b7fa3-dc79-4a79-a313-296801de76b9", "match": { "bundle_version": "2017-08-03T041453.170646Z", "bundle_uuid": "4ce8a36d-51d6-4a3c-bae7-41a63699f877" } }' <callback_url> 
 ```
 
-### Endpoints
+### Methods and Endpoints
 
-|  Endpoints | Notes |
+|  Methods/Endpoints | Notes |
 | ------------- | ------------- |
 | `<callback_url>`/  | takes in a post request and indexes the bundle found in the request   |
-| `<callback_url>`/escheck  |  returns the ES info, good check to make sure Chalice can talk to ES  |
-| `<callback_url>`/bundle/{bundle_uuid}  |  returns the uuids of the contents of the bundle (given by the uuid), separated by json and not json files  |
-| `<callback_url>`/file/{file_uuid}  |  returns the contents of the file specified by the uuid   |
-| `<callback_url>`/write/{bundle_uuid}  |  does the bulk of the work, takes a bundle_uuid and indexes the entire bundle and adds to ES   |
-| `<callback_url>`/cron  |  this function is called daily. Sends a match_all request to the Blue Box and then indexes all bundles  |
+| es_check() |  returns the ES info, good check to make sure Chalice can talk to ES  |
+| get_bundles(bundle_uuid)  |  returns the uuids of the contents of the bundle (given by the uuid), separated by json and not json files  |
+| get_file(file_uuid)  |  returns the contents of the file specified by the uuid   |
+| write_index(bundle_uuid)  |  does the bulk of the work, takes a bundle_uuid and indexes the entire bundle and adds to ES   |
+| cron_look() |  this function is called daily. Sends a match_all request to the Blue Box and then indexes all bundles  |
 
 ### Manual Loading
 
@@ -195,8 +204,7 @@ Note: Manual loading creates mappings for ES, has some list parsing capability, 
 
 ### Todo List
 
-* add mappings to Chalice
-* test with Blue Box
+* improve mappings to Chalice
 * list handling in json files
 * cron deduplication
 * capibility to download files that are not json
@@ -205,5 +213,4 @@ Note: Manual loading creates mappings for ES, has some list parsing capability, 
     * We need something that will generate POSTS to the lambda, such as a shell script.
     * Flask has endpoints for looking up bundles, and get a particular manifest.
     * Assume  bundles uuid always exist. generate a request to download anything indexable ? 
-* config for turning on/off debug
-* not hard code urls (like the https in bb_host or in_host)
+* Improve debugging (config for turning on/off debug)
