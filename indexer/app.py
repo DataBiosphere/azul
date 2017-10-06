@@ -11,13 +11,13 @@ from aws_requests_auth import boto_utils
 import collections
 import re
 import random
-app = Chalice(app_name='test-indexer')
+app = Chalice(app_name=os.getenv('INDEXER_NAME', 'dss-indigo'))
 app.debug = True
 app.log.setLevel(logging.DEBUG)
 # set env on lambda, chalice config and profile
 es_host = os.environ['ES_ENDPOINT']
 bb_host = "https://"+os.environ['BLUE_BOX_ENDPOINT']
-in_host = "https://"+os.environ['INDEXER_ENDPOINT']
+#in_host = "https://"+os.environ['INDEXER_ENDPOINT']
 try:
     es_index = os.environ['ES_INDEX']
 except KeyError:
