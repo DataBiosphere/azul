@@ -4,6 +4,7 @@ from flask_login import LoginManager, login_required, \
 # import json
 # from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
+from flask import redirect
 # from flask_migrate import Migrate
 # import flask_excel as excel
 from flask.ext.elasticsearch import Elasticsearch

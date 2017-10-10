@@ -10,7 +10,7 @@ cryptography==1.7.2
 docutils==0.13.1
 elasticsearch==5.0.1
 enum34==1.1.6
-Flask==0.11.1
+Flask==0.12.2
 Flask-APScheduler==1.5.0
 Flask-Cors==3.0.2
 Flask-Elasticsearch==0.2.5

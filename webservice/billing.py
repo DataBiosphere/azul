@@ -7,6 +7,7 @@ from flask_cors import CORS, cross_origin
 from flask_migrate import Migrate
 # import flask_excel as excel
 from flask.ext.elasticsearch import Elasticsearch
+from flask import redirect
 # import ast
 from decimal import Decimal
 # import copy
