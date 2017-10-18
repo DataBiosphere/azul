@@ -33,4 +33,4 @@ def luigiDBInit():
     if not db_engine.dialect.has_table(db_engine, monitordb_table):
         monitordb_table.create()
 
-    return monitordb_connection, monitordb_table
+    return monitordb_connection, monitordb_table, db_engine

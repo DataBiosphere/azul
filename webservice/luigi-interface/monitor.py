@@ -101,7 +101,7 @@ def validateConsonanceUUID(consonance_uuid):
     return bool(uuid_pattern.match(consonance_uuid))
 
 
-monitordb_connection, monitordb_table = luigiDBInit()
+monitordb_connection, monitordb_table, db_engine = luigiDBInit()
 jobList = get_job_list()
 
 for job in jobList:
@@ -232,7 +232,7 @@ for job in result_list:
     except Exception as e:
         print >>sys.stderr, e.message, e.args
         print >>sys.stderr, "Dumping job entry:", job
-
+        job_name = job['luigi_job']
         stmt = monitordb_table.update().\
             where((and_(monitordb_table.c.luigi_job == job_name,
                         monitordb_table.c.status != 'SUCCESS',
@@ -240,4 +240,5 @@ for job in result_list:
             values(status='JOB NOT FOUND')
         exec_result = monitordb_connection.execute(stmt)
 monitordb_connection.close()
+db_engine.dispose()
 

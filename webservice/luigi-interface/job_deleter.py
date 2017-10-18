@@ -14,7 +14,7 @@ sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) )
 from monitordb_lib import luigiDBInit
 
 
-monitordb_connection, monitordb_table = luigiDBInit()
+monitordb_connection, monitordb_table, db_engine = luigiDBInit()
 
 # 
 # for job in list
@@ -46,3 +46,4 @@ for job in result_list:
 		print >>sys.stderr, "ERROR:", str(e)
 
 monitordb_connection.close()
+db_engine.dispose()
