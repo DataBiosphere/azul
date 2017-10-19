@@ -110,6 +110,35 @@ class ElasticTransformDump(object):
         return es_search
 
     @staticmethod
+    def create_autocomplete_request(filters, es_client, req_config, post_filter=False):
+        """
+        This function will create an ElasticSearch request based on the filters and facet_config
+        passed into the function
+        :param filters: The 'filters' parameter from '/files'. Assumes to be translated into es_key terms
+        :param es_client: The ElasticSearch client object used to configure the Search object
+        :param req_config: The {'translation: {'browserKey': 'es_key'}, 'facets': ['facet1', ...]} config
+        :param post_filter: Flag for doing either post_filter or regular querying (i.e. faceting or not)
+        :return: Returns the Search object that can be used for executing the request
+        """
+        # Get the field mapping and facet configuration from the config
+        field_mapping = req_config['translation']
+        facet_config = {key: field_mapping[key] for key in req_config['facets']}
+        # Create the Search Object
+        es_search = Search(using=es_client, index=os.getenv('ES_FILE_INDEX', 'fb_index'))
+        # Translate the filters keys
+        filters = ElasticTransformDump.translate_filters(filters, field_mapping)
+        # Get the query from 'create_query'
+        es_query = ElasticTransformDump.create_query(filters)
+        # Do a post_filter using the returned query
+        es_search = es_search.query(es_query) if not post_filter else es_search.post_filter(es_query)
+        # Iterate over the aggregates in the facet_config
+        for agg, translation in facet_config.iteritems():
+            # Create a bucket aggregate for the 'agg'. Call create_aggregate() to return the appropriate aggregate query
+            es_search.aggs.bucket(agg, ElasticTransformDump.create_aggregate(filters, facet_config, agg))
+        return es_search
+
+
+    @staticmethod
     def open_and_return_json(file_path):
         """
         Opens and returns the contents of the json file given in file_path
@@ -309,8 +338,6 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         es_search = self.create_request(filters, self.es_client, request_config, post_filter=post_filter)
         # Handle pagination
-
-        # It's a full file search
         # Translate the sort field if there is any translation available
         if pagination['sort'] in request_config['translation']:
             pagination['sort'] = request_config['translation'][pagination['sort']]
