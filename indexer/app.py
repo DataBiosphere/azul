@@ -22,6 +22,15 @@ try:
     es_index = os.environ['ES_INDEX']
 except KeyError:
     es_index = 'test-chalice'
+
+#settings for elasticsearch
+try:
+    with open('chalicelib/settings.json') as f:
+         es_settings = json.loads(f.read())
+except Exception as e:
+    print(e)
+    raise NotFoundError("chalicelib/settings.json file does not exist")
+
 # need to have the AWS CLI and $aws configure
 awsauth = AWSRequestsAuth(
     aws_host=es_host,
@@ -46,9 +55,12 @@ else:
         use_ssl=False
     )
 #es.indices.delete(index=es_index, ignore=[400])
-es.indices.create(index=es_index, ignore=[400])
+es.indices.create(index=es_index, body=es_settings, ignore=[400])
 # used by write_index to flatten nested arrays, also used for mapping
 # from https://stackoverflow.com/a/2158532
+
+
+
 
 
 def flatten(l):
@@ -63,12 +75,15 @@ def es_config(c_item, name):
     if isinstance(c_item, dict):
         es_array = []
         for key, value in c_item.items():
-            name = str(name) + str(key) + "|"
+            if len(name) >0:
+                name = str(name) +"|"+ str(key)
+            else:
+                name = str(key)
             for item in value:
                 es_array.append(es_config(item, name))
             return es_array
     else:
-        name = str(name) + str(c_item)
+        name = str(name) +"|"+ str(c_item)
         return (name)
 # ES mapping
 try:
@@ -78,16 +93,49 @@ except Exception as e:
     print(e)
     raise NotFoundError("chalicelib/config.json file does not exist")
 # key_names = ['bundle_uuid', 'dirpath', 'file_name']
-key_names = ['bundle_uuid', 'file_name', 'file_name', 'file_uuid', 'file_version', 'file_format','bundle_type']
+key_names = ['bundle_uuid', 'file_name*keyword*text_autocomplete', 'file_uuid', 'file_version', 'file_format','bundle_type', "file_size*long"]
 for c_key, c_value in config.items():
     for c_item in c_value:
-        key_names.append(es_config(c_item, ""))
+        key_names.append(es_config(c_item, c_key))
 key_names = flatten(key_names)
 es_mappings = []
+
+
+#i_split splits at "*"
+#u_split splits i_split[1] at "_" (u for underscore)
+#banana_split splits i_split[2] at "_"
 for item in key_names:
-    es_mappings.append({item : {"type":"keyword"}})
-# file size is different than other key names
-es_mappings.append({"file_size" : {"type":"long"}})
+    i_replace = item.replace(".",",")
+    print(i_replace)
+    i_split = i_replace.split("*")
+    if len(i_split) == 1:
+        es_mappings.append({i_split[0] : {"type":"keyword"}})
+    elif len(i_split) == 2:
+        u_split = i_split[1].split("_")
+        if len (u_split)==1:
+            es_mappings.append({i_split[0]: {"type": i_split[1]}})
+        else:
+            es_mappings.append({i_split[0]: {"type": u_split[0], "analyzer": u_split[1], "search_analyzer":"standard"}})
+    else:
+        u_split = i_split[1].split("_")
+        banana_split =i_split[2].split("_")
+        if len(u_split)==1 and len(banana_split)==1:
+            es_mappings.append({i_split[0]: {"type": i_split[1], "fields":{"raw":{"type":i_split[2]}}}})
+        elif len(u_split)==2 and len(banana_split)==1:
+            es_mappings.append(
+                {i_split[0]: {"type": u_split[0], "analyzer": u_split[1], "search_analyzer":"standard", "fields": {"raw": {"type": i_split[2]}}}})
+        elif len(u_split) == 1 and len(banana_split) == 2:
+            es_mappings.append(
+                {i_split[0]: {"type": i_split[1],
+                              "fields": {"raw": {"type": banana_split[0], "analyzer": banana_split[1], "search_analyzer":"standard"}}}})
+        elif len(u_split) == 2 and len(banana_split) == 2:
+            es_mappings.append(
+                {i_split[0]: {"type": u_split[0], "analyzer": u_split[1], "search_analyzer":"standard",
+                              "fields": {"raw": {"type": banana_split[0], "analyzer": banana_split[1], "search_analyzer":"standard"}}}})
+        else:
+            app.log.info("mapping formatting problem %s", i_split)
+
+
 es_keys = []
 es_values = []
 for item in es_mappings:
@@ -241,7 +289,7 @@ def write_index(bundle_uuid):
                     app.log.info("8")
                     for c_item in c_value:
                         app.log.info("9")
-                        to_append = look_file(c_item, file, "")
+                        to_append = look_file(c_item, file, c_key)
                         app.log.info("10")
                         if to_append is not None:
                             app.log.info("11")
@@ -294,21 +342,28 @@ def look_file(c_item, file, name):
     if isinstance(c_item, dict):
         es_array = []
         for key, value in c_item.items():
+            key_split = key.split("*")
             if key in file:
-                name = str(name)+str(key)+"|"
+                if len(name) > 0:
+                    name = str(name) + "|" + str(key_split[0])
+                else:
+                    name = str(key)
                 for item in value:
-                    es_array.append(look_file(item, file[key], name))
+                    es_array.append(look_file(item, file[key_split[0]], name))
                 return es_array
     elif c_item in file:
         file_value = file[c_item]
         if not isinstance(file_value, list):
-            name = str(name)+str(c_item)
-            return ({name: file_value})
+            name = str(name) + "|" + str(c_item)
+            n_replace = name.replace(".", ",")
+            return ({n_replace: file_value})
     # Carlos's test
     elif c_item not in file:
+        c_item_split = c_item.split("*")
         file_value = "None" # Putting an empty string. I think if i put None it could break things downstream
-        name = str(name)+str(c_item)
-        return ({name: file_value})
+        name = str(name) + "|" + str(c_item_split[0])
+        n_replace = name.replace(".", ",")
+        return ({n_replace: file_value})
 
 # used by write_index to add to ES
 def write_es(es_json, file_uuid):
