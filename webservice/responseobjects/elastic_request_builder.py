@@ -276,3 +276,53 @@ class ElasticTransformDump(object):
         # Get the ManifestResponse object
         manifest = ManifestResponse(es_response_dict, request_config['manifest'], request_config['translation'])
         return manifest.return_response()
+
+    def transform_autocomplete_request(self, request_config_file='request_config.json',
+                                       mapping_config_file='mapping_config.json', filters=None, pagination=None,
+                                       post_filter=False):
+        """
+        This function does the whole transformation process. It takes the path of the config file, the filters, and
+        pagination, if any. Excluding filters will do a match_all request. Excluding pagination will exclude pagination
+        from the output.
+        :param filters: Filter parameter from the API to be used in the query. Defaults to None
+        :param request_config_file: Path containing the requests config to be used for aggregates. Relative to the
+            'config' folder.
+        :param mapping_config_file: Path containing the mapping to the API response fields. Relative to the
+            'config' folder.
+        :param pagination: Pagination to be used for the API
+        :param post_filter: Flag to indicate whether to do a post_filter call instead of the regular query.
+        :return: Returns the transformed request
+        """
+        # Use this as the base to construct the paths
+        # https://stackoverflow.com/questions/247770/retrieving-python-module-path
+        # Use that to get the path of the config module
+        config_folder = os.path.dirname(config.__file__)
+        # Create the path for the mapping config file
+        mapping_config_path = "{}/{}".format(config_folder, mapping_config_file)
+        # Create the path for the config_path
+        request_config_path = "{}/{}".format(config_folder, request_config_file)
+        # Get the Json Objects from the mapping_config and the request_config
+        mapping_config = self.open_and_return_json(mapping_config_path)
+        request_config = self.open_and_return_json(request_config_path)
+        # Handle empty filters
+        if filters is None:
+            filters = {"file": {}}
+        es_search = self.create_request(filters, self.es_client, request_config, post_filter=post_filter)
+        # Handle pagination
+
+        # It's a full file search
+        # Translate the sort field if there is any translation available
+        if pagination['sort'] in request_config['translation']:
+            pagination['sort'] = request_config['translation'][pagination['sort']]
+        es_search = self.apply_paging(es_search, pagination)
+        # TODO: NEED TO APPROPRIATELY LOG, PLEASE DELETE PRINT STATEMENT
+        print "Printing ES_SEARCH request dict:\n {}".format(json.dumps(es_search.to_dict()))
+        es_response = es_search.execute(ignore_cache=True)
+        es_response_dict = es_response.to_dict()
+        print "Printing ES_SEARCH response dict:\n {}".format(json.dumps(es_response_dict))
+        hits = [x['_source'] for x in es_response_dict['hits']['hits']]
+        facets = es_response_dict['aggregations']
+        paging = self.generate_paging_dict(es_response_dict, pagination)
+        final_response = FileSearchResponse(mapping_config, hits, paging, facets)
+        final_response = final_response.apiResponse.to_json()
+        return final_response
