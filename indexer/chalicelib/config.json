@@ -23,7 +23,7 @@
     "id",
     {
       "submitter": [
-        "name*text_autocomplete",
+        "name*keyword*text_autocomplete",
         "institution",
         "country"
       ]
@@ -32,14 +32,14 @@
   "sample.json": [
     {
       "body_part": [
-        "text"
+        "text*keyword*text_autocomplete"
       ]
     },
     {
       "donor": [
         {
           "species": [
-            "text*text",
+            "text*keyword*text_autocomplete",
             "ontology"
           ]
         },
@@ -60,7 +60,7 @@
     "project_id",
     {
       "cell_cycle": [
-        "text*text_autocomplete*keyword"
+        "text*keyword*text_autocomplete"
       ]
     },
     "culture_type",
