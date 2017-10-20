@@ -315,7 +315,8 @@ class ElasticTransformDump(object):
         :param mapping_config_file: Path containing the mapping to the API response fields. Relative to the
             'config' folder.
         :param pagination: Pagination to be used for the API
-        :param post_filter: Flag to indicate whether to do a post_filter call instead of the regular query.
+        :param _query: String query to use on the search.
+        :param search_field: Field to perform the search on.
         :return: Returns the transformed request
         """
         # Use this as the base to construct the paths
@@ -334,9 +335,7 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         es_search = self.create_autocomplete_request(filters, self.es_client, request_config, _query, search_field)
         # Handle pagination
-        # Translate the sort field if there is any translation available
-        if pagination['sort'] in request_config['translation']:
-            pagination['sort'] = request_config['translation'][pagination['sort']]
+        pagination['sort'] = '_score'
         es_search = self.apply_paging(es_search, pagination)
         # TODO: NEED TO APPROPRIATELY LOG, PLEASE DELETE PRINT STATEMENT
         print "Printing ES_SEARCH request dict:\n {}".format(json.dumps(es_search.to_dict()))
