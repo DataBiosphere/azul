@@ -131,7 +131,7 @@ class ElasticTransformDump(object):
         # Do a post_filter using the filter query
         es_search = es_search.post_filter(es_filter_query)
         # Apply a prefix query with the query string
-        es_search = es_search.query(Q('prefix', **{'{}.raw'.format(search_field): _query}))
+        es_search = es_search.query(Q('prefix', **{'{}__raw'.format(search_field): _query}))
         return es_search
 
     @staticmethod
