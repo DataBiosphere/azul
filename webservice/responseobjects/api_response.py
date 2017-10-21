@@ -140,6 +140,29 @@ class SummaryRepresentation(JsonObject):
     primarySiteCount = IntegerProperty()
 
 
+class DonorAutoCompleteEntry(JsonObject):
+    _id = StringProperty(name='id')
+    projectId = StringProperty()
+    sampleIds = ListProperty(StringProperty)
+    specimenIds = ListProperty(StringProperty)
+    submittedId = StringProperty()
+    submittedSampleIds = ListProperty(StringProperty)
+    submittedSpecimenIds = ListProperty(StringProperty)
+    _type = StringProperty(name='id', default='donor')
+
+
+class FileIdAutoCompleteEntry(JsonObject):
+    pass
+
+
+class AutoCompleteRepresentation(JsonObject):
+    """
+    Class defining the Autocomplete Representation
+    """
+    hits = ListProperty(OtherObj)
+    pagination = ObjectProperty(PaginationObj, exclude_if_none=True, default=None)
+
+
 class AbstractResponse(object):
     """
     Abstract class to be used for each /files API response.
@@ -437,3 +460,17 @@ class FileSearchResponse(KeywordSearchResponse):
         self.apiResponse.pagination = PaginationObj(**pagination)
         # Add the facets
         self.apiResponse.termFacets = self.add_facets(facets)
+
+
+class AutoCompleteResponse(KeywordSearchResponse):
+
+    def __init__(self, mapping, hits, pagination):
+        """
+        Constructs the object and initializes the apiResponse attribute
+        :param mapping: A JSON with the mapping for the field
+        :param hits: A list of hits from ElasticSearch
+        """
+        # This should initialize the self.apiResponse attribute of the object
+        super(AutoCompleteResponse, self).__init__(mapping, hits)
+        # Add the paging via **kwargs of dictionary 'pagination'
+        self.apiResponse.pagination = PaginationObj(**pagination)
