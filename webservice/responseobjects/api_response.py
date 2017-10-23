@@ -152,7 +152,13 @@ class DonorAutoCompleteEntry(JsonObject):
 
 
 class FileIdAutoCompleteEntry(JsonObject):
-    pass
+    _id = StringProperty(name='id')
+    dataType = ListProperty(StringProperty)
+    donorId = ListProperty(StringProperty)
+    fileBundleId = StringProperty()
+    fileName = ListProperty(StringProperty)
+    projectCode = ListProperty(StringProperty)
+    _type = StringProperty(name='id', default='file')
 
 
 class AutoCompleteRepresentation(JsonObject):
@@ -464,13 +470,38 @@ class FileSearchResponse(KeywordSearchResponse):
 
 class AutoCompleteResponse(KeywordSearchResponse):
 
-    def __init__(self, mapping, hits, pagination):
+    def map_entries(self, mapping, entry, _type):
+        """
+        Returns a HitEntry Object. Takes the mapping and maps the appropriate fields from entry to
+        the corresponding entry in the mapping
+        :param mapping: Takes in a Json object with the mapping to the corresponding field in the entry object
+        :param entry: A 1 dimensional dictionary corresponding to a single hit from ElasticSearch
+        :return: A HitEntry Object with the appropriate fields mapped
+        """
+        mapped_entry = AutoCompleteRepresentation(
+            _id=self.fetch_entry_value(mapping, entry, 'id'),
+            objectID=self.fetch_entry_value(mapping, entry, 'objectID'),
+            access=self.fetch_entry_value(mapping, entry, 'access'),
+            study=self.handle_list(self.fetch_entry_value(mapping, entry, 'study')),
+            dataCategorization=self.make_data_categorization(mapping['dataCategorization'], entry),
+            fileCopies=self.handle_list(self.make_file_copy(mapping['fileCopies'][0], entry)),
+            centerName=self.fetch_entry_value(mapping, entry, 'center_name'),
+            program=self.fetch_entry_value(mapping, entry, 'program'),
+            donors=self.handle_list(self.make_donor(mapping['donors'][0], entry)),
+            analysisMethod=self.make_analysis_method(mapping['analysisMethod'], entry),
+            referenceGenome=self.make_reference_genome(mapping['referenceGenome'], entry)
+        )
+        return mapped_entry
+
+    def __init__(self, mapping, hits, pagination, _type):
         """
         Constructs the object and initializes the apiResponse attribute
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
-        # This should initialize the self.apiResponse attribute of the object
+        # Overriding the __init__ method of the parent class
         super(AutoCompleteResponse, self).__init__(mapping, hits)
+        class_entries = {'hits': [self.map_entries(mapping, x, _type) for x in hits], 'pagination': None}
+        self.apiResponse = ApiResponse(**class_entries)
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)
