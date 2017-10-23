@@ -370,7 +370,7 @@ class KeywordSearchResponse(AbstractResponse):
             otherIdentifiers=self.make_other_obj(mapping['otherIdentifiers'], entry)
         )
 
-    def map_entries(self, mapping, entry):
+    def map_entries(self, mapping, entry, **kwargs):
         """
         Returns a HitEntry Object. Takes the mapping and maps the appropriate fields from entry to
         the corresponding entry in the mapping
@@ -470,14 +470,23 @@ class FileSearchResponse(KeywordSearchResponse):
 
 class AutoCompleteResponse(KeywordSearchResponse):
 
-    def map_entries(self, mapping, entry, _type):
+    def map_entries(self, mapping, entry, _type='file'):
         """
         Returns a HitEntry Object. Takes the mapping and maps the appropriate fields from entry to
         the corresponding entry in the mapping
         :param mapping: Takes in a Json object with the mapping to the corresponding field in the entry object
         :param entry: A 1 dimensional dictionary corresponding to a single hit from ElasticSearch
+        :param _type: The type of entry that will be used when constructing the entry
         :return: A HitEntry Object with the appropriate fields mapped
         """
+
+        if _type == 'file':
+            # Create a file representation
+            mapped_entry = FileIdAutoCompleteEntry()
+        else:
+            # Create a donor representation
+            mapped_entry = DonorAutoCompleteEntry()
+
         mapped_entry = AutoCompleteRepresentation(
             _id=self.fetch_entry_value(mapping, entry, 'id'),
             objectID=self.fetch_entry_value(mapping, entry, 'objectID'),
