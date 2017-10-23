@@ -148,7 +148,7 @@ class DonorAutoCompleteEntry(JsonObject):
     submittedId = StringProperty()
     submittedSampleIds = ListProperty(StringProperty)
     submittedSpecimenIds = ListProperty(StringProperty)
-    _type = StringProperty(name='id', default='donor')
+    _type = StringProperty(name='type', default='donor')
 
 
 class FileIdAutoCompleteEntry(JsonObject):
@@ -158,7 +158,7 @@ class FileIdAutoCompleteEntry(JsonObject):
     fileBundleId = StringProperty()
     fileName = ListProperty(StringProperty)
     projectCode = ListProperty(StringProperty)
-    _type = StringProperty(name='id', default='file')
+    _type = StringProperty(name='type', default='file')
 
 
 class AutoCompleteRepresentation(JsonObject):
@@ -482,24 +482,27 @@ class AutoCompleteResponse(KeywordSearchResponse):
 
         if _type == 'file':
             # Create a file representation
-            mapped_entry = FileIdAutoCompleteEntry()
+            mapped_entry = FileIdAutoCompleteEntry(
+                _id=self.fetch_entry_value(mapping, entry, 'id'),
+                dataType=self.fetch_entry_value(mapping, entry, 'dataType'),
+                donorId=self.handle_list(self.fetch_entry_value(mapping, entry, 'donorId')),
+                fileBundleId=self.fetch_entry_value(mapping, entry, 'fileBundleId'),
+                fileName=self.handle_list(self.fetch_entry_value(mapping, entry, 'fileName')),
+                projectCode=self.handle_list(self.fetch_entry_value(mapping, entry, 'projectCode')),
+                _type='file'
+            )
         else:
             # Create a donor representation
-            mapped_entry = DonorAutoCompleteEntry()
-
-        mapped_entry = AutoCompleteRepresentation(
-            _id=self.fetch_entry_value(mapping, entry, 'id'),
-            objectID=self.fetch_entry_value(mapping, entry, 'objectID'),
-            access=self.fetch_entry_value(mapping, entry, 'access'),
-            study=self.handle_list(self.fetch_entry_value(mapping, entry, 'study')),
-            dataCategorization=self.make_data_categorization(mapping['dataCategorization'], entry),
-            fileCopies=self.handle_list(self.make_file_copy(mapping['fileCopies'][0], entry)),
-            centerName=self.fetch_entry_value(mapping, entry, 'center_name'),
-            program=self.fetch_entry_value(mapping, entry, 'program'),
-            donors=self.handle_list(self.make_donor(mapping['donors'][0], entry)),
-            analysisMethod=self.make_analysis_method(mapping['analysisMethod'], entry),
-            referenceGenome=self.make_reference_genome(mapping['referenceGenome'], entry)
-        )
+            mapped_entry = DonorAutoCompleteEntry(
+                _id=self.fetch_entry_value(mapping, entry, 'id'),
+                projectId=self.fetch_entry_value(mapping, entry, 'projectId'),
+                sampleIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'sampleIds')),
+                specimenIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'specimenIds')),
+                submittedId=self.fetch_entry_value(mapping, entry, 'submittedId'),
+                submittedSampleIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'submittedSampleIds')),
+                submittedSpecimenIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'submittedSampleIds')),
+                _type='donor'
+            )
         return mapped_entry
 
     def __init__(self, mapping, hits, pagination, _type):
@@ -511,6 +514,6 @@ class AutoCompleteResponse(KeywordSearchResponse):
         # Overriding the __init__ method of the parent class
         super(AutoCompleteResponse, self).__init__(mapping, hits)
         class_entries = {'hits': [self.map_entries(mapping, x, _type) for x in hits], 'pagination': None}
-        self.apiResponse = ApiResponse(**class_entries)
+        self.apiResponse = AutoCompleteRepresentation(**class_entries)
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)
