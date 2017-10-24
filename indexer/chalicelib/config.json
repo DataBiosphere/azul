@@ -2,7 +2,7 @@
   "assay.json": [
     {
       "single_cell": [
-        "cell_handling*keyword"
+        "cell_handling"
       ]
     },
     {
@@ -23,7 +23,7 @@
     "id",
     {
       "submitter": [
-        "name*keyword*text_autocomplete",
+        "name",
         "institution",
         "country"
       ]
@@ -32,14 +32,14 @@
   "sample.json": [
     {
       "body_part": [
-        "text*keyword*text_autocomplete"
+        "text"
       ]
     },
     {
       "donor": [
         {
           "species": [
-            "text*keyword*text_autocomplete",
+            "text",
             "ontology"
           ]
         },
@@ -54,13 +54,13 @@
     "name",
     {
       "organ": [
-        "text*keyword*text_autocomplete"
+        "text"
       ]
     },
     "project_id",
     {
       "cell_cycle": [
-        "text*keyword*text_autocomplete"
+        "text"
       ]
     },
     "culture_type",

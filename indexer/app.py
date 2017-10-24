@@ -11,22 +11,28 @@ from aws_requests_auth import boto_utils
 import collections
 import re
 import random
+
 app = Chalice(app_name=os.getenv('INDEXER_NAME', 'dss-indigo'))
 app.debug = True
 app.log.setLevel(logging.DEBUG)
 # set env on lambda, chalice config and profile
 es_host = os.environ['ES_ENDPOINT']
-bb_host = "https://"+os.environ['BLUE_BOX_ENDPOINT']
-#in_host = "https://"+os.environ['INDEXER_ENDPOINT']
+bb_host = "https://" + os.environ['BLUE_BOX_ENDPOINT']
+# in_host = "https://"+os.environ['INDEXER_ENDPOINT']
+
+try:
+    config_analyzer = os.environ['CONFIG_ANALYZER']
+except KeyError:
+    config_analyzer = 'autocomplete'
 try:
     es_index = os.environ['ES_INDEX']
 except KeyError:
     es_index = 'test-chalice'
 
-#settings for elasticsearch
+# settings for elasticsearch
 try:
     with open('chalicelib/settings.json') as f:
-         es_settings = json.loads(f.read())
+        es_settings = json.loads(f.read())
 except Exception as e:
     print(e)
     raise NotFoundError("chalicelib/settings.json file does not exist")
@@ -54,15 +60,14 @@ else:
         http_auth=('elastic', 'changeme'),
         use_ssl=False
     )
-#es.indices.delete(index=es_index, ignore=[400])
+# es.indices.delete(index=es_index, ignore=[400])
 es.indices.create(index=es_index, body=es_settings, ignore=[400])
+
+
+
+
 # used by write_index to flatten nested arrays, also used for mapping
 # from https://stackoverflow.com/a/2158532
-
-
-
-
-
 def flatten(l):
     for el in l:
         if isinstance(el, collections.Sequence) and not isinstance(el, (str, bytes)):
@@ -75,16 +80,18 @@ def es_config(c_item, name):
     if isinstance(c_item, dict):
         es_array = []
         for key, value in c_item.items():
-            if len(name) >0:
-                name = str(name) +"|"+ str(key)
+            if len(name) > 0:
+                name = str(name) + "|" + str(key)
             else:
                 name = str(key)
             for item in value:
                 es_array.append(es_config(item, name))
             return es_array
     else:
-        name = str(name) +"|"+ str(c_item)
+        name = str(name) + "|" + str(c_item)
         return (name)
+
+
 # ES mapping
 try:
     with open('chalicelib/config.json') as f:
@@ -93,48 +100,60 @@ except Exception as e:
     print(e)
     raise NotFoundError("chalicelib/config.json file does not exist")
 # key_names = ['bundle_uuid', 'dirpath', 'file_name']
-key_names = ['bundle_uuid', 'file_name*keyword*text_autocomplete', 'file_uuid', 'file_version', 'file_format','bundle_type', "file_size*long"]
+key_names = ['bundle_uuid', 'file_name', 'file_uuid',
+             'file_version', 'file_format', 'bundle_type', "file_size*long"]
 for c_key, c_value in config.items():
     for c_item in c_value:
         key_names.append(es_config(c_item, c_key))
 key_names = flatten(key_names)
 es_mappings = []
 
-
-#i_split splits at "*"
-#u_split splits i_split[1] at "_" (u for underscore)
-#banana_split splits i_split[2] at "_"
+# i_split splits at "*"
+# u_split splits i_split[1] at "_" (u for underscore)
+# banana_split splits i_split[2] at "_"
 for item in key_names:
-    i_replace = item.replace(".",",")
-    print(i_replace)
+    i_replace = item.replace(".", ",")
     i_split = i_replace.split("*")
     if len(i_split) == 1:
-        es_mappings.append({i_split[0] : {"type":"keyword"}})
+        es_mappings.append(
+            {i_split[0]: {"type": "keyword",
+                          "fields": {"raw": {"type": "text",
+                                             "analyzer": config_analyzer,
+                                             "search_analyzer": "standard"}}}})
     elif len(i_split) == 2:
         u_split = i_split[1].split("_")
-        if len (u_split)==1:
+        if len(u_split) == 1:
             es_mappings.append({i_split[0]: {"type": i_split[1]}})
         else:
-            es_mappings.append({i_split[0]: {"type": u_split[0], "analyzer": u_split[1], "search_analyzer":"standard"}})
+            es_mappings.append(
+                {i_split[0]: {"type": u_split[0], "analyzer": u_split[1],
+                              "search_analyzer": "standard"}})
     else:
         u_split = i_split[1].split("_")
-        banana_split =i_split[2].split("_")
-        if len(u_split)==1 and len(banana_split)==1:
-            es_mappings.append({i_split[0]: {"type": i_split[1], "fields":{"raw":{"type":i_split[2]}}}})
-        elif len(u_split)==2 and len(banana_split)==1:
+        banana_split = i_split[2].split("_")
+        if len(u_split) == 1 and len(banana_split) == 1:
+            es_mappings.append({i_split[0]: {"type": i_split[1], "fields": {
+                "raw": {"type": i_split[2]}}}})
+        elif len(u_split) == 2 and len(banana_split) == 1:
             es_mappings.append(
-                {i_split[0]: {"type": u_split[0], "analyzer": u_split[1], "search_analyzer":"standard", "fields": {"raw": {"type": i_split[2]}}}})
+                {i_split[0]: {"type": u_split[0], "analyzer": u_split[1],
+                              "search_analyzer": "standard",
+                              "fields": {"raw": {"type": i_split[2]}}}})
         elif len(u_split) == 1 and len(banana_split) == 2:
             es_mappings.append(
                 {i_split[0]: {"type": i_split[1],
-                              "fields": {"raw": {"type": banana_split[0], "analyzer": banana_split[1], "search_analyzer":"standard"}}}})
+                              "fields": {"raw": {"type": banana_split[0],
+                                                 "analyzer": banana_split[1],
+                                                 "search_analyzer": "standard"}}}})
         elif len(u_split) == 2 and len(banana_split) == 2:
             es_mappings.append(
-                {i_split[0]: {"type": u_split[0], "analyzer": u_split[1], "search_analyzer":"standard",
-                              "fields": {"raw": {"type": banana_split[0], "analyzer": banana_split[1], "search_analyzer":"standard"}}}})
+                {i_split[0]: {"type": u_split[0], "analyzer": u_split[1],
+                              "search_analyzer": "standard",
+                              "fields": {"raw": {"type": banana_split[0],
+                                                 "analyzer": banana_split[1],
+                                                 "search_analyzer": "standard"}}}})
         else:
             app.log.info("mapping formatting problem %s", i_split)
-
 
 es_keys = []
 es_values = []
@@ -144,39 +163,43 @@ for item in es_mappings:
             es_keys.append(key)
             es_values.append(value)
     es_file = dict(zip(es_keys, es_values))
-final_mapping = '{"properties":'+json.dumps(es_file)+'}'
-print(final_mapping)
+final_mapping = '{"properties":' + json.dumps(es_file) + '}'
 es.indices.put_mapping(index=es_index,
-    doc_type="document", body = final_mapping)
+                       doc_type="document", body=final_mapping)
+
+
 # for blue box notification
 @app.route('/', methods=['GET', 'POST'])
 def post_notification():
     request = app.current_request.json_body
     app.log.info("Received notification %s", request)
     bundle_uuid = request['match']['bundle_uuid']
-    #urlopen(str(in_host + '/write/' + bundle_uuid))
+    # urlopen(str(in_host + '/write/' + bundle_uuid))
     write_index(bundle_uuid)
-    return {"bundle_uuid":bundle_uuid}
+    return {"bundle_uuid": bundle_uuid}
 
 
 @app.route('/escheck')
 def es_check():
     return json.dumps(es.info())
+
+
 # note: Support CORS by adding app.route('/', cors=True)
 # returns the name and file uuids sorted by data and json files
 @app.route('/bundle/{bundle_uuid}', methods=['GET'])
 def get_bundles(bundle_uuid):
     app.log.info("get_bundle %s", bundle_uuid)
-#    try:
-#        json_str = urlopen(str(bb_host+('v1/bundles/')+bundle_uuid)).read()
-#        bundle = json.loads(json_str)
-#    except Exception as e:
-#        app.log.info(e)
-#        raise NotFoundError("Bundle '%s' does not exist" % bundle_uuid)
+    #    try:
+    #        json_str = urlopen(str(bb_host+('v1/bundles/')+bundle_uuid)).read()
+    #        bundle = json.loads(json_str)
+    #    except Exception as e:
+    #        app.log.info(e)
+    #        raise NotFoundError("Bundle '%s' does not exist" % bundle_uuid)
     retries = 0
     while retries < 3:
         try:
-            json_str = urlopen(str(bb_host + ('v1/bundles/') + bundle_uuid)).read()
+            json_str = urlopen(
+                str(bb_host + ('v1/bundles/') + bundle_uuid)).read()
             bundle = json.loads(json_str)
             break
         except HTTPError as er:
@@ -184,7 +207,7 @@ def get_bundles(bundle_uuid):
             # if er.code == 504:
             #    retries += 1
             #    continue
-            #else:
+            # else:
             #   raise
             retries += 1
             continue
@@ -196,7 +219,6 @@ def get_bundles(bundle_uuid):
         app.log.error("Maximum number of retries reached: {}".format(retries))
         raise Exception("Unable to access bundle '%s'" % bundle_uuid)
 
-
     json_files = []
     data_files = []
     for file in bundle['bundle']['files']:
@@ -206,11 +228,13 @@ def get_bundles(bundle_uuid):
             # data_files.append({file["name"]: file["uuid"]}) CARLOS REMOVED THIS
             data_files.append({file["name"]: file})
     return json.dumps({'json_files': json_files, 'data_files': data_files})
+
+
 # returns the file
 @app.route('/file/{file_uuid}', methods=['GET'])
 def get_file(file_uuid):
     app.log.info("get_file %s", file_uuid)
-    aws_url = bb_host+"v1/files/"+file_uuid+"?replica=aws"
+    aws_url = bb_host + "v1/files/" + file_uuid + "?replica=aws"
     header = {'accept': 'application/json'}
     try:
         aws_response = requests.get(aws_url, headers=header)
@@ -220,6 +244,8 @@ def get_file(file_uuid):
         app.log.info(e)
         raise NotFoundError("File '%s' does not exist" % file_uuid)
     return json.dumps(file)
+
+
 # indexes the files in the bundle
 @app.route('/write/{bundle_uuid}')
 def write_index(bundle_uuid):
@@ -248,12 +274,12 @@ def write_index(bundle_uuid):
         raise NotFoundError("chalicelib/config.json file does not exist")
     app.log.info("config is %s", config)
     file_uuid = ""
-    #for i in range(2):  # in the case of no data_files, this doesn't run
+    # for i in range(2):  # in the case of no data_files, this doesn't run
     #    file_uuid = random.randint(100, 999)
     #    app.log.info("3")
-        # for d_key, d_value in bundle['data_files'][i].items():
-        #     file_uuid = d_key
-        #     app.log.info("4")
+    # for d_key, d_value in bundle['data_files'][i].items():
+    #     file_uuid = d_key
+    #     app.log.info("4")
     file_extensions = set()
     for data_file in bundle['data_files']:
         file_name, values = list(data_file.items())[0]
@@ -272,7 +298,7 @@ def write_index(bundle_uuid):
         app.log.info("4.5")
         for c_key, c_value in config.items():
             app.log.info("5")
-            for j in range (len(json_files)):
+            for j in range(len(json_files)):
                 app.log.info("6")
                 if c_key in json_files[j]:
                     app.log.info("7")
@@ -336,6 +362,8 @@ def write_index(bundle_uuid):
         write_es(es_json, es_uuid)
     app.log.info("13")
     return json.dumps(bundle['data_files'])
+
+
 # used by write_index to recursively return values of items in config file
 def look_file(c_item, file, name):
     app.log.info("look_file %s", c_item)
@@ -360,10 +388,11 @@ def look_file(c_item, file, name):
     # Carlos's test
     elif c_item not in file:
         c_item_split = c_item.split("*")
-        file_value = "None" # Putting an empty string. I think if i put None it could break things downstream
+        file_value = "None"  # Putting an empty string. I think if i put None it could break things downstream
         name = str(name) + "|" + str(c_item_split[0])
         n_replace = name.replace(".", ",")
         return ({n_replace: file_value})
+
 
 # used by write_index to add to ES
 def write_es(es_json, file_uuid):
@@ -385,17 +414,21 @@ def write_es(es_json, file_uuid):
     res = es.index(index=es_index, doc_type='document',
                    id=file_uuid, body=es_file)
     app.log.info("es12.6")
-    return(res['created'])
+    return (res['created'])
+
+
 # daily scan of the blue box
 @app.schedule('rate(1 day)')
 def every_day(event, context):
     pass
+
+
 @app.route('/cron')
 def cron_look():
     headers = {"content-type": "application/json",
                "accept": "application/json"}
     data = {"query": {"match_all": {}}}
-    bb_url = str(bb_host)+"/v1/search"
+    bb_url = str(bb_host) + "/v1/search"
     r = requests.post(bb_url, data=json.dumps(data), headers=headers)
     r_response = json.loads(r.text)
     bundle_ids = []
@@ -406,3 +439,4 @@ def cron_look():
         write_index(bundle_mod)
     app.log.info({"bundle_id": bundle_ids})
     return {"bundle_id": bundle_ids}
+
