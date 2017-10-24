@@ -4,7 +4,8 @@ from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q, A
 import json
 import os
-from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse, SummaryResponse, ManifestResponse
+from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse, SummaryResponse, ManifestResponse,\
+    AutoCompleteResponse
 
 
 class ElasticTransformDump(object):
@@ -115,7 +116,9 @@ class ElasticTransformDump(object):
         This function will create an ElasticSearch request based on the filters passed to the function
         :param filters: The 'filters' parameter from '/keywords'.
         :param es_client: The ElasticSearch client object used to configure the Search object
-        :param req_config: The {'translation: {'browserKey': 'es_key'}, 'facets': ['facet1', ...]} config
+        :param req_config: The {'translation': {'browserKey': 'es_key'}, 'facets': ['facet1', ...]} config
+        :param _query: The query (string) to use for querying.
+        :param search_field: The field to do the query on.
         :return: Returns the Search object that can be used for executing the request
         """
         # Get the field mapping and facet configuration from the config
@@ -302,9 +305,9 @@ class ElasticTransformDump(object):
         manifest = ManifestResponse(es_response_dict, request_config['manifest'], request_config['translation'])
         return manifest.return_response()
 
-    def transform_autocomplete_request(self, request_config_file='request_config.json',
-                                       mapping_config_file='mapping_config.json', filters=None, pagination=None,
-                                       _query='', search_field='fileId'):
+    def transform_autocomplete_request(self, pagination, request_config_file='request_config.json',
+                                       mapping_config_file='mapping_config.json', filters=None,
+                                       _query='', search_field='fileId', entry_format='file'):
         """
         This function does the whole transformation process. It takes the path of the config file, the filters, and
         pagination, if any. Excluding filters will do a match_all request. Excluding pagination will exclude pagination
@@ -317,6 +320,7 @@ class ElasticTransformDump(object):
         :param pagination: Pagination to be used for the API
         :param _query: String query to use on the search.
         :param search_field: Field to perform the search on.
+        :param entry_format: Tells the method which _type of entry format to use.
         :return: Returns the transformed request
         """
         # Use this as the base to construct the paths
@@ -343,8 +347,7 @@ class ElasticTransformDump(object):
         es_response_dict = es_response.to_dict()
         print "Printing ES_SEARCH response dict:\n {}".format(json.dumps(es_response_dict))
         hits = [x['_source'] for x in es_response_dict['hits']['hits']]
-        facets = es_response_dict['aggregations']
         paging = self.generate_paging_dict(es_response_dict, pagination)
-        final_response = FileSearchResponse(mapping_config, hits, paging, facets)
+        final_response = AutoCompleteResponse(mapping_config, hits, paging, _type=entry_format)
         final_response = final_response.apiResponse.to_json()
         return final_response
