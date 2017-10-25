@@ -6,6 +6,8 @@ import os
 import unittest
 from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 
+base_path = os.path.dirname(os.path.abspath(__file__))
+
 
 class MyTestCase(unittest.TestCase):
 
@@ -15,8 +17,8 @@ class MyTestCase(unittest.TestCase):
         :return: True or False depending on the assertion
         """
         # Load files required for this test
-        request_config = EsTd.open_and_return_json('test_request_config.json')
-        expected_output = EsTd.open_and_return_json('request_builder_test1.json')
+        request_config = EsTd.open_and_return_json('{}/test_request_config.json'.format(base_path))
+        expected_output = EsTd.open_and_return_json('{}/request_builder_test1.json'.format(base_path))
         # Create a simple filter to test on
         sample_filter = {"file": {"projectCode": {"is": ["CGL"]}}}
         # Need to work on a couple cases:
@@ -54,8 +56,8 @@ class MyTestCase(unittest.TestCase):
         """
         # Testing with default (that is, no) filter
         # Load files required for this test
-        request_config = EsTd.open_and_return_json('test_request_config.json')
-        expected_output = EsTd.open_and_return_json('request_builder_test2.json')
+        request_config = EsTd.open_and_return_json('{}/test_request_config.json'.format(base_path))
+        expected_output = EsTd.open_and_return_json('{}/request_builder_test2.json'.format(base_path))
         # Create empty filter
         sample_filter = {"file": {}}  # TODO: Need some form of handler for the query language
         # Create ElasticTransformDump instance
@@ -88,8 +90,8 @@ class MyTestCase(unittest.TestCase):
         """
         # Testing with default (that is, no) filter
         # Load files required for this test
-        request_config = EsTd.open_and_return_json('test_request_config.json')
-        expected_output = EsTd.open_and_return_json('request_builder_test3.json')
+        request_config = EsTd.open_and_return_json('{}/test_request_config.json'.format(base_path))
+        expected_output = EsTd.open_and_return_json('{}/request_builder_test3.json'.format(base_path))
         # Create sample filter
         sample_filter = {"file": {"project": {"is": ["CGP", "CAR", "CGL"]}, "analysis_type": {
             "is": ["sequence_upload", "rna_seq_quantification"]}, "file_type": {"is": ["fastq.gz", "bam"]}}}

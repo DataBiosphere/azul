@@ -4,6 +4,9 @@ import json
 import difflib
 import unittest
 from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse
+import os
+
+base_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class MyTestCase(unittest.TestCase):
@@ -13,15 +16,15 @@ class MyTestCase(unittest.TestCase):
         appropriate by asserting the apiResponse attribute is the same as expected.
         :return:
         """
-        with open('test_mapping_config.json') as json_mapping:
+        with open('{}/test_mapping_config.json'.format(base_path)) as json_mapping:
             test_mapping = json.load(json_mapping)
             json_mapping.close()
 
-        with open('test1index.json') as json_test:
+        with open('{}/test1index.json'.format(base_path)) as json_test:
             test_json = json.load(json_test)
             json_test.close()
 
-        with open('keyword_test1.json') as test1:
+        with open('{}/keyword_test1.json'.format(base_path)) as test1:
             keyword_test = json.load(test1)
             test1.close()
         # Still need a way to test the response.
@@ -47,15 +50,15 @@ class MyTestCase(unittest.TestCase):
         appropriate by asserting the apiResponse attribute is the same as expected.
         :return:
         """
-        with open('test_null_mapping_config.json') as json_mapping:
+        with open('{}/test_null_mapping_config.json'.format(base_path)) as json_mapping:
             test_mapping = json.load(json_mapping)
             json_mapping.close()
 
-        with open('test1index.json') as json_test:
+        with open('{}/test1index.json'.format(base_path)) as json_test:
             test_json = json.load(json_test)
             json_test.close()
 
-        with open('keyword_null_test1.json') as test1:
+        with open('{}/keyword_null_test1.json'.format(base_path)) as test1:
             keyword_test = json.load(test1)
             test1.close()
         # Still need a way to test the response.
@@ -82,24 +85,24 @@ class MyTestCase(unittest.TestCase):
         appropriate by asserting the apiResponse attribute is the same as expected.
         :return:
         """
-        with open('test_mapping_config.json') as json_mapping:
+        with open('{}/test_mapping_config.json'.format(base_path)) as json_mapping:
             test_mapping = json.load(json_mapping)
             json_mapping.close()
 
-        with open('test1index.json') as json_test:
+        with open('{}/test1index.json'.format(base_path)) as json_test:
             test_json = json.load(json_test)
             json_test.close()
 
-        with open('filesearch_test1.json') as test1:
+        with open('{}/filesearch_test1.json'.format(base_path)) as test1:
             file_search_test = json.load(test1)
             test1.close()
 
         # This is what will be used as the comparing standard
-        with open('facets_test_input1.json') as facet_input:
+        with open('{}/facets_test_input1.json'.format(base_path)) as facet_input:
             facet_test = json.load(facet_input)
             facet_input.close()
 
-        with open('pagination_test_input1.json') as pagination_input:
+        with open('{}/pagination_test_input1.json'.format(base_path)) as pagination_input:
             pagination_test = json.load(pagination_input)
             pagination_input.close()
 
