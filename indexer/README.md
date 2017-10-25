@@ -40,7 +40,7 @@ Enter the newly created repo `<your-indexer-lambda-application-name>` (eg dss-in
 This will create an AWS Lambda function called `dss-indigo` which will be updated using `chalice deploy`.
 
 `rm app.py` and `rm requirements.txt` (in other words, remove the files that chalice automatically generated).
- Then, copy `app.py`, `requirements.txt` and `chalicelib/config.json` from this repo and add to the dss-indigo folder.
+ Then, copy `app.py`, `requirements.txt` and `chalicelib/` from this repo and add to the dss-indigo folder.
 
 `pip install -r requirements.txt`
 
