@@ -19,13 +19,13 @@ Take note of the Elasticsearch endpoint.
 ### Configure AWS and create a Virtual Environment
 Install python3.
 
+Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
+
 Install and configure the AWS CLI with your information
 ```
-pip install awscli --upgrade --user
+pip install awscli --upgrade
 aws configure
 ```
-
-Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
 
 ### Chalice
 
@@ -40,7 +40,7 @@ Enter the newly created repo `<your-indexer-lambda-application-name>` (eg dss-in
 This will create an AWS Lambda function called `dss-indigo` which will be updated using `chalice deploy`.
 
 `rm app.py` and `rm requirements.txt` (in other words, remove the files that chalice automatically generated).
- Then, copy `app.py`, `requirements.txt` and `chalicelib/config.json` from this repo and add to the dss-indigo folder.
+ Then, copy `app.py`, `requirements.txt` and `chalicelib/` from this repo and add to the dss-indigo folder.
 
 `pip install -r requirements.txt`
 
