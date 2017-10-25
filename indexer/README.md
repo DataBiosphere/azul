@@ -19,13 +19,13 @@ Take note of the Elasticsearch endpoint.
 ### Configure AWS and create a Virtual Environment
 Install python3.
 
+Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
+
 Install and configure the AWS CLI with your information
 ```
-pip install awscli --upgrade --user
+pip install awscli --upgrade
 aws configure
 ```
-
-Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
 
 ### Chalice
 
