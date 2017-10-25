@@ -204,6 +204,8 @@ Note: Manual loading creates mappings for ES, has some list parsing capability, 
 
 ### Todo List
 
+* how to setup Kibana for security group reasons
+* how to run find-golden-tickets.py
 * improve mappings to Chalice
 * list handling in json files
 * cron deduplication
