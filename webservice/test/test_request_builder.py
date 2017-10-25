@@ -7,7 +7,11 @@ import unittest
 from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 
 base_path = os.path.dirname(os.path.abspath(__file__))
-
+#es_domain='localhost', es_port=9200, es_protocol='http'
+#es_domain=es_domain, es_port=es_port, es_protocol=es_protocol
+es_domain = os.getenv('ES_SERVICE', 'localhost')
+es_port = os.getenv('ES_PORT', '9200')
+es_protocol = os.getenv('ES_PROTOCOL', 'http')
 
 class MyTestCase(unittest.TestCase):
 
@@ -27,7 +31,7 @@ class MyTestCase(unittest.TestCase):
         # - The complex multiple filters case
 
         # Create ElasticTransformDump instance
-        es_ts_instance = EsTd()
+        es_ts_instance = EsTd(es_domain=es_domain, es_port=es_port, es_protocol=es_protocol)
         # Create a request object
         es_search = EsTd.create_request(sample_filter, es_ts_instance.es_client, request_config, post_filter=True)
         # Convert objects to be compared to strings
@@ -61,7 +65,7 @@ class MyTestCase(unittest.TestCase):
         # Create empty filter
         sample_filter = {"file": {}}  # TODO: Need some form of handler for the query language
         # Create ElasticTransformDump instance
-        es_ts_instance = EsTd()
+        es_ts_instance = EsTd(es_domain=es_domain, es_port=es_port, es_protocol=es_protocol)
         # Create a request object
         es_search = EsTd.create_request(sample_filter, es_ts_instance.es_client, request_config)
         # Convert objects to be compared to strings
@@ -96,7 +100,7 @@ class MyTestCase(unittest.TestCase):
         sample_filter = {"file": {"project": {"is": ["CGP", "CAR", "CGL"]}, "analysis_type": {
             "is": ["sequence_upload", "rna_seq_quantification"]}, "file_type": {"is": ["fastq.gz", "bam"]}}}
         # Create ElasticTransformDump instance
-        es_ts_instance = EsTd()
+        es_ts_instance = EsTd(es_domain=es_domain, es_port=es_port, es_protocol=es_protocol)
         # Create a request object
         es_search = EsTd.create_request(sample_filter, es_ts_instance.es_client, request_config, post_filter=True)
         # Convert objects to be compared to strings
@@ -140,7 +144,7 @@ class MyTestCase(unittest.TestCase):
         # Set up the ElasticTransformDump  instance
         es_domain = os.getenv('ES_DOMAIN', 'localhost')
         es_port = os.getenv('ES_PORT', 9200)
-        es_requester = EsTd(es_domain=es_domain, es_port=es_port)
+        es_requester = EsTd(es_domain=es_domain, es_port=es_port, es_protocol=es_protocol)
 
         actual_output = es_requester.transform_request(request_config_file=request_config,
                                                        mapping_config_file=mapping_config,
