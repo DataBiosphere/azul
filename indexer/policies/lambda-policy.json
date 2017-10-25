@@ -19,7 +19,7 @@
                 "es:ESHttpPut",
                 "es:ESHttpDelete"
             ],
-            "Resource": <your arn for your elasticsearch box>
+            "Resource": "<your arn for your elasticsearch box>/*"
         }
     ]
 }
