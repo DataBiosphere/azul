@@ -17,7 +17,7 @@ app.debug = True
 app.log.setLevel(logging.DEBUG)
 # set env on lambda, chalice config and profile
 es_host = os.environ['ES_ENDPOINT']
-bb_host = "https://" + os.environ['BLUE_BOX_ENDPOINT']
+bb_host = "http://" + os.environ['BLUE_BOX_ENDPOINT']
 # in_host = "https://"+os.environ['INDEXER_ENDPOINT']
 
 try:
@@ -37,14 +37,14 @@ except Exception as e:
     print(e)
     raise NotFoundError("chalicelib/settings.json file does not exist")
 
-# need to have the AWS CLI and $aws configure
-awsauth = AWSRequestsAuth(
-    aws_host=es_host,
-    aws_region='us-west-2',
-    aws_service='es',
-    **boto_utils.get_credentials()
-)
 if es_host.endswith('.es.amazonaws.com'):
+    # need to have the AWS CLI and $aws configure
+    awsauth = AWSRequestsAuth(
+        aws_host=es_host,
+        aws_region='us-west-2',
+        aws_service='es',
+        **boto_utils.get_credentials()
+    )
     # use the requests connection_class and pass in our custom auth class
     es = Elasticsearch(
         hosts=[{'host': es_host, 'port': 443}],
@@ -379,14 +379,18 @@ def look_file(c_item, file, name):
                 for item in value:
                     es_array.append(look_file(item, file[key_split[0]], name))
                 return es_array
-    elif c_item in file:
-        file_value = file[c_item]
+    elif c_item.split("*")[0] in file:
+        c_item_split = c_item.split("*")
+        file_value = file[c_item_split[0]]
         if not isinstance(file_value, list):
-            name = str(name) + "|" + str(c_item)
+            if len(name) > 0:
+                name = str(name) + "|" + str(c_item_split[0])
+            else:
+                name = str(c_item_split[0])
             n_replace = name.replace(".", ",")
             return ({n_replace: file_value})
     # Carlos's test
-    elif c_item not in file:
+    elif c_item.split("*")[0] not in file:
         c_item_split = c_item.split("*")
         file_value = "None"  # Putting an empty string. I think if i put None it could break things downstream
         name = str(name) + "|" + str(c_item_split[0])
@@ -399,21 +403,16 @@ def write_es(es_json, file_uuid):
     app.log.info("write_es %s", file_uuid)
     es_keys = []
     es_values = []
-    app.log.info("es12.1")
     app.log.info("write_es es_json %s", str(es_json))
     for item in es_json:
         if item is not None:
-            app.log.info("es12.2")
             for key, value in item.items():
-                app.log.info("es12.3")
                 es_keys.append(key)
                 es_values.append(value)
-    app.log.info("es12.4")
     es_file = dict(zip(es_keys, es_values))
     app.log.info("write_es es_file %s", str(es_file))
     res = es.index(index=es_index, doc_type='document',
                    id=file_uuid, body=es_file)
-    app.log.info("es12.6")
     return (res['created'])
 
 
