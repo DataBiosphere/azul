@@ -5,6 +5,11 @@ run:
 	# Apply migrations and then run using the built image in daemon mode
 	docker-compose up -d
 
+populate:
+    # Populate the ElasticSearch index
+
+    docker-compose exec dcc-dashboard-service ./test/populator.sh
+
 test:
 	# Run pytest inside the running container from run
 	docker-compose exec dcc-dashboard-service py.test -p no:cacheprovider -s -x

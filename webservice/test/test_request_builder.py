@@ -6,12 +6,13 @@ import os
 import unittest
 from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 
+# Setup the base path
 base_path = os.path.dirname(os.path.abspath(__file__))
-#es_domain='localhost', es_port=9200, es_protocol='http'
-#es_domain=es_domain, es_port=es_port, es_protocol=es_protocol
+# Setup the ElasticSearch variables
 es_domain = os.getenv('ES_SERVICE', 'localhost')
 es_port = os.getenv('ES_PORT', '9200')
 es_protocol = os.getenv('ES_PROTOCOL', 'http')
+
 
 class MyTestCase(unittest.TestCase):
 
