@@ -9,7 +9,7 @@ populate:
 	# Populate the ElasticSearch index
 	docker-compose exec dcc-dashboard-service /app/test/populator.sh
 
-test:
+tests:
 	# Run pytest inside the running container from run
 	docker-compose exec dcc-dashboard-service py.test -p no:cacheprovider -s -x
 

@@ -142,9 +142,6 @@ class MyTestCase(unittest.TestCase):
             "size": 5,
             "sort": "center_name",
         }
-        # Set up the ElasticTransformDump  instance
-        es_domain = os.getenv('ES_DOMAIN', 'localhost')
-        es_port = os.getenv('ES_PORT', 9200)
         es_requester = EsTd(es_domain=es_domain, es_port=es_port, es_protocol=es_protocol)
 
         actual_output = es_requester.transform_request(request_config_file=request_config,
