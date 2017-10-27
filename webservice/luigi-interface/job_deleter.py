@@ -25,8 +25,8 @@ select_result = monitordb_connection.execute(select_query)
 result_list = [dict(row) for row in select_result]
 for job in result_list:
 	try:
-		job_name = job['luigi_job']
 		job_uuid = job['consonance_job_uuid']
+		updated  = job['last_updated']
 
 		if job_uuid == "no consonance id in test mode":
 			continue
@@ -40,7 +40,7 @@ for job in result_list:
 			if ((abs(job_month - current_month) > 1)
 				and (job_month + current_month != 13)):
 				stmt = monitordb_table.delete().\
-					   where(monitordb_table.c.consonance_job_uuid == job_uuid)
+					where(monitordb_table.c.consonance_job_uuid == job_uuid)
 				exec_result = monitordb_connection.execute(stmt)
 	except Exception as e:
 		print >>sys.stderr, "ERROR:", str(e)
