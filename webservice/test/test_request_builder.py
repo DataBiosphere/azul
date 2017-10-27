@@ -149,7 +149,7 @@ class MyTestCase(unittest.TestCase):
                                                        filters=sample_filter,
                                                        pagination=pagination,
                                                        post_filter=post_filter)
-        expected_output = EsTd.open_and_return_json('test_transform_request_test1.json')
+        expected_output = EsTd.open_and_return_json('{}/test_transform_request_test1.json'.format(base_path))
         # Convert objects to be compared to strings
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(actual_output, sort_keys=True)
