@@ -37,8 +37,14 @@
         "type":"keyword"
       },
       "file_id":{
-        "type":"text",
-	"analyzer":"autocomplete"
+        "type":"keyword",
+        "fields": {
+          "raw": {
+            "type": "text",
+            "analyzer":"autocomplete",
+            "search_analyzer": "standard"
+          }
+        }
       },
       "experimentalStrategy":{
         "type":"keyword"
