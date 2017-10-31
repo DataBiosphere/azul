@@ -154,8 +154,50 @@ class MyTestCase(unittest.TestCase):
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(actual_output, sort_keys=True)
         # Print the 2 strings for reference
-        print "Printing expected output: \n %s" % expected_output
-        print "Printing actual output: \n %s" % actual_output
+        # print "Printing expected output: \n %s" % expected_output
+        # print "Printing actual output: \n %s" % actual_output
+        # Now show differences so message is helpful
+        print "Comparing the two dictionaries built."
+        print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
+        for i, s in enumerate(difflib.ndiff(actual_output, expected_output)):
+            if s[0] == ' ':
+                continue
+            elif s[0] == '-':
+                print(u'Delete "{}" from position {}'.format(s[-1], i))
+            elif s[0] == '+':
+                print(u'Add "{}" to position {}'.format(s[-1], i))
+        # Testing first case with 1 filter
+        self.assertEqual(actual_output, expected_output)
+
+    def test_autocomplete_request(self):
+        """
+        Testes the autocomplete request function from ElasticTransformDump. This test assumes that ElasticSearch is
+        operational, and that the domain and port for ElasticSearch are provided in the form of environmental
+        variables. It must be loaded with known test data
+        :return: True or false depending on the assertion
+        """
+        # Get the parameters to be used to the EsTd
+        mapping_config = '../test/test_mapping_config.json'
+        request_config = '../test/test_request_config.json'
+        post_filter = True
+        pagination = {
+            "from": 1,
+            "order": "desc",
+            "size": 5,
+            "sort": "_score",
+        }
+        es_requester = EsTd(es_domain=es_domain, es_port=es_port, es_protocol=es_protocol)
+        actual_output = es_requester.transform_autocomplete_request(pagination, request_config_file=request_config,
+                                                                    mapping_config_file=mapping_config,
+                                                                    _query='dc', search_field='fileId',
+                                                                    entry_format='file')
+        expected_output = EsTd.open_and_return_json('{}/test_autocomplete_request_test1.json'.format(base_path))
+        # Convert objects to be compared to strings
+        expected_output = json.dumps(expected_output, sort_keys=True)
+        actual_output = json.dumps(actual_output, sort_keys=True)
+        # Print the 2 strings for reference
+        # print "Printing expected output: \n %s" % expected_output
+        # print "Printing actual output: \n %s" % actual_output
         # Now show differences so message is helpful
         print "Comparing the two dictionaries built."
         print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
