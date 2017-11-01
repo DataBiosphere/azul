@@ -1,0 +1,17 @@
+{
+  "file": {
+    "dataType": "file_type",
+    "donorId": [
+      "donor"
+    ],
+    "fileBundleId": "repoDataBundleId",
+    "fileName": [
+      "title"
+    ],
+    "id": "file_id",
+    "projectCode": [
+      "project"
+    ]
+  },
+  "donor": {}
+}

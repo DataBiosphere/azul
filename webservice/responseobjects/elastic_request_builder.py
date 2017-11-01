@@ -306,7 +306,7 @@ class ElasticTransformDump(object):
         return manifest.return_response()
 
     def transform_autocomplete_request(self, pagination, request_config_file='request_config.json',
-                                       mapping_config_file='mapping_config.json', filters=None,
+                                       mapping_config_file='autocomplete_mapping_config.json', filters=None,
                                        _query='', search_field='fileId', entry_format='file'):
         """
         This function does the whole transformation process. It takes the path of the config file, the filters, and
@@ -334,6 +334,8 @@ class ElasticTransformDump(object):
         # Get the Json Objects from the mapping_config and the request_config
         mapping_config = self.open_and_return_json(mapping_config_path)
         request_config = self.open_and_return_json(request_config_path)
+        # Get the right autocomplete mapping configuration
+        mapping_config = mapping_config[entry_format]
         # Handle empty filters
         if filters is None:
             filters = {"file": {}}

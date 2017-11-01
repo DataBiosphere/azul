@@ -177,7 +177,7 @@ class MyTestCase(unittest.TestCase):
         :return: True or false depending on the assertion
         """
         # Get the parameters to be used to the EsTd
-        mapping_config = '../test/test_mapping_config.json'
+        mapping_config = '../test/test_autocomplete_mapping_config.json'
         request_config = '../test/test_request_config.json'
         post_filter = True
         pagination = {
@@ -213,4 +213,5 @@ class MyTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    # make stop; make reset ; make run ; sleep 30 && echo "Finished Sleeping 30 seconds" ; make populate; make tests
     unittest.main()

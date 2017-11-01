@@ -153,7 +153,7 @@ class DonorAutoCompleteEntry(JsonObject):
 
 class FileIdAutoCompleteEntry(JsonObject):
     _id = StringProperty(name='id')
-    dataType = ListProperty(StringProperty)
+    dataType = StringProperty()
     donorId = ListProperty(StringProperty)
     fileBundleId = StringProperty()
     fileName = ListProperty(StringProperty)
@@ -165,7 +165,7 @@ class AutoCompleteRepresentation(JsonObject):
     """
     Class defining the Autocomplete Representation
     """
-    hits = ListProperty(OtherObj)
+    # hits = ListProperty()
     pagination = ObjectProperty(PaginationObj, exclude_if_none=True, default=None)
 
 
@@ -178,6 +178,36 @@ class AbstractResponse(object):
     @abc.abstractmethod
     def return_response(self):
         raise NotImplementedError('users must define return_response to use this base class')
+
+
+class EntryFetcher:
+    """
+    Helper class containing helper methods
+    """
+    @staticmethod
+    def fetch_entry_value(mapping, entry, key):
+        """
+        Helper method for getting the value of key on the mapping
+        :param mapping: Mapping in question. Values should be at the root level
+        :param entry: Dictionary where the contents are to be looking for in
+        :param key: Key to be used to get the right value
+        :return: Returns entry[mapping[key]] if present. Other
+        """
+        m = mapping[key]
+        if m is not None:
+            if isinstance(m, list):
+                return entry[m[0]] if m[0] is not None else None
+            else:
+                return entry[m] if m in entry else None
+        else:
+            return None
+
+    @staticmethod
+    def handle_list(value):
+        return [value] if value is not None else []
+
+    def __init__(self):
+        pass
 
 
 class ManifestResponse(AbstractResponse):
@@ -247,33 +277,11 @@ class SummaryResponse(AbstractResponse):
         )
 
 
-class KeywordSearchResponse(AbstractResponse):
+class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     """
     Class for the keyword search response. Based on the AbstractResponse class
     Not to be confused with the 'keywords' endpoint
     """
-    @staticmethod
-    def handle_list(value):
-        return [value] if value is not None else []
-
-    @staticmethod
-    def fetch_entry_value(mapping, entry, key):
-        """
-        Helper method for getting the value of key on the mapping
-        :param mapping: Mapping in question. Values should be at the root level
-        :param entry: Dictionary where the contents are to be looking for in
-        :param key: Key to be used to get the right value
-        :return: Returns entry[mapping[key]] if present. Other
-        """
-        m = mapping[key]
-        if m is not None:
-            if isinstance(m, list):
-                return entry[m[0]] if m[0] is not None else None
-            else:
-                return entry[m] if m in entry else None
-        else:
-            return None
-
     def return_response(self):
         return self.apiResponse
 
@@ -370,7 +378,7 @@ class KeywordSearchResponse(AbstractResponse):
             otherIdentifiers=self.make_other_obj(mapping['otherIdentifiers'], entry)
         )
 
-    def map_entries(self, mapping, entry, **kwargs):
+    def map_entries(self, mapping, entry):
         """
         Returns a HitEntry Object. Takes the mapping and maps the appropriate fields from entry to
         the corresponding entry in the mapping
@@ -401,6 +409,7 @@ class KeywordSearchResponse(AbstractResponse):
         """
         # TODO: This is actually wrong. The Response from a single fileId call isn't under hits. It is actually not
         # wrapped under anything
+        super(KeywordSearchResponse, self).__init__()
         class_entries = {'hits': [self.map_entries(mapping, x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
 
@@ -468,7 +477,7 @@ class FileSearchResponse(KeywordSearchResponse):
         self.apiResponse.termFacets = self.add_facets(facets)
 
 
-class AutoCompleteResponse(KeywordSearchResponse):
+class AutoCompleteResponse(EntryFetcher):
 
     def map_entries(self, mapping, entry, _type='file'):
         """
@@ -503,7 +512,7 @@ class AutoCompleteResponse(KeywordSearchResponse):
                 submittedSpecimenIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'submittedSampleIds')),
                 _type='donor'
             )
-        return mapped_entry
+        return mapped_entry.to_json()
 
     def __init__(self, mapping, hits, pagination, _type):
         """
@@ -512,7 +521,7 @@ class AutoCompleteResponse(KeywordSearchResponse):
         :param hits: A list of hits from ElasticSearch
         """
         # Overriding the __init__ method of the parent class
-        super(AutoCompleteResponse, self).__init__(mapping, hits)
+        EntryFetcher.__init__(self)
         class_entries = {'hits': [self.map_entries(mapping, x, _type) for x in hits], 'pagination': None}
         self.apiResponse = AutoCompleteRepresentation(**class_entries)
         # Add the paging via **kwargs of dictionary 'pagination'

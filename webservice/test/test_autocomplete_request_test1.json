@@ -33,7 +33,7 @@
   ],
   "pagination": {
     "count": 2,
-    "from": 0,
+    "from": 1,
     "order": "desc",
     "page": 1,
     "pages": 1,
