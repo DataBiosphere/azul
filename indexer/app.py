@@ -247,8 +247,7 @@ def get_bundles(bundle_uuid):
     while retries < 3:
         try:
             # call the blue box
-            json_str = urlopen(
-                str(bb_host + ('v1/bundles/') + bundle_uuid)).read()
+            json_str = urlopen(str(bb_host + ('v1/bundles/') + bundle_uuid + "?replica=aws")).read()
             # json load string for processing later
             bundle = json.loads(json_str)
             break
@@ -359,6 +358,7 @@ def write_index(bundle_uuid):
         file_name, values = list(_file.items())[0]
         file_uuid = values['uuid']
         file_version = values['version']
+        file_size = values['size']
         # Make the ES uuid be a concatenation of:
         # bundle_uuid:file_uuid:file_version
         es_uuid = "{}:{}:{}".format(bundle_uuid, file_uuid, file_version)
@@ -429,8 +429,8 @@ def write_index(bundle_uuid):
             es_json.append({'bundle_type': 'scRNA-Seq Upload'})
         else:
             es_json.append({'bundle_type': 'Unknown'})
-        # fake file size
-        es_json.append({'file_size': 500000})
+        # adding size of the file
+        es_json.append({'file_size': file_size})
         # Carlos using set theory to handle non-present keys
         all_keys = es_file.keys()
         present_keys = [list(x.keys())[0] for x in es_json]
