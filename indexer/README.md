@@ -19,13 +19,13 @@ Take note of the Elasticsearch endpoint.
 ### Configure AWS and create a Virtual Environment
 Install python3.
 
+Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
+
 Install and configure the AWS CLI with your information
 ```
-pip install awscli --upgrade --user
+pip install awscli --upgrade
 aws configure
 ```
-
-Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
 
 ### Chalice
 
@@ -40,7 +40,7 @@ Enter the newly created repo `<your-indexer-lambda-application-name>` (eg dss-in
 This will create an AWS Lambda function called `dss-indigo` which will be updated using `chalice deploy`.
 
 `rm app.py` and `rm requirements.txt` (in other words, remove the files that chalice automatically generated).
- Then, copy `app.py`, `requirements.txt` and `chalicelib/config.json` from this repo and add to the dss-indigo folder.
+ Then, copy `app.py`, `requirements.txt` and `chalicelib/` from this repo and add to the dss-indigo folder.
 
 `pip install -r requirements.txt`
 
@@ -207,7 +207,7 @@ INDEXER_NAME  -->  <your-indexer-lambda-application-name>
 
 Given the current configuration, a deployment will result in errors when attempting to reach Elasticsearch. This is because Lambda is not configured to allow ES actions.
 
-Open the AWS console and go to IAM. On the side menu bar, chose roles, then choose your lambda function, `<your-indexer-lambda-application-name>` and under "Policy name" click the drop down, then click on "Edit Policy". Add the policy found in policy-template.json, making sure to change the `Resource` value to the ARN of your elasticsearch box.
+Open the AWS console and go to IAM. On the side menu bar, chose roles, then choose your lambda function, `<your-indexer-lambda-application-name>` and under "Policy name" click the drop down, then click on "Edit Policy". Add the policy found in lambda-policy.json under the `policies` folder, making sure to change the `Resource` value to the ARN of your elasticsearch box.
 
 ### Deploy Chalice
 
@@ -243,6 +243,8 @@ Note: Manual loading creates mappings for ES, has some list parsing capability, 
 
 ### Todo List
 
+* how to setup Kibana for security group reasons
+* how to run find-golden-tickets.py
 * improve mappings to Chalice
 * list handling in json files
 * cron deduplication

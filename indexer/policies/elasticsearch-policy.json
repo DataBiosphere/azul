@@ -16,7 +16,7 @@
       },
       "Action": "es:*",
       "Resource": [
-        "arn:aws:es:us-west-2:2:<AWS-account-ID>:domain/<your-es-domain-name>/*",
+        "arn:aws:es:us-west-2:<AWS-account-ID>:domain/<your-es-domain-name>/*",
         "arn:aws:lambda:us-west-2:<AWS-account-ID>:function:<your-indexer-lambda-domain-name>/*"
       ],
       "Condition": {

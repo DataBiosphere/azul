@@ -1,8 +1,10 @@
+from future import standard_library
+standard_library.install_aliases()
 import os
 import json, ssl, argparse
 import threading
 import time
-from urllib2 import urlopen, Request
+from urllib.request import urlopen, Request
 
 #es_service = os.environ.get("ES_SERVICE", "localhost")
 
@@ -24,8 +26,8 @@ def requestConstructor(url, headers, data):
     '''
     Helper function to make requests to use on with urlopen()
     '''
-    req = Request(url, data)
-    for key, value in headers.items():
+    req = Request(url, data.encode('utf-8'))
+    for key, value in list(headers.items()):
          req.add_header(key, value)
 
     return req
@@ -58,7 +60,7 @@ def main():
     response = executeRequest(req)
     response = json.loads(response)
     bundle_list = [parseResultEntry(x) for x in response['results']]
-    # Post to the indexer endpoint 
+    # Post to the indexer endpoint
     headers = {"content-type": "application/json"}
     # post_result = postToIndexer(bundle_list, args.repoCode, headers)
     threads = []
@@ -66,13 +68,13 @@ def main():
         data = json.dumps({ "query": { "query": { "match_all":{}} }, "subscription_id": "ba50df7b-5a97-4e87-b9ce-c0935a817f0b", "transaction_id": "ff6b7fa3-dc79-4a79-a313-296801de76b9", "match": { "bundle_version": version, "bundle_uuid": bundle } })
         req = requestConstructor(args.repoCode, headers, data)
         threads.append(threading.Thread(target=executeRequest, args=(req,)))
- 
-        print "Bundle: {}, Version: {}".format(bundle, version)
+
+        print ("Bundle: {}, Version: {}".format(bundle, version))
         try:
             response = executeRequest(req)
         except Exception as e:
-            print e
-    print "Total of {} bundles".format(len(bundle_list))
+            print (e)
+    print ("Total of {} bundles".format(len(bundle_list)))
     start = time.time()
 #    for thread in threads:
 #        thread.start()
