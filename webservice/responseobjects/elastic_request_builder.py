@@ -3,9 +3,12 @@ import config
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q, A
 import json
+import logging
 import os
 from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse, SummaryResponse, ManifestResponse,\
     AutoCompleteResponse
+
+module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
 
 class ElasticTransformDump(object):
@@ -25,8 +28,10 @@ class ElasticTransformDump(object):
         :param es_port: Port where ElasticSearch is listening
         :param es_protocol: Protocol for ElasticSearch. Must be 'http' or 'https'
         """
+        self.logger = logging.getLogger('dashboardService.elastic_request_builder.ElasticTransformDump')
         assert es_protocol in ['http', 'https'], "Protocol must be 'http' or 'https'"
         self.es_client = Elasticsearch(['{}://{}:{}/'.format(es_protocol, es_domain, es_port)])
+        self.logger.info('Creating an instance of ElasticTransformDump')
 
     @staticmethod
     def translate_filters(filters, field_mapping):
@@ -192,22 +197,31 @@ class ElasticTransformDump(object):
         # Use this as the base to construct the paths
         # https://stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
+        self.logger.info('Transforming /summary request')
         config_folder = os.path.dirname(config.__file__)
         # Create the path for the request_config_file
         request_config_path = "{}/{}".format(config_folder, request_config_file)
         # Get the Json Objects from the mapping_config and the request_config
+        self.logger.debug('Getting the request_config file')
         request_config = self.open_and_return_json(request_config_path)
         # Handle empty filters
         if filters is None:
             filters = {"file": {}}
         # Create a request to ElasticSearch
+        self.logger.info('Creating request to ElasticSearch')
         es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
+        # Add a total_size aggregate to the ElasticSearch request
         es_search.aggs.metric('total_size', 'sum', field=request_config['translation']['fileSize'])
         # Add an aggregate for Donors
         cardinality = request_config['translation']['donorId']
         es_search.aggs.metric("donor", 'cardinality', field=cardinality, precision_threshold="40000")
+        # Execute ElasticSearch request
+        self.logger.info('Executing request to ElasticSearch')
         es_response = es_search.execute(ignore_cache=True)
+        # Create the SummaryResponse object, which has the format for the summary request
+        self.logger.info('Creating a SummaryResponse object')
         final_response = SummaryResponse(es_response.to_dict())
+        self.logger.info('Returning the final response for transform_summary()')
         return final_response.apiResponse.to_json()
 
     def transform_request(self, request_config_file='request_config.json',
@@ -229,18 +243,23 @@ class ElasticTransformDump(object):
         # Use this as the base to construct the paths
         # https://stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
+        self.logger.info('Transforming /files request')
         config_folder = os.path.dirname(config.__file__)
         # Create the path for the mapping config file
         mapping_config_path = "{}/{}".format(config_folder, mapping_config_file)
         # Create the path for the config_path
         request_config_path = "{}/{}".format(config_folder, request_config_file)
         # Get the Json Objects from the mapping_config and the request_config
+        self.logger.debug('Getting the request_config and mapping_config file: {}'.format(request_config_path,
+                                                                                          mapping_config_path))
         mapping_config = self.open_and_return_json(mapping_config_path)
         request_config = self.open_and_return_json(request_config_path)
         # Handle empty filters
+        self.logger.debug('Handling empty filters')
         if filters is None:
             filters = {"file": {}}
         # No faceting (i.e. do the faceting on the filtered query)
+        self.logger.debug('Handling presence or absence of faceting')
         if post_filter is False:
             # Create request structure
             es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
@@ -249,27 +268,35 @@ class ElasticTransformDump(object):
             # Create request structure
             es_search = self.create_request(filters, self.es_client, request_config, post_filter=post_filter)
         # Handle pagination
+        self.logger.debug('Handling pagination')
         if pagination is None:
             # It's a single file search
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()
             hits = [x['_source'] for x in es_response_dict['hits']['hits']]
+            # Create a KeywordSearchResponse object
+            self.logger.info('Creating KeywordSearchResponse')
             final_response = KeywordSearchResponse(mapping_config, hits)
         else:
             # It's a full file search
             # Translate the sort field if there is any translation available
             if pagination['sort'] in request_config['translation']:
                 pagination['sort'] = request_config['translation'][pagination['sort']]
+            # Apply paging
             es_search = self.apply_paging(es_search, pagination)
-            # TODO: NEED TO APPROPRIATELY LOG, PLEASE DELETE PRINT STATEMENT
-            print "Printing ES_SEARCH request dict:\n {}".format(json.dumps(es_search.to_dict()))
+            self.logger.debug("Printing ES_SEARCH request dict:\n {}".format(json.dumps(es_search.to_dict())))
+            # Execute ElasticSearch request
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()
-            print "Printing ES_SEARCH response dict:\n {}".format(json.dumps(es_response_dict))
+            self.logger.debug("Printing ES_SEARCH response dict:\n {}".format(json.dumps(es_response_dict)))
+            # Extract hits and facets (aggregations)
             hits = [x['_source'] for x in es_response_dict['hits']['hits']]
             facets = es_response_dict['aggregations']
             paging = self.generate_paging_dict(es_response_dict, pagination)
+            # Creating FileSearchResponse object
+            self.logger.info('Creating FileSearchResponse')
             final_response = FileSearchResponse(mapping_config, hits, paging, facets)
+        self.logger.info('Returning the final response for transform_request()')
         final_response = final_response.apiResponse.to_json()
         return final_response
 
@@ -286,22 +313,27 @@ class ElasticTransformDump(object):
         # https://stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
         config_folder = os.path.dirname(config.__file__)
+        self.logger.info('Transforming /export request')
         # Create the path for the config_path
         request_config_path = "{}/{}".format(config_folder, request_config_file)
         # Get the Json Objects from the request_config
+        self.logger.debug('Getting the request_config file: {}'.format(request_config_path))
         request_config = self.open_and_return_json(request_config_path)
         # Handle empty filters
         if filters is None:
             filters = {"file": {}}
+        # Create an ElasticSearch request
         es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
         # TODO: This will break beyond 10,000 entries in ElasticSearch. This needs to be addressed in the near future
         # Get as many files as simple paging allows
         es_search = es_search[0:9999]
         # Execute the ElasticSearch Request
+        self.logger.info('Executing ElasticSearch request')
         es_response = es_search.execute(ignore_cache=True)
         # Transform to a raw dictionary
         es_response_dict = es_response.to_dict()
         # Get the ManifestResponse object
+        self.logger.info('Creating ManifestResponse object')
         manifest = ManifestResponse(es_response_dict, request_config['manifest'], request_config['translation'])
         return manifest.return_response()
 
@@ -327,11 +359,14 @@ class ElasticTransformDump(object):
         # https://stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
         config_folder = os.path.dirname(config.__file__)
+        self.logger.info('Transforming /keywords request')
         # Create the path for the mapping config file
         mapping_config_path = "{}/{}".format(config_folder, mapping_config_file)
         # Create the path for the config_path
         request_config_path = "{}/{}".format(config_folder, request_config_file)
         # Get the Json Objects from the mapping_config and the request_config
+        self.logger.debug('Getting the request_config and mapping_config file: {}'.format(request_config_path,
+                                                                                          mapping_config_path))
         mapping_config = self.open_and_return_json(mapping_config_path)
         request_config = self.open_and_return_json(request_config_path)
         # Get the right autocomplete mapping configuration
@@ -341,13 +376,13 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         es_search = self.create_autocomplete_request(filters, self.es_client, request_config, _query, search_field)
         # Handle pagination
+        self.logger.info("Handling pagination")
         pagination['sort'] = '_score'
         es_search = self.apply_paging(es_search, pagination)
-        # TODO: NEED TO APPROPRIATELY LOG, PLEASE DELETE PRINT STATEMENT
-        print "Printing ES_SEARCH request dict:\n {}".format(json.dumps(es_search.to_dict()))
+        self.logger.debug("Printing ES_SEARCH request dict:\n {}".format(json.dumps(es_search.to_dict())))
         es_response = es_search.execute(ignore_cache=True)
         es_response_dict = es_response.to_dict()
-        print "Printing ES_SEARCH response dict:\n {}".format(json.dumps(es_response_dict))
+        self.logger.debug("Printing ES_SEARCH response dict:\n {}".format(json.dumps(es_response_dict)))
         hits = [x['_source'] for x in es_response_dict['hits']['hits']]
         paging = self.generate_paging_dict(es_response_dict, pagination)
         final_response = AutoCompleteResponse(mapping_config, hits, paging, _type=entry_format)

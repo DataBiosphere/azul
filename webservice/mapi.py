@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, session, Blueprint
 from billing import billingbp
 from action import actionbp
 from webservice import webservicebp
-import logging
+import logging.config
 
 from database import db, login_db, login_manager
 from flask_login import LoginManager, login_required, \
@@ -17,8 +17,9 @@ from models import Billing, db
 
 
 
-logging.basicConfig()
-
+#logging.basicConfig()
+logging.config.fileConfig('logging.conf')
+logger = logging.getLogger("dashboardService")
 
 # def create_app(config_obj):
 #     app = Flask(__name__)

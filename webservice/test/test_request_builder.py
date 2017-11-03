@@ -2,6 +2,7 @@
 
 import json
 import difflib
+import logging.config
 import os
 import unittest
 from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
@@ -12,6 +13,9 @@ base_path = os.path.dirname(os.path.abspath(__file__))
 es_domain = os.getenv('ES_SERVICE', 'localhost')
 es_port = os.getenv('ES_PORT', '9200')
 es_protocol = os.getenv('ES_PROTOCOL', 'http')
+# Setup logging
+logging.config.fileConfig('{}/../logging.conf'.format(base_path))
+logger = logging.getLogger("dashboardService")
 
 
 class MyTestCase(unittest.TestCase):
@@ -39,8 +43,8 @@ class MyTestCase(unittest.TestCase):
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         # Print the 2 strings for reference
-        print "Printing expected output: \n %s" % expected_output
-        print "Printing actual output: \n %s" % actual_output
+        # print "Printing expected output: \n %s" % expected_output
+        # print "Printing actual output: \n %s" % actual_output
         # Now show differences so message is helpful
         print "Comparing the two dictionaries built."
         print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
@@ -73,8 +77,8 @@ class MyTestCase(unittest.TestCase):
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         # Print the 2 strings for reference
-        print "Printing expected output: \n %s" % expected_output
-        print "Printing actual output: \n %s" % actual_output
+        # print "Printing expected output: \n %s" % expected_output
+        # print "Printing actual output: \n %s" % actual_output
         # Now show differences so message is helpful
         print "Comparing the two dictionaries built."
         print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
@@ -108,8 +112,8 @@ class MyTestCase(unittest.TestCase):
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         # Print the 2 strings for reference
-        print "Printing expected output: \n %s" % expected_output
-        print "Printing actual output: \n %s" % actual_output
+        # print "Printing expected output: \n %s" % expected_output
+        # print "Printing actual output: \n %s" % actual_output
         # Now show differences so message is helpful
         print "Comparing the two dictionaries built."
         print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
