@@ -12,6 +12,7 @@
     "fileId": "file_id",
     "id": "file_id",
     "donorId": "donor",
+    "donor": "donor",
     "Program":"program",
     "Project": "project",
     "Center Name": "center_name",

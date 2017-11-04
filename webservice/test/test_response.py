@@ -77,7 +77,6 @@ class MyTestCase(unittest.TestCase):
             elif s[0] == '+':
                 print(u'Add "{}" to position {}'.format(s[-1], i))
         self.assertEqual(json_test, json_response)
-        #self.assertEqual(True, True)
 
     def test_file_search_response(self):
         """

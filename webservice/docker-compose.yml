@@ -6,6 +6,8 @@ services:
       ES_SERVICE: "elasticsearch1"
       ES_PORT: "9200"
       ES_PROTOCOL: "http"
+      ES_FILE_INDEX: "fb_index"
+      ES_DONOR_INDEX: "analysis_index"
     build: .
     ports:
       - "80"

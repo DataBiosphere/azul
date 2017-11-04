@@ -1,7 +1,10 @@
 #!/usr/bin/python
 import abc
 from flask_excel import make_response_from_array
+import logging
 from jsonobject import *
+
+module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
 
 class FileCopyObj(JsonObject):
@@ -141,6 +144,9 @@ class SummaryRepresentation(JsonObject):
 
 
 class DonorAutoCompleteEntry(JsonObject):
+    """
+    Class defining the Donor Autocomplete Entry
+    """
     _id = StringProperty(name='id')
     projectId = StringProperty()
     sampleIds = ListProperty(StringProperty)
@@ -152,6 +158,9 @@ class DonorAutoCompleteEntry(JsonObject):
 
 
 class FileIdAutoCompleteEntry(JsonObject):
+    """
+    Class defining the File Id Auto Complete Entry
+    """
     _id = StringProperty(name='id')
     dataType = StringProperty()
     donorId = ListProperty(StringProperty)
@@ -165,7 +174,7 @@ class AutoCompleteRepresentation(JsonObject):
     """
     Class defining the Autocomplete Representation
     """
-    # hits = ListProperty()
+    hits = ListProperty()
     pagination = ObjectProperty(PaginationObj, exclude_if_none=True, default=None)
 
 
@@ -207,7 +216,8 @@ class EntryFetcher:
         return [value] if value is not None else []
 
     def __init__(self):
-        pass
+        # Setting up logger
+        self.logger = logging.getLogger('dashboardService.api_response.EntryFetcher')
 
 
 class ManifestResponse(AbstractResponse):
@@ -225,6 +235,8 @@ class ManifestResponse(AbstractResponse):
         :param mapping: The mapping between the columns to values within ElasticSearch
         :param manifest_entries: The columns that will be present in the tsv
         """
+        # Setup the logger
+        self.logger = logging.getLogger('dashboardService.api_response.ManifestResponse')
         # Get a list of the hits in the raw response
         hits = [x['_source'] for x in raw_response['hits']['hits']]
         # Create the body of the entries in the manifest
@@ -232,6 +244,7 @@ class ManifestResponse(AbstractResponse):
                             for column in manifest_entries] for entry in hits]
         # Prepend the header as the first entry on the manifest
         mapped_manifest.insert(0, [column for column in manifest_entries])
+        self.logger.info('Creating response from array')
         self.apiResponse = make_response_from_array(mapped_manifest, 'tsv', file_name='manifest')
 
 
@@ -253,6 +266,7 @@ class SummaryResponse(AbstractResponse):
         """
         # Return the specified content of the aggregate. Otherwise return an empty string
         # return aggs_dict[agg_name][agg_form] if agg_name in aggs_dict else ""
+        print aggs_dict # TEST DELETE
         try:
             contents = aggs_dict[agg_name][agg_form]
             if agg_form == "buckets":
@@ -264,10 +278,13 @@ class SummaryResponse(AbstractResponse):
         return contents
 
     def __init__(self, raw_response):
+        # Setup the logger
+        self.logger = logging.getLogger('dashboardService.api_response.SummaryResponse')
         # Separate the raw_response into hits and aggregates
         hits = raw_response['hits']
         aggregates = raw_response['aggregations']
         # Create a SummaryRepresentation object
+        self.logger.info('Creating the summary representation')
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
             donorCount=self.agg_contents(aggregates, 'donor', agg_form='value'),
@@ -386,6 +403,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         :param entry: A 1 dimensional dictionary corresponding to a single hit from ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
+        self.logger.debug('Entry to be mapped: \n{}'.format(entry))
         mapped_entry = HitEntry(
             _id=self.fetch_entry_value(mapping, entry, 'id'),
             objectID=self.fetch_entry_value(mapping, entry, 'objectID'),
@@ -407,9 +425,13 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
+        # Setup the logger
+        self.logger = logging.getLogger('dashboardService.api_response.SummaryResponse')
         # TODO: This is actually wrong. The Response from a single fileId call isn't under hits. It is actually not
         # wrapped under anything
         super(KeywordSearchResponse, self).__init__()
+        self.logger.info('Mapping the entries')
+        self.logger.debug('Mapping config: \n{}'.format(mapping))
         class_entries = {'hits': [self.map_entries(mapping, x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
 
@@ -469,6 +491,8 @@ class FileSearchResponse(KeywordSearchResponse):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
+        # Setup the logger
+        self.logger = logging.getLogger('dashboardService.api_response.FileSearchResponse')
         # This should initialize the self.apiResponse attribute of the object
         KeywordSearchResponse.__init__(self, mapping, hits)
         # Add the paging via **kwargs of dictionary 'pagination'
@@ -488,7 +512,7 @@ class AutoCompleteResponse(EntryFetcher):
         :param _type: The type of entry that will be used when constructing the entry
         :return: A HitEntry Object with the appropriate fields mapped
         """
-
+        self.logger.debug("Entry to be mapped: \n{}".format(entry))
         if _type == 'file':
             # Create a file representation
             mapped_entry = FileIdAutoCompleteEntry(
@@ -520,8 +544,12 @@ class AutoCompleteResponse(EntryFetcher):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
+        # Setup the logger
+        self.logger = logging.getLogger('dashboardService.api_response.AutoCompleteResponse')
         # Overriding the __init__ method of the parent class
         EntryFetcher.__init__(self)
+        self.logger.info("Mapping entries")
+        self.logger.debug("Mapping: \n{}".format(mapping))
         class_entries = {'hits': [self.map_entries(mapping, x, _type) for x in hits], 'pagination': None}
         self.apiResponse = AutoCompleteRepresentation(**class_entries)
         # Add the paging via **kwargs of dictionary 'pagination'

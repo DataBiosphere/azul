@@ -30,6 +30,7 @@ class ElasticTransformDump(object):
         """
         self.logger = logging.getLogger('dashboardService.elastic_request_builder.ElasticTransformDump')
         assert es_protocol in ['http', 'https'], "Protocol must be 'http' or 'https'"
+        self.logger.debug('ElasticSearch url: {}://{}:{}/'.format(es_protocol, es_domain, es_port))
         self.es_client = Elasticsearch(['{}://{}:{}/'.format(es_protocol, es_domain, es_port)])
         self.logger.info('Creating an instance of ElasticTransformDump')
 
@@ -116,7 +117,7 @@ class ElasticTransformDump(object):
         return es_search
 
     @staticmethod
-    def create_autocomplete_request(filters, es_client, req_config, _query, search_field):
+    def create_autocomplete_request(filters, es_client, req_config, _query, search_field, index='ES_FILE_INDEX'):
         """
         This function will create an ElasticSearch request based on the filters passed to the function
         :param filters: The 'filters' parameter from '/keywords'.
@@ -124,12 +125,13 @@ class ElasticTransformDump(object):
         :param req_config: The {'translation': {'browserKey': 'es_key'}, 'facets': ['facet1', ...]} config
         :param _query: The query (string) to use for querying.
         :param search_field: The field to do the query on.
+        :param index: the string referring to the environmental variable containing the ElasticSearch index to search
         :return: Returns the Search object that can be used for executing the request
         """
         # Get the field mapping and facet configuration from the config
         field_mapping = req_config['translation']
         # Create the Search Object
-        es_search = Search(using=es_client, index=os.getenv('ES_FILE_INDEX', 'fb_index'))
+        es_search = Search(using=es_client, index=os.getenv(index, 'fb_index'))
         # Translate the filters keys
         filters = ElasticTransformDump.translate_filters(filters, field_mapping)
         # Translate the search_field
@@ -379,12 +381,19 @@ class ElasticTransformDump(object):
         self.logger.info("Handling pagination")
         pagination['sort'] = '_score'
         es_search = self.apply_paging(es_search, pagination)
+        # Executing ElasticSearch request
         self.logger.debug("Printing ES_SEARCH request dict:\n {}".format(json.dumps(es_search.to_dict())))
         es_response = es_search.execute(ignore_cache=True)
         es_response_dict = es_response.to_dict()
         self.logger.debug("Printing ES_SEARCH response dict:\n {}".format(json.dumps(es_response_dict)))
+        # Extracting hits
         hits = [x['_source'] for x in es_response_dict['hits']['hits']]
+        # Generating pagination
+        self.logger.debug("Generating pagination")
         paging = self.generate_paging_dict(es_response_dict, pagination)
+        # Creating
+        self.logger.info("Creating AutoCompleteResponse")
         final_response = AutoCompleteResponse(mapping_config, hits, paging, _type=entry_format)
         final_response = final_response.apiResponse.to_json()
+        self.logger.info("Returning the final response for ")
         return final_response
