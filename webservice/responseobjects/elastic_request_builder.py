@@ -214,9 +214,11 @@ class ElasticTransformDump(object):
         es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
         # Add a total_size aggregate to the ElasticSearch request
         es_search.aggs.metric('total_size', 'sum', field=request_config['translation']['fileSize'])
-        # Add an aggregate for Donors
-        cardinality = request_config['translation']['donorId']
-        es_search.aggs.metric("donor", 'cardinality', field=cardinality, precision_threshold="40000")
+        # Override the aggregates for Donors, Primary site count, and project count
+        for field, agg_name in (('donorId', 'donor'), ('primarySite', 'submitterDonorPrimarySite'),
+                                ('projectCode', 'projectCode')):
+            cardinality = request_config['translation'][field]
+            es_search.aggs.metric(agg_name, 'cardinality', field=cardinality, precision_threshold="40000")
         # Execute ElasticSearch request
         self.logger.info('Executing request to ElasticSearch')
         es_response = es_search.execute(ignore_cache=True)

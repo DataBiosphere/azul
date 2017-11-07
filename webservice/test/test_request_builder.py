@@ -214,8 +214,6 @@ class MyTestCase(unittest.TestCase):
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
-    # TODO: Need to write code to handle calling the donor oriented index.
-    '''
     def test_donor_autocomplete_request(self):
         """
         Tests the donor autocomplete request function from ElasticTransformDump. This test assumes that ElasticSearch
@@ -236,7 +234,7 @@ class MyTestCase(unittest.TestCase):
         actual_output = es_requester.transform_autocomplete_request(pagination, request_config_file=request_config,
                                                                     mapping_config_file=mapping_config,
                                                                     _query='4-', search_field='donor',
-                                                                    entry_format='donor')
+                                                                    entry_format='file-donor')
         expected_output = EsTd.open_and_return_json('{}/test_donor_autocomplete_request_test1.json'.format(base_path))
         # Convert objects to be compared to strings
         expected_output = json.dumps(expected_output, sort_keys=True)
@@ -256,7 +254,6 @@ class MyTestCase(unittest.TestCase):
                 print(u'Add "{}" to position {}'.format(s[-1], i))
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
-    '''
 
     def test_summary_request(self):
         """

@@ -146,6 +146,8 @@ class SummaryRepresentation(JsonObject):
 class DonorAutoCompleteEntry(JsonObject):
     """
     Class defining the Donor Autocomplete Entry
+    Out of commission until we begin dealing with
+    more indexes
     """
     _id = StringProperty(name='id')
     projectId = StringProperty()
@@ -154,6 +156,14 @@ class DonorAutoCompleteEntry(JsonObject):
     submittedId = StringProperty()
     submittedSampleIds = ListProperty(StringProperty)
     submittedSpecimenIds = ListProperty(StringProperty)
+    _type = StringProperty(name='type', default='donor')
+
+
+class FileDonorAutoCompleteEntry(JsonObject):
+    """
+    Class defining the Donor Autocomplete Entry
+    """
+    _id = StringProperty(name='id')
     _type = StringProperty(name='type', default='donor')
 
 
@@ -266,13 +276,12 @@ class SummaryResponse(AbstractResponse):
         """
         # Return the specified content of the aggregate. Otherwise return an empty string
         # return aggs_dict[agg_name][agg_form] if agg_name in aggs_dict else ""
-        print aggs_dict # TEST DELETE
         try:
             contents = aggs_dict[agg_name][agg_form]
             if agg_form == "buckets":
                 contents = len(contents)
         except Exception as e:
-            print e
+            module_logger.error("Error parsing the aggregate: {}".format(e.message))
             # If for whatever reason it can't do it, just return a negative number
             contents = -1
         return contents
@@ -288,9 +297,9 @@ class SummaryResponse(AbstractResponse):
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
             donorCount=self.agg_contents(aggregates, 'donor', agg_form='value'),
-            projectCount=self.agg_contents(aggregates, 'projectCode'),
+            projectCount=self.agg_contents(aggregates, 'projectCode', agg_form='value'),
             totalFileSize=self.agg_contents(aggregates, 'total_size', agg_form='value'),
-            primarySiteCount=self.agg_contents(aggregates, 'submitterDonorPrimarySite')
+            primarySiteCount=self.agg_contents(aggregates, 'submitterDonorPrimarySite', agg_form='value')
         )
 
 
@@ -513,6 +522,7 @@ class AutoCompleteResponse(EntryFetcher):
         :return: A HitEntry Object with the appropriate fields mapped
         """
         self.logger.debug("Entry to be mapped: \n{}".format(entry))
+        mapped_entry = {}
         if _type == 'file':
             # Create a file representation
             mapped_entry = FileIdAutoCompleteEntry(
@@ -524,16 +534,10 @@ class AutoCompleteResponse(EntryFetcher):
                 projectCode=self.handle_list(self.fetch_entry_value(mapping, entry, 'projectCode')),
                 _type='file'
             )
-        else:
-            # Create a donor representation
-            mapped_entry = DonorAutoCompleteEntry(
+        elif _type == 'file-donor' or _type == 'donor':
+            # Create a file-donor representation
+            mapped_entry = FileDonorAutoCompleteEntry(
                 _id=self.fetch_entry_value(mapping, entry, 'id'),
-                projectId=self.fetch_entry_value(mapping, entry, 'projectId'),
-                sampleIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'sampleIds')),
-                specimenIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'specimenIds')),
-                submittedId=self.fetch_entry_value(mapping, entry, 'submittedId'),
-                submittedSampleIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'submittedSampleIds')),
-                submittedSpecimenIds=self.handle_list(self.fetch_entry_value(mapping, entry, 'submittedSampleIds')),
                 _type='donor'
             )
         return mapped_entry.to_json()

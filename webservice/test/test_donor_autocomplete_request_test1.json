@@ -2,60 +2,14 @@
   "hits": [
     {
       "id": "088bda20-30d2-5944-a5fd-fee9a223f1a7",
-      "projectId": "DEV",
-      "sampleIds": [
-        "8f2f5091-a6de-5b05-a2b1-331f582f4b41",
-        "0c34704b-dd86-5141-aaf0-573656dee389"
-      ],
-      "specimenIds": [
-        "2d352c29-f993-57cd-9e8b-bb73909c1dbb",
-        "03a781e4-e6a9-5d61-861e-49fcd034c5e4"
-      ],
-      "submittedId": "S123472",
-      "submittedSampleIds": [
-        "S123472b1",
-        "S123472a1"
-      ],
-      "submittedSpecimenIds": [
-        "S123472b",
-        "S123472a"
-      ],
       "type": "donor"
     },
     {
       "id": "9ee8d3f4-93ab-57bc-8a91-d8f77da2fc8b",
-      "projectId": "CAR",
-      "sampleIds": [
-        "7140f9f2-d506-5146-8707-f1a05721e6cd"
-      ],
-      "specimenIds": [
-        "9036b893-deaf-59b4-ac2c-37cce1b09be7"
-      ],
-      "submittedId": "A123472",
-      "submittedSampleIds": [
-        "S123472a1"
-      ],
-      "submittedSpecimenIds": [
-        "A123472a"
-      ],
       "type": "donor"
     },
     {
       "id": "992f3726-fdc4-5d90-af7c-f287543e53e6",
-      "projectId": "CGP",
-      "sampleIds": [
-        "2dc8d583-c205-515b-8b79-fd7905e94c91"
-      ],
-      "specimenIds": [
-        "8c9bdadb-efa6-5e63-91d3-00da70c0ac86"
-      ],
-      "submittedId": "S123472",
-      "submittedSampleIds": [
-        "S123472a1"
-      ],
-      "submittedSpecimenIds": [
-        "S123472a"
-      ],
       "type": "donor"
     }
   ],

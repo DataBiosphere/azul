@@ -13,6 +13,7 @@
     "id": "file_id",
     "donorId": "donor",
     "donor": "donor",
+    "primarySite": "submitterDonorPrimarySite",
     "Program":"program",
     "Project": "project",
     "Center Name": "center_name",
