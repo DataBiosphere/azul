@@ -13,6 +13,17 @@ There are currently five working endpoints:
 
 Please refer to [dcc-ops](https://github.com/BD2KGenomics/dcc-ops) for installing the the dashboard-service and all its required components. This will automatically set up the dashboard service behind an NGINX server.
 
+## Too Many Connections in Monitor Database
+In the event that the monitor cannot connect because there are too many clients in place already, exec into the monitor database container and run the following script:
+
+```
+SELECT pg_terminate_backend(pg_stat_activity.pid) 
+FROM pg_stat_activity
+WHERE client_port > -1;
+```
+
+This kills all client connections to the database except the client that ran the command.
+
 ***API Instructions; /repository/files***<br>
 Currently there are 6 parameters supported. They are as follows:<br>
 

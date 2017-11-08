@@ -4,6 +4,7 @@ from flask_login import LoginManager, login_required, \
 # import json
 # from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
+from flask import redirect
 # from flask_migrate import Migrate
 # import flask_excel as excel
 from flask.ext.elasticsearch import Elasticsearch
@@ -45,12 +46,13 @@ def login():
 @login_required
 @cross_origin()
 def get_action_service():
-    monitordb_connection, monitordb_table = luigiDBInit()
+    monitordb_connection, monitordb_table, db_engine = luigiDBInit()
     select_query = select([monitordb_table]).order_by(desc("last_updated"))
     select_result = monitordb_connection.execute(select_query)
+    result_list = jsonify([dict(row) for row in select_result])
     monitordb_connection.close()
-    result_list = [dict(row) for row in select_result]
-    return jsonify(result_list)
+    db_engine.dispose()
+    return result_list
 
 @actionbp.route('/')
 @cross_origin()
