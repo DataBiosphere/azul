@@ -214,7 +214,7 @@ class MyTestCase(unittest.TestCase):
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
-    def test_donor_autocomplete_request(self):
+    def test_file_donor_autocomplete_request(self):
         """
         Tests the donor autocomplete request function from ElasticTransformDump. This test assumes that ElasticSearch
         is operational, and that the domain and port for ElasticSearch are provided in the form of environmental

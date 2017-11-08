@@ -89,7 +89,7 @@ class ElasticTransformDump(object):
         return aggregate
 
     @staticmethod
-    def create_request(filters, es_client, req_config, post_filter=False):
+    def create_request(filters, es_client, req_config, post_filter=False, index='ES_FILE_INDEX'):
         """
         This function will create an ElasticSearch request based on the filters and facet_config
         passed into the function
@@ -97,13 +97,14 @@ class ElasticTransformDump(object):
         :param es_client: The ElasticSearch client object used to configure the Search object
         :param req_config: The {'translation: {'browserKey': 'es_key'}, 'facets': ['facet1', ...]} config
         :param post_filter: Flag for doing either post_filter or regular querying (i.e. faceting or not)
+        :param index: the string referring to the environmental variable containing the ElasticSearch index to search
         :return: Returns the Search object that can be used for executing the request
         """
         # Get the field mapping and facet configuration from the config
         field_mapping = req_config['translation']
         facet_config = {key: field_mapping[key] for key in req_config['facets']}
         # Create the Search Object
-        es_search = Search(using=es_client, index=os.getenv('ES_FILE_INDEX', 'fb_index'))
+        es_search = Search(using=es_client, index=os.getenv(index, 'fb_index'))
         # Translate the filters keys
         filters = ElasticTransformDump.translate_filters(filters, field_mapping)
         # Get the query from 'create_query'
@@ -129,18 +130,20 @@ class ElasticTransformDump(object):
         :return: Returns the Search object that can be used for executing the request
         """
         # Get the field mapping and facet configuration from the config
-        field_mapping = req_config['translation']
+        field_mapping = req_config['autocomplete-translation'][index]
         # Create the Search Object
         es_search = Search(using=es_client, index=os.getenv(index, 'fb_index'))
         # Translate the filters keys
         filters = ElasticTransformDump.translate_filters(filters, field_mapping)
         # Translate the search_field
-        search_field = field_mapping[search_field]
+        search_field = field_mapping[search_field] if search_field in field_mapping else search_field
         # Get the query from 'create_query'
         es_filter_query = ElasticTransformDump.create_query(filters)
         # Do a post_filter using the filter query
         es_search = es_search.post_filter(es_filter_query)
         # Apply a prefix query with the query string
+        print "I HATE YOU!!!!!!!!!: Field Mapping: " + json.dumps(field_mapping)
+        print "I HATE YOU!!!!!!!!!: Search Field: " + search_field# TEST
         es_search = es_search.query(Q('prefix', **{'{}__raw'.format(search_field): _query}))
         return es_search
 
@@ -378,7 +381,10 @@ class ElasticTransformDump(object):
         # Handle empty filters
         if filters is None:
             filters = {"file": {}}
-        es_search = self.create_autocomplete_request(filters, self.es_client, request_config, _query, search_field)
+
+        index = 'ES_FILE_INDEX' if entry_format == 'file' else 'ES_DONOR_INDEX'
+        es_search = self.create_autocomplete_request(filters, self.es_client, request_config, _query, search_field,
+                                                     index=index)
         # Handle pagination
         self.logger.info("Handling pagination")
         pagination['sort'] = '_score'
@@ -393,9 +399,9 @@ class ElasticTransformDump(object):
         # Generating pagination
         self.logger.debug("Generating pagination")
         paging = self.generate_paging_dict(es_response_dict, pagination)
-        # Creating
+        # Creating AutocompleteResponse
         self.logger.info("Creating AutoCompleteResponse")
         final_response = AutoCompleteResponse(mapping_config, hits, paging, _type=entry_format)
         final_response = final_response.apiResponse.to_json()
-        self.logger.info("Returning the final response for ")
+        self.logger.info("Returning the final response for transform_autocomplete_request")
         return final_response

@@ -557,4 +557,5 @@ class AutoCompleteResponse(EntryFetcher):
         class_entries = {'hits': [self.map_entries(mapping, x, _type) for x in hits], 'pagination': None}
         self.apiResponse = AutoCompleteRepresentation(**class_entries)
         # Add the paging via **kwargs of dictionary 'pagination'
+        # self.apiResponse.pagination = PaginationObj(**pagination) if _type == 'file' else None
         self.apiResponse.pagination = PaginationObj(**pagination)

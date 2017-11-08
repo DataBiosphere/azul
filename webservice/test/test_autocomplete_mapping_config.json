@@ -14,8 +14,9 @@
     ]
   },
   "donor": {
+    "id": "donor_uuid"
   },
   "file-donor": {
-    "id": "donor"
+    "id": "donor_uuid"
   }
 }

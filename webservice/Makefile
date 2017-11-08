@@ -16,6 +16,17 @@ tests:
 stop:
 	docker-compose down --rmi 'all'
 
+# This is to set up the environment for some quick prototyping. This will setup ElasticSearch and Kibana bounded on the
+# local host loaded with some testing files
+play: stop reset run
+	sleep 60
+	echo "Finished Sleeping 60 Seconds"
+	$(MAKE) populate
+	echo "Kibana is now available on localhost:5601"
+
+# Clears the whole system, reloads indexes, and runs the tests
+unittest: play tests
+
 reset:
 	docker-compose stop
 	docker-compose rm -f
