@@ -321,5 +321,4 @@ class MyTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # make stop; make reset ; make run ; sleep 30 && echo "Finished Sleeping 30 seconds" ; make populate; make tests
     unittest.main()

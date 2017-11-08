@@ -536,6 +536,7 @@ class AutoCompleteResponse(EntryFetcher):
             )
         elif _type == 'file-donor' or _type == 'donor':
             # Create a file-donor representation
+            # TODO: Need to work on the donor exclusive representation.
             mapped_entry = FileDonorAutoCompleteEntry(
                 _id=self.fetch_entry_value(mapping, entry, 'id'),
                 _type='donor'

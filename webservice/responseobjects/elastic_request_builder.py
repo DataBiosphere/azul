@@ -152,7 +152,7 @@ class ElasticTransformDump(object):
         :param file_path: Path of a json file to be opened
         :return: Returns an obj with the contents of the json file
         """
-        with open(file_path) as file_:
+        with open(file_path, 'r') as file_:
             loaded_file = json.load(file_)
             file_.close()
         return loaded_file
