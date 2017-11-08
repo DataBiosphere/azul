@@ -10,7 +10,11 @@ import os
 from aws_requests_auth import boto_utils
 import collections
 import re
+from multiprocessing import Process
+import threading
 # import random
+
+
 
 app = Chalice(app_name=os.getenv('INDEXER_NAME', 'dss-indigo'))
 app.debug = True
@@ -314,21 +318,15 @@ def write_index(bundle_uuid):
     """
     app.log.info("write_index %s", bundle_uuid)
     try:
-        app.log.info("get_bundle1")
         # bundle_url = urlopen(str(in_host+'/bundle/'+ bundle_uuid)).read()
         bundle_url = get_bundles(bundle_uuid)
-        app.log.info("get_bundle2")
     except Exception as e:
         app.log.info(e)
         raise NotFoundError("Bundle '%s' does not exist" % bundle_uuid)
-    app.log.info("-1")
     bundle = json.loads(bundle_url)
     # bundle = json.loads(get_bundles(bundle_uuid))
-    app.log.info("0")
     fcount = len(bundle['data_files'])
-    app.log.info("1")
     json_files = bundle['json_files']
-    app.log.info("2")
     #open config file
     try:
         with open('chalicelib/config.json') as f:
@@ -363,53 +361,37 @@ def write_index(bundle_uuid):
         # bundle_uuid:file_uuid:file_version
         es_uuid = "{}:{}:{}".format(bundle_uuid, file_uuid, file_version)
         es_json = []
-        app.log.info("4.5")
         # every item in config must be looked at
         # top level of config is file name
         for c_key, c_value in config.items():
-            app.log.info("5")
             # config (file name) must be looked for in all the json_files
             for j in range(len(json_files)):
-                app.log.info("6")
                 # if the config (file name) is in the given json file
                 if c_key in json_files[j]:
-                    app.log.info("7")
                     try:
-                        app.log.info("get_file1")
                         # file_url = urlopen(str(in_host+'/file/' + json_files[j][c_key])).read()
                         file_url = get_file(json_files[j][c_key])
-                        app.log.info("get_file2")
                         file = json.loads(file_url)
                     except Exception as e:
                         app.log.info(e)
                         raise NotFoundError("File '%s' does not exist"
                                             % file_uuid)
-                    app.log.info("8")
                     # for every item under this file name in config
                     for c_item in c_value:
-                        app.log.info("9")
                         # look for config item in file
                         to_append = look_file(c_item, file, c_key)
-                        app.log.info("10")
                         # if config item is in the file
                         if to_append is not None:
-                            app.log.info("11")
                             if isinstance(to_append, list):
-                                app.log.info("11.1")
                                 # makes lists of lists into a single list
                                 to_append = flatten(to_append)
-                                app.log.info("11.2")
                                 for item in to_append:
-                                    app.log.info("11.3")
                                     # add file item to list of items to append to ES
                                     es_json.append(item)
-                                app.log.info("11.4")
                             else:
-                                app.log.info("12")
                                 # add file item to list of items to append to ES
                                 es_json.append(to_append)
-                    app.log.info("es12.15 %s", str(es_json))
-        app.log.info("12")
+                    app.log.info("write_index es_json %s", str(es_json))
         # add special fields (ones that aren't in config)
         es_json.append({'bundle_uuid': bundle_uuid})
         # Carlos adding extra fields
@@ -440,7 +422,6 @@ def write_index(bundle_uuid):
         # write_es(es_json, file_uuid)
         # tell elasticsearch to index
         write_es(es_json, es_uuid)
-    app.log.info("13")
     return json.dumps(bundle['data_files'])
 
 
@@ -536,18 +517,36 @@ def every_day(event, context):
 
 @app.route('/cron')
 def cron_look():
+    app.log.info("cron job running")
     headers = {"content-type": "application/json",
                "accept": "application/json"}
-    data = {"query": {"match_all": {}}}
-    bb_url = str(bb_host) + "/v1/search"
+    data = {"es_query":{"query": {"match_all": {}}}}
+    bb_url = str(bb_host) + "/v1/search?replica=aws"
     r = requests.post(bb_url, data=json.dumps(data), headers=headers)
     r_response = json.loads(r.text)
+    app.log.info(r_response)
     bundle_ids = []
+    # create a list to keep all processes
+    processes = []
+    threads = []
     for item in r_response['results']:
         bundle_mod = item['bundle_id'][:-26]
         app.log.info(bundle_mod)
         bundle_ids.append(bundle_mod)
-        write_index(bundle_mod)
+        thread = threading.Thread(target=write_index, args=(bundle_mod,))
+        threads.append(thread)
+        # process = Process(target=write_index, args=(bundle_mod,))
+        # processes.append(process)
+    # # start all processes
+    # for process in processes:
+    #     process.start()
+    # # make sure that all processes have finished
+    # for process in processes:
+    #     process.join()
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
     app.log.info({"bundle_id": bundle_ids})
-    return {"bundle_id": bundle_ids}
-
+    #return {"bundle_id": bundle_ids}
+    return {"Cron":"done"}
