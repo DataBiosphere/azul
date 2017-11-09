@@ -173,6 +173,7 @@ class ElasticTransformDump(object):
         # Apply order
         es_search = es_search.sort({_sort: {"order": _order}})
         # Apply paging
+        # TODO: We need to handle pagination for more than 10,000 entries
         es_search = es_search[_from:_to]
         return es_search
 

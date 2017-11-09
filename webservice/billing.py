@@ -1,27 +1,18 @@
-from flask import Flask, jsonify, request, session, Blueprint
-from flask_login import LoginManager, login_required, \
-    current_user, UserMixin
-# import json
-# from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS, cross_origin
-from flask_migrate import Migrate
-# import flask_excel as excel
+from flask import jsonify, request, Blueprint
+from flask_login import login_required, \
+    current_user
+from flask_cors import cross_origin
 from flask.ext.elasticsearch import Elasticsearch
 from flask import redirect
-# import ast
 from decimal import Decimal
-# import copy
-
 import os
-from models import Billing, db
+from models import Billing
 from utility import get_compute_costs, get_storage_costs, create_analysis_costs_json, create_storage_costs_json
 import datetime
 import calendar
 import click
-# TEST database call
-# from sqlalchemy import create_engine, MetaData, String, Table, Float, Column, select
 import logging
-from database import db, login_db, login_manager, User
+from database import login_manager, User
 
 billingbp = Blueprint('billingbp', 'billingbp')
 
@@ -30,9 +21,11 @@ logging.basicConfig()
 es_service = os.environ.get("ES_SERVICE", "localhost")
 es = Elasticsearch(['http://' + es_service + ':9200/'])
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
 
 @billingbp.route('/login')
 def login():
@@ -40,6 +33,7 @@ def login():
         redirect('https://{}'.format(os.getenv('DCC_DASHBOARD_HOST')))
     else:
         redirect('https://{}/login'.format(os.getenv('DCC_DASHBOARD_HOST')))
+
 
 @billingbp.route('/invoices')
 @login_required
@@ -274,7 +268,8 @@ def generate_daily_reports(date):
 
     try:
         timeend = datetime.datetime.strptime(date, '%Y/%m/%d')
-    except:
+    except Exception as e:
+        print str(e)
         timeend = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
     # HANDLE CLOSING OUT BILLINGS at end of month

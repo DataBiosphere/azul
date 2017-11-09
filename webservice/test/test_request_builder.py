@@ -14,7 +14,7 @@ es_domain = os.getenv('ES_SERVICE', 'localhost')
 es_port = os.getenv('ES_PORT', '9200')
 es_protocol = os.getenv('ES_PROTOCOL', 'http')
 # Setup logging
-logging.config.fileConfig('{}/../logging.conf'.format(base_path))
+logging.config.fileConfig('{}/../config/logging.conf'.format(base_path))
 logger = logging.getLogger("dashboardService")
 
 

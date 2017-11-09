@@ -10,8 +10,8 @@ services:
       ES_DONOR_INDEX: "analysis_index"
     build: .
     ports:
-      - "80"
-      - "443"
+      - "80:80"
+      - "443:443"
     networks:
       - esnet
     ports:
