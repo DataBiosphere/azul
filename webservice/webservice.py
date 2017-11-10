@@ -13,6 +13,7 @@ bp_logger = logging.getLogger("dashboardService.webservice")
 # Setting up the blueprint
 webservicebp = Blueprint('webservicebp', 'webservicebp')
 # TODO: Write the docstrings so they can support swagger. Please see https://github.com/rochacbruno/flasgger
+# and https://stackoverflow.com/questions/43911510/how-to-write-docstring-for-url-parameters
 
 
 def json_pp(json_object):

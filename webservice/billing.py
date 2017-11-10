@@ -151,7 +151,8 @@ def make_search_filter_query(timefrom, timetil, project):
                                         "aggs": {
                                             "totaltime": {
                                                 "sum": {
-                                                    "field": "specimen.samples.analysis.timing_metrics.overall_walltime_seconds"
+                                                    "field": "specimen.samples.analysis.timing_metrics.overall_" +
+                                                             "walltime_seconds"
                                                 }
                                             }
                                         }
@@ -209,11 +210,9 @@ def get_previous_file_sizes(timeend, project):
 
 
 def get_months_uploads(project, timefrom, timetil):
-
     timestartstring = timefrom.strftime('%Y-%m-%dT%H:%M:%S')
     timeendstring = timetil.strftime('%Y-%m-%dT%H:%M:%S')
-    es_resp = es.search(index='billing_idx', body=
-    {
+    es_resp = es.search(index='billing_idx', body={
         "query": {
             "bool": {
                 "must": [
@@ -313,4 +312,3 @@ def generate_daily_reports(date):
             Billing.create(compute_cost=compute_costs, storage_cost=storage_costs, start_date=monthstart,
                            end_date=timeend, project=project, closed_out=False,
                            cost_by_analysis=itemized_costs)
-
