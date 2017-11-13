@@ -7,9 +7,18 @@ import logging
 import os
 from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse, SummaryResponse, ManifestResponse,\
     AutoCompleteResponse
-from webservice import json_pp
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
+
+
+def json_pp(json_object):
+    """
+    Helper method to convert objects into json formatted pretty string
+    :param json_object: The object to be converted into pretty string
+    :return: A pretty formatted string
+    """
+    formatted_json = json.dumps(json_object, sort_keys=True, indent=4, separators=(',', ': '))
+    return formatted_json
 
 
 class ElasticTransformDump(object):

@@ -1,10 +1,10 @@
 import ast
 import config
 from flask import jsonify, request, Blueprint
-import json
 import logging.config
 import os
 from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+from responseobjects.elastic_request_builder import json_pp
 
 # Setting up logging
 base_path = os.path.dirname(os.path.abspath(__file__))
@@ -14,16 +14,6 @@ bp_logger = logging.getLogger("dashboardService.webservice")
 webservicebp = Blueprint('webservicebp', 'webservicebp')
 # TODO: Write the docstrings so they can support swagger. Please see https://github.com/rochacbruno/flasgger
 # and https://stackoverflow.com/questions/43911510/how-to-write-docstring-for-url-parameters
-
-
-def json_pp(json_object):
-    """
-    Helper method to convert objects into json formatted pretty string
-    :param json_object: The object to be converted into pretty string
-    :return: A pretty formatted string
-    """
-    formatted_json = json.dumps(json_object, sort_keys=True, indent=4, separators=(',', ': '))
-    return formatted_json
 
 
 @webservicebp.route('/repository/files', methods=['GET'])
