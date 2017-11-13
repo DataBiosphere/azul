@@ -7,6 +7,7 @@ import logging
 import os
 from responseobjects.api_response import KeywordSearchResponse, FileSearchResponse, SummaryResponse, ManifestResponse,\
     AutoCompleteResponse
+from webservice import json_pp
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
@@ -376,6 +377,7 @@ class ElasticTransformDump(object):
         mapping_config = self.open_and_return_json(mapping_config_path)
         request_config = self.open_and_return_json(request_config_path)
         # Get the right autocomplete mapping configuration
+        self.logger.debug("Entry is {} Printing the mapping_config: \n{}".format(entry_format, json_pp(mapping_config)))
         mapping_config = mapping_config[entry_format]
         # Handle empty filters
         if filters is None:
