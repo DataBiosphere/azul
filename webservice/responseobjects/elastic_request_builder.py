@@ -382,6 +382,7 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
 
         index = 'ES_FILE_INDEX' if entry_format == 'file' else 'ES_DONOR_INDEX'
+        # Create an ElasticSearch autocomplete request
         es_search = self.create_autocomplete_request(filters, self.es_client, request_config, _query, search_field,
                                                      index=index)
         # Handle pagination

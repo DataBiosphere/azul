@@ -13,5 +13,10 @@
       "project"
     ]
   },
-  "donor": {}
+  "donor": {
+    "id": "donor_uuid"
+  },
+  "file-donor": {
+    "id": "donor_uuid"
+  }
 }
