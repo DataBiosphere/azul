@@ -48,6 +48,7 @@ def get_data(file_id=None):
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_data")
     # Get all the parameters from the URL
+    logger.debug('Parameter file_id: {}'.format(file_id))
     filters = request.args.get('filters', '{"file": {}}')
     logger.debug("Filters string is: {}".format(filters))
     try:

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import abc
+from elastic_request_builder import json_pp
 from flask_excel import make_response_from_array
 import logging
 from jsonobject import *
@@ -412,7 +413,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         :param entry: A 1 dimensional dictionary corresponding to a single hit from ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        self.logger.debug('Entry to be mapped: \n{}'.format(entry))
+        self.logger.debug('Entry to be mapped: \n{}'.format(json_pp(entry)))
         mapped_entry = HitEntry(
             _id=self.fetch_entry_value(mapping, entry, 'id'),
             objectID=self.fetch_entry_value(mapping, entry, 'objectID'),
@@ -440,7 +441,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # wrapped under anything
         super(KeywordSearchResponse, self).__init__()
         self.logger.info('Mapping the entries')
-        self.logger.debug('Mapping config: \n{}'.format(mapping))
+        self.logger.debug('Mapping config: \n{}'.format(json_pp(mapping)))
         class_entries = {'hits': [self.map_entries(mapping, x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
 
@@ -521,7 +522,7 @@ class AutoCompleteResponse(EntryFetcher):
         :param _type: The type of entry that will be used when constructing the entry
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        self.logger.debug("Entry to be mapped: \n{}".format(entry))
+        self.logger.debug("Entry to be mapped: \n{}".format(json_pp(entry)))
         mapped_entry = {}
         if _type == 'file':
             # Create a file representation
@@ -554,7 +555,7 @@ class AutoCompleteResponse(EntryFetcher):
         # Overriding the __init__ method of the parent class
         EntryFetcher.__init__(self)
         self.logger.info("Mapping entries")
-        self.logger.debug("Mapping: \n{}".format(mapping))
+        self.logger.debug("Mapping: \n{}".format(json_pp(mapping)))
         class_entries = {'hits': [self.map_entries(mapping, x, _type) for x in hits], 'pagination': None}
         self.apiResponse = AutoCompleteRepresentation(**class_entries)
         # Add the paging via **kwargs of dictionary 'pagination'
