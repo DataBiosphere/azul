@@ -12,6 +12,7 @@ import collections
 import re
 from multiprocessing import Process
 import threading
+import queue
 # import random
 
 
@@ -304,6 +305,7 @@ def get_file(file_uuid):
     except Exception as e:
         app.log.info(e)
         raise NotFoundError("File '%s' does not exist" % file_uuid)
+    #queue.put(json.dumps(file))
     return json.dumps(file)
 
 
@@ -533,20 +535,28 @@ def cron_look():
         bundle_mod = item['bundle_id'][:-26]
         app.log.info(bundle_mod)
         bundle_ids.append(bundle_mod)
-        thread = threading.Thread(target=write_index, args=(bundle_mod,))
-        threads.append(thread)
+        process = Process(target=make_thread, args=(bundle_mod,))
+        # thread = threading.Thread(target=write_index, args=(bundle_mod,))
+        # threads.append(thread)
         # process = Process(target=write_index, args=(bundle_mod,))
-        # processes.append(process)
-    # # start all processes
-    # for process in processes:
-    #     process.start()
-    # # make sure that all processes have finished
-    # for process in processes:
-    #     process.join()
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
+        processes.append(process)
+        process.start()
+    # make sure that all processes have finished
+    for process in processes:
+        process.join()
+    # for thread in threads:
+    #     thread.start()
+    # for thread in threads:
+    #     thread.join()
     app.log.info({"bundle_id": bundle_ids})
     #return {"bundle_id": bundle_ids}
-    return {"Cron":"done"}
+    return {"cron_bundle_ids": bundle_ids}
+
+def make_thread(bundle_mod):
+    app.log.info ("make_thread"+bundle_mod)
+    thread = threading.Thread(target=write_index, args=(bundle_mod,))
+    thread.start()
+    thread.join()
+    return thread
+
+
