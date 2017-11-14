@@ -386,7 +386,8 @@ class ElasticTransformDump(object):
         mapping_config = self.open_and_return_json(mapping_config_path)
         request_config = self.open_and_return_json(request_config_path)
         # Get the right autocomplete mapping configuration
-        self.logger.debug("Entry is {} Printing the mapping_config: \n{}".format(entry_format, json_pp(mapping_config)))
+        self.logger.debug("Entry is: {}".format(entry_format))
+        self.logger.debug("Printing the mapping_config: \n{}".format(json_pp(mapping_config)))
         mapping_config = mapping_config[entry_format]
         # Handle empty filters
         if filters is None:
@@ -399,6 +400,7 @@ class ElasticTransformDump(object):
         # Handle pagination
         self.logger.info("Handling pagination")
         pagination['sort'] = '_score'
+        pagination['order'] = 'desc'
         es_search = self.apply_paging(es_search, pagination)
         # Executing ElasticSearch request
         self.logger.debug("Printing ES_SEARCH request dict:\n {}".format(json.dumps(es_search.to_dict())))
