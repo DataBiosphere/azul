@@ -227,7 +227,7 @@ def get_search():
     }
     logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Get the entry format and search field
-    _type = request.args.get('type', 'file'),
+    _type = request.args.get('type', 'file')
     # Get the field to search
     field = request.args.get('field', 'fileId')
     # HACK: Adding this small check to make sure the search bar works with
