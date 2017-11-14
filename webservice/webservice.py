@@ -4,7 +4,7 @@ from flask import jsonify, request, Blueprint
 import logging.config
 import os
 from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
-from responseobjects.elastic_request_builder import json_pp
+from responseobjects.utilities import json_pp
 
 # Setting up logging
 base_path = os.path.dirname(os.path.abspath(__file__))

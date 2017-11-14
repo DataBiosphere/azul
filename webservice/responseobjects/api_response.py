@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import abc
-from elastic_request_builder import json_pp
+from utilities import json_pp
 from flask_excel import make_response_from_array
 import logging
 from jsonobject import *
