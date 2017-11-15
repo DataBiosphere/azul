@@ -9,7 +9,7 @@ populate:
 	# Populate the ElasticSearch index
 	docker-compose exec dcc-dashboard-service /app/test/populator.sh
 
-tests:
+unittests:
 	# Run pytest inside the running container from run
 	docker-compose exec dcc-dashboard-service py.test -p no:cacheprovider -s -x
 
@@ -25,7 +25,7 @@ play: stop reset run
 	echo "Kibana is now available on localhost:5601"
 
 # Clears the whole system, reloads indexes, and runs the tests
-unittest: play tests
+testme: play unittests
 
 reset:
 	docker-compose stop

@@ -3,7 +3,8 @@ import config
 from flask import jsonify, request, Blueprint
 import logging.config
 import os
-from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+from responseobjects.elastic_request_builder import \
+    ElasticTransformDump as EsTd
 from responseobjects.utilities import json_pp
 
 # Setting up logging
@@ -12,8 +13,10 @@ logging.config.fileConfig('{}/config/logging.conf'.format(base_path))
 bp_logger = logging.getLogger("dashboardService.webservice")
 # Setting up the blueprint
 webservicebp = Blueprint('webservicebp', 'webservicebp')
-# TODO: Write the docstrings so they can support swagger. Please see https://github.com/rochacbruno/flasgger
-# and https://stackoverflow.com/questions/43911510/how-to-write-docstring-for-url-parameters
+# TODO: Write the docstrings so they can support swagger.
+# Please see https://github.com/rochacbruno/flasgger
+# stackoverflow.com/questions/43911510/ \
+# how-to-write-docstring-for-url-parameters
 
 
 @webservicebp.route('/repository/files', methods=['GET'])
@@ -21,7 +24,8 @@ webservicebp = Blueprint('webservicebp', 'webservicebp')
 @webservicebp.route('/repository/files/<file_id>', methods=['GET'])
 def get_data(file_id=None):
     """
-    Returns a dictionary with entries that can be used by the browser to display the data and facets
+    Returns a dictionary with entries that can be used by the browser
+    to display the data and facets
     parameters:
         - name: filters
           in: query
@@ -43,7 +47,8 @@ def get_data(file_id=None):
           in: query
           type: string
           description: Which field to sort by
-    :return: Returns a dictionary with the entries to be used when generating the facets and/or table data
+    :return: Returns a dictionary with the entries to be used when generating
+    the facets and/or table data
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_data")
@@ -78,7 +83,9 @@ def get_data(file_id=None):
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_request(filters=filters, pagination=pagination, post_filter=True)
+    response = es_td.transform_request(filters=filters,
+                                       pagination=pagination,
+                                       post_filter=True)
     # Returning a single response if <file_id> request form is used
     if file_id is not None:
         response = response['hits'][0]
@@ -88,7 +95,8 @@ def get_data(file_id=None):
 @webservicebp.route('/repository/files/piecharts', methods=['GET'])
 def get_data_pie():
     """
-    Returns a dictionary with entries that can be used by the browser to generate piecharts
+    Returns a dictionary with entries that can be used by the
+    browser to generate piecharts
     parameters:
         - name: filters
           in: query
@@ -110,7 +118,8 @@ def get_data_pie():
           in: integer
           type: string
           description: Which field to sort by
-    :return: Returns a dictionary with the entries to be used when generating a pie chart
+    :return: Returns a dictionary with the entries to be used when generating
+    a pie chart
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_data_pie")
@@ -140,7 +149,9 @@ def get_data_pie():
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_request(filters=filters, pagination=pagination, post_filter=False)
+    response = es_td.transform_request(filters=filters,
+                                       pagination=pagination,
+                                       post_filter=False)
     # Returning a single response if <file_id> request form is used
     return jsonify(response)
 
@@ -184,7 +195,8 @@ def get_summary():
 @webservicebp.route('/keywords', methods=['GET'])
 def get_search():
     """
-    Creates and returns a dictionary with entries that best match the query passed in to the endpoint
+    Creates and returns a dictionary with entries that best match the query
+    passed in to the endpoint
     parameters:
         - name: filters
           in: query
@@ -202,7 +214,8 @@ def get_search():
           in: integer
           type: string
           description: Size of the page being returned
-    :return: A dictionary with entries that best match the query passed in to the endpoint
+    :return: A dictionary with entries that best match the query passed in
+    to the endpoint
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_search")
@@ -241,7 +254,8 @@ def get_search():
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_autocomplete_request(pagination, filters=filters,
+    response = es_td.transform_autocomplete_request(pagination,
+                                                    filters=filters,
                                                     _query=_query,
                                                     search_field=field,
                                                     entry_format=_type)
@@ -258,7 +272,8 @@ def get_order():
     logger = logging.getLogger("dashboardService.webservice.get_order")
     # Open the order_config file and get the order list
     logger.info("Getting t")
-    with open('{}/order_config'.format(os.path.dirname(config.__file__))) as order:
+    with open('{}/order_config'.format(
+            os.path.dirname(config.__file__))) as order:
         order_list = [line.rstrip('\n') for line in order]
     return jsonify({'order': order_list})
 
@@ -266,7 +281,8 @@ def get_order():
 @webservicebp.route('/repository/files/export', methods=['GET'])
 def get_manifest():
     """
-    Creates and returns a manifest based on the filters pased on to this endpoint
+    Creates and returns a manifest based on the filters pased on
+    to this endpoint
     parameters:
         - name: filters
           in: query

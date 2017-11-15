@@ -1,11 +1,11 @@
 import json
 import urllib2
+from random import randint
 
-from datetime import datetime, timedelta
-from random import randint, choice
 
-def get_error(server, job_id):    
-    error_url = server + "fetch_error?data=%7B%22task_id%22%3A%22" + job_id + "%22%7D"
+def get_error(server, job_id):
+    error_url = server + "fetch_error?data=%" \
+                         "7B%22task_id%22%3A%22" + job_id + "%22%7D"
     req_data = urllib2.Request(error_url)
     response_data = urllib2.urlopen(req_data)
     text_data = response_data.read()
@@ -14,25 +14,43 @@ def get_error(server, job_id):
     err_parameters = json_data["response"]
     return err_parameters["error"]
 
+
 def fake_id():
-    num = randint(1,10)
-    for i in range(1,7):
-        num = 10*num + randint(0,10)
+    num = randint(1, 10)
+    for i in range(1, 7):
+        num = 10 * num + randint(0, 10)
     string = str(num)
     return "S" + string[:7]
 
+
 server = "http://localhost:8082/api/"
 
-running_url   = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-batch_url     = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-failed_url    = server + "task_list?data=%7B%22status%22%3A%22FAILED%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-upfail_url    = server + "task_list?data=%7B%22status%22%3A%22PENDING%22%2C%22upstream_status%22%3A%22UPSTREAM_FAILED%22%2C%22search%22%3A%22%22%7D"
-disable_url   = server + "task_list?data=%7B%22status%22%3A%22DISABLED%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-updisable_url = server + "task_list?data=%7B%22status%22%3A%22PENDING%22%2C%22upstream_status%22%3A%22UPSTREAM_DISABLED%22%2C%22search%22%3A%22%22%7D"
-pending_url   = server + "task_list?data=%7B%22status%22%3A%22PENDING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-done_url      = server + "task_list?data=%7B%22status%22%3A%22DONE%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
+running_url = server + "task_list?data=%7B%22status%22%3A%22RUNNING" \
+                       "%22%2C%22upstream_status%22%3A%22%22%2C%22s" \
+                       "earch%22%3A%22%22%7D"
+batch_url = server + "task_list?data=%7B%22status%22%3A%22BATCH" \
+                     "_RUNNING%22%2C%22upstream_status%22%3A%22%2" \
+                     "2%2C%22search%22%3A%22%22%7D"
+failed_url = server + "task_list?data=%7B%22status%22%3A%22FAILED%" \
+                      "22%2C%22upstream_status%22%3A%22%22%2C%22s" \
+                      "earch%22%3A%22%22%7D"
+upfail_url = server + "task_list?data=%7B%22status%22%3A%22PENDING" \
+                      "%22%2C%22upstream_status%22%3A%22UPSTREAM_F" \
+                      "AILED%22%2C%22search%22%3A%22%22%7D"
+disable_url = server + "task_list?data=%7B%22status%22%3A%22DISA" \
+                       "BLED%22%2C%22upstream_status%22%3A%22%22%" \
+                       "2C%22search%22%3A%22%22%7D"
+updisable_url = server + "task_list?data=%7B%22status%22%3A%22PEND" \
+                         "ING%22%2C%22upstream_status%22%3A%22UPSTRE" \
+                         "AM_DISABLED%22%2C%22search%22%3A%22%22%7D"
+pending_url = server + "task_list?data=%7B%22status%22%3A%22PEND" \
+                       "ING%22%2C%22upstream_status%22%3A%22%22%2C" \
+                       "%22search%22%3A%22%22%7D"
+done_url = server + "task_list?data=%7B%22status%22%3A%22DONE%" \
+                    "22%2C%22upstream_status%22%3A%22%22%2C%22se" \
+                    "arch%22%3A%22%22%7D"
 
-list_of_URLs = [running_url, batch_url, failed_url, upfail_url, 
+list_of_URLs = [running_url, batch_url, failed_url, upfail_url,
                 disable_url, updisable_url, pending_url, done_url]
 
 relevant_attributes = ["status", "name", "start_time", "params"]
@@ -69,7 +87,7 @@ for URL in list_of_URLs:
     print job_list
 
     continue
-
+'''
     jobject = {}
     #print "\n", jobject["name"]
     jobject["error_text"] = error_text
@@ -79,7 +97,6 @@ for URL in list_of_URLs:
         # Get error information
         if job_list[job_id]["status"] == "FAILED":
             jobject["error_text"] = get_error(server, job_id)
-            
         for attr in relevant_attributes:
 
             node = job_list[job_id][attr]
@@ -91,7 +108,8 @@ for URL in list_of_URLs:
                 jobject[attr] = node
 
         # Format time properly
-        input_time = datetime.fromtimestamp(jobject['start_time']) + timedelta(hours=8)
+        input_time = datetime.fromtimestamp(
+                            jobject['start_time']) + timedelta(hours=8)
         jobject['start_time'] = input_time.strftime('20%y-%m-%d %H:%M:%S')
 
         # Add unique run_id
@@ -100,7 +118,8 @@ for URL in list_of_URLs:
         # Add the fake ID's
         string = fake_id()
         jobject['donor_id'] = string
-        jobject['sample_id'] = string + choice(['a','b','c']) + str(randint(1,5))
+        jobject['sample_id'] = string + choice(
+                                        ['a','b','c']) + str(randint(1,5))
 
         #print json.dumps(jobject)
 
@@ -108,8 +127,8 @@ for URL in list_of_URLs:
         del jobject['name']
 
     print jobject
-
-''' 
+'''
+'''
 TODO:
 * How to run this script automatically?
     - How often is it called?

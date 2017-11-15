@@ -7,6 +7,7 @@ db = SQLAlchemy()
 login_db = SQLAlchemy()
 login_manager = LoginManager()
 
+
 class User(login_db.Model, UserMixin):
     __tablename__ = "users"
     __bind_key__ = "login-db"
@@ -17,4 +18,5 @@ class User(login_db.Model, UserMixin):
     access_token = login_db.Column(login_db.String(5000))
     redwood_token = login_db.Column(login_db.String(5000))
     tokens = login_db.Column(login_db.Text)
-    created_at = login_db.Column(login_db.DateTime, default=datetime.datetime.utcnow())
+    created_at = login_db.Column(login_db.DateTime,
+                                 default=datetime.datetime.utcnow())

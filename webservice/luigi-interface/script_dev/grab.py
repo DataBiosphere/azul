@@ -2,10 +2,12 @@ import json
 import urllib2
 import subprocess
 
+
 def get_consonance_status(consonance_uuid):
     cmd = ['consonance', 'status', '--job_uuid', consonance_uuid]
     status_text = subprocess.check_output(cmd)
     return json.loads(status_text)
+
 
 URL = "https://dev.ucsc-cgl.org/api/v1/action/service"
 
@@ -24,6 +26,7 @@ for dictionary in json_tools:
     if consonance_uuid != "no consonance id in test mode":
         try:
             print get_consonance_status(consonance_uuid)
-        except:
-	    print "Something failed."
+        except Exception as e:
+            print "Something failed."
+            print e
             continue
