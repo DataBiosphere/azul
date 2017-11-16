@@ -12,7 +12,7 @@ import collections
 import re
 from multiprocessing import Process
 import threading
-import queue
+import time
 # import random
 
 
@@ -363,37 +363,21 @@ def write_index(bundle_uuid):
         # bundle_uuid:file_uuid:file_version
         es_uuid = "{}:{}:{}".format(bundle_uuid, file_uuid, file_version)
         es_json = []
+
         # every item in config must be looked at
         # top level of config is file name
+        threads = []
         for c_key, c_value in config.items():
             # config (file name) must be looked for in all the json_files
-            for j in range(len(json_files)):
-                # if the config (file name) is in the given json file
-                if c_key in json_files[j]:
-                    try:
-                        # file_url = urlopen(str(in_host+'/file/' + json_files[j][c_key])).read()
-                        file_url = get_file(json_files[j][c_key])
-                        file = json.loads(file_url)
-                    except Exception as e:
-                        app.log.info(e)
-                        raise NotFoundError("File '%s' does not exist"
-                                            % file_uuid)
-                    # for every item under this file name in config
-                    for c_item in c_value:
-                        # look for config item in file
-                        to_append = look_file(c_item, file, c_key)
-                        # if config item is in the file
-                        if to_append is not None:
-                            if isinstance(to_append, list):
-                                # makes lists of lists into a single list
-                                to_append = flatten(to_append)
-                                for item in to_append:
-                                    # add file item to list of items to append to ES
-                                    es_json.append(item)
-                            else:
-                                # add file item to list of items to append to ES
-                                es_json.append(to_append)
-                    app.log.info("write_index es_json %s", str(es_json))
+
+
+            thread = threading.Thread(target=config_thread,
+                                      args=(c_key, c_value, json_files, file_uuid, es_json))
+            threads.append(thread)
+            thread.start()
+        for thread in threads:
+            thread.join()
+
         # add special fields (ones that aren't in config)
         es_json.append({'bundle_uuid': bundle_uuid})
         # Carlos adding extra fields
@@ -426,6 +410,36 @@ def write_index(bundle_uuid):
         write_es(es_json, es_uuid)
     return json.dumps(bundle['data_files'])
 
+
+def config_thread(c_key, c_value, json_files,file_uuid, es_json):
+    app.log.info("config_thread %s", str(c_key))
+    for j in range(len(json_files)):
+        # if the config (file name) is in the given json file
+        if c_key in json_files[j]:
+            try:
+                # file_url = urlopen(str(in_host+'/file/' + json_files[j][c_key])).read()
+                file_url = get_file(json_files[j][c_key])
+                file = json.loads(file_url)
+            except Exception as e:
+                app.log.info(e)
+                raise NotFoundError("File '%s' does not exist"
+                                    % file_uuid)
+            # for every item under this file name in config
+            for c_item in c_value:
+                # look for config item in file
+                to_append = look_file(c_item, file, c_key)
+                # if config item is in the file
+                if to_append is not None:
+                    if isinstance(to_append, list):
+                        # makes lists of lists into a single list
+                        to_append = flatten(to_append)
+                        for item in to_append:
+                            # add file item to list of items to append to ES
+                            es_json.append(item)
+                    else:
+                        # add file item to list of items to append to ES
+                        es_json.append(to_append)
+            app.log.info("config_thread es_json %s", str(es_json))
 
 # used by write_index to recursively return values of items in config file
 def look_file(c_item, file, name):
