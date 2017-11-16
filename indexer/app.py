@@ -102,7 +102,7 @@ def es_config(c_item, name):
                 name = str(name) + "|" + str(key)
             else:
                 name = str(key)
-            # recursively call function on each item in this level of config values
+            # recursively call on each item in this level of config values
             for item in value:
                 es_array.append(es_config(item, name))
             return es_array
@@ -173,19 +173,16 @@ for item in key_names:
                               "fields": {"raw": {"type": i_split[2]}}}})
         elif len(u_split) == 1 and len(banana_split) == 2:
             # ex: name*mapping1*mapping2_analyzer
-            es_mappings.append(
-                {i_split[0]: {"type": i_split[1],
-                              "fields": {"raw": {"type": banana_split[0],
-                                                 "analyzer": banana_split[1],
-                                                 "search_analyzer": "standard"}}}})
+            es_mappings.append({i_split[0]: {"type": i_split[1], "fields": {
+                "raw": {"type": banana_split[0], "analyzer": banana_split[1],
+                        "search_analyzer": "standard"}}}})
         elif len(u_split) == 2 and len(banana_split) == 2:
             # ex: name*mapping1_analyzer*mapping2_analyzer
-            es_mappings.append(
-                {i_split[0]: {"type": u_split[0], "analyzer": u_split[1],
-                              "search_analyzer": "standard",
-                              "fields": {"raw": {"type": banana_split[0],
-                                                 "analyzer": banana_split[1],
-                                                 "search_analyzer": "standard"}}}})
+            es_mappings.append({i_split[0]: {"type": u_split[0], "fields": {
+                "raw": {"type": banana_split[0], "analyzer": banana_split[1],
+                        "search_analyzer": "standard"}},
+                                             "analyzer": u_split[1],
+                                             "search_analyzer": "standard"}})
         else:
             app.log.info("mapping formatting problem %s", i_split)
 
@@ -243,12 +240,12 @@ def get_bundles(bundle_uuid):
     :return: json file with items separated by json files and data files
     """
     app.log.info("get_bundle %s", bundle_uuid)
-    #    try:
-    #        json_str = urlopen(str(bb_host+('v1/bundles/')+bundle_uuid)).read()
-    #        bundle = json.loads(json_str)
-    #    except Exception as e:
-    #        app.log.info(e)
-    #        raise NotFoundError("Bundle '%s' does not exist" % bundle_uuid)
+    # try:
+    #    json_str = urlopen(str(bb_host+('v1/bundles/')+bundle_uuid)).read()
+    #    bundle = json.loads(json_str)
+    # except Exception as e:
+    #    app.log.info(e)
+    #    raise NotFoundError("Bundle '%s' does not exist" % bundle_uuid)
 
     # the blue box may have trouble returning bundle, so retry 3 times
     retries = 0
@@ -284,7 +281,6 @@ def get_bundles(bundle_uuid):
         if file["name"].endswith(".json"):
             json_files.append({file["name"]: file["uuid"]})
         else:
-            # data_files.append({file["name"]: file["uuid"]}) CARLOS REMOVED THIS
             data_files.append({file["name"]: file})
     return json.dumps({'json_files': json_files, 'data_files': data_files})
 
@@ -331,7 +327,7 @@ def write_index(bundle_uuid):
         raise NotFoundError("Bundle '%s' does not exist" % bundle_uuid)
     bundle = json.loads(bundle_url)
     # bundle = json.loads(get_bundles(bundle_uuid))
-    fcount = len(bundle['data_files'])
+    # fcount = len(bundle['data_files'])
     json_files = bundle['json_files']
     # open config file
     try:
@@ -422,7 +418,8 @@ def config_thread(c_key, c_value, json_files, file_uuid, es_json):
         # if the config (file name) is in the given json file
         if c_key in json_files[j]:
             try:
-                # file_url = urlopen(str(in_host+'/file/' + json_files[j][c_key])).read()
+                # file_url = urlopen(
+                #     str(in_host + '/file/' + json_files[j][c_key])).read()
                 file_url = get_file(json_files[j][c_key])
                 file = json.loads(file_url)
             except Exception as e:
@@ -497,7 +494,9 @@ def look_file(c_item, file, name):
     elif c_item.split("*")[0] not in file:
         # all config items that cannot be found in file are given value "None"
         c_item_split = c_item.split("*")
-        file_value = "None"  # Putting an empty string. I think if I put None (instead of "None") it could break things downstream
+        # Putting an empty string.
+        # If None (instead of "None") it could break things downstream
+        file_value = "None"
         name = str(name) + "|" + str(c_item_split[0])
         # ES does not like periods(.) use commas(,) instead
         n_replace = name.replace(".", ",")
