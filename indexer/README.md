@@ -113,6 +113,45 @@ Could have a config like such:
   ]
  }
 ```
+In Elasticsearch, the fields will be
+```
+assay,json|rna|primer
+assay,json|single_cell|method
+assay,json|sra_experiment
+assay,json|files|format
+cell,json|type
+cell,json|ontology
+cell,json|id
+```
+Notice the commas(,) where there were previously periods(.). Also, the pipe (|) is used as the separator between levels in the config.
+
+#### Adding Mappings
+Given a config:
+```
+{
+  "cell.json":[
+    "type",
+    "ontology",
+    "id"
+  ]
+ }
+```
+The default mapping is `keyword`. 
+However, in the `chalicelib/config.json` the mapping can be specified. For example:
+```
+{
+  "cell.json":[
+    "type*keyword",
+    "ontology*keyword*text",
+    "id*keyword*text_autocomplete"
+  ]
+ }
+```
+The field `cell,json|type` will have a mapping of `keyword`.
+The field `cell,json|ontology` will have a mapping of `keyword` but `cell,json|ontology.raw` has a mapping of `text`
+The field `cell,json|id` will have a mapping of `keyword` but `cell,json|id.raw` has a mapping of `text` with an analyzer of `autocomplete`
+The analyzers can be defined in `chalicelib/settings.json`
+Other mappings are also allowed (ie: `long`). However, if using both `keyword` and `text` please put `keyword` before `text` (ie: `ontology*keyword*text` not `ontology*text*keyword`)
 
 ### Environmental Variables
 In order to add environmental variables to Chalice, the variables must be added to three locations.
