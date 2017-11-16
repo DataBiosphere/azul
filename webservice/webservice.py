@@ -78,7 +78,7 @@ def get_data(file_id=None):
         filters['file']['fileId'] = {"is": [file_id]}
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN"),
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
                  es_port=os.getenv("ES_PORT", 9200),
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
@@ -144,7 +144,7 @@ def get_data_pie():
     logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN"),
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
                  es_port=os.getenv("ES_PORT", 9200),
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
@@ -182,7 +182,7 @@ def get_summary():
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN"),
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
                  es_port=os.getenv("ES_PORT", 9200),
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
@@ -206,6 +206,14 @@ def get_search():
           in: query
           type: string
           description: String query to use when calling ElasticSearch
+        - name: type
+          in: query
+          type: string
+          description: Which type of response format should be returned
+        - name: field
+          in: query
+          type: string
+          description: Which field to search on. Defaults to file id
         - name: from
           in: query
           type: integer
@@ -303,7 +311,7 @@ def get_manifest():
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN"),
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
                  es_port=os.getenv("ES_PORT", 9200),
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
