@@ -78,3 +78,20 @@ Currently there are 5 parameters supported. They are as follows:<br>
 
 Please refer to [dcc-ops](https://github.com/BD2KGenomics/dcc-ops) for installing the the dashboard-service and all its required components. This will automatically set up the dashboard service behind an NGINX server.
 
+If you want to locally set up the webservice for quick prototyping, you can type `make play` in your terminal. In order for this to work, you need to have `Docker` and `docker-compose` installed in your machine. Aditionally, you need to allow Docker to use 5GB of RAM. `make play` will setup the webservice, ElasticSearch, and Kibana on your machine as a series of Docker containers bound to `localhost` as follows:
+
+* Web Service: port 9000 (access via `localhost:9000`)
+* ElasticSearch: port 9200 (access via `localhost:9200`)
+* Kibana: port 5601 (access via `localhost:5601`)
+
+ElasticSearch will be loaded with a set of dummy test indexes. You can modify or change the indexes as you wish. You can do for example do
+
+```
+curl -XPUT http://localhost:9200/myindex/_bulk?pretty --data-binary @test/my_index_entries.jsonl
+```
+
+to create an index called myindex and loading the entries contained in the `my_index_entries.jsonl` file. Please take a look at the `tests/populator.sh` script for more details on how the test suite creates and loads indexes (the 'aliases' for the file and donor oriented indexes are named `fb_index` and `analysis_index` respectively). 
+
+
+
+
