@@ -12,9 +12,9 @@ import collections
 import re
 from multiprocessing import Process
 import threading
-import time
-# import random
 
+# import time
+# import random
 
 
 app = Chalice(app_name=os.getenv('INDEXER_NAME', 'dss-indigo'))
@@ -33,6 +33,10 @@ try:
     es_index = os.environ['ES_INDEX']
 except KeyError:
     es_index = 'test-chalice'
+try:
+    replica = os.environ['REPLICA']
+except KeyError:
+    replica = 'aws'
 
 # get settings for elasticsearch
 try:
@@ -70,13 +74,12 @@ else:
 es.indices.create(index=es_index, body=es_settings, ignore=[400])
 
 
-
-
 # used by write_index to flatten nested arrays, also used for mapping
 # from https://stackoverflow.com/a/2158532
 def flatten(l):
     for el in l:
-        if isinstance(el, collections.Sequence) and not isinstance(el, (str, bytes)):
+        if isinstance(el, collections.Sequence) and not isinstance(el, (
+                str, bytes)):
             yield from flatten(el)
         else:
             yield el
@@ -252,7 +255,8 @@ def get_bundles(bundle_uuid):
     while retries < 3:
         try:
             # call the blue box
-            json_str = urlopen(str(bb_host + ('v1/bundles/') + bundle_uuid + "?replica=aws")).read()
+            json_str = urlopen(str(bb_host + (
+                'v1/bundles/') + bundle_uuid + "?replica=" + replica)).read()
             # json load string for processing later
             bundle = json.loads(json_str)
             break
@@ -295,7 +299,7 @@ def get_file(file_uuid):
     """
     app.log.info("get_file %s", file_uuid)
     # '?replica=aws' needed to choose cloud location
-    aws_url = bb_host + "v1/files/" + file_uuid + "?replica=aws"
+    aws_url = bb_host + "v1/files/" + file_uuid + "?replica=" + replica
     # only accept json files
     header = {'accept': 'application/json'}
     try:
@@ -305,7 +309,7 @@ def get_file(file_uuid):
     except Exception as e:
         app.log.info(e)
         raise NotFoundError("File '%s' does not exist" % file_uuid)
-    #queue.put(json.dumps(file))
+    # queue.put(json.dumps(file))
     return json.dumps(file)
 
 
@@ -329,7 +333,7 @@ def write_index(bundle_uuid):
     # bundle = json.loads(get_bundles(bundle_uuid))
     fcount = len(bundle['data_files'])
     json_files = bundle['json_files']
-    #open config file
+    # open config file
     try:
         with open('chalicelib/config.json') as f:
             config = json.loads(f.read())
@@ -369,10 +373,11 @@ def write_index(bundle_uuid):
         threads = []
         for c_key, c_value in config.items():
             # config (file name) must be looked for in all the json_files
-
-
             thread = threading.Thread(target=config_thread,
-                                      args=(c_key, c_value, json_files, file_uuid, es_json))
+                                      args=(
+                                          c_key, c_value, json_files,
+                                          file_uuid,
+                                          es_json))
             threads.append(thread)
             thread.start()
         for thread in threads:
@@ -411,7 +416,7 @@ def write_index(bundle_uuid):
     return json.dumps(bundle['data_files'])
 
 
-def config_thread(c_key, c_value, json_files,file_uuid, es_json):
+def config_thread(c_key, c_value, json_files, file_uuid, es_json):
     app.log.info("config_thread %s", str(c_key))
     for j in range(len(json_files)):
         # if the config (file name) is in the given json file
@@ -440,6 +445,7 @@ def config_thread(c_key, c_value, json_files,file_uuid, es_json):
                         # add file item to list of items to append to ES
                         es_json.append(to_append)
             app.log.info("config_thread es_json %s", str(es_json))
+
 
 # used by write_index to recursively return values of items in config file
 def look_file(c_item, file, name):
@@ -485,7 +491,7 @@ def look_file(c_item, file, name):
                 name = str(c_item_split[0])
             # ES does not like periods(.) use commas(,) instead
             n_replace = name.replace(".", ",")
-            #return the value of key (given by config)
+            # return the value of key (given by config)
             return ({n_replace: file_value})
     # Carlos's test
     elif c_item.split("*")[0] not in file:
@@ -536,23 +542,27 @@ def cron_look():
     app.log.info("cron job running")
     headers = {"content-type": "application/json",
                "accept": "application/json"}
-    data = {"es_query":{"query": {"match_all": {}}}}
-    bb_url = str(bb_host) + "/v1/search?replica=aws"
+    data = {"es_query": {"query": {"match_all": {}}}}
+    bb_url = str(bb_host) + "/v1/search?replica=" + replica
     r = requests.post(bb_url, data=json.dumps(data), headers=headers)
     r_response = json.loads(r.text)
     app.log.info(r_response)
     bundle_ids = []
+    count = 0
+    for item in r_response['results']:
+        count += 1
     # create a list to keep all processes
     processes = []
-    threads = []
     for item in r_response['results']:
         bundle_mod = item['bundle_id'][:-26]
         app.log.info(bundle_mod)
         bundle_ids.append(bundle_mod)
+        # Comma after bundle_mod is important for input as string
         process = Process(target=make_thread, args=(bundle_mod,))
         # thread = threading.Thread(target=write_index, args=(bundle_mod,))
         # threads.append(thread)
         # process = Process(target=write_index, args=(bundle_mod,))
+
         processes.append(process)
         process.start()
     # make sure that all processes have finished
@@ -563,14 +573,14 @@ def cron_look():
     # for thread in threads:
     #     thread.join()
     app.log.info({"bundle_id": bundle_ids})
-    #return {"bundle_id": bundle_ids}
+    # return {"bundle_id": bundle_ids}
     return {"cron_bundle_ids": bundle_ids}
 
+
 def make_thread(bundle_mod):
-    app.log.info ("make_thread"+bundle_mod)
+    app.log.info("make_thread %s", bundle_mod)
     thread = threading.Thread(target=write_index, args=(bundle_mod,))
     thread.start()
     thread.join()
     return thread
-
 
