@@ -61,8 +61,6 @@ Currently there are 6 parameters supported. They are as follows:<br>
 
 ***/keywords***<br>
 
-Currently there are 5 parameters supported. They are as follows:<br>
-
 |Parameter|Description|Data Type|Example|
 |--- |--- |--- |--- |
 |type|Specifies which type of format to return (file or file-donor). Supplied as a string. Defaults to 'file'.|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1 This will return files based on the search query 8f1.|
