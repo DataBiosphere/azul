@@ -1,0 +1,8 @@
+.git/
+!.git/HEAD
+!.git/refs/
+!.git/packed-refs
+**/__pycache__
+.cache
+env
+**/*.pyc

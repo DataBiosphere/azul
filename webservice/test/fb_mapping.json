@@ -28,7 +28,14 @@
         "type":"keyword"
       },
       "donor":{
-        "type":"keyword"
+        "type":"keyword",
+        "fields": {
+          "raw": {
+            "type": "text",
+            "analyzer":"autocomplete",
+            "search_analyzer": "standard"
+          }
+        }
       },
       "lastModified":{
         "type":"date"
@@ -37,8 +44,14 @@
         "type":"keyword"
       },
       "file_id":{
-        "type":"text",
-	"analyzer":"autocomplete"
+        "type":"keyword",
+        "fields": {
+          "raw": {
+            "type": "text",
+            "analyzer":"autocomplete",
+            "search_analyzer": "standard"
+          }
+        }
       },
       "experimentalStrategy":{
         "type":"keyword"

@@ -1,9 +1,9 @@
 {
     "settings": {
-        "number_of_shards": 1, 
+        "number_of_shards": 1,
         "analysis": {
             "filter": {
-                "autocomplete_filter": { 
+                "autocomplete_filter": {
                     "type":     "ngram",
                     "min_gram": 1,
                     "max_gram": 36
@@ -15,7 +15,7 @@
                     "tokenizer": "keyword",
                     "filter": [
                         "lowercase",
-                        "autocomplete_filter" 
+                        "autocomplete_filter"
                     ]
                 }
             }

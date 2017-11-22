@@ -8,10 +8,10 @@ import urllib2
 
 from sqlalchemy import select, and_
 from datetime import datetime
+from monitordb_lib import luigiDBInit
 
 # Add parent directory to get luigidb init
-sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
-from monitordb_lib import luigiDBInit
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def get_touchfile(bucket_name, touchfile_name):
@@ -30,15 +30,32 @@ def get_touchfile(bucket_name, touchfile_name):
 
 def get_job_list():
     # Scrape Luigi
-    server = os.getenv("LUIGI_SERVER") + ":" + os.getenv("LUIGI_PORT", "8082") + "/api/"
-    running_url = server + "task_list?data=%7B%22status%22%3A%22RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-    batch_url = server + "task_list?data=%7B%22status%22%3A%22BATCH_RUNNING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-    failed_url = server + "task_list?data=%7B%22status%22%3A%22FAILED%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-    upfail_url = server + "task_list?data=%7B%22status%22%3A%22PENDING%22%2C%22upstream_status%22%3A%22UPSTREAM_FAILED%22%2C%22search%22%3A%22%22%7D"
-    disable_url = server + "task_list?data=%7B%22status%22%3A%22DISABLED%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-    updisable_url = server + "task_list?data=%7B%22status%22%3A%22PENDING%22%2C%22upstream_status%22%3A%22UPSTREAM_DISABLED%22%2C%22search%22%3A%22%22%7D"
-    pending_url = server + "task_list?data=%7B%22status%22%3A%22PENDING%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
-    done_url = server + "task_list?data=%7B%22status%22%3A%22DONE%22%2C%22upstream_status%22%3A%22%22%2C%22search%22%3A%22%22%7D"
+    server = os.getenv("LUIGI_SERVER") + ":" + os.getenv(
+        "LUIGI_PORT", "8082") + "/api/"
+    running_url = server + "task_list?data=%7B%22status%22%3A%" \
+                           "22RUNNING%22%2C%22upstream_status%22%" \
+                           "3A%22%22%2C%22search%22%3A%22%22%7D"
+    batch_url = server + "task_list?data=%7B%22status%22%3A%22BATCH" \
+                         "_RUNNING%22%2C%22upstream_status%22%3A%22%22" \
+                         "%2C%22search%22%3A%22%22%7D"
+    failed_url = server + "task_list?data=%7B%22status%22%3A%22FAILED%22%" \
+                          "2C%22upstream_status%22%3A%22%22%2C%22search%22%" \
+                          "3A%22%22%7D"
+    upfail_url = server + "task_list?data=%7B%22status%22%3A%22PENDING%22" \
+                          "%2C%22upstream_status%22%3A%22UPSTREAM_FAILED%" \
+                          "22%2C%22search%22%3A%22%22%7D"
+    disable_url = server + "task_list?data=%7B%22status%22%3A%22DISABLED%" \
+                           "22%2C%22upstream_status%22%3A%22%22%2C%22sear" \
+                           "ch%22%3A%22%22%7D"
+    updisable_url = server + "task_list?data=%7B%22status%22%3A%22PENDING" \
+                             "%22%2C%22upstream_status%22%3A%22UPSTREAM_" \
+                             "DISABLED%22%2C%22search%22%3A%22%22%7D"
+    pending_url = server + "task_list?data=%7B%22status%22%3A%22PENDING%" \
+                           "22%2C%22upstream_status%22%3A%22%22%2C%22sea" \
+                           "rch%22%3A%22%22%7D"
+    done_url = server + "task_list?data=%7B%22status%22%3A%22DONE%22%2C%22" \
+                        "upstream_status%22%3A%22%22%2C%22search%22%3A%22%" \
+                        "22%7D"
 
     list_of_URLs = [running_url, batch_url, failed_url, upfail_url,
                     disable_url, updisable_url, pending_url, done_url]
@@ -91,12 +108,13 @@ def get_consonance_status(consonance_uuid):
 def format_consonance_timestamp(consonance_timestamp):
     # This was exported to a method to avoid duplication
     # for both the creation and update timestamps
-    datetime_obj = datetime.strptime(consonance_timestamp, '%Y-%m-%dT%H:%M:%S.%f+0000')
+    datetime_obj = datetime.strptime(consonance_timestamp,
+                                     '%Y-%m-%dT%H:%M:%S.%f+0000')
     return datetime.strftime(datetime_obj, '%Y-%m-%d %H:%M')
 
 
 def validateConsonanceUUID(consonance_uuid):
-    # Return if consonance uuid only contains hex characters and "-" 
+    # Return if consonance uuid only contains hex characters and "-"
     uuid_pattern = re.compile("[a-f,A-F,0-9,-]+")
     return bool(uuid_pattern.match(consonance_uuid))
 
@@ -113,7 +131,8 @@ for job in jobList:
     try:
         s3string = job_dict['params']['touch_file_path']
         bucket_name, filepath = s3string.split('/', 1)
-        touchfile_name = filepath + '/' + job_dict['params']['metadata_json_file_name']
+        touchfile_name = filepath + '/' + job_dict['params'][
+            'metadata_json_file_name']
         print "BUCKET_NAME:", bucket_name
         print "TOUCH FILE NAME:", touchfile_name
         stringContents = get_touchfile(bucket_name, touchfile_name)
@@ -123,7 +142,8 @@ for job in jobList:
     except Exception as e:
         # Hardcoded jsonMetadata
         print >>sys.stderr, e.message, e.args
-        print >>sys.stderr, "Failure when connecting to S3, dumping job dictionary:", job_dict
+        print >>sys.stderr, "Failure when connecting to S3," \
+                            "dumping job dictionary:", job_dict
         continue
 
     #
@@ -133,15 +153,18 @@ for job in jobList:
     print "and job:", job
     try:
         # Use uuid from S3
-        status_json = get_consonance_status(jsonMetadata['consonance_job_uuid'])
-    except:
+        status_json = get_consonance_status(jsonMetadata[
+                                                'consonance_job_uuid'])
+    except Exception as e:
         # Default to Luigi status and timestamps
-        print "EXCEPT STATEMENT IN GETTING CONSONANCE STATUS FOR JOB WITH METADATA", job
+        print "EXCEPT STATEMENT IN GETTING CONSONANCE " \
+              "STATUS FOR JOB WITH METADATA", job
         status_json = {
             'create_timestamp': job_dict['start_time'],
             'update_timestamp': job_dict['last_updated'],
             'state': 'LUIGI:' + job_dict['status']
         }
+        print e
 
     #
     # Find if current job is already listed in
@@ -152,32 +175,37 @@ for job in jobList:
     # use the Consonance job uuid instead of the Luigi job id because
     # Luigi sometimes reuses job ids for different runs
     # The Consonance job uuid is always unique
-    # select_query = select([monitordb_table]).where(monitordb_table.c.luigi_job == job)
+    # select_query = select([monitordb_table]).where(
+    # monitordb_table.c.luigi_job == job)
     job_uuid = jsonMetadata['consonance_job_uuid']
     print "QUERYING DB FOR JOB UUID:", job_uuid
-    select_query = select([monitordb_table]).where(monitordb_table.c.consonance_job_uuid == job_uuid)
+    select_query = select([monitordb_table]).where(
+        monitordb_table.c.consonance_job_uuid == job_uuid)
     select_result = query_to_list(monitordb_connection.execute(select_query))
     print "JOB RESULT:", select_result
     if len(select_result) == 0:
         try:
-            #ins_query = monitordb_table.insert().values(luigi_job=job,
-            ins_query = monitordb_table.insert().values(luigi_job=job,
-                                              submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
-                                              specimen_uuid=jsonMetadata['specimen_uuid'],
-                                              workflow_name=jsonMetadata['workflow_name'],
-                                              center_name=jsonMetadata['center_name'],
-                                              submitter_donor_id=jsonMetadata['submitter_donor_id'],
-                                              consonance_job_uuid=jsonMetadata['consonance_job_uuid'],
-                                              submitter_donor_primary_site=jsonMetadata['submitter_donor_primary_site'],
-                                              project=jsonMetadata['project'],
-                                              analysis_type=jsonMetadata['analysis_type'],
-                                              program=jsonMetadata['program'],
-                                              donor_uuid=jsonMetadata['donor_uuid'],
-                                              submitter_sample_id=jsonMetadata['submitter_sample_id'],
-                                              submitter_experimental_design=jsonMetadata['submitter_experimental_design'],
-                                              submitter_specimen_type=jsonMetadata['submitter_specimen_type'],
-                                              workflow_version=jsonMetadata['workflow_version'],
-                                              sample_uuid=jsonMetadata['sample_uuid'])
+            ins_query = monitordb_table.insert().values(
+                luigi_job=job,
+                submitter_specimen_id=jsonMetadata['submitter_specimen_id'],
+                specimen_uuid=jsonMetadata['specimen_uuid'],
+                workflow_name=jsonMetadata['workflow_name'],
+                center_name=jsonMetadata['center_name'],
+                submitter_donor_id=jsonMetadata['submitter_donor_id'],
+                consonance_job_uuid=jsonMetadata['consonance_job_uuid'],
+                submitter_donor_primary_site=jsonMetadata[
+                    'submitter_donor_primary_site'],
+                project=jsonMetadata['project'],
+                analysis_type=jsonMetadata['analysis_type'],
+                program=jsonMetadata['program'],
+                donor_uuid=jsonMetadata['donor_uuid'],
+                submitter_sample_id=jsonMetadata['submitter_sample_id'],
+                submitter_experimental_design=jsonMetadata[
+                    'submitter_experimental_design'],
+                submitter_specimen_type=jsonMetadata[
+                    'submitter_specimen_type'],
+                workflow_version=jsonMetadata['workflow_version'],
+                sample_uuid=jsonMetadata['sample_uuid'])
             exec_result = monitordb_connection.execute(ins_query)
         except Exception as e:
             print >>sys.stderr, e.message, e.args
@@ -206,7 +234,8 @@ for job in result_list:
             # and force next job
             print "\nTest ID, skipping"
 
-            stmt = monitordb_table.delete().where(monitordb_table.c.luigi_job == job_name)
+            stmt = monitordb_table.delete().where(
+                monitordb_table.c.luigi_job == job_name)
             exec_result = monitordb_connection.execute(stmt)
         else:
             # Consonace job id is real
@@ -214,8 +243,10 @@ for job in result_list:
 
             status_json = get_consonance_status(job_uuid)
             state = status_json['state']
-            created = format_consonance_timestamp(status_json['create_timestamp'])
-            updated = format_consonance_timestamp(status_json['update_timestamp'])
+            created = format_consonance_timestamp(
+                status_json['create_timestamp'])
+            updated = format_consonance_timestamp(
+                status_json['update_timestamp'])
 
             # DEBUG to check if state, created, and updated are collected
             print "STATE:", state
@@ -241,4 +272,3 @@ for job in result_list:
         exec_result = monitordb_connection.execute(stmt)
 monitordb_connection.close()
 db_engine.dispose()
-
