@@ -1,10 +1,11 @@
 from abc import abstractmethod, ABCMeta
 
+
 class AbstractIndexer(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def extract_item(self):
+    def extract_item(self, **kwargs):
         """
         looks for a items from the config in the metadata
         :return: none
@@ -13,7 +14,7 @@ class AbstractIndexer(object):
             'users must define extract_item to use this base class')
 
     @abstractmethod
-    def index(self):
+    def index(self, **kwargs):
         """
         this is where different indexes can be indexed
         calls extract_item, merge, load_doc
@@ -23,7 +24,7 @@ class AbstractIndexer(object):
             'users must define index to use this base class')
 
     @abstractmethod
-    def special_fields(self):
+    def special_fields(self, **kwargs):
         """
         special fields (bundle_uuid, bundle_type)
         :return: none
@@ -32,7 +33,7 @@ class AbstractIndexer(object):
             'users must define special_fields to use this base class')
 
     @abstractmethod
-    def merge(self):
+    def merge(self, **kwargs):
         """
         take results of extract_item and query ES to merge into one ES file
         calls special_fields
@@ -42,7 +43,7 @@ class AbstractIndexer(object):
             'users must define merge to use this base class')
 
     @abstractmethod
-    def load_doc(self):
+    def load_doc(self, **kwargs):
         """
         makes put request to ES
         :return:
@@ -51,7 +52,7 @@ class AbstractIndexer(object):
             'users must define load_doc to use this base class')
 
     @abstractmethod
-    def load_mapping(self):
+    def load_mapping(self, **kwargs):
         """
         load mappings into ES
         :return:
@@ -83,10 +84,10 @@ class Indexer(AbstractIndexer):
         :return: none
         """
         if isinstance(metadata_files, dict):
-        for key, value in config:
-            if key in metadata_files:
-                if isinstance(value, dict):
-                    self.extract_item(metadata_files[key],value)
+            for key, value in config:
+                if key in metadata_files:
+                    if isinstance(value, dict):
+                        self.extract_item(metadata_files[key], value)
 
 
 
