@@ -73,9 +73,10 @@ else:
 # es.indices.delete(index=es_index, ignore=[400])
 es.indices.create(index=es_index, body=es_settings, ignore=[400])
 
-
 # used by write_index to flatten nested arrays, also used for mapping
 # from https://stackoverflow.com/a/2158532
+
+
 def flatten(l):
     for el in l:
         if isinstance(el, collections.Sequence) and not isinstance(el, (
@@ -582,4 +583,3 @@ def make_thread(bundle_mod):
     thread.start()
     thread.join()
     return thread
-
