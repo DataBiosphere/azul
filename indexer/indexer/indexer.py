@@ -72,7 +72,6 @@ class AbstractIndexer(object):
 
 
 class Indexer(AbstractIndexer):
-
     def __init__(self, metadata_files, data_files, es_client, **kwargs):
         """
         :param metadata_files: list of json metadata (list of dicts)
@@ -164,13 +163,18 @@ class Indexer(AbstractIndexer):
 class FileIndexer(Indexer):
     def index(self, **kwargs):
         for dfile in data_files:
-            es_json = []
             file_uuid = dfiles[file_uuid]
+            es_json = self.special_fields(dfile=dfile, metadata=metadata_files)
+            for field in es_json:
+                for fkey, fvalue in field.items():
+                    if fkey == 'es_uuid':
+                        es_uuid = fvalue
+                        es_json.remove(field)
             for c_key, c_value in kwargs['config']:
                 for mfile in metadata_files:
                     if c_key in mfile:
                         for c_item in c_value:
-                            to_append = extract_item(c_key, mfile)
+                            to_append = self.__extract_item(c_key, mfile)
                             if to_append is not None:
                                 if isinstance(to_append, list):
                                     # makes lists of lists into a single list
@@ -186,9 +190,8 @@ class FileIndexer(Indexer):
             if to_append is not None:
                 if isinstance(to_append, list):
                     # makes lists of lists into a single list
-                    to_append = flatten(to_append)
-            load_doc(doc_contents=to_append, doc_uuid=file_uuid)
-
+                    to_append = self.merge(to_append)
+            self.load_doc(doc_contents=to_append, doc_uuid=es_uuid)
 
     def __extract_item(self, **kwargs):
         if isinstance(c_item, dict):
@@ -206,7 +209,9 @@ class FileIndexer(Indexer):
                         name = str(key)
                     for item in value:
                         # resursive call, one nested item deeper
-                        es_array.append(self.__extract_item(item, file[key_split[0]], name))
+                        es_array.append(
+                            self.__extract_item(item, file[key_split[0]],
+                                                name))
                     return es_array
         elif c_item.split("*")[0] in file:
             # if config item is in the file
@@ -242,7 +247,6 @@ class FileIndexer(Indexer):
             else:
                 yield el
 
-
     def create_mapping():
         # ES mapping
         try:
@@ -253,7 +257,8 @@ class FileIndexer(Indexer):
             raise NotFoundError("chalicelib/config.json file does not exist")
         # key_names = ['bundle_uuid', 'dirpath', 'file_name']
         key_names = ['bundle_uuid', 'file_name', 'file_uuid',
-                     'file_version', 'file_format', 'bundle_type', "file_size*long"]
+                     'file_version', 'file_format', 'bundle_type',
+                     "file_size*long"]
         for c_key, c_value in config.items():
             for c_item in c_value:
                 # get the names for each of the items in the config
@@ -288,33 +293,41 @@ class FileIndexer(Indexer):
                 else:
                     # ex: name*mapping1_analyzer
                     es_mappings.append(
-                        {i_split[0]: {"type": u_split[0], "analyzer": u_split[1],
+                        {i_split[0]: {"type": u_split[0],
+                                      "analyzer": u_split[1],
                                       "search_analyzer": "standard"}})
             else:
                 u_split = i_split[1].split("_")
                 banana_split = i_split[2].split("_")
                 if len(u_split) == 1 and len(banana_split) == 1:
                     # ex: name*mapping1*mapping2
-                    es_mappings.append({i_split[0]: {"type": i_split[1], "fields": {
-                        "raw": {"type": i_split[2]}}}})
+                    es_mappings.append(
+                        {i_split[0]: {"type": i_split[1], "fields": {
+                            "raw": {"type": i_split[2]}}}})
                 elif len(u_split) == 2 and len(banana_split) == 1:
                     # ex: name*mapping1_analyzer*mapping2
                     es_mappings.append(
-                        {i_split[0]: {"type": u_split[0], "analyzer": u_split[1],
+                        {i_split[0]: {"type": u_split[0],
+                                      "analyzer": u_split[1],
                                       "search_analyzer": "standard",
-                                      "fields": {"raw": {"type": i_split[2]}}}})
+                                      "fields": {
+                                          "raw": {"type": i_split[2]}}}})
                 elif len(u_split) == 1 and len(banana_split) == 2:
                     # ex: name*mapping1*mapping2_analyzer
-                    es_mappings.append({i_split[0]: {"type": i_split[1], "fields": {
-                        "raw": {"type": banana_split[0], "analyzer": banana_split[1],
-                                "search_analyzer": "standard"}}}})
+                    es_mappings.append(
+                        {i_split[0]: {"type": i_split[1], "fields": {
+                            "raw": {"type": banana_split[0],
+                                    "analyzer": banana_split[1],
+                                    "search_analyzer": "standard"}}}})
                 elif len(u_split) == 2 and len(banana_split) == 2:
                     # ex: name*mapping1_analyzer*mapping2_analyzer
-                    es_mappings.append({i_split[0]: {"type": u_split[0], "fields": {
-                        "raw": {"type": banana_split[0], "analyzer": banana_split[1],
-                                "search_analyzer": "standard"}},
-                                                     "analyzer": u_split[1],
-                                                     "search_analyzer": "standard"}})
+                    es_mappings.append(
+                        {i_split[0]: {"type": u_split[0], "fields": {
+                            "raw": {"type": banana_split[0],
+                                    "analyzer": banana_split[1],
+                                    "search_analyzer": "standard"}},
+                                      "analyzer": u_split[1],
+                                      "search_analyzer": "standard"}})
                 else:
                     app.log.info("mapping formatting problem %s", i_split)
 
@@ -348,12 +361,45 @@ class FileIndexer(Indexer):
                     name = str(key)
                 # recursively call on each item in this level of config values
                 for item in value:
-                    es_array.append(es_config(item, name))
+                    es_array.append(self.__es_config(item, name))
                 return es_array
         else:
             # return name concatenated with config key
             name = str(name) + "|" + str(c_item)
             return (name)
+
+    def special_fields(self, **kwargs):
+        es_json = []
+        file_name, values = list(dfile.items())[0]
+        file_uuid = values['uuid']
+        file_version = values['version']
+        file_size = values['size']
+        # Make the ES uuid be a concatenation of:
+        # bundle_uuid:file_uuid:file_version
+        es_uuid = "{}:{}:{}".format(bundle_uuid, file_uuid, file_version)
+        es_json.append({'es_uuid': es_uuid})
+        # add special fields (ones that aren't in config)
+        es_json.append({'bundle_uuid': bundle_uuid})
+        # Carlos adding extra fields
+        es_json.append({'file_name': file_name})
+        es_json.append({'file_uuid': file_uuid})
+        es_json.append({'file_version': file_version})
+        # Add the file format
+        file_format = '.'.join(file_name.split('.')[1:])
+        file_format = file_format if file_format != '' else 'None'
+        es_json.append({'file_format': file_format})
+        # Emily adding bundle_type
+        if 'analysis.json' in [list(x.keys())[0] for x in metadata]:
+            es_json.append({'bundle_type': 'Analysis'})
+        elif re.search(r'(tiff)', str(file_extensions)):
+            es_json.append({'bundle_type': 'Imaging'})
+        elif re.search(r'(fastq.gz)', str(file_extensions)):
+            es_json.append({'bundle_type': 'scRNA-Seq Upload'})
+        else:
+            es_json.append({'bundle_type': 'Unknown'})
+        # adding size of the file
+        es_json.append({'file_size': file_size})
+        return es_json
 
 
 class DonorIndexer(Indexer):
