@@ -5,17 +5,6 @@ class AbstractIndexer(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, metadata_files, data_files, es_client, **kwargs):
-        """
-        :param metadata_files: list of json metadata (list of dicts)
-        :param data_files: list describing non-metadata files (list of dicts)
-        :param es_client: localhost or not (string)
-        """
-        self.metadata_files = metadata_files
-        self.metadata_files = data_files
-        self.es_client = es_client
-
-    @abstractmethod
     def index(self, **kwargs):
         """
         this is where different indexes can be indexed
@@ -78,8 +67,10 @@ class Indexer(AbstractIndexer):
         :param data_files: list describing non-metadata files (list of dicts)
         :param es_client: The elasticsearch client
         """
-        # Call the parent __init__ method
-        super(AbstractIndexer, self).__init__()
+        # Set main arguments
+        self.metadata_files = metadata_files
+        self.data_files = data_files
+        self.es_client = es_client
         # Set all kwargs as instance attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -143,7 +134,8 @@ class Indexer(AbstractIndexer):
         to be loaded into ElasticSearch. It should use the index_mapping_config
         attribute as appropriate.
         """
-        return {}
+        raise NotImplementedError(
+            'users must define create_mapping to use this base class')
 
     def load_mapping(self, **kwargs):
         """
@@ -162,7 +154,7 @@ class Indexer(AbstractIndexer):
 
 class FileIndexer(Indexer):
     def index(self, **kwargs):
-        for dfile in data_files:
+        for dfile in self.data_files:
             file_uuid = dfiles[file_uuid]
             es_json = self.special_fields(dfile=dfile, metadata=metadata_files)
             for field in es_json:
