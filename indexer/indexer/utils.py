@@ -1,5 +1,9 @@
+from collections import ChainMap
 from hca.dss import DSSClient, SwaggerAPIException
 import logging
+from multiprocessing.dummy import Pool as ThreadPool
+import os
+
 
 indexer_name = os.getenv('INDEXER_NAME', 'dss-indigo')
 module_logger = logging.getLogger(indexer_name + ".indexer")
@@ -54,15 +58,15 @@ class DataExtractor(object):
         :return: Returns a tuple separating (metadata_files, data_files)
         """
         # The blue box may have trouble returning bundle, so __attempt 3 times
-        bundle = __attempt(3,
-                           self.dss_client.get_bundle,
-                           SwaggerAPIException,
-                           uuid=bundle_uuid,
-                           replica=replica)
+        bundle = self.__attempt(3,
+                                self.dss_client.get_bundle,
+                                SwaggerAPIException,
+                                uuid=bundle_uuid,
+                                replica=replica)
         # Separate files in bundle by metadata files and data files
         _files = bundle['bundle']['files']
-        metadata_files = [{f["name"]: f} for f in _files if f["indexed"]]
-        data_files = [{f["name"]: f} for f in _files if not f["indexed"]]
+        metadata_files = {f["name"]: f for f in _files if f["indexed"]}
+        data_files = {f["name"]: f for f in _files if not f["indexed"]}
         # Return as a tuple
         return metadata_files, data_files
 
@@ -74,90 +78,36 @@ class DataExtractor(object):
         :return: Contents of that file
         """
         # The blue box may have trouble returning file, so __attempt 3 times
-        _file = __attempt(3,
-                          self.dss_client.get_file,
-                          SwaggerAPIException,
-                          uuid=file_uuid,
-                          replica=replica)
+        _file = self.__attempt(3,
+                               self.dss_client.get_file,
+                               SwaggerAPIException,
+                               uuid=file_uuid,
+                               replica=replica)
         return _file
 
-    def extract_bundle():
+    def extract_bundle(self, request, replica):
         """
         This is the main method that will extract the contents of the bundle
         and separate it into a tuple of (metadata_files, data_files), where
         the metadata_files are actual contents of the metadata files and the
         data_files are the metadata describing the files.
+        :param request: The contents of the DSS event notification
+        :param replica: The replica to which pull the bundle from
         """
-        # Call __get_bundle
-        # Then call some other method to thread the calling of metadata_files
-        pass
-
-def get_bundles(bundle_uuid, bbhost, replica):
-    """
-    This function gets a bundle from the blue box
-    and sorts returned items by json and data (not json) files
-    :param bundle_uuid: tell blue box which bundle to get
-    :return: json file with items separated by json files and data files
-    """
-
-    # the blue box may have trouble returning bundle, so retry 3 times
-    retries = 0
-    while retries < 3:
-        try:
-            # call the blue box
-            json_str = urlopen(str(bb_host + (
-                'v1/bundles/') + bundle_uuid + "?replica=" + replica)).read()
-
-            # json load string for processing later
-            bundle = json.loads(json_str)
-            break
-        except HTTPError as er:
-            app.log.info("Error on try {}\n:{}".format(retries, er))
-            retries += 1
-            continue
-        except URLError as er:
-            app.log.info("Error on try {}\n:{}".format(retries, er))
-            retries += 1
-            continue
-    else:
-        print("Maximum number of retries reached: {}".format(retries))
-        raise Exception("Unable to access bundle '%s'" % bundle_uuid)
-
-    json_files = []
-    data_files = []
-    # separate files in bundle by json files and data files
-    for file in bundle['bundle']['files']:
-        if file["name"].endswith(".json"):
-            jsonfile = get_file(file["uuid"])
-            json_files.append({file["name"]: jsonfile})
-        else:
-            data_files.append({file["name"]: file})
-    return json.dumps({'json_files': json_files, 'data_files': data_files})
-
-
-# returns the file
-def get_file(file_uuid, bbhost, replica):
-    """
-    This function gets a file from the blue box
-    :param file_uuid: tell blue box which file to get
-    :return: file
-    """
-    # '?replica=aws' needed to choose cloud location
-    aws_url = bb_host + "v1/files/" + file_uuid + "?replica=" + replica
-    # only accept json files
-    header = {'accept': 'application/json'}
-    try:
-        aws_response = requests.get(aws_url, headers=header)
-        # not flattened
-        file = json.loads(aws_response.content)
-    except Exception as e:
-        print(e)
-        raise NotFoundError("File '%s' does not exist" % file_uuid)
-    # queue.put(json.dumps(file))
-    return json.dumps(file)
-
-def post_notication(request)
-    #request = app.current_request.json_body
-    bundle_uuid = request['match']['bundle_uuid']
-    bundle = get_bundles(bundle_uuid)
-    return bundle
+        def get_metadata(file_name, args):
+            _metadata = {file_name: self.__get_file(*args)}
+            return _metadata
+        bundle_uuid = request['match']['bundle_uuid']
+        # Get the metadata and data descriptions
+        metadata_files, data_files = self.__get_bundle(bundle_uuid, replica)
+        # Create a ThreadPool which will execute the function
+        pool = ThreadPool(len(metadata_files))
+        # Pool the contents in the right format for the get_metadata function
+        args = [(name, (_f['uuid'], replica)) for name, _f in
+                metadata_files.items()]
+        results = pool.starmap(get_metadata, args)
+        pool.close()
+        pool.join()
+        # Reassign the metadata files as a single dictionary
+        metadata_files = dict(ChainMap(*results))
+        return metadata_files, data_files
