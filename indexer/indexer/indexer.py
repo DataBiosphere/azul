@@ -1,4 +1,8 @@
 from abc import abstractmethod, ABCMeta
+from collections import ChainMap
+import json
+from pprint import pprint
+import re
 
 
 class AbstractIndexer(object):
@@ -61,41 +65,37 @@ class AbstractIndexer(object):
 
 
 class Indexer(AbstractIndexer):
-    def __init__(self, metadata_files, data_files, es_client, **kwargs):
+    def __init__(self, metadata_files, data_files, es_client, index_name,
+                 doc_type, index_settings=None, index_mapping_config=None,
+                 **kwargs):
         """
         :param metadata_files: list of json metadata (list of dicts)
-        :param data_files: list describing non-metadata files (list of dicts)
+        :param data_files: dictionary describing non-metadata files
+         (list of dicts)
         :param es_client: The elasticsearch client
         """
         # Set main arguments
         self.metadata_files = metadata_files
         self.data_files = data_files
         self.es_client = es_client
+        self.index_name = index_name
+        self.doc_type = doc_type
+        self.index_settings = index_settings
+        self.index_mapping_config = index_mapping_config
         # Set all kwargs as instance attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
-        # Ensure this keys got passed on to kwargs
-        index_config = ['index_name',
-                        'index_settings',
-                        'index_mapping_config',
-                        'doc_type']
-        # Confirm fields in index_config are present
-        if not all(attr in kwargs for attr in index_config):
-            missing_fields = index_config - kwargs.keys()
-            raise ValueError("You are missing: {}".format(missing_fields))
-        # Loads the mapping into ElasticSearch
-        self.load_mapping()
 
-    def index(self, **kwargs):
+    def index(self, *args, **kwargs):
         """
         this is where different indexes can be indexed
-        calls merge, load_doc
+        calls special_fields, merge, load_doc
         :return: none
         """
         raise NotImplementedError(
             'users must define index to use this base class')
 
-    def special_fields(self, **kwargs):
+    def special_fields(self, *args, **kwargs):
         """
         special fields handler (bundle_uuid, bundle_type)
         :return:
@@ -112,7 +112,7 @@ class Indexer(AbstractIndexer):
         raise NotImplementedError(
             'users must define merge to use this base class')
 
-    def load_doc(self, **kwargs):
+    def load_doc(self, doc_uuid, doc_contents, **kwargs):
         """
         makes put request to ES (ElasticSearch)
         :param index_name: The name of the index to load into ElasticSearch
@@ -124,8 +124,8 @@ class Indexer(AbstractIndexer):
         # Loads the index document file into elasticsearch
         self.es_client.index(index=self.index_name,
                              doc_type=self.doc_type,
-                             id=kwargs['doc_uuid'],
-                             body=kwargs['doc_contents'])
+                             id=doc_uuid,
+                             body=doc_contents)
 
     def create_mapping(self, **kwargs):
         """
@@ -144,7 +144,7 @@ class Indexer(AbstractIndexer):
         """
         # Creates the index
         self.es_client.indices.create(index=self.index_name,
-                                      doc_type=self.index_settings,
+                                      body=self.index_settings,
                                       ignore=[400])
         # Loads mappings for the index
         self.es_client.put_mapping(index=self.index_name,
@@ -153,85 +153,131 @@ class Indexer(AbstractIndexer):
 
 
 class FileIndexer(Indexer):
-    def index(self, **kwargs):
-        for dfile in self.data_files:
-            file_uuid = dfiles[file_uuid]
-            es_json = self.special_fields(dfile=dfile, metadata=metadata_files)
-            for field in es_json:
-                for fkey, fvalue in field.items():
-                    if fkey == 'es_uuid':
-                        es_uuid = fvalue
-                        es_json.remove(field)
-            for c_key, c_value in kwargs['config']:
-                for mfile in metadata_files:
-                    if c_key in mfile:
-                        for c_item in c_value:
-                            to_append = self.__extract_item(c_key, mfile)
-                            if to_append is not None:
-                                if isinstance(to_append, list):
-                                    # makes lists of lists into a single list
-                                    to_append = self.merge(to_append)
-                                    for item in to_append:
-                                        # add file item to list of items to append to ES
-                                        es_json.append(item)
-                                else:
-                                    # add file item to list of items to append to ES
-                                    es_json.append(to_append)
+    """Create a file oriented index.
 
-            to_append = self.__extract_item(config, metadata_files)
-            if to_append is not None:
-                if isinstance(to_append, list):
-                    # makes lists of lists into a single list
-                    to_append = self.merge(to_append)
-            self.load_doc(doc_contents=to_append, doc_uuid=es_uuid)
+    FileIndexer makes use of its index() function to perform indexing
+    of the data files that are presented to the class when creating an
+    instance.
 
-    def __extract_item(self, **kwargs):
+    End for now.
+
+    """
+
+    def index(self, bundle_uuid, bundle_version, **kwargs):
+        """Indexes the data files.
+
+        Triggers the actual indexing process
+
+        :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
+        :param bundle_version: The bundle of the version.
+        """
+        # for dfile in self.data_files:
+        #     file_uuid = dfiles[file_uuid]
+        #     es_json = self.special_fields(dfile=dfile, metadata=metadata_files)
+        #     for field in es_json:
+        #         for fkey, fvalue in field.items():
+        #             if fkey == 'es_uuid':
+        #                 es_uuid = fvalue
+        #                 es_json.remove(field)
+        #     for c_key, c_value in kwargs['config']:
+        #         for mfile in metadata_files:
+        #             if c_key in mfile:
+        #                 for c_item in c_value:
+        #                     to_append = self.__extract_item(c_key, mfile)
+        #                     if to_append is not None:
+        #                         if isinstance(to_append, list):
+        #                             # makes lists of lists into a single list
+        #                             to_append = self.merge(to_append)
+        #                             for item in to_append:
+        #                                 # add file item to list of items to append to ES
+        #                                 es_json.append(item)
+        #                         else:
+        #                             # add file item to list of items to append to ES
+        #                             es_json.append(to_append)
+        #
+        #     to_append = self.__extract_item(config, metadata_files)
+        #     if to_append is not None:
+        #         if isinstance(to_append, list):
+        #             # makes lists of lists into a single list
+        #             to_append = self.merge(to_append)
+        # self.load_doc(doc_contents=to_append, doc_uuid=es_uuid)
+
+        ### CARLOS REFACTOR
+        # Get the config driving indexing
+        requested_entries = self.index_mapping_config['requested_entries']
+        # Iterate over each file
+        for _file in self.data_files.values():
+            # Set the contents to an empty dictionary
+            contents = {}
+            # For each file iterate over the contents of the config
+            for c_key, c_value in requested_entries.items():
+                if c_key in self.metadata_files:
+                    # Contents is a dictionary with all the present fields
+                    current = self.__extract_item(c_value,
+                                                  self.metadata_files[c_key],
+                                                  c_key)
+                # Merge two dictionaries
+                print("##############   PRINTING current     #############")
+                pprint(current)
+                contents = {**contents, **current}
+                print("##############   PRINTING contents     #############")
+                pprint(contents)
+            # Get the special fields added to the contents
+            es_uuid = "{}:{}".format(bundle_uuid, _file['uuid'])
+            print("##############   PRINTING Before Special fields     #############")
+            pprint(contents)
+            special_ = self.special_fields(_file,
+                                           contents,
+                                           bundle_uuid=bundle_uuid,
+                                           bundle_version=bundle_version,
+                                           es_uuid=es_uuid)
+            contents = {**contents, **special_}
+            # Load the current file in question
+            # Ideally merge() should be called at this point
+            print("##############   PRINTING TOLOAD FILE       #############")
+            pprint(contents)
+            self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
+
+    def __extract_item(self, c_item, _file, name, **kwargs):
+        print("##############   PRINTING FILE       #############")
+        pprint(_file)
+        print("##############   PRINTING CONFIG ITEM   #############")
+        print(c_item)
+        print("##############   PRINTING NAME #############")
+        print(name)
         if isinstance(c_item, dict):
             # if the config is a dictionary,
             # then need to look deeper into the file and config for the key
             es_array = []
             for key, value in c_item.items():
-                # removing mapping param
-                key_split = key.split("*")
-                if key in file:
+                # Check if the key is in the _file in question
+                if key in _file:
                     # making the name that shows path taken to get to value
-                    if len(name) > 0:
-                        name = str(name) + "|" + str(key_split[0])
-                    else:
-                        name = str(key)
-                    for item in value:
-                        # resursive call, one nested item deeper
-                        es_array.append(
-                            self.__extract_item(item, file[key_split[0]],
-                                                name))
-                    return es_array
-        elif c_item.split("*")[0] in file:
+                    name = "{}|{}".format(name, key) if name != "" else key
+                    # resursive call. Get a list of key:value pairs
+                    current = [self.__extract_item(item, _file[key], name)
+                               for item in value]
+                    es_array.extend(current)
+                    # Make the list of dictionaries into a single dictionary
+            fields_dictionary = dict(ChainMap(*filter(None, es_array)))
+            return fields_dictionary
+        elif isinstance(c_item, list):
+            es_array = [self.__extract_item(item, _file, name)
+                        for item in c_item]
+            fields_dictionary = dict(ChainMap(*filter(None, es_array)))
+            return fields_dictionary
+        elif c_item in _file:
             # if config item is in the file
-            c_item_split = c_item.split("*")
-            file_value = file[c_item_split[0]]
+            file_value = _file[c_item]
             # need to be able to handle lists
             if not isinstance(file_value, list):
-                if len(name) > 0:
-                    name = str(name) + "|" + str(c_item_split[0])
-                else:
-                    name = str(c_item_split[0])
+                name = "{}|{}".format(name, c_item) if name != "" else c_item
                 # ES does not like periods(.) use commas(,) instead
                 n_replace = name.replace(".", ",")
                 # return the value of key (given by config)
-                return ({n_replace: file_value})
-        # Carlos's test
-        elif c_item.split("*")[0] not in file:
-            # all config items that cannot be found in file are given value "None"
-            c_item_split = c_item.split("*")
-            # Putting an empty string.
-            # If None (instead of "None") it could break things downstream
-            file_value = "None"
-            name = str(name) + "|" + str(c_item_split[0])
-            # ES does not like periods(.) use commas(,) instead
-            n_replace = name.replace(".", ",")
-            return ({n_replace: file_value})
+                return {n_replace: file_value}
 
-    def merge(l):
+    def merge(self, l):
         for el in l:
             if isinstance(el, collections.Sequence) and not isinstance(el, (
                     str, bytes)):
@@ -239,102 +285,17 @@ class FileIndexer(Indexer):
             else:
                 yield el
 
-    def create_mapping():
-        # ES mapping
-        try:
-            with open('chalicelib/config.json') as f:
-                config = json.loads(f.read())
-        except Exception as e:
-            print(e)
-            raise NotFoundError("chalicelib/config.json file does not exist")
-        # key_names = ['bundle_uuid', 'dirpath', 'file_name']
-        key_names = ['bundle_uuid', 'file_name', 'file_uuid',
-                     'file_version', 'file_format', 'bundle_type',
-                     "file_size*long"]
-        for c_key, c_value in config.items():
-            for c_item in c_value:
-                # get the names for each of the items in the config
-                # the key_names array still has the mapping attached to each name
-                key_names.append(self.__es_config(c_item, c_key))
-        key_names = __merge(key_names)
-        es_mappings = []
+    def create_mapping(self, **kwargs):
+        """
+        Return the mapping as a string.
 
-        # i_split splits at "*" (i for item)
-        # u_split splits i_split[1] at "_" (u for underscore)
-        # banana_split splits i_split[2] at "_"
-        for item in key_names:
-            # this takes in names with mappings still attached, separates it
-            # name and mappings separated by *
-            # analyzer is separated by mapping by _
-            # ex: name*mapping1*mapping2_analyzer
-            i_replace = item.replace(".", ",")
-            i_split = i_replace.split("*")
-            if len(i_split) == 1:
-                # ex: name
-                # default behavior: main field: keyword, raw field: text with analyzer
-                es_mappings.append(
-                    {i_split[0]: {"type": "keyword",
-                                  "fields": {"raw": {"type": "text",
-                                                     "analyzer": config_analyzer,
-                                                     "search_analyzer": "standard"}}}})
-            elif len(i_split) == 2:
-                u_split = i_split[1].split("_")
-                if len(u_split) == 1:
-                    # ex: name*mapping1
-                    es_mappings.append({i_split[0]: {"type": i_split[1]}})
-                else:
-                    # ex: name*mapping1_analyzer
-                    es_mappings.append(
-                        {i_split[0]: {"type": u_split[0],
-                                      "analyzer": u_split[1],
-                                      "search_analyzer": "standard"}})
-            else:
-                u_split = i_split[1].split("_")
-                banana_split = i_split[2].split("_")
-                if len(u_split) == 1 and len(banana_split) == 1:
-                    # ex: name*mapping1*mapping2
-                    es_mappings.append(
-                        {i_split[0]: {"type": i_split[1], "fields": {
-                            "raw": {"type": i_split[2]}}}})
-                elif len(u_split) == 2 and len(banana_split) == 1:
-                    # ex: name*mapping1_analyzer*mapping2
-                    es_mappings.append(
-                        {i_split[0]: {"type": u_split[0],
-                                      "analyzer": u_split[1],
-                                      "search_analyzer": "standard",
-                                      "fields": {
-                                          "raw": {"type": i_split[2]}}}})
-                elif len(u_split) == 1 and len(banana_split) == 2:
-                    # ex: name*mapping1*mapping2_analyzer
-                    es_mappings.append(
-                        {i_split[0]: {"type": i_split[1], "fields": {
-                            "raw": {"type": banana_split[0],
-                                    "analyzer": banana_split[1],
-                                    "search_analyzer": "standard"}}}})
-                elif len(u_split) == 2 and len(banana_split) == 2:
-                    # ex: name*mapping1_analyzer*mapping2_analyzer
-                    es_mappings.append(
-                        {i_split[0]: {"type": u_split[0], "fields": {
-                            "raw": {"type": banana_split[0],
-                                    "analyzer": banana_split[1],
-                                    "search_analyzer": "standard"}},
-                                      "analyzer": u_split[1],
-                                      "search_analyzer": "standard"}})
-                else:
-                    app.log.info("mapping formatting problem %s", i_split)
+        Pulls the mapping from the index_mapping_config.
+        """
+        # Return the es_mapping from the index_mapping_config
+        mapping_config = self.index_mapping_config['es_mapping']
+        return json.dumps(mapping_config)
 
-        es_keys = []
-        es_values = []
-        # format mappings
-        for item in es_mappings:
-            if item is not None:
-                for key, value in item.items():
-                    es_keys.append(key)
-                    es_values.append(value)
-            es_file = dict(zip(es_keys, es_values))
-        return final_mapping = '{"properties":' + json.dumps(es_file) + '}'
-
-    def __es_config(c_item, name):
+    def __es_config(self, c_item, name):
         """
         This function is a simpler version of look_file
         The name is recursively found by going through
@@ -343,55 +304,92 @@ class FileIndexer(Indexer):
         :param name: used for key in the key, value pair
         :return: name
         """
+        # TODO: THE LOGIC OF THIS IS WRONG. MIGHT HAVE TO REWRITE IT
         if isinstance(c_item, dict):
-            es_array = []
             # name concatenated with config key
             for key, value in c_item.items():
-                if len(name) > 0:
-                    name = str(name) + "|" + str(key)
-                else:
-                    name = str(key)
+                # Assign the name
+                name = "{}|{}".format(name, key) if name != "" else key
                 # recursively call on each item in this level of config values
-                for item in value:
-                    es_array.append(self.__es_config(item, name))
-                return es_array
+                es_array = [self.__es_config(item, name) for item in value]
+                # Union on all of the sets in the list
+                fields_set = set.union(*es_array)
+                yield fields_set # THIS RETURNS WITHOUT GOING THOROUGH ALL THE FILES
         else:
             # return name concatenated with config key
-            name = str(name) + "|" + str(c_item)
-            return (name)
+            name = "{}|{}".format(name, c_item)
+            n_replace = name.replace(".", ",")
+            return {n_replace}
 
-    def special_fields(self, **kwargs):
-        es_json = []
-        file_name, values = list(dfile.items())[0]
-        file_uuid = values['uuid']
-        file_version = values['version']
-        file_size = values['size']
-        # Make the ES uuid be a concatenation of:
-        # bundle_uuid:file_uuid:file_version
-        es_uuid = "{}:{}:{}".format(bundle_uuid, file_uuid, file_version)
-        es_json.append({'es_uuid': es_uuid})
-        # add special fields (ones that aren't in config)
-        es_json.append({'bundle_uuid': bundle_uuid})
-        # Carlos adding extra fields
-        es_json.append({'file_name': file_name})
-        es_json.append({'file_uuid': file_uuid})
-        es_json.append({'file_version': file_version})
-        # Add the file format
+    def __get_format(self, file_name):
+        """
+        HACK This is to get the file format while we get a file format.
+
+        We need to get the file format from the Blue Box team somehow.
+        This is a small parsing hack while we get a response.
+
+        :param file_name: A string containing the the file name with extension
+        """
+        # Get everything after the period
         file_format = '.'.join(file_name.split('.')[1:])
-        file_format = file_format if file_format != '' else 'None'
-        es_json.append({'file_format': file_format})
-        # Emily adding bundle_type
-        if 'analysis.json' in [list(x.keys())[0] for x in metadata]:
-            es_json.append({'bundle_type': 'Analysis'})
-        elif re.search(r'(tiff)', str(file_extensions)):
-            es_json.append({'bundle_type': 'Imaging'})
-        elif re.search(r'(fastq.gz)', str(file_extensions)):
-            es_json.append({'bundle_type': 'scRNA-Seq Upload'})
+        file_format = file_format if file_format != '' else 'Unknown'
+        return file_format
+
+    def __get_bundle_type(self, file_extension):
+        """
+        HACK This is to get the bundle type while we wait for Blue Box team.
+
+        We need to get the bundle type from the Blue Box team somehow.
+        This is a small parsing hack while we get a response from them.
+
+        :param file_name: A string containing the the file extension
+        """
+        # A series of if else statements to figure out the bundle type
+        # HACK
+        if 'analysis.json' in self.metadata_files:
+            bundle_type = 'Analysis'
+        elif re.search(r'(tiff)', str(file_extension)):
+            bundle_type = 'Imaging'
+        elif re.search(r'(fastq.gz)', str(file_extension)):
+            bundle_type = 'scRNA-Seq Upload'
         else:
-            es_json.append({'bundle_type': 'Unknown'})
-        # adding size of the file
-        es_json.append({'file_size': file_size})
-        return es_json
+            bundle_type = 'Unknown'
+        return bundle_type
+
+    def special_fields(self, data_file, present_fields, **kwargs):
+        """
+        Add any special fields that may be missing.
+
+        Gets any special field that may not be available directly from the
+        metadata.
+
+        :param data_file: a dictionary describing the file in question.
+        :param present_fields: dictionary with available fields.
+        :param kwargs: any additional entries you want to include.
+        :return: a dictionary with all the special fields added.
+        """
+        # Get all the fields from a single file into a dictionary
+        file_data = {'file_{}'.format(key): value
+                     for key, value in data_file.items()}
+        # Add extra field that should go in here (e.g. es_uuid, bundle_uuid)
+        extra_fields = {key: value for key, value in kwargs.items()}
+        # Get the file format
+        file_format = self.__get_format(file_data['file_name'])
+        # Create a dictionary with the file fomrat and the bundle type
+        computed_fields = {"file_format": file_format,
+                           "bundle_type": self.__get_bundle_type(file_format)}
+        # Add empty fields as the string 'None'
+        # Get all the entries that should go in ElasticSearch
+        requested_entries = self.index_mapping_config['requested_entries']
+        all_fields = self.__es_config(requested_entries, "")
+        print("##############   PRINTING ALL_FIELDS       #############")
+        pprint(all_fields)
+        # Make a set out of the fields present in the data
+        present_fields = set(present_fields.keys())
+        empty = {field: "None" for field in all_fields - present_fields}
+        # Merge the four dictionaries
+        all_data = {**file_data, **extra_fields, **computed_fields, **empty}
+        return all_data
 
 
 class DonorIndexer(Indexer):
@@ -400,6 +398,9 @@ class DonorIndexer(Indexer):
 
 '''
 index method calls:
+    - special_fields
     - merge
-    -load_doc
+    - load_mapping
+        - create_mapping
+    - load_doc
 '''

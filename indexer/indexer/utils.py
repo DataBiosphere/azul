@@ -14,7 +14,7 @@ class DataExtractor(object):
     This class works as a helper class for obtaining files from the Blue Box
     via the hca python module.
     """
-    def __init__(self, dss_host, **kwargs):
+    def __init__(self, dss_host):
         """
         Creates an instance of the DataExtractor. It takes the formatted url
         of the DSS (e.g. https://dss.staging.data.humancellatlas.org/v1)
@@ -49,7 +49,7 @@ class DataExtractor(object):
             raise Exception("Unable to access resource")
         return response
 
-    def __get_bundle(self, bundle_uuid, replica, **kwargs):
+    def __get_bundle(self, bundle_uuid, replica):
         """
         Private method for getting the bundle from the bundle_uuid
         :param bundle_uuid: The bundle to pull from the DSS
@@ -70,7 +70,7 @@ class DataExtractor(object):
         # Return as a tuple
         return metadata_files, data_files
 
-    def __get_file(self, file_uuid, replica, **kwargs):
+    def __get_file(self, file_uuid, replica):
         """
         This function gets a file from the blue box
         :param file_uuid: Specifies which file to get
@@ -94,8 +94,8 @@ class DataExtractor(object):
         :param request: The contents of the DSS event notification
         :param replica: The replica to which pull the bundle from
         """
-        def get_metadata(file_name, args):
-            _metadata = {file_name: self.__get_file(*args)}
+        def get_metadata(file_name, _args):
+            _metadata = {file_name: self.__get_file(*_args)}
             return _metadata
         bundle_uuid = request['match']['bundle_uuid']
         # Get the metadata and data descriptions
