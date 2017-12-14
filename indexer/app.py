@@ -25,6 +25,7 @@ app.log.setLevel(logging.DEBUG)
 # Set env on lambda, chalice config and profile
 # Get the ElasticSearch and BlueBox host
 es_host = os.environ.get('ES_ENDPOINT', "localhost")
+es_port = os.environ.get("ES_PORT", 9200)
 bb_host = "https://" + os.environ.get('BLUE_BOX_ENDPOINT',
                                       "dss.staging.data.humancellatlas.org/v1")
 es_index = os.environ.get('ES_INDEX', "azul-test-indexer")
@@ -57,7 +58,7 @@ if es_host.endswith('.es.amazonaws.com'):
     )
 else:
     # default auth for testing purposes
-    es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
+    es = Elasticsearch([{'host': 'es_host', 'port': es_port}])
 
 
 # for blue box notification
