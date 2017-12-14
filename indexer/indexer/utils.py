@@ -44,7 +44,7 @@ class DataExtractor(object):
 
     def __attempt(self, times, func, errors, **kwargs):
         """
-        Try a fucntion multiple times.
+        Try a function multiple times.
 
         Private helper method to try multiple times a function.
         It will try to catch the all of the errors passed to
