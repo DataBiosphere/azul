@@ -275,8 +275,8 @@ class FileIndexer(Indexer):
                 for item in value:
                     # Recursive call on each level
                     if _file is None or key in _file:
-                        son = None if _file is None else _file[key]
-                        yield from self.__get_item(item, new_name, _file=son)
+                        child = None if _file is None else _file[key]
+                        yield from self.__get_item(item, new_name, _file=child)
         else:
             # Return name concatenated with config key
             name = "{}|{}".format(name, c_item).replace(".", ",")
