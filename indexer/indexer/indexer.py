@@ -65,7 +65,8 @@ class Indexer(object):
             setattr(self, key, value)
 
     def index(self, bundle_uuid, bundle_version, *args, **kwargs):
-        """Indexes the data files.
+        """
+        Indexes the data files.
 
         Triggers the actual indexing process
 
@@ -193,6 +194,64 @@ class FileIndexer(Indexer):
             # Ideally merge() should be called at this point
             self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
 
+    def merge(self, doc_contents):
+        """
+        Merge the document with the contents in ElasticSearch.
+
+        merge() should take the results of get_item() and harmonize it
+        with whatever is present in ElasticSearch to avoid blind overwritting
+        of documents. Users should implement their own protocol.
+
+        :param doc_contents: Current document to be indexed.
+        :return: The harmonized document which can overwrite existing entry.
+        """
+        # Assuming a file is never really changed, there is no reason
+        # for merge here.
+        pass
+
+    def create_mapping(self, **kwargs):
+        """
+        Return the mapping as a string.
+
+        Pulls the mapping from the index_mapping_config.
+        """
+        # Return the es_mapping from the index_mapping_config
+        mapping_config = self.index_mapping_config['es_mapping']
+        return json.dumps(mapping_config)
+
+    def special_fields(self, data_file, present_fields, **kwargs):
+        """
+        Add any special fields that may be missing.
+
+        Gets any special field that may not be available directly from the
+        metadata.
+
+        :param data_file: a dictionary describing the file in question.
+        :param present_fields: dictionary with available fields.
+        :param kwargs: any additional entries you want to include.
+        :return: a dictionary of all the special fields to be added.
+        """
+        # Get all the fields from a single file into a dictionary
+        file_data = {'file_{}'.format(key): value
+                     for key, value in data_file.items()}
+        # Add extra field that should go in here (e.g. es_uuid, bundle_uuid)
+        extra_fields = {key: value for key, value in kwargs.items()}
+        # Get the file format
+        file_format = self.__get_format(file_data['file_name'])
+        # Create a dictionary with the file fomrat and the bundle type
+        computed_fields = {"file_format": file_format,
+                           "bundle_type": self.__get_bundle_type(file_format)}
+        # Get all the requested entries that should go in ElasticSearch
+        req_entries = self.index_mapping_config['requested_entries']
+        all_fields = {entry for entry in self.__get_item(req_entries, "")}
+        # Make a set out of the fields present in the data
+        present_keys = set(present_fields.keys())
+        # Add empty fields as the string 'None'
+        empty = {field: "None" for field in all_fields - present_keys}
+        # Merge the four dictionaries
+        all_data = {**file_data, **extra_fields, **computed_fields, **empty}
+        return all_data
+
     def __get_item(self, c_item, name, _file=None):
         """
         Get the c_item in _file or all the strings in the c_item.
@@ -228,31 +287,6 @@ class FileIndexer(Indexer):
                 # If we only want the string of the name
                 yield name
 
-    def merge(self, doc_contents):
-        """
-        Merge the document with the contents in ElasticSearch.
-
-        merge() should take the results of get_item() and harmonize it
-        with whatever is present in ElasticSearch to avoid blind overwritting
-        of documents. Users should implement their own protocol.
-
-        :param doc_contents: Current document to be indexed.
-        :return: The harmonized document which can overwrite existing entry.
-        """
-        # Assuming a file is never really changed, there is no reason
-        # for merge here.
-        pass
-
-    def create_mapping(self, **kwargs):
-        """
-        Return the mapping as a string.
-
-        Pulls the mapping from the index_mapping_config.
-        """
-        # Return the es_mapping from the index_mapping_config
-        mapping_config = self.index_mapping_config['es_mapping']
-        return json.dumps(mapping_config)
-
     def __get_format(self, file_name):
         """
         HACK This is to get the file format while we get a file format.
@@ -287,39 +321,6 @@ class FileIndexer(Indexer):
         else:
             bundle_type = 'Unknown'
         return bundle_type
-
-    def special_fields(self, data_file, present_fields, **kwargs):
-        """
-        Add any special fields that may be missing.
-
-        Gets any special field that may not be available directly from the
-        metadata.
-
-        :param data_file: a dictionary describing the file in question.
-        :param present_fields: dictionary with available fields.
-        :param kwargs: any additional entries you want to include.
-        :return: a dictionary of all the special fields to be added.
-        """
-        # Get all the fields from a single file into a dictionary
-        file_data = {'file_{}'.format(key): value
-                     for key, value in data_file.items()}
-        # Add extra field that should go in here (e.g. es_uuid, bundle_uuid)
-        extra_fields = {key: value for key, value in kwargs.items()}
-        # Get the file format
-        file_format = self.__get_format(file_data['file_name'])
-        # Create a dictionary with the file fomrat and the bundle type
-        computed_fields = {"file_format": file_format,
-                           "bundle_type": self.__get_bundle_type(file_format)}
-        # Get all the requested entries that should go in ElasticSearch
-        req_entries = self.index_mapping_config['requested_entries']
-        all_fields = {entry for entry in self.__get_item(req_entries, "")}
-        # Make a set out of the fields present in the data
-        present_fields = set(present_fields.keys())
-        # Add empty fields as the string 'None'
-        empty = {field: "None" for field in all_fields - present_fields}
-        # Merge the four dictionaries
-        all_data = {**file_data, **extra_fields, **computed_fields, **empty}
-        return all_data
 
 
 class DonorIndexer(Indexer):

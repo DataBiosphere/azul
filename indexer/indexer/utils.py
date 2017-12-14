@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""Utils module to help with getting data from Blue box.
+
+The utils module has a DataExtractor class which aims to get the
+metadata and data files from the Blue Box.
+
+This module serves as a layer to interact with the BlueBox,
+get the metadata and data files, and present it in a format
+that can be used by the Indexer subclasses.
+
+"""
 from collections import ChainMap
 from hca.dss import DSSClient, SwaggerAPIException
 import logging
@@ -10,14 +21,21 @@ module_logger = logging.getLogger(indexer_name + ".indexer")
 
 
 class DataExtractor(object):
-    """
+    """DataExtractor class to help with BlueBox interaction.
+
     This class works as a helper class for obtaining files from the Blue Box
     via the hca python module.
+
     """
+
     def __init__(self, dss_host):
         """
-        Creates an instance of the DataExtractor. It takes the formatted url
-        of the DSS (e.g. https://dss.staging.data.humancellatlas.org/v1)
+        Create an instance of the DataExtractor.
+
+        It takes the formatted url of the DSS
+        (e.g. https://dss.staging.data.humancellatlas.org/v1) to which
+        to talk to.
+
         :param dss_host: The formatted url for the DSS
         """
         self.dss_client = DSSClient()
@@ -26,7 +44,12 @@ class DataExtractor(object):
 
     def __attempt(self, times, func, errors, **kwargs):
         """
-        Private helper method to try multiple times a function
+        Try a fucntion multiple times.
+
+        Private helper method to try multiple times a function.
+        It will try to catch the all of the errors passed to
+        the function.
+
         :param times: The number of times to try the function
         :param func: The function being passed to the method
         :param errors: A tuple of errors to except on
@@ -51,7 +74,13 @@ class DataExtractor(object):
 
     def __get_bundle(self, bundle_uuid, replica):
         """
-        Private method for getting the bundle from the bundle_uuid
+        Get the metadata and data files.
+
+        Private method for getting the bundle from the bundle_uuid.
+        It will attempt to get the bundle contents three times.
+        It parses the contents of the bundle into metadata and data
+        files.
+
         :param bundle_uuid: The bundle to pull from the DSS
         :param replica: The replica which we should be pulling from
         (e.g aws, gcp, etc)
@@ -72,7 +101,12 @@ class DataExtractor(object):
 
     def __get_file(self, file_uuid, replica):
         """
-        This function gets a file from the blue box
+        Get a file from the Blue Box.
+
+        This function gets a file from the blue box based on
+        the 'file_uuid'. It will attempt to get the file three
+        times.
+
         :param file_uuid: Specifies which file to get
         :param replica: Specifies the replica to pull from
         :return: Contents of that file
@@ -87,10 +121,13 @@ class DataExtractor(object):
 
     def extract_bundle(self, request, replica):
         """
+        Get the files and actual metadata.
+
         This is the main method that will extract the contents of the bundle
         and separate it into a tuple of (metadata_files, data_files), where
         the metadata_files are actual contents of the metadata files and the
         data_files are the metadata describing the files.
+
         :param request: The contents of the DSS event notification
         :param replica: The replica to which pull the bundle from
         """
