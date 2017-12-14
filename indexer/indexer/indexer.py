@@ -1,78 +1,56 @@
-from abc import abstractmethod, ABCMeta
-from collections import ChainMap
+# -*- coding: utf-8 -*-
+"""Indexer module to help with indexing.
+
+The indexer module contains classes to create different types of Indexes.
+
+The based class Indexer serves as the basis for additional indexing classes
+in this module.
+
+"""
 import json
-from pprint import pprint
 import re
 
 
-class AbstractIndexer(object):
-    __metaclass__ = ABCMeta
+class Indexer(object):
+    """Indexer class to help indexing operation.
 
-    @abstractmethod
-    def index(self, **kwargs):
-        """
-        this is where different indexes can be indexed
-        calls extract_item, merge, load_doc
-        :return: none
-        """
-        raise NotImplementedError(
-            'users must define index to use this base class')
+    The base class Indexer serves as the basis to extend other types
+    of transformative indexes. It codes a lot of the boiler plate code
+    regarding communication with ElasticSearch, so that users of this
+    base class only need to focus on their indexing algorithm. Users
+    may optionally overwrite all of the methods should they need to use
+    other technologies besides ElasticSearch.
 
-    @abstractmethod
-    def special_fields(self, **kwargs):
-        """
-        special fields (bundle_uuid, bundle_type)
-        :return:
-        """
-        raise NotImplementedError(
-            'users must define special_fields to use this base class')
+    The index() method is the main method for the Indexer class. Users
+    should ideally only overwrite index(), special_fields() and merge().
+    index() should call special_fields() first and then merge(). Users
+    can define their own extra functions to help with indexing as needed.
 
-    @abstractmethod
-    def merge(self, **kwargs):
-        """
-        take results of extract_item and query ES to merge into one ES file
-        calls special_fields
-        :return:
-        """
-        raise NotImplementedError(
-            'users must define merge to use this base class')
+    """
 
-    @abstractmethod
-    def load_doc(self, **kwargs):
-        """
-        makes put request to ES
-        :return:
-        """
-        raise NotImplementedError(
-            'users must define load_doc to use this base class')
-
-    @abstractmethod
-    def create_mapping(self, **kwargs):
-        """
-        Creates the mapping to be used for the index in ElasticSearch
-        """
-        raise NotImplementedError(
-            'users must define create_mapping to use this base class')
-
-    @abstractmethod
-    def load_mapping(self, **kwargs):
-        """
-        load mappings into ES
-        :return:
-        """
-        raise NotImplementedError(
-            'users must define load_mapping to use this base class')
-
-
-class Indexer(AbstractIndexer):
     def __init__(self, metadata_files, data_files, es_client, index_name,
                  doc_type, index_settings=None, index_mapping_config=None,
                  **kwargs):
         """
-        :param metadata_files: list of json metadata (list of dicts)
+        Create an instance of the Indexing class.
+
+        The constructor creates an Indexer instance, with various
+        parameters that are needed when performing the indexing operation.
+        It requires a dictionary of the metadata_files, the data_files,
+        an ElasticSearch(ES) client object to communicate with some
+        ES instance, the index_settings, as well as a mapping config
+        file that can be used by the indexer for indexing operation and
+        actual ElasticSearch mapping. Any extra kwargs are set as
+        attributes to the instance.
+
+        :param metadata_files: dictionary of json metadata (list of dicts)
         :param data_files: dictionary describing non-metadata files
          (list of dicts)
         :param es_client: The elasticsearch client
+        :param index_name: The name of the index to put the documents.
+        :param doc_type: The document type to put the document under in ES.
+        :param index_settings: Any special settings for the ES index.
+        :param index_mapping_config: The indexer config file.
         """
         # Set main arguments
         self.metadata_files = metadata_files
@@ -86,39 +64,54 @@ class Indexer(AbstractIndexer):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def index(self, *args, **kwargs):
-        """
-        this is where different indexes can be indexed
-        calls special_fields, merge, load_doc
-        :return: none
+    def index(self, bundle_uuid, bundle_version, *args, **kwargs):
+        """Indexes the data files.
+
+        Triggers the actual indexing process
+
+        :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
+        :param bundle_version: The bundle of the version.
         """
         raise NotImplementedError(
             'users must define index to use this base class')
 
     def special_fields(self, *args, **kwargs):
         """
-        special fields handler (bundle_uuid, bundle_type)
-        :return:
+        Add any special fields that may be missing.
+
+        Gets any special field that may not be available directly from the
+        metadata.
+
+        :return: a dictionary of all the special fields to be added.
         """
         raise NotImplementedError(
             'users must define special_fields to use this base class')
 
-    def merge(self, **kwargs):
+    def merge(self, doc_contents, **kwargs):
         """
-        take results of extract_item and query ES to merge into one ES file
-        calls special_fields
-        :return:
+        Merge the document with the contents in ElasticSearch.
+
+        merge() should take the results of get_item() and harmonize it
+        with whatever is present in ElasticSearch to avoid blind overwritting
+        of documents. Users should implement their own protocol.
+
+        :param doc_contents: Current document to be indexed.
+        :return: The harmonized document which can overwrite existing entry.
         """
         raise NotImplementedError(
             'users must define merge to use this base class')
 
-    def load_doc(self, doc_uuid, doc_contents, **kwargs):
+    def load_doc(self, doc_uuid, doc_contents, * args, **kwargs):
         """
-        makes put request to ES (ElasticSearch)
-        :param index_name: The name of the index to load into ElasticSearch
-        :param doc_type: The name of the document type in ElasticSearch
-        :param doc_uuid: The uuid which will root the ElasticSearch document
-        :param doc_contents: The contents that will be loaded into ES
+        Load a document into ElasticSearch.
+
+        Load 'doc_contents' as a document in ElasticSearch (ES) with a
+        uuid 'doc_uuid'.
+
+        :param index_name: The name of the index to load into ElasticSearch.
+        :param doc_type: The name of the document type in ElasticSearch.
+        :param doc_uuid: The uuid which will root the ElasticSearch document.
+        :param doc_contents: The contents that will be loaded into ES.
         :return:
         """
         # Loads the index document file into elasticsearch
@@ -127,20 +120,28 @@ class Indexer(AbstractIndexer):
                              id=doc_uuid,
                              body=doc_contents)
 
-    def create_mapping(self, **kwargs):
+    def create_mapping(self, *args, **kwargs):
         """
+        Create the ElasticSearch mapping.
+
         To be overwritten by the class inheriting from here.
         This class should return the dictionary corresponding to the mapping
         to be loaded into ElasticSearch. It should use the index_mapping_config
         attribute as appropriate.
+
+        :return: Dictionary describing the ElaticSearch mapping.
         """
         raise NotImplementedError(
             'users must define create_mapping to use this base class')
 
-    def load_mapping(self, **kwargs):
+    def load_mapping(self, *args, **kwargs):
         """
-        create index and load mappings into ES (ElasticSearch)
-        :return:
+        Load the mapping into Elasticsearch.
+
+        This method is responsible for loading the mapping into Elasticsearch.
+        It first creates an index using the instance's attributes, and
+        then loads the mapping by also calling create_mapping(), which
+        will create the object describing the mapping.
         """
         # Creates the index
         self.es_client.indices.create(index=self.index_name,
@@ -171,61 +172,17 @@ class FileIndexer(Indexer):
         :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
         :param bundle_version: The bundle of the version.
         """
-        # for dfile in self.data_files:
-        #     file_uuid = dfiles[file_uuid]
-        #     es_json = self.special_fields(dfile=dfile, metadata=metadata_files)
-        #     for field in es_json:
-        #         for fkey, fvalue in field.items():
-        #             if fkey == 'es_uuid':
-        #                 es_uuid = fvalue
-        #                 es_json.remove(field)
-        #     for c_key, c_value in kwargs['config']:
-        #         for mfile in metadata_files:
-        #             if c_key in mfile:
-        #                 for c_item in c_value:
-        #                     to_append = self.__extract_item(c_key, mfile)
-        #                     if to_append is not None:
-        #                         if isinstance(to_append, list):
-        #                             # makes lists of lists into a single list
-        #                             to_append = self.merge(to_append)
-        #                             for item in to_append:
-        #                                 # add file item to list of items to append to ES
-        #                                 es_json.append(item)
-        #                         else:
-        #                             # add file item to list of items to append to ES
-        #                             es_json.append(to_append)
-        #
-        #     to_append = self.__extract_item(config, metadata_files)
-        #     if to_append is not None:
-        #         if isinstance(to_append, list):
-        #             # makes lists of lists into a single list
-        #             to_append = self.merge(to_append)
-        # self.load_doc(doc_contents=to_append, doc_uuid=es_uuid)
-
-        ### CARLOS REFACTOR
-        # Get the config driving indexing
-        requested_entries = self.index_mapping_config['requested_entries']
+        # Get the config driving indexing (e.g. the required entries)
+        req_entries = self.index_mapping_config['requested_entries']
         # Iterate over each file
         for _file in self.data_files.values():
-            # Set the contents to an empty dictionary
-            contents = {}
-            # For each file iterate over the contents of the config
-            for c_key, c_value in requested_entries.items():
-                if c_key in self.metadata_files:
-                    # Contents is a dictionary with all the present fields
-                    current = self.__extract_item(c_value,
-                                                  self.metadata_files[c_key],
-                                                  c_key)
-                # Merge two dictionaries
-                print("##############   PRINTING current     #############")
-                pprint(current)
-                contents = {**contents, **current}
-                print("##############   PRINTING contents     #############")
-                pprint(contents)
-            # Get the special fields added to the contents
+            # List the arguments for clarity
+            args = [req_entries, "", self.metadata_files]
+            # Get all the contents from the entries requested in the config
+            contents = {key: value for key, value in self.__get_item(*args)}
+            # Get the elasticsearch uuid for this particular data file
             es_uuid = "{}:{}".format(bundle_uuid, _file['uuid'])
-            print("##############   PRINTING Before Special fields     #############")
-            pprint(contents)
+            # Get the special fields added to the contents
             special_ = self.special_fields(_file,
                                            contents,
                                            bundle_uuid=bundle_uuid,
@@ -234,56 +191,57 @@ class FileIndexer(Indexer):
             contents = {**contents, **special_}
             # Load the current file in question
             # Ideally merge() should be called at this point
-            print("##############   PRINTING TOLOAD FILE       #############")
-            pprint(contents)
             self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
 
-    def __extract_item(self, c_item, _file, name, **kwargs):
-        print("##############   PRINTING FILE       #############")
-        pprint(_file)
-        print("##############   PRINTING CONFIG ITEM   #############")
-        print(c_item)
-        print("##############   PRINTING NAME #############")
-        print(name)
-        if isinstance(c_item, dict):
-            # if the config is a dictionary,
-            # then need to look deeper into the file and config for the key
-            es_array = []
-            for key, value in c_item.items():
-                # Check if the key is in the _file in question
-                if key in _file:
-                    # making the name that shows path taken to get to value
-                    name = "{}|{}".format(name, key) if name != "" else key
-                    # resursive call. Get a list of key:value pairs
-                    current = [self.__extract_item(item, _file[key], name)
-                               for item in value]
-                    es_array.extend(current)
-                    # Make the list of dictionaries into a single dictionary
-            fields_dictionary = dict(ChainMap(*filter(None, es_array)))
-            return fields_dictionary
-        elif isinstance(c_item, list):
-            es_array = [self.__extract_item(item, _file, name)
-                        for item in c_item]
-            fields_dictionary = dict(ChainMap(*filter(None, es_array)))
-            return fields_dictionary
-        elif c_item in _file:
-            # if config item is in the file
-            file_value = _file[c_item]
-            # need to be able to handle lists
-            if not isinstance(file_value, list):
-                name = "{}|{}".format(name, c_item) if name != "" else c_item
-                # ES does not like periods(.) use commas(,) instead
-                n_replace = name.replace(".", ",")
-                # return the value of key (given by config)
-                return {n_replace: file_value}
+    def __get_item(self, c_item, name, _file=None):
+        """
+        Get the c_item in _file or all the strings in the c_item.
 
-    def merge(self, l):
-        for el in l:
-            if isinstance(el, collections.Sequence) and not isinstance(el, (
-                    str, bytes)):
-                yield from self.merge(el)
-            else:
-                yield el
+        This recursive method serves to either get all the formatted
+        strings that make the config (c_item). If '_file' is not None,
+        then you get a tuple containing the string representing the path
+        in the metadata and the value of the metadata at that path.
+        This is a generator function.
+
+        :param c_item: config item.
+        :param name: name representing the path on the metadata
+        :param _file: the object to extract contents from. Defaults to None.
+        :return: name or name, item
+        """
+        if isinstance(c_item, dict):
+            # Iterate over the contents of the dictionary
+            for key, value in c_item.items():
+                # Create the new name
+                new_name = "{}|{}".format(name, key) if name != "" else key
+                for item in value:
+                    # Recursive call on each level
+                    if _file is None or key in _file:
+                        son = None if _file is None else _file[key]
+                        yield from self.__get_item(item, new_name, _file=son)
+        else:
+            # Return name concatenated with config key
+            name = "{}|{}".format(name, c_item).replace(".", ",")
+            if _file is not None and c_item in _file:
+                # If the file exists and contains the item in question
+                yield name, _file[c_item]
+            elif _file is None:
+                # If we only want the string of the name
+                yield name
+
+    def merge(self, doc_contents):
+        """
+        Merge the document with the contents in ElasticSearch.
+
+        merge() should take the results of get_item() and harmonize it
+        with whatever is present in ElasticSearch to avoid blind overwritting
+        of documents. Users should implement their own protocol.
+
+        :param doc_contents: Current document to be indexed.
+        :return: The harmonized document which can overwrite existing entry.
+        """
+        # Assuming a file is never really changed, there is no reason
+        # for merge here.
+        pass
 
     def create_mapping(self, **kwargs):
         """
@@ -294,32 +252,6 @@ class FileIndexer(Indexer):
         # Return the es_mapping from the index_mapping_config
         mapping_config = self.index_mapping_config['es_mapping']
         return json.dumps(mapping_config)
-
-    def __es_config(self, c_item, name):
-        """
-        This function is a simpler version of look_file
-        The name is recursively found by going through
-        the nested levels of the config file
-        :param c_item: config item
-        :param name: used for key in the key, value pair
-        :return: name
-        """
-        # TODO: THE LOGIC OF THIS IS WRONG. MIGHT HAVE TO REWRITE IT
-        if isinstance(c_item, dict):
-            # name concatenated with config key
-            for key, value in c_item.items():
-                # Assign the name
-                name = "{}|{}".format(name, key) if name != "" else key
-                # recursively call on each item in this level of config values
-                es_array = [self.__es_config(item, name) for item in value]
-                # Union on all of the sets in the list
-                fields_set = set.union(*es_array)
-                yield fields_set # THIS RETURNS WITHOUT GOING THOROUGH ALL THE FILES
-        else:
-            # return name concatenated with config key
-            name = "{}|{}".format(name, c_item)
-            n_replace = name.replace(".", ",")
-            return {n_replace}
 
     def __get_format(self, file_name):
         """
@@ -366,7 +298,7 @@ class FileIndexer(Indexer):
         :param data_file: a dictionary describing the file in question.
         :param present_fields: dictionary with available fields.
         :param kwargs: any additional entries you want to include.
-        :return: a dictionary with all the special fields added.
+        :return: a dictionary of all the special fields to be added.
         """
         # Get all the fields from a single file into a dictionary
         file_data = {'file_{}'.format(key): value
@@ -378,14 +310,12 @@ class FileIndexer(Indexer):
         # Create a dictionary with the file fomrat and the bundle type
         computed_fields = {"file_format": file_format,
                            "bundle_type": self.__get_bundle_type(file_format)}
-        # Add empty fields as the string 'None'
-        # Get all the entries that should go in ElasticSearch
-        requested_entries = self.index_mapping_config['requested_entries']
-        all_fields = self.__es_config(requested_entries, "")
-        print("##############   PRINTING ALL_FIELDS       #############")
-        pprint(all_fields)
+        # Get all the requested entries that should go in ElasticSearch
+        req_entries = self.index_mapping_config['requested_entries']
+        all_fields = {entry for entry in self.__get_item(req_entries, "")}
         # Make a set out of the fields present in the data
         present_fields = set(present_fields.keys())
+        # Add empty fields as the string 'None'
         empty = {field: "None" for field in all_fields - present_fields}
         # Merge the four dictionaries
         all_data = {**file_data, **extra_fields, **computed_fields, **empty}
@@ -393,14 +323,14 @@ class FileIndexer(Indexer):
 
 
 class DonorIndexer(Indexer):
-    pass
+    """index method calls:.
 
-
-'''
-index method calls:
     - special_fields
     - merge
     - load_mapping
         - create_mapping
     - load_doc
-'''
+
+    """
+
+    pass
