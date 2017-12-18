@@ -1,72 +1,94 @@
 {
-  "assay.json": [
-    {
-      "single_cell": [
-        "cell_handling"
-      ]
-    },
-    {
-      "rna": [
-        "library_construction",
-        "spike_in"
-      ]
-    },
-    {
-      "seq": [
-        "paired_ends",
-        "instrument_platform",
-        "library_construction"
-      ]
-    }
-  ],
-  "project.json": [
-    "id",
-    {
-      "submitter": [
-        "name",
-        "institution",
-        "country"
-      ]
-    }
-  ],
-  "sample.json": [
-    {
-      "body_part": [
-        "text"
-      ]
-    },
-    {
-      "donor": [
-        {
-          "species": [
-            "text",
-            "ontology"
-          ]
-        },
-        "is_living",
-        {
-          "core": [
-            "uuid"
-          ]
+  "requested_entries": {
+    "assay.json": [
+      {
+        "single_cell": [
+          "cell_handling"
+        ]
+      },
+      {
+        "rna": [
+          "library_construction",
+          "spike_in"
+        ]
+      },
+      {
+        "seq": [
+          "paired_ends",
+          "instrument_platform",
+          "library_construction"
+        ]
+      }
+    ],
+    "project.json": [
+      "id",
+      {
+        "submitter": [
+          "name",
+          "institution",
+          "country"
+        ]
+      }
+    ],
+    "sample.json": [
+      {
+        "body_part": [
+          "text"
+        ]
+      },
+      {
+        "donor": [
+          {
+            "species": [
+              "text",
+              "ontology"
+            ]
+          },
+          "is_living",
+          {
+            "core": [
+              "uuid"
+            ]
+          }
+        ]
+      },
+      "name",
+      {
+        "organ": [
+          "text"
+        ]
+      },
+      "project_id",
+      {
+        "cell_cycle": [
+          "text"
+        ]
+      },
+      "culture_type",
+      "donor_id"
+    ],
+    "analysis.json": [
+      "computational_method"
+    ]
+  },
+  "es_mapping": {
+    "dynamic_templates": [
+      {
+        "strings": {
+          "match_mapping_type": "string",
+          "mapping": {
+            "type": "text",
+            "analyzer": "autocomplete",
+            "search_analyzer": "standard",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          }
         }
-      ]
-    },
-    "name",
-    {
-      "organ": [
-        "text"
-      ]
-    },
-    "project_id",
-    {
-      "cell_cycle": [
-        "text"
-      ]
-    },
-    "culture_type",
-    "donor_id"
-  ],
-  "analysis.json": [
-    "computational_method"
-  ]
+      }
+    ]
+  }
 }
