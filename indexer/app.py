@@ -58,7 +58,7 @@ if es_host.endswith('.es.amazonaws.com'):
     )
 else:
     # default auth for testing purposes
-    es = Elasticsearch([{'host': 'es_host', 'port': es_port}])
+    es = Elasticsearch([{'host': es_host, 'port': es_port}])
 
 
 # for blue box notification
