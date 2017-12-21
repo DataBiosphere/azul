@@ -175,7 +175,7 @@ class FileIndexer(Indexer):
         :param bundle_version: The bundle of the version.
         """
         # Get the config driving indexing (e.g. the required entries)
-        req_entries = self.index_mapping_config['requested_entries']["v3.0.0"]
+        req_entries = self.index_mapping_config['requested_entries']["v4.6.1"]
         # Iterate over each file
         for _file in self.data_files.values():
             # List the arguments for clarity
@@ -243,7 +243,7 @@ class FileIndexer(Indexer):
         computed_fields = {"file_format": file_format,
                            "bundle_type": self.__get_bundle_type(file_format)}
         # Get all the requested entries that should go in ElasticSearch
-        req_entries = self.index_mapping_config['requested_entries']["v3.0.0"]
+        req_entries = self.index_mapping_config['requested_entries']["v4.6.1"]
         all_fields = {entry for entry in self.__get_item(req_entries, "")}
         # Make a set out of the fields present in the data
         present_keys = set(present_fields.keys())
@@ -343,6 +343,9 @@ class AssayOrientedIndexer(Indexer):
         :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
         :param bundle_version: The bundle of the version.
         """
+        # Assign the ES uuid
+        es_uuid = self.metadata_files['assay.json']['content']['assay_id']
+        # Get required entries
         req_entries = self.index_mapping_config['requested_entries']["v4.6.1"]
         args = [req_entries, "", self.metadata_files]
         facets = {key: value for key, value in self.__get_item(*args)}
@@ -357,11 +360,10 @@ class AssayOrientedIndexer(Indexer):
             analysis_json = self.metadata_files['analysis.json']
         else:
             analysis_type = "upload"
-            analysis_json = {}
+            analysis_json = {"content": {"analysis_id": es_uuid}}
         # Get samples
         samples = facets['sample,json|samples']
-        # Assign the ES uuid
-        es_uuid = self.metadata_files['assay.json']['content']['assay_id']
+
         # Construct the ES doc to be loaded
         contents = {
             **self.metadata_files['assay.json'],
@@ -374,7 +376,7 @@ class AssayOrientedIndexer(Indexer):
                  ]}
             ],
             "samples": samples,
-            "project": [
+            "projects": [
                 {**self.metadata_files['project.json']}
             ],
             "es_uuid": es_uuid
@@ -423,33 +425,47 @@ class AssayOrientedIndexer(Indexer):
                                       id=_id,
                                       ignore=[404])
         if '_source' in existing:
-            # Get the source
+            # Get the samples
             samples_es = existing['_source']['samples']
             samples_doc = doc_contents['samples']
+            # Merge samples
             samples_merge = self.__merge_lists(samples_doc,
                                                samples_es,
                                                ('content', 'sample_id'))
+            # Get analysis
             analysis_es = existing['_source']['analysis']
             analysis_doc = doc_contents['analysis']
+            # Merge analysis
             analysis_merge = self.__merge_lists(analysis_doc,
                                                 analysis_es,
                                                 ('content', 'analysis_id'))
+            # Assign only unique analysis
             for analysis in analysis_merge:
                 analysis_id = self.__get_value(analysis, ('content',
                                                           'analysis_id'))
                 for old_analysis in analysis_es:
-                    old_analysis = self.__get_value(old_analysis,
-                                                    ('content', 'analysis_id'))
-                    if analysis_id == old_analysis:
+                    old_analysis_id = self.__get_value(old_analysis,
+                                                       ('content',
+                                                        'analysis_id'))
+                    if analysis_id == old_analysis_id:
                         new_bundles = analysis['data_bundles']
                         old_bundles = old_analysis['data_bundles']
                         merged_bundles = self.__merge_lists(new_bundles,
                                                             old_bundles,
-                                                            ('bundle_uuid'))
+                                                            ('bundle_uuid',))
                         analysis['data_bundles'] = merged_bundles
                         break
+            # Get projects
+            projects_es = existing['_source']['projects']
+            projects_doc = doc_contents['projects']
+            projects_merge = self.__merge_lists(projects_doc,
+                                                projects_es,
+                                                ('content', 'project_id'))
+            # Assign new top fields
+            doc_contents['projects'] = projects_merge
             doc_contents['samples'] = samples_merge
             doc_contents['analysis'] = analysis_merge
+            return doc_contents
 
         else:
             return doc_contents
