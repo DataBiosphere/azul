@@ -9,8 +9,8 @@ from urllib.request import urlopen, Request
 #es_service = os.environ.get("ES_SERVICE", "localhost")
 
 parser = argparse.ArgumentParser(description='Process options the finder of golden bundles.')
-parser.add_argument('--assay-id', dest='assay_id', action='store',
-                    default='Q3_DEMO-assay1', help='assay id')
+#parser.add_argument('--assay-id', dest='assay_id', action='store',
+#                    default='Q3_DEMO-assay1', help='assay id')
 parser.add_argument('--dss-url', dest='dss_url', action='store',
                     default='https://dss.staging.data.humancellatlas.org/v1/search?replica=aws', help='The url for the storage system.')
 parser.add_argument('--indexer-url', dest='repoCode', action='store',
@@ -55,7 +55,7 @@ def main():
     Main function which will carry out the execution of the program
     '''
     headers = {"accept": "application/json", "content-type": "application/json"}
-    data = json.dumps({"es_query": {"query": { "bool": {"must": [{"match":{"files.assay_json.id": args.assay_id}}]}}}})
+    data = json.dumps({"es_query": {"query": {"match": {"files.project_json.content.core.schema_version": "4.6.1"}}}})
     req = requestConstructor(args.dss_url, headers, data)
     response = executeRequest(req)
     response = json.loads(response)
@@ -69,18 +69,19 @@ def main():
         req = requestConstructor(args.repoCode, headers, data)
         threads.append(threading.Thread(target=executeRequest, args=(req,)))
 
-        print ("Bundle: {}, Version: {}".format(bundle, version))
+        print("Bundle: {}, Version: {}".format(bundle, version))
         try:
             response = executeRequest(req)
         except Exception as e:
             print (e)
-    print ("Total of {} bundles".format(len(bundle_list)))
+    print("Total of {} bundles".format(len(bundle_list)))
     start = time.time()
 #    for thread in threads:
 #        thread.start()
 #    for thread in threads:
 #        thread.join()
 #    print "Elapsed Time: %s" % (time.time() - start)
+
 
 if __name__ == "__main__":
     main()

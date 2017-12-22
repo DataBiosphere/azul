@@ -12,7 +12,7 @@ from aws_requests_auth import boto_utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 from chalice import Chalice
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-from indexer.indexer import FileIndexer
+from indexer.indexer import FileIndexer, AssayOrientedIndexer as AssayIndexer
 from indexer.utils import DataExtractor
 import json
 import logging
@@ -58,7 +58,7 @@ if es_host.endswith('.es.amazonaws.com'):
     )
 else:
     # default auth for testing purposes
-    es = Elasticsearch([{'host': 'es_host', 'port': es_port}])
+    es = Elasticsearch([{'host': es_host, 'port': es_port}])
 
 
 # for blue box notification
@@ -86,11 +86,19 @@ def post_notification():
     file_indexer = FileIndexer(metadata_files,
                                data_files,
                                es,
-                               es_index,
+                               '{}_file_v4'.format(es_index),
                                es_doc_type,
                                index_settings=es_settings,
                                index_mapping_config=index_mapping_config)
+    assay_indexer = AssayIndexer(metadata_files,
+                                 data_files,
+                                 es,
+                                 "{}_assay_index_v4".format(es_index),
+                                 "doc",
+                                 index_settings=es_settings,
+                                 index_mapping_config=index_mapping_config)
     file_indexer.index(bundle_uuid, bundle_version)
+    assay_indexer.index(bundle_uuid, bundle_version)
     return {"status": "done"}
 
 
