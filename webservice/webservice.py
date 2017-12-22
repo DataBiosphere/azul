@@ -4,7 +4,6 @@ from flask_login import LoginManager, login_required, \
 # from flask import current_app as app
 import json
 # from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS, cross_origin
 # from flask_migrate import Migrate
 import flask_excel as excel
 from flask.ext.elasticsearch import Elasticsearch
@@ -170,7 +169,6 @@ def parse_ES_response(es_dict, the_size, the_from, the_sort, the_order, key_sear
 @webservicebp.route('/repository/files')
 @webservicebp.route('/repository/files/')
 @webservicebp.route('/repository/files/<file_id>')
-@cross_origin()
 def get_data(file_id=None):
     print "Getting data"
     # Get all the parameters from the URL
@@ -298,7 +296,6 @@ def get_data(file_id=None):
 
 ###********************************TEST FOR THE PIECHARTS FACETS ENDPOINT**********************************************##
 @webservicebp.route('/repository/files/piecharts')
-@cross_origin()
 def get_data_pie():
     print "Getting data"
     # Get the filters from the URL
@@ -427,7 +424,6 @@ def get_data_pie():
 
 # Get the manifest. You need to pass on the filters
 @webservicebp.route('/repository/files/exportNew')
-@cross_origin()
 def get_manifes_newt():
     m_filters = request.args.get('filters')
     m_size = request.args.get('size', 25, type=int)
@@ -533,7 +529,6 @@ def get_manifes_newt():
 
 # This will return a summary of the facets
 @webservicebp.route('/repository/files/facets')
-@cross_origin()
 def get_facets():
     # Get the order of the keys for the facet list
     f_order = []
@@ -672,7 +667,6 @@ def get_facets():
 # This will return a summary as the one from the ICGC endpoint
 # Takes filters as parameter.
 @webservicebp.route('/repository/files/summary')
-@cross_origin()
 def get_summary():
     my_summary = {"fileCount": None, "totalFileSize": None, "donorCount": None, "projectCount": None,
                   "primarySiteCount": "DUMMY"}
@@ -925,7 +919,6 @@ def searchDonors(_query, _filters, _from, _size):
 # This will return a search list
 # Takes filters as parameter.
 @webservicebp.route('/keywords')
-@cross_origin()
 def get_search():
     # Get the parameters
     m_query = request.args.get('q')
@@ -1006,7 +999,6 @@ def get_search():
 # This will simply return the desired order of the facets
 # Takes filters as parameter.
 @webservicebp.route('/repository/files/order')
-@cross_origin()
 def get_order2():
     with open(apache_path + 'order_config') as my_aggs:
         # with open('reference_aggs.json') as my_aggs:
@@ -1016,7 +1008,6 @@ def get_order2():
 
 
 @webservicebp.route('/repository/files/meta')
-@cross_origin()
 def get_order3():
     with open(apache_path + 'f_donor') as my_aggs:
         # with open('reference_aggs.json') as my_aggs:
@@ -1037,7 +1028,6 @@ def get_order3():
 
 # Get the manifest. You need to pass on the filters
 @webservicebp.route('/repository/files/exportOld')
-@cross_origin()
 def get_manifest_old():
     m_filters = request.args.get('filters')
     m_size = request.args.get('size', 25, type=int)
@@ -1118,7 +1108,6 @@ def get_manifest_old():
 
 # Get the manifest. You need to pass on the filters
 @webservicebp.route('/repository/files/export')
-@cross_origin()
 def get_manifest():
     m_filters = request.args.get('filters')
     m_size = request.args.get('size', 25, type=int)
@@ -1212,7 +1201,6 @@ def get_manifest():
 
 # Get the manifest. You need to pass on the filters
 @webservicebp.route('/repository/files/exportFull')
-@cross_origin()
 def get_manifes_full():
     m_filters = request.args.get('filters')
     m_size = request.args.get('size', 25, type=int)
