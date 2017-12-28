@@ -21,7 +21,7 @@ Install python3.
 
 Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
 
-Install and configure the AWS CLI with your information
+Install and configure the AWS CLI with your credentials
 ```
 pip install awscli --upgrade
 aws configure
@@ -34,13 +34,9 @@ Chalice is similar to Flask but is serverless and uses AWS Lambda.
 pip install chalice
 chalice new-project
 ```
-When prompted for project name, input `<your-indexer-lambda-application-name>`, (eg dss-indigo).
+When prompted for project name, input `<your-indexer-lambda-application-name>`, (e.g., dss-indigo).
 
-Enter the newly created repo `<your-indexer-lambda-application-name>` (eg dss-indigo) and `chalice deploy`. Record the url returned in the last line of stdout returned by this command - henceforth referred to as `<callback_url>`. 
-This will create an AWS Lambda function called `dss-indigo` which will be updated using `chalice deploy`.
-
-`rm app.py` and `rm requirements.txt` (in other words, remove the files that chalice automatically generated).
- Then, copy `app.py`, `requirements.txt` and `chalicelib/` from this repo and add to the dss-indigo folder.
+Change the working directory to the newly created folder `<your-indexer-lambda-application-name>` (e.g., dss-indigo) and execute `chalice deploy`. Record the URL returned in the last line of stdout returned by this command - henceforth referred to as `<callback_url>`. This will create an AWS Lambda function called `dss-indigo` which will be updated using `chalice deploy`. Chalice automatically generated a folder `chalicelib/` and the files `rm app.py` and `rm requirements.txt`. Overwrite those by copying `app.py`, `requirements.txt` and `chalicelib/` from this repo and to the dss-indigo folder. Then execute
 
 `pip install -r requirements.txt`
 
@@ -139,7 +135,7 @@ Given a config:
  }
 ```
 
-### Environmental Variables
+### Environment Variables
 In order to add environmental variables to Chalice, the variables must be added to three locations.
 Do not add protocols to any of the Endpoints. Make sure the ES_ENDPOINT does not have any trailing slashes.
 
@@ -159,7 +155,8 @@ Replace the current file with the following, making sure to replace the <> with 
          "ES_ENDPOINT":"<your elasticsearch endpoint>",
          "BLUE_BOX_ENDPOINT":"<your blue box>",
          "ES_INDEX":"<elasticsearch index to use>",
-         "INDEXER_NAME":"<your-indexer-lambda-application-name>"
+         "INDEXER_NAME":"<your-indexer-lambda-application-name>",
+         "HOME":"/tmp"
       }
     }
   }
@@ -174,19 +171,21 @@ export ES_ENDPOINT=<your elasticsearch endpoint>
 export BLUE_BOX_ENDPOINT=<your blue box>
 export ES_INDEX=<elasticsearch index to use>
 export INDEXER_NAME=<your-indexer-lambda-application-name>
+export HOME=/tmp
 ```
 
 run `. ~/.profile` to load the variables
 
 3) Edit Lambda
 
-Go to the AWS console, and then to your Lambda function and add the following environmental variables:
+Go to the AWS console, and then to your Lambda function and add the following environment variables:
 
 ```
 ES_ENDPOINT  -->   <your elasticsearch endpoint>
 BLUE_BOX_ENDPOINT   -->   <your blue box>
 ES_INDEX  -->  <elasticsearch index to use>
 INDEXER_NAME  -->  <your-indexer-lambda-application-name>
+HOME --> /tmp
 ```
 
 ### Elasticsearch & Lambda
