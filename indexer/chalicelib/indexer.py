@@ -7,8 +7,10 @@ The based class Indexer serves as the basis for additional indexing classes
 in this module.
 
 """
+import collections
 from functools import reduce
 import json
+from pprint import pprint
 import re
 
 
@@ -176,12 +178,24 @@ class FileIndexer(Indexer):
         """
         # Get the config driving indexing (e.g. the required entries)
         req_entries = self.index_mapping_config['requested_entries']["v4.6.1"]
+        req_entries2 = self.index_mapping_config['requested_entries']["vTEST"]#TEST
         # Iterate over each file
         for _file in self.data_files.values():
             # List the arguments for clarity
             args = [req_entries, "", self.metadata_files]
             # Get all the contents from the entries requested in the config
             contents = {key: value for key, value in self.__get_item(*args)}
+            #TEST
+            args2 = [req_entries2, self.metadata_files]
+            d = collections.defaultdict(list)
+            for key, value in self.__get_item2(*args2):
+                d[key].append(value)
+                print("JUST APPENDED ENTRY, dictionary right now:\n")
+                pprint(d)
+            print("#######TESTING NEW get_item2 METHOD##########")
+            pprint(d)
+            d = None
+            ###FINISH TEST###
             # Get the elasticsearch uuid for this particular data file
             es_uuid = "{}:{}".format(bundle_uuid, _file['uuid'])
             # Get the special fields added to the contents
@@ -253,6 +267,73 @@ class FileIndexer(Indexer):
         all_data = {**file_data, **extra_fields, **computed_fields, **empty}
         return all_data
 
+    def flatten(self, l):
+        for el in l:
+            if isinstance(el, collections.Sequence) and not isinstance(el, (
+                    str, bytes)):
+                yield from self.flatten(el)
+            else:
+                yield el
+
+    def __get_item2(self, c_item, _file):
+        """
+        Get the c_item in _file or all the strings in the c_item.
+
+        This recursive method serves to either get all the formatted
+        strings that make the config (c_item). If '_file' is not None,
+        then you get a tuple containing the string representing the path
+        in the metadata and the value of the metadata at that path.
+        This is a generator function.
+
+        :param c_item: config item.
+        :param name: name representing the path on the metadata
+        :param _file: the object to extract contents from. Defaults to None.
+        :return: name or name, item
+        """
+        if isinstance(c_item, dict):
+            # Iterate over the contents of the dictionary
+            for key, value in c_item.items():
+                # Create the new name
+                # for item in value:
+                #     # Handle if _file is a list
+                #     if isinstance(_file, list):
+                #         print("PRINTING _file:")
+                #         pprint(_file)
+                #         for el in _file:
+                #             print("PRINTING el")
+                #             pprint(el)
+                #             yield from self.__get_item2(c_item, el)
+                #     # Recursive call on each level
+                #     elif key in _file:
+                #         child = _file[key]
+                #         yield from self.__get_item2(item, child)
+                if isinstance(_file, list):
+                    print("PRINTING _file:")
+                    pprint(_file)
+                    for el in _file:
+                        print("PRINTING el")
+                        pprint(el)
+                        yield from self.__get_item2(c_item, el)
+                else:
+                    for item in value:
+                        # Handle if _file is a list
+                        if key in _file:
+                            child = _file[key]
+                            yield from self.__get_item2(item, child)
+        else:
+            # Return the tuple containing the key and value
+            content, name = tuple(c_item.split('*'))
+            print("Content: {} ; Name: {} \n".format(content, name))
+            pprint("THE LEAF _file is: {}\n ".format(_file))
+            if isinstance(_file, list):
+                for el in _file:
+                    print("PRINTING LEAF el")
+                    pprint(el)
+                    yield from self.__get_item2(c_item, el)
+            elif content in _file:
+                print("the file content is: {}\n".format(_file[content]))
+                yield name, _file[content]
+
     def __get_item(self, c_item, name, _file=None):
         """
         Get the c_item in _file or all the strings in the c_item.
@@ -274,8 +355,13 @@ class FileIndexer(Indexer):
                 # Create the new name
                 new_name = "{}|{}".format(name, key) if name != "" else key
                 for item in value:
+                    # Handle if _file is a list
+                    if isinstance(_file, list):
+                        facets_list = [term for el in _file for term in self.__get_item(c_item, name, el)]
+                        #facets_list = list(self.flatten(facets_list))
+                        yield new_name, facets_list
                     # Recursive call on each level
-                    if _file is None or key in _file:
+                    elif _file is None or key in _file:
                         child = None if _file is None else _file[key]
                         yield from self.__get_item(item, new_name, _file=child)
         else:
