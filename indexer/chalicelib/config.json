@@ -1,6 +1,6 @@
 {
   "requested_entries": {
-    "v3.0.0": {
+    "3.0.0": {
       "assay.json": [{
           "single_cell": [
             "cell_handling"
@@ -69,7 +69,7 @@
         "computational_method"
       ]
     },
-    "v4.6.1":{
+    "vTRASH":{
       "assay.json": [
         {
           "content": [
@@ -134,7 +134,7 @@
         }
       ]
     },
-    "vTEST":{
+    "4.6.1":{
       "assay.json": [
         {
           "content": [
@@ -190,7 +190,8 @@
                   "genus_species": [
                     "text*sampleSpecies"
                   ]
-                }
+                },
+                "sample_id*sampleIds"
               ]
             }
           ]
@@ -199,7 +200,8 @@
       "analysis.json": [
         {
           "content": [
-            "computational_method*analysisComputationalMethod"
+            "computational_method*analysisComputationalMethod",
+            "analysis_id*analysisId"
           ]
         }
       ]
