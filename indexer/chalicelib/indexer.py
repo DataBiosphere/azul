@@ -280,7 +280,7 @@ class FileIndexer(Indexer):
             d.pop("sampleSpecies", None)
             samples = {"samples": samples_list}
             contents = {**d, **special_, **samples}
-            print("Final dictionary to crerate entry with:\n")
+            print("PRINTING FILE INDEX DOCUMENT:\n")
             pprint(contents)
             # Load the current file in question
             # Ideally merge() should be called at this point
@@ -622,17 +622,43 @@ class SampleOrientedIndexer(Indexer):
         # the dictionary
         for key, value in self.get_item(*args):
             d[key].append(value)
+        # Add the format and bundle type to each file
+        bundle_type = None
         for file_name, description in self.data_files.items():
             self.data_files[file_name]['format'] = self.__get_format(file_name)
             # Get the bundle type
             bundle_type = self.__get_bundle_type(file_name)
-            self.data_files[file_name]["bundle_type"] = bundle_type
+        # Assign the bundle type
+        d["bundle_uuid"] = bundle_uuid
+        d["bundle_type"] = bundle_type
+        d["bundle_version"] = bundle_version
+        # Assign the files
+        d["files"] = list(self.data_files.values())
+        # Rearrange samples
+        samples_list = []
+        for i, sample_id in enumerate(d['sampleIds']):
+            sample = {
+                "sampleId": sample_id,
+                "sampleBodyPart": d["sampleBodyPart"][i],
+                "sampleSpecies": d["sampleSpecies"][i]
+            }
+            samples_list.append(sample)
+        # Remove superfluous keywords
+        d.pop('sampleIds', None)
+        d.pop("sampleBodyPart", None)
+        d.pop("sampleSpecies", None)
+        # Assign the sample list
+        d["samples"] = samples_list
+        # Iterate over each sample
         for sample in d['samples']:
             new_sample = deepcopy(d)
             new_sample['samples'] = sample
-
+            es_uuid = sample['sampleId']
+            new_sample['es_uuid'] = es_uuid
             # Load the current file in question
-            contents = self.merge(contents, es_uuid)
+            contents = self.merge(new_sample, es_uuid)
+            print("PRINTING SAMPLE INDEX DOCUMENT:\n")
+            pprint(contents)
             self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
 
     def __get_value(self, d, path):
@@ -675,12 +701,19 @@ class SampleOrientedIndexer(Indexer):
                                       id=_id,
                                       ignore=[404])
         if '_source' in existing:
-            # Get the assays
-            assays_es = existing['_source']['assays']
-            assays_doc = doc_contents['assays']
-
-            return doc_contents
-
+            # Pop out the samples field
+            sample = existing['_source'].pop('samples')
+            # Merge all the fields:
+            # do for loop, use the collections thing to update a new dict
+            d = collections.defaultdict(list)
+            d.update(existing['_source'])
+            for key, value in doc_contents.items():
+                if isinstance(d[key], list):
+                    d[key].extend(value)
+                else:
+                    d[key] = value
+            d['samples'] = sample
+            return d
         else:
             return doc_contents
 
