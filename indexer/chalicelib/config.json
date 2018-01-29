@@ -166,7 +166,7 @@
             "submitters*projectSubmitters",
             {
               "contributors": [
-                "email*projectContributosEmail"
+                "email*projectContributorsEmail"
               ]
             }
           ]
