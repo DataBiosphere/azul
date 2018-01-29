@@ -717,40 +717,169 @@ class SampleOrientedIndexer(Indexer):
         else:
             return doc_contents
 
-    def __get_item(self, c_item, name, _file=None):
+    def __get_format(self, file_name):
         """
-        Get the c_item in _file or all the strings in the c_item.
+        HACK This is to get the file format while we get a file format.
 
-        This recursive method serves to either get all the formatted
-        strings that make the config (c_item). If '_file' is not None,
-        then you get a tuple containing the string representing the path
-        in the metadata and the value of the metadata at that path.
-        This is a generator function.
+        We need to get the file format from the Blue Box team somehow.
+        This is a small parsing hack while we get a response.
 
-        :param c_item: config item.
-        :param name: name representing the path on the metadata
-        :param _file: the object to extract contents from. Defaults to None.
-        :return: name or name, item
+        :param file_name: A string containing the the file name with extension
         """
-        if isinstance(c_item, dict):
-            # Iterate over the contents of the dictionary
-            for key, value in c_item.items():
-                # Create the new name
-                new_name = "{}|{}".format(name, key) if name != "" else key
-                for item in value:
-                    # Recursive call on each level
-                    if _file is None or key in _file:
-                        child = None if _file is None else _file[key]
-                        yield from self.__get_item(item, new_name, _file=child)
+        # Get everything after the period
+        file_format = '.'.join(file_name.split('.')[1:])
+        file_format = file_format if file_format != '' else 'Unknown'
+        return file_format
+
+    def __get_bundle_type(self, file_extension):
+        """
+        HACK This is to get the bundle type while we wait for Blue Box team.
+
+        We need to get the bundle type from the Blue Box team somehow.
+        This is a small parsing hack while we get a response from them.
+
+        :param file_extension: A string containing the the file extension
+        """
+        # A series of if else statements to figure out the bundle type
+        # HACK
+        if 'analysis.json' in self.metadata_files:
+            bundle_type = 'Analysis'
+        elif re.search(r'(tiff)', str(file_extension)):
+            bundle_type = 'Imaging'
+        elif re.search(r'(fastq.gz)', str(file_extension)):
+            bundle_type = 'scRNA-Seq Upload'
         else:
-            # Return name concatenated with config key
-            name = "{}|{}".format(name, c_item).replace(".", ",")
-            if _file is not None and c_item in _file:
-                # If the file exists and contains the item in question
-                yield name, _file[c_item]
-            elif _file is None:
-                # If we only want the string of the name
-                yield name
+            bundle_type = 'Unknown'
+        return bundle_type
+
+
+class ProjectOrientedIndexer(Indexer):
+    """Create a Project oriented index.
+
+    ProjectOrientedIndexer makes use of its index() function to perform
+    indexing of the bundle files that are presented to the class when creating
+    an instance.
+
+    End for now.
+
+    """
+
+    def index(self, bundle_uuid, bundle_version, **kwargs):
+        """Indexes the bundle into a sample oriented indexer.
+
+        Triggers the actual indexing process
+
+        :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
+        :param bundle_version: The bundle of the version.
+        """
+        # Get the config driving indexing (e.g. the required entries)
+        versions = self.index_mapping_config['requested_entries']
+        # Get schema version for one of the metadata files
+        metadata_file = next(iter(self.metadata_files.values()))
+        schema_v = self.get_schema(metadata_file)
+        # Get the config for the current schema version
+        req_entries = versions[schema_v]
+        # Put together the list of arguments
+        args = [req_entries,  self.metadata_files]
+        # Create a new dictionary
+        d = collections.defaultdict(list)
+        # For each tuple returned from the metadata file, update
+        # the dictionary
+        for key, value in self.get_item(*args):
+            d[key].append(value)
+        # Add the format and bundle type to each file
+        bundle_type = None
+        for file_name, description in self.data_files.items():
+            self.data_files[file_name]['format'] = self.__get_format(file_name)
+            # Get the bundle type
+            bundle_type = self.__get_bundle_type(file_name)
+        # Assign the bundle type
+        d["bundle_uuid"] = bundle_uuid
+        d["bundle_type"] = bundle_type
+        d["bundle_version"] = bundle_version
+        # Assign the files
+        d["files"] = list(self.data_files.values())
+        # Rearrange samples
+        samples_list = []
+        for i, sample_id in enumerate(d['sampleIds']):
+            sample = {
+                "sampleId": sample_id,
+                "sampleBodyPart": d["sampleBodyPart"][i],
+                "sampleSpecies": d["sampleSpecies"][i]
+            }
+            samples_list.append(sample)
+        # Remove superfluous keywords
+        d.pop('sampleIds', None)
+        d.pop("sampleBodyPart", None)
+        d.pop("sampleSpecies", None)
+        # Assign the sample list
+        d["samples"] = samples_list
+        # Iterate over each sample
+        for project in d['projectId']:
+            new_project = deepcopy(d)
+            new_project['projectId'] = project
+            es_uuid = project
+            new_project['es_uuid'] = es_uuid
+            contents = self.merge(new_project, es_uuid)
+            print("PRINTING PROJECT INDEX DOCUMENT:\n")
+            pprint(contents)
+            self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
+
+    def __get_value(self, d, path):
+        """
+        Obtain a value deep in a Dictionary.
+
+        This helper function serves to get a value deep in a dictionary.
+        See: stackoverflow.com/questions/40468932/pass-nested-dictionary-
+        location-as-parameter-in-python
+        """
+        return reduce(dict.get, path, d)
+
+    def __merge_lists(self, new, current, path):
+        """
+        Merge two lists with unique ids.
+
+        This function helps by merging two litst of dictionaries and making
+        sure that the field in question only appears once in the list.
+        """
+        merged_dict = {}
+        both_lists = current + new
+        for item in both_lists:
+            _id = self.__get_value(item, path)
+            # TODO: I don't like this approach, but this is a first pass.
+            # We need to redo so that it is less than O(n)
+            # This first pass approach ensures new entries overwrite old ones.
+            merged_dict[_id] = item
+        merged = list(merged_dict.values())
+        return merged
+
+    def merge(self, doc_contents, _id):
+        """
+        Merge the current doc_contents.
+
+        This method calls elasticsearch and merges the documents present
+        in there with the ones from doc_contents
+        """
+        existing = self.es_client.get(index=self.index_name,
+                                      doc_type=self.doc_type,
+                                      id=_id,
+                                      ignore=[404])
+        if '_source' in existing:
+            # Pop out the samples field
+            project = existing['_source'].pop('projectId')
+            # Merge all the fields:
+            # do for loop, use the collections thing to update a new dict
+            d = collections.defaultdict(list)
+            d.update(existing['_source'])
+            for key, value in doc_contents.items():
+                if isinstance(d[key], list):
+                    d[key].extend(value)
+                else:
+                    d[key] = value
+            d['projectId'] = project
+            return d
+        else:
+            return doc_contents
 
     def __get_format(self, file_name):
         """
