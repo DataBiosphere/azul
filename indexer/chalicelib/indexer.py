@@ -266,6 +266,13 @@ class FileIndexer(Indexer):
                                            bundle_uuid=bundle_uuid,
                                            bundle_version=bundle_version,
                                            es_uuid=es_uuid)
+            d['bundles'] = [
+                {
+                    "uuid": special_.pop('bundle_uuid', None),
+                    "version": special_.pop('bundle_version', None),
+                    "type": special_.pop('bundle_type', None)
+                }
+            ]
             samples_list = []
             for i, sample_id in enumerate(d['sampleIds']):
                 sample = {
@@ -579,10 +586,14 @@ class AssayOrientedIndexer(Indexer):
             self.data_files[file_name]['format'] = self.__get_format(file_name)
             # Get the bundle type
             bundle_type = self.__get_bundle_type(file_name)
-        # Assign the bundle type
-        d["bundle_uuid"] = bundle_uuid
-        d["bundle_type"] = bundle_type
-        d["bundle_version"] = bundle_version
+        # Assign the bundles
+        d['bundles'] = [
+            {
+                "uuid": bundle_uuid,
+                "version": bundle_version,
+                "type": bundle_type
+            }
+        ]
         # Assign the files
         d["files"] = list(self.data_files.values())
         # Rearrange samples
@@ -743,10 +754,14 @@ class SampleOrientedIndexer(Indexer):
             self.data_files[file_name]['format'] = self.__get_format(file_name)
             # Get the bundle type
             bundle_type = self.__get_bundle_type(file_name)
-        # Assign the bundle type
-        d["bundle_uuid"] = bundle_uuid
-        d["bundle_type"] = bundle_type
-        d["bundle_version"] = bundle_version
+        # Assign the bundle
+        d['bundles'] = [
+            {
+                "uuid": bundle_uuid,
+                "version": bundle_version,
+                "type": bundle_type
+            }
+        ]
         # Assign the files
         d["files"] = list(self.data_files.values())
         # Rearrange samples
@@ -908,10 +923,14 @@ class ProjectOrientedIndexer(Indexer):
             self.data_files[file_name]['format'] = self.__get_format(file_name)
             # Get the bundle type
             bundle_type = self.__get_bundle_type(file_name)
-        # Assign the bundle type
-        d["bundle_uuid"] = bundle_uuid
-        d["bundle_type"] = bundle_type
-        d["bundle_version"] = bundle_version
+        # Assign the bundle
+        d['bundles'] = [
+            {
+                "uuid": bundle_uuid,
+                "version": bundle_version,
+                "type": bundle_type
+            }
+        ]
         # Assign the files
         d["files"] = list(self.data_files.values())
         # Rearrange samples
