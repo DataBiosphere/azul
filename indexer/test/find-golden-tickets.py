@@ -45,7 +45,7 @@ def parseResultEntry(result_entry):
     '''
     Helper function to parse the results from a single results entry
     '''
-    bundle_id = result_entry['bundle_id']
+    bundle_id = result_entry['bundle_fqid']
     bundle_uuid = bundle_id[:36]
     bundle_version = bundle_id[37:]
     return (bundle_uuid, bundle_version)
