@@ -278,13 +278,15 @@ class FileIndexer(Indexer):
                 sample = {
                     "sampleId": sample_id,
                     "sampleBodyPart": d["sampleBodyPart"][i],
-                    "sampleSpecies": d["sampleSpecies"][i]
+                    "sampleSpecies": d["sampleSpecies"][i],
+                    "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
                 }
                 samples_list.append(sample)
             # Remove superfluous keywords
             d.pop('sampleIds', None)
             d.pop("sampleBodyPart", None)
             d.pop("sampleSpecies", None)
+            d.pop("sampleNcbiTaxonIds", None)
             samples = {"samples": samples_list}
             contents = {**d, **special_, **samples}
             print("PRINTING FILE INDEX DOCUMENT:\n")
@@ -434,13 +436,15 @@ class BundleOrientedIndexer(Indexer):
             sample = {
                 "sampleId": sample_id,
                 "sampleBodyPart": d["sampleBodyPart"][i],
-                "sampleSpecies": d["sampleSpecies"][i]
+                "sampleSpecies": d["sampleSpecies"][i],
+                "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
             }
             samples_list.append(sample)
         # Remove superfluous keywords
         d.pop('sampleIds', None)
         d.pop("sampleBodyPart", None)
         d.pop("sampleSpecies", None)
+        d.pop("sampleNcbiTaxonIds", None)
         # Assign the sample list
         d["samples"] = samples_list
         # Iterate over each sample
@@ -602,13 +606,15 @@ class AssayOrientedIndexer(Indexer):
             sample = {
                 "sampleId": sample_id,
                 "sampleBodyPart": d["sampleBodyPart"][i],
-                "sampleSpecies": d["sampleSpecies"][i]
+                "sampleSpecies": d["sampleSpecies"][i],
+                "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
             }
             samples_list.append(sample)
         # Remove superfluous keywords
         d.pop('sampleIds', None)
         d.pop("sampleBodyPart", None)
         d.pop("sampleSpecies", None)
+        d.pop("sampleNcbiTaxonIds", None)
         # Assign the sample list
         d["samples"] = samples_list
         # Iterate over each sample
@@ -770,13 +776,15 @@ class SampleOrientedIndexer(Indexer):
             sample = {
                 "sampleId": sample_id,
                 "sampleBodyPart": d["sampleBodyPart"][i],
-                "sampleSpecies": d["sampleSpecies"][i]
+                "sampleSpecies": d["sampleSpecies"][i],
+                "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
             }
             samples_list.append(sample)
         # Remove superfluous keywords
         d.pop('sampleIds', None)
         d.pop("sampleBodyPart", None)
         d.pop("sampleSpecies", None)
+        d.pop("sampleNcbiTaxonIds", None)
         # Assign the sample list
         d["samples"] = samples_list
         # Iterate over each sample
@@ -939,13 +947,15 @@ class ProjectOrientedIndexer(Indexer):
             sample = {
                 "sampleId": sample_id,
                 "sampleBodyPart": d["sampleBodyPart"][i],
-                "sampleSpecies": d["sampleSpecies"][i]
+                "sampleSpecies": d["sampleSpecies"][i],
+                "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
             }
             samples_list.append(sample)
         # Remove superfluous keywords
         d.pop('sampleIds', None)
         d.pop("sampleBodyPart", None)
         d.pop("sampleSpecies", None)
+        d.pop("sampleNcbiTaxonIds", None)
         # Assign the sample list
         d["samples"] = samples_list
         # Iterate over each sample

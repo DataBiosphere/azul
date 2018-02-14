@@ -191,7 +191,8 @@
                     "text*sampleSpecies"
                   ]
                 },
-                "sample_id*sampleIds"
+                "sample_id*sampleIds",
+                "ncbi_taxon_id*sampleNcbiTaxonIds"
               ]
             }
           ]
