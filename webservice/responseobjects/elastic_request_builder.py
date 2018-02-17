@@ -5,7 +5,7 @@ from elasticsearch_dsl import Search, Q, A
 import json
 import logging
 import os
-from responseobjects.api_response import KeywordSearchResponse, \
+from responseobjects.hca_response import KeywordSearchResponse, \
     FileSearchResponse, SummaryResponse, ManifestResponse,\
     AutoCompleteResponse
 from utilities import json_pp

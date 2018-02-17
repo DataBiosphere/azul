@@ -69,7 +69,7 @@ def get_data(file_id=None):
         "from": request.args.get('from', 1, type=int),
         "order": request.args.get('order', 'desc'),
         "size": request.args.get('size', 5, type=int),
-        "sort":    request.args.get('sort', 'center_name'),
+        "sort":    request.args.get('sort', 'es_uuid'),
     }
     logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Handle <file_id> request form
@@ -319,4 +319,3 @@ def get_manifest():
     response = es_td.transform_manifest(filters=filters)
     # Return the excel file
     return response
-

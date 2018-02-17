@@ -1,8 +1,12 @@
 #!/usr/bin/python
 import abc
+from utilities import json_pp
 from flask_excel import make_response_from_array
+import logging
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
     IntegerProperty, ListProperty, ObjectProperty, DictProperty
+
+module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
 
 class FileCopyObj(JsonObject):
@@ -98,10 +102,12 @@ class ApiResponse(JsonObject):
     """
     Class defining an API response
     """
-    hits = ListProperty(HitEntry)
-    pagination = ObjectProperty(
-        PaginationObj, exclude_if_none=True, default=None)
-    termFacets = DictProperty(FacetObj, exclude_if_none=True)
+    # hits = ListProperty(HitEntry)
+    # pagination = ObjectProperty(
+    #     PaginationObj,
+    #     exclude_if_none=True,
+    #     default=None)
+    # termFacets = DictProperty(FacetObj, exclude_if_none=True)
 
 
 class SummaryRepresentation(JsonObject):
@@ -113,6 +119,54 @@ class SummaryRepresentation(JsonObject):
     donorCount = IntegerProperty()
     projectCount = IntegerProperty()
     primarySiteCount = IntegerProperty()
+
+
+class DonorAutoCompleteEntry(JsonObject):
+    """
+    Class defining the Donor Autocomplete Entry
+    Out of commission until we begin dealing with
+    more indexes
+    """
+    _id = StringProperty(name='id')
+    projectId = StringProperty()
+    sampleIds = ListProperty(StringProperty)
+    specimenIds = ListProperty(StringProperty)
+    submittedId = StringProperty()
+    submittedSampleIds = ListProperty(StringProperty)
+    submittedSpecimenIds = ListProperty(StringProperty)
+    _type = StringProperty(name='type', default='donor')
+
+
+class FileDonorAutoCompleteEntry(JsonObject):
+    """
+    Class defining the Donor Autocomplete Entry
+    """
+    _id = StringProperty(name='id')
+    _type = StringProperty(name='type', default='donor')
+
+
+class FileIdAutoCompleteEntry(JsonObject):
+    """
+    Class defining the File Id Auto Complete Entry
+    """
+    _id = StringProperty(name='id')
+    dataType = StringProperty()
+    donorId = ListProperty(StringProperty)
+    fileBundleId = StringProperty()
+    fileName = ListProperty(StringProperty)
+    projectCode = ListProperty(StringProperty)
+    _type = StringProperty(name='type', default='file')
+
+
+class AutoCompleteRepresentation(JsonObject):
+    """
+    Class defining the Autocomplete Representation
+    """
+    hits = ListProperty()
+    pagination = ObjectProperty(
+        PaginationObj,
+        exclude_if_none=True,
+        default=None)
 
 
 class AbstractResponse(object):
@@ -152,6 +206,39 @@ class ManifestResponse(AbstractResponse):
         mapped_manifest.insert(0, [column for column in manifest_entries])
         self.apiResponse = make_response_from_array(
             mapped_manifest, 'tsv', file_name='manifest')
+
+
+class EntryFetcher:
+    """
+    Helper class containing helper methods
+    """
+    @staticmethod
+    def fetch_entry_value(mapping, entry, key):
+        """
+        Helper method for getting the value of key on the mapping
+        :param mapping: Mapping in question. Values should be at
+        the root level
+        :param entry: Dictionary where the contents are to be looking for in
+        :param key: Key to be used to get the right value
+        :return: Returns entry[mapping[key]] if present. Other
+        """
+        m = mapping[key]
+        if m is not None:
+            if isinstance(m, list):
+                return entry[m[0]] if m[0] is not None else None
+            else:
+                return entry[m] if m in entry else None
+        else:
+            return None
+
+    @staticmethod
+    def handle_list(value):
+        return [value] if value is not None else []
+
+    def __init__(self):
+        # Setting up logger
+        self.logger = logging.getLogger(
+            'dashboardService.api_response.EntryFetcher')
 
 
 class SummaryResponse(AbstractResponse):
@@ -404,3 +491,63 @@ class FileSearchResponse(KeywordSearchResponse):
         self.apiResponse.pagination = PaginationObj(**pagination)
         # Add the facets
         self.apiResponse.termFacets = self.add_facets(facets)
+
+
+class AutoCompleteResponse(EntryFetcher):
+
+    def map_entries(self, mapping, entry, _type='file'):
+        """
+        Returns a HitEntry Object. Takes the mapping and maps the appropriate
+        fields from entry to the corresponding entry in the mapping
+        :param mapping: Takes in a Json object with the mapping to the
+        corresponding field in the entry object
+        :param entry: A 1 dimensional dictionary corresponding to a single
+        hit from ElasticSearch
+        :param _type: The type of entry that will be used when constructing
+        the entry
+        :return: A HitEntry Object with the appropriate fields mapped
+        """
+        self.logger.debug("Entry to be mapped: \n{}".format(json_pp(entry)))
+        mapped_entry = {}
+        if _type == 'file':
+            # Create a file representation
+            mapped_entry = FileIdAutoCompleteEntry(
+                _id=self.fetch_entry_value(mapping, entry, 'id'),
+                dataType=self.fetch_entry_value(mapping, entry, 'dataType'),
+                donorId=self.handle_list(self.fetch_entry_value(
+                    mapping, entry, 'donorId')),
+                fileBundleId=self.fetch_entry_value(
+                    mapping, entry, 'fileBundleId'),
+                fileName=self.handle_list(self.fetch_entry_value(
+                    mapping, entry, 'fileName')),
+                projectCode=self.handle_list(self.fetch_entry_value(
+                    mapping, entry, 'projectCode')),
+                _type='file'
+            )
+        elif _type == 'file-donor' or _type == 'donor':
+            # Create a file-donor representation
+            # TODO: Need to work on the donor exclusive representation.
+            mapped_entry = FileDonorAutoCompleteEntry(
+                _id=self.fetch_entry_value(mapping, entry, 'id'),
+                _type='donor'
+            )
+        return mapped_entry.to_json()
+
+    def __init__(self, mapping, hits, pagination, _type):
+        """
+        Constructs the object and initializes the apiResponse attribute
+        :param mapping: A JSON with the mapping for the field
+        :param hits: A list of hits from ElasticSearch
+        """
+        # Setup the logger
+        self.logger = logging.getLogger(
+            'dashboardService.api_response.AutoCompleteResponse')
+        # Overriding the __init__ method of the parent class
+        EntryFetcher.__init__(self)
+        self.logger.info("Mapping entries")
+        self.logger.debug("Mapping: \n{}".format(json_pp(mapping)))
+        class_entries = {'hits': [self.map_entries(
+            mapping, x, _type) for x in hits], 'pagination': None}
+        self.apiResponse = AutoCompleteRepresentation(**class_entries)
+        # Add the paging via **kwargs of dictionary 'pagination'
+        self.apiResponse.pagination = PaginationObj(**pagination)
