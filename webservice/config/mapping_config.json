@@ -1,68 +1,39 @@
 {
-  "access": "access",
-  "analysisMethod": {
-    "analysisType": "analysis_type",
-    "software": "software"
+  "id": "es_uuid",
+  "objectID": "es_uuid",
+  "assay":{
+    "assayId": "assayId",
+    "singleCellHandling": "singleCellHandling",
+    "seqInstrumentPlatform": "seqInstrumentPlatform",
+    "pairedEnds": "pairedEnds",
+    "rnaLibraryConstruction": "rnaLibraryConstruction",
+    "rnaSpikeIn": "rnaSpikeIn"
   },
-  "center_name": "center_name",
-  "dataCategorization": {
-    "dataType": "file_type",
-    "experimentalStrategy": "experimentalStrategy"
+  "projectId": "projectId",
+  "projectContributorsEmail": "projectContributorsEmail",
+  "analysis":{
+    "analysisId": "analysisId",
+    "analysisComputationalMethod": "analysisComputationalMethod"
   },
-  "donors": [
-    {
-      "donorId": "donor",
-      "otherIdentifiers": {
-        "RedwoodDonorUUID": [
-          "redwoodDonorUUID"
-        ]
-      },
-      "primarySite": "submitterDonorPrimarySite",
-      "projectCode": "project",
-      "sampleId": [
-        "sampleId"
-      ],
-      "specimenType": [
-        "specimen_type"
-      ],
-      "study": "study",
-      "submittedDonorId": "submittedDonorId",
-      "submittedSampleId": [
-        "submittedSampleId"
-      ],
-      "submittedSpecimenId": [
-        "submittedSpecimenId"
-      ]
-    }
-  ],
+  "bundleUuid": "uuid",
+  "bundleVersion": "version",
+  "bundleType": "bundleVersion",
   "fileCopies": [
     {
-      "fileFormat": "file_type",
-      "fileMd5sum": "fileMd5sum",
-      "fileName": "title",
-      "fileSize": "fileSize",
-      "lastModified": "lastModified",
-      "repoBaseUrl": "repoBaseUrl",
-      "repoCode": "repoCode",
-      "repoCountry": "repoCountry",
-      "repoDataBundleId": "repoDataBundleId",
-      "repoDataPath": null,
-      "repoDataSetIds": [null],
-      "repoMetadataPath": null,
-      "repoName": "repoName",
-      "repoOrg": "repoOrg",
-      "repoType": "repoType"
+      "fileName": "name",
+      "fileFormat": "format",
+      "fileSize": "size",
+      "fileSha1": "sha1",
+      "fileVersion": "version",
+      "fileUuid": "uuid"
     }
   ],
-  "id": "file_id",
-  "objectID": "file_id",
-  "program": "program",
-  "referenceGenome": {
-    "downloadUrl": null,
-    "genomeBuild": null,
-    "referenceName": null
-  },
-  "study": [
-    "study"
+  "samples": [
+    {
+      "sampleId": "sampleId",
+      "sampleBodyPart": "sampleBodyPart",
+      "sampleSpecies": "sampleSpecies",
+      "sampleNcbiTaxonIds": "sampleNcbiTaxonIds"
+    }
   ]
 }

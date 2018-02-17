@@ -4,45 +4,45 @@ services:
   dcc-dashboard-service:
     container_name: "dcc-dashboard-service"
     environment:
-      ES_SERVICE: "elasticsearch1"
-      ES_DOMAIN: "elasticsearch1"
-      ES_PORT: "9200"
-      ES_PROTOCOL: "http"
-      ES_FILE_INDEX: "fb_index"
-      ES_DONOR_INDEX: "analysis_index"
+      ES_SERVICE: "search-dss-azul-dev-carlos-hlz2qxnr27y352gcudeblyjkau.us-west-2.es.amazonaws.com"
+      ES_DOMAIN: "search-dss-azul-dev-carlos-hlz2qxnr27y352gcudeblyjkau.us-west-2.es.amazonaws.com"
+      ES_PORT: "443"
+      ES_PROTOCOL: "https"
+      ES_FILE_INDEX: "file_index_v4"
+      ES_DONOR_INDEX: "sample_index_v4"
     build: .
     ports:
       - "9000:80"
     networks:
       - esnet
     restart: always
-  elasticsearch1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.3
-    container_name: "elasticsearch1"
-    environment:
-      - "discovery.type=single-node"
-      - "xpack.security.enabled=false"
-      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
-    ports:
-       - "9200:9200"
-       - "9300:9200"
-    networks:
-      - esnet
-    restart: always
-
-  kibana:
-    container_name: "kibana"
-    image: docker.elastic.co/kibana/kibana:5.6.3
-    environment:
-      ELASTICSEARCH_URL: "http://elasticsearch1:9200"
-      XPACK_SECURITY_ENABLED: "false"
-    ports:
-      - "5601:5601"
-    networks:
-      - esnet
-    links:
-      - "elasticsearch1"
-    restart: always
+  # elasticsearch1:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:5.6.3
+  #   container_name: "elasticsearch1"
+  #   environment:
+  #     - "discovery.type=single-node"
+  #     - "xpack.security.enabled=false"
+  #     - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+  #   ports:
+  #      - "9200:9200"
+  #      - "9300:9200"
+  #   networks:
+  #     - esnet
+  #   restart: always
+  #
+  # kibana:
+  #   container_name: "kibana"
+  #   image: docker.elastic.co/kibana/kibana:5.6.3
+  #   environment:
+  #     ELASTICSEARCH_URL: "http://elasticsearch1:9200"
+  #     XPACK_SECURITY_ENABLED: "false"
+  #   ports:
+  #     - "5601:5601"
+  #   networks:
+  #     - esnet
+  #   links:
+  #     - "elasticsearch1"
+  #   restart: always
 
 networks:
   esnet:
