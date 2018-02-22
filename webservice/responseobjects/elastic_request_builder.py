@@ -77,7 +77,7 @@ class ElasticTransformDump(object):
         """
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=Q(
-            'terms', **{facet: values['is']}))
+            'terms', **{'{}__keyword'.format(facet): values['is']}))
                       for facet, values in filters['file'].iteritems()]
         # Return a Query object. Make it match_all
         return Q('bool', must=query_list) if len(query_list) > 0 else Q()
@@ -100,10 +100,16 @@ class ElasticTransformDump(object):
         # Create the filter aggregate
         aggregate = A('filter', filter_query)
         # Make an inner aggregate that will contain the terms in question
+        # _field = '{}.keyword'.format(facet_config[agg])
+        # HACK
+        if facet_config[agg] != 'pairedEnds':
+            _field = '{}.keyword'.format(facet_config[agg])
+        else:
+            _field = facet_config[agg]
         aggregate.bucket(
             'myTerms',
             'terms',
-            field=facet_config[agg],
+            field=_field,
             size=99999)
         # If the aggregate in question didn't have any filter on the API
         #  call, skip it. Otherwise insert the popped
@@ -204,7 +210,7 @@ class ElasticTransformDump(object):
         es_search = es_search.post_filter(es_filter_query)
         # Apply a prefix query with the query string
         es_search = es_search.query(
-            Q('prefix', **{'{}__raw'.format(search_field): _query}))
+            Q('prefix', **{'{}'.format(search_field): _query}))
         return es_search
 
     @staticmethod
@@ -231,7 +237,7 @@ class ElasticTransformDump(object):
         # Extract the fields for readability (and slight manipulation)
         _from = pagination['from'] - 1
         _to = pagination['size'] + _from
-        _sort = pagination['sort']
+        _sort = '{}.keyword'.format(pagination['sort'])
         _order = pagination['order']
         # Apply order
         es_search = es_search.sort({_sort: {"order": _order}})

@@ -3,7 +3,7 @@
   "objectID": "es_uuid",
   "assay":{
     "assayId": "assayId",
-    "singleCellHandling": "singleCellHandling",
+    "singleCellHandling": "scCellHandling",
     "seqInstrumentPlatform": "seqInstrumentPlatform",
     "pairedEnds": "pairedEnds",
     "rnaLibraryConstruction": "rnaLibraryConstruction",
@@ -17,7 +17,7 @@
   },
   "bundleUuid": "uuid",
   "bundleVersion": "version",
-  "bundleType": "bundleVersion",
+  "bundleType": "type",
   "fileCopies": [
     {
       "fileName": "name",

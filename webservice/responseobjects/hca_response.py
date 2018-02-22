@@ -4,7 +4,8 @@ from utilities import json_pp
 from flask_excel import make_response_from_array
 import logging
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
-    IntegerProperty, ListProperty, ObjectProperty, DictProperty
+    IntegerProperty, ListProperty, ObjectProperty, DictProperty, \
+    BooleanProperty
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
@@ -36,7 +37,7 @@ class AssayObject(JsonObject):
     assayId = StringProperty()
     singleCellHandling = StringProperty()
     seqInstrumentPlatform = StringProperty()
-    pairedEnds = StringProperty()
+    pairedEnds = BooleanProperty()
     rnaLibraryConstruction = StringProperty()
     rnaSpikeIn = StringProperty()
 
@@ -48,7 +49,7 @@ class SampleObj(JsonObject):
     sampleId = StringProperty()
     sampleBodyPart = StringProperty()
     sampleSpecies = StringProperty()
-    sampleNcbiTaxonIds = StringProperty()
+    sampleNcbiTaxonIds = IntegerProperty()
 
 
 class TermObj(JsonObject):
@@ -102,11 +103,9 @@ class ApiResponse(JsonObject):
     """
     Class defining an API response
     """
-    # hits = ListProperty(HitEntry)
-    # pagination = ObjectProperty(
-    #     PaginationObj,
-    #     exclude_if_none=True,
-    #     default=None)
+    hits = ListProperty(HitEntry)
+    pagination = ObjectProperty(
+        PaginationObj, exclude_if_none=True, default=None)
     # termFacets = DictProperty(FacetObj, exclude_if_none=True)
 
 
@@ -227,7 +226,10 @@ class EntryFetcher:
             if isinstance(m, list):
                 return entry[m[0]] if m[0] is not None else None
             else:
-                return entry[m] if m in entry else None
+                _entry = entry[m] if m in entry else None
+                _entry = _entry[0] if isinstance(
+                    _entry, list) and len(_entry) == 1 else _entry
+                return _entry
         else:
             return None
 
@@ -289,52 +291,27 @@ class SummaryResponse(AbstractResponse):
         )
 
 
-class KeywordSearchResponse(AbstractResponse):
+class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     """
     Class for the keyword search response. Based on the AbstractResponse class
     Not to be confused with the 'keywords' endpoint
     """
-    @staticmethod
-    def handle_list(value):
-        return [value] if value is not None else []
-
-    @staticmethod
-    def fetch_entry_value(mapping, entry, key):
-        """
-        Helper method for getting the value of key on the mapping
-        :param mapping: Mapping in question. Values should be at the root level
-        :param entry: Dictionary where the contents are to be looking for in
-        :param key: Key to be used to get the right value
-        :return: Returns entry[mapping[key]] if present. Other
-        """
-        m = mapping[key]
-        if m is not None:
-            if isinstance(m, list):
-                return entry[m[0]] if m[0] is not None else None
-            else:
-                return entry[m] if m in entry else None
-        else:
-            return None
 
     def return_response(self):
         return self.apiResponse
 
     def make_assay_object(self, mapping, entry):
         return AssayObject(
-            assayId=self.handle_list(
-                self.fetch_entry_value(mapping, entry, 'assayId')),
-            singleCellHandling=self.handle_list(
-                self.fetch_entry_value(mapping, entry, 'singleCellHandling')),
-            seqInstrumentPlatform=self.handle_list(
-                self.fetch_entry_value(
-                    mapping, entry, 'seqInstrumentPlatform')),
-            pairedEnds=self.handle_list(
-                self.fetch_entry_value(mapping, entry, 'pairedEnds')),
-            rnaLibraryConstruction=self.handle_list(
-                self.fetch_entry_value(
-                    mapping, entry, 'rnaLibraryConstruction')),
-            rnaSpikeIn=self.handle_list(
-                self.fetch_entry_value(mapping, entry, 'rnaSpikeIn'))
+            assayId=self.fetch_entry_value(mapping, entry, 'assayId'),
+            singleCellHandling=self.fetch_entry_value(
+                mapping, entry, 'singleCellHandling'),
+            seqInstrumentPlatform=self.fetch_entry_value(
+                mapping, entry, 'seqInstrumentPlatform'),
+            pairedEnds=self.fetch_entry_value(
+                mapping, entry, 'pairedEnds'),
+            rnaLibraryConstruction=self.fetch_entry_value(
+                mapping, entry, 'rnaLibraryConstruction'),
+            rnaSpikeIn=self.fetch_entry_value(mapping, entry, 'rnaSpikeIn')
         )
 
     def make_analysis_method(self, mapping, entry):
@@ -345,11 +322,9 @@ class KeywordSearchResponse(AbstractResponse):
         :return: Returns an AnalysisObj
         """
         return AnalysisObj(
-            analysisId=self.handle_list(
-                self.fetch_entry_value(mapping, entry, 'analysisId')),
-            analysisComputationalMethod=self.handle_list(
-                self.fetch_entry_value(
-                    mapping, entry, 'analysisComputationalMethod'))
+            analysisId=self.fetch_entry_value(mapping, entry, 'analysisId'),
+            analysisComputationalMethod=self.fetch_entry_value(
+                mapping, entry, 'analysisComputationalMethod')
         )
 
     def make_file_copy(self, mapping, entry):
@@ -373,15 +348,13 @@ class KeywordSearchResponse(AbstractResponse):
         array = []
         for sample in entry['samples']:
             sample_obj = SampleObj(
-                sampleId=self.handle_list(
-                    self.fetch_entry_value(mapping, sample, 'sampleId')),
-                sampleBodyPart=self.handle_list(
-                    self.fetch_entry_value(mapping, sample, 'sampleBodyPart')),
-                sampleSpecies=self.handle_list(
-                    self.fetch_entry_value(mapping, sample, 'sampleSpecies')),
-                sampleNcbiTaxonIds=self.handle_list(
-                    self.fetch_entry_value(
-                        mapping, sample, 'sampleNcbiTaxonIds'))
+                sampleId=self.fetch_entry_value(mapping, sample, 'sampleId'),
+                sampleBodyPart=self.fetch_entry_value(
+                    mapping, sample, 'sampleBodyPart'),
+                sampleSpecies=self.fetch_entry_value(
+                    mapping, sample, 'sampleSpecies'),
+                sampleNcbiTaxonIds=self.fetch_entry_value(
+                    mapping, sample, 'sampleNcbiTaxonIds')
             )
             array.append(sample_obj)
         return array
@@ -422,8 +395,14 @@ class KeywordSearchResponse(AbstractResponse):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
+        # Setup the logger
+        self.logger = logging.getLogger(
+            'dashboardService.api_response.KeywordSearchResponse')
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
+        super(KeywordSearchResponse, self).__init__()
+        self.logger.info('Mapping the entries')
+        self.logger.debug('Mapping config: \n{}'.format(json_pp(mapping)))
         class_entries = {'hits': [
             self.map_entries(mapping, x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
@@ -456,15 +435,15 @@ class FileSearchResponse(KeywordSearchResponse):
         :param contents: A dictionary from a particular ElasticSearch aggregate
         :return: A FacetObj constructed out of the ElasticSearch aggregate
         """
-        term_list = [
-            TermObj(**{"term": term['key'], "count":term['doc_count']})
-            for term in contents['myTerms']['buckets']]
+        term_list = [TermObj(**{"term": term['key'],
+                                "count":term['doc_count']})
+                     for term in contents['myTerms']['buckets']]
         facet = FacetObj(
             terms=term_list,
             total=contents['doc_count'],
             type='terms'  # Change once we on-board more types of contents.
         )
-        return facet
+        return facet.to_json()
 
     @staticmethod
     def add_facets(facets_response):
@@ -485,6 +464,9 @@ class FileSearchResponse(KeywordSearchResponse):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
+        # Setup the logger
+        self.logger = logging.getLogger(
+            'dashboardService.api_response.FileSearchResponse')
         # This should initialize the self.apiResponse attribute of the object
         KeywordSearchResponse.__init__(self, mapping, hits)
         # Add the paging via **kwargs of dictionary 'pagination'
