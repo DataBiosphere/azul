@@ -4,8 +4,7 @@ from utilities import json_pp
 from flask_excel import make_response_from_array
 import logging
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
-    IntegerProperty, ListProperty, ObjectProperty, DictProperty, \
-    BooleanProperty
+    IntegerProperty, ListProperty, ObjectProperty, BooleanProperty
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
@@ -435,8 +434,15 @@ class FileSearchResponse(KeywordSearchResponse):
         :param contents: A dictionary from a particular ElasticSearch aggregate
         :return: A FacetObj constructed out of the ElasticSearch aggregate
         """
-        term_list = [TermObj(**{"term": term['key'],
-                                "count":term['doc_count']})
+        # HACK
+        def choose_entry(_term):
+            if 'key_as_string' in _term:
+                return _term['key_as_string']
+            else:
+                return _term['key']
+
+        term_list = [TermObj(**{"term": choose_entry(term),
+                                "count": term['doc_count']})
                      for term in contents['myTerms']['buckets']]
         facet = FacetObj(
             terms=term_list,
