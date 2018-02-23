@@ -320,3 +320,51 @@ def get_manifest():
     # Return the excel file
     return response
 
+@webservicebp.route('/repository/files/export/firecloud', methods=['GET'])
+def export_to_firecloud():
+    """
+    Creates and returns a manifest based on the filters pased on
+    to this endpoint
+    parameters:
+        - name: filters
+          in: query
+          type: string
+          description: Filters to be applied when generating the manifest
+        - name: workspace
+          in: query
+          type: string
+          description: The name of the FireCloud workspace to create
+        - name: namespace
+          in: query
+          type: string
+          description: The namespace of the FireCloud workspace to create
+    :return: A manifest that the user can use to download the files in there
+    """
+    # Setup logging
+    logger = logging.getLogger("dashboardService.webservice.export_to_firecloud")
+    filters = request.args.get('filters', '{"file": {}}')
+    logger.debug("Filters string is: {}".format(filters))
+    try:
+        logger.info("Extracting the filter parameter from the request")
+        filters = ast.literal_eval(filters)
+        filters = {"file": {}} if filters == {} else filters
+    except Exception, e:
+        logger.error("Malformed filters parameter: {}".format(e.message))
+        return "Malformed filters parameter"
+    workspace = request.args.get('workspace')
+    if workspace is None:
+        logger.error("Missing workspace parameter")
+        return "Missing workspace parameter", 400
+    namespace = request.args.get('namespace')
+    if namespace is None:
+        return "Missing namespace parameter", 400
+    auth = request.headers.get('authorization')
+    if auth is None:
+        return "Unauthorized", 401
+    response = {
+        'auth': auth,
+        'workspace': workspace,
+        'namespace': namespace
+    }
+    # TODO: 1. Generate bagit; 2. Use bagit, auth, workspace, and namespace to invoke lambda
+    return jsonify(response)
