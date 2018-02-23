@@ -323,8 +323,9 @@ def get_manifest():
 @webservicebp.route('/repository/files/export/firecloud', methods=['GET'])
 def export_to_firecloud():
     """
-    Creates and returns a manifest based on the filters pased on
-    to this endpoint
+    Creates a FireCloud workspace based on the filters, workspace, and namespace passed to
+    to this endpoint. The authorization header should contain a bearer token that will be used against the
+    FireCloud API.
     parameters:
         - name: filters
           in: query
@@ -338,7 +339,7 @@ def export_to_firecloud():
           in: query
           type: string
           description: The namespace of the FireCloud workspace to create
-    :return: A manifest that the user can use to download the files in there
+    :return: TBD, probably a JSON object with the url of the FireCloud workspace
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.export_to_firecloud")
