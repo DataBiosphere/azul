@@ -114,9 +114,9 @@ class SummaryRepresentation(JsonObject):
     """
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
-    donorCount = IntegerProperty()
+    sampleCount = IntegerProperty()
     projectCount = IntegerProperty()
-    primarySiteCount = IntegerProperty()
+    bodyPartsCounts = IntegerProperty()
 
 
 class DonorAutoCompleteEntry(JsonObject):
