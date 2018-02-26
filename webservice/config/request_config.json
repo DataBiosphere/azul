@@ -11,7 +11,9 @@
     "fileFormat": "files.format",
     "computationalMethod": "analysisComputationalMethod",
     "bundleType": "bundles.type",
-    "fileSize": "files.size"
+    "fileSize": "files.size",
+    "projectCode": "projectId",
+    "sampleId": "samples.sampleId",
   },
   "autocomplete-translation": {
     "ES_FILE_INDEX": {
