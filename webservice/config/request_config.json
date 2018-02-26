@@ -13,7 +13,7 @@
     "bundleType": "bundles.type",
     "fileSize": "files.size",
     "projectCode": "projectId",
-    "sampleId": "samples.sampleId",
+    "sampleId": "samples.sampleId"
   },
   "autocomplete-translation": {
     "ES_FILE_INDEX": {
