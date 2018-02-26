@@ -297,11 +297,11 @@ class ElasticTransformDump(object):
             'total_size',
             'sum',
             field=request_config['translation']['fileSize'])
-        # Override the aggregates for Donors,
+        # Override the aggregates for Samples,
         # Primary site count, and project count
         for field, agg_name in (
-                ('donorId', 'donor'),
-                ('primarySite', 'submitterDonorPrimarySite'),
+                ('sampleId', 'samples'),
+                ('bodyPart', 'submittedBodyParts'),
                 ('projectCode', 'projectCode')):
             cardinality = request_config['translation'][field]
             es_search.aggs.metric(
