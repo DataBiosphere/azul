@@ -10,7 +10,7 @@
     "rnaSpikeIn": "rnaSpikeIn"
   },
   "projectId": "projectId",
-  "projectContributorsEmail": "projectContributorsEmail",
+  "projectContributorsEmail": ["projectContributorsEmail"],
   "analysis":{
     "analysisId": "analysisId",
     "analysisComputationalMethod": "analysisComputationalMethod"

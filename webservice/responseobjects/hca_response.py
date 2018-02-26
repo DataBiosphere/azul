@@ -89,7 +89,7 @@ class HitEntry(JsonObject):
     objectID = StringProperty()
     assay = ObjectProperty(AssayObject)
     projectId = StringProperty()
-    projectContributorsEmail = StringProperty()
+    projectContributorsEmail = ListProperty(StringProperty)
     analysis = ObjectProperty(AnalysisObj)
     bundleUuid = StringProperty()
     bundleVersion = StringProperty()
