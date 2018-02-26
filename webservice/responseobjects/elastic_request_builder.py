@@ -306,7 +306,7 @@ class ElasticTransformDump(object):
             cardinality = request_config['translation'][field]
             es_search.aggs.metric(
                 agg_name, 'cardinality',
-                field=cardinality,
+                field='{}.keyword'.format(cardinality),
                 precision_threshold="40000")
         # Execute ElasticSearch request
         self.logger.info('Executing request to ElasticSearch')
