@@ -395,14 +395,14 @@ def export_to_firecloud():
     bag = create_bdbag(**args)  # bag is a compressed file
 
     fileobj = open(bag, 'rb')
-    domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com/api/exportBag"
+    domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com"
     fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
     fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
     fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '443')
     url = (fc_lambda_protocol +
            '://' + fc_lambda_port +
            '/' + fc_lambda_domain +
-           '?workspace=' + workspace +
+           '/api/exportBag?workspace=' + workspace +
            '&namespace=' + namespace)
     headers = {'Content-Type': 'application/octet-stream',
                'Accept': 'application/json',
