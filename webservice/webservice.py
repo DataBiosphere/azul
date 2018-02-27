@@ -1,8 +1,12 @@
 import ast
 import config
+import datetime
 from flask import jsonify, request, Blueprint
 import logging.config
 import os
+import io
+import zipfile
+import bagit
 from responseobjects.elastic_request_builder import \
     ElasticTransformDump as EsTd
 from responseobjects.utilities import json_pp
@@ -367,5 +371,50 @@ def export_to_firecloud():
         'workspace': workspace,
         'namespace': namespace
     }
+    # Create and instance of the ElasticTransformDump
+    logger.info("Creating ElasticTransformDump object")
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
+                 es_port=os.getenv("ES_PORT", 9200),
+                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
+    # Get the response back
+    logger.info("Creating the API response")
+    response = es_td.transform_manifest(filters=filters)
+    # Create and return the BDbag folder.
+    bag_name = 'manifest_bag'
+    bag_path = os.getcwd() + '/' + bag_name
+    bag_info = {'organization': 'UCSC Genomics Institute',
+                'data_type': 'TOPMed',
+                'date_created': datetime.datetime.now().isoformat()}
+    args = dict(
+            bag_path=bag_path,
+            bag_info=bag_info,
+            payload=response.get_data())
+    bag = create_bdbag(**args)  # bag is a compressed file
+    logger.info("Creating a compressed BDbag containing manifest.")
+
     # TODO: 1. Generate bagit; 2. Use bagit, auth, workspace, and namespace to invoke lambda
     return jsonify(response)
+
+def create_bdbag(bag_path, bag_info, payload):
+    """Create compressed BDbag file."""
+    if not os.path.exists(bag_path):
+        os.makedirs(bag_path)
+    bag = bagit.make_bag(bag_path, bag_info)
+    # Add payload in subfolder "data".
+    with open(bag_path + '/data/manifest.tsv', 'w') as fp:
+        fp.write(payload)
+    bag.save(manifests=True)  # creates checksum manifests
+    # Compress bag.
+    zip_file_path = os.path.basename(os.path.normpath(str(bag)))
+    zip_file_name = 'manifest_bag.zip'
+    zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+    zipdir(zip_file_path, zipf)
+    zipf.close()
+    return zip_file_name
+
+
+def zipdir(path, ziph):
+    # ziph is zipfile handle
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file))
