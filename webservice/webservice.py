@@ -1,10 +1,12 @@
 import ast
+
+import requests
+
 import config
 import datetime
 from flask import jsonify, request, Blueprint
 import logging.config
 import os
-import io
 import zipfile
 import bagit
 from responseobjects.elastic_request_builder import \
@@ -389,30 +391,25 @@ def export_to_firecloud():
             bag_path=bag_path,
             bag_info=bag_info,
             payload=response.get_data())
-    bag = create_bdbag(**args)  # bag is a compressed file
     logger.info("Creating a compressed BDbag containing manifest.")
+    bag = create_bdbag(**args)  # bag is a compressed file
 
-    # TODO: 1. Use bagit, auth, workspace, and namespace to invoke lambda
     fileobj = open(bag, 'rb')
     domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com/api/exportBag"
-    fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "http")
+    fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
     fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
-    fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '80')
-    workspace = 'test_stream2'
-    namespace = 'firecloud-cgl'
+    fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '443')
     url = (fc_lambda_protocol +
            '://' + fc_lambda_port +
            '/' + fc_lambda_domain +
            '?workspace=' + workspace +
-           '&namespace=' + namespace +
-           '&')
+           '&namespace=' + namespace)
     headers = {'Content-Type': 'application/octet-stream',
                'Accept': 'application/json',
                'Authorization': auth}
-    r = requests.post(url=url,
-                      data=fileobj,
-                      headers=headers)
-    return jsonify(response)
+    return requests.post(url=url,
+                         data=fileobj,
+                         headers=headers)
 
 def create_bdbag(bag_path, bag_info, payload):
     """Create compressed BDbag file."""
