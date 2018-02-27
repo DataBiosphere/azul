@@ -392,7 +392,26 @@ def export_to_firecloud():
     bag = create_bdbag(**args)  # bag is a compressed file
     logger.info("Creating a compressed BDbag containing manifest.")
 
-    # TODO: 1. Generate bagit; 2. Use bagit, auth, workspace, and namespace to invoke lambda
+    # TODO: 1. Use bagit, auth, workspace, and namespace to invoke lambda
+    fileobj = open(bag, 'rb')
+    domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com/api/exportBag"
+    fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "http")
+    fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
+    fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '80')
+    workspace = 'test_stream2'
+    namespace = 'firecloud-cgl'
+    url = (fc_lambda_protocol +
+           '://' + fc_lambda_port +
+           '/' + fc_lambda_domain +
+           '?workspace=' + workspace +
+           '&namespace=' + namespace +
+           '&')
+    headers = {'Content-Type': 'application/octet-stream',
+               'Accept': 'application/json',
+               'Authorization': auth}
+    r = requests.post(url=url,
+                      data=fileobj,
+                      headers=headers)
     return jsonify(response)
 
 def create_bdbag(bag_path, bag_info, payload):
