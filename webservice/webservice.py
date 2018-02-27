@@ -7,6 +7,7 @@ import datetime
 from flask import jsonify, request, Blueprint
 import logging.config
 import os
+import shutil
 import zipfile
 import bagit
 from responseobjects.elastic_request_builder import \
@@ -408,9 +409,10 @@ def export_to_firecloud():
     headers = {'Content-Type': 'application/octet-stream',
                'Accept': 'application/json',
                'Authorization': auth}
-    return requests.post(url=url,
-                         data=fileobj,
-                         headers=headers)
+    post = requests.post(url=url, data=fileobj, headers=headers)
+    fileobj.close()
+    os.remove(bag)
+    return post.status_code
 
 def create_bdbag(bag_path, bag_info, payload):
     """Create compressed BDbag file."""
@@ -427,6 +429,7 @@ def create_bdbag(bag_path, bag_info, payload):
     zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
     zipdir(zip_file_path, zipf)
     zipf.close()
+    shutil.rmtree(bag_path, True)
     return zip_file_name
 
 
