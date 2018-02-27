@@ -412,7 +412,10 @@ def export_to_firecloud():
     post = requests.post(url=url, data=fileobj, headers=headers)
     fileobj.close()
     os.remove(bag)
-    return post.status_code
+    response = {
+        'reason': post.reason
+    }
+    return jsonify(response), post.status_code
 
 def create_bdbag(bag_path, bag_info, payload):
     """Create compressed BDbag file."""
