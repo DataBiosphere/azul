@@ -400,10 +400,11 @@ def export_to_firecloud():
     fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
     fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '443')
     url = (fc_lambda_protocol +
-           '://' + fc_lambda_port +
-           '/' + fc_lambda_domain +
+           '://' + fc_lambda_domain +
+           ':' + fc_lambda_port +
            '/api/exportBag?workspace=' + workspace +
            '&namespace=' + namespace)
+    logger.info("going to hit {}".format(url))
     headers = {'Content-Type': 'application/octet-stream',
                'Accept': 'application/json',
                'Authorization': auth}
