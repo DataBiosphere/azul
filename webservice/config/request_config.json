@@ -13,7 +13,11 @@
     "bundleType": "bundles.type",
     "fileSize": "files.size",
     "projectCode": "projectId",
-    "sampleId": "samples.sampleId"
+    "sampleId": "samples.sampleId",
+    "File ID:Version": "es_uuid",
+    "Assay Id": "assayId",
+    "Analysis Id": "analysisId",
+    "Project Id": "projectId"
   },
   "autocomplete-translation": {
     "ES_FILE_INDEX": {
@@ -57,26 +61,10 @@
     }
   },
   "manifest": [
-    "Program",
-    "Project",
-    "Center Name",
-    "Submitter Donor ID",
-    "Donor UUID",
-    "Submitter Donor Primary Site",
-    "Submitter Specimen ID",
-    "Specimen UUID",
-    "Submitter Specimen Type",
-    "Submitter Experimental Design",
-    "Submitter Sample ID",
-    "Sample UUID",
-    "Analysis Type",
-    "Workflow Name",
-    "Workflow Version",
-    "File Type",
-    "File Path",
-    "Upload File ID",
-    "Data Bundle UUID",
-    "Metadata.json"
+    "File ID:Version",
+    "Assay Id",
+    "Analysis Id",
+    "Project Id"
   ],
   "facets": [
     "cellHandling",
