@@ -1,11 +1,5 @@
-cellHandling
-libraryConstruction
 projectId
 bodyPart
-spikeIn
-pairedEnds
-instrumentPlatform
-sampleSpecies
-fileFormat
+cellHandling
 computationalMethod
-bundleType
+fileFormat
