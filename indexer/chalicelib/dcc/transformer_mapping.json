@@ -1,0 +1,182 @@
+{
+  "transformer_settings": [{
+    "indexer_name": "fb_real",
+    "mappings": [{
+        "constant": "public",
+        "index_field": "access"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "analysis_type",
+        "dss_field": "analysis_type"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "center_name",
+        "index_field": "center_name"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "donor_uuid",
+        "index_field": "redwoodDonorUUID"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "project",
+        "index_field": "project"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "program",
+        "dss_field": "program"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "lastModified",
+        "dss_field": "timestamp"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "file_type",
+        "dss_field": "file_type",
+        "filter": [{
+          "data_file_field": "name",
+          "metadata_field": "file_path"
+        }]
+      },
+      {
+        "from_file_data": "True",
+        "dss_field": "size",
+        "index_field": "fileSize"
+      },
+      {
+        "from_file_data": "True",
+        "index_field": "file_id",
+        "dss_field": "uuid"
+      },
+      {
+        "from_file_data": "True",
+        "index_field": "fileMd5sum",
+        "dss_field": "sha1"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "experimentalStrategy",
+        "dss_field": "submitter_experimental_design"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "bundle_uuid",
+        "index_field": "download_id"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "donor",
+        "dss_field": "donor_uuid"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "redwoodDonorUUID",
+        "dss_field": "donor_uuid"
+      },
+      {
+        "constant": "",
+        "index_field": "repoBaseUrl"
+      },
+      {
+        "constant": "Redwood-AWS-Oregon",
+        "index_field": "repoCode"
+      },
+      {
+        "constant": "US",
+        "index_field": "repoCountry"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "bundle_uuid",
+        "index_field": "repoDataBundleId"
+      },
+      {
+        "constant": "Redwood-AWS-Oregon",
+        "index_field": "repoName"
+      },
+      {
+        "constant": "UCSC",
+        "index_field": "repoOrg"
+      },
+      {
+        "constant": "Blue Box",
+        "index_field": "repoType"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "sampleId",
+        "dss_field": "sample_uuid"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "software",
+        "dss_field": "workflow_name"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "software",
+        "dss_field": "workflow_name"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "submitter_specimen_type",
+        "index_field": "specimen_type"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "study",
+        "dss_field": "project"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "submittedDonorId",
+        "dss_field": "submitter_donor_id"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "submittedSampleId",
+        "dss_field": "submitter_sample_id"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "submittedSpecimenId",
+        "dss_field": "submitter_specimen_id"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "submitterDonorPrimarySite",
+        "dss_field": "submitter_donor_primary_site"
+      },
+      {
+        "constant": "",
+        "index_field": "submitter_donor_id"
+      },
+      {
+        "from_file_data": "True",
+        "index_field": "title",
+        "dss_field": "name"
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "workflow",
+        "dss_field": {
+          "field_names": [
+            "workflow_name",
+            "workflow_version"
+          ],
+          "separator": ":"
+        }
+      },
+      {
+        "source": "metadata.json",
+        "index_field": "workflowVersion",
+        "dss_field": "workflow_version"
+      }]
+    }]
+}
