@@ -7,9 +7,15 @@ The based class Indexer serves as the basis for additional indexing classes
 in this module.
 
 """
+import collections
+from copy import deepcopy
 from functools import reduce
+import logging
 import json
 import re
+
+# create logger
+module_logger = logging.getLogger('chalicelib.indexer')
 
 
 class Indexer(object):
@@ -61,6 +67,8 @@ class Indexer(object):
         self.doc_type = doc_type
         self.index_settings = index_settings
         self.index_mapping_config = index_mapping_config
+        # Set logger
+        self.logger = logging.getLogger('chalicelib.indexer.Indexer')
         # Set all kwargs as instance attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -154,6 +162,71 @@ class Indexer(object):
                                    doc_type=self.doc_type,
                                    body=self.create_mapping())
 
+    def get_schema(self, d, path=("core", "schema_version")):
+        """
+        Obtain the schema version.
+
+        This helper function gets the schema version deep in a dictionary.
+        See: stackoverflow.com/questions/40468932/pass-nested-dictionary-
+        location-as-parameter-in-python
+        :param d: Metadata dictionary.
+        :param path: Path to the schema version.
+        :return: path contents
+        """
+        return reduce(dict.get, path, d)
+
+    def get_item(self, c_item, _file):
+        """
+        Get the c_item in _file or a None string if field is missing.
+
+        This recursive method serves to either get all the formatted
+        strings that make the config (c_item). Each leaf on the c_item must
+        be a string containing an asterisk, where the left hand side is the
+        name under the extraction files, and the right hand side is the keyword
+        we want to associate the contents with. If a field is not found, the
+        function will continue until it reaches the leaf and return it with a
+        "None string"
+
+        :param c_item: config item.
+        :param _file: the object to extract contents from. Defaults to 'None'.
+        :return: name, item
+        """
+        if isinstance(c_item, dict):
+            # Iterate over the contents of the dictionary
+            for key, value in c_item.items():
+                # Extract the contents of the _file list
+                if isinstance(_file, list):
+                    # Iterate over each object in the list
+                    for el in _file:
+                        yield from self.get_item(c_item, el)
+                # If the _file is not a list
+                else:
+                    # Iterate over each requested object in the current config
+                    # path
+                    for item in value:
+                        # If requested item present, continue to next level
+                        if key in _file:
+                            child = _file[key]
+                            yield from self.get_item(item, child)
+                        # Otherwise, just continue with empty dictionary;
+                        # This will return None on all missing fields
+                        else:
+                            yield from self.get_item(item, {})
+        else:
+            # Parse the requested field into actual name and desired name
+            content, name = tuple(c_item.split('*'))
+            # If it is a list, please handle
+            if isinstance(_file, list):
+                # Iterate over each field in _file
+                for el in _file:
+                    yield from self.get_item(c_item, el)
+            # If requested field is present return it
+            elif content in _file:
+                yield name, _file[content]
+            # Return None string if there is no field present
+            else:
+                yield name, "None"
+
 
 class FileIndexer(Indexer):
     """Create a file oriented index.
@@ -175,22 +248,54 @@ class FileIndexer(Indexer):
         :param bundle_version: The bundle of the version.
         """
         # Get the config driving indexing (e.g. the required entries)
-        req_entries = self.index_mapping_config['requested_entries']["v4.6.1"]
+        versions = self.index_mapping_config['requested_entries']
         # Iterate over each file
         for _file in self.data_files.values():
-            # List the arguments for clarity
-            args = [req_entries, "", self.metadata_files]
-            # Get all the contents from the entries requested in the config
-            contents = {key: value for key, value in self.__get_item(*args)}
+            # Create a new dictionary
+            d = collections.defaultdict(list)
+            # Get schema version for one of the metadata files
+            metadata_file = next(iter(self.metadata_files.values()))
+            schema_v = self.get_schema(metadata_file)
+            # Get the config for the current schema version
+            req_entries = versions[schema_v]
+            # Put together the list of arguments
+            args = [req_entries,  self.metadata_files]
+            # For each tuple returned from the metadata file, update
+            # the dictionary
+            for key, value in self.get_item(*args):
+                d[key].append(value)
             # Get the elasticsearch uuid for this particular data file
             es_uuid = "{}:{}".format(bundle_uuid, _file['uuid'])
             # Get the special fields added to the contents
             special_ = self.special_fields(_file,
-                                           contents,
                                            bundle_uuid=bundle_uuid,
                                            bundle_version=bundle_version,
                                            es_uuid=es_uuid)
-            contents = {**contents, **special_}
+            d['bundles'] = [
+                {
+                    "uuid": special_.pop('bundle_uuid', None),
+                    "version": special_.pop('bundle_version', None),
+                    "type": special_.pop('bundle_type', None)
+                }
+            ]
+            samples_list = []
+            for i, sample_id in enumerate(d['sampleIds']):
+                sample = {
+                    "sampleId": sample_id,
+                    "sampleBodyPart": d["sampleBodyPart"][i],
+                    "sampleSpecies": d["sampleSpecies"][i],
+                    "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
+                }
+                samples_list.append(sample)
+            # Remove superfluous keywords
+            d.pop('sampleIds', None)
+            d.pop("sampleBodyPart", None)
+            d.pop("sampleSpecies", None)
+            d.pop("sampleNcbiTaxonIds", None)
+            samples = {"samples": samples_list}
+            contents = {**d, **special_, **samples}
+            self.logger.debug("PRINTING FILE INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
             # Load the current file in question
             # Ideally merge() should be called at this point
             self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
@@ -220,7 +325,7 @@ class FileIndexer(Indexer):
         mapping_config = self.index_mapping_config['es_mapping']
         return json.dumps(mapping_config)
 
-    def special_fields(self, data_file, present_fields, **kwargs):
+    def special_fields(self, data_file, **kwargs):
         """
         Add any special fields that may be missing.
 
@@ -228,65 +333,21 @@ class FileIndexer(Indexer):
         metadata.
 
         :param data_file: a dictionary describing the file in question.
-        :param present_fields: dictionary with available fields.
         :param kwargs: any additional entries you want to include.
         :return: a dictionary of all the special fields to be added.
         """
-        # Get all the fields from a single file into a dictionary
-        file_data = {'file_{}'.format(key): value
-                     for key, value in data_file.items()}
+        # Create a list of files
+        file_data = {"files": data_file}
         # Add extra field that should go in here (e.g. es_uuid, bundle_uuid)
         extra_fields = {key: value for key, value in kwargs.items()}
         # Get the file format
-        file_format = self.__get_format(file_data['file_name'])
+        file_format = self.__get_format(file_data['files']['name'])
+        file_data["files"]["format"] = file_format
         # Create a dictionary with the file fomrat and the bundle type
-        computed_fields = {"file_format": file_format,
-                           "bundle_type": self.__get_bundle_type(file_format)}
-        # Get all the requested entries that should go in ElasticSearch
-        req_entries = self.index_mapping_config['requested_entries']["v4.6.1"]
-        all_fields = {entry for entry in self.__get_item(req_entries, "")}
-        # Make a set out of the fields present in the data
-        present_keys = set(present_fields.keys())
-        # Add empty fields as the string 'None'
-        empty = {field: "None" for field in all_fields - present_keys}
+        computed_fields = {"bundle_type": self.__get_bundle_type(file_format)}
         # Merge the four dictionaries
-        all_data = {**file_data, **extra_fields, **computed_fields, **empty}
+        all_data = {**file_data, **extra_fields, **computed_fields}
         return all_data
-
-    def __get_item(self, c_item, name, _file=None):
-        """
-        Get the c_item in _file or all the strings in the c_item.
-
-        This recursive method serves to either get all the formatted
-        strings that make the config (c_item). If '_file' is not None,
-        then you get a tuple containing the string representing the path
-        in the metadata and the value of the metadata at that path.
-        This is a generator function.
-
-        :param c_item: config item.
-        :param name: name representing the path on the metadata
-        :param _file: the object to extract contents from. Defaults to None.
-        :return: name or name, item
-        """
-        if isinstance(c_item, dict):
-            # Iterate over the contents of the dictionary
-            for key, value in c_item.items():
-                # Create the new name
-                new_name = "{}|{}".format(name, key) if name != "" else key
-                for item in value:
-                    # Recursive call on each level
-                    if _file is None or key in _file:
-                        child = None if _file is None else _file[key]
-                        yield from self.__get_item(item, new_name, _file=child)
-        else:
-            # Return name concatenated with config key
-            name = "{}|{}".format(name, c_item).replace(".", ",")
-            if _file is not None and c_item in _file:
-                # If the file exists and contains the item in question
-                yield name, _file[c_item]
-            elif _file is None:
-                # If we only want the string of the name
-                yield name
 
     def __get_format(self, file_name):
         """
@@ -324,10 +385,10 @@ class FileIndexer(Indexer):
         return bundle_type
 
 
-class AssayOrientedIndexer(Indexer):
-    """Create an Analysis oriented index.
+class BundleOrientedIndexer(Indexer):
+    """Create a Project oriented index.
 
-    AssayOrientedIndexer makes use of its index() function to perform
+    ProjectOrientedIndexer makes use of its index() function to perform
     indexing of the bundle files that are presented to the class when creating
     an instance.
 
@@ -336,54 +397,71 @@ class AssayOrientedIndexer(Indexer):
     """
 
     def index(self, bundle_uuid, bundle_version, **kwargs):
-        """Indexes the bundle into an assay oriented indexer.
+        """Indexes the bundle into a sample oriented indexer.
 
         Triggers the actual indexing process
 
         :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
         :param bundle_version: The bundle of the version.
         """
-        # Assign the ES uuid
-        es_uuid = self.metadata_files['assay.json']['content']['assay_id']
-        # Get required entries
-        req_entries = self.index_mapping_config['requested_entries']["v4.6.1"]
-        args = [req_entries, "", self.metadata_files]
-        facets = {key: value for key, value in self.__get_item(*args)}
+        # Get the config driving indexing (e.g. the required entries)
+        versions = self.index_mapping_config['requested_entries']
+        # Get schema version for one of the metadata files
+        metadata_file = next(iter(self.metadata_files.values()))
+        schema_v = self.get_schema(metadata_file)
+        # Get the config for the current schema version
+        req_entries = versions[schema_v]
+        # Put together the list of arguments
+        args = [req_entries,  self.metadata_files]
+        # Create a new dictionary
+        d = collections.defaultdict(list)
+        # For each tuple returned from the metadata file, update
+        # the dictionary
+        for key, value in self.get_item(*args):
+            d[key].append(value)
+        # Add the format and bundle type to each file
+        bundle_type = None
         for file_name, description in self.data_files.items():
             self.data_files[file_name]['format'] = self.__get_format(file_name)
             # Get the bundle type
             bundle_type = self.__get_bundle_type(file_name)
-            self.data_files[file_name]["bundle_type"] = bundle_type
-        # Get extra fields
-        if "analysis.json" in self.metadata_files:
-            analysis_type = "analysis"
-            analysis_json = self.metadata_files['analysis.json']
-        else:
-            analysis_type = "upload"
-            analysis_json = {"content": {"analysis_id": es_uuid}}
-        # Get samples
-        samples = facets['sample,json|samples']
-
-        # Construct the ES doc to be loaded
-        contents = {
-            **self.metadata_files['assay.json'],
-            "analysis": [
-                {**analysis_json,
-                 'analysis_type': analysis_type,
-                 'data_bundles': [
-                     {"bundle_uuid": bundle_uuid,
-                      "files": list(self.data_files.values())}
-                 ]}
-            ],
-            "samples": samples,
-            "projects": [
-                {**self.metadata_files['project.json']}
-            ],
-            "es_uuid": es_uuid
-        }
-        # Load the current file in question
-        contents = self.merge(contents, es_uuid)
-        self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
+        # Assign the bundle
+        d['bundles'] = [
+            {
+                "uuid": bundle_uuid,
+                "version": bundle_version,
+                "type": bundle_type
+            }
+        ]
+        # Assign the files
+        d["files"] = list(self.data_files.values())
+        # Rearrange samples
+        samples_list = []
+        for i, sample_id in enumerate(d['sampleIds']):
+            sample = {
+                "sampleId": sample_id,
+                "sampleBodyPart": d["sampleBodyPart"][i],
+                "sampleSpecies": d["sampleSpecies"][i],
+                "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
+            }
+            samples_list.append(sample)
+        # Remove superfluous keywords
+        d.pop('sampleIds', None)
+        d.pop("sampleBodyPart", None)
+        d.pop("sampleSpecies", None)
+        d.pop("sampleNcbiTaxonIds", None)
+        # Assign the sample list
+        d["samples"] = samples_list
+        # Iterate over each sample
+        for bundle in d['bundles']:
+            new_bundle = deepcopy(d)
+            new_bundle['bundles'] = bundle
+            es_uuid = bundle['uuid']
+            new_bundle['es_uuid'] = es_uuid
+            contents = self.merge(new_bundle, es_uuid)
+            self.logger.debug("PRINTING BUNDLE INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
+            self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
 
     def __get_value(self, d, path):
         """
@@ -425,85 +503,532 @@ class AssayOrientedIndexer(Indexer):
                                       id=_id,
                                       ignore=[404])
         if '_source' in existing:
-            # Get the samples
-            samples_es = existing['_source']['samples']
-            samples_doc = doc_contents['samples']
-            # Merge samples
-            samples_merge = self.__merge_lists(samples_doc,
-                                               samples_es,
-                                               ('content', 'sample_id'))
-            # Get analysis
-            analysis_es = existing['_source']['analysis']
-            analysis_doc = doc_contents['analysis']
-            # Merge analysis
-            analysis_merge = self.__merge_lists(analysis_doc,
-                                                analysis_es,
-                                                ('content', 'analysis_id'))
-            # Assign only unique analysis
-            for analysis in analysis_merge:
-                analysis_id = self.__get_value(analysis, ('content',
-                                                          'analysis_id'))
-                for old_analysis in analysis_es:
-                    old_analysis_id = self.__get_value(old_analysis,
-                                                       ('content',
-                                                        'analysis_id'))
-                    if analysis_id == old_analysis_id:
-                        new_bundles = analysis['data_bundles']
-                        old_bundles = old_analysis['data_bundles']
-                        merged_bundles = self.__merge_lists(new_bundles,
-                                                            old_bundles,
-                                                            ('bundle_uuid',))
-                        analysis['data_bundles'] = merged_bundles
-                        break
-            # Get projects
-            projects_es = existing['_source']['projects']
-            projects_doc = doc_contents['projects']
-            projects_merge = self.__merge_lists(projects_doc,
-                                                projects_es,
-                                                ('content', 'project_id'))
-            # Assign new top fields
-            doc_contents['projects'] = projects_merge
-            doc_contents['samples'] = samples_merge
-            doc_contents['analysis'] = analysis_merge
-            return doc_contents
-
+            # Pop out the samples field
+            bundle = existing['_source'].pop('bundles')
+            # Merge all the fields:
+            # do for loop, use the collections thing to update a new dict
+            d = collections.defaultdict(list)
+            d.update(existing['_source'])
+            for key, value in doc_contents.items():
+                if isinstance(d[key], list):
+                    d[key].extend(value)
+                else:
+                    d[key] = value
+            d['bundles'] = bundle
+            return d
         else:
             return doc_contents
 
-    def __get_item(self, c_item, name, _file=None):
+    def __get_format(self, file_name):
         """
-        Get the c_item in _file or all the strings in the c_item.
+        HACK This is to get the file format while we get a file format.
 
-        This recursive method serves to either get all the formatted
-        strings that make the config (c_item). If '_file' is not None,
-        then you get a tuple containing the string representing the path
-        in the metadata and the value of the metadata at that path.
-        This is a generator function.
+        We need to get the file format from the Blue Box team somehow.
+        This is a small parsing hack while we get a response.
 
-        :param c_item: config item.
-        :param name: name representing the path on the metadata
-        :param _file: the object to extract contents from. Defaults to None.
-        :return: name or name, item
+        :param file_name: A string containing the the file name with extension
         """
-        if isinstance(c_item, dict):
-            # Iterate over the contents of the dictionary
-            for key, value in c_item.items():
-                # Create the new name
-                new_name = "{}|{}".format(name, key) if name != "" else key
-                for item in value:
-                    # Recursive call on each level
-                    if _file is None or key in _file:
-                        child = None if _file is None else _file[key]
-                        yield from self.__get_item(item, new_name, _file=child)
+        # Get everything after the period
+        file_format = '.'.join(file_name.split('.')[1:])
+        file_format = file_format if file_format != '' else 'Unknown'
+        return file_format
+
+    def __get_bundle_type(self, file_extension):
+        """
+        HACK This is to get the bundle type while we wait for Blue Box team.
+
+        We need to get the bundle type from the Blue Box team somehow.
+        This is a small parsing hack while we get a response from them.
+
+        :param file_extension: A string containing the the file extension
+        """
+        # A series of if else statements to figure out the bundle type
+        # HACK
+        if 'analysis.json' in self.metadata_files:
+            bundle_type = 'Analysis'
+        elif re.search(r'(tiff)', str(file_extension)):
+            bundle_type = 'Imaging'
+        elif re.search(r'(fastq.gz)', str(file_extension)):
+            bundle_type = 'scRNA-Seq Upload'
         else:
-            # Return name concatenated with config key
-            name = "{}|{}".format(name, c_item).replace(".", ",")
-            if _file is not None and c_item in _file:
-                # If the file exists and contains the item in question
-                yield name, _file[c_item]
-            elif _file is None:
-                # If we only want the string of the name
-                yield name
+            bundle_type = 'Unknown'
+        return bundle_type
+
+
+class AssayOrientedIndexer(Indexer):
+    """Create a Project oriented index.
+
+    ProjectOrientedIndexer makes use of its index() function to perform
+    indexing of the bundle files that are presented to the class when creating
+    an instance.
+
+    End for now.
+
+    """
+
+    def index(self, bundle_uuid, bundle_version, **kwargs):
+        """Indexes the bundle into a sample oriented indexer.
+
+        Triggers the actual indexing process
+
+        :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
+        :param bundle_version: The bundle of the version.
+        """
+        # Get the config driving indexing (e.g. the required entries)
+        versions = self.index_mapping_config['requested_entries']
+        # Get schema version for one of the metadata files
+        metadata_file = next(iter(self.metadata_files.values()))
+        schema_v = self.get_schema(metadata_file)
+        # Get the config for the current schema version
+        req_entries = versions[schema_v]
+        # Put together the list of arguments
+        args = [req_entries,  self.metadata_files]
+        # Create a new dictionary
+        d = collections.defaultdict(list)
+        # For each tuple returned from the metadata file, update
+        # the dictionary
+        for key, value in self.get_item(*args):
+            d[key].append(value)
+        # Add the format and bundle type to each file
+        bundle_type = None
+        for file_name, description in self.data_files.items():
+            self.data_files[file_name]['format'] = self.__get_format(file_name)
+            # Get the bundle type
+            bundle_type = self.__get_bundle_type(file_name)
+        # Assign the bundles
+        d['bundles'] = [
+            {
+                "uuid": bundle_uuid,
+                "version": bundle_version,
+                "type": bundle_type
+            }
+        ]
+        # Assign the files
+        d["files"] = list(self.data_files.values())
+        # Rearrange samples
+        samples_list = []
+        for i, sample_id in enumerate(d['sampleIds']):
+            sample = {
+                "sampleId": sample_id,
+                "sampleBodyPart": d["sampleBodyPart"][i],
+                "sampleSpecies": d["sampleSpecies"][i],
+                "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
+            }
+            samples_list.append(sample)
+        # Remove superfluous keywords
+        d.pop('sampleIds', None)
+        d.pop("sampleBodyPart", None)
+        d.pop("sampleSpecies", None)
+        d.pop("sampleNcbiTaxonIds", None)
+        # Assign the sample list
+        d["samples"] = samples_list
+        # Iterate over each sample
+        for assay in d['assayId']:
+            new_assay = deepcopy(d)
+            new_assay['assayId'] = assay
+            es_uuid = assay
+            new_assay['es_uuid'] = es_uuid
+            contents = self.merge(new_assay, es_uuid)
+            self.logger.debug("PRINTING ASSAY INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
+            self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
+
+    def __get_value(self, d, path):
+        """
+        Obtain a value deep in a Dictionary.
+
+        This helper function serves to get a value deep in a dictionary.
+        See: stackoverflow.com/questions/40468932/pass-nested-dictionary-
+        location-as-parameter-in-python
+        """
+        return reduce(dict.get, path, d)
+
+    def __merge_lists(self, new, current, path):
+        """
+        Merge two lists with unique ids.
+
+        This function helps by merging two litst of dictionaries and making
+        sure that the field in question only appears once in the list.
+        """
+        merged_dict = {}
+        both_lists = current + new
+        for item in both_lists:
+            _id = self.__get_value(item, path)
+            # TODO: I don't like this approach, but this is a first pass.
+            # We need to redo so that it is less than O(n)
+            # This first pass approach ensures new entries overwrite old ones.
+            merged_dict[_id] = item
+        merged = list(merged_dict.values())
+        return merged
+
+    def merge(self, doc_contents, _id):
+        """
+        Merge the current doc_contents.
+
+        This method calls elasticsearch and merges the documents present
+        in there with the ones from doc_contents
+        """
+        existing = self.es_client.get(index=self.index_name,
+                                      doc_type=self.doc_type,
+                                      id=_id,
+                                      ignore=[404])
+        if '_source' in existing:
+            # Pop out the samples field
+            assay = existing['_source'].pop('assayId')
+            # Merge all the fields:
+            # do for loop, use the collections thing to update a new dict
+            d = collections.defaultdict(list)
+            d.update(existing['_source'])
+            for key, value in doc_contents.items():
+                if isinstance(d[key], list):
+                    d[key].extend(value)
+                else:
+                    d[key] = value
+            d['assayId'] = assay
+            return d
+        else:
+            return doc_contents
+
+    def __get_format(self, file_name):
+        """
+        HACK This is to get the file format while we get a file format.
+
+        We need to get the file format from the Blue Box team somehow.
+        This is a small parsing hack while we get a response.
+
+        :param file_name: A string containing the the file name with extension
+        """
+        # Get everything after the period
+        file_format = '.'.join(file_name.split('.')[1:])
+        file_format = file_format if file_format != '' else 'Unknown'
+        return file_format
+
+    def __get_bundle_type(self, file_extension):
+        """
+        HACK This is to get the bundle type while we wait for Blue Box team.
+
+        We need to get the bundle type from the Blue Box team somehow.
+        This is a small parsing hack while we get a response from them.
+
+        :param file_extension: A string containing the the file extension
+        """
+        # A series of if else statements to figure out the bundle type
+        # HACK
+        if 'analysis.json' in self.metadata_files:
+            bundle_type = 'Analysis'
+        elif re.search(r'(tiff)', str(file_extension)):
+            bundle_type = 'Imaging'
+        elif re.search(r'(fastq.gz)', str(file_extension)):
+            bundle_type = 'scRNA-Seq Upload'
+        else:
+            bundle_type = 'Unknown'
+        return bundle_type
+
+
+class SampleOrientedIndexer(Indexer):
+    """Create a Sample oriented index.
+
+    SampleOrientedIndexer makes use of its index() function to perform
+    indexing of the bundle files that are presented to the class when creating
+    an instance.
+
+    End for now.
+
+    """
+
+    def index(self, bundle_uuid, bundle_version, **kwargs):
+        """Indexes the bundle into a sample oriented indexer.
+
+        Triggers the actual indexing process
+
+        :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
+        :param bundle_version: The bundle of the version.
+        """
+        # Get the config driving indexing (e.g. the required entries)
+        versions = self.index_mapping_config['requested_entries']
+        # Get schema version for one of the metadata files
+        metadata_file = next(iter(self.metadata_files.values()))
+        schema_v = self.get_schema(metadata_file)
+        # Get the config for the current schema version
+        req_entries = versions[schema_v]
+        # Put together the list of arguments
+        args = [req_entries,  self.metadata_files]
+        # Create a new dictionary
+        d = collections.defaultdict(list)
+        # For each tuple returned from the metadata file, update
+        # the dictionary
+        for key, value in self.get_item(*args):
+            d[key].append(value)
+        # Add the format and bundle type to each file
+        bundle_type = None
+        for file_name, description in self.data_files.items():
+            self.data_files[file_name]['format'] = self.__get_format(file_name)
+            # Get the bundle type
+            bundle_type = self.__get_bundle_type(file_name)
+        # Assign the bundle
+        d['bundles'] = [
+            {
+                "uuid": bundle_uuid,
+                "version": bundle_version,
+                "type": bundle_type
+            }
+        ]
+        # Assign the files
+        d["files"] = list(self.data_files.values())
+        # Rearrange samples
+        samples_list = []
+        for i, sample_id in enumerate(d['sampleIds']):
+            sample = {
+                "sampleId": sample_id,
+                "sampleBodyPart": d["sampleBodyPart"][i],
+                "sampleSpecies": d["sampleSpecies"][i],
+                "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
+            }
+            samples_list.append(sample)
+        # Remove superfluous keywords
+        d.pop('sampleIds', None)
+        d.pop("sampleBodyPart", None)
+        d.pop("sampleSpecies", None)
+        d.pop("sampleNcbiTaxonIds", None)
+        # Assign the sample list
+        d["samples"] = samples_list
+        # Iterate over each sample
+        for sample in d['samples']:
+            new_sample = deepcopy(d)
+            new_sample['samples'] = sample
+            es_uuid = sample['sampleId']
+            new_sample['es_uuid'] = es_uuid
+            # Load the current file in question
+            contents = self.merge(new_sample, es_uuid)
+            self.logger.debug("PRINTING SAMPLE INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
+            self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
+
+    def __get_value(self, d, path):
+        """
+        Obtain a value deep in a Dictionary.
+
+        This helper function serves to get a value deep in a dictionary.
+        See: stackoverflow.com/questions/40468932/pass-nested-dictionary-
+        location-as-parameter-in-python
+        """
+        return reduce(dict.get, path, d)
+
+    def __merge_lists(self, new, current, path):
+        """
+        Merge two lists with unique ids.
+
+        This function helps by merging two litst of dictionaries and making
+        sure that the field in question only appears once in the list.
+        """
+        merged_dict = {}
+        both_lists = current + new
+        for item in both_lists:
+            _id = self.__get_value(item, path)
+            # TODO: I don't like this approach, but this is a first pass.
+            # We need to redo so that it is less than O(n)
+            # This first pass approach ensures new entries overwrite old ones.
+            merged_dict[_id] = item
+        merged = list(merged_dict.values())
+        return merged
+
+    def merge(self, doc_contents, _id):
+        """
+        Merge the current doc_contents.
+
+        This method calls elasticsearch and merges the documents present
+        in there with the ones from doc_contents
+        """
+        existing = self.es_client.get(index=self.index_name,
+                                      doc_type=self.doc_type,
+                                      id=_id,
+                                      ignore=[404])
+        if '_source' in existing:
+            # Pop out the samples field
+            sample = existing['_source'].pop('samples')
+            # Merge all the fields:
+            # do for loop, use the collections thing to update a new dict
+            d = collections.defaultdict(list)
+            d.update(existing['_source'])
+            for key, value in doc_contents.items():
+                if isinstance(d[key], list):
+                    d[key].extend(value)
+                else:
+                    d[key] = value
+            d['samples'] = sample
+            return d
+        else:
+            return doc_contents
+
+    def __get_format(self, file_name):
+        """
+        HACK This is to get the file format while we get a file format.
+
+        We need to get the file format from the Blue Box team somehow.
+        This is a small parsing hack while we get a response.
+
+        :param file_name: A string containing the the file name with extension
+        """
+        # Get everything after the period
+        file_format = '.'.join(file_name.split('.')[1:])
+        file_format = file_format if file_format != '' else 'Unknown'
+        return file_format
+
+    def __get_bundle_type(self, file_extension):
+        """
+        HACK This is to get the bundle type while we wait for Blue Box team.
+
+        We need to get the bundle type from the Blue Box team somehow.
+        This is a small parsing hack while we get a response from them.
+
+        :param file_extension: A string containing the the file extension
+        """
+        # A series of if else statements to figure out the bundle type
+        # HACK
+        if 'analysis.json' in self.metadata_files:
+            bundle_type = 'Analysis'
+        elif re.search(r'(tiff)', str(file_extension)):
+            bundle_type = 'Imaging'
+        elif re.search(r'(fastq.gz)', str(file_extension)):
+            bundle_type = 'scRNA-Seq Upload'
+        else:
+            bundle_type = 'Unknown'
+        return bundle_type
+
+
+class ProjectOrientedIndexer(Indexer):
+    """Create a Project oriented index.
+
+    ProjectOrientedIndexer makes use of its index() function to perform
+    indexing of the bundle files that are presented to the class when creating
+    an instance.
+
+    End for now.
+
+    """
+
+    def index(self, bundle_uuid, bundle_version, **kwargs):
+        """Indexes the bundle into a sample oriented indexer.
+
+        Triggers the actual indexing process
+
+        :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
+        :param bundle_version: The bundle of the version.
+        """
+        # Get the config driving indexing (e.g. the required entries)
+        versions = self.index_mapping_config['requested_entries']
+        # Get schema version for one of the metadata files
+        metadata_file = next(iter(self.metadata_files.values()))
+        schema_v = self.get_schema(metadata_file)
+        # Get the config for the current schema version
+        req_entries = versions[schema_v]
+        # Put together the list of arguments
+        args = [req_entries,  self.metadata_files]
+        # Create a new dictionary
+        d = collections.defaultdict(list)
+        # For each tuple returned from the metadata file, update
+        # the dictionary
+        for key, value in self.get_item(*args):
+            d[key].append(value)
+        # Add the format and bundle type to each file
+        bundle_type = None
+        for file_name, description in self.data_files.items():
+            self.data_files[file_name]['format'] = self.__get_format(file_name)
+            # Get the bundle type
+            bundle_type = self.__get_bundle_type(file_name)
+        # Assign the bundle
+        d['bundles'] = [
+            {
+                "uuid": bundle_uuid,
+                "version": bundle_version,
+                "type": bundle_type
+            }
+        ]
+        # Assign the files
+        d["files"] = list(self.data_files.values())
+        # Rearrange samples
+        samples_list = []
+        for i, sample_id in enumerate(d['sampleIds']):
+            sample = {
+                "sampleId": sample_id,
+                "sampleBodyPart": d["sampleBodyPart"][i],
+                "sampleSpecies": d["sampleSpecies"][i],
+                "sampleNcbiTaxonIds": d["sampleNcbiTaxonIds"][i]
+            }
+            samples_list.append(sample)
+        # Remove superfluous keywords
+        d.pop('sampleIds', None)
+        d.pop("sampleBodyPart", None)
+        d.pop("sampleSpecies", None)
+        d.pop("sampleNcbiTaxonIds", None)
+        # Assign the sample list
+        d["samples"] = samples_list
+        # Iterate over each sample
+        for project in d['projectId']:
+            new_project = deepcopy(d)
+            new_project['projectId'] = project
+            es_uuid = project
+            new_project['es_uuid'] = es_uuid
+            contents = self.merge(new_project, es_uuid)
+            self.logger.debug("PRINTING PROJECT INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
+            self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
+
+    def __get_value(self, d, path):
+        """
+        Obtain a value deep in a Dictionary.
+
+        This helper function serves to get a value deep in a dictionary.
+        See: stackoverflow.com/questions/40468932/pass-nested-dictionary-
+        location-as-parameter-in-python
+        """
+        return reduce(dict.get, path, d)
+
+    def __merge_lists(self, new, current, path):
+        """
+        Merge two lists with unique ids.
+
+        This function helps by merging two litst of dictionaries and making
+        sure that the field in question only appears once in the list.
+        """
+        merged_dict = {}
+        both_lists = current + new
+        for item in both_lists:
+            _id = self.__get_value(item, path)
+            # TODO: I don't like this approach, but this is a first pass.
+            # We need to redo so that it is less than O(n)
+            # This first pass approach ensures new entries overwrite old ones.
+            merged_dict[_id] = item
+        merged = list(merged_dict.values())
+        return merged
+
+    def merge(self, doc_contents, _id):
+        """
+        Merge the current doc_contents.
+
+        This method calls elasticsearch and merges the documents present
+        in there with the ones from doc_contents
+        """
+        existing = self.es_client.get(index=self.index_name,
+                                      doc_type=self.doc_type,
+                                      id=_id,
+                                      ignore=[404])
+        if '_source' in existing:
+            # Pop out the samples field
+            project = existing['_source'].pop('projectId')
+            # Merge all the fields:
+            # do for loop, use the collections thing to update a new dict
+            d = collections.defaultdict(list)
+            d.update(existing['_source'])
+            for key, value in doc_contents.items():
+                if isinstance(d[key], list):
+                    d[key].extend(value)
+                else:
+                    d[key] = value
+            d['projectId'] = project
+            return d
+        else:
+            return doc_contents
 
     def __get_format(self, file_name):
         """

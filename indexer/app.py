@@ -12,7 +12,11 @@ from aws_requests_auth import boto_utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 from chalice import Chalice
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-from chalicelib.indexer import FileIndexer, AssayOrientedIndexer as AssayIndexer
+from chalicelib.indexer import FileIndexer, \
+    BundleOrientedIndexer as BundleIndexer, \
+    AssayOrientedIndexer as AssayIndexer, \
+    SampleOrientedIndexer as SampleIndexer, \
+    ProjectOrientedIndexer as ProjectIndexer
 from chalicelib.utils import DataExtractor
 import json
 import logging
@@ -28,7 +32,7 @@ es_host = os.environ.get('ES_ENDPOINT', "localhost")
 es_port = os.environ.get("ES_PORT", 9200)
 bb_host = "https://" + os.environ.get('BLUE_BOX_ENDPOINT',
                                       "dss.staging.data.humancellatlas.org/v1")
-es_index = os.environ.get('ES_INDEX', "azul-test-indexer")
+# es_index = os.environ.get('ES_INDEX', "azul-test-indexer")
 es_doc_type = os.environ.get('ES_DOC_TYPE', "doc")
 replica = os.environ.get("REPLICA", "aws")
 
@@ -86,19 +90,45 @@ def post_notification():
     file_indexer = FileIndexer(metadata_files,
                                data_files,
                                es,
-                               '{}_file_v4'.format(es_index),
+                               'file_index_v4',
                                es_doc_type,
                                index_settings=es_settings,
                                index_mapping_config=index_mapping_config)
+    bundle_indexer = BundleIndexer(metadata_files,
+                                   data_files,
+                                   es,
+                                   "bundle_index_v4",
+                                   "doc",
+                                   index_settings=es_settings,
+                                   index_mapping_config=index_mapping_config)
     assay_indexer = AssayIndexer(metadata_files,
                                  data_files,
                                  es,
-                                 "{}_assay_index_v4".format(es_index),
+                                 "assay_index_v4",
                                  "doc",
                                  index_settings=es_settings,
                                  index_mapping_config=index_mapping_config)
+    sample_indexer = SampleIndexer(metadata_files,
+                                   data_files,
+                                   es,
+                                   "sample_index_v4",
+                                   "doc",
+                                   index_settings=es_settings,
+                                   index_mapping_config=index_mapping_config)
+
+    project_indexer = ProjectIndexer(metadata_files,
+                                     data_files,
+                                     es,
+                                     "project_index_v4",
+                                     "doc",
+                                     index_settings=es_settings,
+                                     index_mapping_config=index_mapping_config)
+
     file_indexer.index(bundle_uuid, bundle_version)
+    bundle_indexer.index(bundle_uuid, bundle_version)
     assay_indexer.index(bundle_uuid, bundle_version)
+    sample_indexer.index(bundle_uuid, bundle_version)
+    project_indexer.index(bundle_uuid, bundle_version)
     return {"status": "done"}
 
 
