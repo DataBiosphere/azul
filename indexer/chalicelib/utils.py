@@ -28,7 +28,7 @@ class DataExtractor(object):
 
     """
 
-    def __init__(self, dss_host):
+    def __init__(self, dss_host, will_include_urls=False):
         """
         Create an instance of the DataExtractor.
 
@@ -38,6 +38,7 @@ class DataExtractor(object):
 
         :param dss_host: The formatted url for the DSS
         """
+        self.will_include_urls = will_include_urls
         self.dss_client = DSSClient()
         self.dss_client.host = dss_host
         self.log = logging.getLogger(indexer_name + ".indexer.DataExtractor")
@@ -72,7 +73,7 @@ class DataExtractor(object):
             raise Exception("Unable to access resource")
         return response
 
-    def __get_bundle(self, bundle_uuid, replica):
+    def __get_bundle(self, bundle_uuid, replica, will_include_urls=False):
         """
         Get the metadata and data files.
 
@@ -90,6 +91,7 @@ class DataExtractor(object):
         bundle = self.__attempt(3,
                                 self.dss_client.get_bundle,
                                 SwaggerAPIException,
+                                directurls=str(will_include_urls),
                                 uuid=bundle_uuid,
                                 replica=replica)
         # Separate files in bundle by metadata files and data files
@@ -119,7 +121,7 @@ class DataExtractor(object):
                                replica=replica)
         return _file
 
-    def extract_bundle(self, request, replica):
+    def extract_bundle(self, request, replica, will_include_urls=False):
         """
         Get the files and actual metadata.
 
@@ -130,13 +132,14 @@ class DataExtractor(object):
 
         :param request: The contents of the DSS event notification
         :param replica: The replica to which pull the bundle from
+        :param will_include_urls: If true, the data_files will include the url field
         """
         def get_metadata(file_name, _args):
             _metadata = {file_name: self.__get_file(*_args)}
             return _metadata
         bundle_uuid = request['match']['bundle_uuid']
         # Get the metadata and data descriptions
-        metadata_files, data_files = self.__get_bundle(bundle_uuid, replica)
+        metadata_files, data_files = self.__get_bundle(bundle_uuid, replica, will_include_urls=will_include_urls)
         # Create a ThreadPool which will execute the function
         pool = ThreadPool(len(metadata_files))
         # Pool the contents in the right format for the get_metadata function

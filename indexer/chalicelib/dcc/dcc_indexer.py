@@ -2,7 +2,10 @@ from chalicelib.indexer import Indexer, FileIndexer
 from chalicelib.dcc.transformer import DCCJSONTransformer
 import os
 import json
-import pprint
+import logging
+
+log = logging.getLogger(__name__)
+
 
 CONFIG_JSON_FILENAME = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     "transformer_mapping.json")
@@ -12,21 +15,21 @@ ES_DOC_TYPE = 'meta'
 
 
 class DCCIndexer(Indexer):
-    indexer_settings = DCCJSONTransformer(CONFIG_JSON_FILENAME)
+    transformer = DCCJSONTransformer(CONFIG_JSON_FILENAME)
 
     def __init__(self, metadata_files, data_files, es_client):
         super(DCCIndexer, self).__init__(metadata_files, data_files, es_client, None, ES_DOC_TYPE)
+        self.transformer.update_settings()
 
-    def index(self, *args, **kwargs):
-
+    def index(self, bundle_uuid, bundle_version, *args, **kwargs):
+        self.transformer.update_settings()
         for _file in self.data_files.values():
-            indexer_doc_list = self.indexer_settings.transform(_file, self.metadata_files)
+            indexer_doc_list = self.transformer.transform(_file, self.metadata_files)
             for indexer_name, contents in indexer_doc_list.items():
-                # pprint.pprint(contents)
-                # print(indexer_name)
-                self.load_doc_by_index(contents['file_id'], contents, indexer_name)
+                doc_id = f"{bundle_uuid}.{bundle_version}"
+                self.load_doc_by_index(doc_id, contents, indexer_name)
 
-    #TODO Add duplication check from like from FileIndexer
+    #TODO Add duplication check from like from FileIndexer in develop branch
     def merge(self, doc_contents, **kwargs):
         return doc_contents
 

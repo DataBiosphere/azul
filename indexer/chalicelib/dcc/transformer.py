@@ -1,9 +1,11 @@
 import json
 import pprint
+import logging
 #TODO Check if APACHE LICENSE is OK to Use
 from jsonpath_rw import parse as jsonpath_parse
 
-import operator
+log = logging.getLogger(__name__)
+
 
 TRANSFORMER_SETTINGS_KEY = 'transformer_settings'
 
@@ -21,11 +23,35 @@ FILTER_TARGET_FIELD_KEY = 'metadata_field'
 FILTER_ORIGIN_FIELD_KEY = 'data_file_field'
 
 MULTI_DSS_FIELD_KEY = 'field_names'
+FORMATTERS_KEY = 'formatters'
 #SEPERATOR = 'seperator'
 
 #
 # class FilterFieldError(Exception):
 #     pass
+
+
+class Formatter:
+    name = "base_formatter"
+
+    def __init__(self):
+        pass
+
+    def format(self, value):
+        raise NotImplementedError
+
+
+class ConvertToListFormatter(Formatter):
+    name = "convert_to_list"
+
+    def __init__(self):
+        super().__init__()
+
+    def format(self, value):
+        if not isinstance(value, list):
+            return [value]
+        else:
+            return value
 
 
 class DCCJSONTransformer:
@@ -34,11 +60,19 @@ class DCCJSONTransformer:
             self.settings = json.load(csf)
             self.filename = filename
 
+        self._formatters = {}
+        self.add_formatter(ConvertToListFormatter())
+
+    def add_formatter(self, formatter):
+        self._formatters[formatter.name] = formatter
+
     def update_settings(self):
         try:
-            self.settings = json.load(self.filename)
-        except Exception:
-            print("Something wrong with the settings.")
+            with open(self.filename, 'r') as csf:
+                self.settings = json.load(csf)
+        #TODO replace Generic Exception
+        except Exception as e:
+            log.error("Something's wrong with the settings:\n{}".format(e), exc_info=True)
 
     def transform(self, data_file, metadata_files):
         output_json = {}
@@ -47,6 +81,8 @@ class DCCJSONTransformer:
             index_output = output_json[indexer_name] = {}
             for mapping in index_setting[MAPPING_KEY]:
                 index_field = mapping[INDEX_FIELD_KEY]
+
+                #Selects what data from the metadata will be written
                 if SOURCE_KEY in mapping.keys():
                     source = mapping[SOURCE_KEY]
                     metadata = metadata_files[source]
@@ -57,28 +93,48 @@ class DCCJSONTransformer:
                         raw_value = self._get_matching_subitem(data_file_value, index_filter_field, index_field,
                                                                metadata)
                     else:
-                        dss_field_key = mapping[DSS_FIELD_KEY]
-                        raw_value = self._find_value_with_fieldname(dss_field_key, metadata)
-                elif bool(mapping.get(FILE_DATA_KEY, False)):
+                        try:
+                            dss_field_key = mapping[DSS_FIELD_KEY]
+                        except KeyError:
+                            log.error("Missing Required field from mapping:\n{}".format(pprint.pformat(mapping)),
+                                      exc_info=True)
+                            raise
+                        else:
+                            raw_value = self._find_value_with_fieldname(dss_field_key, metadata)
+                elif mapping.get(FILE_DATA_KEY, False):
                     metadata = data_file
                     dss_field_key = mapping[DSS_FIELD_KEY]
                     raw_value = self._find_value_with_fieldname(dss_field_key, metadata)
                 elif CONSTANT_KEY in mapping.keys():
                     raw_value = mapping[CONSTANT_KEY]
                 else:
-                    # TODO add better exception
-                    # pprint.pprint(data_file)
+                    log.error("No source field given from settings file:\n{}".format(pprint.pformat(data_file)))
+                    #TODO replace with custom exception
                     raise Exception
 
-                index_output[index_field] = raw_value
+                formatted_value = raw_value
+                if FORMATTERS_KEY in mapping.keys():
+                    for fmtr_name in mapping[FORMATTERS_KEY]:
+                        fmtr = self._formatters[fmtr_name]
+                        formatted_value = fmtr.format(formatted_value)
+
+                index_output[index_field] = formatted_value
         return output_json
 
     def _find_value_with_fieldname(self, dss_field, metadata):
         def parse_metadata(field):
             parser = jsonpath_parse("$..{}".format(field))
             result = parser.find(metadata)
-            return result[0].value
+
+            try:
+                result_value = result[0].value
+            except IndexError as e:
+                log.error("The '{}' field doesn't exist in selected metadata".format(field), exec_info=True)
+                raise
+            return result_value
+
         if isinstance(dss_field, dict):
+            #TODO Implement seperator settings
             return ":".join(map(parse_metadata, dss_field[MULTI_DSS_FIELD_KEY]))
         else:
             return parse_metadata(dss_field)
@@ -91,7 +147,3 @@ class DCCJSONTransformer:
             query_index_value = self._find_value_with_fieldname(query_index_field, subitem)
             if dss_value == query_index_value:
                 return self._find_value_with_fieldname(index_field, subitem)
-
-
-
-

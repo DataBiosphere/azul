@@ -1,6 +1,6 @@
 {
   "transformer_settings": [{
-    "indexer_name": "fb_real",
+    "indexer_name": "fb_index",
     "mappings": [{
         "constant": "public",
         "index_field": "access"
@@ -45,17 +45,17 @@
         }]
       },
       {
-        "from_file_data": "True",
+        "from_file_data": true,
         "dss_field": "size",
         "index_field": "fileSize"
       },
       {
-        "from_file_data": "True",
+        "from_file_data": true,
         "index_field": "file_id",
         "dss_field": "uuid"
       },
       {
-        "from_file_data": "True",
+        "from_file_data": true,
         "index_field": "fileMd5sum",
         "dss_field": "sha1"
       },
@@ -158,7 +158,7 @@
         "index_field": "submitter_donor_id"
       },
       {
-        "from_file_data": "True",
+        "from_file_data": true,
         "index_field": "title",
         "dss_field": "name"
       },
@@ -172,6 +172,12 @@
           ],
           "separator": ":"
         }
+      },
+      {
+        "from_file_data": true,
+        "index_field": "urls",
+        "dss_field": "url",
+        "formatters": ["convert_to_list"]
       },
       {
         "source": "metadata.json",
