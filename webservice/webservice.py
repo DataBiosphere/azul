@@ -1,18 +1,14 @@
 import ast
-
 import requests
-
 import config
 import datetime
 from flask import jsonify, request, Blueprint
 import logging.config
 import os
-import shutil
-import zipfile
-import bagit
 from responseobjects.elastic_request_builder import \
     ElasticTransformDump as EsTd
 from responseobjects.utilities import json_pp
+from bagitutils import BagHandler
 
 # Setting up logging
 base_path = os.path.dirname(os.path.abspath(__file__))
@@ -327,12 +323,15 @@ def get_manifest():
     # Return the excel file
     return response
 
-@webservicebp.route('/repository/files/export/firecloud', methods=['GET'])
+
+@webservicebp.route('/repository/files/export/firecloud',
+                    methods=['GET'])
 def export_to_firecloud():
     """
-    Creates a FireCloud workspace based on the filters, workspace, and namespace passed to
-    to this endpoint. The authorization header should contain a bearer token that will be used against the
-    FireCloud API.
+    Creates a FireCloud workspace based on the filters, workspace,
+    and namespace passed to to this endpoint. The authorization
+    header should contain a bearer token that will be used against
+    the FireCloud API.
     parameters:
         - name: filters
           in: query
@@ -346,10 +345,12 @@ def export_to_firecloud():
           in: query
           type: string
           description: The namespace of the FireCloud workspace to create
-    :return: TBD, probably a JSON object with the url of the FireCloud workspace
+    :return: TBD, probably a JSON object with the url of the
+    FireCloud workspace
     """
     # Setup logging
-    logger = logging.getLogger("dashboardService.webservice.export_to_firecloud")
+    logger = logging.getLogger(
+        "dashboardService.webservice.export_to_firecloud")
     filters = request.args.get('filters', '{"file": {}}')
     logger.debug("Filters string is: {}".format(filters))
     try:
@@ -381,20 +382,21 @@ def export_to_firecloud():
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_manifest(filters=filters)
+    response_obj = es_td.transform_manifest(filters=filters)
     # Create and return the BDbag folder.
     bag_name = 'manifest_bag'
     bag_path = os.getcwd() + '/' + bag_name
     bag_info = {'organization': 'UCSC Genomics Institute',
                 'data_type': 'TOPMed',
                 'date_created': datetime.datetime.now().isoformat()}
-    args = dict(
-            bag_path=bag_path,
-            bag_info=bag_info,
-            payload=response.get_data())
+    # Instantiate bag object.
+    bag = BagHandler(response_data=response_obj.get_data(),
+                     bag_name=bag_name,
+                     bag_path=bag_path,
+                     bag_info=bag_info)
+    # Pathname of compressed bag.
+    zipped_bag = bag.create_bdbag()  # compressed bag
     logger.info("Creating a compressed BDbag containing manifest.")
-    bag = create_bdbag(**args)  # bag is a compressed file
-
     fileobj = open(bag, 'rb')
     domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com"
     fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
@@ -416,28 +418,3 @@ def export_to_firecloud():
         'reason': post.reason
     }
     return jsonify(response), post.status_code
-
-def create_bdbag(bag_path, bag_info, payload):
-    """Create compressed BDbag file."""
-    if not os.path.exists(bag_path):
-        os.makedirs(bag_path)
-    bag = bagit.make_bag(bag_path, bag_info)
-    # Add payload in subfolder "data".
-    with open(bag_path + '/data/manifest.tsv', 'w') as fp:
-        fp.write(payload)
-    bag.save(manifests=True)  # creates checksum manifests
-    # Compress bag.
-    zip_file_path = os.path.basename(os.path.normpath(str(bag)))
-    zip_file_name = 'manifest_bag.zip'
-    zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
-    zipdir(zip_file_path, zipf)
-    zipf.close()
-    shutil.rmtree(bag_path, True)
-    return zip_file_name
-
-
-def zipdir(path, ziph):
-    # ziph is zipfile handle
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            ziph.write(os.path.join(root, file))
