@@ -10,9 +10,12 @@ in this module.
 import collections
 from copy import deepcopy
 from functools import reduce
+import logging
 import json
-from pprint import pprint
 import re
+
+# create logger
+module_logger = logging.getLogger('chalicelib.indexer')
 
 
 class Indexer(object):
@@ -64,6 +67,8 @@ class Indexer(object):
         self.doc_type = doc_type
         self.index_settings = index_settings
         self.index_mapping_config = index_mapping_config
+        # Set logger
+        self.logger = logging.getLogger('chalicelib.indexer.Indexer')
         # Set all kwargs as instance attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -289,8 +294,8 @@ class FileIndexer(Indexer):
             d.pop("sampleNcbiTaxonIds", None)
             samples = {"samples": samples_list}
             contents = {**d, **special_, **samples}
-            print("PRINTING FILE INDEX DOCUMENT:\n")
-            pprint(contents)
+            self.logger.debug("PRINTING FILE INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
             # Load the current file in question
             # Ideally merge() should be called at this point
             self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
@@ -454,8 +459,8 @@ class BundleOrientedIndexer(Indexer):
             es_uuid = bundle['uuid']
             new_bundle['es_uuid'] = es_uuid
             contents = self.merge(new_bundle, es_uuid)
-            print("PRINTING BUNDLE INDEX DOCUMENT:\n")
-            pprint(contents)
+            self.logger.debug("PRINTING BUNDLE INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
             self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
 
     def __get_value(self, d, path):
@@ -624,8 +629,8 @@ class AssayOrientedIndexer(Indexer):
             es_uuid = assay
             new_assay['es_uuid'] = es_uuid
             contents = self.merge(new_assay, es_uuid)
-            print("PRINTING ASSAY INDEX DOCUMENT:\n")
-            pprint(contents)
+            self.logger.debug("PRINTING ASSAY INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
             self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
 
     def __get_value(self, d, path):
@@ -795,8 +800,8 @@ class SampleOrientedIndexer(Indexer):
             new_sample['es_uuid'] = es_uuid
             # Load the current file in question
             contents = self.merge(new_sample, es_uuid)
-            print("PRINTING SAMPLE INDEX DOCUMENT:\n")
-            pprint(contents)
+            self.logger.debug("PRINTING SAMPLE INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
             self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
 
     def __get_value(self, d, path):
@@ -965,8 +970,8 @@ class ProjectOrientedIndexer(Indexer):
             es_uuid = project
             new_project['es_uuid'] = es_uuid
             contents = self.merge(new_project, es_uuid)
-            print("PRINTING PROJECT INDEX DOCUMENT:\n")
-            pprint(contents)
+            self.logger.debug("PRINTING PROJECT INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
             self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
 
     def __get_value(self, d, path):

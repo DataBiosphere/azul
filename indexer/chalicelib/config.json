@@ -1,7 +1,8 @@
 {
   "requested_entries": {
     "3.0.0": {
-      "assay.json": [{
+      "assay.json": [
+        {
           "single_cell": [
             "cell_handling"
           ]
@@ -30,13 +31,15 @@
           ]
         }
       ],
-      "sample.json": [{
+      "sample.json": [
+        {
           "body_part": [
             "text"
           ]
         },
         {
-          "donor": [{
+          "donor": [
+            {
               "species": [
                 "text",
                 "ontology"
@@ -69,72 +72,7 @@
         "computational_method"
       ]
     },
-    "vTRASH":{
-      "assay.json": [
-        {
-          "content": [
-            {
-              "single_cell": [
-                "cell_handling"
-              ]
-            },
-            {
-              "seq": [
-                "instrument_platform",
-                "paired_ends"
-              ]
-            },
-            {
-              "rna": [
-                "library_construction",
-                "spike_in"
-              ]
-            }
-          ]
-        }
-      ],
-      "project.json": [
-        {
-          "content": [
-            "project_id",
-            "contributors",
-            "submitters"
-          ]
-        }
-      ],
-      "sample.json": [
-        {
-          "samples": [
-            {
-              "content":[
-                {
-                  "specimen_from_organism": [
-                    {
-                      "body_part":[
-                        "text"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "genus_species": [
-                    "text"
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "analysis.json": [
-        {
-          "content": [
-            "computational_method"
-          ]
-        }
-      ]
-    },
-    "4.6.1":{
+    "4.6.1": {
       "assay.json": [
         {
           "content": [
@@ -176,11 +114,11 @@
         {
           "samples": [
             {
-              "content":[
+              "content": [
                 {
                   "specimen_from_organism": [
                     {
-                      "body_part":[
+                      "body_part": [
                         "text*sampleBodyPart"
                       ]
                     }
