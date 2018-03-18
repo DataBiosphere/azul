@@ -1,0 +1,3 @@
+donor_uuid	filetype_1	file_path_1	upload_file_id_1	filetype_2	file_path_2	upload_file_id_2	filetype_3	file_path_3	upload_file_id_3	filetype_4	file_path_4	upload_file_id_4
+1	cram	f1.recab.cram	aaaa	crai	f1.recab.cram.crai	bbbb	bam	f1.recab.bam	cccc	bai	f1.recab.bam.bai	dddd
+2	cram	f2.recab.cram	eeee	crai	f2.recab.cram.crai	ffff	bam	f2.recab.bam	gggg	bai	f2.recab.bam.bai	hhhh

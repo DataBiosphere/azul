@@ -5,16 +5,20 @@ import zipfile
 import os
 import bagit
 import pandas as pd
+import numpy as np
 
 
 class BagHandler:
     """
     
     """
-    def __init__(self, response_data, bag_name, bag_path, bag_info):
+    def __init__(self, data, bag_name, bag_path, bag_info):
         # self.data = response_data
         # Create Pandas dataframe from tab-separated values.
-        self.data = pd.read_csv(response_data, sep='\t')
+        if isinstance(data, pd.core.frame.DataFrame):
+            self.data = data
+        else:
+            self.data = pd.read_csv(data, sep='\t')
         self.name = bag_name
         self.path = bag_path
         self.info = bag_info
@@ -96,3 +100,14 @@ class BagHandler:
                      'upload_file_id': 'upload_file_id1',
                      'metadata.json': 'metadata_json'})
         return participant, sample
+
+    def __normalize(df):
+        """
+        """
+        nrecords = len(df['donor_uuid'].unique()) # number of donors
+        filetype = df['file_type'].unique()  # create list of filetypes
+        a = np.repeat((filetype[0]), nrecords)  
+        for item in np.nditer(filetype):
+            print(item,)
+        return df
+
