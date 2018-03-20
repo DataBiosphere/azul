@@ -193,6 +193,10 @@
         "source": "metadata.json",
         "index_field": "workflowVersion",
         "dss_field": "workflow_version"
+      },
+      {
+        "constant": "",
+        "index_field": "metadataJson"
       }]
     }]
 }
