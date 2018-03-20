@@ -100,10 +100,11 @@ class ElasticTransformDump(object):
         # Create the filter aggregate
         aggregate = A('filter', filter_query)
         # Make an inner aggregate that will contain the terms in question
+        _field = '{}.keyword'.format(facet_config[agg])
         aggregate.bucket(
             'myTerms',
             'terms',
-            field=facet_config[agg],
+            field=_field,
             size=99999)
         # If the aggregate in question didn't have any filter on the API
         #  call, skip it. Otherwise insert the popped
@@ -231,7 +232,7 @@ class ElasticTransformDump(object):
         # Extract the fields for readability (and slight manipulation)
         _from = pagination['from'] - 1
         _to = pagination['size'] + _from
-        _sort = pagination['sort']
+        _sort = '{}.keyword'.format(pagination['sort'])
         _order = pagination['order']
         # Apply order
         es_search = es_search.sort({_sort: {"order": _order}})
@@ -300,7 +301,7 @@ class ElasticTransformDump(object):
             cardinality = request_config['translation'][field]
             es_search.aggs.metric(
                 agg_name, 'cardinality',
-                field=cardinality,
+                field='{}.keyword'.format(cardinality),
                 precision_threshold="40000")
         # Execute ElasticSearch request
         self.logger.info('Executing request to ElasticSearch')
