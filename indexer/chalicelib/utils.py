@@ -73,7 +73,7 @@ class DataExtractor(object):
             raise Exception("Unable to access resource")
         return response
 
-    def __get_bundle(self, bundle_uuid, replica, will_include_urls=False):
+    def __get_bundle(self, bundle_uuid, bundle_version, replica, will_include_urls=False):
         """
         Get the metadata and data files.
 
@@ -83,6 +83,7 @@ class DataExtractor(object):
         files.
 
         :param bundle_uuid: The bundle to pull from the DSS
+        :param bundle_version The version of the bundle to pull from the DSS
         :param replica: The replica which we should be pulling from
         (e.g aws, gcp, etc)
         :return: Returns a tuple separating (metadata_files, data_files)
@@ -93,15 +94,35 @@ class DataExtractor(object):
                                 SwaggerAPIException,
                                 directurls=str(will_include_urls),
                                 uuid=bundle_uuid,
+                                version=bundle_version,
                                 replica=replica)
         # Separate files in bundle by metadata files and data files
         _files = bundle['bundle']['files']
         metadata_files = {f["name"]: f for f in _files if f["indexed"]}
         data_files = {f["name"]: f for f in _files if not f["indexed"]}
+
+        # Update the file info for any files loaded by reference using the
+        # current, interim Commons data-store mechanism for loading reference.
+        # TODO When the interim mechanism is replaced by full data-store support for loading by reference,
+        # remove the following method and call.
+        self.__update_file_references(bundle_uuid, bundle_version, data_files, replica)
+
         # Return as a tuple
         return metadata_files, data_files
 
-    def __get_file(self, file_uuid, replica):
+    def __update_file_references(self, bundle_uuid, bundle_version, data_files, replica):
+        for filename, file_info in data_files.items():
+            try:
+                if "dss-type=fileref" in file_info['content-type']:
+                    file_reference_info = self.__get_file(file_info['uuid'], file_info['version'], replica)
+                    file_info.update(file_reference_info)
+            except KeyError as e:
+                self.log.error(
+                    "Expected key not found while processing file reference for file %s in bundle %s.%s Error: %s",
+                    filename, bundle_uuid, bundle_version, str(e))
+                raise
+
+    def __get_file(self, file_uuid, file_version, replica):
         """
         Get a file from the Blue Box.
 
@@ -110,6 +131,7 @@ class DataExtractor(object):
         times.
 
         :param file_uuid: Specifies which file to get
+        :param file_version: Specifies the file version to get
         :param replica: Specifies the replica to pull from
         :return: Contents of that file
         """
@@ -118,6 +140,7 @@ class DataExtractor(object):
                                self.dss_client.get_file,
                                SwaggerAPIException,
                                uuid=file_uuid,
+                               version=file_version,
                                replica=replica)
         return _file
 
@@ -138,12 +161,13 @@ class DataExtractor(object):
             _metadata = {file_name: self.__get_file(*_args)}
             return _metadata
         bundle_uuid = request['match']['bundle_uuid']
+        bundle_version = request['match']['bundle_version']
         # Get the metadata and data descriptions
-        metadata_files, data_files = self.__get_bundle(bundle_uuid, replica, will_include_urls=will_include_urls)
+        metadata_files, data_files = self.__get_bundle(bundle_uuid, bundle_version, replica, will_include_urls=will_include_urls)
         # Create a ThreadPool which will execute the function
         pool = ThreadPool(len(metadata_files))
         # Pool the contents in the right format for the get_metadata function
-        args = [(name, (_f['uuid'], replica)) for name, _f in
+        args = [(name, (_f['uuid'], _f['version'], replica)) for name, _f in
                 metadata_files.items()]
         results = pool.starmap(get_metadata, args)
         pool.close()
