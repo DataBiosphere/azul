@@ -27,6 +27,7 @@ class FileCopyObj(JsonObject):
     fileFormat = StringProperty()
     fileSize = IntegerProperty()
     fileMd5sum = StringProperty()
+    urls = ListProperty(StringProperty)
     # DateTimeProperty Int given the ICGC format uses
     # an int and not DateTimeProperty
     lastModified = StringProperty()
@@ -416,6 +417,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             fileFormat=self.fetch_entry_value(mapping, entry, 'fileFormat'),
             fileSize=self.fetch_entry_value(mapping, entry, 'fileSize'),
             fileMd5sum=self.fetch_entry_value(mapping, entry, 'fileMd5sum'),
+            urls=self.fetch_entry_value(mapping, entry, 'urls'),
             lastModified=self.fetch_entry_value(
                 mapping, entry, 'lastModified')
         )

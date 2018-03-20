@@ -41,6 +41,7 @@
       "fileMd5sum": "fileMd5sum",
       "fileName": "title",
       "fileSize": "fileSize",
+      "urls": "urls",
       "lastModified": "lastModified",
       "repoBaseUrl": "repoBaseUrl",
       "repoCode": "repoCode",
