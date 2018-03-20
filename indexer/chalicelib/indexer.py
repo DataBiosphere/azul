@@ -150,7 +150,7 @@ class Indexer(object):
                                       body=self.index_settings,
                                       ignore=[400])
         # Loads mappings for the index
-        self.es_client.put_mapping(index=self.index_name,
+        self.es_client.indices.put_mapping(index=self.index_name,
                                    doc_type=self.doc_type,
                                    body=self.create_mapping())
 

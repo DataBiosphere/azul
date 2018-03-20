@@ -12,7 +12,7 @@ from aws_requests_auth import boto_utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 from chalice import Chalice
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-from chalicelib.indexer import FileIndexer, AssayOrientedIndexer as AssayIndexer
+from chalicelib.indexer import FileIndexer
 from chalicelib.dcc.dcc_indexer import DCCIndexer
 from chalicelib.utils import DataExtractor
 import json
@@ -91,16 +91,9 @@ def post_notification():
                                es_doc_type,
                                index_settings=es_settings,
                                index_mapping_config=index_mapping_config)
-    # assay_indexer = AssayIndexer(metadata_files,
-    #                              data_files,
-    #                              es,
-    #                              "{}_assay_index_v4".format(es_index),
-    #                              "doc",
-    #                              index_settings=es_settings,
-    #                              index_mapping_config=index_mapping_config)
     file_indexer.index(bundle_uuid, bundle_version)
-    # assay_indexer.index(bundle_uuid, bundle_version)
-    dcc_indexer = DCCIndexer(metadata_files, data_files, es)
+    dcc_indexer = DCCIndexer(metadata_files, data_files, es, index_settings=es_settings,
+                             index_mapping_config=index_mapping_config)
     dcc_indexer.index(bundle_uuid, bundle_version)
     return {"status": "done"}
 

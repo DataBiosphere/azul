@@ -17,21 +17,41 @@ ES_DOC_TYPE = 'meta'
 class DCCIndexer(Indexer):
     transformer = DCCJSONTransformer(CONFIG_JSON_FILENAME)
 
-    def __init__(self, metadata_files, data_files, es_client):
-        super(DCCIndexer, self).__init__(metadata_files, data_files, es_client, None, ES_DOC_TYPE)
+    def __init__(self, metadata_files, data_files, es_client, index_settings=None, index_mapping_config=None):
+        super(DCCIndexer, self).__init__(metadata_files, data_files, es_client, None, ES_DOC_TYPE,
+                                         index_settings=index_settings, index_mapping_config=index_mapping_config)
         self.transformer.update_settings()
 
     def index(self, bundle_uuid, bundle_version, *args, **kwargs):
         self.transformer.update_settings()
         for _file in self.data_files.values():
             indexer_doc_list = self.transformer.transform(_file, self.metadata_files)
-            for indexer_name, contents in indexer_doc_list.items():
-                doc_id = f"{bundle_uuid}.{bundle_version}"
-                self.load_doc_by_index(doc_id, contents, indexer_name)
+            for index_name, contents in indexer_doc_list.items():
+                doc_id = f"{_file['uuid']}.{_file['version']}"
+                if not self.es_client.indices.exists(index_name):
+                    self.load_mapping(index_name)
+                self.load_doc_by_index(doc_id, contents, index_name)
 
     #TODO Add duplication check from like from FileIndexer in develop branch
     def merge(self, doc_contents, **kwargs):
         return doc_contents
+
+    def load_mapping(self, index_name, *args, **kwargs):
+        """
+        Load the mapping into Elasticsearch.
+
+        This method is responsible for loading the mapping into Elasticsearch.
+        It first creates an index using the instance's attributes, and
+        then loads the mapping by also calling create_mapping(), which
+        will create the object describing the mapping.
+        """
+        # Creates the index
+        self.es_client.indices.create(index=index_name,
+                                      body=self.index_settings,
+                                      ignore=[400])
+        self.es_client.indices.put_mapping(index=self.index_name,
+                                           doc_type=self.doc_type,
+                                           body=self.create_mapping())
 
     def create_mapping(self, *args, **kwargs):
         mapping_config = self.get_mapping_config()
