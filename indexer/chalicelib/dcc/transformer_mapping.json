@@ -150,6 +150,11 @@
       },
       {
         "source": "metadata.json",
+        "index_field": "specimenUUID",
+        "dss_field": "specimen_uuid"
+      },
+      {
+        "source": "metadata.json",
         "index_field": "submittedSpecimenId",
         "dss_field": "submitter_specimen_id"
       },
