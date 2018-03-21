@@ -30,7 +30,7 @@ class BagHandler:
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         bag = bagit.make_bag(self.path, self.info)
-        bag._reformat_headers()
+        self._reformat_headers()
         participant, sample = self.transform()
         # Add payload in subfolder "data" and write to disk.
         with open(self.path + '/data/participant.tsv', 'w') as fp:
