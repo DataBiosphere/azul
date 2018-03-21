@@ -395,9 +395,9 @@ def export_to_firecloud():
                      bag_path=bag_path,
                      bag_info=bag_info)
     # Pathname of compressed bag.
-    zipped_bag = bag.create_bdbag()  # compressed bag
+    zipped_bag = bag.create_bdbag()  # path to compressed bag
     logger.info("Creating a compressed BDbag containing manifest.")
-    fileobj = open(bag, 'rb')
+    fileobj = open(zipped_bag, 'rb')
     domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com"
     fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
     fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
