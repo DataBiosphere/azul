@@ -11,6 +11,7 @@
     "software": "software",
     "fileId": "file_id",
     "id": "file_id",
+    "fileVersion": "file_version",
     "donorId": "donor",
     "donor": "donor",
     "primarySite": "submitterDonorPrimarySite",

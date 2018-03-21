@@ -10,6 +10,7 @@ services:
       ES_PROTOCOL: "http"
       ES_FILE_INDEX: "fb_index"
       ES_DONOR_INDEX: "analysis_index"
+      DOS_DSS_SERVICE: "dos-dss.ucsc-cgp-dev.org"
     build: .
     ports:
       - "9000:80"

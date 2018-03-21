@@ -1,5 +1,8 @@
 #!/usr/bin/python
 import abc
+
+import os
+
 from utilities import json_pp
 from flask_excel import make_response_from_array
 import logging
@@ -27,7 +30,10 @@ class FileCopyObj(JsonObject):
     fileFormat = StringProperty()
     fileSize = IntegerProperty()
     fileMd5sum = StringProperty()
+    fileId = StringProperty()
+    fileVersion = StringProperty()
     urls = ListProperty(StringProperty)
+    dosUrl = StringProperty()
     # DateTimeProperty Int given the ICGC format uses
     # an int and not DateTimeProperty
     lastModified = StringProperty()
@@ -235,6 +241,12 @@ class EntryFetcher:
             return None
 
     @staticmethod
+    def compose_dos_url(file_uuid, file_version):
+        DOS_DSS_SERVICE = os.environ.get('DOS_DSS_SERVICE')
+        BASE_PATH = "ga4gh/dos/v1"
+        return "dos://{}/{}/dataobjects/{}?version={}".format(DOS_DSS_SERVICE, BASE_PATH, file_uuid, file_version)
+
+    @staticmethod
     def handle_list(value):
         return [value] if value is not None else []
 
@@ -269,11 +281,24 @@ class ManifestResponse(AbstractResponse):
         mapped_manifest = [[entry[mapping[column]]
                             if entry[mapping[column]] is not None else ''
                             for column in manifest_entries] for entry in hits]
+        self.append_dos_url_column(hits, manifest_entries, mapping, mapped_manifest)
         # Prepend the header as the first entry on the manifest
         mapped_manifest.insert(0, [column for column in manifest_entries])
         self.logger.info('Creating response from array')
         self.apiResponse = make_response_from_array(
             mapped_manifest, 'tsv', file_name='manifest')
+
+    # TODO As currently implemented, this implementation is brittle in that
+    # it is not full driven by configuration. Consider revising the configuration
+    # mechanism to support computed manifest values.
+    @staticmethod
+    def append_dos_url_column(hits, manifest_entries, mapping, mapped_manifest):
+        manifest_entries.append("File DOS URL")
+        for i in range(len(mapped_manifest)):
+            entry = hits[i]
+            dos_url = EntryFetcher.compose_dos_url(entry[mapping["fileId"]],
+                                                   entry[mapping["fileVersion"]])
+            mapped_manifest[i].append(dos_url)
 
 
 class SummaryResponse(AbstractResponse):
@@ -417,7 +442,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             fileFormat=self.fetch_entry_value(mapping, entry, 'fileFormat'),
             fileSize=self.fetch_entry_value(mapping, entry, 'fileSize'),
             fileMd5sum=self.fetch_entry_value(mapping, entry, 'fileMd5sum'),
+            fileId=self.fetch_entry_value(mapping, entry, 'fileId'),
+            fileVersion=self.fetch_entry_value(mapping, entry, 'fileVersion'),
             urls=self.fetch_entry_value(mapping, entry, 'urls'),
+            dosUrl=self.compose_dos_url(self.fetch_entry_value(mapping, entry, 'fileId'),
+                                        self.fetch_entry_value(mapping, entry, 'fileVersion')),
             lastModified=self.fetch_entry_value(
                 mapping, entry, 'lastModified')
         )
