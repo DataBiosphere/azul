@@ -9,6 +9,7 @@ from responseobjects.elastic_request_builder import \
     ElasticTransformDump as EsTd
 from responseobjects.utilities import json_pp
 from bagitutils import BagHandler
+from StringIO import StringIO
 
 # Setting up logging
 base_path = os.path.dirname(os.path.abspath(__file__))
@@ -390,7 +391,7 @@ def export_to_firecloud():
                 'data_type': 'TOPMed',
                 'date_created': datetime.datetime.now().isoformat()}
     # Instantiate bag object.
-    bag = BagHandler(data=response_obj.get_data(),
+    bag = BagHandler(data=StringIO(response_obj.get_data()),
                      bag_name=bag_name,
                      bag_path=bag_path,
                      bag_info=bag_info)
