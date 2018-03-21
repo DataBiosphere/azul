@@ -390,7 +390,7 @@ def export_to_firecloud():
                 'data_type': 'TOPMed',
                 'date_created': datetime.datetime.now().isoformat()}
     # Instantiate bag object.
-    bag = BagHandler(response_data=response_obj.get_data(),
+    bag = BagHandler(data=response_obj.get_data(),
                      bag_name=bag_name,
                      bag_path=bag_path,
                      bag_info=bag_info)
