@@ -37,6 +37,7 @@ lxml==3.6.4
 Mako==1.0.6
 MarkupSafe==0.23
 packaging==16.8
+pandas==0.22
 psycopg2==2.7.4
 pyasn1==0.2.2
 pycparser==2.17
