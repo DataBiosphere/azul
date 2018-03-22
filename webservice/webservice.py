@@ -385,7 +385,7 @@ def export_to_firecloud():
     logger.info("Creating the API response")
     response_obj = es_td.transform_manifest(filters=filters)
     # Create and return the BDbag folder.
-    bag_name = 'manifest_bag'
+    bag_name = 'manifest'
     bag_path = os.getcwd() + '/' + bag_name
     bag_info = {'organization': 'UCSC Genomics Institute',
                 'data_type': 'TOPMed',
