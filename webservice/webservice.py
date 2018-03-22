@@ -392,7 +392,6 @@ def export_to_firecloud():
                 'date_created': datetime.datetime.now().isoformat()}
     # Instantiate bag object.
     bag = BagHandler(data=StringIO(response_obj.get_data()),
-                     bag_name=bag_name,
                      bag_path=bag_path,
                      bag_info=bag_info)
     # Pathname of compressed bag.

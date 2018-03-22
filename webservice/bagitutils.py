@@ -13,13 +13,12 @@ class BagHandler:
     """
     Handles data in BagIt data structure.
     """
-    def __init__(self, data, bag_name, bag_path, bag_info):
+    def __init__(self, data, bag_path, bag_info):
         # Create Pandas dataframe from tab-separated values.
         if isinstance(data, pd.core.frame.DataFrame):
             self.data = data
         else:
             self.data = pd.read_csv(data, sep='\t')
-        self.name = bag_name
         self.path = bag_path
         self.info = bag_info
 
@@ -33,10 +32,11 @@ class BagHandler:
         self._reformat_headers()
         participant, sample = self.transform()
         # Add payload in subfolder "data" and write to disk.
-        with open(self.path + '/data/participant.tsv', 'w') as fp:
-            fp.write(participant)
-        with open(self.path + '/data/sample.tsv', 'w') as fp:
-            fp.write(sample)
+        data_path = self.path + '/data'
+        if not os.path.exists(data_path):
+            os.makedirs(data_path)
+        participant.to_csv(data_path + '/participant.tsv', sep='\t', index=False, header=True)
+        sample.to_csv(data_path + '/sample.tsv', sep='\t', index=False, header=True)
         # Write BagIt to disk and create checksum manifests.
         bag.save(manifests=True)
         # Compress bag.
