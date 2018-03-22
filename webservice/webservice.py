@@ -413,7 +413,7 @@ def export_to_firecloud():
                'Authorization': auth}
     post = requests.post(url=url, data=fileobj, headers=headers)
     fileobj.close()
-    os.remove(bag)
+    os.remove(zipped_bag)
     response = {
         'reason': post.reason
     }
