@@ -278,8 +278,7 @@ class ManifestResponse(AbstractResponse):
         # Get a list of the hits in the raw response
         hits = [x['_source'] for x in raw_response['hits']['hits']]
         # Create the body of the entries in the manifest
-        mapped_manifest = [[entry[mapping[column]]
-                            if entry[mapping[column]] is not None else ''
+        mapped_manifest = [[self.format_manifest_value(entry[mapping[column]])
                             for column in manifest_entries] for entry in hits]
         self.append_dos_url_column(hits, manifest_entries, mapping, mapped_manifest)
         # Prepend the header as the first entry on the manifest
@@ -299,6 +298,15 @@ class ManifestResponse(AbstractResponse):
             dos_url = EntryFetcher.compose_dos_url(entry[mapping["fileId"]],
                                                    entry[mapping["fileVersion"]])
             mapped_manifest[i].append(dos_url)
+
+    @staticmethod
+    def format_manifest_value(value):
+        value = value if value is not None else ''
+
+        if isinstance(value, list):
+            value = ",".join(value)
+
+        return value
 
 
 class SummaryResponse(AbstractResponse):
@@ -442,11 +450,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             fileFormat=self.fetch_entry_value(mapping, entry, 'fileFormat'),
             fileSize=self.fetch_entry_value(mapping, entry, 'fileSize'),
             fileMd5sum=self.fetch_entry_value(mapping, entry, 'fileMd5sum'),
-            fileId=self.fetch_entry_value(mapping, entry, 'fileId'),
-            fileVersion=self.fetch_entry_value(mapping, entry, 'fileVersion'),
-            urls=self.fetch_entry_value(mapping, entry, 'urls'),
-            dosUrl=self.compose_dos_url(self.fetch_entry_value(mapping, entry, 'fileId'),
-                                        self.fetch_entry_value(mapping, entry, 'fileVersion')),
             lastModified=self.fetch_entry_value(
                 mapping, entry, 'lastModified')
         )
