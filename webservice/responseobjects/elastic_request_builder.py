@@ -5,7 +5,7 @@ from elasticsearch_dsl import Search, Q, A
 import json
 import logging
 import os
-from responseobjects.hca_response import KeywordSearchResponse, \
+from responseobjects.hca_response_v5 import KeywordSearchResponse, \
     FileSearchResponse, SummaryResponse, ManifestResponse,\
     AutoCompleteResponse
 from utilities import json_pp
@@ -300,9 +300,10 @@ class ElasticTransformDump(object):
         # Override the aggregates for Samples,
         # Primary site count, and project count
         for field, agg_name in (
-                ('sampleId', 'samples'),
-                ('bodyPart', 'submittedBodyParts'),
-                ('projectCode', 'projectCode')):
+                ('biomaterials.content.biomaterial_core.biomaterial_id',
+                 'samples'),
+                ('biomaterials.content.organ.text', 'organsCount'),
+                ('project.project_core.project_shortname', 'projectCode')):
             cardinality = request_config['translation'][field]
             es_search.aggs.metric(
                 agg_name, 'cardinality',
