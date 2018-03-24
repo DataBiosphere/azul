@@ -7,52 +7,60 @@ import bagit
 import pandas as pd
 import numpy as np
 import re
+import tempfile
 
 
 class BagHandler:
     """
     Handles data in BagIt data structure.
     """
-    def __init__(self, data, bag_path, bag_info):
+    def __init__(self, data, bag_name, bag_info):
         # Create Pandas dataframe from tab-separated values.
         if isinstance(data, pd.core.frame.DataFrame):
             self.data = data
         else:
             self.data = pd.read_csv(data, sep='\t')
-        self.path = bag_path
+        self.name = bag_name
         self.info = bag_info
 
-    def create_bdbag(self):
+    def create_bag(self):
         """Create compressed file that contains a BagIt.
         :return zip_file_name: path to compressed BagIt
         """
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
-        bag = bagit.make_bag(self.path, self.info)
+        tempd = tempfile.mkdtemp('bag_tmpd')
+        bag_dir = tempd + '/' + self.name
+        # Add payload in subfolder "data" and write to disk.
+        data_path = bag_dir + '/data'
+        os.makedirs(data_path)
+        bag = bagit.make_bag(bag_dir, self.info)
         self._reformat_headers()
         participant, sample = self.transform()
-        # Add payload in subfolder "data" and write to disk.
-        data_path = self.path + '/data'
-        if not os.path.exists(data_path):
-            os.makedirs(data_path)
-        participant.to_csv(data_path + '/participant.tsv', sep='\t', index=False, header=True)
-        sample.to_csv(data_path + '/sample.tsv', sep='\t', index=False, header=True)
+
+        participant.to_csv(path=data_path + '/participant.tsv',
+                           sep='\t',
+                           index=False,
+                           header=True)
+        sample.to_csv(path_or_buf=data_path + '/sample.tsv',
+                      sep='\t',
+                      index=False,
+                      header=True)
         # Write BagIt to disk and create checksum manifests.
         bag.save(manifests=True)
         # Compress bag.
-        zip_file_path = os.path.basename(os.path.normpath(str(bag)))
-        zip_file_name = 'manifest.zip'
-        zipf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
-        self.__zipdir(zip_file_path, zipf)
-        zipf.close()
-        shutil.rmtree(self.path, True)
-        return zip_file_name
+        zipfile_tmp = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
+        zipfile_handle = zipfile.ZipFile(zipfile_tmp,
+                                         'w', zipfile.ZIP_DEFLATED)
+        self.__zipdir(tempd, zipfile_handle)
+        zipfile_handle.close()
+        shutil.rmtree(tempd, True)
+        return zipfile_tmp.name
 
-    def __zipdir(self, path, ziph):
-        # ziph is zipfile handle
+    def __zipdir(self, path, zip_fh):
+        # zip_fh is zipfile handle
+        pathLength = len(path)
         for root, dirs, files in os.walk(path):
             for file in files:
-                ziph.write(os.path.join(root, file))
+                zip_fh.write(os.path.join(root, file), arcname=root[pathLength:] + '/' + file)
 
     def _reformat_headers(self):
         """Removes whitespace and dots in column names, and sets

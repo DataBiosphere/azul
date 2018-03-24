@@ -11,6 +11,7 @@ from responseobjects.utilities import json_pp
 from bagitutils import BagHandler
 from StringIO import StringIO
 
+
 # Setting up logging
 base_path = os.path.dirname(os.path.abspath(__file__))
 logging.config.fileConfig('{}/config/logging.conf'.format(base_path))
@@ -381,21 +382,20 @@ def export_to_firecloud():
     es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
                  es_port=os.getenv("ES_PORT", 9200),
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
-    # Get the response back
+    # Response contains metadata as a string.
     logger.info("Creating the API response")
     response_obj = es_td.transform_manifest(filters=filters)
     # Create and return the BDbag folder.
     bag_name = 'manifest'
-    bag_path = os.getcwd() + '/' + bag_name
     bag_info = {'organization': 'UCSC Genomics Institute',
                 'data_type': 'TOPMed',
                 'date_created': datetime.datetime.now().isoformat()}
     # Instantiate bag object.
     bag = BagHandler(data=StringIO(response_obj.get_data()),
-                     bag_path=bag_path,
-                     bag_info=bag_info)
+                     bag_info=bag_info,
+                     bag_name=bag_name)
     # Pathname of compressed bag.
-    zipped_bag = bag.create_bdbag()  # path to compressed bag
+    zipped_bag = bag.create_bag()  # path to compressed bag
     logger.info("Creating a compressed BDbag containing manifest.")
     fileobj = open(zipped_bag, 'rb')
     domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com"
