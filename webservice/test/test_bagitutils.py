@@ -61,24 +61,11 @@ class TestBagHandlerMethods(unittest.TestCase):
                     self.assertIn('data/', name)
         os.remove(zip_name)
 
-    def test_tranformToParticpantAndSample(self):
-        data = "Donor UUID\tSample UUID\tFile Type\tFile URLs\tFile DOS URL\tProgram\tFile Path\tUpload File ID\n\
-d1\ts1\tcrai\tgs://one,s3://one\tdos://one\tFoo\tpath1\tid1\n\
-d1\ts1\tbai\tgs://two,s3://two\tdos://two\tFoo\tpath2\tid2\n\
-d2\ts2\tcram\tgs://three,s3://three\tdos://three\tpath3\tid3\tFoo"
-        s = StringIO(data)
-        bag = BagHandler(data=s, bag_info={}, bag_name='manifest')
-        (participants, sample) = bag.transform_to_participant_and_sample(data)
-        self.assertListEqual(
-            sorted(['d1', 'd2']),
-            sorted(participants))
-        self.assertEquals(len(sample), 2)
-
     def testDemoData(self):
-        data = ("Program	Project	Center Name	Submitter Donor ID	Donor UUID	Submitter Donor Primary Site	Submitter Specimen ID	Specimen UUID	Submitter Specimen Type	Submitter Experimental Design	Submitter Sample ID	Sample UUID	Analysis Type	Workflow Name	Workflow Version	File Type	File Path	Upload File ID	Data Bundle UUID	Metadata.json	File URLs	File DOS URL\n\
+        data = ("Program	Project	Center Name	Submitter Donor ID	Donor UUID	Submitter Donor Primary Site	Submitter Specimen ID	Specimen UUID	Submitter Specimen Type	Submitter Experimental Design	Submitter Sample ID	Sample UUID	Analysis Type	Workflow Name	Workflow Version	File Type	File Path	Upload File ID	Data Bundle UUID	Metadata.json	File URLs	File DOS URI\n\
 NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298-4d80-4aaa-bddf-20c15d184af3	Blood	NA12878_2	bfcc3266-340a-5751-8db1-d661163ac8e5	Normal - Blood	Seq_DNA_SNP_CNV; Seq_DNA_WholeGenome	H06JUADXX130110_1	c774934f-4100-44bf-8df9-8d4e509c088d	none	test workflow	Development	bam	H06JUADXX130110.1.ATCACGAT.20k_reads.bam	60936d97-6358-4ce3-8136-d5776186ee21	dd04fbf3-2a51-4c72-8038-da7094b8da55		gs://broad-public-datasets/NA12878_downsampled_for_testing/unmapped/H06JUADXX130110.1.ATCACGAT.20k_reads.bam	dos://dos-dss.ucsc-cgp-dev.org/ga4gh/dos/v1/dataobjects/60936d97-6358-4ce3-8136-d5776186ee21?version=2018-03-23T123738.145535Z")
         bag = BagHandler(data=data, bag_info={}, bag_name='manifest')
-        (participants, sample) = bag.transform_to_participant_and_sample(data)
+        (participants, sample) = bag.transform_to_participant_and_sample()
         self.assertListEqual(
             sorted(['c2b4c298-4d80-4aaa-bddf-20c15d184af3']),
             sorted(participants))
@@ -89,7 +76,7 @@ NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298
         self.assertFalse('s3_url1' in row)
 
     def testWriteCsv(self):
-        data = ("Program	Project	Center Name	Submitter Donor ID	Donor UUID	Submitter Donor Primary Site	Submitter Specimen ID	Specimen UUID	Submitter Specimen Type	Submitter Experimental Design	Submitter Sample ID	Sample UUID	Analysis Type	Workflow Name	Workflow Version	File Type	File Path	Upload File ID	Data Bundle UUID	Metadata.json	File URLs	File DOS URL\n\
+        data = ("Program	Project	Center Name	Submitter Donor ID	Donor UUID	Submitter Donor Primary Site	Submitter Specimen ID	Specimen UUID	Submitter Specimen Type	Submitter Experimental Design	Submitter Sample ID	Sample UUID	Analysis Type	Workflow Name	Workflow Version	File Type	File Path	Upload File ID	Data Bundle UUID	Metadata.json	File URLs	File DOS URI\n\
         NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298-4d80-4aaa-bddf-20c15d184af3	Blood	NA12878_2	bfcc3266-340a-5751-8db1-d661163ac8e5	Normal - Blood	Seq_DNA_SNP_CNV; Seq_DNA_WholeGenome	H06JUADXX130110_1	c774934f-4100-44bf-8df9-8d4e509c088d	none	test workflow	Development	bam	H06JUADXX130110.1.ATCACGAT.20k_reads.bam	60936d97-6358-4ce3-8136-d5776186ee21	dd04fbf3-2a51-4c72-8038-da7094b8da55		gs://broad-public-datasets/NA12878_downsampled_for_testing/unmapped/H06JUADXX130110.1.ATCACGAT.20k_reads.bam	dos://dos-dss.ucsc-cgp-dev.org/ga4gh/dos/v1/dataobjects/60936d97-6358-4ce3-8136-d5776186ee21?version=2018-03-23T123738.145535Z")
         bag = BagHandler(data=data, bag_info={}, bag_name='manifest')
         zip_name = bag.create_bag()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import shutil
+import operator
 import zipfile
 import os
 from StringIO import StringIO
@@ -15,14 +16,14 @@ BW_SAMPLE_UUID = "Sample UUID"
 BW_DONOR_UUID = "Donor UUID"
 BW_FILE_TYPE = "File Type"
 BW_FILE_URLS = 'File URLs'
-INCOMING_COLUMN_EXCEPTIONS = [BW_SAMPLE_UUID,
-                              BW_FILE_TYPE,
-                              BW_DONOR_UUID,
-                              BW_FILE_URLS,
-                              "File Path",
-                              "Upload File ID",
-                              'File DOS URL'
-                              ]
+BW_SPECIMEN_UUID = 'Specimen UUID'
+FILE_COLUMN_MAPPINGS = [
+    'File DOS URI',
+    BW_FILE_TYPE,
+    'File Path',
+    'Upload File ID'
+]
+COMPLEX_COLUMN_MAPPINGS = FILE_COLUMN_MAPPINGS + [BW_SAMPLE_UUID, BW_FILE_URLS]
 
 FC_SAMPLE_ID = 'entity:sample_id'
 FC_ENTITY_ID = 'entity:participant_id'
@@ -38,6 +39,7 @@ class BagHandler:
         if isinstance(data, pd.core.frame.DataFrame):
             self.data = data
         elif type(data) is str:
+            # Experimental -- handle without Pandas
             self.data = data
         else:
             self.data = pd.read_csv(data, sep='\t')
@@ -55,24 +57,7 @@ class BagHandler:
         os.makedirs(data_path)
         bag = bagit.make_bag(bag_dir, self.info)
         if type(self.data) is str:
-            (participants, samples) = self.transform_to_participant_and_sample(self.data)
-            with open(data_path + '/participant.tsv', 'w') as tsv:
-                fieldnames = [FC_ENTITY_ID]
-                writer = csv.DictWriter(tsv, fieldnames=fieldnames, delimiter='\t')
-                writer.writeheader()
-                for p in participants:
-                    writer.writerow({FC_ENTITY_ID: p})
-            with open(data_path + '/sample.tsv', 'w') as tsv:
-                first = True
-                for sample in samples:
-                    if first:
-                        first = False
-                        keys = sample.keys()
-                        keys.remove(FC_SAMPLE_ID)
-                        fieldnames = [FC_SAMPLE_ID] + sorted(keys)
-                        writer = csv.DictWriter(tsv, fieldnames=fieldnames, delimiter='\t')
-                        writer.writeheader()
-                    writer.writerow(sample)
+            self.write_csv_files(data_path)
         else:
             self._reformat_headers()
             participant, sample = self.transform()
@@ -187,25 +172,45 @@ class BagHandler:
             a = np.repeat((filetype[0]), nrecords)
         return df
 
-    def transform_to_participant_and_sample(self, data):
-        participants, file_types, native_protocols = self.participants_and_file_types_and_protocols(data)
-        return list(participants), self.samples(data, file_types, native_protocols)
+    def write_csv_files(self, data_path):
+        (participants, samples) = self.transform_to_participant_and_sample()
 
-    def participants_and_file_types_and_protocols(self, data):
-        reader = csv.DictReader(StringIO(data), delimiter='\t')
+        with open(data_path + '/participant.tsv', 'w') as tsv:
+            writer = csv.DictWriter(tsv, fieldnames=[FC_ENTITY_ID], delimiter='\t')
+            writer.writeheader()
+            for p in participants:
+                writer.writerow({FC_ENTITY_ID: p})
+
+        with open(data_path + '/sample.tsv', 'w') as tsv:
+            first = True
+            for sample in samples:
+                if first:
+                    first = False
+                    keys = sample.keys()
+                    keys.remove(FC_SAMPLE_ID)
+                    fieldnames = [FC_SAMPLE_ID] + sorted(keys)
+                    writer = csv.DictWriter(tsv, fieldnames=fieldnames, delimiter='\t')
+                    writer.writeheader()
+                writer.writerow(sample)
+
+    def transform_to_participant_and_sample(self):
+        participants, max_samples, native_protocols = self.participants_and_max_files_and_protocols()
+        return list(participants), self.samples(max_samples, native_protocols)
+
+    def participants_and_max_files_and_protocols(self):
+        reader = csv.DictReader(StringIO(self.data), delimiter='\t')
         participants = set()
         native_protocols = set()
-        file_types = {} # Key: file type; value: index
-        counter = 1
+        specimens = {} # key: specimen UUID, value count
         for row in reader:
             # Add all participants. It's a set, so no dupes
             participants.add(row[BW_DONOR_UUID])
 
-            # Track all unique file types, and associate a number with each
-            file_type = row[BW_FILE_TYPE].strip()
-            if file_type not in file_types:
-                file_types[file_type] = counter
-                counter = counter + 1
+            specimen_uuid = row[BW_SPECIMEN_UUID]
+            if specimen_uuid in specimens:
+                specimens[specimen_uuid] = specimens[specimen_uuid] + 1
+            else:
+                specimens[specimen_uuid] = 1
 
             # Track all the different cloud native url protocols
             for file_url in row[BW_FILE_URLS].split(','):
@@ -213,33 +218,34 @@ class BagHandler:
                 if protocol is not None and protocol not in native_protocols:
                     native_protocols.add(protocol)
 
-        return participants, file_types, native_protocols
+        return participants, max(specimens.values()), native_protocols
 
-    def samples(self, data, file_types, native_protocols):
-        reader = csv.DictReader(StringIO(data), delimiter='\t')
+    def samples(self, max_samples, native_protocols):
+        reader = csv.DictReader(StringIO(self.data), delimiter='\t')
         samples = []
 
         current_specimen_uuid = None
         current_row = None
 
-        for row in reader:
+        for row in sorted(reader, key=operator.itemgetter(BW_SPECIMEN_UUID)):
             specimen_uuid = row[BW_SAMPLE_UUID]
             if specimen_uuid != current_specimen_uuid:
                 current_specimen_uuid = specimen_uuid
+                index = 1
                 if current_row is not None:
                     samples.append(current_row)
-                current_row = self.init_row(row, file_types, native_protocols)
+                current_row = self.init_row(row, max_samples, native_protocols)
+            else:
+                index = index + 1
 
-            self.add_files_to_row(current_row, row, file_types)
+            self.add_files_to_row(current_row, row, index)
 
         if current_row is not None:
             samples.append(current_row)
         return samples
 
-    def add_files_to_row(self, new_row, existing_row, file_types):
-        file_type = existing_row[BW_FILE_TYPE].strip()
-        file_type_index = file_types[file_type]
-        suffix = str(file_type_index)
+    def add_files_to_row(self, new_row, existing_row, index):
+        suffix = str(index)
 
         file_urls = existing_row[BW_FILE_URLS].split(',')
         for file_url in file_urls:
@@ -247,24 +253,21 @@ class BagHandler:
             if protocol is not None:
                 new_row[self.native_column_name(protocol, suffix)] = file_url
 
-        for column in ['File DOS URL', BW_FILE_TYPE, 'File Path', 'Upload File ID']:
-            new_row[self.transform_boardwalk_column_to_fc_column(column) + suffix] = existing_row[column]
+        for column in FILE_COLUMN_MAPPINGS:
+            new_row[self.boardwalk_to_firecloud(column) + suffix] = existing_row[column]
 
-    def init_row(self, existing_row, file_types, native_protocols):
-        # Rename sample column
-        row = {FC_SAMPLE_ID: existing_row[BW_SAMPLE_UUID]}
+    def init_row(self, existing_row, max_samples, native_protocols):
+        # Rename sample column and participant
+        row = {FC_SAMPLE_ID: existing_row[BW_SAMPLE_UUID], 'participant': existing_row[BW_DONOR_UUID]}
 
         # Copy rows that don't need transformation, other than FC naming conventions
         for key in existing_row.keys():
-            if key not in INCOMING_COLUMN_EXCEPTIONS:
-              row[self.transform_boardwalk_column_to_fc_column(key)] = existing_row[key]
+            if key not in COMPLEX_COLUMN_MAPPINGS:
+              row[self.boardwalk_to_firecloud(key)] = existing_row[key]
 
-        # Rename "DONOR UUID" to 'participant'
-        row['participant'] = existing_row[BW_DONOR_UUID]
-
-        # Initialize native, native urls
-        for file_type in file_types.values():
-            suffix = str(file_type)
+        # Initialize native url place holders
+        for i in range(max_samples):
+            suffix = str(i)
             for native_protocol in native_protocols:
                 row[self.native_column_name(native_protocol, suffix)] = None
         return row
@@ -280,5 +283,5 @@ class BagHandler:
         return native_protocol + '_url' + suffix
 
     @staticmethod
-    def transform_boardwalk_column_to_fc_column(column):
+    def boardwalk_to_firecloud(column):
         return column.lower().replace(' ', '_').replace('.', '_')
