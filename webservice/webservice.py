@@ -391,7 +391,7 @@ def export_to_firecloud():
                 'data_type': 'TOPMed',
                 'date_created': datetime.datetime.now().isoformat()}
     # Instantiate bag object.
-    bag = BagHandler(data=StringIO(response_obj.get_data()),
+    bag = BagHandler(data=response_obj.get_data(),
                      bag_info=bag_info,
                      bag_name=bag_name)
     # Pathname of compressed bag.
@@ -402,11 +402,9 @@ def export_to_firecloud():
     fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
     fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
     fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '443')
-    url = (fc_lambda_protocol +
-           '://' + fc_lambda_domain +
-           ':' + fc_lambda_port +
-           '/api/exportBag?workspace=' + workspace +
-           '&namespace=' + namespace)
+    url = '{}://{}:{}/api/exportBag?workspace={}&namespace={}'.format(
+        fc_lambda_protocol,  fc_lambda_domain, fc_lambda_port,
+        workspace, namespace)
     logger.info("going to hit {}".format(url))
     headers = {'Content-Type': 'application/octet-stream',
                'Accept': 'application/json',
