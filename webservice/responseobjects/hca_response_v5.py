@@ -316,7 +316,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def return_response(self):
         return self.apiResponse
 
-    def make_processes(self, mapping, entry):
+    def make_processes(self, entry):
         processes = []
         for es_process in entry['processes']:
             api_process = ProcessObject(
@@ -337,7 +337,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             processes.append(api_process)
         return processes
 
-    def make_protocols(self, mapping, entry):
+    def make_protocols(self, entry):
         protocols = []
         for es_protocol in entry['protocols']:
             api_protocol = ProtocolObject(
@@ -347,24 +347,23 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             protocols.append(api_protocol)
         return protocols
 
-    def make_file_copy(self, mapping, entry):
+    def make_file_copy(self, entry):
         """
         Returns a FileCopyObj based on the mapping entry params
-        :param mapping: The mapping for the object
         :param entry: The entry in ElasticSearch containing the results.
         :return: Returns a FileCopyObj
         """
         _entry = entry['files']
         return FileCopyObj(
-            fileUuid=self.fetch_entry_value(mapping, _entry, 'fileUuid'),
-            fileVersion=self.fetch_entry_value(mapping, _entry, 'fileVersion'),
-            fileSha1=self.fetch_entry_value(mapping, _entry, 'fileSha1'),
-            fileSize=self.fetch_entry_value(mapping, _entry, 'fileSize'),
-            fileFormat=self.fetch_entry_value(mapping, _entry, 'fileFormat'),
-            fileName=self.fetch_entry_value(mapping, _entry, 'fileName')
+            fileUuid=jmespath.search("uuid", _entry),
+            fileVersion=jmespath.search("version", _entry),
+            fileSha1=jmespath.search("sha1", _entry),
+            fileSize=jmespath.search("size", _entry),
+            fileFormat=jmespath.search("format", _entry),
+            fileName=jmespath.search("name", _entry)
         )
 
-    def make_biomaterials(self, mapping, entry):
+    def make_biomaterials(self, entry):
         biomaterials = []
         for es_biomaterial in entry['biomaterials']:
             api_biomaterial = BiomaterialObject(
@@ -399,43 +398,33 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             biomaterials.append(api_biomaterial)
         return biomaterials
 
-    def map_entries(self, mapping, entry):
+    def map_entries(self, entry):
         """
-        Returns a HitEntry Object. Takes the mapping and maps the appropriate
-        fields from entry to the corresponding entry in the mapping
-        :param mapping: Takes in a Json object with the mapping to the
-        corresponding field in the entry object
-        :param entry: A 1 dimensional dictionary corresponding to a single
-        hit from ElasticSearch
+        Returns a HitEntry Object. Creates a single HitEntry object.
+        :param entry: A dictionary corresponding to a single hit from
+        ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
         mapped_entry = HitEntry(
-            processes=self.make_processes(mapping['processes'][0], entry),
-            protocols=self.make_protocols(mapping['protocols'][0], entry),
-            bundleType=self.fetch_entry_value(
-                mapping, entry['bundles'][0], 'bundleType'),
-            bundleUuid=self.fetch_entry_value(
-                mapping, entry['bundles'][0], 'bundleUuid'),
-            bundleVersion=self.fetch_entry_value(
-                mapping, entry['bundles'][0], 'bundleVersion'),
-            fileCopies=self.handle_list(
-                self.make_file_copy(mapping['fileCopies'][0], entry)),
-            _id=self.fetch_entry_value(mapping, entry, 'id'),
-            objectID=self.fetch_entry_value(mapping, entry, 'objectID'),
-            projectShortname=self.fetch_entry_value(
-                mapping, entry, 'projectShortname'),
-            projectContributorsEmail=self.fetch_entry_value(
-                mapping, entry, 'projectContributorsEmail'),
-            biomaterials=self.make_biomaterials(
-                mapping['biomaterials'][0], entry),
-
+            processes=self.make_processes(entry),
+            protocols=self.make_protocols(entry),
+            bundleType=jmespath.search("bundles[0].type", entry),
+            bundleUuid=jmespath.search("bundles[0].uuid", entry),
+            bundleVersion=jmespath.search("bundles[0].version", entry),
+            fileCopies=self.handle_list(self.make_file_copy(entry)),
+            _id=jmespath.search("es_uuid", entry),
+            objectID=jmespath.search("es_uuid", entry),
+            projectShortname=jmespath.search(
+                "project.content.project_core.project_shortname", entry),
+            projectContributorsEmail=jmespath.search(
+                "project.content.contributors[*].email", entry),
+            biomaterials=self.make_biomaterials(entry)
         )
         return mapped_entry
 
-    def __init__(self, mapping, hits):
+    def __init__(self, hits):
         """
         Constructs the object and initializes the apiResponse attribute
-        :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
         # Setup the logger
@@ -444,10 +433,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
-        self.logger.info('Mapping the entries')
-        self.logger.debug('Mapping config: \n{}'.format(json_pp(mapping)))
+        self.logger.info('Creating the entries in ApiResponse')
         class_entries = {'hits': [
-            self.map_entries(mapping, x) for x in hits], 'pagination': None}
+            self.map_entries(x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
 
 
