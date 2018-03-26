@@ -16,7 +16,8 @@
     "project": "project.content.project_core.project_shortname",
     "laboratory": "project.content.contributors.laboratory",
     "protocol": "protocols.content.protocol_core.protocol_id",
-    "fileFormat": "files.format"
+    "fileFormat": "files.format",
+    "fileSize": "files.size"
   },
   "autocomplete-translation": {
     "ES_FILE_INDEX": {

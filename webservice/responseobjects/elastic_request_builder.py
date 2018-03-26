@@ -301,10 +301,10 @@ class ElasticTransformDump(object):
         # Override the aggregates for Samples,
         # Primary site count, and project count
         for field, agg_name in (
-                ('biomaterials.content.biomaterial_core.biomaterial_id',
-                 'samples'),
-                ('biomaterials.content.organ.text', 'organsCount'),
-                ('project.project_core.project_shortname', 'projectCode')):
+                ('biomaterialId',
+                 'biomaterialCount'),
+                ('organ', 'organsCount'),
+                ('project', 'projectCode')):
             cardinality = request_config['translation'][field]
             es_search.aggs.metric(
                 agg_name, 'cardinality',

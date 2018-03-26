@@ -46,7 +46,7 @@ class BiomaterialObject(JsonObject):
     """
     biomaterialId = StringProperty()
     biomaterialNcbiTaxonIds = ListProperty(IntegerProperty)
-    biomaterialGenusSpecies = StringProperty()
+    biomaterialGenusSpecies = ListProperty(StringProperty)
     biomaterialOrgan = StringProperty()
     biomaterialOrganPart = StringProperty()
     biomaterialDisease = ListProperty(StringProperty)
@@ -328,7 +328,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                     "content.library_construction_approach",
                     es_process),
                 instrumentManufacturerModel=jmespath.search(
-                    "content.instrument_manufacturer_model", es_process
+                    "content.instrument_manufacturer_model.text", es_process
                 ),
                 dissociationMethod=jmespath.search(
                     "content.dissociation_method", es_process
@@ -380,7 +380,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                     "content.organ.text", es_biomaterial
                 ),
                 biomaterialOrganPart=jmespath.search(
-                    "content.organ_part", es_biomaterial
+                    "content.organ_part.text", es_biomaterial
                 ),
                 biomaterialDisease=jmespath.search(
                     "content.disease[*].text", es_biomaterial
@@ -478,7 +478,7 @@ class FileSearchResponse(KeywordSearchResponse):
                      for term in contents['myTerms']['buckets']]
         facet = FacetObj(
             terms=term_list,
-            total=contents['doc_count'],
+            total=0 if len(contents['myTerms']['buckets']) == 0 else contents['doc_count'],
             type='terms'  # Change once we on-board more types of contents.
         )
         return facet.to_json()
