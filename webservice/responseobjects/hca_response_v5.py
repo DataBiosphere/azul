@@ -415,9 +415,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             _id=jmespath.search("es_uuid", entry),
             objectID=jmespath.search("es_uuid", entry),
             projectShortname=jmespath.search(
-                "project.content.project_core.project_shortname", entry),
+                "project.project_core.project_shortname", entry),
             projectContributorsEmail=jmespath.search(
-                "project.content.contributors[*].email", entry),
+                "project.contributors[*].email", entry),
             biomaterials=self.make_biomaterials(entry)
         )
         return mapped_entry
