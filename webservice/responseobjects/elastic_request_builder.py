@@ -77,7 +77,8 @@ class ElasticTransformDump(object):
         """
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=Q(
-            'terms', **{'{}__keyword'.format(facet): values['is']}))
+            'terms', **{'{}__keyword'.format(
+                facet.replace(".", "__")): values['is']}))
                       for facet, values in filters['file'].iteritems()]
         # Return a Query object. Make it match_all
         return Q('bool', must=query_list) if len(query_list) > 0 else Q()
