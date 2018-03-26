@@ -496,17 +496,16 @@ class FileSearchResponse(KeywordSearchResponse):
             facets[facet] = FileSearchResponse.create_facet(contents)
         return facets
 
-    def __init__(self, mapping, hits, pagination, facets):
+    def __init__(self, hits, pagination, facets):
         """
         Constructs the object and initializes the apiResponse attribute
-        :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
         # Setup the logger
         self.logger = logging.getLogger(
             'dashboardService.api_response.FileSearchResponse')
         # This should initialize the self.apiResponse attribute of the object
-        KeywordSearchResponse.__init__(self, mapping, hits)
+        KeywordSearchResponse.__init__(self, hits)
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)
         # Add the facets

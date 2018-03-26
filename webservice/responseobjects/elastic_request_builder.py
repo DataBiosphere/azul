@@ -360,7 +360,6 @@ class ElasticTransformDump(object):
             'Getting the request_config and mapping_config file: {}'.format(
                 request_config_path,
                 mapping_config_path))
-        mapping_config = self.open_and_return_json(mapping_config_path)
         request_config = self.open_and_return_json(request_config_path)
         # Handle empty filters
         self.logger.debug('Handling empty filters')
@@ -392,7 +391,7 @@ class ElasticTransformDump(object):
                     for x in es_response_dict['hits']['hits']]
             # Create a KeywordSearchResponse object
             self.logger.info('Creating KeywordSearchResponse')
-            final_response = KeywordSearchResponse(mapping_config, hits)
+            final_response = KeywordSearchResponse(hits)
         else:
             # It's a full file search
             # Translate the sort field if there is any translation available
@@ -415,7 +414,6 @@ class ElasticTransformDump(object):
             # Creating FileSearchResponse object
             self.logger.info('Creating FileSearchResponse')
             final_response = FileSearchResponse(
-                mapping_config,
                 hits,
                 paging,
                 facets)
