@@ -1,5 +1,6 @@
 {
   "translation": {
+    "biomaterialId": "biomaterials.content.biomaterial_core.biomaterial_id",
     "organ": "biomaterials.content.organ.text",
     "organPart": "biomaterials.content.organ_part.text",
     "processId": "processes.content.process_core.process_id",
