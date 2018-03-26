@@ -297,7 +297,7 @@ class SummaryResponse(AbstractResponse):
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
             biomaterialCount=self.agg_contents(
-                aggregates, 'biomaterialsCount', agg_form='value'),
+                aggregates, 'biomaterialCount', agg_form='value'),
             projectCount=self.agg_contents(
                 aggregates, 'projectCode', agg_form='value'),
             totalFileSize=self.agg_contents(
@@ -478,7 +478,9 @@ class FileSearchResponse(KeywordSearchResponse):
                      for term in contents['myTerms']['buckets']]
         facet = FacetObj(
             terms=term_list,
-            total=0 if len(contents['myTerms']['buckets']) == 0 else contents['doc_count'],
+            total=0 if len(
+                contents['myTerms']['buckets']
+                ) == 0 else contents['doc_count'],
             type='terms'  # Change once we on-board more types of contents.
         )
         return facet.to_json()
