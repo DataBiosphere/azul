@@ -90,5 +90,13 @@ NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298
 
         os.remove(zip_name)
 
+    def testWriteCsv2(self):
+        with open('test/manifest_with_crai_cram_bai.tsv', 'r') as tsv:
+            lines = tsv.readlines()
+        data = "\n".join(lines)
+        bag = BagHandler(data=data, bag_info={}, bag_name='manifest')
+        zip_name = bag.create_bag()
+        os.remove(zip_name)
+
 if __name__ == '__main__':
     unittest.main()

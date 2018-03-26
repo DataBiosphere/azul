@@ -173,6 +173,11 @@ class BagHandler:
         return df
 
     def write_csv_files(self, data_path):
+        """
+        Generates and writes participant.tsv and sample.tsv to data_path directory.
+        :param data_path: Where to write the files
+        :return: None
+        """
         (participants, samples) = self.transform_to_participant_and_sample()
 
         with open(data_path + '/participant.tsv', 'w') as tsv:
@@ -187,6 +192,7 @@ class BagHandler:
                 if first:
                     first = False
                     keys = sample.keys()
+                    # entity:sample_id must be first
                     keys.remove(FC_SAMPLE_ID)
                     fieldnames = [FC_SAMPLE_ID] + sorted(keys)
                     writer = csv.DictWriter(tsv, fieldnames=fieldnames, delimiter='\t')
@@ -198,6 +204,12 @@ class BagHandler:
         return list(participants), self.samples(max_samples, native_protocols)
 
     def participants_and_max_files_and_protocols(self):
+        """
+        Does one pass through the CSV, calculating the unique participants,
+        the maximum number of files for a any one specimen, and the total number
+        of cloud native protocols being used.
+        :return: a tuple with a list of participants, the number
+        """
         reader = csv.DictReader(StringIO(self.data), delimiter='\t')
         participants = set()
         native_protocols = set()
@@ -266,8 +278,11 @@ class BagHandler:
               row[self.boardwalk_to_firecloud(key)] = existing_row[key]
 
         # Initialize native url place holders
-        for i in range(max_samples):
+        for i in range(1, max_samples + 1):
             suffix = str(i)
+            for column in FILE_COLUMN_MAPPINGS:
+                row[self.boardwalk_to_firecloud(column) + suffix] = None
+
             for native_protocol in native_protocols:
                 row[self.native_column_name(native_protocol, suffix)] = None
         return row
