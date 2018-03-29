@@ -6,6 +6,7 @@ import logging
 import jmespath
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
     IntegerProperty, ListProperty, ObjectProperty, BooleanProperty
+import os
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
@@ -176,6 +177,8 @@ class AbstractResponse(object):
     Abstract class to be used for each /files API response.
     """
     __metaclass__ = abc.ABCMeta
+    DSS_URL = os.getenv("DSS_URL",
+                        "https://dss.staging.data.humancellatlas.org/v1")
 
     @abc.abstractmethod
     def return_response(self):
@@ -201,24 +204,14 @@ class ManifestResponse(AbstractResponse):
         # Get a list of the hits in the raw response
         hits = [x['_source'] for x in raw_response['hits']['hits']]
 
-        def handle_entry(mapping, entry, column):
-            """
-            Local method for handling entries in the ES response
-            """
-            if entry[mapping[column]] is not None:
-                _entry = entry[mapping[column]]
-                if isinstance(_entry, list):
-                    return _entry[0]
-                else:
-                    return _entry
-            else:
-                return ''
-        # Create the body of the entries in the manifest
-        mapped_manifest = [[handle_entry(mapping, entry, column)
-                            for column in manifest_entries]
-                           for entry in hits]
-        # Prepend the header as the first entry on the manifest
-        mapped_manifest.insert(0, [column for column in manifest_entries])
+        def create_url(entry):
+            file_uuid = jmespath.search('files.uuid', entry)
+            file_version = jmespath.search('files.version', entry)
+            url = "{}/files/{}?replica=aws&version={}".format(
+                self.DSS_URL, file_uuid, file_version)
+            return url
+
+        mapped_manifest = [[create_url(entry)] for entry in hits]
         self.apiResponse = make_response_from_array(
             mapped_manifest, 'tsv', file_name='manifest')
 
