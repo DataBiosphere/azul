@@ -9,9 +9,13 @@ import bagit
 import tempfile
 import csv
 
+
 # Some column names from Boardwalk manifest. These are the ones that require
 # special handling when converting into the FireCloud scheme.
 class BoardwalkColumns:
+    def __init__(self):
+        pass
+
     SAMPLE_UUID = 'Sample UUID'
     DONOR_UUID = 'Donor UUID'
     FILE_TYPE = 'File Type'
@@ -20,6 +24,7 @@ class BoardwalkColumns:
     FILE_DOS_URI = 'File DOS URI'
     FILE_PATH = 'File Path'
     UPLOAD_FILE_ID = 'Upload File ID'
+
 
 # Column names in Boardwalk that are file related, except for FILE_URLS,
 # which is extra special because its value is a comma-separated list.
@@ -37,17 +42,22 @@ COMPLEX_COLUMNS = FILE_COLUMNS + [
     BoardwalkColumns.FILE_URLS
 ]
 
+
 class RequiredFirecloudColumns:
     """
     Columns must be present in FireCloud TSVs. The TSVs can contain additional
     columns, but these minimal columns must be present.
     """
+    def __init__(self):
+        pass
+
     # The column in the participant.tsv
     PARTICIPANT_ENTITY_ID = 'entity:participant_id'
 
     # Columns in sample.tsv
     SAMPLE_SAMPLE_ID = 'entity:sample_id'
     SAMPLE_PARTICIPANT = 'participant'
+
 
 class BagHandler:
     """
@@ -128,26 +138,31 @@ class BagHandler:
         shutil.rmtree(tempd, True)
         return zipfile_tmp.name
 
-    def _zipdir(self, path, zip_fh):
+    @staticmethod
+    def _zipdir(path, zip_fh):
         # zip_fh is zipfile handle
         path_length = len(path)
         for root, dirs, files in os.walk(path):
             for file in files:
-                zip_fh.write(os.path.join(root, file), arcname=root[path_length:] + '/' + file)
+                zip_fh.write(os.path.join(root, file),
+                             arcname=root[path_length:] + '/' + file)
 
     def write_csv_files(self, data_path):
         """
-        Generates and writes participant.tsv and sample.tsv to data_path directory.
+        Generates and writes participant.tsv and sample.tsv to data_path
+        directory.
         :param data_path: Where to write the files
         :return: None
         """
-        (participants, samples) = self.convert_to_participant_and_sample()
+        participants, samples = self.convert_to_participant_and_sample()
 
         with open(data_path + '/participant.tsv', 'w') as tsv:
-            writer = csv.DictWriter(tsv, fieldnames=[RequiredFirecloudColumns.PARTICIPANT_ENTITY_ID], delimiter='\t')
+            writer = csv.DictWriter(tsv, fieldnames=[
+                RequiredFirecloudColumns.PARTICIPANT_ENTITY_ID], delimiter='\t')
             writer.writeheader()
             for p in participants:
-                writer.writerow({RequiredFirecloudColumns.PARTICIPANT_ENTITY_ID: p})
+                writer.writerow(
+                    {RequiredFirecloudColumns.PARTICIPANT_ENTITY_ID: p})
 
         with open(data_path + '/sample.tsv', 'w') as tsv:
             first_row = True
@@ -157,13 +172,16 @@ class BagHandler:
                     keys = sample.keys()
                     # entity:sample_id must be first
                     keys.remove(RequiredFirecloudColumns.SAMPLE_SAMPLE_ID)
-                    fieldnames = [RequiredFirecloudColumns.SAMPLE_SAMPLE_ID] + sorted(keys)
-                    writer = csv.DictWriter(tsv, fieldnames=fieldnames, delimiter='\t')
+                    fieldnames = [ RequiredFirecloudColumns.SAMPLE_SAMPLE_ID]\
+                                 + sorted(keys)
+                    writer = csv.DictWriter(tsv, fieldnames=fieldnames,
+                                            delimiter='\t')
                     writer.writeheader()
                 writer.writerow(sample)
 
     def convert_to_participant_and_sample(self):
-        participants, max_samples, native_protocols = self.participants_and_max_files_in_sample_and_protocols()
+        participants, max_samples, native_protocols = \
+            self.participants_and_max_files_in_sample_and_protocols()
         return list(participants), self.samples(max_samples, native_protocols)
 
     def participants_and_max_files_in_sample_and_protocols(self):
@@ -177,7 +195,7 @@ class BagHandler:
         reader = csv.DictReader(StringIO(self.data), delimiter='\t')
         participants = set()
         native_protocols = set()
-        specimens = {} # key: specimen UUID, value count
+        specimens = {}  # key: specimen UUID, value count
         for row in reader:
             # Add all participants. It's a set, so no dupes
             participants.add(row[BoardwalkColumns.DONOR_UUID])
@@ -218,14 +236,16 @@ class BagHandler:
         current_specimen_uuid = None
         current_row = None
 
-        for row in sorted(reader, key=operator.itemgetter(BoardwalkColumns.SPECIMEN_UUID)):
-            specimen_uuid = row[BoardwalkColumns.SAMPLE_UUID]
+        for row in sorted(reader, key=operator.itemgetter(
+                BoardwalkColumns.SPECIMEN_UUID)):
+            specimen_uuid = row[BoardwalkColumns.SPECIMEN_UUID]
             if specimen_uuid != current_specimen_uuid:
                 current_specimen_uuid = specimen_uuid
                 index = 1
                 if current_row is not None:
                     samples.append(current_row)
-                current_row = self.init_sample_row(row, max_files_in_sample, native_protocols)
+                current_row = self.init_sample_row(row, max_files_in_sample,
+                                                   native_protocols)
             else:
                 index = index + 1
 
@@ -252,9 +272,11 @@ class BagHandler:
 
         for column in FILE_COLUMNS:
             if column in existing_row:
-                new_row[self.firecloud_column_name(column) + suffix] = existing_row[column]
+                new_row[self.firecloud_column_name(column) + suffix] = \
+                existing_row[column]
 
-    def init_sample_row(self, existing_row, max_files_in_sample, native_protocols):
+    def init_sample_row(self, existing_row, max_files_in_sample,
+                        native_protocols):
         """
         Create and initialize a sample row
         :param existing_row: the existing row
@@ -263,10 +285,13 @@ class BagHandler:
         :return: the initialized row
         """
         # Rename sample column and participant
-        row = {RequiredFirecloudColumns.SAMPLE_SAMPLE_ID: existing_row[BoardwalkColumns.SAMPLE_UUID],
-               RequiredFirecloudColumns.SAMPLE_PARTICIPANT: existing_row[BoardwalkColumns.DONOR_UUID]}
+        row = {RequiredFirecloudColumns.SAMPLE_SAMPLE_ID: existing_row[
+            BoardwalkColumns.SAMPLE_UUID],
+               RequiredFirecloudColumns.SAMPLE_PARTICIPANT: existing_row[
+                   BoardwalkColumns.DONOR_UUID]}
 
-        # Copy rows that don't need transformation, other than FC naming conventions
+        # Copy rows that don't need transformation, other than FC naming
+        # conventions
         for key, value in existing_row.iteritems():
             if key not in COMPLEX_COLUMNS:
                 row[self.firecloud_column_name(key)] = value
