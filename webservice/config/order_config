@@ -1,14 +1,5 @@
 organ
 organPart
-instrumentManufacturerModel
-libraryConstructionApproach
-genusSpecies
-organismAge
-organismAgeUnit
 biologicalSex
-disease
-preservationMethod
-project
-laboratory
-protocol
 fileFormat
+protocol
