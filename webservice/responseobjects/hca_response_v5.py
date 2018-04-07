@@ -204,6 +204,9 @@ class ManifestResponse(AbstractResponse):
         # Get a list of the hits in the raw response
         hits = [x['_source'] for x in raw_response['hits']['hits']]
 
+        bundle_uuids = {jmespath.search('bundles[0].uuid', entry)
+                        for entry in hits}
+
         def create_url(entry):
             file_uuid = jmespath.search('files.uuid', entry)
             file_version = jmespath.search('files.version', entry)
@@ -211,7 +214,7 @@ class ManifestResponse(AbstractResponse):
                 self.DSS_URL, file_uuid, file_version)
             return url
 
-        mapped_manifest = [[create_url(entry)] for entry in hits]
+        mapped_manifest = [[uuid] for uuid in bundle_uuids]
         self.apiResponse = make_response_from_array(
             mapped_manifest, 'tsv', file_name='manifest')
 
