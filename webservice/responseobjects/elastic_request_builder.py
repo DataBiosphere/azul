@@ -43,7 +43,8 @@ class ElasticTransformDump(object):
         self.logger.debug('ElasticSearch url: {}://{}:{}/'.format(
             es_protocol, es_domain, es_port))
         self.es_client = Elasticsearch(
-            ['{}://{}:{}/'.format(es_protocol, es_domain, es_port)])
+            ['{}://{}:{}/'.format(es_protocol, es_domain, es_port)],
+            timeout=90)
         self.logger.info('Creating an instance of ElasticTransformDump')
 
     @staticmethod
