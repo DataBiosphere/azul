@@ -460,7 +460,7 @@ class ElasticTransformDump(object):
         # TODO: This will break beyond 10,000 entries in ElasticSearch.
         # This needs to be addressed in the near future
         # Get as many files as simple paging allows
-        es_search = es_search[0:9999]
+        es_search = es_search[0:19999]
         # Execute the ElasticSearch Request
         self.logger.info('Executing ElasticSearch request')
         es_response = es_search.execute(ignore_cache=True)
