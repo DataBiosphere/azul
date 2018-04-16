@@ -1,72 +1,169 @@
 {
-  "assay.json": [
-    {
-      "single_cell": [
-        "cell_handling"
-      ]
-    },
-    {
-      "rna": [
-        "library_construction",
-        "spike_in"
-      ]
-    },
-    {
-      "seq": [
-        "paired_ends",
-        "instrument_platform",
-        "library_construction"
-      ]
-    }
-  ],
-  "project.json": [
-    "id",
-    {
-      "submitter": [
-        "name",
-        "institution",
-        "country"
-      ]
-    }
-  ],
-  "sample.json": [
-    {
-      "body_part": [
-        "text"
-      ]
-    },
-    {
-      "donor": [
+  "requested_entries": {
+    "3.0.0": {
+      "assay.json": [
         {
-          "species": [
-            "text",
-            "ontology"
+          "single_cell": [
+            "cell_handling"
           ]
         },
-        "is_living",
         {
-          "core": [
-            "uuid"
+          "rna": [
+            "library_construction",
+            "spike_in"
+          ]
+        },
+        {
+          "seq": [
+            "paired_ends",
+            "instrument_platform",
+            "library_construction"
+          ]
+        }
+      ],
+      "project.json": [
+        "id",
+        {
+          "submitter": [
+            "name",
+            "institution",
+            "country"
+          ]
+        }
+      ],
+      "sample.json": [
+        {
+          "body_part": [
+            "text"
+          ]
+        },
+        {
+          "donor": [
+            {
+              "species": [
+                "text",
+                "ontology"
+              ]
+            },
+            "is_living",
+            {
+              "core": [
+                "uuid"
+              ]
+            }
+          ]
+        },
+        "name",
+        {
+          "organ": [
+            "text"
+          ]
+        },
+        "project_id",
+        {
+          "cell_cycle": [
+            "text"
+          ]
+        },
+        "culture_type",
+        "donor_id"
+      ],
+      "analysis.json": [
+        "computational_method"
+      ]
+    },
+    "4.6.1": {
+      "assay.json": [
+        {
+          "content": [
+            "assay_id*assayId",
+            {
+              "single_cell": [
+                "cell_handling*scCellHandling"
+              ]
+            },
+            {
+              "seq": [
+                "instrument_platform*seqInstrumentPlatform",
+                "paired_ends*pairedEnds"
+              ]
+            },
+            {
+              "rna": [
+                "library_construction*rnaLibraryConstruction",
+                "spike_in*rnaSpikeIn"
+              ]
+            }
+          ]
+        }
+      ],
+      "project.json": [
+        {
+          "content": [
+            "project_id*projectId",
+            "submitters*projectSubmitters",
+            {
+              "contributors": [
+                "email*projectContributorsEmail"
+              ]
+            }
+          ]
+        }
+      ],
+      "sample.json": [
+        {
+          "samples": [
+            {
+              "content": [
+                {
+                  "specimen_from_organism": [
+                    {
+                      "body_part": [
+                        "text*sampleBodyPart"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "genus_species": [
+                    "text*sampleSpecies"
+                  ]
+                },
+                "sample_id*sampleIds",
+                "ncbi_taxon_id*sampleNcbiTaxonIds"
+              ]
+            }
+          ]
+        }
+      ],
+      "analysis.json": [
+        {
+          "content": [
+            "computational_method*analysisComputationalMethod",
+            "analysis_id*analysisId"
           ]
         }
       ]
-    },
-    "name",
-    {
-      "organ": [
-        "text"
-      ]
-    },
-    "project_id",
-    {
-      "cell_cycle": [
-        "text"
-      ]
-    },
-    "culture_type",
-    "donor_id"
-  ],
-  "analysis.json": [
-    "computational_method"
-  ]
+    }
+  },
+  "es_mapping": {
+    "dynamic_templates": [
+      {
+        "strings": {
+          "match_mapping_type": "string",
+          "mapping": {
+            "type": "text",
+            "analyzer": "autocomplete",
+            "search_analyzer": "standard",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
 }

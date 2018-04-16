@@ -21,7 +21,7 @@ Install python3.
 
 Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
 
-Install and configure the AWS CLI with your information
+Install and configure the AWS CLI with your credentials
 ```
 pip install awscli --upgrade
 aws configure
@@ -34,13 +34,9 @@ Chalice is similar to Flask but is serverless and uses AWS Lambda.
 pip install chalice
 chalice new-project
 ```
-When prompted for project name, input `<your-indexer-lambda-application-name>`, (eg dss-indigo).
+When prompted for project name, input `<your-indexer-lambda-application-name>`, (e.g., dss-indigo).
 
-Enter the newly created repo `<your-indexer-lambda-application-name>` (eg dss-indigo) and `chalice deploy`. Record the url returned in the last line of stdout returned by this command - henceforth referred to as `<callback_url>`. 
-This will create an AWS Lambda function called `dss-indigo` which will be updated using `chalice deploy`.
-
-`rm app.py` and `rm requirements.txt` (in other words, remove the files that chalice automatically generated).
- Then, copy `app.py`, `requirements.txt` and `chalicelib/` from this repo and add to the dss-indigo folder.
+Change the working directory to the newly created folder `<your-indexer-lambda-application-name>` (e.g., dss-indigo) and execute `chalice deploy`. Record the URL returned in the last line of stdout returned by this command - henceforth referred to as `<callback_url>`. This will create an AWS Lambda function called `dss-indigo` which will be updated using `chalice deploy`. Chalice automatically generated a folder `chalicelib/` and the files `rm app.py` and `rm requirements.txt`. Overwrite those by copying `app.py`, `requirements.txt` and `chalicelib/` from this repo and to the dss-indigo folder. Then execute
 
 `pip install -r requirements.txt`
 
@@ -113,7 +109,9 @@ Could have a config like such:
   ]
  }
 ```
-In Elasticsearch, the fields will be
+***NOTE***: The config should be rooted under a version of the metadata being received.
+
+In Elasticsearch, the fields for the File Indexer will be
 ```
 assay,json|rna|primer
 assay,json|single_cell|method
@@ -136,24 +134,8 @@ Given a config:
   ]
  }
 ```
-The default mapping is `keyword`. 
-However, in the `chalicelib/config.json` the mapping can be specified. For example:
-```
-{
-  "cell.json":[
-    "type*keyword",
-    "ontology*keyword*text",
-    "id*keyword*text_autocomplete"
-  ]
- }
-```
-The field `cell,json|type` will have a mapping of `keyword`.
-The field `cell,json|ontology` will have a mapping of `keyword` but `cell,json|ontology.raw` has a mapping of `text`
-The field `cell,json|id` will have a mapping of `keyword` but `cell,json|id.raw` has a mapping of `text` with an analyzer of `autocomplete`
-The analyzers can be defined in `chalicelib/settings.json`
-Other mappings are also allowed (ie: `long`). However, if using both `keyword` and `text` please put `keyword` before `text` (ie: `ontology*keyword*text` not `ontology*text*keyword`)
 
-### Environmental Variables
+### Environment Variables
 In order to add environmental variables to Chalice, the variables must be added to three locations.
 Do not add protocols to any of the Endpoints. Make sure the ES_ENDPOINT does not have any trailing slashes.
 
@@ -173,7 +155,8 @@ Replace the current file with the following, making sure to replace the <> with 
          "ES_ENDPOINT":"<your elasticsearch endpoint>",
          "BLUE_BOX_ENDPOINT":"<your blue box>",
          "ES_INDEX":"<elasticsearch index to use>",
-         "INDEXER_NAME":"<your-indexer-lambda-application-name>"
+         "INDEXER_NAME":"<your-indexer-lambda-application-name>",
+         "HOME":"/tmp"
       }
     }
   }
@@ -188,19 +171,21 @@ export ES_ENDPOINT=<your elasticsearch endpoint>
 export BLUE_BOX_ENDPOINT=<your blue box>
 export ES_INDEX=<elasticsearch index to use>
 export INDEXER_NAME=<your-indexer-lambda-application-name>
+export HOME=/tmp
 ```
 
 run `. ~/.profile` to load the variables
 
 3) Edit Lambda
 
-Go to the AWS console, and then to your Lambda function and add the following environmental variables:
+Go to the AWS console, and then to your Lambda function and add the following environment variables:
 
 ```
 ES_ENDPOINT  -->   <your elasticsearch endpoint>
 BLUE_BOX_ENDPOINT   -->   <your blue box>
 ES_INDEX  -->  <elasticsearch index to use>
 INDEXER_NAME  -->  <your-indexer-lambda-application-name>
+HOME --> /tmp
 ```
 
 ### Elasticsearch & Lambda
@@ -225,10 +210,6 @@ curl -H "Content-Type: application/json" -X POST -d '{ "query": { "query": { "bo
 | ------------- | ------------- |
 | `<callback_url>`/  | takes in a post request and indexes the bundle found in the request   |
 | es_check() |  returns the ES info, good check to make sure Chalice can talk to ES  |
-| get_bundles(bundle_uuid)  |  returns the uuids of the contents of the bundle (given by the uuid), separated by json and not json files  |
-| get_file(file_uuid)  |  returns the contents of the file specified by the uuid   |
-| write_index(bundle_uuid)  |  does the bulk of the work, takes a bundle_uuid and indexes the entire bundle and adds to ES   |
-| cron_look() |  this function is called daily. Sends a match_all request to the Blue Box and then indexes all bundles  |
 
 ### Manual Loading
 
