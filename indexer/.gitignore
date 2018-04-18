@@ -1,6 +1,7 @@
 .idea
 .ipynb_checkpoints
 dss-indigo
+dss-file-browser-staging
 indexer/__pycache__
 venv
 chalicelib/__pycache__

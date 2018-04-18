@@ -15,7 +15,7 @@ import json
 import re
 
 # create logger
-module_logger = logging.getLogger('chalicelib.indexer')
+module_logger = logging.getLogger(__name__)
 
 
 class Indexer(object):
@@ -226,6 +226,154 @@ class Indexer(object):
             # Return None string if there is no field present
             else:
                 yield name, "None"
+
+
+class FileIndexerV5(Indexer):
+    """Create a file oriented index.
+
+    FileIndexer makes use of its index() function to perform indexing
+    of the data files that are presented to the class when creating an
+    instance.
+
+    End for now.
+
+    """
+
+    def index(self, bundle_uuid, bundle_version, **kwargs):
+        """Indexes the data files.
+
+        Triggers the actual indexing process
+
+        :param bundle_uuid: The bundle_uuid of the bundle that will be indexed.
+        :param bundle_version: The bundle of the version.
+        """
+        # Get the config driving indexing (e.g. the required entries)
+        versions = self.index_mapping_config['requested_entries']
+        # Iterate over each file
+        for _file in self.data_files.values():
+            # Create a new dictionary
+            d = {}
+            # Create an iterable of metadata files
+            metadata_file = self.metadata_files.values()
+            # Get the max version of the metadata files
+            schema_v = max([self.get_schema(m, path=("schema_version",))
+                            for m in metadata_file])
+            assert schema_v >= "5.0.0" and schema_v <= "5.2.1", "No V5 files"
+            schema_v = "5.2.1"
+            # Get the config for the current schema version
+            req_entries = versions[schema_v]
+            # Put together the list of arguments
+            args = [req_entries,  self.metadata_files]
+            # For each tuple returned from the metadata file, update
+            # the dictionary
+            for key, value in self.get_item(*args):
+                d[key] = value
+            # Get the elasticsearch uuid for this particular data file
+            es_uuid = "{}:{}:{}".format(bundle_uuid,
+                                        _file['uuid'],
+                                        _file['version'])
+            # Get the special fields added to the contents
+            special_ = self.special_fields(_file,
+                                           bundle_uuid=bundle_uuid,
+                                           bundle_version=bundle_version,
+                                           es_uuid=es_uuid)
+            d['bundles'] = [
+                {
+                    "uuid": special_.pop('bundle_uuid', None),
+                    "version": special_.pop('bundle_version', None),
+                    "type": special_.pop('bundle_type', None)
+                }
+            ]
+            contents = {**d, **special_}
+            self.logger.debug("PRINTING FILE INDEX DOCUMENT:\n")
+            self.logger.debug(contents)
+            # Load the current file in question
+            # Ideally merge() should be called at this point
+            self.load_doc(doc_contents=contents, doc_uuid=es_uuid)
+
+    def merge(self, doc_contents):
+        """
+        Merge the document with the contents in ElasticSearch.
+
+        merge() should take the results of get_item() and harmonize it
+        with whatever is present in ElasticSearch to avoid blind overwritting
+        of documents. Users should implement their own protocol.
+
+        :param doc_contents: Current document to be indexed.
+        :return: The harmonized document which can overwrite existing entry.
+        """
+        # Assuming a file is never really changed, there is no reason
+        # for merge here.
+        pass
+
+    def create_mapping(self, **kwargs):
+        """
+        Return the mapping as a string.
+
+        Pulls the mapping from the index_mapping_config.
+        """
+        # Return the es_mapping from the index_mapping_config
+        mapping_config = self.index_mapping_config['es_mapping']
+        return json.dumps(mapping_config)
+
+    def special_fields(self, data_file, **kwargs):
+        """
+        Add any special fields that may be missing.
+
+        Gets any special field that may not be available directly from the
+        metadata.
+
+        :param data_file: a dictionary describing the file in question.
+        :param kwargs: any additional entries you want to include.
+        :return: a dictionary of all the special fields to be added.
+        """
+        # Create a list of files
+        file_data = {"files": data_file}
+        # Add extra field that should go in here (e.g. es_uuid, bundle_uuid)
+        extra_fields = {key: value for key, value in kwargs.items()}
+        # Get the file format
+        file_format = self.__get_format(file_data['files']['name'])
+        file_data["files"]["format"] = file_format
+        # Create a dictionary with the file fomrat and the bundle type
+        computed_fields = {"bundle_type": self.__get_bundle_type(file_format)}
+        # Merge the four dictionaries
+        all_data = {**file_data, **extra_fields, **computed_fields}
+        return all_data
+
+    def __get_format(self, file_name):
+        """
+        HACK This is to get the file format while we get a file format.
+
+        We need to get the file format from the Blue Box team somehow.
+        This is a small parsing hack while we get a response.
+
+        :param file_name: A string containing the the file name with extension
+        """
+        # Get everything after the period
+        file_format = '.'.join(file_name.split('.')[1:])
+        file_format = file_format if file_format != '' else 'Unknown'
+        return file_format
+
+    def __get_bundle_type(self, file_extension):
+        """
+        HACK This is to get the bundle type while we wait for Blue Box team.
+
+        We need to get the bundle type from the Blue Box team somehow.
+        This is a small parsing hack while we get a response from them.
+
+        :param file_extension: A string containing the the file extension
+        """
+        # A series of if else statements to figure out the bundle type
+        # HACK
+        if 'analysis.json' in self.metadata_files:
+            bundle_type = 'Analysis'
+        elif re.search(r'(tiff)', str(file_extension)):
+            bundle_type = 'Imaging'
+        elif re.search(r'(fastq.gz)', str(file_extension)):
+            bundle_type = 'scRNA-Seq Upload'
+        else:
+            bundle_type = 'Unknown'
+        return bundle_type
 
 
 class FileIndexer(Indexer):

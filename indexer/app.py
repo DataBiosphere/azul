@@ -12,11 +12,11 @@ from aws_requests_auth import boto_utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 from chalice import Chalice
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-from chalicelib.indexer import FileIndexer, \
-    BundleOrientedIndexer as BundleIndexer, \
-    AssayOrientedIndexer as AssayIndexer, \
-    SampleOrientedIndexer as SampleIndexer, \
-    ProjectOrientedIndexer as ProjectIndexer
+from chalicelib.indexer import FileIndexerV5
+# BundleOrientedIndexer as BundleIndexer, \
+# AssayOrientedIndexer as AssayIndexer, \
+# SampleOrientedIndexer as SampleIndexer, \
+# ProjectOrientedIndexer as ProjectIndexer
 from chalicelib.utils import DataExtractor
 import json
 import logging
@@ -87,48 +87,48 @@ def post_notification():
     # Extract the relevant files and metadata to the bundle
     metadata_files, data_files = extractor.extract_bundle(payload, replica)
     # Create an instance of the Indexers and run it
-    file_indexer = FileIndexer(metadata_files,
-                               data_files,
-                               es,
-                               'file_index_v4',
-                               es_doc_type,
-                               index_settings=es_settings,
-                               index_mapping_config=index_mapping_config)
-    bundle_indexer = BundleIndexer(metadata_files,
-                                   data_files,
-                                   es,
-                                   "bundle_index_v4",
-                                   "doc",
-                                   index_settings=es_settings,
-                                   index_mapping_config=index_mapping_config)
-    assay_indexer = AssayIndexer(metadata_files,
+    file_indexer = FileIndexerV5(metadata_files,
                                  data_files,
                                  es,
-                                 "assay_index_v4",
-                                 "doc",
+                                 'file_index_v5',
+                                 es_doc_type,
                                  index_settings=es_settings,
                                  index_mapping_config=index_mapping_config)
-    sample_indexer = SampleIndexer(metadata_files,
-                                   data_files,
-                                   es,
-                                   "sample_index_v4",
-                                   "doc",
-                                   index_settings=es_settings,
-                                   index_mapping_config=index_mapping_config)
-
-    project_indexer = ProjectIndexer(metadata_files,
-                                     data_files,
-                                     es,
-                                     "project_index_v4",
-                                     "doc",
-                                     index_settings=es_settings,
-                                     index_mapping_config=index_mapping_config)
+    # bundle_indexer = BundleIndexer(metadata_files,
+    #                                data_files,
+    #                                es,
+    #                                "bundle_index_v4",
+    #                                "doc",
+    #                                index_settings=es_settings,
+    #                                index_mapping_config=index_mapping_config)
+    # assay_indexer = AssayIndexer(metadata_files,
+    #                              data_files,
+    #                              es,
+    #                              "assay_index_v4",
+    #                              "doc",
+    #                              index_settings=es_settings,
+    #                              index_mapping_config=index_mapping_config)
+    # sample_indexer = SampleIndexer(metadata_files,
+    #                                data_files,
+    #                                es,
+    #                                "sample_index_v4",
+    #                                "doc",
+    #                                index_settings=es_settings,
+    #                                index_mapping_config=index_mapping_config)
+    #
+    # project_indexer = ProjectIndexer(metadata_files,
+    #                                  data_files,
+    #                                  es,
+    #                                  "project_index_v4",
+    #                                  "doc",
+    #                                  index_settings=es_settings,
+    #                                  index_mapping_config=index_mapping_config)
 
     file_indexer.index(bundle_uuid, bundle_version)
-    bundle_indexer.index(bundle_uuid, bundle_version)
-    assay_indexer.index(bundle_uuid, bundle_version)
-    sample_indexer.index(bundle_uuid, bundle_version)
-    project_indexer.index(bundle_uuid, bundle_version)
+    # bundle_indexer.index(bundle_uuid, bundle_version)
+    # assay_indexer.index(bundle_uuid, bundle_version)
+    # sample_indexer.index(bundle_uuid, bundle_version)
+    # project_indexer.index(bundle_uuid, bundle_version)
     return {"status": "done"}
 
 

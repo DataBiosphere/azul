@@ -144,6 +144,23 @@
           ]
         }
       ]
+    },
+    "5.2.1":{
+      "biomaterial.json": [
+        "biomaterials*biomaterials"
+      ],
+      "process.json": [
+        "processes*processes"
+      ],
+      "file.json": [
+        "files*files"
+      ],
+      "protocol.json": [
+        "protocols*protocols"
+      ],
+      "project.json": [
+        "content*project"
+      ]
     }
   },
   "es_mapping": {
