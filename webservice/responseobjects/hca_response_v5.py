@@ -388,7 +388,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                     "content.organism_age", es_biomaterial
                 ),
                 organismAgeUnit=jmespath.search(
-                    "content.organims_age_unit.text", es_biomaterial
+                    "content.organism_age_unit.text", es_biomaterial
                 )
             )
             biomaterials.append(api_biomaterial)
