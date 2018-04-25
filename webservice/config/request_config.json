@@ -9,7 +9,7 @@
     "libraryConstructionApproach": "process.content.library_construction_approach",
     "genusSpecies": "biomaterials.content.genus_species.text",
     "organismAge": "biomaterials.content.organism_age",
-    "organismAgeUnit": "biomaterials.content.organism_age_unit",
+    "organismAgeUnit": "biomaterials.content.organism_age_unit.text",
     "biologicalSex": "biomaterials.content.biological_sex",
     "disease": "biomaterials.content.disease",
     "preservationMethod": "biomaterials.content.preservation_method",
