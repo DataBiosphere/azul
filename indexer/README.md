@@ -236,3 +236,31 @@ Note: Manual loading creates mappings for ES, has some list parsing capability, 
     * Flask has endpoints for looking up bundles, and get a particular manifest.
     * Assume  bundles uuid always exist. generate a request to download anything indexable ? 
 * Improve debugging (config for turning on/off debug)
+
+## Automated Deployment
+You can use `make` to create a ElasticSearch service, chalice lambda and set everything up. The `Makefile` can take in `STAGE=<STAGE_VALUE>` as an input for different stages when deploying `chalice`. 
+
+Before you run `make`, you will need to setup the prerequisites. 
+
+### Prerequisities to run `make`
+You will need to update the `config/elasticsearch-policy.json` file to enter your desired domain name, lambda name and the IP address. 
+Next, you will need to update the `config/config.env` file and apply all the values. The ```
+BB_ENDPOINT=dss.staging.data.humancellatlas.org/v1
+ES_INDEX=test-import
+```
+values are pre-filled by default. 
+
+If you've an existing ElasticSearch service instance, you should fill in the following values:
+```
+ES_DOMAIN_NAME=
+ES_ENDPOINT=
+ES_ARN=
+```
+
+If you don't supply the `ES_DOMAIN_NAME` value, the `make` file will automatically create a new ElasticSearch instance. 
+
+The `config/elasticsearch-config.json` and `config/ebs-config.json` files can be modified to change the shape of the ElasticSearch service instance and ElasticSearch Beanstalk. 
+
+Once `make` finishes successfully, you can find all the required environment variables' values in `values_generated.txt`
+
+You will need to export these values to your `~/.profile`
