@@ -20,7 +20,7 @@ indexer_name = os.getenv('INDEXER_NAME', 'dss-indigo')
 module_logger = logging.getLogger(indexer_name + ".indexer")
 
 
-class DataExtractor(object):
+class MetadataDownloader(object):
     """DataExtractor class to help with BlueBox interaction.
 
     This class works as a helper class for obtaining files from the Blue Box
