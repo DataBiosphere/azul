@@ -90,17 +90,22 @@ class HitEntry(JsonObject):
     """
     Class defining a hit entry in the Api response
     """
-    _id = StringProperty(name='id')
-    objectID = StringProperty()
-    processes = ListProperty(ProcessObject)
-    protocols = ListProperty(ProtocolObject)
+    # _id = StringProperty(name='id')
+    # objectID = StringProperty()
+    # processes = ListProperty(ProcessObject)
+    # protocols = ListProperty(ProtocolObject)
+    # bundleUuid = StringProperty()
+    # bundleVersion = StringProperty()
+    # bundleType = StringProperty()
+    # fileCopies = ListProperty(FileCopyObj)
+    # projectShortname = StringProperty()
+    # projectContributorsEmail = ListProperty(StringProperty)
+    # biomaterials = ListProperty(BiomaterialObject)
+
+    entity_id = StringProperty()
+    entity_version = StringProperty()
     bundleUuid = StringProperty()
     bundleVersion = StringProperty()
-    bundleType = StringProperty()
-    fileCopies = ListProperty(FileCopyObj)
-    projectShortname = StringProperty()
-    projectContributorsEmail = ListProperty(StringProperty)
-    biomaterials = ListProperty(BiomaterialObject)
 
 
 class ApiResponse(JsonObject):
@@ -401,22 +406,28 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        mapped_entry = HitEntry(
-            processes=self.make_processes(entry),
-            protocols=self.make_protocols(entry),
-            bundleType=jmespath.search("bundles[0].type", entry),
-            bundleUuid=jmespath.search("bundles[0].uuid", entry),
+        # mapped_entry = HitEntry(
+        #     processes=self.make_processes(entry),
+        #     protocols=self.make_protocols(entry),
+        #     bundleType=jmespath.search("bundles[0].type", entry),
+        #     bundleUuid=jmespath.search("bundles[0].uuid", entry),
+        #     bundleVersion=jmespath.search("bundles[0].version", entry),
+        #     fileCopies=self.handle_list(self.make_file_copy(entry)),
+        #     _id=jmespath.search("es_uuid", entry),
+        #     objectID=jmespath.search("es_uuid", entry),
+        #     projectShortname=jmespath.search(
+        #         "project.project_core.project_shortname", entry),
+        #     projectContributorsEmail=jmespath.search(
+        #         "project.contributors[*].email", entry),
+        #     biomaterials=self.make_biomaterials(entry)
+        # )
+        # return mapped_entry
+        return HitEntry(
+            entity_id=jmespath.search("entity_id", entry),
+            entity_version=jmespath.search("entity_version", entry),
             bundleVersion=jmespath.search("bundles[0].version", entry),
-            fileCopies=self.handle_list(self.make_file_copy(entry)),
-            _id=jmespath.search("es_uuid", entry),
-            objectID=jmespath.search("es_uuid", entry),
-            projectShortname=jmespath.search(
-                "project.project_core.project_shortname", entry),
-            projectContributorsEmail=jmespath.search(
-                "project.contributors[*].email", entry),
-            biomaterials=self.make_biomaterials(entry)
+            bundleUuid = jmespath.search("bundles[0].uuid", entry)
         )
-        return mapped_entry
 
     def __init__(self, hits):
         """

@@ -7,6 +7,8 @@ from responseobjects.elastic_request_builder import \
     ElasticTransformDump as EsTd
 from responseobjects.utilities import json_pp
 
+ENTRIES_PER_PAGE = 10
+
 # Setting up logging
 base_path = os.path.dirname(os.path.abspath(__file__))
 logging.config.fileConfig('{}/config/logging.conf'.format(base_path))
@@ -66,11 +68,25 @@ def get_data(file_id=None):
     # Make the default pagination
     logger.info("Creating pagination")
     pagination = {
-        "from": request.args.get('from', 1, type=int),
         "order": request.args.get('order', 'desc'),
-        "size": request.args.get('size', 5, type=int),
-        "sort":    request.args.get('sort', 'es_uuid'),
+        "size": request.args.get('size', ENTRIES_PER_PAGE, type=int),
+        "sort": request.args.get('sort', 'entity_id'),
     }
+
+    sa = request.args.getlist('search_after')
+    sb = request.args.getlist('search_before')
+    if not sa and not sb:
+        logger.debug("Using from sorting")
+        pagination['from'] = request.args.get('from', 1, type=int);
+    elif not sb:
+        logger.debug("Using search after sorting, with value "+str(sa))
+        pagination['search_after'] = sa
+    elif not sa:
+        logger.debug("Using search before sorting, with value "+str(sb))
+        pagination['search_before'] = sb
+    else:
+        logger.error("Bad arguments, only one of search_after or search_before can be set")
+        return "Bad arguments, only one of search_after or search_before can be set"
     logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Handle <file_id> request form
     if file_id is not None:
@@ -136,11 +152,25 @@ def get_data_pie():
     # Make the default pagination
     logger.info("Creating pagination")
     pagination = {
-        "from": request.args.get('from', 1, type=int),
         "order": request.args.get('order', 'desc'),
-        "size": request.args.get('size', 5, type=int),
-        "sort":    request.args.get('sort', 'center_name'),
+        "size": request.args.get('size', ENTRIES_PER_PAGE, type=int),
+        "sort": request.args.get('sort', 'entity_id'),
     }
+
+    sa = request.args.getlist('search_after')
+    sb = request.args.getlist('search_before')
+    if not sa and not sb:
+        logger.debug("Using from sorting")
+        pagination['from'] = request.args.get('from', 1, type=int);
+    elif not sb:
+        logger.debug("Using search after sorting, with value " + str(sa))
+        pagination['search_after'] = sa
+    elif not sa:
+        logger.debug("Using search before sorting, with value " + str(sb))
+        pagination['search_before'] = sb
+    else:
+        logger.error("Bad arguments, only one of search_after or search_before can be set")
+        return "Bad arguments, only one of search_after or search_before can be set"
     logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")

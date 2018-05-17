@@ -108,7 +108,8 @@ class PaginationObj(JsonObject):
     page = IntegerProperty()
     sort = StringProperty()
     order = StringProperty(choices=['asc', 'desc'])
-
+    search_after = ListProperty()
+    search_before = ListProperty()
 
 class HitEntry(JsonObject):
     """
