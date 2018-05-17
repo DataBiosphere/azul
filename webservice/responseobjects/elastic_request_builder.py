@@ -12,6 +12,9 @@ from utilities import json_pp
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
+# The minimum total number of hits for which search_after pagination
+# will be used instead of standard from/to pagination.
+SEARCH_AFTER_THRESHOLD = 20000
 
 class ElasticTransformDump(object):
     """
@@ -233,19 +236,38 @@ class ElasticTransformDump(object):
         Applies the pagination to the ES Search object
         :param es_search: The ES Search object
         :param pagination: Dictionary with raw entries from the GET Request.
-        It has: 'from', 'size', 'sort', 'order'
+        It has: 'size', 'sort', 'order', and one of 'search_after', 'search_before', or 'from'.
         :return: An ES Search object where pagination has been applied
         """
         # Extract the fields for readability (and slight manipulation)
-        _from = pagination['from'] - 1
-        _to = pagination['size'] + _from
-        _sort = '{}.keyword'.format(pagination['sort'])
+
+        _sort = pagination['sort']
         _order = pagination['order']
         # Apply order
-        es_search = es_search.sort({_sort: {"order": _order}})
-        # Apply paging
-        # TODO: We need to handle pagination for more than 10,000 entries
-        es_search = es_search[_from:_to]
+        if 'from' in pagination:
+            # Using to-from pagination
+            _from = pagination['from'] - 1
+            _to = pagination['size'] + _from
+            es_search = es_search[_from:_to]
+            es_search = es_search.sort({_sort: {"order": _order}},
+                                       {'_uid': {"order": 'desc'}})
+        else:
+            # Using search_after/search_before pagination
+            if 'search_after' in pagination:
+                es_search = es_search.extra(search_after=pagination['search_after'])
+                es_search = es_search.sort({_sort: {"order": _order}},
+                                           {'_uid': {"order": 'desc'}})
+            elif 'search_before' in pagination:
+                es_search = es_search.extra(search_after=pagination['search_before'])
+                rev_order = 'asc' if _order == 'desc' else 'desc'
+                es_search = es_search.sort({_sort: {"order": rev_order}},
+                                           {'_uid': {"order": 'asc'}})
+
+            # fetch one more than needed to see if there's a "next page".
+            es_search = es_search.extra(size=pagination['size']+1)
+
+
+        logging.debug("es_search is "+str(es_search))
         return es_search
 
     @staticmethod
@@ -258,16 +280,62 @@ class ElasticTransformDump(object):
         :return: Modifies and returns the pagination updated with the
         new required entries.
         """
-        page_field = {
-            'count': len(es_response['hits']['hits']),
-            'total': es_response['hits']['total'],
-            'size': pagination['size'],
-            'from': pagination['from'],
-            'page': ((pagination['from'] - 1) / pagination['size']) + 1,
-            'pages': -(-es_response['hits']['total'] // pagination['size']),
-            'sort': pagination['sort'],
-            'order': pagination['order']
-        }
+        pages = -(-es_response['hits']['total'] // pagination['size'])
+        if es_response['hits']['total'] < SEARCH_AFTER_THRESHOLD:
+            # Use from/to pagination
+            page_field = {
+                'count': len(es_response['hits']['hits']),
+                'total': es_response['hits']['total'],
+                'size': pagination['size'],
+                'from': pagination['from'],
+                'page': ((pagination['from'] - 1) / pagination['size']) + 1,
+                'pages': pages,
+                'sort': pagination['sort'],
+                'order': pagination['order']
+            }
+        else:
+            # ...else use search_after/search_before pagination
+            es_hits = es_response['hits']['hits']
+            count = len(es_hits)
+
+            logging.debug("count="+str(count)+" and size="+str(pagination['size']))
+
+            if 'search_before' in pagination:
+                # hits are reverse sorted
+                if count > pagination['size']:
+                    # There is an extra hit, indicating a previous page.
+                    count = count - 1
+                    search_before = es_hits[count - 1]['sort']
+                else:
+                    # No previous page
+                    search_before = []
+                search_after = es_hits[0]['sort']
+            elif 'search_after' in pagination:
+                # hits are normal sorted
+                if count > pagination['size']:
+                    # There is an extra hit, indicating a next page.
+                    count = count - 1
+                    search_after =  es_hits[count - 1]['sort']
+                else:
+                    #No next page
+                    search_after = []
+                search_before = es_hits[0]['sort']
+            else:
+                # No search_after/before args were supplied, so assume it is the first page
+                search_after = es_hits[count - 1]['sort'] if pages > 1 else []
+                search_before = []
+
+            page_field = {
+                'count': count,
+                'total': es_response['hits']['total'],
+                'size': pagination['size'],
+                'search_after': search_after,
+                'search_before': search_before,
+                'pages': pages,
+                'sort': pagination['sort'],
+                'order': pagination['order']
+            }
+
         return page_field
 
     def transform_summary(
@@ -401,15 +469,24 @@ class ElasticTransformDump(object):
                     'translation'][pagination['sort']]
             # Apply paging
             es_search = self.apply_paging(es_search, pagination)
-            self.logger.debug("Printing ES_SEARCH request dict:\n {}".format(
-                json.dumps(es_search.to_dict())))
             # Execute ElasticSearch request
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()
             self.logger.debug("Printing ES_SEARCH response dict:\n {}".format(
                 json.dumps(es_response_dict)))
             # Extract hits and facets (aggregations)
-            hits = [x['_source'] for x in es_response_dict['hits']['hits']]
+            es_hits = es_response_dict['hits']['hits']
+            self.logger.info("length of es_hits: "+str(len(es_response_dict['hits']['hits'])))
+            # If the number of elements exceed the page size, then we fetched one too many
+            # entries to determine if there is a previous or next page.  In that case,
+            # return one fewer hit.
+            list_adjustment = 1 if len(es_hits) > pagination['size'] else 0
+            if 'search_before' in pagination:
+                hits = [x['_source'] for x in
+                        reversed(es_hits[0:len(es_hits)-list_adjustment])]
+            else:
+                hits = [x['_source'] for x in es_hits[0:len(es_hits)-list_adjustment]]
+
             facets = es_response_dict['aggregations']
             paging = self.generate_paging_dict(es_response_dict, pagination)
             # Creating FileSearchResponse object

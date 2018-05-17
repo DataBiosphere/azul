@@ -4,11 +4,11 @@ services:
   dcc-dashboard-service:
     container_name: "dcc-dashboard-service"
     environment:
-      ES_SERVICE: "search-dss-azul-dev-carlos-hlz2qxnr27y352gcudeblyjkau.us-west-2.es.amazonaws.com"
-      ES_DOMAIN: "search-dss-azul-dev-carlos-hlz2qxnr27y352gcudeblyjkau.us-west-2.es.amazonaws.com"
+      ES_SERVICE: "search-dss-stress-test-index-dev-fjcazd2sn65gtpzduhlyjsh33y.us-east-1.es.amazonaws.com"
+      ES_DOMAIN: "search-dss-stress-test-index-dev-fjcazd2sn65gtpzduhlyjsh33y.us-east-1.es.amazonaws.com"
       ES_PORT: "443"
       ES_PROTOCOL: "https"
-      ES_FILE_INDEX: "file_index_v4"
+      ES_FILE_INDEX: "test_data"
       ES_DONOR_INDEX: "sample_index_v4"
     build: .
     ports:
