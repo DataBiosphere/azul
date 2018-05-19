@@ -56,7 +56,7 @@ class Transformer(ABC):
         pass
 
     @abstractmethod
-    def _create_projects(self, metadata_dictionary: dict) -> Sequence[dict]:
+    def _create_project(self, metadata_dictionary: dict) -> Sequence[dict]:
         pass
 
     @abstractmethod
@@ -74,7 +74,7 @@ class FileTransformer(Transformer):
 
     def _create_files(
             self,
-            files_dictionary: dict,
+            files_dictionary: Mapping[str, dict],
             metadata_dictionary: dict=None
     ) -> Sequence[dict]:
         # Handle the file.json if it's present
@@ -100,6 +100,7 @@ class FileTransformer(Transformer):
 
         def find_descendants(nodes: Iterable[dict],
                              parent_id: str=None) -> Iterable[dict]:
+            # TODO: Add code to break under some cyclic condition
                 for child in filter(lambda x: parent_id in x["parent"], nodes):
                     yield from find_descendants(nodes, child["biomaterial_id"])
                     yield child
@@ -159,6 +160,36 @@ class FileTransformer(Transformer):
             metadata_files: Mapping[str, dict],
             data_files: Mapping[str, dict]
     ) -> Sequence[ElasticSearchDocument]:
+        # Get basic units
+        project = self._create_project(metadata_files['project.json'])
+        specimens = self._create_specimens(metadata_files['biomaterial.json'])
+        processes = self._create_processes(metadata_files['process.json'])
+        protocol = self._create_protocols(metadata_files["protocol.json"])
+        files = self._create_files(data_files,
+                                   metadata_dictionary=metadata_files[
+                                       "file.json"])
+        all_units = specimens + processes + protocol + files
+
+        def get_relatives(root_id: str, links_array: list) -> Iterable[str]:
+            for parent in jmespath.search("[?destination_id=='{}'].source_id".format(root_id), links_array):
+                yield from get_relatives(parent, links_array)
+                yield parent
+
+            for child in jmespath.search("[?source_id=='{}'].destination_id".format(root_id), links_array):
+                yield from get_relatives(child, links_array)
+                yield child
+
+        # Get the links
+        links = metadata_files['links.json']
+        # Begin merging.
+        for _file in files:
+            contents = defaultdict[list]
+            relatives = get_relatives(_file['hca_id'], links['links'])
+            for relative in relatives:
+                # TODO: Look for the contents of the list and pull out the appropriate unit and place where appropriate respectively.
+                pass
+
+
         # Maybe climb up the link.json by first starting at the entity level
         # (start by using the file uuid)
         pass

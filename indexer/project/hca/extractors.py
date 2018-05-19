@@ -4,7 +4,7 @@ import jmespath
 class FileExtractor:
     @staticmethod
     def v1_0_0(metadata_file: dict) -> dict:
-        # Jmespath within the file objects
+        # jmespath within the file objects
         _format = "content.file_core.file_format || `null`"
         lane = "content.lane_index || `null`"
         read = "content.read_index || `null`"
@@ -16,7 +16,8 @@ class FileExtractor:
                     "format": jmespath.search(_format, _file),
                     "lane": jmespath.search(lane, _file),
                     "read": jmespath.search(read, _file),
-                    "hca_id": jmespath.search(hca_id, _file)
+                    "hca_id": jmespath.search(hca_id, _file),
+                    "_type": "files"
                 }
             }
             files.update(temp)
@@ -55,7 +56,8 @@ class BiomaterialExtractor:
                                       metadata_file).rpartition('/')[2],
             "total_cells": jmespath.search(total_cells, metadata_file),
             "parent": jmespath.search(parent, metadata_file),
-            "hca_id": jmespath.search(hca_id, metadata_file)
+            "hca_id": jmespath.search(hca_id, metadata_file),
+            "_type": "samples"
         }
         return biomaterial
 
@@ -75,7 +77,8 @@ class ProcessesExtractor:
             "instrument": jmespath.search(instrument, metadata_file),
             "library_construction": jmespath.search(library_construction,
                                                     metadata_file),
-            "hca_id": jmespath.search(hca_id, metadata_file)
+            "hca_id": jmespath.search(hca_id, metadata_file),
+            "_type": "processes"
         }
         return process
 
@@ -93,7 +96,8 @@ class ProcessesExtractor:
             "instrument": jmespath.search(instrument, metadata_file),
             "library_construction": jmespath.search(library_construction,
                                                     metadata_file),
-            "hca_id": jmespath.search(hca_id, metadata_file)
+            "hca_id": jmespath.search(hca_id, metadata_file),
+            "_type": "processes"
         }
         return process
 
@@ -108,6 +112,7 @@ class ProtocolExtractor:
             "protocol_id": jmespath.search(protocol_id, metadata_file),
             "protocol": jmespath.search(protocol, metadata_file),
             "hca_id": jmespath.search(hca_id, metadata_file),
+            "_type": "processes"
         }
         return protocol
 
@@ -121,6 +126,7 @@ class ProjectExtractor:
         project = {
             "project": jmespath.search(project, metadata_file),
             "laboratory": jmespath.search(laboratory, metadata_file),
-            "hca_id": jmespath.search(hca_id, metadata_file)
+            "hca_id": jmespath.search(hca_id, metadata_file),
+            "_type": "project"
         }
         return project
