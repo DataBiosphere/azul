@@ -222,6 +222,17 @@ Run `local-import.py`. Open Kibana to see your files appear. The
 
 Note: Manual loading creates mappings for ES, has some list parsing capability, and if `key` in config.json does not exist, returns a value of "no `key`". (This functionality is not present in the Chalice function yet)
 
+### Stress test
+The test data can be populated under `test/data_generator` directory to an ElasticSearch instance by updating the ES URL and directory name in `make_fake_data`. 
+
+To run the stress test, first update the `host` variable in `test_stress_indexer.py`, or pass it as a flag when running the test. 
+The query by default matches all of the elements in elasticsearch to stress the system to the maximum, but that can be optionally changed `json` parameter in the `query_indexer` method. 
+
+To run the test, use `locust -f test_stress_indexer.py --no-web -c 10 -r 2 -n 10` , where `-c` represents the number of concurrent users to simulate, `-r` the number of new users generated per second and `-n` the number of times this is run. You can optionally specify the total run time instead of the number of times by passing in `-t HHh:MMm:SSs` in place of `-n`. If you want to use a different host, you can pass the Elasticsearch URL by passing it in using the `-host <HOST_URL>` option
+
+If `--no-web` is not generated, locust will create an UI on port `8089` where you can configure the parameters.
+
+
 ### Todo List
 
 * how to setup Kibana for security group reasons
