@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from functools import partial, reduce
 from itertools import chain, filterfalse, tee
 import jmespath
 import project.hca.extractors as extractors
@@ -9,10 +10,32 @@ from typing import Mapping, Sequence, Iterable
 # TODO: consider moving the current "create_specimens", etc. to "extract_speciments" and then make a new method called "assign_specimens", etc
 
 
+class Document:
+    def __init__(self, entity_id: str, bundle_uuid: str, bundle_version: str, content: dict) -> None:
+        self.entity_id = entity_id
+        self.bundle_uuid = bundle_uuid
+        self.bundle_version = bundle_version
+        self.content = content
+
+    @property
+    def document(self) -> dict:
+        constructed_dict = {
+            "entity_id": self.entity_id,
+            "bundles": [
+                {
+                    "uuid": self.bundle_uuid,
+                    "version": self.bundle_version,
+                    "contents": self.content
+                }
+            ]
+        }
+        return constructed_dict
+
+
 class ElasticSearchDocument:
-    def __init__(self, elastic_search_id: str, document_json: dict) -> None:
+    def __init__(self, elastic_search_id: str, content: Document) -> None:
         self.elastic_search_id = elastic_search_id
-        self.document_json = document_json
+        self.content = content
 
     @property
     def document_id(self) -> str:
@@ -20,7 +43,7 @@ class ElasticSearchDocument:
 
     @property
     def document_content(self) -> dict:
-        return self.document_json
+        return self.content.document
 
 
 class Transformer(ABC):
@@ -63,7 +86,9 @@ class Transformer(ABC):
     def create_documents(
             self,
             metadata_files: Mapping[str, dict],
-            data_files: Mapping[str, dict]
+            data_files: Mapping[str, dict],
+            bundle_uuid: str,
+            bundle_version: str,
     ) -> Sequence[ElasticSearchDocument]:
         pass
 
@@ -125,11 +150,6 @@ class FileTransformer(Transformer):
                     merged_sample[key] += value
             merged_sample["biomaterial_id"] = root_id
             samples_list.append(merged_sample)
-
-
-        # I think that I can use a hash table with all the ids from links and
-        # That way figure out which processes are being used in this run
-
         return samples_list
 
     def _create_processes(self, metadata_dictionary: dict) -> Sequence[dict]:
@@ -158,7 +178,9 @@ class FileTransformer(Transformer):
     def create_documents(
             self,
             metadata_files: Mapping[str, dict],
-            data_files: Mapping[str, dict]
+            data_files: Mapping[str, dict],
+            bundle_uuid: str,
+            bundle_version: str,
     ) -> Sequence[ElasticSearchDocument]:
         # Get basic units
         project = self._create_project(metadata_files['project.json'])
@@ -168,9 +190,19 @@ class FileTransformer(Transformer):
         files = self._create_files(data_files,
                                    metadata_dictionary=metadata_files[
                                        "file.json"])
-        all_units = specimens + processes + protocol + files
+        # all_units = {x["hca_id"]: x for x in chain(specimens, processes, protocol, files)}
+        all_units = {}
+        for unit in chain(specimens, processes, protocol, files):
+            if isinstance(unit["hca_id"], list):
+                reduce(partial(lambda x, y, z: x.update((z, y)), all_units, unit), unit["hca_id"])
+            else:
+                # It's a string
+                all_units[unit["hca_id"]] = unit
 
         def get_relatives(root_id: str, links_array: list) -> Iterable[str]:
+            """
+            Get the ancestors and descendants of the root_id
+            """
             for parent in jmespath.search("[?destination_id=='{}'].source_id".format(root_id), links_array):
                 yield from get_relatives(parent, links_array)
                 yield parent
@@ -184,18 +216,28 @@ class FileTransformer(Transformer):
         # Begin merging.
         for _file in files:
             contents = defaultdict[list]
-            relatives = get_relatives(_file['hca_id'], links['links'])
+            entity_id = _file['hca_id']
+            entity_type = _file.pop("_type")
+            relatives = get_relatives(entity_id, links['links'])
             for relative in relatives:
-                # TODO: Look for the contents of the list and pull out the appropriate unit and place where appropriate respectively.
-                pass
+                unit_type = all_units[relative].pop("_type")
+                if unit_type == entity_type:
+                    continue
+                contents[unit_type] += relative
+            # Add missing project field and append the current entity
+            contents["project"] = project
+            contents[entity_type] += _file
+            document_contents = Document(entity_id,
+                                         bundle_uuid,
+                                         bundle_version,
+                                         contents)
+            es_document = ElasticSearchDocument(entity_id, document_contents)
+            yield es_document
 
-
-        # Maybe climb up the link.json by first starting at the entity level
-        # (start by using the file uuid)
-        pass
 
 class SampleTransformer:
     pass
+
 
 class ProjectTransformer:
     pass

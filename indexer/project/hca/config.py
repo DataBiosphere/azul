@@ -3,7 +3,7 @@ from aws_requests_auth.aws_auth import AWSRequestsAuth
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 
 
-class IndexProperties:
+class HCAIndexProperties:
     """Index properties for HCA"""
 
     def __init__(self, elasticsearch_host, elasticsearch_port):

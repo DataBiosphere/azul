@@ -13,12 +13,17 @@ from functools import reduce
 import logging
 import json
 import re
+from typing import Type
 
 # create logger
 module_logger = logging.getLogger(__name__)
 
 
 class Indexer(ABC):
+    def __init__(self, metadata_files: dict, data_files: dict, x: Type[str]) -> None:
+        pass
+
+class OLDIndexer(ABC):
     """Indexer class to help indexing operation.
 
     The base class Indexer serves as the basis to extend other types
