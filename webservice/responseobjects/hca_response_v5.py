@@ -410,8 +410,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         return HitEntry(
             entity_id=jmespath.search("entity_id", entry),
             entity_version=jmespath.search("entity_version", entry),
-            bundle_version=jmespath.search("bundles[0].version", entry),
-            bundle_uuid=jmespath.search("bundles[0].uuid", entry)
+            bundleVersion=jmespath.search("bundles[0].version", entry),
+            bundleUuid=jmespath.search("bundles[0].uuid", entry)
         )
 
     def __init__(self, hits):
