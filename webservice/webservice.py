@@ -3,8 +3,7 @@ import config
 from flask import jsonify, request, Blueprint
 import logging.config
 import os
-from responseobjects.elastic_request_builder import \
-    ElasticTransformDump as EsTd
+from responseobjects.elastic_request_builder import BadArgumentException, ElasticTransformDump as EsTd
 from responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
@@ -99,9 +98,12 @@ def get_data(file_id=None):
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_request(filters=filters,
-                                       pagination=pagination,
-                                       post_filter=True)
+    try:
+        response = es_td.transform_request(filters=filters, pagination=pagination, post_filter=True)
+    except BadArgumentException as bae:
+        response = jsonify(dict(error=bae.message))
+        response.status_code = 400
+        return response
     # Returning a single response if <file_id> request form is used
     if file_id is not None:
         response = response['hits'][0]

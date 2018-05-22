@@ -16,6 +16,13 @@ module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 # will be used instead of standard from/to pagination.
 SEARCH_AFTER_THRESHOLD = 20000
 
+
+class BadArgumentException(Exception):
+    def __init__(self, message):
+        Exception.__init__(self)
+        self.message = message
+
+
 class ElasticTransformDump(object):
     """
     This class works as the highest abstraction, serving as the top layer
@@ -248,6 +255,8 @@ class ElasticTransformDump(object):
             # Using to-from pagination
             _from = pagination['from'] - 1
             _to = pagination['size'] + _from
+            if _to > SEARCH_AFTER_THRESHOLD:
+                raise BadArgumentException("from+to must not be greater than " + str(SEARCH_AFTER_THRESHOLD))
             es_search = es_search[_from:_to]
             es_search = es_search.sort({_sort: {"order": _order}},
                                        {'_uid': {"order": 'desc'}})

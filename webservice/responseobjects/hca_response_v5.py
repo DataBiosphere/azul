@@ -406,27 +406,12 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        # mapped_entry = HitEntry(
-        #     processes=self.make_processes(entry),
-        #     protocols=self.make_protocols(entry),
-        #     bundleType=jmespath.search("bundles[0].type", entry),
-        #     bundleUuid=jmespath.search("bundles[0].uuid", entry),
-        #     bundleVersion=jmespath.search("bundles[0].version", entry),
-        #     fileCopies=self.handle_list(self.make_file_copy(entry)),
-        #     _id=jmespath.search("es_uuid", entry),
-        #     objectID=jmespath.search("es_uuid", entry),
-        #     projectShortname=jmespath.search(
-        #         "project.project_core.project_shortname", entry),
-        #     projectContributorsEmail=jmespath.search(
-        #         "project.contributors[*].email", entry),
-        #     biomaterials=self.make_biomaterials(entry)
-        # )
-        # return mapped_entry
+
         return HitEntry(
             entity_id=jmespath.search("entity_id", entry),
             entity_version=jmespath.search("entity_version", entry),
-            bundleVersion=jmespath.search("bundles[0].version", entry),
-            bundleUuid = jmespath.search("bundles[0].uuid", entry)
+            bundle_version=jmespath.search("bundles[0].version", entry),
+            bundle_uuid=jmespath.search("bundles[0].uuid", entry)
         )
 
     def __init__(self, hits):
