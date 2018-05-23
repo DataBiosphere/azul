@@ -8,12 +8,12 @@
       {
         "source": "metadata.json",
         "index_field": "center_name",
-        "dss_field": "contributor"
+        "dss_field": "core_metadata.contributor"
       },
       {
         "source": "metadata.json",
         "dss_field": "project_id",
-        "index_field": "project"
+        "index_field": "core_metadata.project"
       },
       {
         "from_file_data": true,
@@ -23,7 +23,7 @@
       {
         "source": "metadata.json",
         "index_field": "file_type",
-        "dss_field": "format"
+        "dss_field": "core_metadata.format"
       },
       {
         "from_file_data": true,
@@ -53,7 +53,7 @@
       {
         "source": "metadata.json",
         "index_field": "experimentalStrategy",
-        "dss_field": "experimental_strategy"
+        "dss_field": "aliquot.experimental_strategy"
       },
       {
         "constant": "",
@@ -87,7 +87,7 @@
       {
         "source": "metadata.json",
         "index_field": "sampleId",
-        "dss_field": "id"
+        "dss_field": "sample.id"
       },
       {
         "constant": "",
@@ -95,13 +95,13 @@
       },
       {
         "source": "metadata.json",
-        "dss_field": "biospecimen_type",
-        "index_field": "specimen_type"
+        "index_field": "specimen_type",
+        "dss_field": "sample.biospecimen_type"
       },
       {
         "source": "metadata.json",
         "index_field": "study",
-        "dss_field": "project_id"
+        "dss_field": "core_metadata.project_id"
       },
       {
         "constant": "",
@@ -110,12 +110,12 @@
       {
         "source": "metadata.json",
         "index_field": "submittedSampleId",
-        "dss_field": "submitter_id"
+        "dss_field": "aliquot.submitter_id"
       },
       {
         "source": "metadata.json",
         "index_field": "specimenUUID",
-        "dss_field": "id"
+        "dss_field": "sample.id"
       },
       {
         "constant": "",
@@ -124,7 +124,7 @@
       {
         "source": "metadata.json",
         "index_field": "submitterDonorPrimarySite",
-        "dss_field": "composition"
+        "dss_field": "sample.composition"
       },
       {
         "constant": "",
