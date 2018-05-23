@@ -12,7 +12,11 @@ from utils.transformer import Transformer, ElasticSearchDocument, Document
 
 class FileTransformer(Transformer):
     def __init__(self):
-        super().__init__()
+        pass
+
+    @property
+    def entity_name(self):
+        return "files"
 
     def _create_files(
             self,
@@ -152,9 +156,9 @@ class FileTransformer(Transformer):
             yield es_document
 
 
-class SampleTransformer:
+class SpecimenTransformer(Transformer):
     pass
 
 
-class ProjectTransformer:
+class ProjectTransformer(Transformer):
     pass

@@ -9,6 +9,7 @@ The based class Indexer serves as the basis for additional indexing classes.
 import collections
 from copy import deepcopy
 from abc import ABC, abstractmethod
+from utils.downloader import MetadataDownloader
 from functools import reduce
 import logging
 import json
@@ -22,17 +23,44 @@ module_logger = logging.getLogger(__name__)
 
 class Indexer(ABC):
 
-    def __init__(self, metadata_files: dict, data_files: dict, properties: Type[IndexProperties]) -> None:
+    def __init__(self, metadata_files: dict, data_files: dict, properties: IndexProperties) -> None:
         self.metadata_files = metadata_files
         self.data_files = data_files
         self.properties = properties
 
-    def index(self, ):
+    def index(self,
+              blue_box_notification: Mapping[str, Any],
+              replica: str) -> None:
         # Calls extract, transform, merge, and load
+        bundle_uuid = blue_box_notification['match']['bundle_uuid']
+        bundle_version = blue_box_notification['match']['bundle_version']
+        metadata, data = MetadataDownloader(self.properties.dss_url)
+        transformers = self.properties.transformers
+        es_client = self.properties.elastic_search_client
+        # Create and populate the Indexes
+        for index_name in self.properties.index_names:
+            es_client.indices.create(index=index_name,
+                                     body=self.properties.settings,
+                                     ignore=[400])
+            es_client.indices.put_mapping(index=index_name,
+                                          doc_type="doc",
+                                          body=self.properties.mapping)
+        for transformer in transformers:
+            es_documents = transformer.create_documents(metadata, data, bundle_uuid, bundle_version)
+            for es_document in es_documents:
 
+                # TODO: Implement merging strategy by using versioning
+                self.merge(es_document)
+
+                es_client.index(index=es_document.document_index,
+                                doc_type=es_document.document_type,
+                                id=es_document.document_id,
+                                body=es_document.document_content)
+            pass
 
     def extract(self):
-        pass
+        metadata, data = MetadataDownloader(self.properties.dss_url)
+        return metadata, data
 
     def transform(self):
         pass
