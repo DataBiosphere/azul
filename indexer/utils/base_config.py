@@ -1,13 +1,9 @@
 from abc import ABC
-from typing import Mapping, Any
-
 from elasticsearch import Elasticsearch
+from typing import Mapping, Any
 
 
 class IndexProperties(ABC):
-    def __init__(self, elasticsearch_host: str, elasticsearch_port: str) -> None:
-        pass
-
     @property
     def elastic_search_client(self) -> Elasticsearch:
         return Elasticsearch()

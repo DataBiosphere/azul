@@ -1,12 +1,14 @@
 from aws_requests_auth import boto_utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 from elasticsearch import Elasticsearch, RequestsHttpConnection
+from typing import Mapping, Any
+from utils.base_config import IndexProperties
 
 
-class HCAIndexProperties:
+class HCAIndexProperties(IndexProperties):
     """Index properties for HCA"""
 
-    def __init__(self, elasticsearch_host, elasticsearch_port):
+    def __init__(self, elasticsearch_host: str, elasticsearch_port: str) -> None:
         """Initialize properties."""
         self._es_host = elasticsearch_host
         self._es_port = elasticsearch_port
@@ -53,7 +55,7 @@ class HCAIndexProperties:
         }
 
     @property
-    def elastic_search_client(self):
+    def elastic_search_client(self) -> Elasticsearch:
         if self._es_host.endswith('.es.amazonaws.com'):
             # need to have the AWS CLI and $aws configure
             awsauth = AWSRequestsAuth(
@@ -78,9 +80,9 @@ class HCAIndexProperties:
         return es
 
     @property
-    def mapping(self):
+    def mapping(self) -> Mapping[str, Any]:
         return self._es_mapping
 
     @property
-    def settings(self):
+    def settings(self) -> Mapping[str, Any]:
         return self._es_settings

@@ -13,15 +13,44 @@ from functools import reduce
 import logging
 import json
 import re
-from typing import Type
+from utils.base_config import IndexProperties
+from typing import Type, Mapping, Iterable, Any
 
 # create logger
 module_logger = logging.getLogger(__name__)
 
 
 class Indexer(ABC):
-    def __init__(self, metadata_files: dict, data_files: dict, x: Type[str]) -> None:
+
+    def __init__(self, metadata_files: dict, data_files: dict, properties: Type[IndexProperties]) -> None:
+        self.metadata_files = metadata_files
+        self.data_files = data_files
+        self.properties = properties
+
+    def index(self, ):
+        # Calls extract, transform, merge, and load
+
+
+    def extract(self):
         pass
+
+    def transform(self):
+        pass
+
+    def merge(self):
+        pass
+
+    def load(self):
+        pass
+
+
+
+
+
+
+
+
+
 
 class OLDIndexer(ABC):
     """Indexer class to help indexing operation.
