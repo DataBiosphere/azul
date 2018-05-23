@@ -54,6 +54,21 @@ class ConvertToListFormatter(Formatter):
             return value
 
 
+class ExtractFileExtension(Formatter):
+    name = "extract_file_extension"
+
+    def __init__(self):
+        super().__init__()
+
+    def format(self, value):
+        val_lst = value.split('.')
+
+        if val_lst:
+            return val_lst[-1]
+        else:
+            return "N/A"
+
+
 class DCCJSONTransformer:
     def __init__(self, filename):
         with open(filename, 'r') as csf:
@@ -62,6 +77,7 @@ class DCCJSONTransformer:
 
         self._formatters = {}
         self.add_formatter(ConvertToListFormatter())
+        self.add_formatter(ExtractFileExtension())
 
     def add_formatter(self, formatter):
         self._formatters[formatter.name] = formatter

@@ -136,6 +136,12 @@
         "dss_field": "name"
       },
       {
+        "from_file_data": true,
+        "index_field": "file_type",
+        "dss_field": "name",
+        "formatters": ["extract_file_extension"]
+      },
+      {
         "constant": "",
         "index_field": "workflow"
       },
