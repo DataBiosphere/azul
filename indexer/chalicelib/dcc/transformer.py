@@ -2,7 +2,7 @@ import json
 import pprint
 import logging
 #TODO Check if APACHE LICENSE is OK to Use
-from jsonpath_rw import parse as jsonpath_parse
+import jmespath
 
 log = logging.getLogger(__name__)
 
@@ -123,15 +123,12 @@ class DCCJSONTransformer:
 
     def _find_value_with_fieldname(self, dss_field, metadata):
         def parse_metadata(field):
-            parser = jsonpath_parse("$..{}".format(field))
-            result = parser.find(metadata)
-
             try:
-                result_value = result[0].value
+                result = jmespath.search(dss_field, metadata)
             except IndexError as e:
-                log.error("The '{}' field doesn't exist in selected metadata".format(field), exec_info=True)
-                raise
-            return result_value
+                log.error("The '{}' field doesn't exist in selected metadata".format(field))
+                exit()
+            return result
 
         if isinstance(dss_field, dict):
             #TODO Implement seperator settings
@@ -140,8 +137,7 @@ class DCCJSONTransformer:
             return parse_metadata(dss_field)
 
     def _get_matching_subitem(self, dss_value, query_index_field, index_field, metadata):
-        parser = jsonpath_parse("$..{}".format(index_field))
-        result = parser.find(metadata)
+        result = jmespath.search(index_field, metadata)
         matching_subitems = [res.context.value for res in result]
         for subitem in matching_subitems:
             query_index_value = self._find_value_with_fieldname(query_index_field, subitem)
