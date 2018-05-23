@@ -18,8 +18,10 @@ from chalicelib.indexer import FileIndexerV5
 # SampleOrientedIndexer as SampleIndexer, \
 # ProjectOrientedIndexer as ProjectIndexer
 from chalicelib.utils import DataExtractor
+from utils.indexer import BaseIndexer
 import json
 import logging
+import imp
 import os
 
 # Set up the chalice application
@@ -35,6 +37,38 @@ bb_host = "https://" + os.environ.get('BLUE_BOX_ENDPOINT',
 # es_index = os.environ.get('ES_INDEX', "azul-test-indexer")
 es_doc_type = os.environ.get('ES_DOC_TYPE', "doc")
 replica = os.environ.get("REPLICA", "aws")
+
+# get which indexer project definition to use
+#https://lkubuntu.wordpress.com/2012/10/02/writing-a-python-plugin-api/
+IndexerPluginDirectory = "./projects"
+IndexerModule = "indexer"
+indexer_project = os.environ.get('INDEXER_PROJECT', 'hca')
+
+def importProjects():
+    projects = []
+    possible_projects = os.listdir(IndexerPluginDirectory)
+    for project in possible_projects:
+        location = os.path.join(IndexerPluginDirectory, project)
+        if not os.path.isdir(location) or not IndexerModule + ".py" in os.listdir(location):
+            continue
+        info = imp.find_module(IndexerModule, [location])
+        projects.append({"name": project, "info": info})
+    return projects
+
+def loadProject(project):
+    return imp.load_module(IndexerModule, *project["info"])
+
+def load_indexer_class():
+    for i in importProjects():
+        if i['name'] == indexer_project:
+            IndexerLoaded = getattr(loadProject(i), "Indexer")
+            #setup default constructor - similar to V5Indexer constructor
+            my_indexer = IndexerLoaded()
+            if isinstance(my_indexer, BaseIndexer):
+                #return the class
+                return IndexerLoaded
+            else:
+                raise NotImplementedError("Project supplied does not have an indexer derived from the BaseIndexer")
 
 # Get settings for elasticsearch
 with open('chalicelib/settings.json') as f:
@@ -87,6 +121,9 @@ def post_notification():
     # Extract the relevant files and metadata to the bundle
     metadata_files, data_files = extractor.extract_bundle(payload, replica)
     # Create an instance of the Indexers and run it
+    IndexerToLoad = load_indexer_class()
+    my_indexer = IndexerToLoad()
+    
     file_indexer = FileIndexerV5(metadata_files,
                                  data_files,
                                  es,
