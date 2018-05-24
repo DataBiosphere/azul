@@ -55,12 +55,12 @@ def get_data(file_id=None):
     logger = logging.getLogger("dashboardService.webservice.get_data")
     # Get all the parameters from the URL
     logger.debug('Parameter file_id: {}'.format(file_id))
-    filters = request.args.get('filters', '{"file": {}}')
+    filters = request.args.get('filters', '{}')
     logger.debug("Filters string is: {}".format(filters))
     try:
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
-        filters = {"file": {}} if filters == {} else filters
+        #filters = {} if filters == {} else filters
     except Exception, e:
         logger.error("Malformed filters parameter: {}".format(e.message))
         return "Malformed filters parameter"
