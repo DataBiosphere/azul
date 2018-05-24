@@ -23,39 +23,6 @@ class FileCopyObj(JsonObject):
     fileUuid = StringProperty()
 
 
-class ProcessObject(JsonObject):
-    """
-    Class defining the Process object in the HitEntry object
-    """
-    processId = StringProperty()
-    pairedEnds = BooleanProperty()
-    libraryConstructionApproach = StringProperty()
-    instrumentManufacturerModel = StringProperty()
-    dissociationMethod = StringProperty()
-
-
-class ProtocolObject(JsonObject):
-    """
-    Class defining the Protocol object in the HitEntry object
-    """
-    protocolId = StringProperty()
-
-
-class BiomaterialObject(JsonObject):
-    """
-    Class defining a Biomaterial Object in the HitEntry Object
-    """
-    biomaterialId = StringProperty()
-    biomaterialNcbiTaxonIds = ListProperty(IntegerProperty)
-    biomaterialGenusSpecies = ListProperty(StringProperty)
-    biomaterialOrgan = StringProperty()
-    biomaterialOrganPart = StringProperty()
-    biomaterialDisease = ListProperty(StringProperty)
-    biologicalSex = StringProperty()
-    organismAge = StringProperty()
-    organismAgeUnit = StringProperty()
-
-
 class TermObj(JsonObject):
     """
     Class defining a term object in the FacetObj
@@ -90,18 +57,6 @@ class HitEntry(JsonObject):
     """
     Class defining a hit entry in the Api response
     """
-    # _id = StringProperty(name='id')
-    # objectID = StringProperty()
-    # processes = ListProperty(ProcessObject)
-    # protocols = ListProperty(ProtocolObject)
-    # bundleUuid = StringProperty()
-    # bundleVersion = StringProperty()
-    # bundleType = StringProperty()
-    # fileCopies = ListProperty(FileCopyObj)
-    # projectShortname = StringProperty()
-    # projectContributorsEmail = ListProperty(StringProperty)
-    # biomaterials = ListProperty(BiomaterialObject)
-
     entity_id = StringProperty()
     entity_version = StringProperty()
     bundleUuid = StringProperty()
@@ -124,33 +79,6 @@ class SummaryRepresentation(JsonObject):
     """
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
-    biomaterialCount = IntegerProperty()
-    projectCount = IntegerProperty()
-    organCounts = IntegerProperty()
-
-
-class DonorAutoCompleteEntry(JsonObject):
-    """
-    Class defining the Donor Autocomplete Entry
-    Out of commission until we begin dealing with
-    more indexes
-    """
-    _id = StringProperty(name='id')
-    projectId = StringProperty()
-    sampleIds = ListProperty(StringProperty)
-    specimenIds = ListProperty(StringProperty)
-    submittedId = StringProperty()
-    submittedSampleIds = ListProperty(StringProperty)
-    submittedSpecimenIds = ListProperty(StringProperty)
-    _type = StringProperty(name='type', default='donor')
-
-
-class FileDonorAutoCompleteEntry(JsonObject):
-    """
-    Class defining the Donor Autocomplete Entry
-    """
-    _id = StringProperty(name='id')
-    _type = StringProperty(name='type', default='donor')
 
 
 class FileIdAutoCompleteEntry(JsonObject):
@@ -317,37 +245,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def return_response(self):
         return self.apiResponse
 
-    def make_processes(self, entry):
-        processes = []
-        for es_process in entry['processes']:
-            api_process = ProcessObject(
-                processId=jmespath.search(
-                    "content.process_core.process_id", es_process),
-                pairedEnds=jmespath.search(
-                    "content.paired_ends", es_process),
-                libraryConstructionApproach=jmespath.search(
-                    "content.library_construction_approach",
-                    es_process),
-                instrumentManufacturerModel=jmespath.search(
-                    "content.instrument_manufacturer_model.text", es_process
-                ),
-                dissociationMethod=jmespath.search(
-                    "content.dissociation_method", es_process
-                )
-            )
-            processes.append(api_process)
-        return processes
-
-    def make_protocols(self, entry):
-        protocols = []
-        for es_protocol in entry['protocols']:
-            api_protocol = ProtocolObject(
-                protocolId=jmespath.search(
-                    "content.protocol_core.protocol_id", es_protocol)
-            )
-            protocols.append(api_protocol)
-        return protocols
-
     def make_file_copy(self, entry):
         """
         Returns a FileCopyObj based on the mapping entry params
@@ -363,41 +260,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             fileFormat=jmespath.search("format", _entry),
             fileName=jmespath.search("name", _entry)
         )
-
-    def make_biomaterials(self, entry):
-        biomaterials = []
-        for es_biomaterial in entry['biomaterials']:
-            api_biomaterial = BiomaterialObject(
-                biomaterialId=jmespath.search(
-                    "content.biomaterial_core.biomaterial_id", es_biomaterial
-                ),
-                biomaterialNcbiTaxonIds=jmespath.search(
-                    "content.biomaterial_core.ncbi_taxon_id", es_biomaterial
-                ),
-                biomaterialGenusSpecies=jmespath.search(
-                    "content.genus_species[*].text", es_biomaterial
-                ),
-                biomaterialOrgan=jmespath.search(
-                    "content.organ.text", es_biomaterial
-                ),
-                biomaterialOrganPart=jmespath.search(
-                    "content.organ_part.text", es_biomaterial
-                ),
-                biomaterialDisease=jmespath.search(
-                    "content.disease[*].text", es_biomaterial
-                ),
-                biologicalSex=jmespath.search(
-                    "content.biological_sex", es_biomaterial
-                ),
-                organismAge=jmespath.search(
-                    "content.organism_age", es_biomaterial
-                ),
-                organismAgeUnit=jmespath.search(
-                    "content.organism_age_unit.text", es_biomaterial
-                )
-            )
-            biomaterials.append(api_biomaterial)
-        return biomaterials
 
     def map_entries(self, entry):
         """
@@ -537,13 +399,7 @@ class AutoCompleteResponse(EntryFetcher):
                     mapping, entry, 'projectCode')),
                 _type='file'
             )
-        elif _type == 'file-donor' or _type == 'donor':
-            # Create a file-donor representation
-            # TODO: Need to work on the donor exclusive representation.
-            mapped_entry = FileDonorAutoCompleteEntry(
-                _id=self.fetch_entry_value(mapping, entry, 'id'),
-                _type='donor'
-            )
+
         return mapped_entry.to_json()
 
     def __init__(self, mapping, hits, pagination, _type):

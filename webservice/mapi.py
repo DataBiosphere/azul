@@ -1,5 +1,4 @@
 from action import actionbp
-from billing import billingbp
 from database import login_db, login_manager
 from flask import Flask
 from flask_migrate import Migrate
@@ -44,7 +43,6 @@ login_manager.session_protection = "strong"
 # and the billing
 app.register_blueprint(actionbp)
 app.register_blueprint(webservicebp)
-app.register_blueprint(billingbp)
 # Apply any migrations
 migrate = Migrate(app, db)
 # Get the app context

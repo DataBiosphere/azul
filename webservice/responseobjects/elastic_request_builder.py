@@ -69,13 +69,14 @@ class ElasticTransformDump(object):
         """
         # Translate the fields to the appropriate ElasticSearch Index.
         # Probably can be edited later to do not just files but donors, etc.
-        for key, value in filters['file'].items():
+        #for key, value in filters['file'].items():
+        for key, value in filters.items():
             if key in field_mapping:
                 # Get the corrected term within ElasticSearch
                 corrected_term = field_mapping[key]
                 # Replace the key in the filter with the name within
                 # ElasticSearch
-                filters['file'][corrected_term] = filters['file'].pop(key)
+                filters[corrected_term] = filters.pop(key)
         return filters
 
     @staticmethod
@@ -90,7 +91,8 @@ class ElasticTransformDump(object):
         query_list = [Q('constant_score', filter=Q(
             'terms', **{'{}__keyword'.format(
                 facet.replace(".", "__")): values['is']}))
-                      for facet, values in filters['file'].iteritems()]
+                      for facet, values in filters.iteritems()]
+                      #for facet, values in filters['file'].iteritems()]
         # Return a Query object. Make it match_all
         return Q('bool', must=query_list) if len(query_list) > 0 else Q()
 
@@ -496,7 +498,7 @@ class ElasticTransformDump(object):
             else:
                 hits = [x['_source'] for x in es_hits[0:len(es_hits)-list_adjustment]]
 
-            facets = es_response_dict['aggregations']
+            facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             paging = self.generate_paging_dict(es_response_dict, pagination)
             # Creating FileSearchResponse object
             self.logger.info('Creating FileSearchResponse')
