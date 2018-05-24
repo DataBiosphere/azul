@@ -5,6 +5,6 @@
   "page": 1,
   "pages": 1,
   "size": 5,
-  "sort": "center_name",
+  "sort": "entity_uuid",
   "total": 2
 }

@@ -1,60 +1,12 @@
 {
   "translation": {
-    "biomaterialId": "biomaterials.content.biomaterial_core.biomaterial_id",
-    "organ": "biomaterials.content.organ.text",
-    "organPart": "biomaterials.content.organ_part.text",
-    "processId": "processes.content.process_core.process_id",
-    "instrumentManufacturerModel": "processes.content.instrument_manufacturer_model.text",
-    "processType": "process.content.process_type.text",
-    "libraryConstructionApproach": "process.content.library_construction_approach",
-    "genusSpecies": "biomaterials.content.genus_species.text",
-    "organismAge": "biomaterials.content.organism_age",
-    "organismAgeUnit": "biomaterials.content.organism_age_unit.text",
-    "biologicalSex": "biomaterials.content.biological_sex",
-    "disease": "biomaterials.content.disease",
-    "preservationMethod": "biomaterials.content.preservation_method",
-    "project": "project.project_core.project_shortname",
-    "laboratory": "project.content.contributors.laboratory",
-    "protocol": "protocols.content.protocol_core.protocol_id",
-    "fileFormat": "files.format",
-    "fileSize": "files.size"
+    "entity_id": "entity_id",
+    "entity_version":"entity_version"
   },
   "autocomplete-translation": {
     "ES_FILE_INDEX": {
-      "centerName": "center_name",
-      "workFlow": "workflow",
-      "program": "program",
-      "projectCode": "project",
-      "analysisType": "analysis_type",
-      "fileFormat": "file_type",
-      "fileSize": "fileSize",
-      "specimenType": "specimen_type",
-      "software": "software",
-      "fileId": "file_id",
-      "id": "file_id",
-      "donorId": "donor",
-      "donor": "donor",
-      "primarySite": "submitterDonorPrimarySite",
-      "Program": "program",
-      "Project": "project",
-      "Center Name": "center_name",
-      "Submitter Donor ID": "submittedDonorId",
-      "Donor UUID": "donor",
-      "Submitter Donor Primary Site": "submitterDonorPrimarySite",
-      "Submitter Specimen ID": "submittedSpecimenId",
-      "Specimen UUID": "specimenUUID",
-      "Submitter Specimen Type": "specimen_type",
-      "Submitter Experimental Design": "experimentalStrategy",
-      "Submitter Sample ID": "submittedSampleId",
-      "Sample UUID": "sampleId",
-      "Analysis Type": "analysis_type",
-      "Workflow Name": "software",
-      "Workflow Version": "workflowVersion",
-      "File Type": "file_type",
-      "File Path": "title",
-      "Upload File ID": "file_id",
-      "Data Bundle UUID": "repoDataBundleId",
-      "Metadata.json": "metadataJson"
+      "entity_id": "entity_id",
+      "entity_version":"entity_version"
     },
     "ES_DONOR_INDEX": {
       "donor": "donor_uuid"
@@ -67,19 +19,6 @@
     "Project Id"
   ],
   "facets": [
-    "organ",
-    "organPart",
-    "instrumentManufacturerModel",
-    "libraryConstructionApproach",
-    "genusSpecies",
-    "organismAge",
-    "organismAgeUnit",
-    "biologicalSex",
-    "disease",
-    "preservationMethod",
-    "project",
-    "laboratory",
-    "protocol",
-    "fileFormat"
+
   ]
 }
