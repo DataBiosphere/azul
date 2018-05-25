@@ -58,6 +58,11 @@
         "index_field": "download_id"
       },
       {
+        "from_file_data": true,
+        "dss_field": "aliases",
+        "index_field": "aliases"
+      },
+      {
         "source": "metadata.json",
         "dss_field": "aliquot.experimental_strategy",
         "index_field": "experimentalStrategy"
