@@ -6,19 +6,37 @@
         "index_field": "access"
       },
       {
+        "constant": "",
+        "dss_field": "analysis_type"
+      },
+      {
         "source": "metadata.json",
         "index_field": "center_name",
         "dss_field": "core_metadata.contributor"
       },
       {
         "source": "metadata.json",
-        "dss_field": "project_id",
-        "index_field": "core_metadata.project"
+        "dss_field": "core_metadata.project",
+        "index_field": "project_id"
       },
       {
         "from_file_data": true,
         "index_field": "lastModified",
         "dss_field": "version"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "core_metadata.project",
+        "index_field": "program"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "core_metadata.project",
+        "index_field": "project"
+      },
+      {
+        "constant": "",
+        "index_field": "redwoodDonorUUID"
       },
       {
         "source": "metadata.json",
@@ -28,7 +46,7 @@
       {
         "from_file_data": true,
         "dss_field": "size",
-        "index_field": "file_size"
+        "index_field": "fileSize"
       },
       {
         "from_file_data": true,
@@ -54,6 +72,10 @@
         "source": "metadata.json",
         "index_field": "experimentalStrategy",
         "dss_field": "aliquot.experimental_strategy"
+      },
+      {
+        "constant": "",
+        "index_field": "donor"
       },
       {
         "constant": "",

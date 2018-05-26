@@ -143,7 +143,7 @@ class DCCJSONTransformer:
                 result = jmespath.search(dss_field, metadata)
             except IndexError as e:
                 log.error("The '{}' field doesn't exist in selected metadata".format(field))
-                exit()
+                raise
             return result
 
         if isinstance(dss_field, dict):
