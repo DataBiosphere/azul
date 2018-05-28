@@ -8,8 +8,10 @@ from utils.base_config import IndexProperties
 class HCAIndexProperties(IndexProperties):
     """Index properties for HCA"""
 
-    def __init__(self, elasticsearch_host: str, elasticsearch_port: str) -> None:
+    def __init__(self, dss_url: str,
+                 elasticsearch_host: str, elasticsearch_port: str) -> None:
         """Initialize properties."""
+        self._dss_url = dss_url
         self._es_host = elasticsearch_host
         self._es_port = elasticsearch_port
         self._es_mapping = {
@@ -54,6 +56,9 @@ class HCAIndexProperties(IndexProperties):
             }
         }
 
+    def dss_url(self) -> str:
+        return self._dss_url
+
     @property
     def elastic_search_client(self) -> Elasticsearch:
         if self._es_host.endswith('.es.amazonaws.com'):
@@ -86,3 +91,12 @@ class HCAIndexProperties(IndexProperties):
     @property
     def settings(self) -> Mapping[str, Any]:
         return self._es_settings
+
+    @property
+    def transformers(self):
+        from project.hca.transformers import FileTransformer,\
+            SpecimenTransformer, ProjectTransformer
+        transformers = [FileTransformer,
+                        SpecimenTransformer, ProjectTransformer]
+        return transformers
+

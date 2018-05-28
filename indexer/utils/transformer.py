@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from itertools import filterfalse, tee
 import re
 from typing import Mapping, Sequence, Iterable
+import os
 
 
 class Document:
@@ -27,9 +28,11 @@ class Document:
 
 
 class ElasticSearchDocument:
-    def __init__(self, elastic_search_id: str, content: Document) -> None:
+    def __init__(self, elastic_search_id: str, content: Document, entity_name: str, _type: str="doc") -> None:
         self.elastic_search_id = elastic_search_id
         self.content = content
+        self.index = "browser_{}_{}".format(entity_name, os.getenv("STAGE_ENVIRONMENT", "dev"))
+        self._type = _type
 
     @property
     def document_id(self) -> str:
@@ -39,10 +42,20 @@ class ElasticSearchDocument:
     def document_content(self) -> dict:
         return self.content.document
 
+    @property
+    def document_index(self) -> str:
+        return self.index
+
+    @property
+    def document_type(self) -> str:
+        return self._type
+
 
 class Transformer(ABC):
-    def __init__(self):
-        pass
+
+    @property
+    def entity_name(self) -> str:
+        return ""
 
     @staticmethod
     def partition(predicate, iterable):
@@ -62,21 +75,6 @@ class Transformer(ABC):
         return version
 
     @abstractmethod
-    def _create_files(
-            self,
-            files_dictionary: dict,
-            metadata_dictionary: dict=None) -> Sequence[dict]:
-        pass
-
-    @abstractmethod
-    def _create_specimens(self, metadata_dictionary: dict) -> Sequence[dict]:
-        pass
-
-    @abstractmethod
-    def _create_project(self, metadata_dictionary: dict) -> Sequence[dict]:
-        pass
-
-    @abstractmethod
     def create_documents(
             self,
             metadata_files: Mapping[str, dict],
@@ -85,3 +83,4 @@ class Transformer(ABC):
             bundle_version: str,
     ) -> Sequence[ElasticSearchDocument]:
         pass
+
