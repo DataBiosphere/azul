@@ -40,7 +40,7 @@ replica = os.environ.get("REPLICA", "aws")
 
 # get which indexer project definition to use
 #https://lkubuntu.wordpress.com/2012/10/02/writing-a-python-plugin-api/
-IndexerPluginDirectory = "./projects"
+IndexerPluginDirectory = "./project"
 IndexerModule = "indexer"
 indexer_project = os.environ.get('INDEXER_PROJECT', 'hca')
 
@@ -123,7 +123,8 @@ def post_notification():
     # Create an instance of the Indexers and run it
     IndexerToLoad = load_indexer_class()
     my_indexer = IndexerToLoad()
-    
+
+    # TODO: Replace with a call to the constructor of the indexer loaded in the previous step
     file_indexer = FileIndexerV5(metadata_files,
                                  data_files,
                                  es,
