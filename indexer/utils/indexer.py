@@ -9,13 +9,14 @@ The based class Indexer serves as the basis for additional indexing classes.
 import collections
 from copy import deepcopy
 from abc import ABC, abstractmethod
+from elasticsearch import RequestError, ConnectionError
 from utils.downloader import MetadataDownloader
 from functools import reduce
 import logging
 import json
 import re
 from utils.base_config import IndexProperties
-from typing import Type, Mapping, Iterable, Any
+from typing import Type, Mapping, Iterable, Any, Union
 
 # create logger
 module_logger = logging.getLogger(__name__)
@@ -48,15 +49,36 @@ class Indexer(ABC):
         for transformer in transformers:
             es_documents = transformer.create_documents(metadata, data, bundle_uuid, bundle_version)
             for es_document in es_documents:
-
-                # TODO: Implement merging strategy by using versioning
-                self.merge(es_document)
-
-                es_client.index(index=es_document.document_index,
-                                doc_type=es_document.document_type,
-                                id=es_document.document_id,
-                                body=es_document.document_content)
-            pass
+                while True:
+                    existing = es_client.get(index=es_document.document_index,
+                                             doc_type=es_document.document_type,
+                                             id=es_document.document_id,
+                                             ignore=[404])
+                    # replace with an empty dictionary if no existing doc
+                    existing = {} if not existing else existing
+                    updated_version = existing.get("_version", 0) + 1
+                    new_content = es_document.document_content
+                    updated_document = self.merge(new_content, existing)
+                    es_document.document_content = updated_document
+                    # TODO: FIX THIS MESS. HANDLE EXCEPTIONS APPROPRIATELY.
+                    # TODO: HTTP errors not related to version should be limited
+                    try:
+                        es_client.index(index=es_document.document_index,
+                                        doc_type=es_document.document_type,
+                                        id=es_document.document_id,
+                                        body=es_document.document_content,
+                                        version=updated_version,
+                                        version_type="external")
+                        break
+                    except RequestError as er:
+                        module_logger.info(
+                            "There was a version conflict... retrying")
+                        module_logger.debug(er.info)
+                    except ConnectionError as er:
+                        module_logger.error("There was a connection error")
+                        module_logger.error(er.error)
+                        module_logger.error(er.info)
+                        raise er
 
     def extract(self):
         metadata, data = MetadataDownloader(self.properties.dss_url)
@@ -65,8 +87,27 @@ class Indexer(ABC):
     def transform(self):
         pass
 
-    def merge(self):
-        pass
+    @staticmethod
+    def merge(new_document: Mapping[str, Any],
+              stored_document: Union[bool, Any]) -> Mapping[str, Any]:
+        # This is a new record
+        if not stored_document:
+            return new_document
+        # new_bundle should be an array of length one since the new document
+        # contains data for only one bundle
+        new_bundle = new_document["bundles"][0]
+        updated_bundles = []
+        for bundle in stored_document["bundles"]:
+            if bundle["uuid"] == new_bundle["uuid"]:
+                latest_bundle = max(bundle,
+                                    new_bundle,
+                                    key=lambda x: x["version"])
+                updated_bundles.append(latest_bundle)
+            else:
+                updated_bundles.append(bundle)
+        # Update the document
+        new_document["bundles"] = updated_bundles
+        return new_document
 
     def load(self):
         pass

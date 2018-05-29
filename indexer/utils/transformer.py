@@ -30,7 +30,7 @@ class Document:
 class ElasticSearchDocument:
     def __init__(self, elastic_search_id: str, content: Document, entity_name: str, _type: str="doc") -> None:
         self.elastic_search_id = elastic_search_id
-        self.content = content
+        self._content = content
         self.index = "browser_{}_{}".format(entity_name, os.getenv("STAGE_ENVIRONMENT", "dev"))
         self._type = _type
 
@@ -40,7 +40,7 @@ class ElasticSearchDocument:
 
     @property
     def document_content(self) -> dict:
-        return self.content.document
+        return self._content.document
 
     @property
     def document_index(self) -> str:
@@ -49,6 +49,10 @@ class ElasticSearchDocument:
     @property
     def document_type(self) -> str:
         return self._type
+
+    @document_content.setter
+    def document_content(self, new_content: dict) -> None:
+        self._content = new_content
 
 
 class Transformer(ABC):
