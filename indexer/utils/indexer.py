@@ -16,6 +16,7 @@ import logging
 import json
 import re
 from utils.base_config import IndexProperties
+from time import sleep
 from typing import Type, Mapping, Iterable, Any, Union
 
 # create logger
@@ -29,9 +30,7 @@ class Indexer(ABC):
         self.data_files = data_files
         self.properties = properties
 
-    def index(self,
-              blue_box_notification: Mapping[str, Any],
-              replica: str) -> None:
+    def index(self, blue_box_notification: Mapping[str, Any]) -> None:
         # Calls extract, transform, merge, and load
         bundle_uuid = blue_box_notification['match']['bundle_uuid']
         bundle_version = blue_box_notification['match']['bundle_version']
@@ -49,6 +48,7 @@ class Indexer(ABC):
         for transformer in transformers:
             es_documents = transformer.create_documents(metadata, data, bundle_uuid, bundle_version)
             for es_document in es_documents:
+                retries = 3
                 while True:
                     existing = es_client.get(index=es_document.document_index,
                                              doc_type=es_document.document_type,
@@ -60,8 +60,6 @@ class Indexer(ABC):
                     new_content = es_document.document_content
                     updated_document = self.merge(new_content, existing)
                     es_document.document_content = updated_document
-                    # TODO: FIX THIS MESS. HANDLE EXCEPTIONS APPROPRIATELY.
-                    # TODO: HTTP errors not related to version should be limited
                     try:
                         es_client.index(index=es_document.document_index,
                                         doc_type=es_document.document_type,
@@ -75,10 +73,16 @@ class Indexer(ABC):
                             "There was a version conflict... retrying")
                         module_logger.debug(er.info)
                     except ConnectionError as er:
-                        module_logger.error("There was a connection error")
-                        module_logger.error(er.error)
-                        module_logger.error(er.info)
-                        raise er
+                        module_logger.info("There was a connection error")
+                        module_logger.info("{} retries left".format(retries))
+                        if retries > 0:
+                            retries -= 1
+                            sleep(retries)
+                        else:
+                            module_logger.error("Out of retries. There is a connection problem.")
+                            module_logger.error(er.error)
+                            module_logger.error(er.info)
+                            raise er
 
     def extract(self):
         metadata, data = MetadataDownloader(self.properties.dss_url)
