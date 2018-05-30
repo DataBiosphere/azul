@@ -25,8 +25,7 @@
         "index_field": "lastModified"
       },
       {
-        "source": "metadata.json",
-        "dss_field": "core_metadata.project",
+        "constant": "TOPMed",
         "index_field": "program"
       },
       {
