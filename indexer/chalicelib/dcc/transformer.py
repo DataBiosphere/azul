@@ -2,7 +2,7 @@ import json
 import pprint
 import logging
 #TODO Check if APACHE LICENSE is OK to Use
-from jsonpath_rw import parse as jsonpath_parse
+import jmespath
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +54,21 @@ class ConvertToListFormatter(Formatter):
             return value
 
 
+class ExtractFileExtension(Formatter):
+    name = "extract_file_extension"
+
+    def __init__(self):
+        super().__init__()
+
+    def format(self, value):
+        val_lst = value.split('.')
+
+        if val_lst:
+            return val_lst[-1]
+        else:
+            return "N/A"
+
+
 class DCCJSONTransformer:
     def __init__(self, filename):
         with open(filename, 'r') as csf:
@@ -62,6 +77,7 @@ class DCCJSONTransformer:
 
         self._formatters = {}
         self.add_formatter(ConvertToListFormatter())
+        self.add_formatter(ExtractFileExtension())
 
     def add_formatter(self, formatter):
         self._formatters[formatter.name] = formatter
@@ -123,15 +139,12 @@ class DCCJSONTransformer:
 
     def _find_value_with_fieldname(self, dss_field, metadata):
         def parse_metadata(field):
-            parser = jsonpath_parse("$..{}".format(field))
-            result = parser.find(metadata)
-
             try:
-                result_value = result[0].value
+                result = jmespath.search(dss_field, metadata)
             except IndexError as e:
-                log.error("The '{}' field doesn't exist in selected metadata".format(field), exec_info=True)
+                log.error("The '{}' field doesn't exist in selected metadata".format(field))
                 raise
-            return result_value
+            return result
 
         if isinstance(dss_field, dict):
             #TODO Implement seperator settings
@@ -140,8 +153,7 @@ class DCCJSONTransformer:
             return parse_metadata(dss_field)
 
     def _get_matching_subitem(self, dss_value, query_index_field, index_field, metadata):
-        parser = jsonpath_parse("$..{}".format(index_field))
-        result = parser.find(metadata)
+        result = jmespath.search(index_field, metadata)
         matching_subitems = [res.context.value for res in result]
         for subitem in matching_subitems:
             query_index_value = self._find_value_with_fieldname(query_index_field, subitem)
