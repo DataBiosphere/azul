@@ -7,7 +7,7 @@
       },
       {
         "constant": "",
-        "dss_field": "analysis_type"
+        "index_field": "analysis_type"
       },
       {
         "source": "metadata.json",
@@ -16,8 +16,8 @@
       },
       {
         "source": "metadata.json",
-        "dss_field": "core_metadata.project",
-        "index_field": "project_id"
+        "dss_field": "core_metadata.project_id",
+        "index_field": "project"
       },
       {
         "from_file_data": true,
@@ -30,18 +30,8 @@
         "index_field": "program"
       },
       {
-        "source": "metadata.json",
-        "dss_field": "core_metadata.project",
-        "index_field": "project"
-      },
-      {
         "constant": "",
         "index_field": "redwoodDonorUUID"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "core_metadata.format",
-        "index_field": "file_type"
       },
       {
         "from_file_data": true,
