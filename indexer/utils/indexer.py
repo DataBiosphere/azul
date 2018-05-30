@@ -21,8 +21,7 @@ from typing import Type, Mapping, Iterable, Any, Union
 # create logger
 module_logger = logging.getLogger(__name__)
 
-
-class Indexer(ABC):
+class BaseIndexer(ABC):
 
     def __init__(self, metadata_files: dict, data_files: dict, properties: IndexProperties) -> None:
         self.metadata_files = metadata_files
@@ -111,14 +110,6 @@ class Indexer(ABC):
 
     def load(self):
         pass
-
-
-
-
-
-
-
-
 
 
 class OLDIndexer(ABC):

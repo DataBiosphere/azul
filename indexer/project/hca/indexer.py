@@ -1,5 +1,5 @@
-from utils.indexer import Indexer
+from utils.indexer import BaseIndexer
 from project.hca.transformers import FileTransformer
 
-class HCAIndexer(Indexer):
+class Indexer(BaseIndexer):
     pass
