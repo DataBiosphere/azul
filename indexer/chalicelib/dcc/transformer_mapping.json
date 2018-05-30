@@ -11,8 +11,8 @@
       },
       {
         "source": "metadata.json",
-        "index_field": "center_name",
-        "dss_field": "core_metadata.contributor"
+        "dss_field": "core_metadata.contributor",
+        "index_field": "center_name"
       },
       {
         "source": "metadata.json",
@@ -21,8 +21,8 @@
       },
       {
         "from_file_data": true,
-        "index_field": "lastModified",
-        "dss_field": "version"
+        "dss_field": "version",
+        "index_field": "lastModified"
       },
       {
         "source": "metadata.json",
@@ -40,8 +40,8 @@
       },
       {
         "source": "metadata.json",
-        "index_field": "file_type",
-        "dss_field": "core_metadata.format"
+        "dss_field": "core_metadata.format",
+        "index_field": "file_type"
       },
       {
         "from_file_data": true,
@@ -50,18 +50,18 @@
       },
       {
         "from_file_data": true,
-        "index_field": "file_id",
-        "dss_field": "uuid"
+        "dss_field": "uuid",
+        "index_field": "file_id"
       },
       {
         "from_file_data": true,
-        "index_field": "file_version",
-        "dss_field": "version"
+        "dss_field": "version",
+        "index_field": "file_version"
       },
       {
         "from_file_data": true,
-        "index_field": "fileMd5sum",
-        "dss_field": "sha1"
+        "dss_field": "sha1",
+        "index_field": "fileMd5sum"
       },
       {
         "from_file_data": true,
@@ -70,8 +70,8 @@
       },
       {
         "source": "metadata.json",
-        "index_field": "experimentalStrategy",
-        "dss_field": "aliquot.experimental_strategy"
+        "dss_field": "aliquot.experimental_strategy",
+        "index_field": "experimentalStrategy"
       },
       {
         "constant": "",
@@ -108,8 +108,8 @@
       },
       {
         "source": "metadata.json",
-        "index_field": "sampleId",
-        "dss_field": "sample.id"
+        "dss_field": "sample.id",
+        "index_field": "sampleId"
       },
       {
         "constant": "",
@@ -117,13 +117,13 @@
       },
       {
         "source": "metadata.json",
-        "index_field": "specimen_type",
-        "dss_field": "sample.biospecimen_type"
+        "dss_field": "sample.biospecimen_type",
+        "index_field": "specimen_type"
       },
       {
         "source": "metadata.json",
-        "index_field": "study",
-        "dss_field": "core_metadata.project_id"
+        "dss_field": "core_metadata.project_id",
+        "index_field": "study"
       },
       {
         "constant": "",
@@ -131,13 +131,13 @@
       },
       {
         "source": "metadata.json",
-        "index_field": "submittedSampleId",
-        "dss_field": "aliquot.submitter_id"
+        "dss_field": "aliquot.submitter_id",
+        "index_field": "submittedSampleId"
       },
       {
         "source": "metadata.json",
-        "index_field": "specimenUUID",
-        "dss_field": "sample.id"
+        "dss_field": "sample.id",
+        "index_field": "specimenUUID"
       },
       {
         "constant": "",
@@ -145,8 +145,8 @@
       },
       {
         "source": "metadata.json",
-        "index_field": "submitterDonorPrimarySite",
-        "dss_field": "sample.composition"
+        "dss_field": "sample.composition",
+        "index_field": "submitterDonorPrimarySite"
       },
       {
         "constant": "",
@@ -154,13 +154,13 @@
       },
       {
         "from_file_data": true,
-        "index_field": "title",
-        "dss_field": "name"
+        "dss_field": "name",
+        "index_field": "title"
       },
       {
         "from_file_data": true,
-        "index_field": "file_type",
         "dss_field": "name",
+        "index_field": "file_type",
         "formatters": ["extract_file_extension"]
       },
       {
@@ -169,8 +169,8 @@
       },
       {
         "from_file_data": true,
-        "index_field": "urls",
         "dss_field": "url",
+        "index_field": "urls",
         "formatters": ["convert_to_list"]
       },
       {
