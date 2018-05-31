@@ -101,7 +101,6 @@ class MyTestCase(unittest.TestCase):
             file_search_test = json.load(test1)
             test1.close()
 
-
         # This is what will be used as the comparing standard
         with open('{}/facets_test_input1.json'.format(
                 base_path)) as facet_input:
@@ -121,8 +120,8 @@ class MyTestCase(unittest.TestCase):
             ).return_response().to_json()
 
         # Transform both json objects to a string
-        json_response = json.dumps(file_search_test, sort_keys=True) #loaded from json
-        json_test = json.dumps(file_search_response, sort_keys=True) #generated
+        json_response = json.dumps(file_search_test, sort_keys=True)  # loaded from json
+        json_test = json.dumps(file_search_response, sort_keys=True)  # generated
 
         # print "expected: "+json_response
         # print "actual: "+json_test
@@ -154,7 +153,6 @@ class MyTestCase(unittest.TestCase):
             file_search_test = json.load(test1)
             test1.close()
 
-
         # This is what will be used as the comparing standard
         with open('{}/facets_test_input1.json'.format(
                 base_path)) as facet_input:
@@ -174,8 +172,8 @@ class MyTestCase(unittest.TestCase):
             ).return_response().to_json()
 
         # Transform both json objects to a string
-        json_response = json.dumps(file_search_test, sort_keys=True) #loaded from json
-        json_test = json.dumps(file_search_response, sort_keys=True) #generated
+        json_response = json.dumps(file_search_test, sort_keys=True)  # loaded from json
+        json_test = json.dumps(file_search_response, sort_keys=True)  # generated
 
         # print "expected: "+json_response
         # print "actual: "+json_test
