@@ -60,7 +60,6 @@ def get_data(file_id=None):
     try:
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
-        #filters = {} if filters == {} else filters
     except Exception, e:
         logger.error("Malformed filters parameter: {}".format(e.message))
         return "Malformed filters parameter"
@@ -76,7 +75,7 @@ def get_data(file_id=None):
     sb = request.args.getlist('search_before')
     if not sa and not sb:
         logger.debug("Using from sorting")
-        pagination['from'] = request.args.get('from', 1, type=int);
+        pagination['from'] = request.args.get('from', 1, type=int)
     elif not sb:
         logger.debug("Using search after sorting, with value "+str(sa))
         pagination['search_after'] = sa
@@ -163,7 +162,7 @@ def get_data_pie():
     sb = request.args.getlist('search_before')
     if not sa and not sb:
         logger.debug("Using from sorting")
-        pagination['from'] = request.args.get('from', 1, type=int);
+        pagination['from'] = request.args.get('from', 1, type=int)
     elif not sb:
         logger.debug("Using search after sorting, with value " + str(sa))
         pagination['search_after'] = sa

@@ -1,0 +1,10 @@
+{
+  "entity_id": "uuid4",
+  "entity_version": "iso8601",
+  "bundles": [
+    {
+      "uuid": "uuid4",
+      "version": "iso8601"
+    }
+  ]
+}

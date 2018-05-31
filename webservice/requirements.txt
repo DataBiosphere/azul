@@ -7,7 +7,7 @@ boto==2.46.1
 certifi==2017.1.23
 cffi==1.9.1
 click==6.7
-cryptography==1.7.2
+cryptography==1.9
 docutils==0.13.1
 elasticsearch==5.0.1
 elasticsearch-dsl>=5.0.0,<6.0.0

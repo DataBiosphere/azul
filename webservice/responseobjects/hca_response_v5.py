@@ -5,7 +5,7 @@ from flask_excel import make_response_from_array
 import logging
 import jmespath
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
-    IntegerProperty, ListProperty, ObjectProperty, BooleanProperty
+    IntegerProperty, ListProperty, ObjectProperty
 import os
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
