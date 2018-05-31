@@ -8,3 +8,4 @@ elasticsearch>=5.0.0,<6.0.0
 Faker==0.8.11
 future==0.16.0
 hca==3.4.6
+locustio==0.8.1
