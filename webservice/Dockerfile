@@ -3,13 +3,13 @@ FROM nginx:1.10
 RUN apt-get update
 RUN apt-get install -y build-essential libpq-dev libssl-dev libffi-dev python-dev
 RUN apt-get install -y python-pip postgresql
-RUN pip install -U pip
+RUN pip install -U pip setuptools
 RUN pip install uwsgi
 RUN pip install --upgrade cffi
 #WORKDIR /app
 RUN apt-get install -y uwsgi-plugin-python
 ADD ./requirements.txt /app/requirements.txt
-RUN pip install -r /app/requirements.txt
+RUN pip install --ignore-installed -r /app/requirements.txt
 #Make NGINX run on the foreground
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 
