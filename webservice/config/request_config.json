@@ -35,7 +35,8 @@
     "Upload File ID": "file_id",
     "Data Bundle UUID": "repoDataBundleId",
     "Metadata.json": "metadataJson",
-    "File URLs": "urls"
+    "File URLs": "urls",
+    "File Aliases": "aliases"
   },
   "autocomplete-translation": {
     "ES_FILE_INDEX": {
@@ -99,7 +100,8 @@
     "Upload File ID",
     "Data Bundle UUID",
     "Metadata.json",
-    "File URLs"
+    "File URLs",
+    "File Aliases"
   ],
   "facets": [
     "centerName",

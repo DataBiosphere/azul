@@ -34,6 +34,7 @@ class FileCopyObj(JsonObject):
     fileVersion = StringProperty()
     urls = ListProperty(StringProperty)
     dosUri = StringProperty()
+    aliases = ListProperty(StringProperty)
     # DateTimeProperty Int given the ICGC format uses
     # an int and not DateTimeProperty
     lastModified = StringProperty()
@@ -454,6 +455,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             urls=self.fetch_entry_value(mapping, entry, 'urls'),
             dosUri=self.compose_dos_uri(self.fetch_entry_value(mapping, entry, 'fileId'),
                                         self.fetch_entry_value(mapping, entry, 'fileVersion')),
+            aliases=self.fetch_entry_value(mapping, entry, 'aliases'),
             lastModified=self.fetch_entry_value(
                 mapping, entry, 'lastModified')
         )

@@ -45,6 +45,7 @@
       "fileVersion": "file_version",
       "urls": "urls",
       "dosUrl": "dosUrl",
+      "aliases": "aliases",
       "lastModified": "lastModified",
       "repoBaseUrl": "repoBaseUrl",
       "repoCode": "repoCode",
