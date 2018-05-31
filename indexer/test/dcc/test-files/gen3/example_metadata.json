@@ -1,0 +1,90 @@
+{
+  "metadata.json": {
+    "aliquot": {
+      "project_id": "test-topmed-public",
+      "aliquot_quantity": null,
+      "aliquot_volume": null,
+      "experiment_date": null,
+      "analyte_isolation_batch_id": null,
+      "analyte_isolation_date": null,
+      "analyte_type": "DNA",
+      "submitter_id": "FKE654321",
+      "amount": null,
+      "analyte_isolation_method": null,
+      "exclude": null,
+      "concentration": null,
+      "experimental_strategy": null,
+      "type": "aliquot",
+      "exclusion_criteria": null,
+      "experiment_batch_id": null
+    },
+    "sample": {
+      "pathology_notes": null,
+      "biospecimen_anatomic_site": null,
+      "oct_embedded": null,
+      "submitter_id": "ABCDE12_sample",
+      "hours_to_collection": null,
+      "prosector_notes": null,
+      "id": "99999999-8888-7777-6666-555555555555",
+      "collection_kit": null,
+      "biospecimen_anatomic_site_uberon_term": null,
+      "sample_type": null,
+      "autolysis_score": null,
+      "project_id": "test-topmed-public",
+      "current_weight": null,
+      "composition": "B-lymphocyte",
+      "internal_notes": null,
+      "is_ffpe": null,
+      "biospecimen_anatomic_site_detail": null,
+      "method_of_sample_procurement": null,
+      "tissue_type": null,
+      "collection_site": null,
+      "freezing_method": null,
+      "biospecimen_physical_site": null,
+      "biospecimen_type": "Normal - Blood",
+      "type": "sample",
+      "preservation_method": null,
+      "biospecimen_anatomic_site_uberon_id": null,
+      "hours_to_sample_procurement": null
+    },
+    "core_metadata": {
+      "rights": "open access",
+      "description": "Aligned reads for ABCDE12_sample sample",
+      "data_type": "WGS",
+      "creator": "Gregor Mendel",
+      "language": "en-US",
+      "format": "CRAM",
+      "submitter_id": "FKE654321-cram-core-metadata",
+      "date": "07/20/22",
+      "relation": "University of Vienna",
+      "source": "HapMap",
+      "coverage": "US",
+      "contributor": "St. Thomas's Abbey",
+      "title": "FKE654321 CRAM File",
+      "project_id": "test-topmed-public",
+      "subject": "sequencing"
+    }
+  },
+  "manifest": [
+    {
+      "name": "FKE654321.recab.cram",
+      "updated_datetime": "2014-03-22T00:00:00.324661+00:00",
+      "created_datetime": "2014-03-22T00:00:00.324661+00:00",
+      "md5sum": "29201939301929301929371733831922",
+      "s3url": "s3://cgp-commons-public/topmed_open_access/00000000-1111-2222-3333-444455556666/FKE654321.recab.cram",
+      "did": "99999999-8888-7777-6666-555555555555",
+      "gsurl": "gs://cgp-commons-multi-region-public/topmed_open_access/00000000-1111-2222-3333-444455556666/FKE654321.recab.cram",
+      "size": 10101010
+    },
+    {
+      "name": "FKE654321.recab.cram.crai",
+      "updated_datetime": "2014-03-22T00:00:00.324661+00:00",
+      "created_datetime": "2014-03-22T00:00:00.324661+00:00",
+      "md5sum": "2048129128328f828382829e91919189",
+      "s3url": "s3://cgp-commons-public/topmed_open_access/99999999-8888-7777-6666-555555555555/FKE654321.recab.cram.crai",
+      "did": "99999999-8888-7777-6666-555555555555",
+      "gsurl": "gs://cgp-commons-multi-region-public/topmed_open_access/99999999-8888-7777-6666-555555555555/FKE654321.recab.cram",
+      "size": 2929
+    }
+  ]
+}

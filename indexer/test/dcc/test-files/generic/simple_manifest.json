@@ -1,0 +1,18 @@
+{
+  "simple.cram": {
+    "content-type": "application/octet-stream",
+    "crc32c": "12345678",
+    "indexed": false,
+    "name": "simple.cram",
+    "s3_etag": "dededededededededededededededede-1414",
+    "sha1": "bbbbbbbbbbbbbbbbbbffbbbfffffffbfbfbfbfbf",
+    "sha256": "4343434243243243243243254325432543254325432543243214231432143244",
+    "size": 23438579833,
+    "url": [
+      "gs://stuff/here/simple.cram",
+      "s3://stuff/here/simple.cram"
+    ],
+    "uuid": "aaaaaaaa-eeee-ffff-dddd-444444444444",
+    "version": "2016-04-08T888888.222222Z"
+  }
+}

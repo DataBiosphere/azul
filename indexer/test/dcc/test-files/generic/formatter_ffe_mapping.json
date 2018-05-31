@@ -1,0 +1,15 @@
+{
+    "transformer_settings": [
+        {
+            "indexer_name": "test_index",
+            "mappings" : [{
+                "source": "formatter_ffe_filename.json",
+                "dss_field": "formatter_ffe_dss_field",
+                "index_field": "formatter_ffe_index_field",
+                "formatters": [
+                    "extract_file_extension"
+                ]
+            }]
+        }
+    ]
+}

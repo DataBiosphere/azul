@@ -1,0 +1,16 @@
+{
+  "content-type": "application/octet-stream",
+  "crc32c": "eeeeeeee",
+  "indexed": false,
+  "name": "FKE6564321.recab.cram",
+  "s3_etag": "32132132132132132132132132132132-4321",
+  "sha1": "bbafabaffbbabdafbabbafafbafbbafafbafffaf",
+  "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "size": 23438579833,
+  "url": [
+    "gs://cgp-commons-multi-region-public/topmed_open_access/99999999-8888-7777-6666-555555555555/NWD319341.recab.cram",
+    "s3://cgp-commons-public/topmed_open_access/99999999-8888-7777-6666-555555555555/NWD319341.recab.cram"
+  ],
+  "uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  "version": "1822-07-20T000000.000000Z"
+}

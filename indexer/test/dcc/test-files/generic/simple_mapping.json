@@ -1,0 +1,10 @@
+{
+  "transformer_settings": [{
+    "indexer_name": "test_index",
+    "mappings": [{
+        "source": "simple_filename.json",
+        "dss_field": "simple_dss_field",
+        "index_field": "simple_index_field"
+      }]
+    }]
+}
