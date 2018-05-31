@@ -8,6 +8,16 @@ services:
 python:
   - "2.7"
 
+env:
+  - ES_VERSION=5.1.1 ES_DOWNLOAD_URL=https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${ES_VERSION}.tar.gz
+
+install:
+  - wget ${ES_DOWNLOAD_URL}
+  - tar -xzf elasticsearch-${ES_VERSION}.tar.gz
+  - pip install flake8
+  - ./elasticsearch-${ES_VERSION}/bin/elasticsearch &
+
 script:
-  - flake8 .
-  - make testme
+  - flake8 --max-line-length=160 .
+  - wget -q --waitretry=1 --retry-connrefused -T 10 -O - http://127.0.0.1:9200  
+  - make travistest

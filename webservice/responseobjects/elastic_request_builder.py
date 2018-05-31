@@ -6,7 +6,7 @@ import json
 import logging
 import os
 from responseobjects.hca_response_v5 import KeywordSearchResponse, \
-    FileSearchResponse, SummaryResponse, ManifestResponse,\
+    FileSearchResponse, SummaryResponse, ManifestResponse, \
     AutoCompleteResponse
 from utilities import json_pp
 
@@ -48,7 +48,7 @@ class ElasticTransformDump(object):
         """
         self.logger = logging.getLogger(
             'dashboardService.elastic_request_builder.ElasticTransformDump')
-        assert es_protocol in ['http', 'https'],\
+        assert es_protocol in ['http', 'https'], \
             "Protocol must be 'http' or 'https'"
         self.logger.debug('ElasticSearch url: {}://{}:{}/'.format(
             es_protocol, es_domain, es_port))
@@ -69,7 +69,7 @@ class ElasticTransformDump(object):
         """
         # Translate the fields to the appropriate ElasticSearch Index.
         # Probably can be edited later to do not just files but donors, etc.
-        #for key, value in filters['file'].items():
+        # for key, value in filters['file'].items():
         for key, value in filters.items():
             if key in field_mapping:
                 # Get the corrected term within ElasticSearch
@@ -92,7 +92,6 @@ class ElasticTransformDump(object):
             'terms', **{'{}__keyword'.format(
                 facet.replace(".", "__")): values['is']}))
                       for facet, values in filters.iteritems()]
-                      #for facet, values in filters['file'].iteritems()]
         # Return a Query object. Make it match_all
         return Q('bool', must=query_list) if len(query_list) > 0 else Q()
 
@@ -275,10 +274,9 @@ class ElasticTransformDump(object):
                                            {'_uid': {"order": 'asc'}})
 
             # fetch one more than needed to see if there's a "next page".
-            es_search = es_search.extra(size=pagination['size']+1)
+            es_search = es_search.extra(size=pagination['size'] + 1)
 
-
-        logging.debug("es_search is "+str(es_search))
+        logging.debug("es_search is " + str(es_search))
         return es_search
 
     @staticmethod
@@ -309,7 +307,7 @@ class ElasticTransformDump(object):
             es_hits = es_response['hits']['hits']
             count = len(es_hits)
 
-            logging.debug("count="+str(count)+" and size="+str(pagination['size']))
+            logging.debug("count=" + str(count) + " and size=" + str(pagination['size']))
 
             if 'search_before' in pagination:
                 # hits are reverse sorted
@@ -326,9 +324,9 @@ class ElasticTransformDump(object):
                 if count > pagination['size']:
                     # There is an extra hit, indicating a next page.
                     count = count - 1
-                    search_after =  es_hits[count - 1]['sort']
+                    search_after = es_hits[count - 1]['sort']
                 else:
-                    #No next page
+                    # No next page
                     search_after = []
                 search_before = es_hits[0]['sort']
             else:
@@ -487,16 +485,16 @@ class ElasticTransformDump(object):
                 json.dumps(es_response_dict)))
             # Extract hits and facets (aggregations)
             es_hits = es_response_dict['hits']['hits']
-            self.logger.info("length of es_hits: "+str(len(es_response_dict['hits']['hits'])))
+            self.logger.info("length of es_hits: " + str(len(es_response_dict['hits']['hits'])))
             # If the number of elements exceed the page size, then we fetched one too many
             # entries to determine if there is a previous or next page.  In that case,
             # return one fewer hit.
             list_adjustment = 1 if len(es_hits) > pagination['size'] else 0
             if 'search_before' in pagination:
                 hits = [x['_source'] for x in
-                        reversed(es_hits[0:len(es_hits)-list_adjustment])]
+                        reversed(es_hits[0:len(es_hits) - list_adjustment])]
             else:
-                hits = [x['_source'] for x in es_hits[0:len(es_hits)-list_adjustment]]
+                hits = [x['_source'] for x in es_hits[0:len(es_hits) - list_adjustment]]
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             paging = self.generate_paging_dict(es_response_dict, pagination)
