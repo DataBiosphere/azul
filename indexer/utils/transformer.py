@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from itertools import filterfalse, tee
 import re
-from typing import Mapping, Sequence, Iterable
+from typing import Mapping, Sequence
 import os
 
 

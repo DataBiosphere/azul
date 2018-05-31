@@ -1,11 +1,18 @@
 from aws_requests_auth import boto_utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-from typing import Mapping, Any
-from utils.base_config import IndexProperties
+import os
+import sys
+from typing import Iterable, Mapping, Any
+
+pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
+sys.path.insert(0, pkg_root)  # noqa
+
+from utils.base_config import BaseIndexProperties
+from utils.transformer import Transformer
 
 
-class HCAIndexProperties(IndexProperties):
+class IndexProperties(BaseIndexProperties):
     """Index properties for HCA"""
 
     def __init__(self, dss_url: str,
@@ -56,6 +63,7 @@ class HCAIndexProperties(IndexProperties):
             }
         }
 
+    @property
     def dss_url(self) -> str:
         return self._dss_url
 
@@ -93,7 +101,7 @@ class HCAIndexProperties(IndexProperties):
         return self._es_settings
 
     @property
-    def transformers(self):
+    def transformers(self) -> Iterable[Transformer]:
         from project.hca.transformers import FileTransformer,\
             SpecimenTransformer, ProjectTransformer
         transformers = [FileTransformer,

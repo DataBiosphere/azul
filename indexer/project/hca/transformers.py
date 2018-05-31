@@ -3,8 +3,14 @@ from collections import defaultdict
 from functools import partial, reduce
 from itertools import chain
 import jmespath
-import project.hca.extractors as extractors
+import os
+import sys
 from typing import Mapping, Sequence, Iterable
+
+pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
+sys.path.insert(0, pkg_root)  # noqa
+
+import project.hca.extractors as extractors
 from utils.transformer import Transformer, ElasticSearchDocument, Document
 
 # TODO: consider moving the current "create_specimens", etc. to "extract_speciments" and then make a new method called "assign_specimens", etc
@@ -111,7 +117,6 @@ class FileTransformer(Transformer):
         files = self._create_files(data_files,
                                    metadata_dictionary=metadata_files[
                                        "file.json"])
-        # all_units = {x["hca_id"]: x for x in chain(specimens, processes, protocol, files)}
         all_units = {}
         for unit in chain(specimens, processes, protocol, files):
             if isinstance(unit["hca_id"], list):

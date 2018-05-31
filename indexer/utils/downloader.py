@@ -16,7 +16,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 import os
 
 
-indexer_name = os.getenv('INDEXER_NAME', 'dss-indigo')
+indexer_name = os.getenv('INDEXER_NAME', 'dss-azul')
 module_logger = logging.getLogger(indexer_name + ".indexer")
 
 

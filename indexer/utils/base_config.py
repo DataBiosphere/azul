@@ -5,7 +5,7 @@ from typing import Iterable, Mapping, Any
 from utils.transformer import Transformer
 
 
-class IndexProperties(ABC):
+class BaseIndexProperties(ABC):
     @property
     def elastic_search_client(self) -> Elasticsearch:
         return Elasticsearch()
