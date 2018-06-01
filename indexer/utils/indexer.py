@@ -29,11 +29,12 @@ class BaseIndexer(ABC):
     def __init__(self, properties: BaseIndexProperties) -> None:
         self.properties = properties
 
-    def index(self, blue_box_notification: Mapping[str, Any]) -> None:
+    def index(self, dss_notification: Mapping[str, Any]) -> None:
         # Calls extract, transform, merge, and load
-        bundle_uuid = blue_box_notification['match']['bundle_uuid']
-        bundle_version = blue_box_notification['match']['bundle_version']
-        metadata, data = MetadataDownloader(self.properties.dss_url)
+        bundle_uuid = dss_notification['match']['bundle_uuid']
+        bundle_version = dss_notification['match']['bundle_version']
+        metadata_downloader = MetadataDownloader(self.properties.dss_url)
+        metadata, data = metadata_downloader.extract_bundle(dss_notification)
         transformers = self.properties.transformers
         es_client = self.properties.elastic_search_client
         # Create and populate the Indexes

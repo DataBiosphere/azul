@@ -3,6 +3,7 @@ from collections import defaultdict
 from functools import partial, reduce
 from itertools import chain
 import jmespath
+import operator
 import os
 import sys
 from typing import Mapping, Sequence, Iterable
@@ -18,7 +19,7 @@ from utils.transformer import Transformer, ElasticSearchDocument, Document
 
 class FileTransformer(Transformer):
     def __init__(self):
-        pass
+        super().__init__()
 
     @property
     def entity_name(self):
@@ -32,8 +33,8 @@ class FileTransformer(Transformer):
         # Handle the file.json if it's present
         if metadata_dictionary is not None:
             metadata_version = self.get_version(metadata_dictionary)
-            file_extractor = getattr(
-                extractors, "FileExtractor.v{}".format(metadata_version))
+            file_extractor = operator.attrgetter(
+                "FileExtractor.v{}".format(metadata_version))(extractors)
             fields_from_metadata = file_extractor(metadata_dictionary)
             for _file, contents in fields_from_metadata.items():
                 files_dictionary[_file].update(contents)
@@ -41,8 +42,8 @@ class FileTransformer(Transformer):
 
     def _create_specimens(self, metadata_dictionary: dict) -> Sequence[dict]:
         metadata_version = self.get_version(metadata_dictionary)
-        biomaterial_extractor = getattr(
-            extractors, "BiomaterialExtractor.v{}".format(metadata_version))
+        biomaterial_extractor = operator.attrgetter(
+            "BiomaterialExtractor.v{}".format(metadata_version))(extractors)
         biomaterials = [biomaterial_extractor(biomaterial) for biomaterial
                         in metadata_dictionary["biomaterials"]]
         # Now mangle the samples into separate entities as appropriate.
@@ -72,33 +73,44 @@ class FileTransformer(Transformer):
             descendants = find_descendants(not_roots, root["parent"])
             root_id = root["biomaterial_id"]
             merged_sample = defaultdict(list)
-            for node in chain(ancestors, descendants, root):
+            print("Printing Root")
+            print(root)
+            print("Printing Ancestors")
+            print(ancestors)
+            print("Printing Descendants")
+            print(descendants)
+            for node in chain(ancestors, descendants, [root]):
+                print("Printing Node")
+                print(node)
                 for key, value in node.items():
-                    merged_sample[key] += value
+                    if isinstance(value, list):
+                        merged_sample[key] += value
+                    else:
+                        merged_sample[key].extend([value])
             merged_sample["biomaterial_id"] = root_id
             samples_list.append(merged_sample)
         return samples_list
 
     def _create_processes(self, metadata_dictionary: dict) -> Sequence[dict]:
         metadata_version = self.get_version(metadata_dictionary)
-        process_extractor = getattr(
-            extractors, "ProcessExtractor.v{}".format(metadata_version))
+        process_extractor = operator.attrgetter(
+            "ProcessExtractor.v{}".format(metadata_version))(extractors)
         processes = [process_extractor(process)
                      for process in metadata_dictionary["processes"]]
         return processes
 
     def _create_protocols(self, metadata_dictionary: dict) -> Sequence[dict]:
         metadata_version = self.get_version(metadata_dictionary)
-        protocol_extractor = getattr(
-            extractors, "ProtocolExtractor.v{}".format(metadata_version))
+        protocol_extractor = operator.attrgetter(
+            "ProtocolExtractor.v{}".format(metadata_version))(extractors)
         protocols = [protocol_extractor(protocol)
                      for protocol in metadata_dictionary["protocols"]]
         return protocols
 
     def _create_project(self, metadata_dictionary: dict) -> dict:
         metadata_version = self.get_version(metadata_dictionary)
-        project_extractor = getattr(
-            extractors, "ProjectExtractor.v{}".format(metadata_version))
+        project_extractor = operator.attrgetter(
+            "ProjectExtractor.v{}".format(metadata_version))(extractors)
         project = project_extractor(metadata_dictionary)
         return project
 

@@ -119,7 +119,7 @@ class MetadataDownloader(object):
                                replica=replica)
         return _file
 
-    def extract_bundle(self, request, replica):
+    def extract_bundle(self, request, replica="aws"):
         """
         Get the files and actual metadata.
 

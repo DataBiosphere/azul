@@ -61,8 +61,44 @@ class BiomaterialExtractor:
         }
         return biomaterial
 
+    @staticmethod
+    def v5_1_0(metadata_file: dict) -> dict:
+        # Jmespath within the file objects
+        biomaterial_id = "content.biomaterial_core.biomaterial_id || `null`"
+        species = "content.genus_species[*].text || `null`"
+        organ = "content.organ.text || `null`"
+        organ_part = "content.organ_part.text || `null`"
+        age = "content.organism_age || `null`"
+        age_unit = "content.organism_age_unit.text || `null`"
+        sex = "content.biological_sex || `null`"
+        disease = "content.disease[*].text || `null`"
+        storage_method = "content.preservation_storage.storage_method" \
+                         " || `null`"
+        source = "content.describedBy || `null`"
+        total_cells = "content.total_estimated_cells || `null`"
+        parent = "content.biomaterial_core.has_input_biomaterial || `null`"
+        hca_id = "hca_ingest.document_id || `null`"
+        biomaterial = {
+            "biomaterial_id": jmespath.search(biomaterial_id, metadata_file),
+            "species": jmespath.search(species, metadata_file),
+            "organ": jmespath.search(organ, metadata_file),
+            "organ_part": jmespath.search(organ_part, metadata_file),
+            "age": jmespath.search(age, metadata_file),
+            "age_unit": jmespath.search(age_unit, metadata_file),
+            "sex": jmespath.search(sex, metadata_file),
+            "disease": jmespath.search(disease, metadata_file),
+            "storage_method": jmespath.search(storage_method, metadata_file),
+            "source": jmespath.search(source,
+                                      metadata_file).rpartition('/')[2],
+            "total_cells": jmespath.search(total_cells, metadata_file),
+            "parent": jmespath.search(parent, metadata_file),
+            "hca_id": jmespath.search(hca_id, metadata_file),
+            "_type": "samples"
+        }
+        return biomaterial
 
-class ProcessesExtractor:
+
+class ProcessExtractor:
     @staticmethod
     def v5_2_1(metadata_file: dict) -> dict:
         process_id = "content.process_core.process_id || `null`"

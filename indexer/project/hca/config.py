@@ -3,7 +3,7 @@ from aws_requests_auth.aws_auth import AWSRequestsAuth
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 import os
 import sys
-from typing import Iterable, Mapping, Any
+from typing import Iterable, Mapping, Any, Type
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
@@ -16,7 +16,7 @@ class IndexProperties(BaseIndexProperties):
     """Index properties for HCA"""
 
     def __init__(self, dss_url: str,
-                 elasticsearch_host: str, elasticsearch_port: str) -> None:
+                 elasticsearch_host: str, elasticsearch_port: int) -> None:
         """Initialize properties."""
         self._dss_url = dss_url
         self._es_host = elasticsearch_host
@@ -102,9 +102,7 @@ class IndexProperties(BaseIndexProperties):
 
     @property
     def transformers(self) -> Iterable[Transformer]:
-        from project.hca.transformers import FileTransformer,\
-            SpecimenTransformer, ProjectTransformer
-        transformers = [FileTransformer,
-                        SpecimenTransformer, ProjectTransformer]
+        from project.hca.transformers import FileTransformer
+        transformers = [FileTransformer()]
         return transformers
 

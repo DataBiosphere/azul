@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 from itertools import filterfalse, tee
+import logging
 import re
 from typing import Mapping, Sequence
 import os
+
+module_logger = logging.getLogger(__name__)
 
 
 class Document:
@@ -56,6 +59,9 @@ class ElasticSearchDocument:
 
 
 class Transformer(ABC):
+
+    def __init__(self):
+        super().__init__()
 
     @property
     def entity_name(self) -> str:
