@@ -14,6 +14,7 @@ class Document:
         self.bundle_uuid = bundle_uuid
         self.bundle_version = bundle_version
         self.content = content
+        self._document = {}
 
     @property
     def document(self) -> dict:
@@ -27,7 +28,12 @@ class Document:
                 }
             ]
         }
+        self._document = constructed_dict
         return constructed_dict
+
+    @document.setter
+    def document(self, new_content: dict) -> None:
+        self._document = new_content
 
 
 class ElasticSearchDocument:
@@ -55,7 +61,7 @@ class ElasticSearchDocument:
 
     @document_content.setter
     def document_content(self, new_content: dict) -> None:
-        self._content = new_content
+        self._content.document = new_content
 
 
 class Transformer(ABC):

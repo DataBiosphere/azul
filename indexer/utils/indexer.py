@@ -7,7 +7,7 @@ The based class Indexer serves as the basis for additional indexing classes.
 
 """
 from abc import ABC
-from elasticsearch import RequestError, ConnectionError
+from elasticsearch import RequestError, ConnectionError, ConflictError
 import logging
 import os
 import sys
@@ -56,10 +56,10 @@ class BaseIndexer(ABC):
                                              id=es_document.document_id,
                                              ignore=[404])
                     # replace with an empty dictionary if no existing doc
-                    existing = {} if not existing else existing
+                    existing_source = existing.get("_source", {})
                     updated_version = existing.get("_version", 0) + 1
                     new_content = es_document.document_content
-                    updated_document = self.merge(new_content, existing)
+                    updated_document = self.merge(new_content, existing_source)
                     es_document.document_content = updated_document
                     try:
                         es_client.index(index=es_document.document_index,

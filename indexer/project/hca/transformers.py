@@ -1,6 +1,5 @@
 
 from collections import defaultdict
-from functools import partial, reduce
 from itertools import chain
 import jmespath
 import operator
@@ -73,15 +72,7 @@ class FileTransformer(Transformer):
             descendants = find_descendants(not_roots, root["parent"])
             root_id = root["biomaterial_id"]
             merged_sample = defaultdict(list)
-            print("Printing Root")
-            print(root)
-            print("Printing Ancestors")
-            print(ancestors)
-            print("Printing Descendants")
-            print(descendants)
             for node in chain(ancestors, descendants, [root]):
-                print("Printing Node")
-                print(node)
                 for key, value in node.items():
                     if isinstance(value, list):
                         merged_sample[key] += value
@@ -130,9 +121,12 @@ class FileTransformer(Transformer):
                                    metadata_dictionary=metadata_files[
                                        "file.json"])
         all_units = {}
+        # Create dictionary with each key being the unit's hca_id and the value
+        # their contents
         for unit in chain(specimens, processes, protocol, files):
             if isinstance(unit["hca_id"], list):
-                reduce(partial(lambda x, y, z: x.update((z, y)), all_units, unit), unit["hca_id"])
+                current_units = {u: unit for u in unit["hca_id"]}
+                all_units.update(current_units)
             else:
                 # It's a string
                 all_units[unit["hca_id"]] = unit
@@ -149,27 +143,59 @@ class FileTransformer(Transformer):
                 yield from get_relatives(child, links_array)
                 yield child
 
+        def get_parents(root_id: str, links_array: list) -> Iterable[str]:
+            """
+            Get the parents of the root_id
+            """
+            for parent in jmespath.search("[?destination_id=='{}'].source_id".format(root_id), links_array):
+                yield from get_parents(parent, links_array)
+                yield parent
+
+        def get_children(root_id: str, links_array: list) -> Iterable[str]:
+            """
+            Get the children of the root_id
+            """
+            for child in jmespath.search("[?source_id=='{}'].destination_id".format(root_id), links_array):
+                yield from get_children(child, links_array)
+                yield child
+
+
         # Get the links
         links = metadata_files['links.json']
         # Begin merging.
         for _file in files:
-            contents = defaultdict[list]
+            contents = defaultdict(list)
             entity_id = _file['hca_id']
-            entity_type = _file.pop("_type")
-            relatives = get_relatives(entity_id, links['links'])
+            entity_type = _file["_type"]
+            # Get relatives and create a set
+            relatives = set(chain(get_parents(entity_id, links['links']),
+                                  get_children(entity_id, links['links'])))
+            # Keep track of the sets that get added
+            added = set()
             for relative in relatives:
-                unit_type = all_units[relative].pop("_type")
+                relative_type = all_units[relative]["_type"]
+                if isinstance(relative_type, str):
+                    relative_type = [relative_type]
+                unit_type = relative_type[0]
+                # If we encounter an ancestor that's of the same type, skip it
                 if unit_type == entity_type:
                     continue
-                contents[unit_type] += relative
+
+                if relative in added:
+                    continue
+                if isinstance(unit_type, str):
+                    contents[unit_type] += [all_units[relative]]
+                else:
+                    contents[unit_type[0]] += [all_units[relative]]
+                added.update(all_units[relative]["hca_id"])
             # Add missing project field and append the current entity
             contents["project"] = project
-            contents[entity_type] += _file
+            contents[entity_type] += [_file]
             document_contents = Document(entity_id,
                                          bundle_uuid,
                                          bundle_version,
                                          contents)
-            es_document = ElasticSearchDocument(entity_id, document_contents)
+            es_document = ElasticSearchDocument(entity_id, document_contents, entity_type)
             yield es_document
 
 
