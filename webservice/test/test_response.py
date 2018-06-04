@@ -3,7 +3,7 @@
 import json
 import difflib
 import unittest
-from responseobjects.hca_response_v5 import KeywordSearchResponse, \
+from chalicelib.responseobjects.hca_response_v5 import KeywordSearchResponse, \
     FileSearchResponse
 import os
 
