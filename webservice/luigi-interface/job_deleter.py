@@ -6,7 +6,7 @@ import sys
 
 from datetime import datetime
 from sqlalchemy import select
-from monitordb_lib import luigiDBInit
+from chalicelib.monitordb_lib import luigiDBInit
 
 # Add parent directory to get luigidb init
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

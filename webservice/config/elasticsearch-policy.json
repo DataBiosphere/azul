@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::<AWS-account-ID>:root"
+      },
+      "Action": "es:*",
+      "Resource": "arn:aws:es:us-west-2:<AWS-account-ID>:domain/<your-es-domain-name>/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "es:*",
+      "Resource": [
+        "arn:aws:es:us-west-2:<AWS-account-ID>:domain/<your-es-domain-name>/*",
+        "arn:aws:lambda:us-west-2:<AWS-account-ID>:function:<your-indexer-lambda-domain-name>/*"
+      ],
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": [
+            "<your-ip-address>"
+          ]
+        }
+      }
+    }
+  ]
+}

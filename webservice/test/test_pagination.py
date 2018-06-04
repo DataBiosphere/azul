@@ -14,7 +14,7 @@ class PaginationTestCase(unittest.TestCase):
         """
         :return: The base URL to test.
         """
-        return "{}/repository/files".format(os.getenv("BASE_URL", "http://localhost:80"))
+        return "{}/repository/files".format(os.getenv("BASE_URL", "http://localhost:9000"))
 
     def assert_page1_correct(self, json_response):
         """
@@ -23,18 +23,19 @@ class PaginationTestCase(unittest.TestCase):
         :return:
         """
         if 'search_before' in json_response['pagination']:
-            self.assertEqual(json_response['pagination']['search_before'], [],
-                             "search_before != [] on first page of results")
+            self.assertIsNone(json_response['pagination']['search_before'],
+                             "search_before != null on first page of results")
+            self.assertIsNone(json_response['pagination']['search_before_uid'],
+                             "search_before != null on first page of results")
         else:
-            self.fail("search_before not set to [] on first page of results")
+            self.fail("search_before not set to null on first page of results")
 
         num_hits = len(json_response['hits'])
         if 'search_after' in json_response['pagination']:
-            self.assertEqual(len(json_response['pagination']['search_after']), 2,
-                             "Wrong number of arguments for search_after on first page of results")
-            self.assertEqual(json_response['pagination']['search_after'][0],
+            self.assertEqual(json_response['pagination']['search_after'],
                              json_response['hits'][num_hits - 1]['entity_id'],
                              "search_after not set to last returned document on first page")
+            self.assertIsNotNone(json_response['pagination']['search_after_uid'])
         else:
             self.fail("search_after not set on first page of results")
 
@@ -49,18 +50,22 @@ class PaginationTestCase(unittest.TestCase):
         num_hits_first = len(json_response['hits'])
         num_hits_second = len(json_response_second['hits'])
         if 'search_before' in json_response_second['pagination']:
-            self.assertEqual(json_response_second['pagination']['search_before'][0],
+            self.assertEqual(json_response_second['pagination']['search_before'],
                              json_response_second['hits'][0]['entity_id'],
                              "search_before on second page not set to first returned document on second page, "
                              + "order=" + sort_order)
+            self.assertIsNotNone(json_response_second['pagination']['search_before_uid'],
+                                 "No search_before_uid returned on second page")
         else:
             self.fail("search_before not set on second page of results, sortOrder=" + sort_order)
 
         if 'search_after' in json_response['pagination']:
-            self.assertEqual(json_response_second['pagination']['search_after'][0],
+            self.assertEqual(json_response_second['pagination']['search_after'],
                              json_response_second['hits'][num_hits_second - 1]['entity_id'],
                              "search_after on second page not set to last returned document on second page, "
                              + "order=" + sort_order)
+            self.assertIsNotNone(json_response['pagination']['search_after_uid'],
+                                 "No search_after_uid returned on second page")
         else:
             self.fail("search_after not set on second page of results, sortOrder=" + sort_order)
 
@@ -100,8 +105,9 @@ class PaginationTestCase(unittest.TestCase):
 
         # Fetch the second page using search_after
         search_after = json_response['pagination']['search_after']
-        url = "{}?sort=entity_id&search_after={}&search_after={}".format(self.get_base_url(), search_after[0],
-                                                                         search_after[1])
+        search_after_uid = json_response['pagination']['search_after_uid']
+        url = "{}?sort=entity_id&search_after={}&search_after_uid={}".format(self.get_base_url(), search_after,
+                                                                         search_after_uid)
         content = requests.get(url).content
         json_response_second = json.loads(content)
         self.assert_page2_correct(json_response, json_response_second, "desc")
@@ -116,29 +122,32 @@ class PaginationTestCase(unittest.TestCase):
         self.assert_page1_correct(json_response)
         # Store the search_after for the last result of the first page.
         search_after_lrfp = json_response['pagination']['search_after']
-
-        content = requests.get("{}?sort=entity_id&order=asc&search_after={}&search_after=[]".format(self.get_base_url(),
-                                                                                                    search_after_lrfp[
-                                                                                                        0],
-                                                                                                    search_after_lrfp[
-                                                                                                        1])).content
+        search_after_lrfp_uid = json_response['pagination']['search_after_uid']
+        content = requests.get("{}?sort=entity_id&order=asc&search_after={}&search_after_uid={}"
+                               .format(self.get_base_url(), search_after_lrfp, search_after_lrfp_uid)).content
         json_response_second = json.loads(content)
         self.assert_page2_correct(json_response, json_response_second, "asc")
 
         search_after = json_response_second['pagination']['search_before']
+        search_after_uid = json_response_second['pagination']['search_before_uid']
 
         content = requests.get(
-            "{}?sort=entity_id&search_after={}&search_after={}&order=desc".format(self.get_base_url(), search_after[0],
-                                                                                  search_after[1])).content
+            "{}?sort=entity_id&search_after={}&search_after_uid={}&order=desc"
+                .format(self.get_base_url(), search_after, search_after_uid)).content
         json_response = json.loads(content)
         if 'search_before' in json_response['pagination']:
-            self.assertEqual(len(json_response['pagination']['search_before']), 2)
-            self.assertEqual(json_response['pagination']['search_before'], search_after_lrfp)
+            self.assertEqual(json_response['pagination']['search_before'], search_after_lrfp,
+                             "search_before on last page is not set correctly")
+            self.assertIsNotNone(json_response['pagination']['search_before_uid'],
+                                 "search_before_uid on last page is not set")
         else:
             self.fail("search_before not set on last page of results")
 
         if 'search_after' in json_response['pagination']:
-            self.assertEqual(json_response['pagination']['search_after'], [])
+            self.assertIsNone(json_response['pagination']['search_after'],
+                              "search_after is not null on last page")
+            self.assertIsNone(json_response['pagination']['search_after_uid'],
+                              "search_after_uid is not null on last page")
         else:
             self.fail("search_after not set to [] on first page of results")
 
