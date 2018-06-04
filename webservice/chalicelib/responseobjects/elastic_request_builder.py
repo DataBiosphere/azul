@@ -1,11 +1,11 @@
 #!/usr/bin/python
-import config
+from chalicelib import config
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q, A
 import json
 import logging
 import os
-from responseobjects.hca_response_v5 import KeywordSearchResponse, \
+from chalicelib.responseobjects.hca_response_v5 import KeywordSearchResponse, \
     FileSearchResponse, SummaryResponse, ManifestResponse, \
     AutoCompleteResponse
 from utilities import json_pp
@@ -317,7 +317,7 @@ class ElasticTransformDump(object):
                     search_before = es_hits[count - 1]['sort']
                 else:
                     # No previous page
-                    search_before = []
+                    search_before = [None, None]
                 search_after = es_hits[0]['sort']
             elif 'search_after' in pagination:
                 # hits are normal sorted
@@ -327,19 +327,21 @@ class ElasticTransformDump(object):
                     search_after = es_hits[count - 1]['sort']
                 else:
                     # No next page
-                    search_after = []
+                    search_after = [None, None]
                 search_before = es_hits[0]['sort']
             else:
                 # No search_after/before args were supplied, so assume it is the first page
                 search_after = es_hits[count - 1]['sort'] if pages > 1 else []
-                search_before = []
+                search_before = [None, None]
 
             page_field = {
                 'count': count,
                 'total': es_response['hits']['total'],
                 'size': pagination['size'],
-                'search_after': search_after,
-                'search_before': search_before,
+                'search_after': search_after[0],
+                'search_after_uid': search_after[1],
+                'search_before': search_before[0],
+                'search_before_uid': search_before[1],
                 'pages': pages,
                 'sort': pagination['sort'],
                 'order': pagination['order']

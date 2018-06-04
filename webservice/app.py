@@ -1,28 +1,32 @@
 import ast
-import config
-from flask import jsonify, request, Blueprint
+from chalicelib import config
 import logging.config
 import os
-from responseobjects.elastic_request_builder import BadArgumentException, ElasticTransformDump as EsTd
-from responseobjects.utilities import json_pp
+from chalicelib.responseobjects.elastic_request_builder import BadArgumentException, ElasticTransformDump as EsTd
+from chalicelib.responseobjects.utilities import json_pp
+from chalice import Chalice
 
 ENTRIES_PER_PAGE = 10
 
 # Setting up logging
 base_path = os.path.dirname(os.path.abspath(__file__))
-logging.config.fileConfig('{}/config/logging.conf'.format(base_path))
-bp_logger = logging.getLogger("dashboardService.webservice")
-# Setting up the blueprint
-webservicebp = Blueprint('webservicebp', 'webservicebp')
+app = Chalice(app_name=os.getenv('INDEXER_NAME', 'cgp-dashboard-service'))
+app.debug = True
+app.log.setLevel(logging.DEBUG)
+
 # TODO: Write the docstrings so they can support swagger.
 # Please see https://github.com/rochacbruno/flasgger
 # stackoverflow.com/questions/43911510/ \
 # how-to-write-docstring-for-url-parameters
 
 
-@webservicebp.route('/repository/files', methods=['GET'])
-@webservicebp.route('/repository/files/', methods=['GET'])
-@webservicebp.route('/repository/files/<file_id>', methods=['GET'])
+@app.route('/')
+def hello():
+    return 'Hello World!'
+
+
+@app.route('/repository/files', methods=['GET'])
+@app.route('/repository/files/{file_id}', methods=['GET'])
 def get_data(file_id=None):
     """
     Returns a dictionary with entries that can be used by the browser
@@ -55,33 +59,39 @@ def get_data(file_id=None):
     logger = logging.getLogger("dashboardService.webservice.get_data")
     # Get all the parameters from the URL
     logger.debug('Parameter file_id: {}'.format(file_id))
-    filters = request.args.get('filters', '{}')
+    if app.current_request.query_params is None:
+        app.current_request.query_params = {}
+    filters = app.current_request.query_params.get('filters', '{}')
     logger.debug("Filters string is: {}".format(filters))
     try:
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
+        #filters = {} if filters == {} else filters
     except Exception, e:
         logger.error("Malformed filters parameter: {}".format(e.message))
         return "Malformed filters parameter"
     # Make the default pagination
     logger.info("Creating pagination")
     pagination = {
-        "order": request.args.get('order', 'desc'),
-        "size": request.args.get('size', ENTRIES_PER_PAGE, type=int),
-        "sort": request.args.get('sort', 'entity_id'),
+
+        "order": app.current_request.query_params.get('order', 'desc'),
+        "size": int(app.current_request.query_params.get('size', ENTRIES_PER_PAGE)),
+        "sort": app.current_request.query_params.get('sort', 'entity_id'),
     }
 
-    sa = request.args.getlist('search_after')
-    sb = request.args.getlist('search_before')
+    sa = app.current_request.query_params.get('search_after')
+    sb = app.current_request.query_params.get('search_before')
+    sa_uid = app.current_request.query_params.get('search_after_uid')
+    sb_uid = app.current_request.query_params.get('search_before_uid')
     if not sa and not sb:
         logger.debug("Using from sorting")
-        pagination['from'] = request.args.get('from', 1, type=int)
+        pagination['from'] = int(app.current_request.query_params.get('from', 1));
     elif not sb:
         logger.debug("Using search after sorting, with value "+str(sa))
-        pagination['search_after'] = sa
+        pagination['search_after'] = [sa, sa_uid]
     elif not sa:
         logger.debug("Using search before sorting, with value "+str(sb))
-        pagination['search_before'] = sb
+        pagination['search_before'] = [sb, sb_uid]
     else:
         logger.error("Bad arguments, only one of search_after or search_before can be set")
         return "Bad arguments, only one of search_after or search_before can be set"
@@ -100,16 +110,16 @@ def get_data(file_id=None):
     try:
         response = es_td.transform_request(filters=filters, pagination=pagination, post_filter=True)
     except BadArgumentException as bae:
-        response = jsonify(dict(error=bae.message))
+        response = dict(error=bae.message)
         response.status_code = 400
         return response
     # Returning a single response if <file_id> request form is used
     if file_id is not None:
         response = response['hits'][0]
-    return jsonify(response)
+    return response
 
 
-@webservicebp.route('/repository/files/piecharts', methods=['GET'])
+@app.route('/repository/files/piecharts', methods=['GET'])
 def get_data_pie():
     """
     Returns a dictionary with entries that can be used by the
@@ -140,8 +150,10 @@ def get_data_pie():
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_data_pie")
+    if app.current_request.query_params is None:
+        app.current_request.query_params = {}
     # Get all the parameters from the URL
-    filters = request.args.get('filters', '{"file": {}}')
+    filters = app.current_request.query_params.get('filters', '{"file": {}}')
     logger.debug("Filters string is: {}".format(filters))
     try:
         logger.info("Extracting the filter parameter from the request")
@@ -153,26 +165,27 @@ def get_data_pie():
     # Make the default pagination
     logger.info("Creating pagination")
     pagination = {
-        "order": request.args.get('order', 'desc'),
-        "size": request.args.get('size', ENTRIES_PER_PAGE, type=int),
-        "sort": request.args.get('sort', 'entity_id'),
+        "order": app.current_request.query_params.get('order', 'desc'),
+        "size": int(app.current_request.query_params.get('size', ENTRIES_PER_PAGE)),
+        "sort": app.current_request.query_params.get('sort', 'entity_id'),
     }
 
-    sa = request.args.getlist('search_after')
-    sb = request.args.getlist('search_before')
+    sa = app.current_request.query_params.get('search_after')
+    sb = app.current_request.query_params.get('search_before')
+    sa_uid = app.current_request.query_params.get('search_after_uid')
+    sb_uid = app.current_request.query_params.get('search_before_uid')
     if not sa and not sb:
         logger.debug("Using from sorting")
-        pagination['from'] = request.args.get('from', 1, type=int)
+        pagination['from'] = int(app.current_request.query_params.get('from', 1));
     elif not sb:
         logger.debug("Using search after sorting, with value " + str(sa))
-        pagination['search_after'] = sa
+        pagination['search_after'] = [sa, sa_uid]
     elif not sa:
         logger.debug("Using search before sorting, with value " + str(sb))
-        pagination['search_before'] = sb
+        pagination['search_before'] = [sb, sb_uid]
     else:
         logger.error("Bad arguments, only one of search_after or search_before can be set")
         return "Bad arguments, only one of search_after or search_before can be set"
-    logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
     es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
@@ -184,10 +197,10 @@ def get_data_pie():
                                        pagination=pagination,
                                        post_filter=False)
     # Returning a single response if <file_id> request form is used
-    return jsonify(response)
+    return response
 
 
-@webservicebp.route('/repository/files/summary', methods=['GET'])
+@app.route('/repository/files/summary', methods=['GET'])
 def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
@@ -201,8 +214,10 @@ def get_summary():
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_summary")
+    if app.current_request.query_params is None:
+        app.current_request.query_params = {}
     # Get the filters from the URL
-    filters = request.args.get('filters', '{"file": {}}')
+    filters = app.current_request.query_params.get('filters', '{"file": {}}')
     logger.debug("Filters string is: {}".format(filters))
     try:
         logger.info("Extracting the filter parameter from the request")
@@ -220,10 +235,10 @@ def get_summary():
     logger.info("Creating the API response")
     response = es_td.transform_summary(filters=filters)
     # Returning a single response if <file_id> request form is used
-    return jsonify(response)
+    return response
 
 
-@webservicebp.route('/keywords', methods=['GET'])
+@app.route('/keywords', methods=['GET'])
 def get_search():
     """
     Creates and returns a dictionary with entries that best match the query
@@ -258,12 +273,14 @@ def get_search():
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_search")
+    if app.current_request.query_params is None:
+        app.current_request.query_params = {}
     # Get all the parameters from the URL
     # Get the query to use for searching. Forcing it to be str for now
-    _query = request.args.get('q', '', type=str)
+    _query = app.current_request.query_params.get('q', '')
     logger.debug("String query is: {}".format(_query))
     # Get the filters
-    filters = request.args.get('filters', '{"file": {}}')
+    filters = app.current_request.query_params.get('filters', '{"file": {}}')
     try:
         # Set up the default filter if it is returned as an empty dictionary
         logger.info("Extracting the filter parameter from the request")
@@ -275,14 +292,14 @@ def get_search():
     # Generate the pagination dictionary out of the endpoint parameters
     logger.info("Creating pagination")
     pagination = {
-        "from": request.args.get('from', 1, type=int),
-        "size": request.args.get('size', 5, type=int)
+        "from": int(app.current_request.query_params.get('from', 1)),
+        "size": int(app.current_request.query_params.get('size', 5))
     }
     logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Get the entry format and search field
-    _type = request.args.get('type', 'file')
+    _type = app.current_request.query_params.get('type', 'file')
     # Get the field to search
-    field = request.args.get('field', 'fileId')
+    field = app.current_request.query_params.get('field', 'fileId')
     # HACK: Adding this small check to make sure the search bar works with
     if _type in {'donor', 'file-donor'}:
         field = 'donor'
@@ -298,10 +315,10 @@ def get_search():
                                                     _query=_query,
                                                     search_field=field,
                                                     entry_format=_type)
-    return jsonify(response)
+    return response
 
 
-@webservicebp.route('/repository/files/order', methods=['GET'])
+@app.route('/repository/files/order', methods=['GET'])
 def get_order():
     """
     Get the order of the facets from the order_config file
@@ -314,10 +331,10 @@ def get_order():
     with open('{}/order_config'.format(
             os.path.dirname(config.__file__))) as order:
         order_list = [line.rstrip('\n') for line in order]
-    return jsonify({'order': order_list})
+    return {'order': order_list}
 
 
-@webservicebp.route('/repository/files/export', methods=['GET'])
+@app.route('/repository/files/export', methods=['GET'])
 def get_manifest():
     """
     Creates and returns a manifest based on the filters pased on
@@ -331,7 +348,9 @@ def get_manifest():
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_manifest")
-    filters = request.args.get('filters', '{"file": {}}')
+    if app.current_request.query_params is None:
+        app.current_request.query_params = {}
+    filters = app.current_request.query_params.get('filters', '{"file": {}}')
     logger.debug("Filters string is: {}".format(filters))
     try:
         logger.info("Extracting the filter parameter from the request")
