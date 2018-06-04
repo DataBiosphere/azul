@@ -1,0 +1,5 @@
+{
+	"EBSEnabled":true,
+	"VolumeType": "standard",
+	"VolumeSize": 10
+}
