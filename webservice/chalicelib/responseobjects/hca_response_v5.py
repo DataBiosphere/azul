@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import abc
 from utilities import json_pp
-from flask_excel import make_response_from_array
+from chalice_excel import make_response_from_array
 import logging
 import jmespath
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
