@@ -3,7 +3,7 @@ from aws_requests_auth.aws_auth import AWSRequestsAuth
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 import os
 import sys
-from typing import Iterable, Mapping, Any, Type
+from typing import Iterable, Mapping, Any
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
@@ -105,4 +105,3 @@ class IndexProperties(BaseIndexProperties):
         from project.hca.transformers import FileTransformer
         transformers = [FileTransformer()]
         return transformers
-

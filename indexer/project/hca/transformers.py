@@ -116,32 +116,20 @@ class FileTransformer(Transformer):
         project = self._create_project(metadata_files['project.json'])
         specimens = self._create_specimens(metadata_files['biomaterial.json'])
         processes = self._create_processes(metadata_files['process.json'])
-        protocol = self._create_protocols(metadata_files["protocol.json"])
+        protocols = self._create_protocols(metadata_files["protocol.json"])
         files = self._create_files(data_files,
                                    metadata_dictionary=metadata_files[
                                        "file.json"])
         all_units = {}
         # Create dictionary with each key being the unit's hca_id and the value
         # their contents
-        for unit in chain(specimens, processes, protocol, files):
+        for unit in chain(specimens, processes, protocols, files):
             if isinstance(unit["hca_id"], list):
                 current_units = {u: unit for u in unit["hca_id"]}
                 all_units.update(current_units)
             else:
                 # It's a string
                 all_units[unit["hca_id"]] = unit
-
-        def get_relatives(root_id: str, links_array: list) -> Iterable[str]:
-            """
-            Get the ancestors and descendants of the root_id
-            """
-            for parent in jmespath.search("[?destination_id=='{}'].source_id".format(root_id), links_array):
-                yield from get_relatives(parent, links_array)
-                yield parent
-
-            for child in jmespath.search("[?source_id=='{}'].destination_id".format(root_id), links_array):
-                yield from get_relatives(child, links_array)
-                yield child
 
         def get_parents(root_id: str, links_array: list) -> Iterable[str]:
             """
@@ -159,9 +147,22 @@ class FileTransformer(Transformer):
                 yield from get_children(child, links_array)
                 yield child
 
-
         # Get the links
         links = metadata_files['links.json']
+        # Merge protocol into process
+        for protocol in protocols:
+            protocol_copy = protocol.copy()
+            protocol_id = protocol_copy.pop("hca_id")
+            edges = filter(lambda x: x["destination_id"] == protocol_id,
+                           links['links'])
+            parent_processes = {_process["source_id"] for _process in edges}
+            for parent in parent_processes:
+                all_units[parent] = {**all_units[parent], **protocol_copy}
+                if isinstance(all_units[parent]['hca_id'], list):
+                    all_units[parent]['hca_id'].append(protocol_id)
+                else:
+                    all_units[parent]['hca_id'] = [all_units[parent]['hca_id'],
+                                                   protocol_id]
         # Begin merging.
         for _file in files:
             contents = defaultdict(list)
