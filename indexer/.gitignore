@@ -5,4 +5,5 @@ dss-file-browser-staging
 indexer/__pycache__
 venv
 chalicelib/__pycache__
+config/config.env
 dss-azul-indexer-carlos
