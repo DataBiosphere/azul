@@ -16,11 +16,11 @@ from multiprocessing.dummy import Pool as ThreadPool
 import os
 
 
-indexer_name = os.getenv('INDEXER_NAME', 'dss-indigo')
+indexer_name = os.getenv('INDEXER_NAME', 'azul-indexer')
 module_logger = logging.getLogger(indexer_name + ".indexer")
 
 
-class DataExtractor(object):
+class MetadataDownloader(object):
     """DataExtractor class to help with BlueBox interaction.
 
     This class works as a helper class for obtaining files from the Blue Box
@@ -119,7 +119,7 @@ class DataExtractor(object):
                                replica=replica)
         return _file
 
-    def extract_bundle(self, request, replica):
+    def extract_bundle(self, request, replica="aws"):
         """
         Get the files and actual metadata.
 

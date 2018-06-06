@@ -35,6 +35,9 @@ update_chalice_with_default_files:
 	#copy files from the repo and update chalice
 	cd $(CHALICE_PROJECT) && rm app.py && rm requirements.txt
 	cp -a chalicelib/. $(CHALICE_PROJECT)/
+	# Putting project and util under chalicelib
+	cp -a project/. $(CHALICE_PROJECT)/chalicelib/
+	cp -a util/. $(CHALICE_PROJECT)/chalicelib/
 	cp app.py $(CHALICE_PROJECT)/
 	cp requirements.txt $(CHALICE_PROJECT)/
 	#install requirements
