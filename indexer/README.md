@@ -138,6 +138,7 @@ Given a config:
 ### Environment Variables
 In order to add environmental variables to Chalice, the variables must be added to three locations.
 Do not add protocols to any of the Endpoints. Make sure the ES_ENDPOINT does not have any trailing slashes.
+BLUE_BOX_ENDPOINT looks like `dss.data.humancellatlas.org/v1`.
 
 1) Edit Chalice  
 open `.chalice/config.json`  
