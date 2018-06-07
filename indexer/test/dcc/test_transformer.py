@@ -80,11 +80,11 @@ class TestDCCTransformer(TestCase):
             },
             {
                 "index_field": "center_name",
-                "value": "St. Thomas's Abbey"
+                "value": "Baylor"
             },
             {
                 "index_field": "project",
-                "value": "test-topmed-public"
+                "value": "topmed-public"
             },
             {
                 "index_field": "lastModified",
@@ -119,12 +119,8 @@ class TestDCCTransformer(TestCase):
                 "value": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
             },
             {
-                "index_field": "experimentalStrategy",
-                "value": None
-            },
-            {
                 "index_field": "donor",
-                "value": ""
+                "value": "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
             },
             {
                 "index_field": "repoBaseUrl",
@@ -156,7 +152,7 @@ class TestDCCTransformer(TestCase):
             },
             {
                 "index_field": "sampleId",
-                "value": "99999999-8888-7777-6666-555555555555"
+                "value": "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
             },
             {
                 "index_field": "software",
@@ -164,11 +160,11 @@ class TestDCCTransformer(TestCase):
             },
             {
                 "index_field": "specimen_type",
-                "value": "Normal - Blood"
+                "value": "Normal - solid tissue"
             },
             {
                 "index_field": "study",
-                "value": "test-topmed-public"
+                "value": "topmed-public"
             },
             {
                 "index_field": "submittedDonorId",
@@ -176,11 +172,11 @@ class TestDCCTransformer(TestCase):
             },
             {
                 "index_field": "submittedSampleId",
-                "value": "FKE654321"
+                "value": "NWD119844"
             },
             {
                 "index_field": "specimenUUID",
-                "value": "99999999-8888-7777-6666-555555555555"
+                "value": "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
             },
             {
                 "index_field": "submittedSpecimenId",

@@ -11,12 +11,12 @@
       },
       {
         "source": "metadata.json",
-        "dss_field": "core_metadata.contributor",
+        "dss_field": "read_group.sequencing_center",
         "index_field": "center_name"
       },
       {
         "source": "metadata.json",
-        "dss_field": "core_metadata.project_id",
+        "dss_field": "case.project_id",
         "index_field": "project"
       },
       {
@@ -116,7 +116,7 @@
       },
       {
         "source": "metadata.json",
-        "dss_field": "core_metadata.project_id",
+        "dss_field": "case.project_id",
         "index_field": "study"
       },
       {
