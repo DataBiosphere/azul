@@ -1,6 +1,6 @@
 
 from collections import defaultdict
-from itertools import chain
+from itertools import chain, tee
 import jmespath
 import operator
 import os
@@ -51,25 +51,28 @@ class FileTransformer(Transformer):
             lambda x: "specimen_from_organism" in x["source"], biomaterials)
 
         def find_descendants(nodes: Iterable[dict],
-                             parent_id: str=None) -> Iterable[dict]:
+                             parent_id: str) -> Iterable[dict]:
             # TODO: Add code to break under some cyclic condition
-                for child in filter(lambda x: parent_id in x["parent"], nodes):
-                    yield from find_descendants(nodes, child["biomaterial_id"])
-                    yield child
+            print(parent_id)
+            for child in filter(lambda x: x["parent"] is not None and parent_id in x["parent"], nodes):
+                yield from find_descendants(nodes, child["biomaterial_id"])
+                yield child
 
         def find_ancestors(nodes: Iterable[dict],
-                           parent_id: str=None) -> Iterable[dict]:
+                           parent_id: str) -> Iterable[dict]:
+            print(parent_id)
             for parent in filter(lambda x: parent_id in x["biomaterial_id"],
                                  nodes):
-                if "parent" in parent:
+                if "parent" in parent and bool(parent["parent"]):
                     yield from find_ancestors(nodes, parent["parent"])
                 yield parent
 
         # Add ancestors and descendants fields to each sample
         samples_list = []
         for root in roots:
-            ancestors = find_ancestors(not_roots, root["parent"])
-            descendants = find_descendants(not_roots, root["parent"])
+            not_roots, not_roots_1, not_roots_2 = tee(not_roots, 3)
+            ancestors = find_ancestors(list(not_roots_1), root["parent"])
+            descendants = find_descendants(list(not_roots_2), root["parent"])
             root_id = root["biomaterial_id"]
             merged_sample = defaultdict(list)
             for node in chain(ancestors, descendants, [root]):
@@ -135,9 +138,9 @@ class FileTransformer(Transformer):
             """
             Get the parents of the root_id
             """
-            for parent in jmespath.search("[?destination_id=='{}'].source_id".format(root_id), links_array):
-                yield from get_parents(parent, links_array)
-                yield parent
+            for _parent in jmespath.search("[?destination_id=='{}'].source_id".format(root_id), links_array):
+                yield from get_parents(_parent, links_array)
+                yield _parent
 
         def get_children(root_id: str, links_array: list) -> Iterable[str]:
             """

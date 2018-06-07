@@ -12,8 +12,8 @@ class TestDataExtractor(unittest.TestCase):
         "subscription_id": str(uuid4()),
         "transaction_id": str(uuid4()),
         "match": {
-            "bundle_uuid": "7d927a4e-43df-4ce0-80ba-ab9a5bad04bb",
-            "bundle_version": "2018-03-29T141801.408051Z"
+            "bundle_uuid": "23e25ba4-094c-40ff-80b3-12861961a244",
+            "bundle_version": "2018-04-12T112557.587946Z"
         }
     }
 
@@ -21,7 +21,7 @@ class TestDataExtractor(unittest.TestCase):
         # Trigger the indexing operation
         es_host = "localhost"
         es_port = 9200
-        dss_url = "https://dss.data.humancellatlas.org/v1"
+        dss_url = "https://dss.integration.data.humancellatlas.org/v1"
         index_properties = IndexProperties(dss_url, es_host, es_port)
         hca_indexer = Indexer(index_properties)
         hca_indexer.index(self.hca_simulated_event)
