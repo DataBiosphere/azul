@@ -18,8 +18,8 @@ import sys
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
-from utils.indexer import BaseIndexer
-from utils.base_config import BaseIndexProperties
+# from utils.indexer import BaseIndexer
+# from utils.base_config import BaseIndexProperties
 
 # Set up the chalice application
 app = Chalice(app_name=os.getenv('INDEXER_NAME', 'dss-indigo'))
@@ -34,7 +34,7 @@ dss_url = "https://" + os.environ.get('BLUE_BOX_ENDPOINT',
 
 # get which indexer project definition to use
 # https://lkubuntu.wordpress.com/2012/10/02/writing-a-python-plugin-api/
-IndexerPluginDirectory = "./project"
+IndexerPluginDirectory = "./project" if os.path.exists("./project") else "chalicelib/project"
 IndexerModule = "indexer"
 ConfigModule = "config"
 indexer_project = os.environ.get('INDEXER_PROJECT', 'hca')
@@ -52,8 +52,24 @@ def import_projects():
     return projects
 
 
+def import_projects_configs():
+    projects = []
+    possible_projects = os.listdir(IndexerPluginDirectory)
+    for project in possible_projects:
+        location = os.path.join(IndexerPluginDirectory, project)
+        if not os.path.isdir(location) or not ConfigModule + ".py" in os.listdir(location):
+            continue
+        info = imp.find_module(ConfigModule, [location])
+        projects.append({"name": project, "info": info})
+    return projects
+
+
 def load_project(project):
     return imp.load_module(IndexerModule, *project["info"])
+
+
+def load_project_config(project):
+    return imp.load_module("config", *project["info"])
 
 
 def load_config(project):
@@ -61,6 +77,7 @@ def load_config(project):
 
 
 def load_indexer_class():
+    from utils.indexer import BaseIndexer
     for i in import_projects():
         if i['name'] == indexer_project:
             indexer_loaded = getattr(load_project(i), "Indexer")
@@ -73,9 +90,10 @@ def load_indexer_class():
 
 
 def load_config_class():
-    for i in import_projects():
+    from utils.base_config import BaseIndexProperties
+    for i in import_projects_configs():
         if i['name'] == indexer_project:
-            config_loaded = getattr(load_project(i), "IndexProperties")
+            config_loaded = getattr(load_project_config(i), "IndexProperties")
             # setup default constructor - similar to V5Indexer constructor
             if issubclass(config_loaded, BaseIndexProperties):
                 # return the class

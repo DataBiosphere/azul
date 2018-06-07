@@ -5,8 +5,8 @@ import os
 import sys
 from typing import Iterable, Mapping, Any
 
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
+# pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
+# sys.path.insert(0, pkg_root)  # noqa
 
 from utils.base_config import BaseIndexProperties
 from utils.transformer import Transformer
@@ -73,7 +73,7 @@ class IndexProperties(BaseIndexProperties):
             # need to have the AWS CLI and $aws configure
             awsauth = AWSRequestsAuth(
                 aws_host=self._es_host,
-                aws_region='us-west-2',
+                aws_region='us-east-1',
                 aws_service='es',
                 **boto_utils.get_credentials()
             )
