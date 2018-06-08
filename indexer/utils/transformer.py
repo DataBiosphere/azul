@@ -87,8 +87,9 @@ class Transformer(ABC):
         schema_url = metadata_json["describedBy"]
         version_match = re.search(r'\d\.\d\.\d', schema_url)
         version = version_match.group()
-        version = version.replace('.', '_')
-        return version
+        simple_version = version.rsplit(".", 1)
+        simple_version = simple_version[0].replace('.', '_')
+        return simple_version
 
     @abstractmethod
     def create_documents(

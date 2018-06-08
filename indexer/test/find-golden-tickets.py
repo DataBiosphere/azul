@@ -144,7 +144,7 @@ def main():
     print("Total of bundles read: {}".format(total))
     print("Total of {} bundles indexed".format(indexed))
     print("Total number of errors by code:")
-    pprint(errors)
+    pprint(dict(errors))
     print("Missing bundles and their error code:")
     pprint(missing)
 
