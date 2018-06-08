@@ -1,7 +1,6 @@
 #!/usr/bin/python
 import abc
-from utilities import json_pp
-from chalice_excel import make_response_from_array
+from chalicelib.responseobjects.utilities import json_pp
 import logging
 import jmespath
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
@@ -135,21 +134,23 @@ class ManifestResponse(AbstractResponse):
         :param manifest_entries: The columns that will be present in the tsv
         """
         # Get a list of the hits in the raw response
-        hits = [x['_source'] for x in raw_response['hits']['hits']]
+        # hits = [x['_source'] for x in raw_response['hits']['hits']]
 
-        bundle_uuids = {jmespath.search('bundles[0].uuid', entry)
-                        for entry in hits}
+        # bundle_uuids = {jmespath.search('bundles[0].uuid', entry)
+        #                for entry in hits}
 
-        def create_url(entry):
-            file_uuid = jmespath.search('files.uuid', entry)
-            file_version = jmespath.search('files.version', entry)
-            url = "{}/files/{}?replica=aws&version={}".format(
-                self.DSS_URL, file_uuid, file_version)
-            return url
+        # def create_url(entry):
+        #     file_uuid = jmespath.search('files.uuid', entry)
+        #     file_version = jmespath.search('files.version', entry)
+        #     url = "{}/files/{}?replica=aws&version={}".format(
+        #         self.DSS_URL, file_uuid, file_version)
+        #     return url
 
-        mapped_manifest = [[uuid] for uuid in bundle_uuids]
-        self.apiResponse = make_response_from_array(
-            mapped_manifest, 'tsv', file_name='manifest')
+        # mapped_manifest = [[uuid] for uuid in bundle_uuids]
+        # TODO: Fix manifests and improve memory usage.
+        raise Exception("Not yet implemented")
+        # self.apiResponse = make_response_from_array(
+        #    mapped_manifest, 'tsv', file_name='manifest')
 
 
 class EntryFetcher:
@@ -212,7 +213,7 @@ class SummaryResponse(AbstractResponse):
             if agg_form == "buckets":
                 contents = len(contents)
         except Exception as e:
-            print e
+            print(e)
             # If for whatever reason it can't do it, just return
             # a negative number
             contents = -1
