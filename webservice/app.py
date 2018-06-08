@@ -14,6 +14,7 @@ app = Chalice(app_name=os.getenv('INDEXER_NAME', 'cgp-dashboard-service'))
 app.debug = True
 app.log.setLevel(logging.DEBUG)
 
+
 # TODO: Write the docstrings so they can support swagger.
 # Please see https://github.com/rochacbruno/flasgger
 # stackoverflow.com/questions/43911510/ \
@@ -23,6 +24,29 @@ app.log.setLevel(logging.DEBUG)
 @app.route('/')
 def hello():
     return 'Hello World!'
+
+
+def _get_pagination(current_request):
+    pagination = {
+        "order": current_request.query_params.get('order', 'desc'),
+        "size": int(current_request.query_params.get('size', ENTRIES_PER_PAGE)),
+        "sort": current_request.query_params.get('sort', 'entity_id'),
+    }
+
+    sa = current_request.query_params.get('search_after')
+    sb = current_request.query_params.get('search_before')
+    sa_uid = current_request.query_params.get('search_after_uid')
+    sb_uid = current_request.query_params.get('search_before_uid')
+    if not sa and not sb:
+        pagination['from'] = int(current_request.query_params.get('from', 1))
+    elif not sb:
+        pagination['search_after'] = [sa, sa_uid]
+    elif not sa:
+        pagination['search_before'] = [sb, sb_uid]
+    else:
+        raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
+
+    return pagination
 
 
 @app.route('/repository/files', methods=['GET'])
@@ -56,7 +80,7 @@ def get_data(file_id=None):
     the facets and/or table data
     """
     # Setup logging
-    logger = logging.getLogger("dashboardService.webservice.get_data")
+    logger = app.log
     # Get all the parameters from the URL
     logger.debug('Parameter file_id: {}'.format(file_id))
     if app.current_request.query_params is None:
@@ -66,53 +90,29 @@ def get_data(file_id=None):
     try:
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
-        #filters = {} if filters == {} else filters
-    except Exception, e:
-        logger.error("Malformed filters parameter: {}".format(e.message))
-        return "Malformed filters parameter"
-    # Make the default pagination
-    logger.info("Creating pagination")
-    pagination = {
-
-        "order": app.current_request.query_params.get('order', 'desc'),
-        "size": int(app.current_request.query_params.get('size', ENTRIES_PER_PAGE)),
-        "sort": app.current_request.query_params.get('sort', 'entity_id'),
-    }
-
-    sa = app.current_request.query_params.get('search_after')
-    sb = app.current_request.query_params.get('search_before')
-    sa_uid = app.current_request.query_params.get('search_after_uid')
-    sb_uid = app.current_request.query_params.get('search_before_uid')
-    if not sa and not sb:
-        logger.debug("Using from sorting")
-        pagination['from'] = int(app.current_request.query_params.get('from', 1));
-    elif not sb:
-        logger.debug("Using search after sorting, with value "+str(sa))
-        pagination['search_after'] = [sa, sa_uid]
-    elif not sa:
-        logger.debug("Using search before sorting, with value "+str(sb))
-        pagination['search_before'] = [sb, sb_uid]
-    else:
-        logger.error("Bad arguments, only one of search_after or search_before can be set")
-        return "Bad arguments, only one of search_after or search_before can be set"
-    logger.debug("Pagination: \n".format(json_pp(pagination)))
-    # Handle <file_id> request form
-    if file_id is not None:
-        logger.info("Handling single file id search")
-        filters['file']['fileId'] = {"is": [file_id]}
-    # Create and instance of the ElasticTransformDump
-    logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
-                 es_port=os.getenv("ES_PORT", 9200),
-                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
-    # Get the response back
-    logger.info("Creating the API response")
-    try:
+        # Make the default pagination
+        logger.info("Creating pagination")
+        pagination = _get_pagination(app.current_request)
+        logger.debug("Pagination: \n".format(json_pp(pagination)))
+        # Handle <file_id> request form
+        if file_id is not None:
+            logger.info("Handling single file id search")
+            filters['file']['fileId'] = {"is": [file_id]}
+        # Create and instance of the ElasticTransformDump
+        logger.info("Creating ElasticTransformDump object")
+        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
+                     es_port=os.getenv("ES_PORT", 9200),
+                     es_protocol=os.getenv("ES_PROTOCOL", "http"))
+        # Get the response back
+        logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters, pagination=pagination, post_filter=True)
     except BadArgumentException as bae:
         response = dict(error=bae.message)
         response.status_code = 400
         return response
+    except Exception as e:
+        logger.error("Malformed filters parameter: {}".format(e.message))
+        return "Malformed filters parameter"
     # Returning a single response if <file_id> request form is used
     if file_id is not None:
         response = response['hits'][0]
@@ -159,45 +159,29 @@ def get_data_pie():
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
         filters = {"file": {}} if filters == {} else filters
-    except Exception, e:
+
+        # Make the default pagination
+        logger.info("Creating pagination")
+        pagination = _get_pagination(app.current_request)
+        # Create and instance of the ElasticTransformDump
+        logger.info("Creating ElasticTransformDump object")
+        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
+                     es_port=os.getenv("ES_PORT", 9200),
+                     es_protocol=os.getenv("ES_PROTOCOL", "http"))
+        # Get the response back
+        logger.info("Creating the API response")
+        response = es_td.transform_request(filters=filters,
+                                           pagination=pagination,
+                                           post_filter=False)
+        # Returning a single response if <file_id> request form is used
+        return response
+    except BadArgumentException as bae:
+        response = dict(error=bae.message)
+        response.status_code = 400
+        return response
+    except Exception as e:
         logger.error("Malformed filters parameter: {}".format(e.message))
         return "Malformed filters parameter"
-    # Make the default pagination
-    logger.info("Creating pagination")
-    pagination = {
-        "order": app.current_request.query_params.get('order', 'desc'),
-        "size": int(app.current_request.query_params.get('size', ENTRIES_PER_PAGE)),
-        "sort": app.current_request.query_params.get('sort', 'entity_id'),
-    }
-
-    sa = app.current_request.query_params.get('search_after')
-    sb = app.current_request.query_params.get('search_before')
-    sa_uid = app.current_request.query_params.get('search_after_uid')
-    sb_uid = app.current_request.query_params.get('search_before_uid')
-    if not sa and not sb:
-        logger.debug("Using from sorting")
-        pagination['from'] = int(app.current_request.query_params.get('from', 1));
-    elif not sb:
-        logger.debug("Using search after sorting, with value " + str(sa))
-        pagination['search_after'] = [sa, sa_uid]
-    elif not sa:
-        logger.debug("Using search before sorting, with value " + str(sb))
-        pagination['search_before'] = [sb, sb_uid]
-    else:
-        logger.error("Bad arguments, only one of search_after or search_before can be set")
-        return "Bad arguments, only one of search_after or search_before can be set"
-    # Create and instance of the ElasticTransformDump
-    logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
-                 es_port=os.getenv("ES_PORT", 9200),
-                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
-    # Get the response back
-    logger.info("Creating the API response")
-    response = es_td.transform_request(filters=filters,
-                                       pagination=pagination,
-                                       post_filter=False)
-    # Returning a single response if <file_id> request form is used
-    return response
 
 
 @app.route('/repository/files/summary', methods=['GET'])
@@ -223,7 +207,7 @@ def get_summary():
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
         filters = {"file": {}} if filters == {} else filters
-    except Exception, e:
+    except Exception as e:
         logger.error("Malformed filters parameter: {}".format(e.message))
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
@@ -286,7 +270,7 @@ def get_search():
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
         filters = {"file": {}} if filters == {} else filters
-    except Exception, e:
+    except Exception as e:
         logger.error("Malformed filters parameter: {}".format(e.message))
         return "Malformed filters parameter"
     # Generate the pagination dictionary out of the endpoint parameters
@@ -356,7 +340,7 @@ def get_manifest():
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
         filters = {"file": {}} if filters == {} else filters
-    except Exception, e:
+    except Exception as e:
         logger.error("Malformed filters parameter: {}".format(e.message))
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump

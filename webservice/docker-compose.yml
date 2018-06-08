@@ -3,15 +3,29 @@ version: '2'
 services:
   dcc-dashboard-service:
     container_name: "dcc-dashboard-service"
-    environment:
-      ES_SERVICE: "search-dss-stress-test-index-dev-fjcazd2sn65gtpzduhlyjsh33y.us-east-1.es.amazonaws.com"
-      ES_DOMAIN: "search-dss-stress-test-index-dev-fjcazd2sn65gtpzduhlyjsh33y.us-east-1.es.amazonaws.com"
-      ES_PORT: "443"
-      ES_PROTOCOL: "https"
+    environment:      
+      ES_SERVICE: "elasticsearch1"
+      ES_DOMAIN: "elasticsearch1"
+      ES_PORT: "9200"
+      ES_PROTOCOL: "http"
       ES_FILE_INDEX: "test_data"
     build: .
     ports:
       - "9000:9000"
+    networks:
+      - esnet
+    restart: always
+
+  elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.3
+    container_name: "elasticsearch1"
+    environment:
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    ports:
+       - "9200:9200"
+       - "9300:9200"
     networks:
       - esnet
     restart: always
