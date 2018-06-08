@@ -134,7 +134,8 @@
         "index_field": "specimenUUID"
       },
       {
-        "constant": "",
+        "source": "metadata.json",
+        "dss_field": "aliquot.submitter_id",
         "index_field": "submittedSpecimenId"
       },
       {
