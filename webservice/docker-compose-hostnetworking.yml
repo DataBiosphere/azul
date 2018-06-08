@@ -11,9 +11,6 @@ services:
       ES_PORT: "9200"
       ES_PROTOCOL: "http"
       ES_FILE_INDEX: "test_data"
-      ES_DONOR_INDEX: "sample_index_v4"
     build: .
-#    ports:
-#      - "9000:80"
     restart: always
     network_mode: host

@@ -24,9 +24,9 @@ class PaginationTestCase(unittest.TestCase):
         """
         if 'search_before' in json_response['pagination']:
             self.assertIsNone(json_response['pagination']['search_before'],
-                             "search_before != null on first page of results")
+                              "search_before != null on first page of results")
             self.assertIsNone(json_response['pagination']['search_before_uid'],
-                             "search_before != null on first page of results")
+                              "search_before != null on first page of results")
         else:
             self.fail("search_before not set to null on first page of results")
 
@@ -107,7 +107,7 @@ class PaginationTestCase(unittest.TestCase):
         search_after = json_response['pagination']['search_after']
         search_after_uid = json_response['pagination']['search_after_uid']
         url = "{}?sort=entity_id&search_after={}&search_after_uid={}".format(self.get_base_url(), search_after,
-                                                                         search_after_uid)
+                                                                             search_after_uid)
         content = requests.get(url).content
         json_response_second = json.loads(content)
         self.assert_page2_correct(json_response, json_response_second, "desc")
@@ -132,8 +132,8 @@ class PaginationTestCase(unittest.TestCase):
         search_after_uid = json_response_second['pagination']['search_before_uid']
 
         content = requests.get(
-            "{}?sort=entity_id&search_after={}&search_after_uid={}&order=desc"
-                .format(self.get_base_url(), search_after, search_after_uid)).content
+            "{}?sort=entity_id&search_after={}&search_after_uid={}&order=desc".format(self.get_base_url(), search_after,
+                                                                                      search_after_uid)).content
         json_response = json.loads(content)
         if 'search_before' in json_response['pagination']:
             self.assertEqual(json_response['pagination']['search_before'], search_after_lrfp,

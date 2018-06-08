@@ -1,1 +1,0 @@
-CALLBACK_URL=https://esw24nro98.execute-api.us-east-1.amazonaws.com/api/ \n ES_ENDPOINT=search-dss-stress-test-index-dev-fjcazd2sn65gtpzduhlyjsh33y.us-east-1.es.amazonaws.com \n ES_INDEX=test_data \n DASHBOARD_NAME=cgp-dashboard-service-dev \n HOME=/tmp
