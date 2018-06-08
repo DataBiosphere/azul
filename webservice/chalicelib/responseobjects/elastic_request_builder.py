@@ -8,7 +8,7 @@ import os
 from chalicelib.responseobjects.hca_response_v5 import KeywordSearchResponse, \
     FileSearchResponse, SummaryResponse, ManifestResponse, \
     AutoCompleteResponse
-from utilities import json_pp
+from chalicelib.responseobjects.utilities import json_pp
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 

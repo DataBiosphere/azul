@@ -37,7 +37,7 @@ class MyTestCase(unittest.TestCase):
         # print "actual: " + json_actual_output
 
         # Now show differences so message is helpful
-        print "Comparing the two dictionaries built."
+        print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(json_actual_output[:20], json_expected_output[:20]))
         for i, s in enumerate(difflib.ndiff(json_actual_output, json_expected_output)):
             if s[0] == ' ':
@@ -73,7 +73,7 @@ class MyTestCase(unittest.TestCase):
         # print "actual: " + json_actual_output
 
         # Now show differences so message is helpful
-        print "Comparing the two dictionaries built."
+        print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(json_actual_output[:20], json_expected_output[:20]))
         for i, s in enumerate(difflib.ndiff(json_actual_output, json_expected_output)):
             if s[0] == ' ':
@@ -117,7 +117,7 @@ class MyTestCase(unittest.TestCase):
             test_json,
             pagination_test,
             facet_test
-            ).return_response().to_json()
+        ).return_response().to_json()
 
         # Transform both json objects to a string
         json_response = json.dumps(file_search_test, sort_keys=True)  # loaded from json
@@ -127,7 +127,7 @@ class MyTestCase(unittest.TestCase):
         # print "actual: "+json_test
 
         # Now show differences so message is helpful
-        print "Comparing the two dictionaries built."
+        print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(json_test[:20], json_response[:20]))
         for i, s in enumerate(difflib.ndiff(json_test, json_response)):
             if s[0] == ' ':
@@ -169,7 +169,7 @@ class MyTestCase(unittest.TestCase):
             test_json,
             pagination_test,
             facet_test
-            ).return_response().to_json()
+        ).return_response().to_json()
 
         # Transform both json objects to a string
         json_response = json.dumps(file_search_test, sort_keys=True)  # loaded from json
@@ -179,7 +179,7 @@ class MyTestCase(unittest.TestCase):
         # print "actual: "+json_test
 
         # Now show differences so message is helpful
-        print "Comparing the two dictionaries built."
+        print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(json_test[:20], json_response[:20]))
         for i, s in enumerate(difflib.ndiff(json_test, json_response)):
             if s[0] == ' ':

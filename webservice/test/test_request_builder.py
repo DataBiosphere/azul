@@ -61,7 +61,7 @@ class MyTestCase(unittest.TestCase):
         # print "Printing actual output: \n %s" % actual_output
         # Now show differences so message is helpful
 
-        print "Comparing the two dictionaries built."
+        print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(
             actual_output[:20],
             expected_output[:20]))
@@ -107,7 +107,7 @@ class MyTestCase(unittest.TestCase):
         # print "Printing expected output: \n %s" % expected_output
         # print "Printing actual output: \n %s" % actual_output
         # Now show differences so message is helpful
-        print "Comparing the two dictionaries built."
+        print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(
             actual_output[:20], expected_output[:20]))
         for i, s in enumerate(
@@ -162,7 +162,7 @@ class MyTestCase(unittest.TestCase):
         # print "Printing expected output: \n %s" % expected_output
         # print "Printing actual output: \n %s" % actual_output
         # Now show differences so message is helpful
-        print "Comparing the two dictionaries built."
+        print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
         for i, s in enumerate(
                 difflib.ndiff(actual_output, expected_output)):

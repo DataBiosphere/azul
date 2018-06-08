@@ -8,7 +8,7 @@ from faker_schema.schema_loader import load_json_from_file
 numIts = 1
 page_size = 100000
 if len(sys.argv) < 2:
-    print ("USAGE: " + sys.argv[
+    print("USAGE: " + sys.argv[
         0] + " <template file> {number of entries per call (default=100000)} {number of iterations (default=1)}")
     sys.exit(1)
 json_file = sys.argv[1]
@@ -44,7 +44,7 @@ for j in range(0, numIts):
         file.write(json.dumps(faker.generate_fake(schema)) + "\n")
         index = index + 1
     file.close()
-    print ("Wrote td_index_page.jsonl")
+    print("Wrote td_index_page.jsonl")
     subprocess.run(
         "curl -s -XPUT $ES_PROTOCOL://$ES_SERVICE:$ES_PORT/test_data/_bulk?pretty --data-binary @td_index_page.jsonl >/dev/null",
         shell=True)
