@@ -7,10 +7,8 @@ The based class Indexer serves as the basis for additional indexing classes.
 
 """
 from abc import ABC
-from elasticsearch import RequestError, ConnectionError, ConflictError
+from elasticsearch import ConnectionError, ConflictError
 import logging
-import os
-import sys
 from time import sleep
 from typing import Mapping, Any, Union
 
@@ -69,7 +67,7 @@ class BaseIndexer(ABC):
                                         version=updated_version,
                                         version_type="external")
                         break
-                    except RequestError as er:
+                    except ConflictError as er:
                         module_logger.info(
                             "There was a version conflict... retrying")
                         module_logger.debug(er.info)

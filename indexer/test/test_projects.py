@@ -5,6 +5,7 @@ from uuid import uuid4
 
 
 class TestDataExtractor(unittest.TestCase):
+
     hca_simulated_event = {
         "query": {
             "match_all": {}

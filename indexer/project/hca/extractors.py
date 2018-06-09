@@ -99,7 +99,7 @@ class BiomaterialExtractor:
             "total_cells": jmespath.search(total_cells, metadata_file),
             "parent": jmespath.search(parent, metadata_file),
             "hca_id": jmespath.search(hca_id, metadata_file),
-            "_type": "samples"
+            "_type": "specimens"
         }
         return biomaterial
 
@@ -135,7 +135,7 @@ class BiomaterialExtractor:
             "total_cells": jmespath.search(total_cells, metadata_file),
             "parent": jmespath.search(parent, metadata_file),
             "hca_id": jmespath.search(hca_id, metadata_file),
-            "_type": "samples"
+            "_type": "specimens"
         }
         return biomaterial
 
@@ -171,7 +171,7 @@ class BiomaterialExtractor:
             "total_cells": jmespath.search(total_cells, metadata_file),
             "parent": jmespath.search(parent, metadata_file),
             "hca_id": jmespath.search(hca_id, metadata_file),
-            "_type": "samples"
+            "_type": "specimens"
         }
         return biomaterial
 
