@@ -45,7 +45,7 @@ class FileTransformer(Transformer):
             "BiomaterialExtractor.v{}".format(metadata_version))(extractors)
         biomaterials = [biomaterial_extractor(biomaterial) for biomaterial
                         in metadata_dictionary["biomaterials"]]
-        # Now mangle the samples into separate entities as appropriate.
+        # Now mangle the biomaterials into separate entities as appropriate.
         # Separate biomaterials into roots and not_roots
         not_roots, roots = self.partition(
             lambda x: "specimen_from_organism" in x["source"], biomaterials)
@@ -54,25 +54,25 @@ class FileTransformer(Transformer):
                              parent_id: str) -> Iterable[dict]:
             # TODO: Add code to break under some cyclic condition
             print(parent_id)
-            for child in filter(lambda x: x["parent"] is not None and parent_id in x["parent"], nodes):
+            for child in filter(lambda x: parent_id == x["parent"], nodes):
                 yield from find_descendants(nodes, child["biomaterial_id"])
                 yield child
 
         def find_ancestors(nodes: Iterable[dict],
                            parent_id: str) -> Iterable[dict]:
             print(parent_id)
-            for parent in filter(lambda x: parent_id in x["biomaterial_id"],
+            for parent in filter(lambda x: parent_id == x["biomaterial_id"],
                                  nodes):
                 if "parent" in parent and bool(parent["parent"]):
                     yield from find_ancestors(nodes, parent["parent"])
                 yield parent
 
         # Add ancestors and descendants fields to each sample
-        samples_list = []
+        specimen_list = []
         for root in roots:
             not_roots, not_roots_1, not_roots_2 = tee(not_roots, 3)
             ancestors = find_ancestors(list(not_roots_1), root["parent"])
-            descendants = find_descendants(list(not_roots_2), root["parent"])
+            descendants = find_descendants(list(not_roots_2), root["biomaterial_id"])
             root_id = root["biomaterial_id"]
             merged_sample = defaultdict(list)
             for node in chain(ancestors, descendants, [root]):
@@ -82,8 +82,8 @@ class FileTransformer(Transformer):
                     else:
                         merged_sample[key].extend([value])
             merged_sample["biomaterial_id"] = root_id
-            samples_list.append(merged_sample)
-        return samples_list
+            specimen_list.append(merged_sample)
+        return specimen_list
 
     def _create_processes(self, metadata_dictionary: dict) -> Sequence[dict]:
         metadata_version = self.get_version(metadata_dictionary)
