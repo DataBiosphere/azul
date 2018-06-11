@@ -6,7 +6,7 @@ import os
 
 # use this file to unittest app.py
 # requirements: app.py, chalicelib/, running test_flask.py,
-# declared env var: ES_INDEX = test-index
+# declared env var: AZUL_ES_INDEX = test-index
 
 # bb_host = "https://"+os.environ['BLUE_BOX_ENDPOINT']
 # in_host = "https://"+os.environ['INDEXER_ENDPOINT']

@@ -1,0 +1,98 @@
+azul_vars=(
+    # The path to the project root directory
+    AZUL_HOME
+
+    # The name of the current deployment
+    AZUL_DEPLOYMENT_STAGE
+
+    # The URL to the DSS (aka Blue box) REST API
+    AZUL_DSS_ENDPOINT
+
+    # The name of the AWS Lambda function (and the contained Chalice app)
+    # receiving notifications from DSS and populating the ES index
+    AZUL_INDEXER_NAME
+
+    # The name of the AWS-hosted ElasticSearch instance (not a domain name)
+    AZUL_ES_DOMAIN
+
+    # The number of nodes in the AWS-hosted ElasticSearch cluster
+    AZUL_ES_INSTANCE_COUNT
+
+    # The EC2 instance type to use for a cluster node
+    AZUL_ES_INSTANCE_TYPE
+
+    # The size of the EBS volume backing each cluster node
+    AZUL_ES_VOLUME_SIZE
+
+    # The name of the ES index to be populated in response to events from DSS
+    AZUL_ES_INDEX
+
+    # The name of the bucket where TerraForm maintains its state, allowing
+    # multiple developers to collaboratively use TerraForm in a single AWS
+    # account. This bucket is likely going be shared with other projects such as
+    # DSS and might require some coordination with the developers of those
+    # projects.
+    AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE
+)
+
+unset ${azul_vars[*]}
+
+AZUL_HOME="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ ! -f "${AZUL_HOME}/deployments/.active/environment" ]]; then
+    echo "Please create a symlink to the active deployment. " \
+         "For example 'cd deployments && ln -snf dev .active'"
+    return
+fi
+
+_set () {
+    for var in ${azul_vars[*]}; do
+        if [[ "$var" == "$1" ]]; then
+            eval ": \${$1:='$2'}"
+            return
+        fi
+    done
+    echo "Error: variable $1 is missing from azul_vars."
+    unset ${azul_vars[*]}
+    # That's the only way (I know of) we can exit the sourced script from within
+    # a function
+    kill -SIGINT $$
+}
+
+# Set variables specific to the active deployment and the current user. This is
+# the most specific level.
+if [[ -f "${AZUL_HOME}/deployments/.active/environment.local" ]]; then
+    source "${AZUL_HOME}/deployments/.active/environment.local"
+fi
+
+# Set variables specific to the active deployment
+source "${AZUL_HOME}/deployments/.active/environment"
+
+# Set variables specific to the current user
+if [[ -f "${AZUL_HOME}/environment.local" ]]; then
+    source "${AZUL_HOME}/environment.local"
+fi
+
+# Set the global defaults. This is the least specific level.
+
+_set AZUL_INDEXER_NAME "azul-indexer-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_ES_INDEX "azul-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_ES_INSTANCE_COUNT 1
+_set AZUL_ES_INSTANCE_TYPE "m4.large.elasticsearch"
+_set AZUL_ES_VOLUME_SIZE 35
+
+# This is the same TF bucket as the one DSS uses. The special string
+# {account_id} is replaced with the ID of the AWS account ID the currently
+# configured AWS credentials belong to.
+_set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"
+
+unset -f _set
+
+export ${azul_vars[*]}
+
+# A little helper to make re-sourcing this script easier.
+
+_refresh () {
+    source ${AZUL_HOME}/environment
+}

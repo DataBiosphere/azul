@@ -11,7 +11,7 @@ import uuid
 es_host = os.environ['ES_ENDPOINT']
 bundle_path = os.environ['BUNDLE_PATH']
 try:
-    es_index = os.environ['ES_INDEX']
+    es_index = os.environ['AZUL_ES_INDEX']
 except KeyError:
     es_index = 'test-import'
 

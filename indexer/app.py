@@ -22,15 +22,11 @@ sys.path.insert(0, pkg_root)  # noqa
 # from utils.base_config import BaseIndexProperties
 
 # Set up the chalice application
-app = Chalice(app_name=os.getenv('INDEXER_NAME', 'dss-indigo'))
+app = Chalice(app_name=os.environ['AZUL_INDEXER_NAME'])
 app.debug = True
 app.log.setLevel(logging.DEBUG)
-# Set env on lambda, chalice config and profile
-# Get the ElasticSearch and DSS host
-es_host = os.environ.get('ES_ENDPOINT', "localhost")
-es_port = os.environ.get('ES_PORT', 443)
-dss_url = "https://" + os.environ.get('BLUE_BOX_ENDPOINT',
-                                      "dss.staging.data.humancellatlas.org/v1")
+es_domain = os.environ['AZUL_ES_DOMAIN']
+dss_url = os.environ['AZUL_DSS_ENDPOINT']
 
 # get which indexer project definition to use
 # https://lkubuntu.wordpress.com/2012/10/02/writing-a-python-plugin-api/
@@ -104,7 +100,7 @@ def load_config_class():
 
 indexer_to_load = load_indexer_class()
 indexer_properties = load_config_class()
-loaded_properties = indexer_properties(dss_url, es_host, es_port)
+loaded_properties = indexer_properties(dss_url, es_domain=es_domain)
 loaded_indexer = indexer_to_load(loaded_properties)
 
 

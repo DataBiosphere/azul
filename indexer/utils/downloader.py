@@ -16,7 +16,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 import os
 
 
-indexer_name = os.getenv('INDEXER_NAME', 'azul-indexer')
+indexer_name = os.environ['AZUL_INDEXER_NAME']
 module_logger = logging.getLogger(indexer_name + ".indexer")
 
 
