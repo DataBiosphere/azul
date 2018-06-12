@@ -20,7 +20,7 @@ class TestDataExtractor(unittest.TestCase):
 
     def test_hca_extraction(self):
         # Trigger the indexing operation
-        dss_url = "https://dss.integration.data.humancellatlas.org/v1"
+        dss_url = "https://dss.data.humancellatlas.org/v1"
         index_properties = IndexProperties(dss_url, es_endpoint=("localhost", 9200))
         hca_indexer = Indexer(index_properties)
         hca_indexer.index(self.hca_simulated_event)

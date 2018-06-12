@@ -33,7 +33,7 @@ class MetadataDownloader(object):
         Create an instance of the DataExtractor.
 
         It takes the formatted url of the DSS
-        (e.g. https://dss.staging.data.humancellatlas.org/v1) to which
+        (e.g. https://dss.data.humancellatlas.org/v1) to which
         to talk to.
 
         :param dss_host: The formatted url for the DSS

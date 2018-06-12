@@ -14,4 +14,4 @@ _set AZUL_DEPLOYMENT_STAGE dev
 
 # FIXME: this should probably be pointing at integration
 
-_set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
+_set AZUL_DSS_ENDPOINT "https://dss.data.humancellatlas.org/v1"
