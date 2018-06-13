@@ -190,7 +190,9 @@ class FileTransformer(Transformer):
                     contents[unit_type] += [all_units[relative]]
                 else:
                     contents[unit_type[0]] += [all_units[relative]]
-                added.update(list(all_units[relative]["hca_id"]))
+                hca_id = all_units[relative]["hca_id"]
+                hca_id = [hca_id] if isinstance(hca_id, str) else hca_id
+                added.update(hca_id)
             # Add missing project field and append the current entity
             contents["project"] = project
             contents[entity_type] += [_file]
