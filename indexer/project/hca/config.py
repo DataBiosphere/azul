@@ -1,12 +1,9 @@
-from aws_requests_auth import boto_utils
-from aws_requests_auth.aws_auth import AWSRequestsAuth
-from elasticsearch import Elasticsearch, RequestsHttpConnection
-import os
-import sys
-from typing import Iterable, Mapping, Any
+from functools import lru_cache
+from typing import Any, Iterable, Mapping, Optional, Tuple
 
-# pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
-# sys.path.insert(0, pkg_root)  # noqa
+import boto3
+from elasticsearch import Elasticsearch, RequestsHttpConnection
+from requests_aws4auth import AWS4Auth
 
 from utils.base_config import BaseIndexProperties
 from utils.transformer import Transformer
@@ -15,12 +12,16 @@ from utils.transformer import Transformer
 class IndexProperties(BaseIndexProperties):
     """Index properties for HCA"""
 
-    def __init__(self, dss_url: str,
-                 elasticsearch_host: str, elasticsearch_port: int) -> None:
-        """Initialize properties."""
+    def __init__(self, dss_url: str, es_endpoint: Optional[Tuple[str, int]] = None, es_domain: str = None) -> None:
+        assert (es_domain is None) != (es_endpoint is None), "Either es_domain or es_endpoint must be specified"
         self._dss_url = dss_url
-        self._es_host = elasticsearch_host
-        self._es_port = elasticsearch_port
+        if es_endpoint is None:
+            es = boto3.client('es')
+            es_domain_status = es.describe_elasticsearch_domain(DomainName=es_domain)
+            self._es_endpoint = (es_domain_status['DomainStatus']['Endpoint'], 443)
+        else:
+            self._es_endpoint = es_endpoint
+
         self._es_mapping = {
             "dynamic_templates": [
                 {
@@ -69,28 +70,31 @@ class IndexProperties(BaseIndexProperties):
 
     @property
     def elastic_search_client(self) -> Elasticsearch:
-        if self._es_host.endswith('.es.amazonaws.com'):
-            # need to have the AWS CLI and $aws configure
-            awsauth = AWSRequestsAuth(
-                aws_host=self._es_host,
-                aws_region='us-east-1',
-                aws_service='es',
-                **boto_utils.get_credentials()
-            )
-            # use the requests connection_class and pass in our custom
-            # auth class
-            es = Elasticsearch(
-                hosts=[{'host': self._es_host, 'port': 443}],
-                http_auth=awsauth,
-                use_ssl=True,
-                verify_certs=True,
-                connection_class=RequestsHttpConnection
-            )
+        host, port = self._es_endpoint
+        return self._elastic_search_client(host, port, 30)
+
+    # Stolen from https://github.com/HumanCellAtlas/data-store/blob/master/dss/index/es/__init__.py#L66
+
+    @lru_cache(maxsize=32)
+    def _elastic_search_client(self, host, port, timeout):
+        if host.endswith(".amazonaws.com"):
+            session = boto3.session.Session()
+            current_credentials = session.get_credentials().get_frozen_credentials()
+            es_auth = AWS4Auth(current_credentials.access_key,
+                               current_credentials.secret_key,
+                               session.region_name,
+                               "es",
+                               session_token=current_credentials.token)
+            client = Elasticsearch(hosts=[dict(host=host, port=port)],
+                                   timeout=timeout,
+                                   use_ssl=True,
+                                   verify_certs=True,
+                                   connection_class=RequestsHttpConnection,
+                                   http_auth=es_auth)
         else:
-            # default auth for testing purposes
-            es = Elasticsearch([{'host': self._es_host,
-                                 'port': self._es_port}])
-        return es
+            client = Elasticsearch(hosts=[dict(host=host, port=port)],
+                                   use_ssl=False)
+        return client
 
     @property
     def mapping(self) -> Mapping[str, Any]:

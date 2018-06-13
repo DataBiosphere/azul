@@ -1,14 +1,44 @@
-# dss-azul-indexer
+# Azul - The HumanCellAtlas Portal Backend 
 
 This is the indexer that consumes events from the blue box and indexes them into Elasticsearch.
 
 ## Getting Started
 
-### Blue Box 
+### Development Preequisites
 
-It is required to know the blue box endpoint. See here for instructions: https://github.com/HumanCellAtlas/data-store/tree/master
+- Python 3.6 with virtualenv and pip
+- Terraform (optional, to create new deployments): https://www.terraform.io/intro/getting-started/install.html 
+  On macOS with Homebrew installed, 'brew install terraform' works, too.
+- AWS credentials configured in ~/.aws/credentials and ~/.aws/config
 
-### Elasticsearch (ES)
+### Runtime Preequisites (Infrastructure)
+
+- HCA DSS (aka Blue Box): It is required to know the URL of the HumanCellAtlas Data Store webservice endpoint. See 
+  here for instructions: https://github.com/HumanCellAtlas/data-store/tree/master
+
+The remaining infrastructure is managed internally with TerraForm. 
+
+### Project configuration
+
+1) Create a Python 3.6 virtualenv and activate it, for example `virtualenv .venv && source .venv/bin/activate`
+2) Choose a target deployment, for example `cd deployments && ln -snf dev .active && cd ..`
+3) Optional: Create a file called `environment.local` and in it set & export environment variables specific to you.
+4) Create a file called `deployments/.active/environment.local` and do the same for variables specific to you AND the 
+   active deployment. For example, `AWS_PROFILE` and `AWS_DEFAULT_REGION` belong there.
+5) `source environment`
+6) Install the development requirements: `pip install -r requirements.dev.txt`
+7) Run `make`. It should not complain. If it does, address the complaint and repeat.
+
+You should never deploy from a feature branch to any of the established deployments. You can maintain your own 
+personal deployment and deploy to it from a feature branch: 
+
+```
+cd deployments 
+cp -r dev foo.local
+ln -snf foo.local .active
+```
+ 
+### Deprecated: Elasticsearch (ES)
 
 Create an Elasticsearch box on AWS. 
 On the AWS console click "Services," then click "Elasticsearch Service." Then click "Create a new domain." Assign a domain name to the ES instance (eg: "dss-sapphire"). Choose your configuration for your requirements.
@@ -155,8 +185,8 @@ Replace the current file with the following, making sure to replace the <> with 
       "environment_variables": {
          "ES_ENDPOINT":"<your elasticsearch endpoint>",
          "BLUE_BOX_ENDPOINT":"<your blue box>",
-         "ES_INDEX":"<elasticsearch index to use>",
-         "INDEXER_NAME":"<your-indexer-lambda-application-name>",
+         "AZUL_ES_INDEX":"<elasticsearch index to use>",
+         "AZUL_INDEXER_NAME":"<your-indexer-lambda-application-name>",
          "HOME":"/tmp"
       }
     }
@@ -170,8 +200,8 @@ open `~/.profile` and add the following items.
 ```
 export ES_ENDPOINT=<your elasticsearch endpoint>
 export BLUE_BOX_ENDPOINT=<your blue box>
-export ES_INDEX=<elasticsearch index to use>
-export INDEXER_NAME=<your-indexer-lambda-application-name>
+export AZUL_ES_INDEX=<elasticsearch index to use>
+export AZUL_INDEXER_NAME=<your-indexer-lambda-application-name>
 export HOME=/tmp
 ```
 
@@ -184,8 +214,8 @@ Go to the AWS console, and then to your Lambda function and add the following en
 ```
 ES_ENDPOINT  -->   <your elasticsearch endpoint>
 BLUE_BOX_ENDPOINT   -->   <your blue box>
-ES_INDEX  -->  <elasticsearch index to use>
-INDEXER_NAME  -->  <your-indexer-lambda-application-name>
+AZUL_ES_INDEX  -->  <elasticsearch index to use>
+AZUL_INDEXER_NAME  -->  <your-indexer-lambda-application-name>
 HOME --> /tmp
 ```
 
@@ -216,7 +246,7 @@ curl -H "Content-Type: application/json" -X POST -d '{ "query": { "query": { "bo
 
 Download and expand import.tgz from Data-Bundle-Examples: https://github.com/HumanCellAtlas/data-bundle-examples/blob/master/import/import.tgz
 Download the test/local-import.py file from this repo. Create an environmental variable `BUNDLE_PATH` that points to the import.tgz files. (Note: There are thousands of files in import.tgz, can specify parts of bundles to download: `import/geo/GSE67835` or `import/geo` or `import`)
-Add environmental variable `ES_ENDPOINT` which points to your ES box or have a localhost running. Optionally, create the name of the ES index to add the files to with the environmental variable `ES_INDEX` (default index is `test-import`)
+Add environmental variable `ES_ENDPOINT` which points to your ES box or have a localhost running. Optionally, create the name of the ES index to add the files to with the environmental variable `AZUL_ES_INDEX` (default index is `test-import`)
 Required to have a config.json (like the one in `chalicelib/config.json`)
 
 Run `local-import.py`. Open Kibana to see your files appear. The
@@ -258,7 +288,7 @@ Before you run `make`, you will need to setup the prerequisites.
 You will need to update the `config/elasticsearch-policy.json` file to enter your desired domain name, lambda name and the IP address. 
 Next, you will need to update the `config/config.env` file and apply all the values. The ```
 BB_ENDPOINT=dss.staging.data.humancellatlas.org/v1
-ES_INDEX=test-import
+AZUL_ES_INDEX=test-import
 ```
 values are pre-filled by default. 
 

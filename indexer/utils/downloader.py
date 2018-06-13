@@ -16,7 +16,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 import os
 
 
-indexer_name = os.getenv('INDEXER_NAME', 'azul-indexer')
+indexer_name = os.environ['AZUL_INDEXER_NAME']
 module_logger = logging.getLogger(indexer_name + ".indexer")
 
 
@@ -33,7 +33,7 @@ class MetadataDownloader(object):
         Create an instance of the DataExtractor.
 
         It takes the formatted url of the DSS
-        (e.g. https://dss.staging.data.humancellatlas.org/v1) to which
+        (e.g. https://dss.data.humancellatlas.org/v1) to which
         to talk to.
 
         :param dss_host: The formatted url for the DSS

@@ -1,4 +1,7 @@
-{
+from utils.deployment import aws
+from utils.template import emit, env
+
+emit({
     "Version": "2012-10-17",
     "Statement": [
         {
@@ -19,7 +22,14 @@
                 "es:ESHttpPut",
                 "es:ESHttpDelete"
             ],
-            "Resource": <ELASTICSEARCH_ARN>
+            "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{env.AZUL_ES_DOMAIN}/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "es:DescribeElasticsearchDomain"
+            ],
+            "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{env.AZUL_ES_DOMAIN}"
         }
     ]
-}
+})

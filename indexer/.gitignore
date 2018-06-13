@@ -1,9 +1,44 @@
-.idea
-.ipynb_checkpoints
-dss-indigo
-dss-file-browser-staging
-indexer/__pycache__
-venv
-chalicelib/__pycache__
-config/config.env
-dss-azul-indexer-carlos
+# Reminder:
+#
+# - Avoid adding exclusions specific to your work environment into this file. Every entry should have general utility
+#   for all collaborators. See https://help.github.com/articles/ignoring-files/#create-a-global-gitignore for more.
+#
+# - A leading slash means the pattern is anchored at the root.
+#
+# - No leading slash means the pattern matches at any depth.
+
+# Python files
+*.pyc
+__pycache__/
+.mypy_cache/
+.tox/
+*.egg-info/
+/build/
+/dist/
+/.eggs/
+
+# Sphinx documentation
+/docs/_build/
+
+# IDE project files
+/.pydevproject
+
+# vim python-mode plugin
+/.ropeproject
+
+# IntelliJ IDEA / PyCharm project files
+/.idea
+/*.iml
+
+# OS X metadata files
+.DS_Store
+
+# Python coverage
+.coverage
+.coverage.*
+
+# Local environment configuration
+/deployments/.active
+/deployments/*.local
+/environment.local
+/deployments/*/environment.local

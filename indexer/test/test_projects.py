@@ -20,10 +20,8 @@ class TestDataExtractor(unittest.TestCase):
 
     def test_hca_extraction(self):
         # Trigger the indexing operation
-        es_host = "localhost"
-        es_port = 9200
-        dss_url = "https://dss.integration.data.humancellatlas.org/v1"
-        index_properties = IndexProperties(dss_url, es_host, es_port)
+        dss_url = "https://dss.data.humancellatlas.org/v1"
+        index_properties = IndexProperties(dss_url, es_endpoint=("localhost", 9200))
         hca_indexer = Indexer(index_properties)
         hca_indexer.index(self.hca_simulated_event)
         print("Indexing operation finished. Check values in ElasticSearch")

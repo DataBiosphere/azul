@@ -2,6 +2,8 @@
 """Command line utility to trigger indexing of bundles based on a query."""
 import argparse
 from collections import defaultdict
+import os
+
 from hca.dss import DSSClient
 import json
 from pprint import pprint
@@ -10,15 +12,17 @@ from urllib.request import urlopen, Request
 from urllib.error import HTTPError
 from uuid import uuid4
 
+from utils.deployment import aws
+
 
 class DefaultProperties:
     """Default Properties for this script."""
 
     def __init__(self):
         """Initialize the default values."""
-        self._dss_url = "https://dss.staging.data.humancellatlas.org/v1"
-        self._indexer_url = "https://9b92wjnlgh.execute-api.us-west-2.\
-        amazonaws.com/dev/"
+        self._dss_url = os.environ['AZUL_DSS_ENDPOINT']
+        self._indexer_url = aws.api_getway_endpoint(function_name=os.environ['AZUL_INDEXER_NAME'],
+                                                    api_gateway_stage=os.environ['AZUL_DEPLOYMENT_STAGE'])
         self._es_query = {"query": {"match_all": {}}}
 
     @property
