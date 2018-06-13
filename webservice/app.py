@@ -21,7 +21,7 @@ app.log.setLevel(logging.DEBUG)
 # how-to-write-docstring-for-url-parameters
 
 
-@app.route('/')
+@app.route('/', cors=True)
 def hello():
     return 'Hello World!'
 
@@ -49,8 +49,8 @@ def _get_pagination(current_request):
     return pagination
 
 
-@app.route('/repository/files', methods=['GET'])
-@app.route('/repository/files/{file_id}', methods=['GET'])
+@app.route('/repository/files', methods=['GET'], cors=True)
+@app.route('/repository/files/{file_id}', methods=['GET'], cors=True)
 def get_data(file_id=None):
     """
     Returns a dictionary with entries that can be used by the browser
@@ -122,7 +122,7 @@ def get_data(file_id=None):
     return response
 
 
-@app.route('/repository/files/piecharts', methods=['GET'])
+@app.route('/repository/files/piecharts', methods=['GET'], cors=True)
 def get_data_pie():
     """
     Returns a dictionary with entries that can be used by the
@@ -187,7 +187,7 @@ def get_data_pie():
         return "Malformed filters parameter"
 
 
-@app.route('/repository/files/summary', methods=['GET'])
+@app.route('/repository/files/summary', methods=['GET'], cors=True)
 def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
@@ -225,7 +225,7 @@ def get_summary():
     return response
 
 
-@app.route('/keywords', methods=['GET'])
+@app.route('/keywords', methods=['GET'], cors=True)
 def get_search():
     """
     Creates and returns a dictionary with entries that best match the query
@@ -305,7 +305,7 @@ def get_search():
     return response
 
 
-@app.route('/repository/files/order', methods=['GET'])
+@app.route('/repository/files/order', methods=['GET'], cors=True)
 def get_order():
     """
     Get the order of the facets from the order_config file
@@ -321,7 +321,7 @@ def get_order():
     return {'order': order_list}
 
 
-@app.route('/repository/files/export', methods=['GET'])
+@app.route('/repository/files/export', methods=['GET'], cors=True)
 def get_manifest():
     """
     Creates and returns a manifest based on the filters pased on
