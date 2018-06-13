@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+
+# This temporary shim around the chalice entry point is a workaround
+# for https://github.com/aws/chalice/issues/479. TODO: (akislyuk)
+# revert to using the standard entry point when fixed.
+
+import os, sys
+
+from chalice.cli import main
+
+import chalice.awsclient, chalice.deploy.deployer, chalice.deploy.packager
+
+class DSSChaliceTypedAWSClient(chalice.awsclient.TypedAWSClient):
+    def update_function(self, *args, **kwargs):
+        kwargs.pop("role_arn", None)
+        super().update_function(*args, **kwargs)
+
+chalice.awsclient.TypedAWSClient = DSSChaliceTypedAWSClient
+chalice.deploy.deployer.TypedAWSClient = DSSChaliceTypedAWSClient
+
+# See https://github.com/aws/chalice/issues/497 for discussion
+chalice.deploy.packager.subprocess_python_base_environ = {"PATH": os.environ["PATH"]}
+
+sys.exit(main())
+
+# from https://github.com/HumanCellAtlas/data-store/blob/master/scripts/dss-chalice

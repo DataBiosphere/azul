@@ -85,7 +85,7 @@ def get_data(file_id=None):
     logger.debug('Parameter file_id: {}'.format(file_id))
     if app.current_request.query_params is None:
         app.current_request.query_params = {}
-    filters = app.current_request.query_params.get('filters', '{}')
+    filters = app.current_request.query_params.get('filters', '{"file": {}}')
     logger.debug("Filters string is: {}".format(filters))
     try:
         logger.info("Extracting the filter parameter from the request")
@@ -100,18 +100,21 @@ def get_data(file_id=None):
             filters['file']['fileId'] = {"is": [file_id]}
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
+        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "localhost"),
                      es_port=os.getenv("ES_PORT", 9200),
                      es_protocol=os.getenv("ES_PROTOCOL", "http"))
         # Get the response back
         logger.info("Creating the API response")
-        response = es_td.transform_request(filters=filters, pagination=pagination, post_filter=True)
+        response = es_td.transform_request(filters=filters,
+                                           pagination=pagination,
+                                           post_filter=True,
+                                           index="ES_FILE_INDEX")
     except BadArgumentException as bae:
         response = dict(error=bae.message)
         response.status_code = 400
         return response
     except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e.message))
+        logger.error("Malformed filters parameter: {}".format(e))
         return "Malformed filters parameter"
     # Returning a single response if <file_id> request form is used
     if file_id is not None:
@@ -165,7 +168,7 @@ def get_data_pie():
         pagination = _get_pagination(app.current_request)
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
+        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "localhost"),
                      es_port=os.getenv("ES_PORT", 9200),
                      es_protocol=os.getenv("ES_PROTOCOL", "http"))
         # Get the response back
@@ -180,7 +183,7 @@ def get_data_pie():
         response.status_code = 400
         return response
     except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e.message))
+        logger.error("Malformed filters parameter: {}".format(e))
         return "Malformed filters parameter"
 
 
@@ -208,11 +211,11 @@ def get_summary():
         filters = ast.literal_eval(filters)
         filters = {"file": {}} if filters == {} else filters
     except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e.message))
+        logger.error("Malformed filters parameter: {}".format(e))
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
+    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "localhost"),
                  es_port=os.getenv("ES_PORT", 9200),
                  es_protocol=os.getenv("ES_PROTOCOL", "http"))
     # Get the response back
@@ -271,7 +274,7 @@ def get_search():
         filters = ast.literal_eval(filters)
         filters = {"file": {}} if filters == {} else filters
     except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e.message))
+        logger.error("Malformed filters parameter: {}".format(e))
         return "Malformed filters parameter"
     # Generate the pagination dictionary out of the endpoint parameters
     logger.info("Creating pagination")
@@ -341,7 +344,7 @@ def get_manifest():
         filters = ast.literal_eval(filters)
         filters = {"file": {}} if filters == {} else filters
     except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e.message))
+        logger.error("Malformed filters parameter: {}".format(e))
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
