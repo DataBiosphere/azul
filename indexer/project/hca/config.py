@@ -110,3 +110,7 @@ class IndexProperties(BaseIndexProperties):
             SpecimenTransformer
         transformers = [FileTransformer(), SpecimenTransformer()]
         return transformers
+
+    @property
+    def entities(self) -> Iterable[str]:
+        return ["files", "specimens", "projects"]

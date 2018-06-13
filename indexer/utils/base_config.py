@@ -27,7 +27,11 @@ class BaseIndexProperties(ABC):
         return [Transformer()]
 
     @property
+    def entities(self) -> Iterable[str]:
+        return [""]
+
+    @property
     def index_names(self) -> Iterable[str]:
-        entities = ["files", "specimens", "projects"]
+        entities = self.entities
         environment = os.getenv("STAGE_ENVIRONMENT", "dev")
         return ["browser_{}_{}".format(entity, environment) for entity in entities]
