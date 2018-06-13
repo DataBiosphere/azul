@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import abc
 from chalicelib.responseobjects.utilities import json_pp
+from collections import defaultdict
+from itertools import chain
 import logging
 import jmespath
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
@@ -47,7 +49,7 @@ class PaginationObj(JsonObject):
     total = IntegerProperty()
     size = IntegerProperty()
     _from = IntegerProperty(name='from')
-    page = IntegerProperty()
+    # page = IntegerProperty()
     sort = StringProperty()
     order = StringProperty(choices=['asc', 'desc'])
 
@@ -56,10 +58,10 @@ class HitEntry(JsonObject):
     """
     Class defining a hit entry in the Api response
     """
-    entity_id = StringProperty()
-    entity_version = StringProperty()
-    bundleUuid = StringProperty()
-    bundleVersion = StringProperty()
+    # entity_id = StringProperty()
+    # entity_version = StringProperty()
+    # bundleUuid = StringProperty()
+    # bundleVersion = StringProperty()
 
 
 class ApiResponse(JsonObject):
@@ -211,14 +213,14 @@ class SummaryResponse(AbstractResponse):
         # Create a SummaryRepresentation object
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
-            biomaterialCount=self.agg_contents(
-                aggregates, 'biomaterialCount', agg_form='value'),
+            specimenCount=self.agg_contents(
+                aggregates, 'specimenCount', agg_form='value'),
             projectCount=self.agg_contents(
                 aggregates, 'projectCode', agg_form='value'),
             totalFileSize=self.agg_contents(
                 aggregates, 'total_size', agg_form='value'),
-            organCounts=self.agg_contents(
-                aggregates, 'organsCount', agg_form='value')
+            organCount=self.agg_contents(
+                aggregates, 'organCount', agg_form='value')
         )
 
 
@@ -227,6 +229,23 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     Class for the keyword search response. Based on the AbstractResponse class
     Not to be confused with the 'keywords' endpoint
     """
+
+    def _merge(self, dict_1, dict_2, identifier):
+        merged_dict = defaultdict(list)
+        dict_id = dict_1.pop(identifier)
+        dict_2.pop(identifier)
+        for key, value in chain(dict_1.items(), dict_2.items()):
+            if isinstance(value, str):
+                merged_dict[key] = list(set(merged_dict[key] + [value]))
+            elif isinstance(value, int):
+                merged_dict[key] = list(merged_dict[key] + [value])
+            elif isinstance(value, list):
+                cleaned_list = list(filter(None, chain(value, merged_dict[key])))
+                merged_dict[key] = list(set(cleaned_list))
+            elif value is None:
+                merged_dict[key] = []
+        merged_dict[identifier] = dict_id
+        return dict(merged_dict)
 
     def return_response(self):
         return self.apiResponse
@@ -247,6 +266,95 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             fileName=jmespath.search("name", _entry)
         )
 
+    def make_bundles(self, entry):
+        return [{"bundleUuid": b["uuid"], "bundleVersion": b["version"]} for b in entry["bundles"]]
+
+    def make_processes(self, entry):
+        processes = {}
+        for bundle in entry["bundles"]:
+            for process in bundle["contents"]["processes"]:
+                process.pop("_type")
+                process_id = process["process_id"]
+                translated_process = {
+                    "processId": process_id,
+                    "processName": process.get("process_name", None),
+                    "libraryConstructionApproach": process.get("library_construction", None),
+                    "instrument": process.get("instrument", None),
+                    "protocolId": process.get("protocol_id", None),
+                    "protocol": process.get("protocol", None),
+                }
+                if process_id not in processes:
+                    processes[process_id] = translated_process
+                else:
+                    merged_process = self._merge(processes[process_id], translated_process, "processId")
+                    processes[process_id] = merged_process
+        return list(processes.values())
+
+    def make_projects(self, entry):
+        projects = {}
+        for bundle in entry["bundles"]:
+            project = bundle["contents"]["project"]
+            project.pop("_type")
+            project_id = project["project"]
+            translated_project = {
+                "shortname": project_id,
+                "laboratory": list(set(project.get("laboratory", None)))
+            }
+            if project_id not in projects:
+                projects[project_id] = translated_project
+            else:
+                merged_process = self._merge(project[project_id], translated_project, "shortname")
+                projects[project_id] = merged_process
+        return list(projects.values())
+
+    def make_files(self, entry):
+        all_files = []
+        for bundle in entry["bundles"]:
+            for _file in bundle["contents"]["files"]:
+                new_file = {
+                    "format": _file.get("format"),
+                    "name": _file.get("name"),
+                    "sha1": _file.get("sha1"),
+                    "size": _file.get("size"),
+                    "uuid": _file.get("uuid"),
+                    "version": _file.get("version"),
+                }
+                all_files.append(new_file)
+        return all_files
+
+    def make_specimens(self, entry):
+        specimens = {}
+        for bundle in entry["bundles"]:
+            for specimen in bundle["contents"]["specimens"]:
+                specimen.pop("_type")
+                specimen_id = specimen["biomaterial_id"]
+                translated_specimen = {
+                    "id": specimen_id,
+                    "genusSpecies": specimen.get("species", None),
+                    "organ": specimen.get("organ", None),
+                    "organPart": specimen.get("organ_part", None),
+                    "organismAge": specimen.get("age", None),
+                    "organismAgeUnit": specimen.get("age_unit", None),
+                    "biologicalSex": specimen.get("sex", None),
+                    "disease": specimen.get("disease", None),
+                    "storageMethod": specimen.get("storage_method", None),
+                    "source": specimen.get("source", None),
+                    "totalCells": specimen.get("total_cells", None)
+                }
+                if specimen_id not in specimens:
+                    for key, value in translated_specimen.items():
+                        if key == "id":
+                            continue
+                        else:
+                            translated_specimen[key] = list(set(filter(None, value)))
+                    translated_specimen["totalCells"] = sum(translated_specimen["totalCells"])
+                    specimens[specimen_id] = translated_specimen
+                else:
+                    merged_specimen = self._merge(specimens[specimen_id], translated_specimen, "biomaterial_id")
+                    merged_specimen["total_cells"] = sum(merged_specimen["total_cells"])
+                    specimens[specimen_id] = merged_specimen
+        return list(specimens.values())
+
     def map_entries(self, entry):
         """
         Returns a HitEntry Object. Creates a single HitEntry object.
@@ -256,10 +364,12 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         """
 
         return HitEntry(
-            entity_id=jmespath.search("entity_id", entry),
-            entity_version=jmespath.search("entity_version", entry),
-            bundleVersion=jmespath.search("bundles[0].version", entry),
-            bundleUuid=jmespath.search("bundles[0].uuid", entry)
+            processes=self.make_processes(entry),
+            entryId=entry["entity_id"],
+            files=self.make_files(entry),
+            projects=self.make_projects(entry),
+            specimens=self.make_specimens(entry),
+            bundles=self.make_bundles(entry)
         )
 
     def __init__(self, hits):
