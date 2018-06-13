@@ -384,8 +384,7 @@ class ElasticTransformDump(object):
         # Get the Json Objects from the mapping_config and the request_config
         self.logger.debug('Getting the request_config file')
         request_config = self.open_and_return_json(request_config_path)
-        # Handle empty filters
-        if filters is None:
+        if not filters:
             filters = {"file": {}}
         filters = filters["file"]
         # Create a request to ElasticSearch
@@ -463,9 +462,8 @@ class ElasticTransformDump(object):
                 request_config_path,
                 mapping_config_path))
         request_config = self.open_and_return_json(request_config_path)
-        # Handle empty filters
         self.logger.debug('Handling empty filters')
-        if filters is None:
+        if not filters:
             filters = {"file": {}}
         filters = filters["file"]
         # No faceting (i.e. do the faceting on the filtered query)
@@ -561,8 +559,7 @@ class ElasticTransformDump(object):
         self.logger.debug(
             'Getting the request_config file: {}'.format(request_config_path))
         request_config = self.open_and_return_json(request_config_path)
-        # Handle empty filters
-        if filters is None:
+        if not filters:
             filters = {"file": {}}
         # Create an ElasticSearch request
         es_search = self.create_request(
@@ -638,8 +635,7 @@ class ElasticTransformDump(object):
             "Printing the mapping_config: \n{}".format(
                 json_pp(mapping_config)))
         mapping_config = mapping_config[entry_format]
-        # Handle empty filters
-        if filters is None:
+        if not filters:
             filters = {"file": {}}
 
         index = 'ES_FILE_INDEX' if entry_format == 'file' \
