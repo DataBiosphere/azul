@@ -106,6 +106,7 @@ class IndexProperties(BaseIndexProperties):
 
     @property
     def transformers(self) -> Iterable[Transformer]:
-        from project.hca.transformers import FileTransformer
-        transformers = [FileTransformer()]
+        from project.hca.transformers import FileTransformer,\
+            SpecimenTransformer
+        transformers = [FileTransformer(), SpecimenTransformer()]
         return transformers
