@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Command line utility to trigger indexing of bundles based on a query."""
+
+"""
+Command line utility to trigger indexing of bundles based on a query
+"""
+
 import argparse
 from collections import defaultdict
 import os
@@ -16,7 +20,9 @@ from utils.deployment import aws
 
 
 class DefaultProperties:
-    """Default Properties for this script."""
+    """
+    Default properties for this script
+    """
 
     def __init__(self):
         """Initialize the default values."""
@@ -27,17 +33,23 @@ class DefaultProperties:
 
     @property
     def dss_url(self):
-        """Return the url of the dss."""
+        """
+        Return the URL of the dss
+        """
         return self._dss_url
 
     @property
     def indexer_url(self):
-        """Return the url of the indexer."""
+        """
+        Return the url of the indexer
+        """
         return self._indexer_url
 
     @property
     def es_query(self):
-        """Return the ElasticSearch query."""
+        """
+        Return the ElasticSearch query
+        """
         return self._es_query
 
 
@@ -66,32 +78,11 @@ parser.add_argument('--es-query',
 args = parser.parse_args()
 
 
-def request_constructor(url, headers, data):
-    """Create a request using urlopen."""
-    req = Request(url, data.encode('utf-8'))
-    for key, value in list(headers.items()):
-        req.add_header(key, value)
-    return req
-
-
-def execute_request(req):
-    """Execute a request."""
-    f = urlopen(req)
-    response = f.read()
-    f.close()
-    return response
-
-
-def uuid_and_version(result_entry):
-    """Parse the search result entry into bundle uuid and bundle version."""
-    bundle_fqid = result_entry['bundle_fqid']
-    bundle_uuid = bundle_fqid.partition('.')[0]
-    bundle_version = bundle_fqid.partition('.')[2]
-    return (bundle_uuid, bundle_version)
-
-
-def post_bundle(bundle_uuid, bundle_version):
-    """Send a fake BlueBox notification to the indexer."""
+def post_bundle(bundle_fqid):
+    """
+    Send a fake BlueBox notification to the indexer
+    """
+    bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
     simulated_event = {
         "query": args.es_query,
         "subscription_id": str(uuid4()),
@@ -101,55 +92,53 @@ def post_bundle(bundle_uuid, bundle_version):
             "bundle_version": bundle_version
         }
     }
-    request = request_constructor(args.indexer_url,
-                                  {"content-type": "application/json"},
-                                  json.dumps(simulated_event))
-    execute_request(request)
+    body = json.dumps(simulated_event).encode('utf-8')
+    request = Request(args.indexer_url, body)
+    request.add_header("content-type", "application/json")
+    with urlopen(request) as f:
+        return f.read()
 
 
 def main():
-    """Entrypoint method for the script."""
+    """
+    Entrypoint method for the script
+    """
     dss_client.host = args.dss_url
-    parameters = {
-        "es_query": args.es_query,
-        "replica": "aws"
-    }
-    # TODO: Need to write this so it scales nicely
-    bundle_list = [uuid_and_version(r)
-                   for r in dss_client.post_search.iterate(**parameters)]
+    # noinspection PyUnresolvedReferences
+    response = dss_client.post_search.iterate(es_query=args.es_query, replica="aws")
+    bundle_fqids = [r['bundle_fqid'] for r in response]
     errors = defaultdict(int)
     missing = {}
     indexed = 0
     total = 0
-    for bundle_uuid, bundle_version in bundle_list:
+    for bundle_fqid in bundle_fqids:
         total += 1
-        print("Bundle: {}, Version: {}".format(bundle_uuid, bundle_version))
+        print(f"Bundle: {bundle_fqid}")
         retries = 3
         while True:
             try:
-                post_bundle(bundle_uuid, bundle_version)
+                post_bundle(bundle_fqid)
                 indexed += 1
             except HTTPError as er:
                 # Current retry didn't work. Try again
-                print("Error sending bundle to indexer:\n{}".format(er))
-                print("{} retries left".format(retries))
+                print(f"Error sending bundle to indexer:\n{er}")
+                print(f"{retries} retries left")
                 if retries > 0:
                     retries -= 1
                     sleep(retries)
                 else:
                     print("Out of retries, there might be a problem.")
-                    print("Error:\n{}".format(er))
+                    print(f"Error:\n{er}")
                     errors[er.code] += 1
-                    bundle_fqid = "{}.{}".format(bundle_uuid, bundle_version)
                     missing[bundle_fqid] = er.code
                     break
             else:
                 break
-    print("Total of bundles read: {}".format(total))
-    print("Total of {} bundles indexed".format(indexed))
+    print(f"Total of bundle_fqids read: {total}")
+    print(f"Total of {indexed} bundle_fqids indexed")
     print("Total number of errors by code:")
     pprint(dict(errors))
-    print("Missing bundles and their error code:")
+    print("Missing bundle_fqids and their error code:")
     pprint(missing)
 
 
