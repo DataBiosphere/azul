@@ -6,6 +6,7 @@ from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
 from utils.base_config import BaseIndexProperties
+from utils.deployment import aws
 from utils.transformer import Transformer
 
 
@@ -16,9 +17,7 @@ class IndexProperties(BaseIndexProperties):
         assert (es_domain is None) != (es_endpoint is None), "Either es_domain or es_endpoint must be specified"
         self._dss_url = dss_url
         if es_endpoint is None:
-            es = boto3.client('es')
-            es_domain_status = es.describe_elasticsearch_domain(DomainName=es_domain)
-            self._es_endpoint = (es_domain_status['DomainStatus']['Endpoint'], 443)
+            self._es_endpoint = aws.es_endpoint(es_domain)
         else:
             self._es_endpoint = es_endpoint
 

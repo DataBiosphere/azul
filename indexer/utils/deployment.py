@@ -2,7 +2,7 @@ from functools import lru_cache
 import json
 import boto3
 import botocore.session
-from typing import Optional
+from typing import Optional, Tuple
 
 
 def memoized_property(f):
@@ -36,6 +36,10 @@ class AWS:
     def account(self):
         return self.sts.get_caller_identity()['Account']
 
+    @memoized_property
+    def es(self):
+        return boto3.client('es')
+
     def api_gateway_id(self, function_name: str) -> Optional[str]:
         try:
             response = self.lambda_.get_policy(FunctionName=function_name)
@@ -52,6 +56,10 @@ class AWS:
             return None
         else:
             return f"https://{api_gateway_id}.execute-api.{self.region_name}.amazonaws.com/{api_gateway_stage}/"
+
+    def es_endpoint(self, es_domain: str) -> Tuple[str, int]:
+        es_domain_status = self.es.describe_elasticsearch_domain(DomainName=es_domain)
+        return es_domain_status['DomainStatus']['Endpoint'], 443
 
 
 del memoized_property

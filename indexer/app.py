@@ -25,7 +25,6 @@ sys.path.insert(0, pkg_root)  # noqa
 app = Chalice(app_name=os.environ['AZUL_INDEXER_NAME'])
 app.debug = True
 app.log.setLevel(logging.DEBUG)
-es_domain = os.environ['AZUL_ES_DOMAIN']
 dss_url = os.environ['AZUL_DSS_ENDPOINT']
 
 # get which indexer project definition to use
@@ -100,7 +99,15 @@ def load_config_class():
 
 indexer_to_load = load_indexer_class()
 indexer_properties = load_config_class()
-loaded_properties = indexer_properties(dss_url, es_domain=es_domain)
+try:
+    es_endpoint = os.environ['AZUL_ES_ENDPOINT']
+except KeyError:
+    kwargs = dict(es_domain=os.environ['AZUL_ES_DOMAIN'])
+else:
+    host, _, port = es_endpoint.partition(':')
+    kwargs = dict(es_endpoint=(host, int(port)))
+
+loaded_properties = indexer_properties(dss_url, **kwargs)
 loaded_indexer = indexer_to_load(loaded_properties)
 
 
