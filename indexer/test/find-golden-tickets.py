@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 
 """
-Command line utility to trigger indexing of bundles based on a query
+Command line utility to trigger indexing of bundles from DSS into Azul
 """
 
 import argparse
 from collections import defaultdict
+from concurrent.futures import Future, ThreadPoolExecutor
+from functools import partial
 import json
+import logging
 import os
-from pprint import pprint
+from pprint import PrettyPrinter
 import sys
-from time import sleep
 from typing import List
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -20,36 +22,38 @@ from hca.dss import DSSClient
 
 from utils.deployment import aws
 
+logger = logging.getLogger(__name__)
+
 
 class Defaults:
     dss_url = os.environ['AZUL_DSS_ENDPOINT']
     indexer_url = aws.api_getway_endpoint(function_name=os.environ['AZUL_INDEXER_NAME'],
                                           api_gateway_stage=os.environ['AZUL_DEPLOYMENT_STAGE'])
     es_query = {"query": {"match_all": {}}}
+    num_workers = 64
 
 
-parser = argparse.ArgumentParser(description='Process options the finder of golden bundles.')
+parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--dss-url',
-                    dest='dss_url',
-                    action='store',
                     default=Defaults.dss_url,
-                    help='The url for the storage system.')
+                    help='The URL of the DSS aka Blue Box REST API endpoint')
 parser.add_argument('--indexer-url',
-                    dest='indexer_url',
-                    action='store',
                     default=Defaults.indexer_url,
-                    help='The indexer URL')
+                    help="The URL of the indexer's notification endpoint to send bundles to")
 parser.add_argument('--es-query',
-                    dest='es_query',
-                    action='store',
                     default=Defaults.es_query,
                     type=json.loads,
-                    help='The ElasticSearch query to use')
+                    help='The Elasticsearch query to use against DSS to enumerate the bundles to be indexed')
+parser.add_argument('--workers',
+                    dest='num_workers',
+                    default=Defaults.num_workers,
+                    type=int,
+                    help='The number of workers that will be sending bundles to the indexer concurrently')
 
 
 def post_bundle(bundle_fqid, es_query, indexer_url):
     """
-    Send a fake BlueBox notification to the indexer
+    Send a mock DSS notification to the indexer
     """
     bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
     simulated_event = {
@@ -69,51 +73,71 @@ def post_bundle(bundle_fqid, es_query, indexer_url):
 
 
 def main(argv: List[str]):
-    """
-    Entrypoint method for the script
-    """
     args = parser.parse_args(argv)
     dss_client = DSSClient()
     dss_client.host = args.dss_url
     # noinspection PyUnresolvedReferences
     response = dss_client.post_search.iterate(es_query=args.es_query, replica="aws")
     bundle_fqids = [r['bundle_fqid'] for r in response]
+    logger.info("Bundle FQIDs to index: %i", len(bundle_fqids))
+
     errors = defaultdict(int)
     missing = {}
     indexed = 0
     total = 0
-    for bundle_fqid in bundle_fqids:
-        total += 1
-        print(f"Bundle: {bundle_fqid}")
-        retries = 3
-        while True:
+
+    with ThreadPoolExecutor(max_workers=args.num_workers, thread_name_prefix='pool') as tpe:
+
+        def attempt(bundle_fqid, i):
             try:
+                logger.info("Bundle %s, attempt %i: Sending notification", bundle_fqid, i)
                 post_bundle(bundle_fqid=bundle_fqid,
                             es_query=args.es_query,
                             indexer_url=args.indexer_url)
-                indexed += 1
-            except HTTPError as er:
-                # Current retry didn't work. Try again
-                print(f"Error sending bundle to indexer:\n{er}")
-                print(f"{retries} retries left")
-                if retries > 0:
-                    retries -= 1
-                    sleep(retries)
+            except HTTPError as e:
+                if i < 3:
+                    logger.warning("Bundle %s, attempt %i: scheduling retry after error %s", bundle_fqid, i, e)
+                    return bundle_fqid, tpe.submit(partial(attempt, bundle_fqid, i + 1))
                 else:
-                    print("Out of retries, there might be a problem.")
-                    print(f"Error:\n{er}")
-                    errors[er.code] += 1
-                    missing[bundle_fqid] = er.code
-                    break
+                    logger.warning("Bundle %s, attempt %i: giving up after error %s", bundle_fqid, i, e)
+                    return bundle_fqid, e
             else:
-                break
-    print(f"Total of bundle_fqids read: {total}")
-    print(f"Total of {indexed} bundle_fqids indexed")
-    print("Total number of errors by code:")
-    pprint(dict(errors))
-    print("Missing bundle_fqids and their error code:")
-    pprint(missing)
+                logger.info("Bundle %s, attempt %i: success", bundle_fqid, i)
+                return bundle_fqid, None
+
+        def handle_future(future):
+            nonlocal indexed
+            # Block until future raises or succeeds
+            exception = future.exception()
+            if exception is None:
+                bundle_fqid, result = future.result()
+                if result is None:
+                    indexed += 1
+                elif isinstance(result, HTTPError):
+                    errors[result.code] += 1
+                    missing[bundle_fqid] = result.code
+                elif isinstance(result, Future):
+                    # The task scheduled a follow-on task, presumably a retry. Follow that new task.
+                    handle_future(result)
+                else:
+                    assert False
+            else:
+                logger.warning("Unhandled exception in worker:", exc_info=exception)
+
+        futures = []
+        for bundle_fqid in bundle_fqids:
+            total += 1
+            futures.append(tpe.submit(partial(attempt, bundle_fqid, 0)))
+        for future in futures:
+            handle_future(future)
+
+    printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
+    logger.info("Total of bundle FQIDs read: %i", total)
+    logger.info("Total of bundle FQIDs indexed: %i", indexed)
+    logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
+    logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format="%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s", level=logging.INFO)
     main(sys.argv[1:])
