@@ -52,14 +52,12 @@ class FileTransformer(Transformer):
         def find_descendants(nodes: Iterable[dict],
                              parent_id: str) -> Iterable[dict]:
             # TODO: Add code to break under some cyclic condition
-            print(parent_id)
             for child in filter(lambda x: parent_id == x["parent"], nodes):
                 yield from find_descendants(nodes, child["biomaterial_id"])
                 yield child
 
         def find_ancestors(nodes: Iterable[dict],
                            parent_id: str) -> Iterable[dict]:
-            print(parent_id)
             for parent in filter(lambda x: parent_id == x["biomaterial_id"],
                                  nodes):
                 if "parent" in parent and bool(parent["parent"]):
@@ -241,14 +239,12 @@ class SpecimenTransformer(Transformer):
         def find_descendants(nodes: Iterable[dict],
                              parent_id: str) -> Iterable[dict]:
             # TODO: Add code to break under some cyclic condition
-            print(parent_id)
             for child in filter(lambda x: parent_id == x["parent"], nodes):
                 yield from find_descendants(nodes, child["biomaterial_id"])
                 yield child
 
         def find_ancestors(nodes: Iterable[dict],
                            parent_id: str) -> Iterable[dict]:
-            print(parent_id)
             for parent in filter(lambda x: parent_id == x["biomaterial_id"],
                                  nodes):
                 if "parent" in parent and bool(parent["parent"]):

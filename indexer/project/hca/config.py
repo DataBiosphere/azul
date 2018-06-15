@@ -90,10 +90,13 @@ class IndexProperties(BaseIndexProperties):
                                    use_ssl=True,
                                    verify_certs=True,
                                    connection_class=RequestsHttpConnection,
-                                   http_auth=es_auth)
+                                   http_auth=es_auth,
+                                   maxsize=16)
         else:
             client = Elasticsearch(hosts=[dict(host=host, port=port)],
-                                   use_ssl=False)
+                                   use_ssl=False,
+                                   timeout=timeout,
+                                   maxsize=16)
         return client
 
     @property
