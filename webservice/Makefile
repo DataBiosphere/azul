@@ -5,12 +5,6 @@
 
 # make -- Run using chalice in localmode against an ES instance as defined in docker-compose.yml.  No test data will be populated.
 
-SHELL=/bin/bash
-
-PYTHON := $(shell command -v python2.7 2> /dev/null)
-STAGE ?= dev
-STAGE_SUFFIX = -dev
-
 all: stop reset run
 	# Run the dashboard service and elastic search within local docker 
 	# containers.  Do not populate the ES instance with test data.

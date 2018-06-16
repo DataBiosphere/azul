@@ -33,8 +33,8 @@ class MyTestCase(unittest.TestCase):
         json_expected_output = json.dumps(expected_output, sort_keys=True)
         json_actual_output = json.dumps(keyword_response, sort_keys=True)
 
-        # print "expected: " + json_expected_output
-        # print "actual: " + json_actual_output
+        print("expected: " + json_expected_output)
+        print("actual: " + json_actual_output)
 
         # Now show differences so message is helpful
         print("Comparing the two dictionaries built.")
@@ -69,8 +69,8 @@ class MyTestCase(unittest.TestCase):
         json_expected_output = json.dumps(keyword_test, sort_keys=True)
         json_actual_output = json.dumps(keyword_response, sort_keys=True)
 
-        # print "expected: " + json_expected_output
-        # print "actual: " + json_actual_output
+        print("expected: " + json_expected_output)
+        print("actual: " + json_actual_output)
 
         # Now show differences so message is helpful
         print("Comparing the two dictionaries built.")
@@ -123,8 +123,8 @@ class MyTestCase(unittest.TestCase):
         json_response = json.dumps(file_search_test, sort_keys=True)  # loaded from json
         json_test = json.dumps(file_search_response, sort_keys=True)  # generated
 
-        # print "expected: "+json_response
-        # print "actual: "+json_test
+        print("expected: " + json_response)
+        print("actual: " + json_test)
 
         # Now show differences so message is helpful
         print("Comparing the two dictionaries built.")
@@ -175,8 +175,8 @@ class MyTestCase(unittest.TestCase):
         json_response = json.dumps(file_search_test, sort_keys=True)  # loaded from json
         json_test = json.dumps(file_search_response, sort_keys=True)  # generated
 
-        # print "expected: "+json_response
-        # print "actual: "+json_test
+        print("expected: " + json_response)
+        print("actual: " + json_test)
 
         # Now show differences so message is helpful
         print("Comparing the two dictionaries built.")

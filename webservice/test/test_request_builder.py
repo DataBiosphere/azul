@@ -134,13 +134,13 @@ class MyTestCase(unittest.TestCase):
             '{}/request_builder_test3.json'.format(base_path))
         # Create sample filter
         sample_filter = {
-            "entity_version":
-                {
-                    "is": ["1993-07-19T23:50:09"]
-                },
             "entity_id":
                 {
                     "is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]
+                },
+            "entity_version":
+                {
+                    "is": ["1993-07-19T23:50:09"]
                 }
         }
 
@@ -159,8 +159,8 @@ class MyTestCase(unittest.TestCase):
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         # Print the 2 strings for reference
-        # print "Printing expected output: \n %s" % expected_output
-        # print "Printing actual output: \n %s" % actual_output
+        print("Printing expected output: \n %s" % expected_output)
+        print("Printing actual output: \n %s" % actual_output)
         # Now show differences so message is helpful
         print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))

@@ -1,10 +1,96 @@
 {
-  "entity_id": "uuid4",
-  "entity_version": "iso8601",
   "bundles": [
     {
+      "contents": {
+        "files": [
+          {
+            "_type": "safe_color_name",
+            "content-type": "safe_color_name",
+            "crc32c": "sha1",
+            "format": "file_extension",
+            "hca_id": "uuid4",
+            "indexed": "pybool",
+            "lane": "pyint",
+            "name": "file_name",
+            "read": "safe_color_name",
+            "s3_etag": "sha1",
+            "sha1": "sha1",
+            "sha256": "sha1",
+            "size": "pyint",
+            "uuid": "uuid4",
+            "version": "iso8601"
+          }
+        ],
+        "processes": [
+          {
+            "_type": "safe_color_name",
+            "hca_id": [
+              "uuid4"
+            ],
+            "instrument": "safe_color_name",
+            "library_construction": "safe_color_name",
+            "process_id": "safe_color_name",
+            "process_name": "safe_color_name",
+            "protocol": "safe_color_name",
+            "protocol_id": "safe_color_name"
+          }
+        ],
+        "project": {
+          "_type": "safe_color_name",
+          "hca_id": "uuid4",
+          "laboratory": [
+            "safe_color_name"         
+          ],
+          "project": "safe_color_name"
+        },
+        "specimens": [
+          {
+            "_type": [
+              "safe_color_name"             
+            ],
+            "age": [
+              "safe_color_name"
+            ],
+            "age_unit": [
+              "safe_color_name"             
+            ],
+            "biomaterial_id": "uuid4",
+            "disease": [
+              "safe_color_name"              
+            ],
+            "hca_id": [
+              "uuid4"              
+            ],
+            "organ": [
+              "safe_color_name"              
+            ],
+            "organ_part": [
+              "safe_color_name"            
+            ],
+            "parent": [
+              "safe_color_name"              
+            ],
+            "sex": [
+              "safe_color_name"            
+            ],
+            "source": [
+              "safe_color_name"              
+            ],
+            "species": [
+              "safe_color_name"              
+            ],
+            "storage_method": [
+              "safe_color_name"              
+            ],
+            "total_cells": [
+             "pyint"            
+            ]
+          }
+        ]
+      },
       "uuid": "uuid4",
       "version": "iso8601"
     }
-  ]
+  ],
+  "entity_id": "uuid4"
 }

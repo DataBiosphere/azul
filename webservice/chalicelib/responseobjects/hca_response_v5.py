@@ -1,13 +1,16 @@
 #!/usr/bin/python
 import abc
 from chalicelib.responseobjects.utilities import json_pp
+from chalice import Response
 from collections import defaultdict
 from itertools import chain
+from io import StringIO
 import logging
 import jmespath
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
     IntegerProperty, ListProperty, ObjectProperty
 import os
+import csv
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
@@ -124,26 +127,49 @@ class ManifestResponse(AbstractResponse):
     """
     Class for the Manifest response. Based on the AbstractionResponse class
     """
-    def return_response(self):
-        return self.apiResponse
 
-    def __init__(self, raw_response, manifest_entries, mapping):
+    def _translate(self, untranslated, keyname):
+        m = self.manifest_entries[keyname]
+        return [untranslated[es_name] if es_name in untranslated else "" for es_name in m.values()]
+
+    def return_response(self):
+        es_search = self.es_search
+
+        headers = {'Content-Disposition': 'attachment; filename="export.tsv"',
+                   'Content-Type': 'text/tab-separated-values'}
+
+        output = StringIO()
+
+        writer = csv.writer(output, dialect='excel-tab')
+
+        writer.writerow(list(self.manifest_entries['bundles'].keys()) + list(self.manifest_entries['files'].keys()))
+        for hit in es_search.scan():
+            hit_dict = hit.to_dict()
+            for bundle in hit_dict['bundles']:
+                bundle_fields = self._translate(bundle, 'bundles')
+                for file in bundle['contents']['files']:
+                    file_fields = self._translate(file, 'files')
+                    writer.writerow(bundle_fields + file_fields)
+        return Response(body=output.getvalue(), headers=headers, status_code=200)
+
+    def __init__(self, es_search, manifest_entries, mapping):
         """
         The constructor takes the raw response from ElasticSearch and creates
-        a tsv file based on the columns from the manifest_entries
+        a csv file based on the columns from the manifest_entries
         :param raw_response: The raw response from ElasticSearch
         :param mapping: The mapping between the columns to values within ES
         :param manifest_entries: The columns that will be present in the tsv
         """
-
-        # TODO: Fix manifests and improve memory usage.
-        raise Exception("Not yet implemented")
+        self.es_search = es_search
+        self.manifest_entries = manifest_entries
+        self.mapping = mapping
 
 
 class EntryFetcher:
     """
     Helper class containing helper methods
     """
+
     @staticmethod
     def fetch_entry_value(mapping, entry, key):
         """
@@ -180,6 +206,7 @@ class SummaryResponse(AbstractResponse):
     """
     Class for the summary response. Based on the AbstractResponse class
     """
+
     def return_response(self):
         return self.apiResponse
 
@@ -396,6 +423,7 @@ class FileSearchResponse(KeywordSearchResponse):
     """
     Class for the file search response. Inherits from KeywordSearchResponse
     """
+
     @staticmethod
     def create_facet(contents):
         """
@@ -419,6 +447,7 @@ class FileSearchResponse(KeywordSearchResponse):
         :param contents: A dictionary from a particular ElasticSearch aggregate
         :return: A FacetObj constructed out of the ElasticSearch aggregate
         """
+
         # HACK
         def choose_entry(_term):
             if 'key_as_string' in _term:
@@ -433,7 +462,7 @@ class FileSearchResponse(KeywordSearchResponse):
             terms=term_list,
             total=0 if len(
                 contents['myTerms']['buckets']
-                ) == 0 else contents['doc_count'],
+            ) == 0 else contents['doc_count'],
             type='terms'  # Change once we on-board more types of contents.
         )
         return facet.to_json()
