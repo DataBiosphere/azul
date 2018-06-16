@@ -1,10 +1,74 @@
 {
   "hits": [
     {
-      "bundleUuid": "83321961-3a9e-3622-45f7-33f69752ede7",
-      "bundleVersion": "1992-06-09T15:10:16",
-      "entity_id": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
-      "entity_version": "1993-07-19T23:50:09"
+      "bundles": [
+        {
+          "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+          "bundleVersion": "2003-08-12T00:52:21"
+        }
+      ],
+      "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+      "files": [
+        {
+          "format": "csv",
+          "name": "billion.key",
+          "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+          "size": 6667,
+          "uuid": "e9772583-4240-4757-6357-32bef0e51150",
+          "version": "2001-03-16T05:26:40"
+        }
+      ],
+      "processes": [
+        {
+          "instrument": "green",
+          "libraryConstructionApproach": "fuchsia",
+          "processId": "maroon",
+          "processName": "olive",
+          "protocol": "olive",
+          "protocolId": "green"
+        }
+      ],
+      "projects": [
+        {
+          "laboratory": [
+            "silver"
+          ],
+          "shortname": "blue"
+        }
+      ],
+      "specimens": [
+        {
+          "biologicalSex": [
+            "silver"
+          ],
+          "disease": [
+            "yellow"
+          ],
+          "genusSpecies": [
+            "teal"
+          ],
+          "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+          "organ": [
+            "purple"
+          ],
+          "organPart": [
+            "black"
+          ],
+          "organismAge": [
+            "purple"
+          ],
+          "organismAgeUnit": [
+            "navy"
+          ],
+          "source": [
+            "purple"
+          ],
+          "storageMethod": [
+            "aqua"
+          ],
+          "totalCells": 5306
+        }
+      ]
     }
   ],
   "pagination": {

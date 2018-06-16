@@ -1,7 +1,6 @@
 {
   "translation": {
-    "entity_id": "entity_id",
-    "entity_version":"entity_version",
+    "entryId": "entity_id",
     "fileName": "bundles.contents.files.name",
     "specimenId": "bundles.contents.specimens.biomaterial_id",
     "organ": "bundles.contents.specimens.organ",
@@ -21,7 +20,6 @@
     "processId": "bundles.contents.processes.process_id",
     "fileSize": "bundles.contents.files.size",
     "fileId": "bundles.contents.files.uuid"
-
   },
   "autocomplete-translation": {
     "ES_FILE_INDEX": {
@@ -32,12 +30,21 @@
       "donor": "donor_uuid"
     }
   },
-  "manifest": [
-    "File ID:Version",
-    "Assay Id",
-    "Analysis Id",
-    "Project Id"
-  ],
+  "manifest": {
+    "files": {
+      "file_content_type": "content-type",
+      "file_name": "name",
+      "file_sha256": "sha256",
+      "file_size": "size",
+      "file_uuid": "uuid",
+      "file_version": "version",
+      "file_indexed": "indexed"
+    },
+    "bundles":{
+      "bundle_uuid": "uuid",
+      "bundle_version": "version"
+    }
+  },
   "facets": [
     "organ",
     "organPart",
