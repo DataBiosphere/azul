@@ -1,12 +1,98 @@
 [
   {
-    "entity_id": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
-    "entity_version": "1993-07-19T23:50:09",
     "bundles": [
       {
-        "uuid": "83321961-3a9e-3622-45f7-33f69752ede7",
-        "version": "1992-06-09T15:10:16"
+        "contents": {
+          "files": [
+            {
+              "_type": "fuchsia",
+              "content-type": "green",
+              "crc32c": "61bd62c582e698313bc2bd60fbfbfb55211a71d5",
+              "format": "csv",
+              "hca_id": "a350b29c-2609-7b92-0c49-23971a4f9371",
+              "indexed": true,
+              "lane": 5108,
+              "name": "billion.key",
+              "read": "blue",
+              "s3_etag": "fef20a0bb461859c18a39aa3055fdf3ccb126a6b",
+              "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+              "sha256": "0166ec04250562942e3613be6c4b96ee2cea4967",
+              "size": 6667,
+              "uuid": "e9772583-4240-4757-6357-32bef0e51150",
+              "version": "2001-03-16T05:26:40"
+            }
+          ],
+          "processes": [
+            {
+              "_type": "navy",
+              "hca_id": [
+                "4188ddbe-8865-a433-a1f6-213d49aa5719"
+              ],
+              "instrument": "green",
+              "library_construction": "fuchsia",
+              "process_id": "maroon",
+              "process_name": "olive",
+              "protocol": "olive",
+              "protocol_id": "green"
+            }
+          ],
+          "project": {
+            "_type": "maroon",
+            "hca_id": "37a92077-530f-fdbb-df14-2926665cc697",
+            "laboratory": [
+              "silver"
+            ],
+            "project": "blue"
+          },
+          "specimens": [
+            {
+              "_type": [
+                "teal"
+              ],
+              "age": [
+                "purple"
+              ],
+              "age_unit": [
+                "navy"
+              ],
+              "biomaterial_id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+              "disease": [
+                "yellow"
+              ],
+              "hca_id": [
+                "1cae440e-3be6-ce39-49e9-74721f0066e0"
+              ],
+              "organ": [
+                "purple"
+              ],
+              "organ_part": [
+                "black"
+              ],
+              "parent": [
+                "aqua"
+              ],
+              "sex": [
+                "silver"
+              ],
+              "source": [
+                "purple"
+              ],
+              "species": [
+                "teal"
+              ],
+              "storage_method": [
+                "aqua"
+              ],
+              "total_cells": [
+                5306
+              ]
+            }
+          ]
+        },
+        "uuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+        "version": "2003-08-12T00:52:21"
       }
-    ]
+    ],
+    "entity_id": "08d3440a-7481-41c5-5140-e15ed269ea63"
   }
 ]
