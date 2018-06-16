@@ -2,8 +2,44 @@
 import json
 import sys
 import subprocess
-from faker_schema.faker_schema import FakerSchema
 from faker_schema.schema_loader import load_json_from_file
+from faker import Faker
+
+
+# Modified from https://github.com/ueg1990/faker-schema/blob/master/faker_schema/faker_schema.py
+# (Adjusted code to allow lists of strings in a template)
+class FakerSchema(object):
+
+    def __init__(self, faker=None, locale=None, providers=None, includes=None):
+        self._faker = faker or Faker(locale=locale, providers=providers, includes=includes)
+
+    def generate_fake(self, schema, iterations=1):
+        result = [self._generate_one_fake(schema) for _ in range(iterations)]
+        return result[0] if len(result) == 1 else result
+
+    def _generate_one_fake(self, schema):
+        """
+        Recursively traverse schema dictionary and for each "leaf node", evaluate the fake
+        value
+        Implementation:
+        For each key-value pair:
+        1) If value is not an iterable (i.e. dict or list), evaluate the fake data (base case)
+        2) If value is a dictionary, recurse
+        3) If value is a list, iteratively recurse over each item
+        """
+        data = {}
+        for k, v in schema.items():
+            if isinstance(v, dict):
+                data[k] = self._generate_one_fake(v)
+            elif isinstance(v, list):
+                if (isinstance(v[0], dict)):
+                    data[k] = [self._generate_one_fake(item) for item in v]
+                else:
+                    data[k] = [getattr(self._faker, a)() for a in v]
+            else:
+                data[k] = getattr(self._faker, v)()
+        return data
+
 
 numIts = 1
 page_size = 100000
@@ -26,7 +62,6 @@ subprocess.run("echo Deleting test_data index at $ES_SERVICE", shell=True)
 subprocess.run("curl -XDELETE $ES_PROTOCOL://$ES_SERVICE:$ES_PORT/test_data/", shell=True)
 print("\n")
 subprocess.run("echo Configuring settings at $ES_SERVICE", shell=True)
-
 subprocess.run("curl -XPUT $ES_PROTOCOL://$ES_SERVICE:$ES_PORT/test_data/ -d @td_settings.json", shell=True)
 print("\n")
 subprocess.run("echo Configuring mapping at $ES_SERVICE", shell=True)
@@ -48,4 +83,3 @@ for j in range(0, numIts):
     subprocess.run(
         "curl -s -XPUT $ES_PROTOCOL://$ES_SERVICE:$ES_PORT/test_data/_bulk?pretty --data-binary @td_index_page.jsonl >/dev/null",
         shell=True)
-    print()
