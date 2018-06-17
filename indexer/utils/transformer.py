@@ -42,6 +42,7 @@ class ElasticSearchDocument:
         self._content = content
         self.index = "browser_{}_{}".format(entity_name, os.getenv("STAGE_ENVIRONMENT", "dev"))
         self._type = _type
+        self._version = 1
 
     @property
     def document_id(self) -> str:
@@ -59,9 +60,17 @@ class ElasticSearchDocument:
     def document_type(self) -> str:
         return self._type
 
+    @property
+    def document_version(self) -> int:
+        return self._version
+
     @document_content.setter
     def document_content(self, new_content: dict) -> None:
         self._content.document = new_content
+
+    @document_version.setter
+    def document_version(self, new_version) -> None:
+        self._version = new_version
 
 
 class Transformer(ABC):
