@@ -77,6 +77,9 @@ class IndexProperties(BaseIndexProperties):
 
     @lru_cache(maxsize=32)
     def _elastic_search_client(self, host, port, timeout):
+
+        common_params = dict(hosts=[dict(host=host, port=port)],
+                             timeout=timeout)
         if host.endswith(".amazonaws.com"):
             session = boto3.session.Session()
             current_credentials = session.get_credentials().get_frozen_credentials()
@@ -85,18 +88,14 @@ class IndexProperties(BaseIndexProperties):
                                session.region_name,
                                "es",
                                session_token=current_credentials.token)
-            client = Elasticsearch(hosts=[dict(host=host, port=port)],
-                                   timeout=timeout,
-                                   use_ssl=True,
+            client = Elasticsearch(use_ssl=True,
                                    verify_certs=True,
                                    connection_class=RequestsHttpConnection,
                                    http_auth=es_auth,
-                                   maxsize=16)
+                                   **common_params)
         else:
-            client = Elasticsearch(hosts=[dict(host=host, port=port)],
-                                   use_ssl=False,
-                                   timeout=timeout,
-                                   maxsize=16)
+            client = Elasticsearch(use_ssl=False,
+                                   **common_params)
         return client
 
     @property
@@ -109,8 +108,7 @@ class IndexProperties(BaseIndexProperties):
 
     @property
     def transformers(self) -> Iterable[Transformer]:
-        from project.hca.transformers import FileTransformer,\
-            SpecimenTransformer
+        from project.hca.transformers import FileTransformer, SpecimenTransformer
         transformers = [FileTransformer(), SpecimenTransformer()]
         return transformers
 
