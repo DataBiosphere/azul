@@ -38,6 +38,14 @@ class TestDataExtractor(unittest.TestCase):
                        ("c94a43f9-257f-4cd0-b2fe-eaf6d5d37d18", "2018-03-29T090343.782253Z")]
     }
 
+    test_same_ids_different_bundles = {
+        "dev": [],
+        "integration": [],
+        "staging": [],
+        "production": [("b2216048-7eaa-45f4-8077-5a3fb4204953", "2018-03-29T142048.835519Z"),
+                       ("ddb8f660-1160-4f6c-9ce4-c25664ac62c9", "2018-03-29T142057.907086Z")]
+    }
+
     # Integration Bundle
     hca_simulated_event = {
         "query": {
@@ -72,7 +80,29 @@ class TestDataExtractor(unittest.TestCase):
             results = es_client.search(index=entity_index,
                                        doc_type="doc",
                                        size=100)
-            print(results)
+        self.assertEqual("pass", "pass")
+
+    def test_same_id_different_bundles(self):
+        # Trigger the indexing operation
+        dss_url = "https://dss.data.humancellatlas.org/v1"
+        index_properties = IndexProperties(dss_url, es_endpoint=("localhost", 9200))
+        hca_indexer = Indexer(index_properties)
+        # Index the test bundles
+        for bundle_uuid, bundle_version in self.test_same_ids_different_bundles["production"]:
+            fake_event = make_fake_notification(bundle_uuid, bundle_version)
+            module_logger.info("Start computation %s",
+                               datetime.now().isoformat(timespec='microseconds'))
+            hca_indexer.index(fake_event)
+            module_logger.info("Indexing operation finished for %s. Check values in ElasticSearch",
+                               bundle_uuid+bundle_version)
+            module_logger.info("End computation %s",
+                               datetime.now().isoformat(timespec='microseconds'))
+        # Check values in ElasticSearch
+        es_client = index_properties.elastic_search_client
+        for entity_index in index_properties.index_names:
+            results = es_client.search(index=entity_index,
+                                       doc_type="doc",
+                                       size=100)
         self.assertEqual("pass", "pass")
 
 

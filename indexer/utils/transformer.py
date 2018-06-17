@@ -13,23 +13,20 @@ class Document:
         self.entity_id = entity_id
         self.bundle_uuid = bundle_uuid
         self.bundle_version = bundle_version
-        self.content = content
-        self._document = {}
-
-    @property
-    def document(self) -> dict:
-        constructed_dict = {
+        self._document = {
             "entity_id": self.entity_id,
             "bundles": [
                 {
                     "uuid": self.bundle_uuid,
                     "version": self.bundle_version,
-                    "contents": self.content
+                    "contents": content
                 }
             ]
         }
-        self._document = constructed_dict
-        return constructed_dict
+
+    @property
+    def document(self) -> dict:
+        return self._document
 
     @document.setter
     def document(self, new_content: dict) -> None:

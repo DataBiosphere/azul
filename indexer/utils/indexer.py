@@ -90,13 +90,12 @@ class BaseIndexer(ABC):
             # Merge any existing document
             for doc in existing_docs["docs"]:
                 if doc["found"]:
-                    es_document = indexable_documents[doc["_id"]]
-                    new_doc = es_document.document_content
+                    new_doc = indexable_documents[doc["_id"]].document_content
                     # This should update 'indexable_documents' by reference
                     updated_document = self.merge(new_doc, doc["_source"])
                     updated_version = doc.get("_version", 0) + 1
-                    es_document.document_content = updated_document
-                    es_document.document_version = updated_version
+                    indexable_documents[doc["_id"]].document_content = updated_document
+                    indexable_documents[doc["_id"]].document_version = updated_version
 
             retry_ids = set()
             # Process each result
@@ -153,14 +152,18 @@ class BaseIndexer(ABC):
         # contains data for only one bundle
         new_bundle = new_document["bundles"][0]
         updated_bundles = []
+        bundle_found = False
         for bundle in stored_document["bundles"]:
             if bundle["uuid"] == new_bundle["uuid"]:
                 latest_bundle = max(bundle,
                                     new_bundle,
                                     key=lambda x: x["version"])
                 updated_bundles.append(latest_bundle)
+                bundle_found = True
             else:
                 updated_bundles.append(bundle)
+        if not bundle_found:
+            updated_bundles.append(new_bundle)
         # Update the document
         new_document["bundles"] = updated_bundles
         return new_document
