@@ -71,7 +71,7 @@ class IndexProperties(BaseIndexProperties):
     @property
     def elastic_search_client(self) -> Elasticsearch:
         host, port = self._es_endpoint
-        return self._elastic_search_client(host, port, 30)
+        return self._elastic_search_client(host, port, 60)
 
     # Stolen from https://github.com/HumanCellAtlas/data-store/blob/master/dss/index/es/__init__.py#L66
 

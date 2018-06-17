@@ -1,8 +1,12 @@
+from datetime import datetime
 import unittest
 from project.hca.indexer import Indexer
 from project.hca.config import IndexProperties
 from typing import Mapping, Any
 from uuid import uuid4
+import logging
+
+module_logger = logging.getLogger(__name__)
 
 
 def make_fake_notification(uuid: str, version: str) -> Mapping[str, Any]:
@@ -55,8 +59,13 @@ class TestDataExtractor(unittest.TestCase):
         # Index the test bundles
         for bundle_uuid, bundle_version in self.test_bundles["production"]:
             fake_event = make_fake_notification(bundle_uuid, bundle_version)
+            module_logger.info("Start computation %s",
+                               datetime.now().isoformat(timespec='microseconds'))
             hca_indexer.index(fake_event)
-            print("Indexing operation finished for {}. Check values in ElasticSearch".format(bundle_uuid+bundle_version))
+            module_logger.info("Indexing operation finished for %s. Check values in ElasticSearch",
+                               bundle_uuid+bundle_version)
+            module_logger.info("End computation %s",
+                               datetime.now().isoformat(timespec='microseconds'))
         # Check values in ElasticSearch
         es_client = index_properties.elastic_search_client
         for entity_index in index_properties.index_names:

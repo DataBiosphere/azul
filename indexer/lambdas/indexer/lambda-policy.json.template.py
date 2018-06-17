@@ -20,6 +20,7 @@ emit({
                 "es:ESHttpGet",
                 "es:ESHttpHead",
                 "es:ESHttpPut",
+                "es:ESHttpPost",
                 "es:ESHttpDelete"
             ],
             "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{env.AZUL_ES_DOMAIN}/*"
