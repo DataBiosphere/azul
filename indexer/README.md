@@ -1,4 +1,4 @@
-# Azul - The HumanCellAtlas Portal Backend 
+# Azul - The HumanCellAtlas Portal Backend
 
 This is the indexer that consumes events from the blue box and indexes them into Elasticsearch.
 
@@ -7,37 +7,37 @@ This is the indexer that consumes events from the blue box and indexes them into
 ### Development Preequisites
 
 - Python 3.6 with virtualenv and pip
-- Terraform (optional, to create new deployments): https://www.terraform.io/intro/getting-started/install.html 
+- Terraform (optional, to create new deployments): https://www.terraform.io/intro/getting-started/install.html
   On macOS with Homebrew installed, 'brew install terraform' works, too.
 - AWS credentials configured in ~/.aws/credentials and ~/.aws/config
 
 ### Runtime Preequisites (Infrastructure)
 
-- HCA DSS (aka Blue Box): It is required to know the URL of the HumanCellAtlas Data Store webservice endpoint. See 
+- HCA DSS (aka Blue Box): It is required to know the URL of the HumanCellAtlas Data Store webservice endpoint. See
   here for instructions: https://github.com/HumanCellAtlas/data-store/tree/master
 
-The remaining infrastructure is managed internally with TerraForm. 
+The remaining infrastructure is managed internally with TerraForm.
 
 ### Project configuration
 
 1) Create a Python 3.6 virtualenv and activate it, for example `virtualenv .venv && source .venv/bin/activate`
 2) Choose a target deployment, for example `cd deployments && ln -snf dev .active && cd ..`
 3) Optional: Create a file called `environment.local` and in it set & export environment variables specific to you.
-4) Create a file called `deployments/.active/environment.local` and do the same for variables specific to you AND the 
+4) Create a file called `deployments/.active/environment.local` and do the same for variables specific to you AND the
    active deployment. For example, `AWS_PROFILE` and `AWS_DEFAULT_REGION` belong there.
 5) `source environment`
 6) Install the development requirements: `pip install -r requirements.dev.txt`
 7) Run `make`. It should not complain. If it does, address the complaint and repeat.
 
-You should never deploy from a feature branch to any of the established deployments. You can maintain your own 
-personal deployment and deploy to it from a feature branch: 
+You should never deploy from a feature branch to any of the established deployments. You can maintain your own
+personal deployment and deploy to it from a feature branch:
 
 ```
-cd deployments 
+cd deployments
 cp -r dev foo.local
 ln -snf foo.local .active
 ```
- 
+
 ### Deprecated: Elasticsearch (ES)
 
 Create an Elasticsearch box on AWS. 
