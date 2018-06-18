@@ -448,7 +448,7 @@ class ElasticTransformDump(object):
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
-        self.logger.info('Transforming /files request')
+        self.logger.info('Transforming /specimens request')
         config_folder = os.path.dirname(config.__file__)
         # Create the path for the mapping config file
         mapping_config_path = "{}/{}".format(

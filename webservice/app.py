@@ -122,6 +122,79 @@ def get_data(file_id=None):
     return response
 
 
+@app.route('/repository/specimens', methods=['GET'], cors=True)
+@app.route('/repository/specimens/{specimen_id}', methods=['GET'], cors=True)
+def get_data(specimen_id=None):
+    """
+    Returns a dictionary with entries that can be used by the browser
+    to display the data and facets
+    parameters:
+        - name: filters
+          in: query
+          type: string
+          description: Filters to be applied when calling ElasticSearch
+        - name: from
+          in: query
+          type: integer
+          description: From where should we start returning the results
+        - name: size
+          in: integer
+          type: string
+          description: Size of the page being returned
+        - name: order
+          in: query
+          type: string
+          description: Whether it should be in ascending or descending order
+        - name: sort
+          in: query
+          type: string
+          description: Which field to sort by
+    :return: Returns a dictionary with the entries to be used when generating
+    the facets and/or table data
+    """
+    # Setup logging
+    logger = app.log
+    # Get all the parameters from the URL
+    logger.debug('Parameter specimen_id: {}'.format(specimen_id))
+    if app.current_request.query_params is None:
+        app.current_request.query_params = {}
+    filters = app.current_request.query_params.get('filters', '{"file": {}}')
+    logger.debug("Filters string is: {}".format(filters))
+    try:
+        logger.info("Extracting the filter parameter from the request")
+        filters = ast.literal_eval(filters)
+        # Make the default pagination
+        logger.info("Creating pagination")
+        pagination = _get_pagination(app.current_request)
+        logger.debug("Pagination: \n".format(json_pp(pagination)))
+        # Handle <file_id> request form
+        if specimen_id is not None:
+            logger.info("Handling single file id search")
+            filters['file']['fileId'] = {"is": [specimen_id]}
+        # Create and instance of the ElasticTransformDump
+        logger.info("Creating ElasticTransformDump object")
+        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "localhost"),
+                     es_port=os.getenv("ES_PORT", 9200),
+                     es_protocol=os.getenv("ES_PROTOCOL", "http"))
+        # Get the response back
+        logger.info("Creating the API response")
+        response = es_td.transform_request(filters=filters,
+                                           pagination=pagination,
+                                           post_filter=True,
+                                           index="ES_SPECIMEN_INDEX")
+    except BadArgumentException as bae:
+        response = dict(error=bae.message)
+        response.status_code = 400
+        return response
+    # except Exception as e:
+    #     logger.error("Malformed filters parameter: {}".format(e))
+    #     return "Malformed filters parameter"
+    # Returning a single response if <specimen_id> request form is used
+    if specimen_id is not None:
+        response = response['hits'][0]
+    return response
+
+
 @app.route('/repository/files/piecharts', methods=['GET'], cors=True)
 def get_data_pie():
     """
