@@ -9,7 +9,7 @@ from io import StringIO
 import logging
 import jmespath
 from jsonobject import JsonObject, StringProperty, FloatProperty, \
-    IntegerProperty, ListProperty, ObjectProperty
+    IntegerProperty, ListProperty, ObjectProperty, DictProperty
 import os
 import csv
 
@@ -69,20 +69,15 @@ class HitEntry(JsonObject):
 
 
 class FileTypeSummary(JsonObject):
-    sizeByFileType = FloatProperty()
-    fileType = StringProperty()
-    totalFilesByType = IntegerProperty()
+    count = IntegerProperty()
+    totalSize = FloatProperty()
 
     @staticmethod
-    def create_object(json):
-        list_new_objects = []
-        for bucket in json:
-            new_object = FileTypeSummary()
-            new_object.fileType = bucket['key']
-            new_object.totalFilesByType = bucket['doc_count']
-            new_object.sizeByFileType = bucket['size_by_type']['value']
-            list_new_objects.append(new_object)
-        return list_new_objects
+    def create_object(bucket):
+        new_object = FileTypeSummary()
+        new_object.count = bucket['doc_count']
+        new_object.totalSize = bucket['size_by_type']['value']
+        return new_object
 
 
 class ApiResponse(JsonObject):
@@ -101,7 +96,7 @@ class SummaryRepresentation(JsonObject):
     """
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
-    fileTypeSummary = ListProperty(FileTypeSummary)
+    fileTypeSummary = DictProperty(FileTypeSummary)
 
 
 class FileIdAutoCompleteEntry(JsonObject):
@@ -256,7 +251,7 @@ class SummaryResponse(AbstractResponse):
         # Separate the raw_response into hits and aggregates
         hits = raw_response['hits']
         aggregates = raw_response['aggregations']
-        sum = raw_response['aggregations']['by_type']
+        _sum = raw_response['aggregations']['by_type']
         # Create a SummaryRepresentation object
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
@@ -268,7 +263,8 @@ class SummaryResponse(AbstractResponse):
                 aggregates, 'total_size', agg_form='value'),
             organCount=self.agg_contents(
                 aggregates, 'organCount', agg_form='value'),
-            fileTypeSummary=FileTypeSummary.create_object(sum['buckets'])
+            fileTypeSummary={bucket['key']: FileTypeSummary.create_object(bucket)
+                             for bucket in _sum['buckets']}
         )
 
 
