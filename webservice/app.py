@@ -124,7 +124,7 @@ def get_data(file_id=None):
 
 @app.route('/repository/specimens', methods=['GET'], cors=True)
 @app.route('/repository/specimens/{specimen_id}', methods=['GET'], cors=True)
-def get_data(specimen_id=None):
+def get_specimen_data(specimen_id=None):
     """
     Returns a dictionary with entries that can be used by the browser
     to display the data and facets
