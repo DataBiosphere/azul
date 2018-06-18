@@ -273,6 +273,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         processes = {}
         for bundle in entry["bundles"]:
             for process in bundle["contents"]["processes"]:
+                # HACK: need to check on the indexer why raw protocols are being added
+                if "process_id" not in process:
+                    continue
                 process.pop("_type")
                 process_id = process["process_id"]
                 translated_process = {
@@ -303,8 +306,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             if project_id not in projects:
                 projects[project_id] = translated_project
             else:
-                merged_process = self._merge(project[project_id], translated_project, "shortname")
-                projects[project_id] = merged_process
+                merged_project= self._merge(projects[project_id], translated_project, "shortname")
+                projects[project_id] = merged_project
         return list(projects.values())
 
     def make_files(self, entry):
@@ -350,8 +353,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                     translated_specimen["totalCells"] = sum(translated_specimen["totalCells"])
                     specimens[specimen_id] = translated_specimen
                 else:
-                    merged_specimen = self._merge(specimens[specimen_id], translated_specimen, "biomaterial_id")
-                    merged_specimen["total_cells"] = sum(merged_specimen["total_cells"])
+                    merged_specimen = self._merge(specimens[specimen_id], translated_specimen, "id")
+                    merged_specimen["totalCells"] = sum(merged_specimen["totalCells"])
                     specimens[specimen_id] = merged_specimen
         return list(specimens.values())
 
