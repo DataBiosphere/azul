@@ -3,6 +3,7 @@ import abc
 from chalicelib.responseobjects.utilities import json_pp
 from chalice import Response
 from collections import defaultdict
+from collections import OrderedDict
 from itertools import chain
 from io import StringIO
 import logging
@@ -130,7 +131,7 @@ class ManifestResponse(AbstractResponse):
 
     def _translate(self, untranslated, keyname):
         m = self.manifest_entries[keyname]
-        return [untranslated[es_name] if es_name in untranslated else "" for es_name in m.values()]
+        return [untranslated.get(es_name, "") for es_name in m.values()]
 
     def return_response(self):
         es_search = self.es_search
@@ -161,7 +162,7 @@ class ManifestResponse(AbstractResponse):
         :param manifest_entries: The columns that will be present in the tsv
         """
         self.es_search = es_search
-        self.manifest_entries = manifest_entries
+        self.manifest_entries = OrderedDict(manifest_entries)
         self.mapping = mapping
 
 
@@ -333,7 +334,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             if project_id not in projects:
                 projects[project_id] = translated_project
             else:
-                merged_project= self._merge(projects[project_id], translated_project, "shortname")
+                merged_project = self._merge(projects[project_id], translated_project, "shortname")
                 projects[project_id] = merged_project
         return list(projects.values())
 
