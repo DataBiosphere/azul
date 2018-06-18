@@ -399,6 +399,11 @@ class ElasticTransformDump(object):
             'total_size',
             'sum',
             field=request_config['translation']['fileSize'])
+
+        # Add a summary object based on file type
+        file_type_selector = request_config['translation']['fileFormat']
+        es_search.aggs.bucket('by_type', 'terms', field='{}.keyword'.format(file_type_selector))
+        es_search.aggs['by_type'].metric('size_by_type', 'sum', field=request_config['translation']['fileSize'])
         # Override the aggregates for Samples,
         # Primary site count, and project count
         for field, agg_name in (
