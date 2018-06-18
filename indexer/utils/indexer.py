@@ -107,34 +107,22 @@ class BaseIndexer(ABC):
                 # We don't care about successes
                 if success:
                     continue
-                retry_ids.add(info["index"]["_id"])
+                doc_id = info["index"]["_id"]
+                retry_ids.add(doc_id)
+                module_logger.error("There was an error with the document: %r", info)
                 if info["index"]['status'] == 409:
-                    module_logger.warning(
-                        "There was a conflict error on document %s, index %s",
-                        info["index"]["_id"], info["index"]["_index"])
-                    module_logger.warning("Indexer will try to re-index")
-                    conflict_documents[info["index"]["_id"]] += 1
-
+                    module_logger.warning("There was a conflict, indexer will try to re-index")
+                    conflict_documents[doc_id] += 1
+                    errored_documents[doc_id] = 0
                 else:
                     # Limit other errors to 3 times.
-                    if errored_documents[info["index"]["_id"]] < 3:
-                        errored_documents[info["index"]["_id"]] += 1
-                        module_logger.warning(
-                            "This isn't a conflict error. %i attempt",
-                            errored_documents[
-                                info["index"]["_id"]])
-                        module_logger.warning(
-                            "There was an error on document %s, index %s",
-                            info["index"]["_id"], info["index"]["_index"])
+                    if errored_documents[doc_id] < 3:
+                        errored_documents[doc_id] += 1
+                        action = "Retrying."
                     else:
-                        module_logger.error("i% tries on id %s",
-                                            errored_documents[
-                                                info["index"]["_id"]],
-                                            info["index"]["_id"])
-                        module_logger.error(
-                            "There was an error on document %s, index %s",
-                            info["index"]["_id"],
-                            info["index"]["_index"])
+                        action = "Giving up"
+                    module_logger.warning("There was a general error (total # of errors: %i). %s.",
+                                          errored_documents[doc_id], action)
 
             # Update the indexable documents
             indexable_documents = {k: v for k, v in indexable_documents.items()
