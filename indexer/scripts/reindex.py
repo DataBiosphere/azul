@@ -29,7 +29,8 @@ class Defaults:
     dss_url = os.environ['AZUL_DSS_ENDPOINT']
     indexer_url = aws.api_getway_endpoint(function_name=os.environ['AZUL_INDEXER_NAME'],
                                           api_gateway_stage=os.environ['AZUL_DEPLOYMENT_STAGE'])
-    es_query = {"query": {"match_all": {}}}
+    es_query = {"query": {"bool": {"must_not": [{"term": {"admin_deleted": True}}],
+                                   "must": [{"exists": {"field": "files.biomaterial_json"}}]}}}
     num_workers = 64
 
 
