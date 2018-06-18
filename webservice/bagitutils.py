@@ -3,7 +3,7 @@ import shutil
 import operator
 import zipfile
 import os
-from io import StringIO
+from StringIO import StringIO
 import bagit
 import tempfile
 import csv

@@ -77,6 +77,26 @@ NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298
         for key in first_row_keys:
             self.assertNotIn('0', key)
 
+    def test_fc_mock(self):
+        """Tests a mock file with a minimal set of columns."""
+        mock_simple = 'test/fc_mock.tsv'
+        real107 = '/home/michael/dev/manifest-handover/manifests/manifest_107_genomes.tsv'
+        with open(real107, 'r') as tsv:
+            lines = tsv.readlines()
+        data = "\n".join(lines)
+        bag = BagHandler(data=data, bag_info={}, bag_name='manifest')
+        participants, max_files_in_sample, protocols = bag.participants_and_max_files_in_sample_and_protocols()
+        # self.assertEqual(len(participants), 2)
+        # self.assertEqual(len(protocols), 1)
+        # self.assertEqual(max_files_in_sample, 4)
+        samples = bag.samples(max_files_in_sample, protocols)
+        # self.assertEqual(len(samples), 1)
+
+        print(bag.data)
+        data_path = '/home/michael/dev/manifest-handover/test_107'
+        bag.write_csv_files(data_path)
+
+
 
 if __name__ == '__main__':
     unittest.main()
