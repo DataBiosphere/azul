@@ -113,9 +113,9 @@ def get_data(file_id=None):
         response = dict(error=bae.message)
         response.status_code = 400
         return response
-    except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e))
-        return "Malformed filters parameter"
+    # except Exception as e:
+    #     logger.error("Malformed filters parameter: {}".format(e))
+    #     return "Malformed filters parameter"
     # Returning a single response if <file_id> request form is used
     if file_id is not None:
         response = response['hits'][0]
