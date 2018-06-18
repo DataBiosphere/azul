@@ -111,7 +111,7 @@ class ElasticTransformDump(object):
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=Q(
             'terms', **{'{}__keyword'.format(
-                facet.replace(".", "__")): values['is'] if 'is' in values else {}}))
+                facet.replace(".", "__")): values.get('is', {})}))
                       for facet, values in filters.items()]
         #        Return a Query object. Make it match_all
         return Q('bool', must=query_list) if len(query_list) > 0 else Q()
@@ -506,7 +506,7 @@ class ElasticTransformDump(object):
                     'translation'][pagination['sort']]
             # Apply paging
             es_search = self.apply_paging(es_search, pagination)
-            # Execute ElasticSearch request"
+            # Execute ElasticSearch request
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()
             self.logger.debug("Printing ES_SEARCH response dict:\n {}".format(
