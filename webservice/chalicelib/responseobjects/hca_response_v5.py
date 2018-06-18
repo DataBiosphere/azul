@@ -68,6 +68,23 @@ class HitEntry(JsonObject):
     # bundleVersion = StringProperty()
 
 
+class FileTypeSummary(JsonObject):
+    sizeByFileType = FloatProperty()
+    fileType = StringProperty()
+    totalFilesByType = IntegerProperty()
+
+    @staticmethod
+    def create_object(json):
+        list_new_objects = []
+        for bucket in json:
+            new_object = FileTypeSummary()
+            new_object.fileType = bucket['key']
+            new_object.totalFilesByType = bucket['doc_count']
+            new_object.sizeByFileType = bucket['size_by_type']['value']
+            list_new_objects.append(new_object)
+        return list_new_objects
+
+
 class ApiResponse(JsonObject):
     """
     Class defining an API response
@@ -84,6 +101,7 @@ class SummaryRepresentation(JsonObject):
     """
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
+    fileTypeSummary = ListProperty(FileTypeSummary)
 
 
 class FileIdAutoCompleteEntry(JsonObject):
@@ -238,6 +256,7 @@ class SummaryResponse(AbstractResponse):
         # Separate the raw_response into hits and aggregates
         hits = raw_response['hits']
         aggregates = raw_response['aggregations']
+        sum = raw_response['aggregations']['by_type']
         # Create a SummaryRepresentation object
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
@@ -248,7 +267,8 @@ class SummaryResponse(AbstractResponse):
             totalFileSize=self.agg_contents(
                 aggregates, 'total_size', agg_form='value'),
             organCount=self.agg_contents(
-                aggregates, 'organCount', agg_form='value')
+                aggregates, 'organCount', agg_form='value'),
+            fileTypeSummary=FileTypeSummary.create_object(sum['buckets'])
         )
 
 
