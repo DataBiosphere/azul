@@ -1,10 +1,8 @@
 {
   "count": 2,
-  "from": 1,
   "order": "desc",
-  "page": 1,
   "pages": 1,
   "size": 5,
-  "sort": "entity_uuid",
+  "sort": "entryId",
   "total": 2
 }
