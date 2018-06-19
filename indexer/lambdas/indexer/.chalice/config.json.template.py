@@ -18,5 +18,7 @@ emit({
         "AZUL_ES_ENDPOINT": f"{host}:{port}",
         **{k: v for k, v in os.environ.items() if k.startswith('AZUL_') and k != 'AZUL_HOME'},
         "HOME": "/tmp"
-    }
+    },
+    "lambda_timeout": 300,
+    "lambda_memory_size": 512
 })
