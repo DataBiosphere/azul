@@ -15,6 +15,7 @@ import logging
 from multiprocessing.dummy import Pool as ThreadPool
 import os
 
+from urllib3 import Timeout
 
 indexer_name = os.environ['AZUL_INDEXER_NAME']
 module_logger = logging.getLogger(indexer_name + ".indexer")
@@ -40,6 +41,8 @@ class MetadataDownloader(object):
         """
         self.dss_client = DSSClient()
         self.dss_client.host = dss_host
+        self.dss_client.timeout_policy = Timeout(connect=10, read=40)
+
         self.log = logging.getLogger(indexer_name + ".indexer.DataExtractor")
 
     def __attempt(self, times, func, errors, **kwargs):
