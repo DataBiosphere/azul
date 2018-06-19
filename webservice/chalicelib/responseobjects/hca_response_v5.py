@@ -52,8 +52,10 @@ class PaginationObj(JsonObject):
     count = IntegerProperty()
     total = IntegerProperty()
     size = IntegerProperty()
-    _from = IntegerProperty(name='from')
-    # page = IntegerProperty()
+    search_after = StringProperty()
+    search_after_uid = StringProperty()
+    search_before = StringProperty()
+    search_before_uid = StringProperty()
     sort = StringProperty()
     order = StringProperty(choices=['asc', 'desc'])
 
