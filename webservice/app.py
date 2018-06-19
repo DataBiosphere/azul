@@ -30,20 +30,19 @@ def _get_pagination(current_request):
     pagination = {
         "order": current_request.query_params.get('order', 'desc'),
         "size": int(current_request.query_params.get('size', ENTRIES_PER_PAGE)),
-        "sort": current_request.query_params.get('sort', 'entity_id'),
+        "sort": current_request.query_params.get('sort', 'entryId'),
     }
 
     sa = current_request.query_params.get('search_after')
     sb = current_request.query_params.get('search_before')
     sa_uid = current_request.query_params.get('search_after_uid')
     sb_uid = current_request.query_params.get('search_before_uid')
-    if not sa and not sb:
-        pagination['from'] = int(current_request.query_params.get('from', 1))
-    elif not sb:
+
+    if not sb and sa:
         pagination['search_after'] = [sa, sa_uid]
-    elif not sa:
+    elif not sa and sb:
         pagination['search_before'] = [sb, sb_uid]
-    else:
+    elif sa and sb:
         raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
 
     return pagination
@@ -60,10 +59,6 @@ def get_data(file_id=None):
           in: query
           type: string
           description: Filters to be applied when calling ElasticSearch
-        - name: from
-          in: query
-          type: integer
-          description: From where should we start returning the results
         - name: size
           in: integer
           type: string
@@ -76,6 +71,24 @@ def get_data(file_id=None):
           in: query
           type: string
           description: Which field to sort by
+        - name: search_after
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
+          to set both this and search_before.
+        - name: search_after_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
+        - name: search_before
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
+          to set both this and search_after.
+        - name: search_before_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
@@ -133,10 +146,6 @@ def get_specimen_data(specimen_id=None):
           in: query
           type: string
           description: Filters to be applied when calling ElasticSearch
-        - name: from
-          in: query
-          type: integer
-          description: From where should we start returning the results
         - name: size
           in: integer
           type: string
@@ -149,6 +158,24 @@ def get_specimen_data(specimen_id=None):
           in: query
           type: string
           description: Which field to sort by
+        - name: search_after
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
+          to set both this and search_before.
+        - name: search_after_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
+        - name: search_before
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
+          to set both this and search_after.
+        - name: search_before_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
@@ -205,10 +232,6 @@ def get_data_pie():
           in: query
           type: string
           description: Filters to be applied when calling ElasticSearch
-        - name: from
-          in: query
-          type: integer
-          description: From where should we start returning the results
         - name: size
           in: integer
           type: string
@@ -221,6 +244,24 @@ def get_data_pie():
           in: integer
           type: string
           description: Which field to sort by
+        - name: search_after
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
+          to set both this and search_before.
+        - name: search_after_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
+        - name: search_before
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
+          to set both this and search_after.
+        - name: search_before_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
     :return: Returns a dictionary with the entries to be used when generating
     a pie chart
     """
@@ -320,14 +361,28 @@ def get_search():
           in: query
           type: string
           description: Which field to search on. Defaults to file id
-        - name: from
-          in: query
-          type: integer
-          description: From where should we start returning the results
         - name: size
           in: integer
           type: string
           description: Size of the page being returned
+        - name: search_after
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
+          to set both this and search_before.
+        - name: search_after_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
+        - name: search_before
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
+          to set both this and search_after.
+        - name: search_before_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
     :return: A dictionary with entries that best match the query passed in
     to the endpoint
     """
@@ -351,10 +406,7 @@ def get_search():
         return "Malformed filters parameter"
     # Generate the pagination dictionary out of the endpoint parameters
     logger.info("Creating pagination")
-    pagination = {
-        "from": int(app.current_request.query_params.get('from', 1)),
-        "size": int(app.current_request.query_params.get('size', 5))
-    }
+    pagination = _get_pagination(app.current_request)
     logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Get the entry format and search field
     _type = app.current_request.query_params.get('type', 'file')

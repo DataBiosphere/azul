@@ -272,31 +272,23 @@ class ElasticTransformDump(object):
 
         _sort = pagination['sort'] + ".keyword"
         _order = pagination['order']
-        # Apply order
-        if 'from' in pagination:
-            # Using to-from pagination
-            _from = pagination['from'] - 1
-            _to = pagination['size'] + _from
-            if _to > SEARCH_AFTER_THRESHOLD:
-                raise BadArgumentException("from+to must not be greater than " + str(SEARCH_AFTER_THRESHOLD))
-            es_search = es_search[_from:_to]
+
+        # Using search_after/search_before pagination
+        if 'search_after' in pagination:
+            es_search = es_search.extra(search_after=pagination['search_after'])
             es_search = es_search.sort({_sort: {"order": _order}},
                                        {'_uid': {"order": 'desc'}})
+        elif 'search_before' in pagination:
+            es_search = es_search.extra(search_after=pagination['search_before'])
+            rev_order = 'asc' if _order == 'desc' else 'desc'
+            es_search = es_search.sort({_sort: {"order": rev_order}},
+                                       {'_uid': {"order": 'asc'}})
         else:
-            # Using search_after/search_before pagination
-            if 'search_after' in pagination:
-                es_search = es_search.extra(search_after=pagination['search_after'])
-                es_search = es_search.sort({_sort: {"order": _order}},
-                                           {'_uid': {"order": 'desc'}})
-            elif 'search_before' in pagination:
-                es_search = es_search.extra(search_after=pagination['search_before'])
-                rev_order = 'asc' if _order == 'desc' else 'desc'
-                es_search = es_search.sort({_sort: {"order": rev_order}},
-                                           {'_uid': {"order": 'asc'}})
+            es_search = es_search.sort({_sort: {"order": _order}},
+                                       {'_uid': {"order": 'desc'}})
 
-            # fetch one more than needed to see if there's a "next page".
-            es_search = es_search.extra(size=pagination['size'] + 1)
-
+        # fetch one more than needed to see if there's a "next page".
+        es_search = es_search.extra(size=pagination['size'] + 1)
         logging.debug("es_search is " + str(es_search))
         return es_search
 
@@ -311,62 +303,44 @@ class ElasticTransformDump(object):
         new required entries.
         """
         pages = -(-es_response['hits']['total'] // pagination['size'])
-        if es_response['hits']['total'] < SEARCH_AFTER_THRESHOLD:
-            # Use from/to pagination
-            page_field = {
-                'count': len(es_response['hits']['hits']),
-                'total': es_response['hits']['total'],
-                'size': pagination['size'],
-                'from': pagination['from'],
-                'page': ((pagination['from'] - 1) / pagination['size']) + 1,
-                'pages': pages,
-                'sort': pagination['sort'],
-                'order': pagination['order']
-            }
-        else:
-            # ...else use search_after/search_before pagination
-            es_hits = es_response['hits']['hits']
-            count = len(es_hits)
 
-            logging.debug("count=" + str(count) + " and size=" + str(pagination['size']))
-
-            if 'search_before' in pagination:
-                # hits are reverse sorted
-                if count > pagination['size']:
-                    # There is an extra hit, indicating a previous page.
-                    count = count - 1
-                    search_before = es_hits[count - 1]['sort']
-                else:
-                    # No previous page
-                    search_before = [None, None]
-                search_after = es_hits[0]['sort']
-            elif 'search_after' in pagination:
-                # hits are normal sorted
-                if count > pagination['size']:
-                    # There is an extra hit, indicating a next page.
-                    count = count - 1
-                    search_after = es_hits[count - 1]['sort']
-                else:
-                    # No next page
-                    search_after = [None, None]
-                search_before = es_hits[0]['sort']
+        # ...else use search_after/search_before pagination
+        es_hits = es_response['hits']['hits']
+        count = len(es_hits)
+        logging.debug("count=" + str(count) + " and size=" + str(pagination['size']))
+        if 'search_before' in pagination:
+            # hits are reverse sorted
+            if count > pagination['size']:
+                # There is an extra hit, indicating a previous page.
+                count = count - 1
+                search_before = es_hits[count - 1]['sort']
             else:
-                # No search_after/before args were supplied, so assume it is the first page
-                search_after = es_hits[count - 1]['sort'] if pages > 1 else []
+                # No previous page
                 search_before = [None, None]
+            search_after = es_hits[0]['sort']
+        else:
+            # hits are normal sorted
+            if count > pagination['size']:
+                # There is an extra hit, indicating a next page.
+                count = count - 1
+                search_after = es_hits[count - 1]['sort']
+            else:
+                # No next page
+                search_after = [None, None]
+            search_before = es_hits[0]['sort'] if 'search_after' in pagination else [None, None]
 
-            page_field = {
-                'count': count,
-                'total': es_response['hits']['total'],
-                'size': pagination['size'],
-                'search_after': search_after[0],
-                'search_after_uid': search_after[1],
-                'search_before': search_before[0],
-                'search_before_uid': search_before[1],
-                'pages': pages,
-                'sort': pagination['sort'],
-                'order': pagination['order']
-            }
+        page_field = {
+            'count': count,
+            'total': es_response['hits']['total'],
+            'size': pagination['size'],
+            'search_after': search_after[0],
+            'search_after_uid': search_after[1],
+            'search_before': search_before[0],
+            'search_before_uid': search_before[1],
+            'pages': pages,
+            'sort': pagination['sort'],
+            'order': pagination['order']
+        }
 
         return page_field
 

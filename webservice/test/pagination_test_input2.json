@@ -1,14 +1,10 @@
 {
     "count": 2,
-    "from": null,
     "order": "desc",
-    "page": null,
     "pages": 1,
-    "search_after": [
-      "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
-      "meta#32"
-    ],
+    "search_after": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
+    "search_after_uid": "meta#32",
     "size": 5,
-    "sort": "entity_uuid",
+    "sort": "entryId",
     "total": 2
   }
