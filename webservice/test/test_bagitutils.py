@@ -4,9 +4,22 @@ import unittest
 import os
 import zipfile
 from bagitutils import BagHandler
+import tempfile
+import shutil
+import csv
+import filecmp
 
 
 class TestBagHandlerMethods(unittest.TestCase):
+
+    def setUp(self):
+        # Create a list of lists representing the output of the
+        # bag.write_csv_files method of the fc_mock.tsv file residing in
+        # the test folder.
+
+        self.bag_manifest = 'test/manifest_bag'
+        self.bag_participant_tsv = 'test/manifest_bag/participant.tsv'
+        self.bag_sample_tsv = 'test/manifest_bag/sample.tsv'
 
     def test_zipRootIsManifest(self):
         s = "Program	Project	Center Name	Submitter Donor ID	Donor UUID	Submitter Donor Primary Site	Submitter Specimen ID	Specimen UUID	Submitter Specimen Type	Submitter Experimental Design	Submitter Sample ID	Sample UUID	Analysis Type	Workflow Name	Workflow Version	File Type	File Path	Upload File ID	Data Bundle UUID	Metadata.json	File URLs	File DOS URL\n\
@@ -31,7 +44,7 @@ NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298
             sorted(participants))
         self.assertEquals(len(sample), 1)
         row = sample[0]
-        self.assertEquals(row['participant'], 'c2b4c298-4d80-4aaa-bddf-20c15d184af3')
+        self.assertEquals(row['participant_id'], 'c2b4c298-4d80-4aaa-bddf-20c15d184af3')
         self.assertEquals(row['gs_url1'], 'gs://broad-public-datasets/NA12878_downsampled_for_testing/unmapped/H06JUADXX130110.1.ATCACGAT.20k_reads.bam')
         self.assertFalse('s3_url1' in row)
 
@@ -78,24 +91,45 @@ NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298
             self.assertNotIn('0', key)
 
     def test_fc_mock(self):
-        """Tests a mock file with a minimal set of columns."""
+        """Tests a small mock file with a minimal set of columns,
+        but which covers all use cases:
+            - common case of one sample of a donor with one crai and one cram
+              file
+            - a case of one sample of a donor with one crai, one cram and one
+              bam file
+            - a cose of one sample of a donor with only one bam file."""
+
         mock_simple = 'test/fc_mock.tsv'
-        real107 = '/home/michael/dev/manifest-handover/manifests/manifest_107_genomes.tsv'
-        with open(real107, 'r') as tsv:
+        with open(mock_simple, 'r') as tsv:
             lines = tsv.readlines()
         data = "\n".join(lines)
         bag = BagHandler(data=data, bag_info={}, bag_name='manifest')
-        participants, max_files_in_sample, protocols = bag.participants_and_max_files_in_sample_and_protocols()
-        # self.assertEqual(len(participants), 2)
-        # self.assertEqual(len(protocols), 1)
-        # self.assertEqual(max_files_in_sample, 4)
+
+        participants, max_files_in_sample, protocols = \
+            bag.participants_and_max_files_in_sample_and_protocols()
+        self.assertEqual(len(participants), 5)
+        self.assertEqual(len(protocols), 2)
+        self.assertEqual(max_files_in_sample, 3)
+
         samples = bag.samples(max_files_in_sample, protocols)
-        # self.assertEqual(len(samples), 1)
+        self.assertEqual(len(samples), 6)
 
-        print(bag.data)
-        data_path = '/home/michael/dev/manifest-handover/test_107'
-        bag.write_csv_files(data_path)
+        # Test whether the content of output samples.tsv file is congruent with
+        # the TSV file bag_tsv_file defined in the setUp of this test suite.
+        tmpdir = tempfile.mkdtemp()
+        bag.write_csv_files(tmpdir)
 
+        # Compare the two output files with the truth files.
+        self.assertTrue(filecmp.cmp(self.bag_participant_tsv,
+                    tmpdir + '/participant.tsv'))
+        self.assertTrue(filecmp.cmp(self.bag_sample_tsv,
+                    tmpdir + '/sample.tsv'))
+
+        # Compare entire manifest output directory.
+        fcmp = filecmp.dircmp(self.bag_manifest, tmpdir)
+        self.assertTrue(fcmp.same_files == ['participant.tsv', 'sample.tsv'])
+
+        shutil.rmtree(tmpdir)
 
 
 if __name__ == '__main__':

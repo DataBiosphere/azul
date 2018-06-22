@@ -1,0 +1,7 @@
+entity:sample_id	participant_id	file_dos_uri1	file_dos_uri2	file_dos_uri3	file_path1	file_path2	file_path3	file_type1	file_type2	file_type3	gs_url1	gs_url2	gs_url3	s3_url1	s3_url2	s3_url3	specimen_uuid	upload_file_id1	upload_file_id2	upload_file_id3
+s1	d1							crai	cram		gs://junk.crai	gs://junk.cram					sp1			
+s2	d1							crai	cram					s3://junk.crai	s3://junk.cram		sp1			
+s3	d2							crai	cram		gs://junk.crai	gs://junk.cram					sp1			
+s4	d3							crai	cram		gs://junk.crai	gs://junk.cram					sp1			
+s5	d4							crai	cram	bam	gs://junk.crai	gs://junk.cram	gs://junk.bam				sp2			
+s6	d5							crai			gs://junk.crai						sp3			

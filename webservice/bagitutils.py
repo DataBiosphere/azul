@@ -15,11 +15,11 @@ class BoardwalkColumns:
     def __init__(self):
         pass
 
+    # Special columns.
     SAMPLE_UUID = 'Sample UUID'
     DONOR_UUID = 'Donor UUID'
     FILE_TYPE = 'File Type'
     FILE_URLS = 'File URLs'
-    SPECIMEN_UUID = 'Specimen UUID'
     FILE_DOS_URI = 'File DOS URI'
     FILE_PATH = 'File Path'
     UPLOAD_FILE_ID = 'Upload File ID'
@@ -37,6 +37,7 @@ FILE_COLUMNS = [
 # Column names in Boardwalk that cannot simply be copied over to FireCloud;
 # they require extra logic.
 COMPLEX_COLUMNS = FILE_COLUMNS + [
+    BoardwalkColumns.DONOR_UUID,
     BoardwalkColumns.SAMPLE_UUID,
     BoardwalkColumns.FILE_URLS
 ]
@@ -55,7 +56,7 @@ class RequiredFirecloudColumns:
 
     # Columns in sample.tsv
     SAMPLE_SAMPLE_ID = 'entity:sample_id'
-    SAMPLE_PARTICIPANT = 'participant'
+    SAMPLE_PARTICIPANT = 'participant_id'
 
 
 class BagHandler:
@@ -142,9 +143,9 @@ class BagHandler:
         # zip_fh is zipfile handle
         path_length = len(path)
         for root, dirs, files in os.walk(path):
-            for file in files:
-                zip_fh.write(os.path.join(root, file),
-                             arcname=root[path_length:] + '/' + file)
+            for _file in files:
+                zip_fh.write(os.path.join(root, _file),
+                             arcname=root[path_length:] + '/' + _file)
 
     def write_csv_files(self, data_path):
         """
@@ -169,10 +170,14 @@ class BagHandler:
                 if first_row:
                     first_row = False
                     keys = sample.keys()
-                    # entity:sample_id must be first
+                    # entity:sample_id must be first. For convenience, we
+                    # add participant_id second.
                     keys.remove(RequiredFirecloudColumns.SAMPLE_SAMPLE_ID)
-                    fieldnames = [ RequiredFirecloudColumns.SAMPLE_SAMPLE_ID]\
-                                 + sorted(keys)
+                    keys.remove(RequiredFirecloudColumns.SAMPLE_PARTICIPANT)
+                    fieldnames = (
+                        [RequiredFirecloudColumns.SAMPLE_SAMPLE_ID] +
+                        [RequiredFirecloudColumns.SAMPLE_PARTICIPANT] +
+                        sorted(keys))
                     writer = csv.DictWriter(tsv, fieldnames=fieldnames,
                                             delimiter='\t')
                     writer.writeheader()
@@ -194,16 +199,16 @@ class BagHandler:
         reader = csv.DictReader(StringIO(self.data), delimiter='\t')
         participants = set()
         native_protocols = set()
-        specimens = {}  # key: specimen UUID, value count
+        samples = {}  # key: samples UUID, value count
         for row in reader:
             # Add all participants. It's a set, so no dupes
             participants.add(row[BoardwalkColumns.DONOR_UUID])
 
-            specimen_uuid = row[BoardwalkColumns.SPECIMEN_UUID]
-            if specimen_uuid in specimens:
-                specimens[specimen_uuid] = specimens[specimen_uuid] + 1
+            sample_uuid = row[BoardwalkColumns.SAMPLE_UUID]
+            if sample_uuid in samples:
+                samples[sample_uuid] = samples[sample_uuid] + 1
             else:
-                specimens[specimen_uuid] = 1
+                samples[sample_uuid] = 1
 
             # Track all the different cloud native url protocols
             for file_url in row[BoardwalkColumns.FILE_URLS].split(','):
@@ -211,14 +216,17 @@ class BagHandler:
                 if protocol is not None:
                     native_protocols.add(protocol)
 
-        return participants, max(specimens.values()), native_protocols
+        return participants, max(samples.values()), native_protocols
 
     def samples(self, max_files_in_sample, native_protocols):
         """
-        Creates a list of dicts, dict is a row in the sample TSV for FireCloud.
-        For all rows of the same sample in the input, create one row only,
-        where the file-specific data from each row is appended as additional
-        columns to the one row.
+        Creates a list of dicts, where one dict is a row in the sample TSV 
+        for FireCloud. For all rows of the same sample in the input create 
+        one row only, where the file-specific data from each row is 
+        appended as additional columns to the one row (reasons
+        for having multiple rows of the same sample are for instance 
+        different file types or different cloud storage protocols for a given
+        sample ID).
 
         The input is self.data. Requires that data be sorted by
         BoardwalkColumns.SAMPLE_UUID; this routine sorts it. If data could be
@@ -232,14 +240,15 @@ class BagHandler:
         reader = csv.DictReader(StringIO(self.data), delimiter='\t')
         samples = []
 
-        current_specimen_uuid = None
+        current_sample_uuid = None
         current_row = None
+        index = None
 
         for row in sorted(reader, key=operator.itemgetter(
-                BoardwalkColumns.SPECIMEN_UUID)):
-            specimen_uuid = row[BoardwalkColumns.SPECIMEN_UUID]
-            if specimen_uuid != current_specimen_uuid:
-                current_specimen_uuid = specimen_uuid
+                BoardwalkColumns.SAMPLE_UUID)):  # sort by sample ID
+            sample_uuid = row[BoardwalkColumns.SAMPLE_UUID]
+            if sample_uuid != current_sample_uuid:
+                current_sample_uuid = sample_uuid
                 index = 1
                 if current_row is not None:
                     samples.append(current_row)
@@ -272,30 +281,30 @@ class BagHandler:
         for column in FILE_COLUMNS:
             if column in existing_row:
                 new_row[self.firecloud_column_name(column) + suffix] = \
-                existing_row[column]
+                    existing_row[column]
 
     def init_sample_row(self, existing_row, max_files_in_sample,
                         native_protocols):
         """
         Create and initialize a sample row
         :param existing_row: the existing row
-        :param max_files_in_sample: the maximum number of files in a sample
+        :param max_files_in_sample: maximum number of file types of any sample
         :param native_protocols:
         :return: the initialized row
         """
-        # Rename sample column and participant
+        # Rename sample column and participant.
         row = {RequiredFirecloudColumns.SAMPLE_SAMPLE_ID: existing_row[
             BoardwalkColumns.SAMPLE_UUID],
                RequiredFirecloudColumns.SAMPLE_PARTICIPANT: existing_row[
                    BoardwalkColumns.DONOR_UUID]}
 
         # Copy rows that don't need transformation, other than FC naming
-        # conventions
+        # conventions.
         for key, value in existing_row.iteritems():
             if key not in COMPLEX_COLUMNS:
                 row[self.firecloud_column_name(key)] = value
 
-        # Initialize columns for files and cloud native urls
+        # Initialize columns for files and cloud native urls.
         for suffix in [str(i) for i in range(1, max_files_in_sample + 1)]:
             for column in FILE_COLUMNS:
                 row[self.firecloud_column_name(column) + suffix] = None
