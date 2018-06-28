@@ -2,225 +2,119 @@
 
 This is the indexer that consumes events from the blue box and indexes them into Elasticsearch.
 
-## Getting Started
+## Installation
 
-### Blue Box 
+### Before Getting Started
 
-It is required to know the blue box endpoint. See here for instructions: https://github.com/HumanCellAtlas/data-store/tree/master
+Make sure to write down: 
+- Your blue box endpoint. See here for instructions: https://github.com/HumanCellAtlas/data-store/tree/master
+- Your AWS Access Keys and AWS Secret Keys
 
-### Elasticsearch (ES)
+### 1. Creating an Elasticsearch Domain
+ 
+1. First, create an Elasticsearch Domain on AWS. You can do this in the AWS Console by clicking "Services" in the top toolbar, 
+and then clicking "Elasticsearch Service".
+2. Once you are in the Amazon Elasticsearch Service dashboard. Click "Create a new domain".
+3. Under the Define Domain step, give a domain name to new the ES Domain
+and use Elasticsearch version 5.5 and click next.
+4. Under *Configure Cluster* step, unless you need other configurations for your domain (*Storage, Node, Snapshot, etc*), skip to the next step
+5. In the *Set Up Access* step, set network configuration to *Public Access*.
+6. Copy the contents of `policies/elasticsearch-policy.json` file in the cgp-dss-azul-indexer repository
+7. Then, paste those contents into the textbox under *Access policy* 
+8. Edit the following values in the policy with your own values:
+    - `<your-es-domain-name>` is the name of the elasticsearch domain
+    - `<your-indexer-lambda-domain-name>` is the name that you will give the lambda project.
+    - `<AWS-account-ID>` is not your IAM User name, but a numeric id representing your aws account. You can find your AWS account ID by clicking "Select a Template" dropdown box. 
+    Then, click "Allow or deny access to one or more AWS accounts or IAM users". Then, a pop-up will appear with your "AWS account ID".
+    - `<your-ip-address>` is your ip address.
+9. Record the values above for later use. They will be need to setup later components.
+10. Confirm your policy settings, review what your configured, and finalize setting up the Elasticsearch domain. 
+11. You should be in the Amazon Elasticsearch Service dashboard. Click on the name of the newly created Elasticsearch domain
+    - record your ARN Domain. Knowing the ARN Domain will help you configure with configuration later.
 
-Create an Elasticsearch box on AWS. 
-On the AWS console click "Services," then click "Elasticsearch Service." Then click "Create a new domain." Assign a domain name to the ES instance (eg: "dss-sapphire"). Choose your configuration for your requirements.
-For the Access Policy, copy the contents of policies/elasticsearch-policy.json and edit the places with `<>`
-To find your `<AWS-account-ID>`, click "Select a Template" and click "Allow or deny access to one or more AWS accounts or IAM users". Then a pop-up will appear with your "AWS account ID".
-Take note of the Elasticsearch endpoint.
+### 2. Configure AWS and create a Virtual Environment
 
-### Configure AWS and create a Virtual Environment
-Install python3.
+1. Install python 3.6
+2. Create a virtual environment with `virtualenv -p python3.6 <envname>` 
+3. Activate with `source <envname>/bin/activate`.
+4. Install and configure the AWS CLI with your credentials (AWS Access Keys and AWS Secret Keys)
 
-Create a virtual environment with `virtualenv -p python3 <envname>` and activate with `source <envname>/bin/activate`.
-
-Install and configure the AWS CLI with your credentials
 ```
 pip install awscli --upgrade
 aws configure
 ```
 
-### Chalice
+### 3. Setup Chalice
 
-Chalice is similar to Flask but is serverless and uses AWS Lambda.
-```
-pip install chalice
-chalice new-project
-```
-When prompted for project name, input `<your-indexer-lambda-application-name>`, (e.g., dss-indigo).
-
-Change the working directory to the newly created folder `<your-indexer-lambda-application-name>` (e.g., dss-indigo) and execute `chalice deploy`. Record the URL returned in the last line of stdout returned by this command - henceforth referred to as `<callback_url>`. This will create an AWS Lambda function called `dss-indigo` which will be updated using `chalice deploy`. Chalice automatically generated a folder `chalicelib/` and the files `rm app.py` and `rm requirements.txt`. Overwrite those by copying `app.py`, `requirements.txt` and `chalicelib/` from this repo and to the dss-indigo folder. Then execute
-
-`pip install -r requirements.txt`
-
-### Config File
-
-`chalicelib/config.json` should contain the keys that you wish to add to the index documents. The structure of the config.json should mimic the metadata json file being looked at.
-
-For example, the following metadata for assay.json:
-```
-{
-  "rna": {
-    "primer": "random"
-  },
-  "seq": {
-    "machine": "Illumina HiSeq 2000",
-    "molecule": "total RNA",
-    "paired_ends": "no",
-    "prep": "TruSeq"
-  },
-  "single_cell": {
-    "method": "mouth pipette"
-  },
-  "sra_experiment": "SRX129997",
-  "sra_run": [
-    "SRR445718"
-  ],
-  "files": [
+1. Install Chalice with the following command:
+    ```
+    pip install chalice
+    chalice new-project
+    ```
+2. When prompted for project name, input `<your-indexer-lambda-application-name>`.
+3. Change the working directory to the newly created folder `<your-indexer-lambda-application-name>`.
+4. Execute `chalice deploy`. **Note:** If you are planning to deploy a different staging instance add the `--staging <stage name>` option.
+5. Record the URL returned in the last line of stdout returned by this command - henceforth referred to as `<azul-indexer-url>`.
+This will create an AWS Lambda function with the name of your application name which will be updated using `chalice deploy`.
+6. Chalice will automatically generate a folder with the name of your application name. The folder will contain the files `app.py` and `requirements.txt`
+and a `.chalice` folder containing a `config.json` file. Overwrite those by copying `app.py`, `requirements.txt` and `chalicelib/` from this repo and the generated folder.
+7. Then, execute `pip install -r requirements.txt`.
+8. Open `.chalice/config.json`, remove any existing text in the file and copy the text below onto `config.json`.
+    ```json
     {
-      "name": "SRR445718_1.fastq.gz",
-      "format": ".fastq.gz",
-      "type": "reads",
-      "lane": 1
-    }
-  ]
-}
-```
-and this cell.json
-```
-{
-  "type": "oocyte",
-  "ontology": "CL_0000023",
-  "id": "oocyte #1"
-}
-```
-Could have a config like such:
-```
-{
-  "assay.json": [
-    {
-      "rna": [
-        "primer"
-      ]
-    },
-    {
-      "single_cell": [
-        "method"
-      ]
-    },
-    "sra_experiment",
-    {
-      "files":[
-        "format"
-      ]
-    }
-  ],
-  "cell.json":[
-    "type",
-    "ontology",
-    "id"
-  ]
- }
-```
-***NOTE***: The config should be rooted under a version of the metadata being received.
-
-In Elasticsearch, the fields for the File Indexer will be
-```
-assay,json|rna|primer
-assay,json|single_cell|method
-assay,json|sra_experiment
-assay,json|files|format
-cell,json|type
-cell,json|ontology
-cell,json|id
-```
-Notice the commas(,) where there were previously periods(.). Also, the pipe (|) is used as the separator between levels in the config.
-
-#### Adding Mappings
-Given a config:
-```
-{
-  "cell.json":[
-    "type",
-    "ontology",
-    "id"
-  ]
- }
-```
-
-### Environment Variables
-In order to add environmental variables to Chalice, the variables must be added to three locations.
-Do not add protocols to any of the Endpoints. Make sure the ES_ENDPOINT does not have any trailing slashes.
-
-1) Edit Chalice  
-open `.chalice/config.json`  
-Replace the current file with the following, making sure to replace the <> with your information.  
-```
-{
-  "version": "2.0",
-  "app_name": "<your-indexer-lambda-application-name>",
-  "stages": {
-    "dev": {
-      "api_gateway_stage": "api",
-      "manage_iam_role":false,
-      "iam_role_arn":"arn:aws:iam::<AWS-account-ID>:role/<your-indexer-lambda-application-name>-dev",
-      "environment_variables": {
-         "ES_ENDPOINT":"<your elasticsearch endpoint>",
-         "BLUE_BOX_ENDPOINT":"<your blue box>",
-         "ES_INDEX":"<elasticsearch index to use>",
-         "INDEXER_NAME":"<your-indexer-lambda-application-name>",
-         "HOME":"/tmp"
+      "version": "2.0",
+      "app_name": "<your-indexer-lambda-application-name>",
+      "stages": {
+        "dev": {
+          "api_gateway_stage": "api",
+          "manage_iam_role":false,
+          "iam_role_arn":"arn:aws:iam::<AWS-account-ID>:role/<your-indexer-lambda-application-name>-dev",
+          "environment_variables": {
+             "ES_ENDPOINT":"<your elasticsearch endpoint>",
+             "BLUE_BOX_ENDPOINT":"<your blue box>",
+             "ES_INDEX":"<elasticsearch index to use>",
+             "INDEXER_NAME":"<your-indexer-lambda-application-name>",
+             "HOME":"/tmp"
+          }
+        }
       }
     }
-  }
-}
-```   
+    ```
+9. Then, replace the following values in the config.json with your own values. 
+    - `<your-indexer-lambda-application-name>` is the name that you will give the lambda project.
+    - `<AWS-account-ID>` is one of the values in the access policy of your Elasticsearch. An numerical id of your AWS Account. 
+    - `<your blue box>` is the endpoint of the DSS Blue Box.
+    - `<your elasticsearch endpoint>` is url you will use to access Azul's Elasticsearch Domain. This url can be found by returning to your Elasticsearch Service Dashboard,
+    clicking the link of your Elasticsearch Domain. The url should be labled as **Endpoint** in the Overview Tab.
+10. Next, like the config.json. Open `~/.profile`. If that file doesn't exist, create one and append the text below. 
+    ```
+    export ES_ENDPOINT=<your elasticsearch endpoint>
+    export BLUE_BOX_ENDPOINT=<your blue box>
+    export ES_INDEX=<elasticsearch index to use>
+    export INDEXER_NAME=<your-indexer-lambda-application-name>
+    export HOME=/tmp
+    ```
+11. Then, replace the `<>` values in the `.profile`. They are the same values used in the `config.json` from the previous steps.
+11. Run `. ~/.profile` to load the variables
 
-2) Edit .profile
-open `~/.profile` and add the following items.
+### 4. Modifying IAM Access Policies
 
-```
-export ES_ENDPOINT=<your elasticsearch endpoint>
-export BLUE_BOX_ENDPOINT=<your blue box>
-export ES_INDEX=<elasticsearch index to use>
-export INDEXER_NAME=<your-indexer-lambda-application-name>
-export HOME=/tmp
-```
+1. In the AWS Console, click Services in the top toolbar, and click IAM in the Security, Identity & Compliance subsection.
+2. On the side menu bar, click **Roles**, then search for your lambda function, `<your-indexer-lambda-application-name>`. Once you find it, click on it.
+3. Find a table in the Permissions tab under the blue Attack Policy button. You should see for lambda name in the table. Click on the caret on the right side of the lambda name. Then, click on "Edit Policy".
+4. Add the policy found in `policies/elasticsearch-policy.json` file in the cgp-dss-azul-indexer repository (Make sure to change the `Resource` value to the ARN of your elasticsearch box)
 
-run `. ~/.profile` to load the variables
+### 5. Deploying Indexer Lambda
 
-3) Edit Lambda
+1. In the directory of your chalice function, run `chalice deploy --no-autogen-policy`. Since we have created a policy in AWS we do not want chalice to automatically create a policy for us.
 
-Go to the AWS console, and then to your Lambda function and add the following environment variables:
-
-```
-ES_ENDPOINT  -->   <your elasticsearch endpoint>
-BLUE_BOX_ENDPOINT   -->   <your blue box>
-ES_INDEX  -->  <elasticsearch index to use>
-INDEXER_NAME  -->  <your-indexer-lambda-application-name>
-HOME --> /tmp
-```
-
-### Elasticsearch & Lambda
-
-Given the current configuration, a deployment will result in errors when attempting to reach Elasticsearch. This is because Lambda is not configured to allow ES actions.
-
-Open the AWS console and go to IAM. On the side menu bar, chose roles, then choose your lambda function, `<your-indexer-lambda-application-name>` and under "Policy name" click the drop down, then click on "Edit Policy". Add the policy found in lambda-policy.json under the `policies` folder, making sure to change the `Resource` value to the ARN of your elasticsearch box.
-
-### Deploy Chalice
-
-Enter your directory of your chalice function and `chalice deploy --no-autogen-policy`. Since we have created a policy in AWS we do not want chalice to automatically create a policy for us.
-
-Your `<callback_url>` should be able to take post requests from the Blue Box and index the resulting files 
-This is untested, but can take in a simulated curl request of the following format.
-```
-curl -H "Content-Type: application/json" -X POST -d '{ "query": { "query": { "bool": { "must": [ { "match": { "files.sample_json.donor.species": "Homo sapiens" } }, { "match": { "files.assay_json.single_cell.method": "Fluidigm C1" } }, { "match": { "files.sample_json.ncbi_biosample": "SAMN04303778" } } ] } } }, "subscription_id": "ba50df7b-5a97-4e87-b9ce-c0935a817f0b", "transaction_id": "ff6b7fa3-dc79-4a79-a313-296801de76b9", "match": { "bundle_version": "2017-08-03T041453.170646Z", "bundle_uuid": "4ce8a36d-51d6-4a3c-bae7-41a63699f877" } }' <callback_url> 
-```
-
-### Methods and Endpoints
+## Methods and Endpoints
 
 |  Methods/Endpoints | Notes |
 | ------------- | ------------- |
 | `<callback_url>`/  | takes in a post request and indexes the bundle found in the request   |
 | es_check() |  returns the ES info, good check to make sure Chalice can talk to ES  |
 
-### Manual Loading
-
-Download and expand import.tgz from Data-Bundle-Examples: https://github.com/HumanCellAtlas/data-bundle-examples/blob/master/import/import.tgz
-Download the test/local-import.py file from this repo. Create an environmental variable `BUNDLE_PATH` that points to the import.tgz files. (Note: There are thousands of files in import.tgz, can specify parts of bundles to download: `import/geo/GSE67835` or `import/geo` or `import`)
-Add environmental variable `ES_ENDPOINT` which points to your ES box or have a localhost running. Optionally, create the name of the ES index to add the files to with the environmental variable `ES_INDEX` (default index is `test-import`)
-Required to have a config.json (like the one in `chalicelib/config.json`)
-
-Run `local-import.py`. Open Kibana to see your files appear. The
-
-Note: Manual loading creates mappings for ES, has some list parsing capability, and if `key` in config.json does not exist, returns a value of "no `key`". (This functionality is not present in the Chalice function yet)
 
 ### Todo List
 
