@@ -1,0 +1,4 @@
+# Added by Alex Hancock
+*/2 * * * * root env - `cat /app/log/env.txt` python /app/luigi-interface/monitor.py > /app/log/monitor_output.txt 2> /app/log/monitor_error.txt
+*   * 1 * * root env - `cat /app/log/env.txt` python /app/luigi-interface/job_deleter.py > /app/log/deleter_output.txt 2> /app/log/deleter_error.txt
+
