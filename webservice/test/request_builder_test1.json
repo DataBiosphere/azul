@@ -1,0 +1,199 @@
+{
+  "query": {
+    "match_all": {}
+  },
+  "post_filter": {
+    "bool": {
+      "must": [
+        {
+          "constant_score": {
+            "filter": {
+              "terms": {
+                "project": [
+                  "CGL"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "workFlow": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "workflow",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "program": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "program",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "projectCode": {
+      "filter": {
+        "match_all":{}
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "project",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "analysisType": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "analysis_type",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "centerName": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "center_name",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "fileFormat": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "file_type",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "specimenType": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "specimen_type",
+            "size": 99999
+          }
+        }
+      }
+    }
+  }
+}

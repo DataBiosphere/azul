@@ -1,0 +1,14 @@
+{
+  "properties": {
+    "donor_uuid":{
+        "type":"keyword",
+        "fields": {
+          "raw": {
+            "type": "text",
+            "analyzer":"autocomplete",
+            "search_analyzer": "standard"
+          }
+        }
+      }
+  }
+}

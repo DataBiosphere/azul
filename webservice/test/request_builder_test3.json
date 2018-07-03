@@ -1,0 +1,384 @@
+{
+  "post_filter": {
+    "bool": {
+      "must": [
+        {
+          "constant_score": {
+            "filter": {
+              "terms": {
+                "project": [
+                  "CGP",
+                  "CAR",
+                  "CGL"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "constant_score": {
+            "filter": {
+              "terms": {
+                "analysis_type": [
+                  "sequence_upload",
+                  "rna_seq_quantification"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "constant_score": {
+            "filter": {
+              "terms": {
+                "file_type": [
+                  "fastq.gz",
+                  "bam"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "workFlow": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGP",
+                      "CAR",
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "analysis_type": [
+                      "sequence_upload",
+                      "rna_seq_quantification"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "file_type": [
+                      "fastq.gz",
+                      "bam"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "workflow",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "program": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGP",
+                      "CAR",
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "analysis_type": [
+                      "sequence_upload",
+                      "rna_seq_quantification"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "file_type": [
+                      "fastq.gz",
+                      "bam"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "program",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "projectCode": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "analysis_type": [
+                      "sequence_upload",
+                      "rna_seq_quantification"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "file_type": [
+                      "fastq.gz",
+                      "bam"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "project",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "analysisType": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGP",
+                      "CAR",
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "file_type": [
+                      "fastq.gz",
+                      "bam"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "analysis_type",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "centerName": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGP",
+                      "CAR",
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "analysis_type": [
+                      "sequence_upload",
+                      "rna_seq_quantification"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "file_type": [
+                      "fastq.gz",
+                      "bam"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "center_name",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "fileFormat": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGP",
+                      "CAR",
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "analysis_type": [
+                      "sequence_upload",
+                      "rna_seq_quantification"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "file_type",
+            "size": 99999
+          }
+        }
+      }
+    },
+    "specimenType": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "project": [
+                      "CGP",
+                      "CAR",
+                      "CGL"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "analysis_type": [
+                      "sequence_upload",
+                      "rna_seq_quantification"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "constant_score": {
+                "filter": {
+                  "terms": {
+                    "file_type": [
+                      "fastq.gz",
+                      "bam"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "aggs": {
+        "myTerms": {
+          "terms": {
+            "field": "specimen_type",
+            "size": 99999
+          }
+        }
+      }
+    }
+  }
+}

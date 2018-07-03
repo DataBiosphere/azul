@@ -1,0 +1,9 @@
+Donor UUID	File Type	File Path	Upload File ID
+1	cram	f1.recab.cram	aaaa
+1	crai	f1.recab.cram.crai	bbbb
+1	bam	f1.recab.bam	cccc
+1	bai	f1.recab.bam.bai	dddd
+2	cram	f2.recab.cram	eeee
+2	crai	f2.recab.cram.crai	ffff
+2	bam	f2.recab.bam	gggg
+2	bai	f2.recab.bam.bai	hhhh
