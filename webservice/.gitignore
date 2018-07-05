@@ -94,3 +94,5 @@ ENV/
 validated.jsonl
 .*.swp
 .*.swo
+
+/config/chalice/deployments
