@@ -37,7 +37,6 @@ FILE_COLUMNS = [
 # Column names in Boardwalk that cannot simply be copied over to FireCloud;
 # they require extra logic.
 COMPLEX_COLUMNS = FILE_COLUMNS + [
-    BoardwalkColumns.DONOR_UUID,
     BoardwalkColumns.SAMPLE_UUID,
     BoardwalkColumns.FILE_URLS
 ]
@@ -56,7 +55,7 @@ class RequiredFirecloudColumns:
 
     # Columns in sample.tsv
     SAMPLE_SAMPLE_ID = 'entity:sample_id'
-    SAMPLE_PARTICIPANT = 'participant_id'
+    SAMPLE_PARTICIPANT = 'participant'
 
 
 class BagHandler:
@@ -170,13 +169,10 @@ class BagHandler:
                 if first_row:
                     first_row = False
                     keys = sample.keys()
-                    # entity:sample_id must be first. For convenience, we
-                    # add participant_id second.
+                    # entity:sample_id must be first.
                     keys.remove(RequiredFirecloudColumns.SAMPLE_SAMPLE_ID)
-                    keys.remove(RequiredFirecloudColumns.SAMPLE_PARTICIPANT)
                     fieldnames = (
                         [RequiredFirecloudColumns.SAMPLE_SAMPLE_ID] +
-                        [RequiredFirecloudColumns.SAMPLE_PARTICIPANT] +
                         sorted(keys))
                     writer = csv.DictWriter(tsv, fieldnames=fieldnames,
                                             delimiter='\t')
