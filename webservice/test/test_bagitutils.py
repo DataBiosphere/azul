@@ -6,7 +6,6 @@ import zipfile
 from bagitutils import BagHandler
 import tempfile
 import shutil
-import csv
 import filecmp
 
 
@@ -44,7 +43,7 @@ NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298
             sorted(participants))
         self.assertEquals(len(sample), 1)
         row = sample[0]
-        self.assertEquals(row['participant_id'], 'c2b4c298-4d80-4aaa-bddf-20c15d184af3')
+        self.assertEquals(row['participant'], 'c2b4c298-4d80-4aaa-bddf-20c15d184af3')
         self.assertEquals(row['gs_url1'], 'gs://broad-public-datasets/NA12878_downsampled_for_testing/unmapped/H06JUADXX130110.1.ATCACGAT.20k_reads.bam')
         self.assertFalse('s3_url1' in row)
 
@@ -112,12 +111,16 @@ NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298
         self.assertEqual(max_files_in_sample, 3)
 
         samples = bag.samples(max_files_in_sample, protocols)
+        self.assertEqual(len(samples[0].keys()), 22)
         self.assertEqual(len(samples), 6)
+
+        bag.write_csv_files('/home/michael/dev/junk')
 
         # Test whether the content of output samples.tsv file is congruent with
         # the TSV file bag_tsv_file defined in the setUp of this test suite.
         tmpdir = tempfile.mkdtemp()
         bag.write_csv_files(tmpdir)
+
 
         # Compare the two output files with the truth files.
         self.assertTrue(filecmp.cmp(self.bag_participant_tsv,
