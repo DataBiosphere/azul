@@ -114,8 +114,6 @@ NIH Data Commons	NIH Data Commons Pilot	Broad Public Datasets	ABC123456	c2b4c298
         self.assertEqual(len(samples[0].keys()), 22)
         self.assertEqual(len(samples), 6)
 
-        bag.write_csv_files('/home/michael/dev/junk')
-
         # Test whether the content of output samples.tsv file is congruent with
         # the TSV file bag_tsv_file defined in the setUp of this test suite.
         tmpdir = tempfile.mkdtemp()
