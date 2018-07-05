@@ -13,7 +13,9 @@
          "ES_FILE_INDEX":"browser_files_dev",
          "ES_SPECIMEN_INDEX": "browser_specimens_dev",
          "INDEXER_NAME":"browser-api-dev"
+      }
     }
-    }
-  }
+  },
+  "lambda_timeout": 31,
+  "lambda_memory_size": 1024
 }
