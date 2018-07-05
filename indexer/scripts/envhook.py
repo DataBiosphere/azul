@@ -56,7 +56,7 @@ def setenv():
     after = _parse(_run(f'source {environment} && env'))
     diff = set(after.items()).symmetric_difference(before.items())
     for k, v in diff:
-        print(f"Setting {k}={v}", file=sys.stderr)
+        print(f"{self.name}: Setting {k} to '{v}'", file=sys.stderr)
         os.environ[k] = v
 
 

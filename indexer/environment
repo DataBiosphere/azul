@@ -48,6 +48,11 @@ fi
 _set () {
     for var in ${azul_vars[*]}; do
         if [[ "$var" == "$1" ]]; then
+            if [[ -n "$PS1" ]]; then
+                # Only echo in interactive shells
+                echo $BASH_SOURCE: Setting $1 to "'$2'"
+            fi
+            # Actually set the value
             eval ": \${$1:='$2'}"
             return
         fi
