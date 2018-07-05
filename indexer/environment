@@ -2,7 +2,8 @@ azul_vars=(
     # The path to the project root directory
     AZUL_HOME
 
-    # The name of the current deployment
+    # The name of the current deployment. This variable controls the name of all cloud resources and is the
+    # main vehicle for isolating cloud resources between deployments.
     AZUL_DEPLOYMENT_STAGE
 
     # The URL to the DSS (aka Blue box) REST API
