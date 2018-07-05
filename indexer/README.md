@@ -9,7 +9,7 @@ This is the indexer that consumes events from the blue box and indexes them into
 - Python 3.6 with virtualenv and pip
 - Terraform (optional, to create new deployments): https://www.terraform.io/intro/getting-started/install.html
   On macOS with Homebrew installed, 'brew install terraform' works, too.
-- AWS credentials configured in ~/.aws/credentials and ~/.aws/config
+- AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
 ### Runtime Preequisites (Infrastructure)
 
@@ -20,23 +20,60 @@ The remaining infrastructure is managed internally with TerraForm.
 
 ### Project configuration
 
-1) Create a Python 3.6 virtualenv and activate it, for example `virtualenv .venv && source .venv/bin/activate`
-2) Choose a target deployment, for example `cd deployments && ln -snf dev .active && cd ..`
-3) Optional: Create a file called `environment.local` and in it set & export environment variables specific to you.
-4) Create a file called `deployments/.active/environment.local` and do the same for variables specific to you AND the
-   active deployment. For example, `AWS_PROFILE` and `AWS_DEFAULT_REGION` belong there.
-5) `source environment`
-6) Install the development requirements: `pip install -r requirements.dev.txt`
-7) Run `make`. It should not complain. If it does, address the complaint and repeat.
+1) Create a Python 3.6 virtualenv and activate it, for example 
+   
+   ```
+   virtualenv .venv
+   source .venv/bin/activate
+   ```
 
-You should never deploy from a feature branch to any of the established deployments. You can maintain your own
-personal deployment and deploy to it from a feature branch:
+2) Choose a name for your personal deployment. The name should be a short
+   handle that is unique within the AWS account you are deploying to. It should
+   also be informative enough to let others know whose deployment this is. We'll
+   be using `foo` as an example here.
 
-```
-cd deployments
-cp -r dev foo.local
-ln -snf foo.local .active
-```
+3) Create a new directory for the configuration of your personal deployment, as 
+   a copy of the `dev` deployment: 
+
+   ```
+   cd deployments
+   cp -r dev foo.local
+   ln -snf foo.local .active
+   cd ..
+   ```  
+   
+4) In `deployments/.active/environment` change `AZUL_DEPLOYMENT_STAGE` to the
+   name of your deployment. In this example, we'd be setting it to `foo`.
+
+5) In the project root, create `environment.local` containing 
+
+   ```
+   export AWS_PROFILE=...
+   export AWS_DEFAULT_REGION=...
+   ```
+   
+   Alternatively, you could use `deployments/.active/environment.local` but if 
+   these two variables are the same in all deployments it makes sense to 
+   set them globally, for all deployments.
+
+6) Load the environment:
+
+   ```
+   source environment
+   ```
+   
+   Scrutinize the output. We copied the `dev` deployment configuration but then
+   changed `AZUL_DEPLOYMENT_STAGE` to ensure that we're not actually
+   touching anything in `dev`.
+
+7) Install the development prerequisites
+   
+   ```
+   pip install -r requirements.dev.txt
+   ```
+
+8) Run `make`. It should say `Looking good!` If one of the sanity checks fails, address the 
+   complaint and repeat. The various sanity checks are defined in `common.mk`.
 
 ### Deprecated: Elasticsearch (ES)
 
