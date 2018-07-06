@@ -271,6 +271,12 @@ class SummaryResponse(AbstractResponse):
                 aggregates, 'total_size', agg_form='value'),
             organCount=self.agg_contents(
                 aggregates, 'organCount', agg_form='value'),
+            donorCount=self.agg_contents(
+                aggregates, 'donorCount', agg_form='value'),
+            labCount=self.agg_contents(
+                aggregates, 'labCount', agg_form='value'),
+            totalCellCount=self.agg_contents(
+                aggregates, 'total_cell_count', agg_form='value'),
             fileTypeSummary={bucket['key']: FileTypeSummary.create_object(bucket)
                              for bucket in _sum['buckets']}
         )

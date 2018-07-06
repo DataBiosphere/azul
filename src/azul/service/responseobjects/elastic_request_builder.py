@@ -367,6 +367,13 @@ class ElasticTransformDump(object):
             'sum',
             field=request_config['translation']['fileSize'])
 
+        #Add a cell_count aggregate to the ElasticSearch request
+        es_search.aggs.metric(
+            'total_cell_count',
+            'sum',
+            field=request_config['translation']['cellCount']
+        )
+
         # Add a summary object based on file type
         file_type_selector = request_config['translation']['fileFormat']
         es_search.aggs.bucket('by_type', 'terms', field='{}.keyword'.format(file_type_selector))
@@ -377,6 +384,8 @@ class ElasticTransformDump(object):
                 ('specimenId',
                  'specimenCount'),
                 ('organ', 'organCount'),
+                ('donorId', 'donorCount'),
+                ('lab', 'labCount'),
                 ('project', 'projectCode')):
             cardinality = request_config['translation'][field]
             es_search.aggs.metric(
