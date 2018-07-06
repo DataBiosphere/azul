@@ -101,6 +101,12 @@ class BiomaterialExtractor:
             "hca_id": jmespath.search(hca_id, metadata_file),
             "_type": "specimens"
         }
+        # append donor information if exists
+        described_by = "content.describedBy || `null`"
+        if "donor_organism" in jmespath.search(described_by, metadata_file):
+            biomaterial['donor_biomaterial_id'] = biomaterial['biomaterial_id']
+        else:
+            biomaterial['donor_biomaterial_id'] = None
         return biomaterial
 
     @staticmethod
@@ -137,6 +143,12 @@ class BiomaterialExtractor:
             "hca_id": jmespath.search(hca_id, metadata_file),
             "_type": "specimens"
         }
+        # append donor information if exists
+        described_by = "content.describedBy || `null`"
+        if "donor_organism" in jmespath.search(described_by, metadata_file):
+            biomaterial['donor_biomaterial_id'] = biomaterial['biomaterial_id']
+        else:
+            biomaterial['donor_biomaterial_id'] = None
         return biomaterial
 
     @staticmethod
@@ -173,6 +185,12 @@ class BiomaterialExtractor:
             "hca_id": jmespath.search(hca_id, metadata_file),
             "_type": "specimens"
         }
+        # append donor information if exists
+        described_by = "content.describedBy || `null`"
+        if "donor_organism" in jmespath.search(described_by, metadata_file):
+            biomaterial['donor_biomaterial_id'] = biomaterial['biomaterial_id']
+        else:
+            biomaterial['donor_biomaterial_id'] = None
         return biomaterial
 
 

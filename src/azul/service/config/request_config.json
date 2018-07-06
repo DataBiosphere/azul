@@ -19,7 +19,10 @@
     "preservationMethod": "bundles.contents.specimens.storage_method",
     "processId": "bundles.contents.processes.process_id",
     "fileSize": "bundles.contents.files.size",
-    "fileId": "bundles.contents.files.uuid"
+    "fileId": "bundles.contents.files.uuid",
+    "donorId": "bundles.contents.specimens.donor_biomaterial_id",
+    "lab": "bundles.contents.project.laboratory",
+    "cellCount": "bundles.contents.specimens.total_cells"
   },
   "autocomplete-translation": {
     "AZUL_FILE_INDEX": {
