@@ -19,3 +19,5 @@ introspective capabilities such as facet and entity type discovery.
 Both the indexer and the web service allow for project-specific customizations
 via a plug-in mechanism, allowing the Boardwalk UI codebase to be functionally
 generic with minimal need for project-specific behavior.
+
+Foo
