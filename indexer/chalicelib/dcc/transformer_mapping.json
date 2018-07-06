@@ -120,7 +120,8 @@
         "index_field": "study"
       },
       {
-        "constant": "",
+        "source": "metadata.json",
+        "dss_field": "case.submitter_id",
         "index_field": "submittedDonorId"
       },
       {
