@@ -99,9 +99,8 @@ class BaseIndexer(ABC):
 
             retry_ids = set()
             # Process each result
-            for success, info in parallel_bulk(es_client,
-                                               create_bulk_body(
-                                                   indexable_documents),
+            for success, info in parallel_bulk(client=es_client,
+                                               actions=create_bulk_body(indexable_documents),
                                                raise_on_error=False,
                                                max_chunk_bytes=10485760):
                 # We don't care about successes
