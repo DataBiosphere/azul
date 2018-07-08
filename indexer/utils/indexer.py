@@ -9,7 +9,7 @@ The based class Indexer serves as the basis for additional indexing classes.
 from abc import ABC
 from collections import defaultdict
 import logging
-from typing import Mapping, Any, Union, Iterable
+from typing import Mapping, Any, Iterable, MutableMapping
 
 from elasticsearch.helpers import parallel_bulk
 
@@ -131,8 +131,7 @@ class BaseIndexer(ABC):
         module_logger.debug("Conflict documents: %s", str(conflict_documents))
 
     @staticmethod
-    def merge(new_document: Mapping[str, Any],
-              stored_document: Union[bool, Any]) -> Mapping[str, Any]:
+    def merge(new_document: MutableMapping[str, Any], stored_document: Mapping[str, Any]) -> Mapping[str, Any]:
         # This is a new record
         if not stored_document:
             return new_document
@@ -152,6 +151,9 @@ class BaseIndexer(ABC):
                 updated_bundles.append(bundle)
         if not bundle_found:
             updated_bundles.append(new_bundle)
+
+        # FIXME: Either modify in place or return, never both
+
         # Update the document
         new_document["bundles"] = updated_bundles
         return new_document
