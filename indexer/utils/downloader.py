@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Utils module to help with getting data from Blue box.
+"""
+Utils module to help with getting data from Blue box.
 
 The utils module has a DataExtractor class which aims to get the
 metadata and data files from the Blue Box.
@@ -7,7 +8,6 @@ metadata and data files from the Blue Box.
 This module serves as a layer to interact with the BlueBox,
 get the metadata and data files, and present it in a format
 that can be used by the Indexer subclasses.
-
 """
 from collections import ChainMap
 from hca.dss import DSSClient, SwaggerAPIException
@@ -17,8 +17,7 @@ import os
 
 from urllib3 import Timeout
 
-indexer_name = os.environ['AZUL_INDEXER_NAME']
-module_logger = logging.getLogger(indexer_name + ".indexer")
+log = logging.getLogger(__name__)
 
 
 class MetadataDownloader(object):
@@ -43,8 +42,6 @@ class MetadataDownloader(object):
         self.dss_client.host = dss_host
         self.dss_client.timeout_policy = Timeout(connect=10, read=40)
 
-        self.log = logging.getLogger(indexer_name + ".indexer.DataExtractor")
-
     def __attempt(self, times, func, errors, **kwargs):
         """
         Try a function multiple times.
@@ -66,12 +63,12 @@ class MetadataDownloader(object):
                 break
             except errors as er:
                 # Current retry didn't work. Try again
-                self.log.info("Error on try {}\n:{}".format(retries, er))
+                log.info("Error on try {}\n:{}".format(retries, er))
                 retries += 1
                 continue
         else:
             # We ran out of tries
-            self.log.error("Maximum number of retries reached: %s" % retries)
+            log.error("Maximum number of retries reached: %s" % retries)
             raise Exception("Unable to access resource")
         return response
 
