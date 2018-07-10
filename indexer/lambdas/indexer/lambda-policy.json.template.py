@@ -31,6 +31,29 @@ emit({
                 "es:DescribeElasticsearchDomain"
             ],
             "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{env.AZUL_ES_DOMAIN}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sqs:ChangeMessageVisibility*",
+                "sqs:DeleteMessage*",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage"
+            ],
+            "Resource": [
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:azul-notify-{env.AZUL_DEPLOYMENT_STAGE}"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sqs:ListQueues"
+            ],
+            "Resource": [
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:*"
+            ]
         }
     ]
 })

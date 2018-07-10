@@ -35,6 +35,9 @@ azul_vars=(
     # projects.
     AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE
 
+    # The number of workers polling queues for each Lambda invocation
+    AZUL_INDEX_WORKERS
+
     # The number of workers pulling files from DSS. There is one such set of DSS workers per index worker!
     AZUL_DSS_WORKERS
 )
@@ -90,6 +93,7 @@ _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_INSTANCE_COUNT 1
 _set AZUL_ES_INSTANCE_TYPE "m4.large.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 35
+_set AZUL_INDEX_WORKERS 16
 _set AZUL_DSS_WORKERS 8
 
 # This is the same TF bucket as the one DSS uses. The special string

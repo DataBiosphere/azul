@@ -4,8 +4,10 @@ templates = .chalice/config.json .chalice/deployed.json lambda-policy.json
 
 all: deploy
 
-deploy: $(templates)
+install:
 	rsync -a ../../utils ../../project chalicelib/
+
+deploy: $(templates) install
 	PYTHONPATH=$(AZUL_HOME) python manage_iam_role.py $(AZUL_INDEXER_NAME) lambda-policy.json
 	chalice deploy --stage $(AZUL_DEPLOYMENT_STAGE)
 
@@ -16,4 +18,4 @@ delete: $(templates)
 clean:
 	git clean -Xdf
 
-.PHONY: all deploy delete clean
+.PHONY: all deploy delete clean install
