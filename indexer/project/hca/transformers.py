@@ -135,7 +135,7 @@ class FileTransformer(Transformer):
             """
             Get the parents of the root_id
             """
-            for _parent in jmespath.search("[?destination_id=='{}'].source_id".format(root_id), links_array):
+            for _parent in (link['source_id'] for link in links_array if link['destination_id'] == root_id):
                 yield from get_parents(_parent, links_array)
                 yield _parent
 
@@ -143,7 +143,7 @@ class FileTransformer(Transformer):
             """
             Get the children of the root_id
             """
-            for child in jmespath.search("[?source_id=='{}'].destination_id".format(root_id), links_array):
+            for child in (link['destination_id'] for link in links_array if link['source_id'] == root_id):
                 yield from get_children(child, links_array)
                 yield child
 
