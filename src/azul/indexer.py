@@ -6,9 +6,9 @@ The base indexer class provides the framework to do indexing.
 The based class Indexer serves as the basis for additional indexing classes.
 
 """
+import logging
 from abc import ABC
 from collections import defaultdict
-import logging
 from typing import Any, Mapping, MutableMapping
 
 from elasticsearch import ConflictError, ElasticsearchException
@@ -16,6 +16,7 @@ from elasticsearch.helpers import parallel_bulk, streaming_bulk
 
 from azul.base_config import BaseIndexProperties
 from azul.downloader import MetadataDownloader
+from azul.dss_bundle import DSSBundle
 
 log = logging.getLogger(__name__)
 
@@ -30,8 +31,11 @@ class BaseIndexer(ABC):
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
         metadata_downloader = MetadataDownloader(self.properties.dss_url)
-        metadata, data = metadata_downloader.extract_bundle(dss_notification)
-
+        metadata, manifest = metadata_downloader.extract_bundle(dss_notification)
+        dss_bundle = DSSBundle(uuid=bundle_uuid,
+                               version=bundle_version,
+                               manifest=manifest,
+                               metadata_files=metadata)
         es_client = self.properties.elastic_search_client
 
         # Create indices and populate mappings
@@ -43,13 +47,10 @@ class BaseIndexer(ABC):
         errored_documents = defaultdict(int)
         conflict_documents = defaultdict(int)
 
-        # Collect the initial set of documents to be indexed
+        # Collect the documents to be indexed
         indexable_documents = {}
         for transformer in self.properties.transformers:
-            es_documents = transformer.create_documents(metadata,
-                                                        data,
-                                                        bundle_uuid,
-                                                        bundle_version)
+            es_documents = transformer.create_documents(dss_bundle)
             for es_document in es_documents:
                 indexable_documents[es_document.document_id] = es_document
 
