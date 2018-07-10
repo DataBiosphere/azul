@@ -6,6 +6,7 @@ elasticsearch>=5.0.0,<6.0.0
 Faker==0.8.11
 future==0.16.0
 hca==4.1.0
+git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
 locustio==0.8.1
 requests==2.18.4
 requests-aws4auth==0.9
