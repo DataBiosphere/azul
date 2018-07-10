@@ -34,6 +34,9 @@ azul_vars=(
     # DSS and might require some coordination with the developers of those
     # projects.
     AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE
+
+    # The number of workers pulling files from DSS. There is one such set of DSS workers per index worker!
+    AZUL_DSS_WORKERS
 )
 
 unset ${azul_vars[*]}
@@ -87,6 +90,7 @@ _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_INSTANCE_COUNT 1
 _set AZUL_ES_INSTANCE_TYPE "m4.large.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 35
+_set AZUL_DSS_WORKERS 8
 
 # This is the same TF bucket as the one DSS uses. The special string
 # {account_id} is replaced with the ID of the AWS account ID the currently
