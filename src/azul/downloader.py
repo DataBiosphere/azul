@@ -98,9 +98,9 @@ class MetadataDownloader(object):
         # Separate files in bundle by metadata files and data files
         _files = bundle['bundle']['files']
         metadata_files = {f["name"]: f for f in _files if f["indexed"]}
-        data_files = {f["name"]: f for f in _files if not f["indexed"]}
+        manifest = _files
         # Return as a tuple
-        return metadata_files, data_files
+        return metadata_files, manifest
 
     def __get_file(self, file_uuid, file_version, replica):
         """
