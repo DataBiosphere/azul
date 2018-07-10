@@ -15,6 +15,7 @@ from pprint import PrettyPrinter
 import sys
 from typing import List
 from urllib.error import HTTPError
+from urllib.parse import urlparse, urlencode, parse_qs
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
@@ -29,9 +30,27 @@ class Defaults:
     dss_url = os.environ['AZUL_DSS_ENDPOINT']
     indexer_url = aws.api_getway_endpoint(function_name=os.environ['AZUL_INDEXER_NAME'],
                                           api_gateway_stage=os.environ['AZUL_DEPLOYMENT_STAGE'])
-    es_query = {"query": {"bool": {"must_not": [{"term": {"admin_deleted": True}}],
-                                   "must": [{"exists": {"field": "files.biomaterial_json"}}]}}}
-    num_workers = 64
+    es_query = {
+        "query": {
+            "bool": {
+                "must_not": [
+                    {
+                        "term": {
+                            "admin_deleted": True
+                        }
+                    }
+                ],
+                "must": [
+                    {
+                        "exists": {
+                            "field": "files.biomaterial_json"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+    num_workers = 16
 
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -50,6 +69,18 @@ parser.add_argument('--workers',
                     default=Defaults.num_workers,
                     type=int,
                     help='The number of workers that will be sending bundles to the indexer concurrently')
+parser.add_argument('--sync',
+                    dest='sync',
+                    default=None,
+                    action='store_true',
+                    help='Have the indexer lambda process the notification synchronously instead of queueing it for '
+                         'asynchronous processing by a worker lambda.')
+parser.add_argument('--async',
+                    dest='sync',
+                    default=None,
+                    action='store_false',
+                    help='Have the indexer lambda queue the notification for asynchronous processing by a worker '
+                         'lambda instead of processing it directly.')
 
 
 def post_bundle(bundle_fqid, es_query, indexer_url):
@@ -92,9 +123,13 @@ def main(argv: List[str]):
         def attempt(bundle_fqid, i):
             try:
                 logger.info("Bundle %s, attempt %i: Sending notification", bundle_fqid, i)
+                url = urlparse(args.indexer_url)
+                if args.sync is not None:
+                    # noinspection PyProtectedMember
+                    url = url._replace(query=urlencode({**parse_qs(url.query), 'sync': args.sync}, doseq=True))
                 post_bundle(bundle_fqid=bundle_fqid,
                             es_query=args.es_query,
-                            indexer_url=args.indexer_url)
+                            indexer_url=url.geturl())
             except HTTPError as e:
                 if i < 3:
                     logger.warning("Bundle %s, attempt %i: scheduling retry after error %s", bundle_fqid, i, e)

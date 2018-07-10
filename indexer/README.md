@@ -72,8 +72,49 @@ The remaining infrastructure is managed internally with TerraForm.
    pip install -r requirements.dev.txt
    ```
 
-8) Run `make`. It should say `Looking good!` If one of the sanity checks fails, address the 
-   complaint and repeat. The various sanity checks are defined in `common.mk`.
+8) Run `make`. It should say `Looking good!` If one of the sanity checks fails,
+   address the complaint and repeat. The various sanity checks are defined in
+   `common.mk`.
+
+
+### Running indexer locally
+
+1) As usual, activate the virtualenv and `source environment` if you haven't
+   done so already
+
+2) `cd lambdas/indexer`
+
+3) `make install`
+
+4) `AWS_CONFIG_FILE='~/.aws/config' AWS_SHARED_CREDENTIALS_FILE='~/.aws/config' chalice local`
+
+5) In another shell, run
+
+   ```
+   PYTHONPATH=. python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000/`
+   ```
+
+The `--sync` argument causes the Chalice app to invoke the indexing code
+directly instead of queuing an SQS message to be consumed by the indexer worker
+Lambda function in AWS.
+
+PyCharm recently added a feature that allows you to attach a debugger: From the
+main menu choose *Run*, *Attach to local process* and select the `chalice`
+process.
+
+The `make install` step needs to be repeated after every code change. This
+requirement should go away soon.
+
+Consider passing `--es-query` to restrict the set of bundles for which
+notifications are sent, especially if you are using a debugger.
+
+Instead of using `reindex.py`, you can speed things up by using `curl` to POST
+directly to the indexer endpoint. But you'd have to know the notification
+payload format (hint: see reindex.py). Note that the query member of the
+notification is currently not used by the indexer.
+
+Overriding `AWS_CONFIG_FILE` and `AWS_SHARED_CREDENTIALS_FILE` for the `chalice
+local` step is necessary because `config.json` sets `HOME` to `/tmp`.
 
 ### Deprecated: Elasticsearch (ES)
 

@@ -2,7 +2,7 @@ include ../common.mk
 
 all: apply
 
-init: elasticsearch.tf.json backend.tf.json providers.tf.json
+init: elasticsearch.tf.json sqs.tf.json backend.tf.json providers.tf.json
 	terraform init
 
 validate: init
