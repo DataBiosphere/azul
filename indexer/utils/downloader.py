@@ -9,13 +9,13 @@ This module serves as a layer to interact with the BlueBox,
 get the metadata and data files, and present it in a format
 that can be used by the Indexer subclasses.
 """
-from collections import ChainMap
-from hca.dss import DSSClient, SwaggerAPIException
-import logging
-from multiprocessing.dummy import Pool as ThreadPool
-import os
 
+from concurrent.futures import ThreadPoolExecutor
+import logging
+import os
 from urllib3 import Timeout
+
+from hca.dss import DSSClient, SwaggerAPIException
 
 log = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class MetadataDownloader(object):
             raise Exception("Unable to access resource")
         return response
 
-    def __get_bundle(self, bundle_uuid, replica):
+    def __get_bundle(self, bundle_uuid, bundle_version, replica):
         """
         Get the metadata and data files.
 
@@ -82,15 +82,18 @@ class MetadataDownloader(object):
         files.
 
         :param bundle_uuid: The bundle to pull from the DSS
+        :param bundle_version: The bundle version to pull from the DSS
         :param replica: The replica which we should be pulling from
         (e.g aws, gcp, etc)
         :return: Returns a tuple separating (metadata_files, data_files)
         """
         # The blue box may have trouble returning bundle, so __attempt 3 times
+        log.info("Getting bundle %s.%s from DSS.", bundle_uuid, bundle_version)
         bundle = self.__attempt(3,
                                 self.dss_client.get_bundle,
                                 SwaggerAPIException,
                                 uuid=bundle_uuid,
+                                version=bundle_version,
                                 replica=replica)
         # Separate files in bundle by metadata files and data files
         _files = bundle['bundle']['files']
@@ -99,7 +102,7 @@ class MetadataDownloader(object):
         # Return as a tuple
         return metadata_files, data_files
 
-    def __get_file(self, file_uuid, replica):
+    def __get_file(self, file_uuid, file_version, replica):
         """
         Get a file from the Blue Box.
 
@@ -108,14 +111,17 @@ class MetadataDownloader(object):
         times.
 
         :param file_uuid: Specifies which file to get
+        :param file_version: Specifies which file to get
         :param replica: Specifies the replica to pull from
         :return: Contents of that file
         """
         # The blue box may have trouble returning file, so __attempt 3 times
+        log.info("Getting file %s version %s from DSS.", file_uuid, file_version)
         _file = self.__attempt(3,
                                self.dss_client.get_file,
                                SwaggerAPIException,
                                uuid=file_uuid,
+                               version=file_version,
                                replica=replica)
         return _file
 
@@ -131,20 +137,13 @@ class MetadataDownloader(object):
         :param request: The contents of the DSS event notification
         :param replica: The replica to which pull the bundle from
         """
-        def get_metadata(file_name, _args):
-            _metadata = {file_name: self.__get_file(*_args)}
-            return _metadata
         bundle_uuid = request['match']['bundle_uuid']
-        # Get the metadata and data descriptions
-        metadata_files, data_files = self.__get_bundle(bundle_uuid, replica)
-        # Create a ThreadPool which will execute the function
-        pool = ThreadPool(len(metadata_files))
-        # Pool the contents in the right format for the get_metadata function
-        args = [(name, (_f['uuid'], replica)) for name, _f in
-                metadata_files.items()]
-        results = pool.starmap(get_metadata, args)
-        pool.close()
-        pool.join()
-        # Reassign the metadata files as a single dictionary
-        metadata_files = dict(ChainMap(*results))
+        bundle_version = request['match']['bundle_version']
+        metadata_files, data_files = self.__get_bundle(bundle_uuid, bundle_version, replica)
+        num_workers = int(os.environ['AZUL_DSS_WORKERS'])
+        with ThreadPoolExecutor(num_workers) as tpe:
+            def get_metadata(item):
+                file_name, manifest_entry = item
+                return file_name, self.__get_file(manifest_entry['uuid'], manifest_entry['version'], replica)
+            metadata_files = dict(tpe.map(get_metadata, metadata_files.items()))
         return metadata_files, data_files
