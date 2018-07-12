@@ -5,8 +5,8 @@ import difflib
 import logging.config
 import os
 import unittest
-from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
-import config
+from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+from azul.service import config
 
 es_domain = os.getenv('ES_SERVICE', 'localhost')
 es_port = os.getenv('ES_PORT', '9200')

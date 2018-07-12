@@ -1,9 +1,9 @@
 import ast
-import config
+from azul.service import config
 import logging.config
 import os
-from responseobjects.elastic_request_builder import BadArgumentException, ElasticTransformDump as EsTd
-from responseobjects.utilities import json_pp
+from azul.service.responseobjects.elastic_request_builder import BadArgumentException, ElasticTransformDump as EsTd
+from azul.service.responseobjects.utilities import json_pp
 from chalice import Chalice
 
 ENTRIES_PER_PAGE = 10

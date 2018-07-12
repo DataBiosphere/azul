@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import abc
-from responseobjects.utilities import json_pp
+from azul.service.responseobjects.utilities import json_pp
 from chalice import Response
 from collections import defaultdict
 from collections import OrderedDict
