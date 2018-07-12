@@ -3,13 +3,15 @@ version: '2'
 services:
   dcc-dashboard-service:
     container_name: "dcc-dashboard-service"
-    environment:      
+    environment:
       ES_SERVICE: "elasticsearch1"
       ES_DOMAIN: "elasticsearch1"
       ES_PORT: "9200"
       ES_PROTOCOL: "http"
       ES_FILE_INDEX: "test_data"
-    build: .
+    build:
+      context: ..
+      dockerfile: test/Dockerfile
     ports:
       - "9000:9000"
     networks:
