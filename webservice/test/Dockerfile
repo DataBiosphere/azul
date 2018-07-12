@@ -28,5 +28,5 @@ COPY . /app
 WORKDIR /app
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/src
 CMD ["test/go.sh"]
