@@ -5,21 +5,21 @@ import difflib
 import logging.config
 import os
 import unittest
-from chalicelib.responseobjects.elastic_request_builder import ElasticTransformDump\
-    as EsTd
+from responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+import config
 
-# Setup the base path
-base_path = os.path.dirname(os.path.abspath(__file__))
-# Setup the ElasticSearch variables
 es_domain = os.getenv('ES_SERVICE', 'localhost')
 es_port = os.getenv('ES_PORT', '9200')
 es_protocol = os.getenv('ES_PROTOCOL', 'http')
-# Setup logging
-logging.config.fileConfig('{}/../chalicelib/config/logging.conf'.format(base_path))
+
+logging.config.fileConfig(os.path.join(os.path.dirname(config.__file__), 'logging.conf'))
 logger = logging.getLogger("dashboardService")
 
 
 class MyTestCase(unittest.TestCase):
+
+    def _load_json(self, name):
+        return EsTd.open_and_return_json(os.path.join(os.path.dirname(__file__), name))
 
     def test_create_request(self):
         """
@@ -27,10 +27,8 @@ class MyTestCase(unittest.TestCase):
         :return: True or False depending on the assertion
         """
         # Load files required for this test
-        request_config = EsTd.open_and_return_json(
-            '{}/test_request_config.json'.format(base_path))
-        expected_output = EsTd.open_and_return_json(
-            '{}/request_builder_test1.json'.format(base_path))
+        request_config = self._load_json('test_request_config.json')
+        expected_output = self._load_json('request_builder_test1.json')
         # Create a simple filter to test on
         sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
         # Need to work on a couple cases:
@@ -83,10 +81,8 @@ class MyTestCase(unittest.TestCase):
         """
         # Testing with default (that is, no) filter
         # Load files required for this test
-        request_config = EsTd.open_and_return_json(
-            '{}/test_request_config.json'.format(base_path))
-        expected_output = EsTd.open_and_return_json(
-            '{}/request_builder_test2.json'.format(base_path))
+        request_config = self._load_json('test_request_config.json')
+        expected_output = self._load_json('request_builder_test2.json')
         # Create empty filter
         # TODO: Need some form of handler for the query language
         sample_filter = {}
@@ -128,10 +124,8 @@ class MyTestCase(unittest.TestCase):
         """
         # Testing with default (that is, no) filter
         # Load files required for this test
-        request_config = EsTd.open_and_return_json(
-            '{}/test_request_config.json'.format(base_path))
-        expected_output = EsTd.open_and_return_json(
-            '{}/request_builder_test3.json'.format(base_path))
+        request_config = self._load_json('test_request_config.json')
+        expected_output = self._load_json('request_builder_test3.json')
         # Create sample filter
         sample_filter = {
             "entity_id":

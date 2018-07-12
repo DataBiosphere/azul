@@ -3,8 +3,7 @@
 import json
 import difflib
 import unittest
-from chalicelib.responseobjects.hca_response_v5 import KeywordSearchResponse, \
-    FileSearchResponse
+from responseobjects.hca_response_v5 import KeywordSearchResponse, FileSearchResponse
 import os
 
 base_path = os.path.dirname(os.path.abspath(__file__))
