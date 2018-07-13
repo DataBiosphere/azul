@@ -21,15 +21,16 @@ from uuid import uuid4
 
 from hca.dss import DSSClient
 
+from utils import config
 from utils.deployment import aws
 
 logger = logging.getLogger(__name__)
 
 
 class Defaults:
-    dss_url = os.environ['AZUL_DSS_ENDPOINT']
-    indexer_url = aws.api_getway_endpoint(function_name=os.environ['AZUL_INDEXER_NAME'],
-                                          api_gateway_stage=os.environ['AZUL_DEPLOYMENT_STAGE'])
+    dss_url = config.dss_endpoint
+    indexer_url = aws.api_getway_endpoint(function_name=config.indexer_name,
+                                          api_gateway_stage=config.deployment_stage)
     es_query = {
         "query": {
             "bool": {

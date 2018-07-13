@@ -25,6 +25,7 @@ azul_vars=(
     # The size of the EBS volume backing each cluster node
     AZUL_ES_VOLUME_SIZE
 
+    # FIXME: not actually used outside of tests
     # The name of the ES index to be populated in response to events from DSS
     AZUL_ES_INDEX
 
@@ -43,6 +44,8 @@ azul_vars=(
 )
 
 unset ${azul_vars[*]}
+
+# FIXME: try to use _set here
 
 AZUL_HOME="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

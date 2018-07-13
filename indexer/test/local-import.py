@@ -1,6 +1,6 @@
-from urllib.request import urlopen
 import json
-import requests
+
+from utils import config
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 import os
@@ -8,10 +8,10 @@ from aws_requests_auth import boto_utils
 import collections
 import uuid
 
-es_host = os.environ['ES_ENDPOINT']
+es_host = config.es_endpoint
 bundle_path = os.environ['BUNDLE_PATH']
 try:
-    es_index = os.environ['AZUL_ES_INDEX']
+    es_index = config.es_index
 except KeyError:
     es_index = 'test-import'
 

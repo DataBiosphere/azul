@@ -13,13 +13,9 @@ from utils.transformer import Transformer
 class IndexProperties(BaseIndexProperties):
     """Index properties for HCA"""
 
-    def __init__(self, dss_url: str, es_endpoint: Optional[Tuple[str, int]] = None, es_domain: str = None) -> None:
-        assert (es_domain is None) != (es_endpoint is None), "Either es_domain or es_endpoint must be specified"
+    def __init__(self, dss_url: str, es_endpoint: Tuple[str, int]) -> None:
         self._dss_url = dss_url
-        if es_endpoint is None:
-            self._es_endpoint = aws.es_endpoint(es_domain)
-        else:
-            self._es_endpoint = es_endpoint
+        self._es_endpoint = es_endpoint
 
         self._es_mapping = {
             "dynamic_templates": [

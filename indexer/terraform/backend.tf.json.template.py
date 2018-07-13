@@ -1,14 +1,15 @@
+from utils import config
 from utils.deployment import aws
-from utils.template import emit, env
+from utils.template import emit
 
 emit(
     {
         "terraform": {
             "backend": {
                 "s3": {
-                    "bucket": env.AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE.format(account_id=aws.account),
+                    "bucket": config.terraform_backend_bucket_template.format(account_id=aws.account),
                     # If we break the TF config up into components, the component name goes in between the two dashes.
-                    "key": "azul--" + env.AZUL_DEPLOYMENT_STAGE + ".tfstate",
+                    "key": "azul--" + config.deployment_stage + ".tfstate",
                     "region": aws.region_name,
                     **(
                         {
