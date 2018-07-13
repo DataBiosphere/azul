@@ -1,22 +1,24 @@
 import os
 
+from utils import config
 from utils.deployment import aws
-from utils.template import emit, env
+from utils.template import emit
 
-suffix = '-' + env.AZUL_DEPLOYMENT_STAGE
-assert env.AZUL_INDEXER_NAME.endswith(suffix)
+suffix = '-' + config.deployment_stage
+assert config.indexer_name.endswith(suffix)
 
-host, port = aws.es_endpoint(env.AZUL_ES_DOMAIN)
+host, port = config.es_endpoint
 
 emit({
     "version": "2.0",
-    "app_name": env.AZUL_INDEXER_NAME[:-len(suffix)],  # Chalice appends stage name implicitly
-    "api_gateway_stage": env.AZUL_DEPLOYMENT_STAGE,
+    "app_name": config.indexer_name[:-len(suffix)],  # Chalice appends stage name implicitly
+    "api_gateway_stage": config.deployment_stage,
     "manage_iam_role": False,
-    "iam_role_arn": f"arn:aws:iam::{aws.account}:role/{env.AZUL_INDEXER_NAME}",
+    "iam_role_arn": f"arn:aws:iam::{aws.account}:role/{config.indexer_name}",
     "environment_variables": {
-        "AZUL_ES_ENDPOINT": f"{host}:{port}",
         **{k: v for k, v in os.environ.items() if k.startswith('AZUL_') and k != 'AZUL_HOME'},
+        # Hard-wire the ES endpoint, so we don't need to look it up at run-time, for every request/invocation
+        "AZUL_ES_ENDPOINT": f"{host}:{port}",
         "HOME": "/tmp"
     },
     "lambda_timeout": 300,
