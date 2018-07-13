@@ -13,10 +13,15 @@ azul_vars=(
     # receiving notifications from DSS and populating the ES index
     AZUL_INDEXER_NAME
 
-    # The name of the AWS-hosted ElasticSearch instance (not a domain name)
+    # The host and port of the Elasticsearch instance to use. This takes
+    # precedence over AZUL_ES_DOMAIN.
+    AZUL_ES_ENDPOINT
+
+    # The name of the AWS-hosted Elasticsearch instance (not a domain name) to
+    # use. The given ES domain's endpoint will be looked up dynamically.
     AZUL_ES_DOMAIN
 
-    # The number of nodes in the AWS-hosted ElasticSearch cluster
+    # The number of nodes in the AWS-hosted Elasticsearch cluster
     AZUL_ES_INSTANCE_COUNT
 
     # The EC2 instance type to use for a cluster node
@@ -26,6 +31,7 @@ azul_vars=(
     AZUL_ES_VOLUME_SIZE
 
     # FIXME: not actually used outside of tests
+    
     # The name of the ES index to be populated in response to events from DSS
     AZUL_ES_INDEX
 
@@ -33,7 +39,8 @@ azul_vars=(
     # multiple developers to collaboratively use TerraForm in a single AWS
     # account. This bucket is likely going be shared with other projects such as
     # DSS and might require some coordination with the developers of those
-    # projects.
+    # projects. The special string {account_id} is replaced with the ID of the
+    # AWS account the currently configured AWS credentials belong to.
     AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE
 
     # The number of workers polling queues for each Lambda invocation
@@ -99,9 +106,7 @@ _set AZUL_ES_VOLUME_SIZE 35
 _set AZUL_INDEX_WORKERS 16
 _set AZUL_DSS_WORKERS 8
 
-# This is the same TF bucket as the one DSS uses. The special string
-# {account_id} is replaced with the ID of the AWS account ID the currently
-# configured AWS credentials belong to.
+# This is the same TF bucket as the one DSS uses
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"
 
 unset -f _set
