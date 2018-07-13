@@ -13,6 +13,10 @@ azul_vars=(
     # receiving notifications from DSS and populating the ES index
     AZUL_INDEXER_NAME
 
+    # The name of the AWS Lambda function (and the contained Chalice app)
+    # handling REST web service request from the browser UI
+    AZUL_SERVICE_NAME
+
     # The host and port of the Elasticsearch instance to use. This takes
     # precedence over AZUL_ES_DOMAIN.
     AZUL_ES_ENDPOINT
@@ -34,6 +38,15 @@ azul_vars=(
     
     # The name of the ES index to be populated in response to events from DSS
     AZUL_ES_INDEX
+
+    # The name of the index containing Specimen entities
+    AZUL_SPECIMEN_INDEX
+
+    # The name of the index containing File entities
+    AZUL_FILE_INDEX
+
+    # The name of the index containing Donor entities
+    AZUL_DONOR_INDEX
 
     # The name of the bucket where TerraForm maintains its state, allowing
     # multiple developers to collaboratively use TerraForm in a single AWS
@@ -98,6 +111,7 @@ fi
 # Set the global defaults. This is the least specific level.
 
 _set AZUL_INDEXER_NAME "azul-indexer-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_SERVICE_NAME "azul-service-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_INDEX "azul-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_INSTANCE_COUNT 1
@@ -105,6 +119,14 @@ _set AZUL_ES_INSTANCE_TYPE "m4.large.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 35
 _set AZUL_INDEX_WORKERS 16
 _set AZUL_DSS_WORKERS 8
+
+# FIXME: the index name should contain the stage name so we can share an ES
+# instance between deployments. However, the indexer seems to be hard-wired
+# to this particular index name.
+
+_set AZUL_FILE_INDEX "browser_files_dev"
+_set AZUL_SPECIMEN_INDEX "browser_specimens_dev"
+_set AZUL_DONOR_INDEX "browser_donor_dev"
 
 # This is the same TF bucket as the one DSS uses
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"
