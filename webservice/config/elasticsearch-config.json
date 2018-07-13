@@ -1,6 +1,0 @@
-{
-	"InstanceType": "t2.micro.elasticsearch",
-	"InstanceCount": 1,
-	"DedicatedMasterEnabled": false,
-	"ZoneAwarenessEnabled": false
-}
