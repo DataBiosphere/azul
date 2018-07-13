@@ -31,6 +31,3 @@ def emit(json_doc: Optional[Mapping[str, Any]]):
             os.rename(f.name, path)
         finally:
             f.close()
-
-
-env = SimpleNamespace(**os.environ)

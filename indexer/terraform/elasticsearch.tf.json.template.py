@@ -1,4 +1,5 @@
-from utils.template import emit, env
+from utils import config
+from utils.template import emit
 
 emit(
     {
@@ -52,7 +53,7 @@ emit(
                                     "type": "AWS"
                                 },
                                 "resources": [
-                                    "arn:aws:es:${local.region}:${local.account_id}:domain/" + env.AZUL_ES_DOMAIN + "/*"
+                                    "arn:aws:es:${local.region}:${local.account_id}:domain/" + config.es_domain + "/*"
                                 ]
                             },
                             {
@@ -71,7 +72,7 @@ emit(
                                     "type": "AWS"
                                 },
                                 "resources": [
-                                    "arn:aws:es:${local.region}:${local.account_id}:domain/" + env.AZUL_ES_DOMAIN + "/*"
+                                    "arn:aws:es:${local.region}:${local.account_id}:domain/" + config.es_domain + "/*"
                                 ]
                             }
                         ]
@@ -87,7 +88,7 @@ emit(
             {
                 "aws_cloudwatch_log_group": {
                     "dss_index_log": {
-                        "name": "/aws/aes/domains/" + env.AZUL_ES_DOMAIN + "/index-logs",
+                        "name": "/aws/aes/domains/" + config.es_domain + "/index-logs",
                         "retention_in_days": 90
                     }
                 }
@@ -95,7 +96,7 @@ emit(
             {
                 "aws_cloudwatch_log_group": {
                     "dss_search_log": {
-                        "name": "/aws/aes/domains/" + env.AZUL_ES_DOMAIN + "/search-logs",
+                        "name": "/aws/aes/domains/" + config.es_domain + "/search-logs",
                         "retention_in_days": 90
                     }
                 }
@@ -104,7 +105,7 @@ emit(
                 "aws_cloudwatch_log_resource_policy": {
                     "dss_es_cloudwatch_policy": {
                         "policy_document": "${data.aws_iam_policy_document.dss_es_cloudwatch_policy_document.json}",
-                        "policy_name": env.AZUL_ES_DOMAIN
+                        "policy_name": config.es_domain
                     }
                 }
             },
@@ -116,14 +117,14 @@ emit(
                             "rest.action.multi.allow_explicit_index": "true"
                         },
                         "cluster_config": {
-                            "instance_count": env.AZUL_ES_INSTANCE_COUNT,
-                            "instance_type": env.AZUL_ES_INSTANCE_TYPE
+                            "instance_count": config.es_instance_count,
+                            "instance_type": config.es_instance_type
                         },
-                        "count": 1 if env.AZUL_ES_DOMAIN else 0,
-                        "domain_name": env.AZUL_ES_DOMAIN,
+                        "count": 1 if config.es_domain else 0,
+                        "domain_name": config.es_domain,
                         "ebs_options": {
                             "ebs_enabled": "true",
-                            "volume_size": env.AZUL_ES_VOLUME_SIZE,
+                            "volume_size": config.es_volume_size,
                             "volume_type": "gp2"
                         },
                         "elasticsearch_version": "5.5",

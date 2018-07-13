@@ -1,5 +1,6 @@
+from utils import config
 from utils.deployment import aws
-from utils.template import emit, env
+from utils.template import emit
 
 emit({
     "Version": "2012-10-17",
@@ -23,14 +24,14 @@ emit({
                 "es:ESHttpPost",
                 "es:ESHttpDelete"
             ],
-            "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{env.AZUL_ES_DOMAIN}/*"
+            "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{config.es_domain}/*"
         },
         {
             "Effect": "Allow",
             "Action": [
                 "es:DescribeElasticsearchDomain"
             ],
-            "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{env.AZUL_ES_DOMAIN}"
+            "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{config.es_domain}"
         },
         {
             "Effect": "Allow",
@@ -43,7 +44,7 @@ emit({
                 "sqs:SendMessage"
             ],
             "Resource": [
-                f"arn:aws:sqs:{aws.region_name}:{aws.account}:azul-notify-{env.AZUL_DEPLOYMENT_STAGE}"
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:azul-notify-{config.deployment_stage}"
             ]
         },
         {

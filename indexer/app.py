@@ -27,6 +27,7 @@ pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib')
 sys.path.insert(0, pkg_root)  # noqa
 
 from utils.time import RemainingLambdaContextTime, RemainingTime
+from utils import config
 
 logging.basicConfig(level=logging.WARNING)
 # FIXME: this should just be one top-level package called `azul`
@@ -34,7 +35,7 @@ log = logging.getLogger(__name__)
 for top_level_pkg in (__name__, 'project', 'utils'):
     logging.getLogger(top_level_pkg).setLevel(logging.DEBUG)
 
-app = Chalice(app_name=os.environ['AZUL_INDEXER_NAME'])
+app = Chalice(app_name=config.indexer_name)
 app.debug = True
 app.log.setLevel(logging.DEBUG)  # please use module logger instead
 
@@ -109,21 +110,13 @@ def load_config_class():
 
 indexer_to_load = load_indexer_class()
 indexer_properties = load_config_class()
-try:
-    es_endpoint = os.environ['AZUL_ES_ENDPOINT']
-except KeyError:
-    kwargs = dict(es_domain=os.environ['AZUL_ES_DOMAIN'])
-else:
-    host, _, port = es_endpoint.partition(':')
-    kwargs = dict(es_endpoint=(host, int(port)))
 
-dss_url = os.environ['AZUL_DSS_ENDPOINT']
-loaded_properties = indexer_properties(dss_url, **kwargs)
+dss_url = config.dss_endpoint
+loaded_properties = indexer_properties(dss_url=config.dss_endpoint,
+                                       es_endpoint=config.es_endpoint)
 loaded_indexer = indexer_to_load(loaded_properties)
 
-num_workers = int(os.environ['AZUL_INDEX_WORKERS'])
-num_dss_workers = int(os.environ['AZUL_DSS_WORKERS'])
-requests.adapters.DEFAULT_POOLSIZE = num_workers * num_dss_workers
+requests.adapters.DEFAULT_POOLSIZE = config.num_workers * config.num_workers
 
 
 @app.route('/', methods=['POST'])
@@ -163,8 +156,8 @@ chalice.app.ScheduledEventHandler.__call__ = new_handler
 def index(event: CloudWatchEvent):
     log.info(f'Starting worker threads')
     remaining_time = RemainingLambdaContextTime(app.lambda_context)
-    with ThreadPoolExecutor(num_workers) as tpe:
-        futures = [tpe.submit(_index, i, remaining_time) for i in range(num_workers)]
+    with ThreadPoolExecutor(config.num_workers) as tpe:
+        futures = [tpe.submit(_index, i, remaining_time) for i in range(config.num_workers)]
         for future in as_completed(futures):
             e = future.exception()
             if e:
@@ -174,7 +167,7 @@ def index(event: CloudWatchEvent):
 
 def queue():
     session = boto3.session.Session()  # See https://github.com/boto/boto3/issues/801
-    queue_name = "azul-notify-" + os.environ['AZUL_DEPLOYMENT_STAGE']
+    queue_name = "azul-notify-" + config.deployment_stage
     queue = session.resource("sqs").get_queue_by_name(QueueName=queue_name)
     return queue
 
