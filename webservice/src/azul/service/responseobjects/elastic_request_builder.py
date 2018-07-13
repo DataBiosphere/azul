@@ -1,6 +1,8 @@
 #!/usr/bin/python
 from aws_requests_auth import boto_utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
+from typing import Tuple
+
 from azul.service import config
 from copy import deepcopy
 from elasticsearch import Elasticsearch, RequestsHttpConnection
@@ -38,45 +40,33 @@ class ElasticTransformDump(object):
         to ElasticSearch
     """
 
-    def __init__(
-            self,
-            es_domain='localhost',
-            es_port=9200,
-            es_protocol='http'):
+    def __init__(self, es_endpoint: Tuple[str, int]):
         """
         The constructor simply initializes the ElasticSearch client object
         to be used for making requests.
-        :param es_domain: Domain where ElasticSearch is living
-        :param es_port: Port where ElasticSearch is listening
-        :param es_protocol: Protocol for ElasticSearch. Must be 'http' or
-        'https'
-        """
-        self.logger = logging.getLogger(
-            'dashboardService.elastic_request_builder.ElasticTransformDump')
-        assert es_protocol in ['http', 'https'], \
-            "Protocol must be 'http' or 'https'"
-        self.logger.debug('ElasticSearch url: {}://{}:{}/'.format(
-            es_protocol, es_domain, es_port))
 
-        if es_domain.endswith('.es.amazonaws.com'):
-            awsauth = AWSRequestsAuth(
-                aws_host=es_domain,
-                aws_region='us-east-1',
-                aws_service='es',
-                **boto_utils.get_credentials()
-            )
-            self.es_client = Elasticsearch(
-                hosts=[{'host': es_domain, 'port': 443}],
-                http_auth=awsauth,
-                use_ssl=True,
-                verify_certs=True,
-                connection_class=RequestsHttpConnection,
-                timeout=90
-            )
+        :param es_endpoint: Host name and port number of the Elasticsearch instance to use.
+                            The protocol (HTTP vs HTTPS) is inferred.
+        """
+        self.logger = logging.getLogger('dashboardService.elastic_request_builder.ElasticTransformDump')
+
+        host, port = es_endpoint
+        self.logger.debug(f'Elasticsearch endpoint: {host}:{port}')
+
+        kwargs = dict(hosts=[dict(host=host, port=port)],
+                      timeout=90)
+        if host.endswith('.es.amazonaws.com'):
+            awsauth = AWSRequestsAuth(aws_host=host,
+                                      aws_region='us-east-1',
+                                      aws_service='es',
+                                      **boto_utils.get_credentials())
+            self.es_client = Elasticsearch(http_auth=awsauth,
+                                           use_ssl=True,
+                                           verify_certs=True,
+                                           connection_class=RequestsHttpConnection,
+                                           **kwargs)
         else:
-            self.es_client = Elasticsearch(
-                ['{}://{}:{}/'.format(es_protocol, es_domain, es_port)],
-                timeout=90)
+            self.es_client = Elasticsearch(**kwargs)
         self.logger.info('Creating an instance of ElasticTransformDump')
 
     @staticmethod
@@ -159,7 +149,7 @@ class ElasticTransformDump(object):
             filters, es_client,
             req_config,
             post_filter=False,
-            index='ES_FILE_INDEX'):
+        index='AZUL_FILE_INDEX'):
         """
         This function will create an ElasticSearch request based on
         the filters and facet_config passed into the function
@@ -210,7 +200,7 @@ class ElasticTransformDump(object):
             req_config,
             _query,
             search_field,
-            index='ES_FILE_INDEX'):
+        index='AZUL_FILE_INDEX'):
         """
         This function will create an ElasticSearch request based on
          the filters passed to the function
@@ -409,7 +399,7 @@ class ElasticTransformDump(object):
                           filters=None,
                           pagination=None,
                           post_filter=False,
-                          index="ES_FILE_INDEX"):
+                          index="AZUL_FILE_INDEX"):
         """
         This function does the whole transformation process. It takes
         the path of the config file, the filters, and
@@ -614,8 +604,8 @@ class ElasticTransformDump(object):
         if not filters:
             filters = {"file": {}}
 
-        index = 'ES_FILE_INDEX' if entry_format == 'file' \
-            else 'ES_DONOR_INDEX'
+        index = 'AZUL_FILE_INDEX' if entry_format == 'file' \
+            else 'AZUL_DONOR_INDEX'
         # Create an ElasticSearch autocomplete request
         es_search = self.create_autocomplete_request(
             filters,

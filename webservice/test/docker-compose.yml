@@ -4,14 +4,12 @@ services:
   dcc-dashboard-service:
     container_name: "dcc-dashboard-service"
     environment:
-      ES_SERVICE: "elasticsearch1"
-      ES_DOMAIN: "elasticsearch1"
-      ES_PORT: "9200"
-      ES_PROTOCOL: "http"
-      ES_FILE_INDEX: "test_data"
+      AZUL_ES_ENDPOINT: "elasticsearch1:9200"
+      AZUL_FILE_INDEX: "test_data"
+      AZUL_SERVICE_NAME: "${AZUL_SERVICE_NAME}"
     build:
-      context: ..
-      dockerfile: test/Dockerfile
+      context: ../..
+      dockerfile: webservice/test/Dockerfile
     ports:
       - "9000:9000"
     networks:
