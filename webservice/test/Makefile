@@ -1,3 +1,5 @@
+include ../common.mk
+
 # Sample usage
 # make testme -- Run tests using chalice in localmode against an ES instance as defined in docker-compose.yml
 #

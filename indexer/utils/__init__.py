@@ -45,6 +45,10 @@ class Config:
         return os.environ['AZUL_INDEXER_NAME']
 
     @property
+    def service_name(self) -> str:
+        return os.environ['AZUL_SERVICE_NAME']
+
+    @property
     def deployment_stage(self) -> str:
         return os.environ['AZUL_DEPLOYMENT_STAGE']
 

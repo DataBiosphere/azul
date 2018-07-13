@@ -21,8 +21,14 @@ $(warning Looks like TerraForm is not installed. This is ok as long as you're no
           Deploying new lambdas is still possible with `make deploy` but `make terraform` will not work.)
 endif
 
+# FIXME: remove conditional once projects are merged
+
 %: %.template.py .FORCE
+ifeq (,$(wildcard $(AZUL_HOME)/src))
 	PYTHONPATH=$(AZUL_HOME) python $<
+else
+	PYTHONPATH=$(AZUL_HOME)/src python $<
+endif
 .FORCE:
 
 # The template output file depends on the template file, of course, as well as the environment. To be safe we force the

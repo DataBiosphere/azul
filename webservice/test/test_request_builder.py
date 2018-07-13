@@ -6,13 +6,10 @@ import logging.config
 import os
 import unittest
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
-from azul.service import config
+import azul.service.config
+from utils import config
 
-es_domain = os.getenv('ES_SERVICE', 'localhost')
-es_port = os.getenv('ES_PORT', '9200')
-es_protocol = os.getenv('ES_PROTOCOL', 'http')
-
-logging.config.fileConfig(os.path.join(os.path.dirname(config.__file__), 'logging.conf'))
+logging.config.fileConfig(os.path.join(os.path.dirname(azul.service.config.__file__), 'logging.conf'))
 logger = logging.getLogger("dashboardService")
 
 
@@ -37,10 +34,7 @@ class MyTestCase(unittest.TestCase):
         # - The complex multiple filters case
 
         # Create ElasticTransformDump instance
-        es_ts_instance = EsTd(
-            es_domain=es_domain,
-            es_port=es_port,
-            es_protocol=es_protocol)
+        es_ts_instance = EsTd(es_endpoint=config.es_endpoint)
         # Create a request object
         es_search = EsTd.create_request(
             sample_filter,
@@ -87,10 +81,7 @@ class MyTestCase(unittest.TestCase):
         # TODO: Need some form of handler for the query language
         sample_filter = {}
         # Create ElasticTransformDump instance
-        es_ts_instance = EsTd(
-            es_domain=es_domain,
-            es_port=es_port,
-            es_protocol=es_protocol)
+        es_ts_instance = EsTd(es_endpoint=config.es_endpoint)
         # Create a request object
         es_search = EsTd.create_request(
             sample_filter,
@@ -139,10 +130,7 @@ class MyTestCase(unittest.TestCase):
         }
 
         # Create ElasticTransformDump instance
-        es_ts_instance = EsTd(
-            es_domain=es_domain,
-            es_port=es_port,
-            es_protocol=es_protocol)
+        es_ts_instance = EsTd(es_endpoint=config.es_endpoint)
         # Create a request object
         es_search = EsTd.create_request(
             sample_filter,

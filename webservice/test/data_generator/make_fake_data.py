@@ -58,15 +58,15 @@ if len(sys.argv) == 4:
 
 schema = load_json_from_file(json_file)
 faker = FakerSchema()
-subprocess.run("echo Deleting test_data index at $ES_SERVICE", shell=True)
-subprocess.run("curl -XDELETE $ES_PROTOCOL://$ES_SERVICE:$ES_PORT/test_data/", shell=True)
+subprocess.run("echo Deleting test_data index at $AZUL_ES_ENDPOINT", shell=True)
+subprocess.run("curl -XDELETE http://$AZUL_ES_ENDPOINT/test_data/", shell=True)
 print("\n")
-subprocess.run("echo Configuring settings at $ES_SERVICE", shell=True)
-subprocess.run("curl -XPUT $ES_PROTOCOL://$ES_SERVICE:$ES_PORT/test_data/ -d @td_settings.json", shell=True)
+subprocess.run("echo Configuring settings at $AZUL_ES_ENDPOINT", shell=True)
+subprocess.run("curl -XPUT http://$AZUL_ES_ENDPOINT/test_data/ -d @td_settings.json", shell=True)
 print("\n")
-subprocess.run("echo Configuring mapping at $ES_SERVICE", shell=True)
+subprocess.run("echo Configuring mapping at $AZUL_ES_ENDPOINT", shell=True)
 subprocess.run(
-    "curl -XPUT $ES_PROTOCOL://$ES_SERVICE:$ES_PORT/test_data/_mapping/meta?update_all_types  -d @td_mapping.json",
+    "curl -XPUT http://$AZUL_ES_ENDPOINT/test_data/_mapping/meta?update_all_types  -d @td_mapping.json",
     shell=True)
 print("\n\nLoading data")
 index = 1
@@ -81,5 +81,5 @@ for j in range(0, numIts):
     file.close()
     print("Wrote td_index_page.jsonl")
     subprocess.run(
-        "curl -s -XPUT $ES_PROTOCOL://$ES_SERVICE:$ES_PORT/test_data/_bulk?pretty --data-binary @td_index_page.jsonl >/dev/null",
+        "curl -s -XPUT http://$AZUL_ES_ENDPOINT/test_data/_bulk?pretty --data-binary @td_index_page.jsonl >/dev/null",
         shell=True)

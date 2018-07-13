@@ -1,18 +1,30 @@
 import ast
-from azul.service import config
+import sys
+
 import logging.config
 import os
+
+from chalice import Chalice
+
+pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))
+sys.path.insert(0, pkg_root)  # noqa
+
+from utils import config
+import azul.service.config
 from azul.service.responseobjects.elastic_request_builder import BadArgumentException, ElasticTransformDump as EsTd
 from azul.service.responseobjects.utilities import json_pp
-from chalice import Chalice
 
 ENTRIES_PER_PAGE = 10
 
-# Setting up logging
-base_path = os.path.dirname(os.path.abspath(__file__))
-app = Chalice(app_name=os.getenv('INDEXER_NAME', 'cgp-dashboard-service'))
+logging.basicConfig(level=logging.WARNING)
+# FIXME: this should just be one top-level package called `azul`
+log = logging.getLogger(__name__)
+for top_level_pkg in (__name__, 'azul', 'utils'):
+    logging.getLogger(top_level_pkg).setLevel(logging.DEBUG)
+
+app = Chalice(app_name=config.service_name)
 app.debug = True
-app.log.setLevel(logging.DEBUG)
+app.log.setLevel(logging.DEBUG)  # please use module logger instead
 
 
 # TODO: Write the docstrings so they can support swagger.
@@ -113,15 +125,13 @@ def get_data(file_id=None):
             filters['file']['fileId'] = {"is": [file_id]}
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "localhost"),
-                     es_port=os.getenv("ES_PORT", 9200),
-                     es_protocol=os.getenv("ES_PROTOCOL", "http"))
+        es_td = EsTd(es_endpoint=config.es_endpoint)
         # Get the response back
         logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
                                            pagination=pagination,
                                            post_filter=True,
-                                           index="ES_FILE_INDEX")
+                                           index="AZUL_FILE_INDEX")
     except BadArgumentException as bae:
         response = dict(error=bae.message)
         response.status_code = 400
@@ -200,15 +210,13 @@ def get_specimen_data(specimen_id=None):
             filters['file']['fileId'] = {"is": [specimen_id]}
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "localhost"),
-                     es_port=os.getenv("ES_PORT", 9200),
-                     es_protocol=os.getenv("ES_PROTOCOL", "http"))
+        es_td = EsTd(es_endpoint=config.es_endpoint)
         # Get the response back
         logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
                                            pagination=pagination,
                                            post_filter=True,
-                                           index="ES_SPECIMEN_INDEX")
+                                           index="AZUL_SPECIMEN_INDEX")
     except BadArgumentException as bae:
         response = dict(error=bae.message)
         response.status_code = 400
@@ -282,9 +290,7 @@ def get_data_pie():
         pagination = _get_pagination(app.current_request)
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "localhost"),
-                     es_port=os.getenv("ES_PORT", 9200),
-                     es_protocol=os.getenv("ES_PROTOCOL", "http"))
+        es_td = EsTd(es_endpoint=config.es_endpoint)
         # Get the response back
         logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
@@ -329,9 +335,7 @@ def get_summary():
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "localhost"),
-                 es_port=os.getenv("ES_PORT", 9200),
-                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
+    es_td = EsTd(es_endpoint=config.es_endpoint)
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_summary(filters=filters)
@@ -417,9 +421,7 @@ def get_search():
         field = 'donor'
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
-                 es_port=os.getenv("ES_PORT", 9200),
-                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
+    es_td = EsTd(es_endpoint=config.es_endpoint)
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_autocomplete_request(pagination,
@@ -440,8 +442,7 @@ def get_order():
     logger = logging.getLogger("dashboardService.webservice.get_order")
     # Open the order_config file and get the order list
     logger.info("Getting t")
-    with open('{}/order_config'.format(
-            os.path.dirname(config.__file__))) as order:
+    with open('{}/order_config'.format(os.path.dirname(azul.service.config.__file__))) as order:
         order_list = [line.rstrip('\n') for line in order]
     return {'order': order_list}
 
@@ -473,9 +474,7 @@ def get_manifest():
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_domain=os.getenv("ES_DOMAIN", "elasticsearch1"),
-                 es_port=os.getenv("ES_PORT", 9200),
-                 es_protocol=os.getenv("ES_PROTOCOL", "http"))
+    es_td = EsTd(es_endpoint=config.es_endpoint)
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_manifest(filters=filters)
