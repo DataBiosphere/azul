@@ -3,7 +3,10 @@ import sys
 
 import boto3
 
-role_name, role_policy_json = sys.argv[1:]
+from utils import config
+
+lambda_name, role_policy_json = sys.argv[1:]
+role_name = config.resource_name(lambda_name)
 
 with open(role_policy_json) as f:
     role_policy = json.load(f)
