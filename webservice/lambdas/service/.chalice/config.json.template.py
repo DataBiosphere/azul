@@ -12,7 +12,7 @@ host, port = config.es_endpoint
 emit({
     'version': '2.0',
     'app_name': config.service_name[:-len(suffix)],  # Chalice appends stage name implicitly
-    'api_gateway_stage': 'api',
+    'api_gateway_stage': config.deployment_stage,
     'manage_iam_role': False,
     'iam_role_arn': f'arn:aws:iam::{aws.account}:role/{config.service_name}',
     'environment_variables': {

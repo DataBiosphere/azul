@@ -6,7 +6,8 @@ services:
     environment:
       AZUL_ES_ENDPOINT: "elasticsearch1:9200"
       AZUL_FILE_INDEX: "test_data"
-      AZUL_SERVICE_NAME: "${AZUL_SERVICE_NAME}"
+      AZUL_RESOURCE_PREFIX: "${AZUL_RESOURCE_PREFIX}"
+      AZUL_DEPLOYMENT_STAGE: "${AZUL_DEPLOYMENT_STAGE}"
     build:
       context: ../..
       dockerfile: webservice/test/Dockerfile
