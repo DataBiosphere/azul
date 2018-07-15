@@ -40,7 +40,7 @@ class AWS:
     def es(self):
         return boto3.client('es')
 
-    def api_gateway_id(self, function_name: str) -> Optional[str]:
+    def api_gateway_id(self, function_name: str, validate=True) -> Optional[str]:
         try:
             response = self.lambda_.get_policy(FunctionName=function_name)
         except self.lambda_.exceptions.ResourceNotFoundException:
@@ -48,7 +48,13 @@ class AWS:
         else:
             policy = json.loads(response['Policy'])
             api_stage_arn = policy['Statement'][0]['Condition']['ArnLike']['AWS:SourceArn']
-            return api_stage_arn.split(':')[-1].split('/', 1)[0]
+            api_gateway_id = api_stage_arn.split(':')[-1].split('/', 1)[0]
+            if validate:
+                try:
+                    self.apigateway.get_rest_api(restApiId=api_gateway_id)
+                except self.apigateway.exceptions.NotFoundException:
+                    return None
+            return api_gateway_id
 
     def api_getway_endpoint(self, function_name: str, api_gateway_stage: str) -> Optional[str]:
         api_gateway_id = self.api_gateway_id(function_name)

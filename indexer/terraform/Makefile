@@ -1,8 +1,10 @@
 include ../common.mk
 
+templates=$(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
+
 all: apply
 
-init: elasticsearch.tf.json sqs.tf.json backend.tf.json providers.tf.json
+init: $(templates)
 	terraform init
 
 validate: init

@@ -10,13 +10,22 @@ azul_vars=(
     # The URL to the DSS (aka Blue box) REST API
     AZUL_DSS_ENDPOINT
 
-    # The name of the AWS Lambda function (and the contained Chalice app)
-    # receiving notifications from DSS and populating the ES index
-    AZUL_INDEXER_NAME
+    # The name of the hosted zone in Route 53 in which to create user friendly
+    # domain names for various API gateways. This hosted zone will have to be
+    # created manually prior to running `make terraform`. The value is typically
+    # not deployment specific. A subdomain will automatically be created for
+    # each deployment.
+    AZUL_DOMAIN_NAME
 
-    # The name of the AWS Lambda function (and the contained Chalice app)
-    # handling REST web service request from the browser UI
-    AZUL_SERVICE_NAME
+    # A template for the name of the Route 53 record set in the hosted zone
+    # specified by AZUL_DOMAIN_NAME. The string {lambda_name} in the template
+    # will be substituted with the name of the Lambda function, e.g. `indexer`
+    # or `service`. May contain periods.
+    AZUL_SUBDOMAIN_TEMPLATE
+
+    # A prefix to be prepended to the names of AWS Lambda functions and
+    # associated resources. Must not contain periods.
+    AZUL_RESOURCE_PREFIX
 
     # The host and port of the Elasticsearch instance to use. This takes
     # precedence over AZUL_ES_DOMAIN.
@@ -111,8 +120,9 @@ fi
 
 # Set the global defaults. This is the least specific level.
 
-_set AZUL_INDEXER_NAME "azul-indexer-$AZUL_DEPLOYMENT_STAGE"
-_set AZUL_SERVICE_NAME "azul-service-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_DOMAIN_NAME "azul.data.humancellatlas.org"  # FIXME: project-specific, is this the right place for this?
+_set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}.$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_RESOURCE_PREFIX "azul-"
 _set AZUL_ES_INDEX "azul-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_INSTANCE_COUNT 1

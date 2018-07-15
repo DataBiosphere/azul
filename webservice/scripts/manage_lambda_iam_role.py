@@ -1,0 +1,1 @@
+../../indexer/scripts/manage_lambda_iam_role.py
