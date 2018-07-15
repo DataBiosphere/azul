@@ -8,7 +8,7 @@ install:
 	rsync -a ../../utils ../../project chalicelib/
 
 deploy: $(templates) install
-	PYTHONPATH=$(AZUL_HOME) python manage_iam_role.py $(AZUL_INDEXER_NAME) lambda-policy.json
+	PYTHONPATH=$(AZUL_HOME) python $(AZUL_HOME)/scripts/manage_lambda_iam_role.py indexer lambda-policy.json
 	chalice deploy --stage $(AZUL_DEPLOYMENT_STAGE)
 
 delete: $(templates)
