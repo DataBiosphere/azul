@@ -14,4 +14,10 @@ deploy:
 clean:
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
 
-.PHONY: all terraform deploy clean
+test:
+	make -C test/service testme
+
+travis:
+	make -C test/service travistest
+
+.PHONY: all terraform deploy clean test travis
