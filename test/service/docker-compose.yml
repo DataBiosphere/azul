@@ -10,7 +10,7 @@ services:
       AZUL_DEPLOYMENT_STAGE: "${AZUL_DEPLOYMENT_STAGE}"
     build:
       context: ../..
-      dockerfile: webservice/test/Dockerfile
+      dockerfile: test/service/Dockerfile
     ports:
       - "9000:9000"
     networks:
