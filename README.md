@@ -98,6 +98,56 @@ The remaining infrastructure is managed internally with TerraForm.
    address the complaint and repeat. The various sanity checks are defined in
    `common.mk`.
 
+### Provisioning cloud infrastructure
+
+Once you've successfully configured the project and your personal deployment,
+it is time to provision the cloud infrastructure for your deployment. Running
+
+```
+make terraform
+```
+
+will display a plan and ask you to confirm it. Please consult the Terraform
+documentation for details. You will need to run `make terraform` once to set up
+your deployment and every time code changes define new cloud resources. The
+resources are defined in `….tf.json` files which in turn are generated from
+`….tf.json.template.py` files which are simple Python scripts containing the
+desired JSON as Python dictionary and list literals and comprehensions.
+
+### Deploying lambda functions
+
+Once the cloud infrastructure for your deployment has been provisioned, you can
+deploy the project code into AWS Lambda. Running
+
+```
+make deploy
+```
+
+Will create or update AWS Lambda functions for each lambda defined in the
+`lambdas` directory. It will also create or update an AWS API Gateway to proxy
+the functions that act as web services. We call those functions *API lambdas*.
+
+### Provisioning stable API domain names
+
+The HTTP endpoint offered by API Gateway have somewhat cryptic and hard to
+remember domain names:
+
+https://klm8yi31z7.execute-api.us-east-1.amazonaws.com/hannes/
+
+Furthermore, the API ID at the beginning of the above URL is likely to change
+when you accidentally delete the REST API and then recreate it. To provide
+stable and user-friendly URLs for the API lambdas, we provision a custom domain
+name object in API Gateway along with an ACM certificate and a CNAME record in
+Route 53. Running `make terraform` again after `make deploy` will detect the
+newly deployed API lambdas and create those resources for you. What the
+user-friendly domain names look like depends on project configuration. The
+default for HCA is currently
+
+http://indexer.${AZUL_DEPLOYMENT_STAGE}.azul.data.humancellatlas.org/
+http://service.${AZUL_DEPLOYMENT_STAGE}.azul.data.humancellatlas.org/
+
+Note that while the native API Gateway URL refers to the stage in the URL path,
+the stable URL mentions it in the domain name.
 
 ### Running indexer locally
 
