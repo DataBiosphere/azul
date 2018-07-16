@@ -5,7 +5,7 @@ templates = .chalice/config.json .chalice/deployed.json lambda-policy.json
 all: deploy
 
 install:
-	rsync -aL $(AZUL_HOME)/src/utils $(AZUL_HOME)/src/azul chalicelib/
+	rsync -a $(AZUL_HOME)/src/utils $(AZUL_HOME)/src/azul chalicelib/
 
 deploy: $(templates) install
 	PYTHONPATH=$(AZUL_HOME)/src python $(AZUL_HOME)/scripts/manage_lambda_iam_role.py service lambda-policy.json
