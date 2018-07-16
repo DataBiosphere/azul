@@ -5,9 +5,8 @@ d1	s2	crai	sp1	s3://junk.crai
 d1	s2	cram	sp1	s3://junk.cram
 d2	s3	crai	sp1	gs://junk.crai
 d2	s3	cram	sp1	gs://junk.cram
-d3	s4	crai	sp1	gs://junk.crai
-d3	s4	cram	sp1	gs://junk.cram
-d4	s5	crai	sp2	gs://junk.crai
-d4	s5	cram	sp2	gs://junk.cram
-d4	s5	bam	sp2	gs://junk.bam
-d5	s6	crai	sp3	gs://junk.crai
+d2	s4	cram	sp1	gs://junk.cram
+d2	s4	crai	sp1	gs://junk.crai
+d3	s5	cram	sp1	gs://junk.cram
+d4	s6	bai	sp2	gs://junk.bai
+d4	s6	bam	sp2	gs://junk.bam
