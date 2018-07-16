@@ -1,9 +1,12 @@
 # DCC-DASHBOARD-SERVICE
+
 [![Build Status](https://travis-ci.org/BD2KGenomics/dcc-dashboard-service.svg?branch=develop)](https://travis-ci.org/BD2KGenomics/dcc-dashboard-service)
 
-Simple Dockerized Flask web service to communicate with ElasticSearch and output the list of results in JSON format. It also supports monitoring of consonance jobs and tracking of billing as part of the UCSC platform.<br>
+Simple Dockerized Flask web service to communicate with ElasticSearch and
+output the list of results in JSON format. It also supports monitoring of
+consonance jobs and tracking of billing as part of the UCSC platform.<br>
 
-<h2>General Overview</h2>
+### General Overview
 The web app is subdivided into different flask blueprints, each filling out a particular function. The current blueprints are:
 
 * action
@@ -13,7 +16,7 @@ The web app is subdivided into different flask blueprints, each filling out a pa
 * webservice
   * The backend that powers the Boardwalk portal. Queries ElasticSearch to serve an API that allows to apply filters and do faceting on entries within ElasticSearch.
   
-<h3>On the Webservice</h3>
+### On the Webservice
 
 The responseobjects module is responsible for handling the faceting and API response creation. Within this module, `elastic_request_builder` is responsible for taking in the parameters passed in through the `HTTP` request and creating a query to ElasticSearch. Then, `api_response` is responsible for parsing the data from ElasticSearch and creating the API response.
 
@@ -69,27 +72,3 @@ Currently there are 6 parameters supported. They are as follows:<br>
 |from|Specifies the start index. Defaults to 1 if not specified:|Integer|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&from=26 This will return the search results from result 26 onwards|
 |size|Specifies how many hits to return. Defaults to 5|Integer|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&size=5 This will return at most 5 hits.|
 |q|Specifies the query for search|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&size=5 This will return at most 5 hits for the query 8f1.|
-
-
-
-<h2>Installation Instructions</h2>
-
-Please refer to [dcc-ops](https://github.com/BD2KGenomics/dcc-ops) for installing the the dashboard-service and all its required components. This will automatically set up the dashboard service behind an NGINX server.
-
-If you want to locally set up the webservice for quick prototyping, you can type `make play` in your terminal. In order for this to work, you need to have `Docker` and `docker-compose` installed in your machine. Aditionally, you need to allow Docker to use 5GB of RAM. `make play` will setup the webservice, ElasticSearch, and Kibana on your machine as a series of Docker containers bound to `localhost` as follows:
-
-* Web Service: port 9000 (access via `localhost:9000`)
-* ElasticSearch: port 9200 (access via `localhost:9200`)
-* Kibana: port 5601 (access via `localhost:5601`)
-
-ElasticSearch will be loaded with a set of dummy test indexes. You can modify or change the indexes as you wish. You can do for example do
-
-```
-curl -XPUT http://localhost:9200/myindex/_bulk?pretty --data-binary @test/my_index_entries.jsonl
-```
-
-to create an index called myindex and loading the entries contained in the `my_index_entries.jsonl` file. Please take a look at the `tests/populator.sh` script for more details on how the test suite creates and loads indexes (the 'aliases' for the file and donor oriented indexes are named `fb_index` and `analysis_index` respectively). 
-
-
-
-
