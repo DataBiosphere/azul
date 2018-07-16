@@ -180,14 +180,14 @@ class BagHandler:
                 writer.writerow(sample)
 
     def convert_to_participant_and_sample(self):
-        participants, max_samples, native_protocols = \
+        participants, max_samples, native_protocols, file_types = \
             self.participants_and_max_files_in_sample_and_protocols()
-        return list(participants), self.samples(max_samples, native_protocols)
+        return list(participants), self.samples(native_protocols, file_types)
 
     def participants_and_max_files_in_sample_and_protocols(self):
         """
         Does one pass through the CSV, calculating the unique participants,
-        the maximum number of files for any one specimen, and the total number
+        the maximum number of files for any one sample, and the total number
         of cloud native protocols being used.
         :return: a tuple with a set of participants, the maximum number of
         files in any one sample, and a set of the unique cloud native protocols.
@@ -195,6 +195,7 @@ class BagHandler:
         reader = csv.DictReader(StringIO(self.data), delimiter='\t')
         participants = set()
         native_protocols = set()
+        file_types = set()
         samples = {}  # key: samples UUID, value count
         for row in reader:
             # Add all participants. It's a set, so no dupes
@@ -212,9 +213,12 @@ class BagHandler:
                 if protocol is not None:
                     native_protocols.add(protocol)
 
-        return participants, max(samples.values()), native_protocols
+            # Track all file types in manifest.
+            file_types.add(row[BoardwalkColumns.FILE_TYPE].lower())
 
-    def samples(self, max_files_in_sample, native_protocols):
+        return participants, max(samples.values()), native_protocols, file_types
+
+    def samples(self, native_protocols, file_types):
         """
         Creates a list of dicts, where one dict is a row in the sample TSV 
         for FireCloud. For all rows of the same sample in the input create 
@@ -229,8 +233,8 @@ class BagHandler:
         sorted before being passed to this method, then we should remove
         sorting in here.
 
-        :param max_files_in_sample: the maximum number of files in sample
         :param native_protocols: all the unique native protocols in the data
+        :param file_types: all unique file types in the data
         :return: a list of dicts
         """
         reader = csv.DictReader(StringIO(self.data), delimiter='\t')
@@ -243,17 +247,19 @@ class BagHandler:
         for row in sorted(reader, key=operator.itemgetter(
                 BoardwalkColumns.SAMPLE_UUID)):  # sort by sample ID
             sample_uuid = row[BoardwalkColumns.SAMPLE_UUID]
+            suffix = self.get_suffix(row[BoardwalkColumns.FILE_TYPE])
             if sample_uuid != current_sample_uuid:
+
                 current_sample_uuid = sample_uuid
                 index = 1
                 if current_row is not None:
                     samples.append(current_row)
-                current_row = self.init_sample_row(row, max_files_in_sample,
-                                                   native_protocols)
+                current_row = self.init_sample_row(row, native_protocols,
+                                                   file_types)
             else:
                 index = index + 1
 
-            self.add_files_to_row(current_row, row, str(index))
+            self.add_files_to_row(current_row, row, suffix)
 
         if current_row is not None:
             samples.append(current_row)
@@ -279,13 +285,12 @@ class BagHandler:
                 new_row[self.firecloud_column_name(column) + suffix] = \
                     existing_row[column]
 
-    def init_sample_row(self, existing_row, max_files_in_sample,
-                        native_protocols):
+    def init_sample_row(self, existing_row, native_protocols, file_types):
         """
         Create and initialize a sample row
         :param existing_row: the existing row
-        :param max_files_in_sample: maximum number of file types of any sample
         :param native_protocols:
+        :param file_types: file types in manifest data
         :return: the initialized row
         """
         # Rename sample column and participant.
@@ -300,13 +305,16 @@ class BagHandler:
             if key not in COMPLEX_COLUMNS:
                 row[self.firecloud_column_name(key)] = value
 
-        # Initialize columns for files and cloud native urls.
-        for suffix in [str(i) for i in range(1, max_files_in_sample + 1)]:
+        # Initialize columns for files and cloud native urls with appropriate
+        # integer denoting the file type (by Team Calcium convention).
+        for file_type in file_types:
+            suffix = self.get_suffix(file_type)
             for column in FILE_COLUMNS:
                 row[self.firecloud_column_name(column) + suffix] = None
 
             for native_protocol in native_protocols:
                 row[self.native_column_name(native_protocol, suffix)] = None
+
         return row
 
     @staticmethod
@@ -322,3 +330,22 @@ class BagHandler:
     @staticmethod
     def firecloud_column_name(column):
         return column.lower().replace(' ', '_').replace('.', '_')
+
+    @staticmethod
+    def get_suffix(s):
+        """Lookup-table hack to address the problem of more than one file type 
+        occurring in a given file type column (2018-07-16).
+        :parameter s: (str) from a row from the manifest TSV file
+        :returns suffix: (str) holds integer corresponding to a file type"""
+
+        s = s.lower()
+
+        if s.endswith('fastq.gz') or s.endswith('fastq'): # unaligned read
+            return str(0)
+        elif s.endswith('crai') or s.endswith('bai'):     # aligned, index
+            return str(1)
+        elif s.endswith('cram') or s.endswith('bam'):     # aligned read
+            return str(2)
+        else:
+            raise ValueError("{}: unknown file type in manifest".
+                             format(repr(s)))
