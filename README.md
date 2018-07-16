@@ -117,7 +117,7 @@ The remaining infrastructure is managed internally with TerraForm.
 5) In another shell, run
 
    ```
-   PYTHONPATH=. python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000/`
+   PYTHONPATH=$AZUL_HOME/src python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000/`
    ```
 
 The `--sync` argument causes the Chalice app to invoke the indexing code

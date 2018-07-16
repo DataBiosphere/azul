@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     curl \
     python3-pip \
-    rsync
+    rsync \
+    git
 
 RUN pip3 install --upgrade pip
 
@@ -19,17 +20,16 @@ RUN pip3 install --upgrade pip
 
 RUN pip3 install faker_schema
 RUN pip3 install --upgrade cffi
-ADD webservice/requirements.txt /app/requirements.txt
-RUN pip install --ignore-installed -r /app/requirements.txt
+ADD requirements.txt /app/requirements.txt
+ADD requirements.dev.txt /app/requirements.dev.txt
+RUN pip install --ignore-installed -r /app/requirements.dev.txt
 
 # Add app code. Note that this expects the Docker build context to be set to the
 # project root, i.e. the parent of the test directory.
 
-COPY webservice /app
-# Docker copies symlinks as symlinks, so to prevent a dangling symlink we need to copy the referee
-COPY indexer/utils /app/src/utils
+COPY . /app
 WORKDIR /app
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV PYTHONPATH=/app/src
-CMD ["test/go.sh"]
+CMD ["test/service/go.sh"]
