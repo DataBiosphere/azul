@@ -42,3 +42,6 @@ __pycache__/
 /deployments/*.local
 /environment.local
 /deployments/*/environment.local
+
+# PyTest
+.cache
