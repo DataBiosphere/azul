@@ -1,4 +1,4 @@
-include ../common.mk
+include ../../common.mk
 
 # Sample usage
 # make testme -- Run tests using chalice in localmode against an ES instance as defined in docker-compose.yml
@@ -18,7 +18,7 @@ run-travis:
 	docker-compose -f docker-compose-hostnetworking.yml up -d --build --force-recreate
 
 populate:
-	docker-compose exec dcc-dashboard-service /app/test/data_generator/make_fake_data.sh
+	docker-compose exec dcc-dashboard-service /app/test/service/data_generator/make_fake_data.sh
 
 reset:
 	docker-compose stop
@@ -34,7 +34,7 @@ travistest: stop reset run-travis populate
 	# docker-compose-hostnetworking.yml)
 	echo "Sleeping 60 seconds before unit testing"
 	sleep 60
-	docker-compose exec dcc-dashboard-service py.test -p no:cacheprovider -s -x
+	docker-compose exec dcc-dashboard-service py.test -p no:cacheprovider --capture=no --exitfirst /app/test/service
 
 run:
 	# Run a chalice instance locally, in local mode, with bridge mode networking
@@ -48,4 +48,4 @@ testme: stop reset run
 	$(MAKE) populate
 	echo "Sleeping 60 seconds before unit testing"
 	sleep 60
-	docker-compose exec dcc-dashboard-service py.test -p no:cacheprovider -s -x
+	docker-compose exec dcc-dashboard-service py.test -p no:cacheprovider --capture=no --exitfirst /app/test/service
