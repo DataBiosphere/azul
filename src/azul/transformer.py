@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from itertools import filterfalse, tee
 import logging
+import os
 import re
 from typing import Mapping, Sequence
-import os
 
 module_logger = logging.getLogger(__name__)
 

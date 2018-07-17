@@ -2,9 +2,7 @@ import json
 import os
 import sys
 import tempfile
-from types import SimpleNamespace
-
-from typing import Optional, Mapping, Any
+from typing import Any, Mapping, Optional
 
 
 def emit(json_doc: Optional[Mapping[str, Any]]):
