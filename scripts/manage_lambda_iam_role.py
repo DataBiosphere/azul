@@ -3,7 +3,7 @@ import sys
 
 import boto3
 
-from utils import config
+from azul import config
 
 lambda_name, role_policy_json = sys.argv[1:]
 role_name = config.resource_name(lambda_name)

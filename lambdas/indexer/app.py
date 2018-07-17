@@ -9,12 +9,11 @@ to drive the indexing operation.
 
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import imp
+import importlib
 import json
 import logging
 import math
 import os
-import sys
 import time
 
 import boto3
@@ -23,98 +22,29 @@ from chalice import Chalice
 from chalice.app import CloudWatchEvent
 import requests.adapters
 
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
-
-from utils.time import RemainingLambdaContextTime, RemainingTime
-from utils import config
+from azul.base_config import BaseIndexProperties
+from azul.indexer import BaseIndexer
+from azul.time import RemainingLambdaContextTime, RemainingTime
+from azul import config
 
 logging.basicConfig(level=logging.WARNING)
-# FIXME: this should just be one top-level package called `azul`
 log = logging.getLogger(__name__)
-for top_level_pkg in (__name__, 'project', 'utils'):
+for top_level_pkg in (__name__, 'azul'):
     logging.getLogger(top_level_pkg).setLevel(logging.DEBUG)
 
 app = Chalice(app_name=config.indexer_name)
 app.debug = True
 app.log.setLevel(logging.DEBUG)  # please use module logger instead
 
-# get which indexer project definition to use
-# https://lkubuntu.wordpress.com/2012/10/02/writing-a-python-plugin-api/
-IndexerPluginDirectory = "./project" if os.path.exists("./project") else "chalicelib/project"
-IndexerModule = "indexer"
-ConfigModule = "config"
-indexer_project = os.environ.get('INDEXER_PROJECT', 'hca')
-
-
-def import_projects():
-    projects = []
-    possible_projects = os.listdir(IndexerPluginDirectory)
-    for project in possible_projects:
-        location = os.path.join(IndexerPluginDirectory, project)
-        if not os.path.isdir(location) or not IndexerModule + ".py" in os.listdir(location):
-            continue
-        info = imp.find_module(IndexerModule, [location])
-        projects.append({"name": project, "info": info})
-    return projects
-
-
-def import_projects_configs():
-    projects = []
-    possible_projects = os.listdir(IndexerPluginDirectory)
-    for project in possible_projects:
-        location = os.path.join(IndexerPluginDirectory, project)
-        if not os.path.isdir(location) or not ConfigModule + ".py" in os.listdir(location):
-            continue
-        info = imp.find_module(ConfigModule, [location])
-        projects.append({"name": project, "info": info})
-    return projects
-
-
-def load_project(project):
-    return imp.load_module(IndexerModule, *project["info"])
-
-
-def load_project_config(project):
-    return imp.load_module("config", *project["info"])
-
-
-def load_config(project):
-    return imp.load_module(ConfigModule, *project["info"])
-
-
-def load_indexer_class():
-    from utils.indexer import BaseIndexer
-    for i in import_projects():
-        if i['name'] == indexer_project:
-            indexer_loaded = getattr(load_project(i), "Indexer")
-            # setup default constructor - similar to V5Indexer constructor
-            if issubclass(indexer_loaded, BaseIndexer):
-                # return the class
-                return indexer_loaded
-            else:
-                raise NotImplementedError("Project supplied does not have an indexer derived from the BaseIndexer")
-
-
-def load_config_class():
-    from utils.base_config import BaseIndexProperties
-    for i in import_projects_configs():
-        if i['name'] == indexer_project:
-            config_loaded = getattr(load_project_config(i), "IndexProperties")
-            # setup default constructor - similar to V5Indexer constructor
-            if issubclass(config_loaded, BaseIndexProperties):
-                # return the class
-                return config_loaded
-            else:
-                raise NotImplementedError("Project supplied does not have an config derived from BaseIndexProperties")
-
-indexer_to_load = load_indexer_class()
-indexer_properties = load_config_class()
-
-dss_url = config.dss_endpoint
-loaded_properties = indexer_properties(dss_url=config.dss_endpoint,
-                                       es_endpoint=config.es_endpoint)
-loaded_indexer = indexer_to_load(loaded_properties)
+# Initialize the project-specific plugin
+#
+plugin_name = 'azul.project.' + os.environ.get('INDEXER_PROJECT', 'hca')
+plugin = importlib.import_module(plugin_name)
+assert issubclass(plugin.Indexer, BaseIndexer)
+assert issubclass(plugin.IndexProperties, BaseIndexProperties)
+properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
+                                    es_endpoint=config.es_endpoint)
+indexer = plugin.Indexer(properties)
 
 requests.adapters.DEFAULT_POOLSIZE = config.num_workers * config.num_workers
 
@@ -128,7 +58,7 @@ def post_notification():
     log.info("Received notification %r", notification)
     params = app.current_request.query_params
     if params and params.get('sync', 'False').lower() == 'true':
-        loaded_indexer.index(notification)
+        indexer.index(notification)
     else:
         queue().send_message(MessageBody=json.dumps(notification))
         log.info("Queued notification %r", notification)
@@ -138,7 +68,7 @@ def post_notification():
 @app.route('/escheck')
 def es_check():
     """Check the status of ElasticSearch by returning its info."""
-    return json.dumps(loaded_properties.elastic_search_client.info())
+    return json.dumps(properties.elastic_search_client.info())
 
 
 # Work around https://github.com/aws/chalice/issues/856
@@ -199,7 +129,7 @@ def _index(worker: int, remaining_time: RemainingTime) -> None:
             notification = json.loads(message.body)
             log.info(f'Worker {worker} handling notification {notification}')
             start = time.time()
-            loaded_indexer.index(notification)
+            indexer.index(notification)
             duration = time.time() - start
             log.info(f'Worker {worker} successfully handled notification {notification} in {duration:.3f}s.')
             message.delete()

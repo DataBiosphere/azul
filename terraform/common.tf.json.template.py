@@ -1,4 +1,4 @@
-from utils.template import emit
+from azul.template import emit
 
 emit({
     "data": [
