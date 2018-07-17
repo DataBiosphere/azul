@@ -1,5 +1,5 @@
-from utils.deployment import aws
-from utils.template import emit
+from azul.deployment import aws
+from azul.template import emit
 
 emit(
     {

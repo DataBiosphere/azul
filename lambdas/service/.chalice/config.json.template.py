@@ -1,8 +1,8 @@
 import os
 
-from utils import config
-from utils.deployment import aws
-from utils.template import emit
+from azul import config
+from azul.deployment import aws
+from azul.template import emit
 
 suffix = '-' + config.deployment_stage
 assert config.service_name.endswith(suffix)

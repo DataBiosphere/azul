@@ -10,7 +10,6 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
 import json
 import logging
-import os
 from pprint import PrettyPrinter
 import sys
 from typing import List
@@ -21,16 +20,15 @@ from uuid import uuid4
 
 from hca.dss import DSSClient
 
-from utils import config
-from utils.deployment import aws
+from azul import config
+
 
 logger = logging.getLogger(__name__)
 
 
 class Defaults:
     dss_url = config.dss_endpoint
-    indexer_url = aws.api_getway_endpoint(function_name=config.indexer_name,
-                                          api_gateway_stage=config.deployment_stage)
+    indexer_url = "https://" + config.api_lambda_domain('indexer') + "/"
     es_query = {
         "query": {
             "bool": {
