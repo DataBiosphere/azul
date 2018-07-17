@@ -1,8 +1,9 @@
 from functools import lru_cache
 import json
+from typing import Optional, Tuple
+
 import boto3
 import botocore.session
-from typing import Optional, Tuple
 
 
 def memoized_property(f):
