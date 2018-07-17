@@ -1,5 +1,6 @@
-from utils import config, aws
-from utils.template import emit
+from azul import config
+from azul.deployment import aws
+from azul.template import emit
 
 gateway_ids = {
     lambda_name: aws.api_gateway_id(config.resource_name(lambda_name))
@@ -40,7 +41,7 @@ emit({
             },
             "aws_acm_certificate": {
                 lambda_name: {
-                    "domain_name": config.subdomain(lambda_name) + "." + config.domain_name,
+                    "domain_name": config.api_lambda_domain(lambda_name),
                     "validation_method": "DNS",
                 }
             },
