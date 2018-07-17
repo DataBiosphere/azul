@@ -1,13 +1,13 @@
 from functools import lru_cache
-from typing import Any, Iterable, Mapping, Optional, Tuple
+from typing import Any, Iterable, Mapping, Tuple
 
 import boto3
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
-from utils.base_config import BaseIndexProperties
-from utils.deployment import aws
-from utils.transformer import Transformer
+from azul.base_config import BaseIndexProperties
+from .transformers import FileTransformer, SpecimenTransformer
+from azul.transformer import Transformer
 
 
 class IndexProperties(BaseIndexProperties):
@@ -103,7 +103,6 @@ class IndexProperties(BaseIndexProperties):
 
     @property
     def transformers(self) -> Iterable[Transformer]:
-        from project.hca.transformers import FileTransformer, SpecimenTransformer
         transformers = [FileTransformer(), SpecimenTransformer()]
         return transformers
 

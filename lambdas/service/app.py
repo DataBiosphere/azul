@@ -1,15 +1,11 @@
 import ast
-import sys
 
 import logging.config
 import os
 
 from chalice import Chalice
 
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))
-sys.path.insert(0, pkg_root)  # noqa
-
-from utils import config
+from azul import config
 import azul.service.config
 from azul.service.responseobjects.elastic_request_builder import BadArgumentException, ElasticTransformDump as EsTd
 from azul.service.responseobjects.utilities import json_pp
@@ -17,9 +13,8 @@ from azul.service.responseobjects.utilities import json_pp
 ENTRIES_PER_PAGE = 10
 
 logging.basicConfig(level=logging.WARNING)
-# FIXME: this should just be one top-level package called `azul`
 log = logging.getLogger(__name__)
-for top_level_pkg in (__name__, 'azul', 'utils'):
+for top_level_pkg in (__name__, 'azul'):
     logging.getLogger(top_level_pkg).setLevel(logging.DEBUG)
 
 app = Chalice(app_name=config.service_name)

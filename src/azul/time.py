@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 import time
 
 from azul import require
-from utils.types import LambdaContext
+from azul.types import LambdaContext
 
 
 class RemainingTime(metaclass=ABCMeta):

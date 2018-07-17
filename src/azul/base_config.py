@@ -2,7 +2,7 @@ from abc import ABC
 from elasticsearch import Elasticsearch
 import os
 from typing import Iterable, Mapping, Any
-from utils.transformer import Transformer
+from azul.transformer import Transformer
 
 
 class BaseIndexProperties(ABC):

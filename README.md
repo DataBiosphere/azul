@@ -156,18 +156,16 @@ the stable URL mentions it in the domain name.
 
 2) `cd lambdas/indexer`
 
-3) `make install`
+3) Run
 
-4) Run
-   
    ```
-   AWS_CONFIG_FILE='~/.aws/config' AWS_SHARED_CREDENTIALS_FILE='~/.aws/config' chalice local`
+   AWS_CONFIG_FILE='~/.aws/config' AWS_SHARED_CREDENTIALS_FILE='~/.aws/credentials' make local`
    ````
 
-5) In another shell, run
+4) In another shell, run
 
    ```
-   PYTHONPATH=$AZUL_HOME/src python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000/`
+   python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000/`
    ```
 
 The `--sync` argument causes the Chalice app to invoke the indexing code

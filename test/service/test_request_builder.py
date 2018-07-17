@@ -7,7 +7,7 @@ import os
 import unittest
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 import azul.service.config
-from utils import config
+from azul import config
 
 logging.config.fileConfig(os.path.join(os.path.dirname(azul.service.config.__file__), 'logging.conf'))
 logger = logging.getLogger("dashboardService")

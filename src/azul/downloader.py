@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Utils module to help with getting data from Blue box.
+Utility module to help with getting data from Blue box.
 
 The utils module has a DataExtractor class which aims to get the
 metadata and data files from the Blue Box.

@@ -1,5 +1,5 @@
-from utils import config
-from utils.template import emit
+from azul import config
+from azul.template import emit
 
 emit(
     {

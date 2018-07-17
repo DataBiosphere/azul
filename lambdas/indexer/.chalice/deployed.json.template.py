@@ -1,8 +1,8 @@
 import sys
 
-from utils import config
-from utils.deployment import aws
-from utils.template import emit
+from azul import config
+from azul.deployment import aws
+from azul.template import emit
 
 api_gateway_id = aws.api_gateway_id(function_name=config.indexer_name)
 

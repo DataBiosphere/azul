@@ -151,3 +151,5 @@ export ${azul_vars[*]}
 _refresh () {
     source ${AZUL_HOME}/environment
 }
+
+export PYTHONPATH="$AZUL_HOME/src"
