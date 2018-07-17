@@ -1,11 +1,11 @@
+from math import ceil, floor
 import random
-from typing import Union, List, Optional
+from typing import List, Union
 
-import rstr
 from faker import Faker
 from faker.providers.python import Provider as PythonProvider
-from jsonschema import RefResolver, Draft4Validator
-from math import ceil, floor
+from jsonschema import Draft4Validator, RefResolver
+import rstr
 
 
 class JsonProvider(PythonProvider):

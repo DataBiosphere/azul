@@ -13,9 +13,9 @@ that can be used by the Indexer subclasses.
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import os
-from urllib3 import Timeout
 
 from hca.dss import DSSClient, SwaggerAPIException
+from urllib3 import Timeout
 
 log = logging.getLogger(__name__)
 

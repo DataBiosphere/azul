@@ -1,17 +1,23 @@
 #!/usr/bin/python
 import abc
-from azul.service.responseobjects.utilities import json_pp
-from chalice import Response
-from collections import defaultdict
-from collections import OrderedDict
-from itertools import chain
-from io import StringIO
-import logging
-import jmespath
-from jsonobject import JsonObject, StringProperty, FloatProperty, \
-    IntegerProperty, ListProperty, ObjectProperty, DictProperty
-import os
+from collections import OrderedDict, defaultdict
 import csv
+from io import StringIO
+from itertools import chain
+import logging
+import os
+
+from chalice import Response
+import jmespath
+from jsonobject import (DictProperty,
+                        FloatProperty,
+                        IntegerProperty,
+                        JsonObject,
+                        ListProperty,
+                        ObjectProperty,
+                        StringProperty)
+
+from azul.service.responseobjects.utilities import json_pp
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
