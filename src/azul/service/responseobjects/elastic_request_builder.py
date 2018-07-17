@@ -1,20 +1,21 @@
 #!/usr/bin/python
-from aws_requests_auth import boto_utils
-from aws_requests_auth.aws_auth import AWSRequestsAuth
-from typing import Tuple
-
-from azul.service import config
 from copy import deepcopy
-from elasticsearch import Elasticsearch, RequestsHttpConnection
-from elasticsearch_dsl import Search, Q, A
 import json
 import logging
 import os
-from azul.service.responseobjects.hca_response_v5 import (KeywordSearchResponse,
+from typing import Tuple
+
+from aws_requests_auth import boto_utils
+from aws_requests_auth.aws_auth import AWSRequestsAuth
+from elasticsearch import Elasticsearch, RequestsHttpConnection
+from elasticsearch_dsl import A, Q, Search
+
+from azul.service import config
+from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse,
                                                           FileSearchResponse,
-                                                          SummaryResponse,
+                                                          KeywordSearchResponse,
                                                           ManifestResponse,
-                                                          AutoCompleteResponse)
+                                                          SummaryResponse)
 from azul.service.responseobjects.utilities import json_pp
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")

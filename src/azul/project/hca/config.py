@@ -6,8 +6,8 @@ from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
 from azul.base_config import BaseIndexProperties
-from .transformers import FileTransformer, SpecimenTransformer
 from azul.transformer import Transformer
+from .transformers import FileTransformer, SpecimenTransformer
 
 
 class IndexProperties(BaseIndexProperties):

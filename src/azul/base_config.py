@@ -1,7 +1,9 @@
 from abc import ABC
-from elasticsearch import Elasticsearch
 import os
-from typing import Iterable, Mapping, Any
+from typing import Any, Iterable, Mapping
+
+from elasticsearch import Elasticsearch
+
 from azul.transformer import Transformer
 
 

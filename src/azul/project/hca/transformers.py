@@ -1,12 +1,14 @@
 
 from collections import defaultdict
 from itertools import chain, tee
-import jmespath
 import operator
-from typing import Mapping, Sequence, Iterable
+from typing import Iterable, Mapping, Sequence
 
+import jmespath
+
+from azul.transformer import Document, ElasticSearchDocument, Transformer
 from . import extractors
-from azul.transformer import Transformer, ElasticSearchDocument, Document
+
 
 # TODO: consider moving the current "create_specimens", etc. to "extract_speciments" and then make a new method called "assign_specimens", etc
 # TODO: Refactor the creation of the subunits.

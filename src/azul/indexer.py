@@ -9,7 +9,7 @@ The based class Indexer serves as the basis for additional indexing classes.
 from abc import ABC
 from collections import defaultdict
 import logging
-from typing import Mapping, Any, MutableMapping
+from typing import Any, Mapping, MutableMapping
 
 from elasticsearch import ConflictError, ElasticsearchException
 from elasticsearch.helpers import parallel_bulk, streaming_bulk
