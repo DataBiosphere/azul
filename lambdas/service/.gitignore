@@ -2,5 +2,4 @@
 /.chalice/venv/
 /.chalice/config.json
 /.chalice/deployed.json
-/chalicelib/*/
 /lambda-policy.json

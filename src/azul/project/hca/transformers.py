@@ -5,11 +5,8 @@ import jmespath
 import operator
 from typing import Mapping, Sequence, Iterable
 
-# pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), 'chalicelib'))  # noqa
-# sys.path.insert(0, pkg_root)  # noqa
-
-import project.hca.extractors as extractors
-from utils.transformer import Transformer, ElasticSearchDocument, Document
+from . import extractors
+from azul.transformer import Transformer, ElasticSearchDocument, Document
 
 # TODO: consider moving the current "create_specimens", etc. to "extract_speciments" and then make a new method called "assign_specimens", etc
 # TODO: Refactor the creation of the subunits.

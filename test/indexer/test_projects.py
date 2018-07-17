@@ -1,7 +1,7 @@
 from datetime import datetime
 import unittest
-from project.hca.indexer import Indexer
-from project.hca.config import IndexProperties
+from azul.project.hca.indexer import Indexer
+from azul.project.hca.config import IndexProperties
 from typing import Mapping, Any
 from uuid import uuid4
 import logging

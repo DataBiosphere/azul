@@ -1,6 +1,6 @@
 import json
 
-from utils import config
+from azul import config
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 import os

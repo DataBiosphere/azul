@@ -14,8 +14,8 @@ from typing import Mapping, Any, MutableMapping
 from elasticsearch import ConflictError, ElasticsearchException
 from elasticsearch.helpers import parallel_bulk, streaming_bulk
 
-from utils.base_config import BaseIndexProperties
-from utils.downloader import MetadataDownloader
+from azul.base_config import BaseIndexProperties
+from azul.downloader import MetadataDownloader
 
 log = logging.getLogger(__name__)
 
