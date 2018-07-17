@@ -24,7 +24,7 @@ and use Elasticsearch version 5.5 and click next.
 1. Edit the following values in the policy with your own values:
     - `<your-es-domain-name>` is the name of the elasticsearch domain
     - `<your-indexer-lambda-domain-name>` is the name that you will give the Lambda project.
-    - `<AWS-account-ID>` is not your IAM User name, but a numeric id representing your aws account. You can find your AWS account ID by clicking "Select a Template" dropdown box. 
+    - `<AWS-account-ID>` is not your IAM User name, but a numeric id representing your AWS account. You can find your AWS account ID by clicking "Select a Template" dropdown box. 
     Then, click "Allow or deny access to one or more AWS accounts or IAM users". Then, a pop-up will appear with your "AWS account ID".
     - `<your-ip-address>` is your ip address.
 1. Record the values above for later use. They will be need to setup later components.
@@ -121,17 +121,17 @@ add the `--stage <stage name>` option. Since we have created a policy in AWS we 
    pip install --upgrade hca
    ```
 1. Setting up config file using the instructions located [here](https://github.com/HumanCellAtlas/dcp-cli#development).
+1. Login to HCA using the command
+   ```
+   hca dss login
+   ```
 1. Check if your HCA DSS deployment has been configured correctly by running
    ```
    hca dss post-search --replica aws --es-query '{}'
    ```
 You should receive a response json containing one or more urls. Check if the returned URLs match the intended DSS Server.
-1. Login to HCA using the command
-   ```
-   hca dss login
-   ```
 1. You should have received the response `Please visit this URL to authorize this application...` and the corresponding URL.
-Click on link. Your web browser should appear requesting you to login. Login with your UCSC Gmail Account.
+Click on link. Your web browser should appear requesting you to login. Login with your Google Account.
 1. Registering the subscription
    ```
    hca dss put-subscription --replica <aws or gcp> --callback-url <azul-indexer-url> --es-query '{"query": {"match_all": {}}}'
@@ -146,11 +146,11 @@ Click on link. Your web browser should appear requesting you to login. Login wit
 
 Run the command below.
 ```
-python test/find-golden-tickets.py --dss-url https://<your DSS URL>c--indexer-url https://<your elasticsearch endpoint> --es-query {}`
+python test/find-golden-tickets.py --dss-url https://<your DSS URL> --indexer-url https://<your elasticsearch endpoint> --es-query {}`
 ```
 where you replace the `<>` value with your own values.
-- `<your DSS URL>` is the endpoint of the HCA DSS.
-- `<your elasticsearch endpoint>` is url of Azul's Elasticsearch Domain.
+- `<your DSS URL>` is the endpoint of the HCA DSS and the /v1 url path. (e.g. example-dss.ucsc-cgp.org/v1)
+- `<your elasticsearch endpoint>` is url of Azul's Elasticsearch Domain. (e.g. search-example-lambda-abcdefghijklmnopqrstuvwxyz.us-west-2.es.amazonaws.com)
        
 
 ## Finding the URL of your Azul Indexer Lambda
@@ -175,7 +175,6 @@ After expanding the details, you should see the **Invoke URL**. This is the URL 
 ### Todo List
 
 * how to setup Kibana for security group reasons
-* how to run find-golden-tickets.py
 * improve mappings to Chalice
 * list handling in json files
 * cron deduplication
