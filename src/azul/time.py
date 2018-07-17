@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import time
 
-from utils import require
+from azul import require
 from utils.types import LambdaContext
 
 
