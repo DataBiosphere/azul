@@ -43,12 +43,14 @@ emit({
                 lambda_name: {
                     "domain_name": config.api_lambda_domain(lambda_name),
                     "validation_method": "DNS",
+                    "provider": "aws.us-east-1"
                 }
             },
             "aws_acm_certificate_validation": {
                 lambda_name: {
                     "certificate_arn": "${aws_acm_certificate.%s.arn}" % lambda_name,
-                    "validation_record_fqdns": ["${aws_route53_record.%s_domain_validation.fqdn}" % lambda_name]
+                    "validation_record_fqdns": ["${aws_route53_record.%s_domain_validation.fqdn}" % lambda_name],
+                    "provider": "aws.us-east-1"
                 }
             },
             "aws_route53_record": {
