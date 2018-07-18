@@ -1,0 +1,26 @@
+{
+    "22467_6#209_1.fastq.gz": {
+        "content-type": "application/gzip; dcp-type=data",
+        "crc32c": "c3a170ed",
+        "indexed": false,
+        "name": "22467_6#209_1.fastq.gz",
+        "s3_etag": "7df2abd52fb511a5a0015a1d5a6d6652",
+        "sha1": "d671d9c43e24a5d3efce53db9e51783628992d0a",
+        "sha256": "be1413a1851354eaac53bf795f74d615b383626f4d78e7d8c7ce69806585f4c4",
+        "size": 1032483,
+        "uuid": "2d8cdf91-8162-4321-9923-e00e90fd9133",
+        "version": "2018-03-29T153501.427209Z"
+    },
+    "22467_6#209_2.fastq.gz": {
+        "content-type": "application/gzip; dcp-type=data",
+        "crc32c": "a39019f8",
+        "indexed": false,
+        "name": "22467_6#209_2.fastq.gz",
+        "s3_etag": "d478462fab81e0310d9efd4209420423",
+        "sha1": "94a4bfa3c6d1bf46cb424dff293311205971ad60",
+        "sha256": "1e0f159cf347a4a65ede1240f03101aab4885c9209a45b0d07bcd536a74b6998",
+        "size": 1205219,
+        "uuid": "d9087c74-a41e-4702-8481-cea3ef68379c",
+        "version": "2018-03-29T153502.542108Z"
+    }
+}
