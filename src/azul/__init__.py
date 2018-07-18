@@ -1,4 +1,7 @@
+import functools
 import os
+import time
+
 from typing import Tuple
 
 from azul.deployment import aws
@@ -122,3 +125,32 @@ def reject(condition: bool, *args, exception: type = RequirementError):
     """
     if condition:
         raise exception(*args)
+
+
+# Taken from:
+# https://github.com/HumanCellAtlas/data-store/blob/90ffc8fccd2591dc21dab48ccfbba6e9ac29a063/tests/__init__.py
+def eventually(timeout: float, interval: float, errors: set={AssertionError}):
+    """
+    @eventually runs a test until all assertions are satisfied or a timeout is reached.
+    :param timeout: time until the test fails
+    :param interval: time between attempts of the test
+    :param errors: the exceptions to catch and retry on
+    :return: the result of the function or a raised assertion error
+    """
+    def decorate(func):
+        @functools.wraps(func)
+        def call(*args, **kwargs):
+            timeout_time = time.time() + timeout
+            error_tuple = tuple(errors)
+            while True:
+                try:
+                    return func(*args, **kwargs)
+                except error_tuple:
+                    if time.time() >= timeout_time:
+                        raise
+                    time.sleep(interval)
+
+        return call
+
+    return decorate
+
