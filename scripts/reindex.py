@@ -25,30 +25,13 @@ from azul import config
 
 logger = logging.getLogger(__name__)
 
+plugin = config.plugin()
+
 
 class Defaults:
     dss_url = config.dss_endpoint
     indexer_url = "https://" + config.api_lambda_domain('indexer') + "/"
-    es_query = {
-        "query": {
-            "bool": {
-                "must_not": [
-                    {
-                        "term": {
-                            "admin_deleted": True
-                        }
-                    }
-                ],
-                "must": [
-                    {
-                        "exists": {
-                            "field": "files.biomaterial_json"
-                        }
-                    }
-                ]
-            }
-        }
-    }
+    es_query = plugin.dss_subscription_query
     num_workers = 16
 
 
