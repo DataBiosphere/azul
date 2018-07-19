@@ -10,6 +10,7 @@ terraform:
 
 deploy:
 	$(MAKE) -C lambdas
+	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py --shared; fi
 
 clean:
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
