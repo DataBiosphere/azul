@@ -69,8 +69,34 @@ azul_vars=(
     # The number of workers polling queues for each Lambda invocation
     AZUL_INDEX_WORKERS
 
-    # The number of workers pulling files from DSS. There is one such set of DSS workers per index worker!
+    # The number of workers pulling files from DSS. There is one such set of DSS
+    # workers per index worker!
     AZUL_DSS_WORKERS
+
+    # Whether to create a subscription to DSS during deployment. Set this
+    # variable to 1 to enable `make deploy` to subscribe the indexer in the
+    # active deployment to DSS bundle events. Making a subscription requires
+    # authenticating against DSS using a Google service account specific to this
+    # deployment.
+    #
+    # If making the subscription is enabled, `make terraform` will automatically
+    # set up the Google service account for the indexer and deposit its
+    # credentials into AWS secrets manager. For this to work you need to
+    # configure your *personal* service account credentials in
+    # `environment.local` enabling Terraform to create the shared *indexer*
+    # service account. The two variables that need to be set are
+    # GOOGLE_APPLICATION_CREDENTIALS and GOOGLE_PROJECT. These are well
+    # documented. You need to use service account credentials, `gcloud auth
+    # login` apparently does not work for this.
+    #
+    # Set this variable to 0 to prevent the registration of a subscription and
+    # to disable the creation of the Google service account. You won't need to
+    # configure any Google credentials in that case. Note that disabling the
+    # subscription registration won't remove any existing subscriptions. Use
+    # `scripts/subscribe.py -U` for that.
+    # 
+    # If you want to use your personal Google service account 
+    AZUL_SUBSCRIBE_TO_DSS
 )
 
 unset ${azul_vars[*]}
@@ -132,6 +158,7 @@ _set AZUL_ES_INSTANCE_TYPE "m4.large.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 35
 _set AZUL_INDEX_WORKERS 16
 _set AZUL_DSS_WORKERS 8
+_set AZUL_SUBSCRIBE_TO_DSS 0
 
 # FIXME: the index name should contain the stage name so we can share an ES
 # instance between deployments. However, the indexer seems to be hard-wired
