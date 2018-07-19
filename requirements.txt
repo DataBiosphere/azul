@@ -13,3 +13,4 @@ git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
 requests==2.19.1
 requests-aws4auth==0.9
 requests-http-signature==0.0.3
+urllib3==1.23
