@@ -1,21 +1,22 @@
 import functools
+import importlib
 import os
 import time
 
 from typing import Tuple
 
+from azul.base_config import BaseIndexProperties
 from azul.deployment import aws
+from azul.indexer import BaseIndexer
 
 
-# FIXME: Once indexer has a `src` directory this should be moved such that it is importable as from azul import config
 
-# FIXME: This class collides with the plugin config classes derived from BaseIndexerConfig, they should be consolidated
 
 class Config:
     """
     See `environment` for documentation of these settings.
     """
-
+    # FIXME: This collides with the plugin config classes derived from BaseIndexerConfig, they should be consolidated
     @property
     def es_endpoint(self) -> Tuple[str, int]:
         try:
@@ -87,6 +88,22 @@ class Config:
     @property
     def domain_name(self) -> str:
         return os.environ['AZUL_DOMAIN_NAME']
+
+    def google_service_account(self, lambda_name):
+        return f"dcp/azul/{self.deployment_stage}/{lambda_name}/google_service_account"
+
+    # FIXME: type hint return value
+
+    def plugin(self):
+        plugin_name = 'azul.project.' + os.environ.get('AZUL_PROJECT', 'hca')
+        plugin = importlib.import_module(plugin_name)
+        assert issubclass(plugin.Indexer, BaseIndexer)
+        assert issubclass(plugin.IndexProperties, BaseIndexProperties)
+        return plugin
+
+    @property
+    def subscribe_to_dss(self):
+        return 0 != int(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
 
 
 config = Config()
