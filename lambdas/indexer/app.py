@@ -22,8 +22,6 @@ from chalice import Chalice
 from chalice.app import CloudWatchEvent
 import requests.adapters
 
-from azul.base_config import BaseIndexProperties
-from azul.indexer import BaseIndexer
 from azul.time import RemainingLambdaContextTime, RemainingTime
 from azul import config
 
@@ -38,10 +36,7 @@ app.log.setLevel(logging.DEBUG)  # please use module logger instead
 
 # Initialize the project-specific plugin
 #
-plugin_name = 'azul.project.' + os.environ.get('INDEXER_PROJECT', 'hca')
-plugin = importlib.import_module(plugin_name)
-assert issubclass(plugin.Indexer, BaseIndexer)
-assert issubclass(plugin.IndexProperties, BaseIndexProperties)
+plugin = config.plugin()
 properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
                                     es_endpoint=config.es_endpoint)
 indexer = plugin.Indexer(properties)
