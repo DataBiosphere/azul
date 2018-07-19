@@ -339,10 +339,10 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_process = {
                     "processId": process_id,
                     "processName": process.get("process_name", None),
-                    "libraryConstructionApproach": process.get("library_construction", None),
-                    "instrument": process.get("instrument", None),
+                    "libraryConstructionApproach": process.get("library_construction_approach", None),
+                    "instrument": process.get("instrument_manufacturer_model", None),
                     "protocolId": process.get("protocol_id", None),
-                    "protocol": process.get("protocol", None),
+                    "protocol": process.get("protocol_name", None),
                 }
                 if process_id not in processes:
                     processes[process_id] = translated_process
@@ -356,16 +356,16 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for bundle in entry["bundles"]:
             project = bundle["contents"]["project"]
             project.pop("_type")
-            project_id = project["project"]
+            project_shortname = project["project_shortname"]
             translated_project = {
-                "shortname": project_id,
+                "projectShortname": project_shortname,
                 "laboratory": list(set(project.get("laboratory")) if project.get("laboratory") else [])
             }
-            if project_id not in projects:
-                projects[project_id] = translated_project
+            if project_shortname not in projects:
+                projects[project_shortname] = translated_project
             else:
-                merged_project = self._merge(projects[project_id], translated_project, "shortname")
-                projects[project_id] = merged_project
+                merged_project = self._merge(projects[project_shortname], translated_project, "shortname")
+                projects[project_shortname] = merged_project
         return list(projects.values())
 
     def make_files(self, entry):
@@ -373,7 +373,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for bundle in entry["bundles"]:
             for _file in bundle["contents"]["files"]:
                 new_file = {
-                    "format": _file.get("format"),
+                    "format": _file.get("file_format"),
                     "name": _file.get("name"),
                     "sha1": _file.get("sha1"),
                     "size": _file.get("size"),
@@ -391,16 +391,16 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 specimen_id = specimen["biomaterial_id"]
                 translated_specimen = {
                     "id": specimen_id,
-                    "genusSpecies": specimen.get("species", None),
+                    "genusSpecies": specimen.get("genus_species", None),
                     "organ": specimen.get("organ", None),
                     "organPart": specimen.get("organ_part", None),
-                    "organismAge": specimen.get("age", None),
-                    "organismAgeUnit": specimen.get("age_unit", None),
-                    "biologicalSex": specimen.get("sex", None),
+                    "organismAge": specimen.get("organism_age", None),
+                    "organismAgeUnit": specimen.get("organism_age_unit", None),
+                    "biologicalSex": specimen.get("biological_sex", None),
                     "disease": specimen.get("disease", None),
                     "storageMethod": specimen.get("storage_method", None),
-                    "source": specimen.get("source", None),
-                    "totalCells": specimen.get("total_cells", None)
+                    "source": specimen.get("_source", None),
+                    "totalCells": specimen.get("total_estimated_cells", None)
                 }
                 if specimen_id not in specimens:
                     for key, value in translated_specimen.items():
