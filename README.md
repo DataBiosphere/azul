@@ -67,16 +67,13 @@ The remaining infrastructure is managed internally with TerraForm.
 4) In `deployments/.active/environment` change `AZUL_DEPLOYMENT_STAGE` to the
    name of your deployment. In this example, we'd be setting it to `foo`.
 
-5) In the project root, create `environment.local` containing 
+5) In the project root, create `deployments/.active/environment.local`
+   containing
 
    ```
    export AWS_PROFILE=...
    export AWS_DEFAULT_REGION=...
    ```
-   
-   Alternatively, you could use `deployments/.active/environment.local` but if 
-   these two variables are the same in all deployments it makes sense to 
-   set them globally, for all deployments.
 
 6) Load the environment:
 
