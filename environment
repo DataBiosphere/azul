@@ -75,8 +75,6 @@ azul_vars=(
 
 unset ${azul_vars[*]}
 
-# FIXME: try to use _set here
-
 AZUL_HOME="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ ! -f "${AZUL_HOME}/deployments/.active/environment" ]]; then
@@ -87,13 +85,17 @@ fi
 
 _set () {
     for var in ${azul_vars[*]}; do
-        if [[ "$var" == "$1" ]]; then
-            if [[ -n "$PS1" ]]; then
-                # Only echo in interactive shells
-                echo $BASH_SOURCE: Setting $1 to "'$2'"
-            fi
-            # Actually set the value
+        if [[ ${var} == $1 ]]; then
             eval ": \${$1:='$2'}"
+            # Only echo in interactive shells
+            if [[ -n $PS1 ]]; then
+                self=${BASH_SOURCE[1]#${AZUL_HOME}/}
+                if [[ ${!1} == $2 ]]; then
+                    echo ${self}: Set $1 to "'$2'"
+                else
+                    echo ${self}: Not setting $1 to "'$2'"
+                fi
+            fi
             return
         fi
     done
