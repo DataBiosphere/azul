@@ -155,3 +155,4 @@ _refresh () {
 }
 
 export PYTHONPATH="$AZUL_HOME/src"
+export TF_DATA_DIR="${AZUL_HOME}/deployments/.active/.terraform"
