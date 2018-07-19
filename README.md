@@ -63,9 +63,11 @@ The remaining infrastructure is managed internally with TerraForm.
    ln -snf foo.local .active
    cd ..
    ```  
-   
+
 4) In `deployments/.active/environment` change `AZUL_DEPLOYMENT_STAGE` to the
-   name of your deployment. In this example, we'd be setting it to `foo`.
+   name of your deployment. In this example, we'd be setting it to `foo`. If you
+   don't have a Google service account in a GCP project that's white-listed for
+   subscriptions in DSS, set AZUL_SUBSCRIBE_TO_DSS to 0.
 
 5) In the project root, create `deployments/.active/environment.local`
    containing
@@ -187,6 +189,26 @@ notification is currently not used by the indexer.
 Overriding `AWS_CONFIG_FILE` and `AWS_SHARED_CREDENTIALS_FILE` for the `chalice
 local` step is necessary because `config.json` sets `HOME` to `/tmp`.
 
+# Troubleshooting
+
+`make terraform` complains 
+
+```
+Initializing the backend...
+Backend configuration changed!
+
+Terraform has detected that the configuration specified for the backend
+has changed. Terraform will now check for existing state in the backends.
+
+
+Error inspecting states in the "s3" backend:
+    NoSuchBucket: The specified bucket does not exist
+```
+
+… but the bucket does exist. Make sure
+`deployments/.active/.terraform/terraform.tfstate` refers to the correct
+bucket, the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE`. If it
+doesn't, you may have to remove that file or modify it to fix the bucket name.
 
 ## Branch flow & development process
 
