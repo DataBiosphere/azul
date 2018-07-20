@@ -2,7 +2,7 @@ import ast
 import logging.config
 import os
 
-from chalice import Chalice
+from chalice import Chalice, BadRequestError
 
 from azul import config
 import azul.service.config
@@ -127,16 +127,11 @@ def get_data(file_id=None):
                                            post_filter=True,
                                            index="AZUL_FILE_INDEX")
     except BadArgumentException as bae:
-        response = dict(error=bae.message)
-        response.status_code = 400
+        raise BadRequestError(msg=bae.message)
+    else:
+        if file_id is not None:
+            response = response['hits'][0]
         return response
-    # except Exception as e:
-    #     logger.error("Malformed filters parameter: {}".format(e))
-    #     return "Malformed filters parameter"
-    # Returning a single response if <file_id> request form is used
-    if file_id is not None:
-        response = response['hits'][0]
-    return response
 
 
 @app.route('/repository/specimens', methods=['GET'], cors=True)
@@ -212,16 +207,12 @@ def get_specimen_data(specimen_id=None):
                                            post_filter=True,
                                            index="AZUL_SPECIMEN_INDEX")
     except BadArgumentException as bae:
-        response = dict(error=bae.message)
-        response.status_code = 400
+        raise BadRequestError(msg=bae.message)
+    else:
+        # Returning a single response if <specimen_id> request form is used
+        if specimen_id is not None:
+            response = response['hits'][0]
         return response
-    # except Exception as e:
-    #     logger.error("Malformed filters parameter: {}".format(e))
-    #     return "Malformed filters parameter"
-    # Returning a single response if <specimen_id> request form is used
-    if specimen_id is not None:
-        response = response['hits'][0]
-    return response
 
 
 @app.route('/repository/files/piecharts', methods=['GET'], cors=True)
@@ -293,9 +284,7 @@ def get_data_pie():
         # Returning a single response if <file_id> request form is used
         return response
     except BadArgumentException as bae:
-        response = dict(error=bae.message)
-        response.status_code = 400
-        return response
+        raise BadRequestError(msg=bae.message)
     except Exception as e:
         logger.error("Malformed filters parameter: {}".format(e))
         return "Malformed filters parameter"

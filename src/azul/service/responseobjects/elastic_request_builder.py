@@ -450,6 +450,16 @@ class ElasticTransformDump(object):
         if not filters:
             filters = {"file": {}}
         filters = filters['file']
+
+        translation_dict = request_config['translation']
+        for facet in filters.keys():
+            if facet not in translation_dict:
+                raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
+
+        facet = pagination["sort"]
+        if facet not in translation_dict:
+            raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
+
         # No faceting (i.e. do the faceting on the filtered query)
         self.logger.debug('Handling presence or absence of faceting')
         if post_filter is False:
