@@ -10,15 +10,27 @@ terraform:
 
 deploy:
 	$(MAKE) -C lambdas
+
+subscribe:
 	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py --shared; fi
+
+reindex:
+	python scripts/reindex.py
+
+everything:
+	$(MAKE) terraform
+	$(MAKE) deploy
+	$(MAKE) terraform  # for custom domain names
+	$(MAKE) subscribe
+	$(MAKE) reindex
 
 clean:
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
 
 test:
-	make -C test/service testme
+	$(MAKE) -C test/service testme
 
 travis:
-	make -C test/service travistest
+	$(MAKE) -C test/service travistest
 
-.PHONY: all terraform deploy clean test travis
+.PHONY: all terraform deploy subscribe everything reindex clean test travis
