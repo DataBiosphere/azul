@@ -284,7 +284,7 @@ def get_data_pie():
         # Returning a single response if <file_id> request form is used
         return response
     except BadArgumentException as bae:
-        raise BadArgumentException(bae.message)
+        raise BadRequestError(msg=bae.message)
     except Exception as e:
         logger.error("Malformed filters parameter: {}".format(e))
         return "Malformed filters parameter"
