@@ -28,6 +28,10 @@ class Config:
             return host, int(port)
 
     @property
+    def project_root(self) -> str:
+        return os.environ['AZUL_HOME']
+
+    @property
     def es_domain(self):
         return os.environ['AZUL_ES_DOMAIN']
 
