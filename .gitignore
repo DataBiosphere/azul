@@ -42,6 +42,7 @@ __pycache__/
 /deployments/*.local
 /environment.local
 /deployments/*/environment.local
+/deployments/*/.terraform/
 
 # PyTest
 .cache
