@@ -20,9 +20,9 @@ Both the indexer and the web service allow for project-specific customizations
 via a plug-in mechanism, allowing the Boardwalk UI codebase to be functionally
 generic with minimal need for project-specific behavior.
 
-## Getting Started
+## 1. Getting Started
 
-### Development Preequisites
+### 1.1. Development Preequisites
 
 - Python 3.6 with virtualenv and pip
 
@@ -32,7 +32,7 @@ generic with minimal need for project-specific behavior.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
-### Runtime Preequisites (Infrastructure)
+### 1.2. Runtime Preequisites (Infrastructure)
 
 - HCA DSS (aka Blue Box): It is required to know the URL of the HumanCellAtlas
   Data Store webservice endpoint. See here for instructions:
@@ -40,7 +40,7 @@ generic with minimal need for project-specific behavior.
 
 The remaining infrastructure is managed internally with TerraForm.
 
-### Project configuration
+### 1.3. Project configuration
 
 1) Create a Python 3.6 virtualenv and activate it, for example 
    
@@ -97,7 +97,9 @@ The remaining infrastructure is managed internally with TerraForm.
    address the complaint and repeat. The various sanity checks are defined in
    `common.mk`.
 
-### Provisioning cloud infrastructure
+## 2. Deployment
+
+### 2.1. Provisioning cloud infrastructure
 
 Once you've successfully configured the project and your personal deployment,
 it is time to provision the cloud infrastructure for your deployment. Running
@@ -113,7 +115,7 @@ resources are defined in `….tf.json` files which in turn are generated from
 `….tf.json.template.py` files which are simple Python scripts containing the
 desired JSON as Python dictionary and list literals and comprehensions.
 
-### Deploying lambda functions
+### 2.2. Deploying lambda functions
 
 Once the cloud infrastructure for your deployment has been provisioned, you can
 deploy the project code into AWS Lambda. Running
@@ -126,7 +128,7 @@ Will create or update AWS Lambda functions for each lambda defined in the
 `lambdas` directory. It will also create or update an AWS API Gateway to proxy
 the functions that act as web services. We call those functions *API lambdas*.
 
-### Provisioning stable API domain names
+### 2.3. Provisioning stable API domain names
 
 The HTTP endpoint offered by API Gateway have somewhat cryptic and hard to
 remember domain names:
@@ -135,11 +137,11 @@ https://klm8yi31z7.execute-api.us-east-1.amazonaws.com/hannes/
 
 Furthermore, the API ID at the beginning of the above URL is likely to change
 when you accidentally delete the REST API and then recreate it. To provide
-stable and user-friendly URLs for the API lambdas, we provision a custom domain
-name object in API Gateway along with an ACM certificate and a CNAME record in
-Route 53. Running `make terraform` again after `make deploy` will detect the
-newly deployed API lambdas and create those resources for you. What the
-user-friendly domain names look like depends on project configuration. The
+stable and user-friendly URLs for the API lambdas, we provision a *custom
+domain name* object in API Gateway along with an ACM certificate and a CNAME
+record in Route 53. Running `make terraform` again after `make deploy` will
+detect the newly deployed API lambdas and create those resources for you. What
+the user-friendly domain names look like depends on project configuration. The
 default for HCA is currently
 
 http://indexer.${AZUL_DEPLOYMENT_STAGE}.azul.data.humancellatlas.org/
@@ -148,7 +150,30 @@ http://service.${AZUL_DEPLOYMENT_STAGE}.azul.data.humancellatlas.org/
 Note that while the native API Gateway URL refers to the stage in the URL path,
 the stable URL mentions it in the domain name.
 
-### Running indexer locally
+### 2.4. Subscribing to DSS
+
+Once the Lambda functions have been deployed, and the custom domain names
+provisioned, the indexer can be registered to receive notifications about new
+bundles from the configured DSS instance. 
+
+```
+make subscribe
+```
+
+By default, the provisioning of that subscription is disabled (see
+`AZUL_SUBSCRIBE_TO_DSS` in `environment`) but the shared deployments in
+`deployments/` have it enabled. If you want to subscribe your personal
+deployment to DSS you can set `AZUL_SUBSCRIBE_TO_DSS` or run
+`scripts/subscribe.py` manually.
+
+### 2.5. Reindexing
+
+The DSS instance used by a deployment is likely to contain existing bundles. To
+index them run:
+
+`make reindex`
+
+## 3. Running indexer locally
 
 1) As usual, activate the virtualenv and `source environment` if you haven't
    done so already
@@ -189,7 +214,7 @@ notification is currently not used by the indexer.
 Overriding `AWS_CONFIG_FILE` and `AWS_SHARED_CREDENTIALS_FILE` for the `chalice
 local` step is necessary because `config.json` sets `HOME` to `/tmp`.
 
-# Troubleshooting
+## 4. Troubleshooting
 
 `make terraform` complains 
 
@@ -210,7 +235,7 @@ Error inspecting states in the "s3" backend:
 bucket, the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE`. If it
 doesn't, you may have to remove that file or modify it to fix the bucket name.
 
-## Branch flow & development process
+## 5. Branch flow & development process
 
 The section below describes the flow we want to get to eventually, not the one
 we are currently using while this repository recovers from the aftermath of its
@@ -375,7 +400,7 @@ two remotes: `origin` (the forked repository) and `upstream` (the upstream
 repository). Other team members can usually get by with just one remote,
 `origin`.
 
-### Deployment branches
+### 5.1. Deployment branches
 
 The code in the upstream repository should never be deployed anywhere because
 it does not contain any concrete modules to be loaded at runtime. The code in a
@@ -391,9 +416,9 @@ fast-forward. A push to any of the deployment branches will trigger a CI/CD
 build that performs the deployment. The promotion could be automatic and/or
 gated on a condition, like tests passing.
 
-## Indexer
+## 6. Indexer
 
-### Config File
+### 6.1. Config File
 
 [This section is out of date.]
 
@@ -503,7 +528,7 @@ Given a config:
  }
 ```
 
-### Manual Loading
+### 6.2. Manual Loading
 
 Download and expand import.tgz from Data-Bundle-Examples:
 https://github.com/HumanCellAtlas/data-bundle-examples/blob/master/import/import
@@ -523,7 +548,7 @@ Note: Manual loading creates mappings for ES, has some list parsing capability,
 and if `key` in config.json does not exist, returns a value of "no `key`".
 (This functionality is not present in the Chalice function yet)
 
-### Stress test
+### 6.3. Stress test
 
 The test data can be populated under `test/data_generator` directory to an
 ElasticSearch instance by updating the ES URL and directory name in
@@ -547,7 +572,7 @@ If `--no-web` is not generated, locust will create an UI on port `8089` where
 you can configure the parameters.
 
 
-### Todo List
+### 6.4. Todo List
 
 [This section needs to be converted to tickets and then removed]
 
@@ -565,9 +590,9 @@ you can configure the parameters.
 * Improve debugging (config for turning on/off debug)
 
 
-## Service
+## 7. Service
 
-### General Overview
+### 7.1. General Overview
 The web app is subdivided into different flask blueprints, each filling out a particular function. The current blueprints are:
 
 * action
@@ -577,7 +602,7 @@ The web app is subdivided into different flask blueprints, each filling out a pa
 * webservice
   * The backend that powers the Boardwalk portal. Queries ElasticSearch to serve an API that allows to apply filters and do faceting on entries within ElasticSearch.
   
-### On the Webservice
+### 7.2. On the Webservice
 
 The responseobjects module is responsible for handling the faceting and API response creation. Within this module, `elastic_request_builder` is responsible for taking in the parameters passed in through the `HTTP` request and creating a query to ElasticSearch. Then, `api_response` is responsible for parsing the data from ElasticSearch and creating the API response.
 
