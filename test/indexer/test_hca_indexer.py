@@ -60,11 +60,11 @@ class TestHCAIndexer(unittest.TestCase):
 
     def _mock_index(self, test_bundles, data_pack):
         bundle_uuid, bundle_version = test_bundles
-        metadata, data = data_pack
+        metadata, manifest = data_pack
         fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
 
         with patch.object(MetadataDownloader, 'extract_bundle') as mock_method:
-            mock_method.return_value = metadata, data
+            mock_method.return_value = metadata, manifest
             self.hca_indexer.index(fake_event)
 
     @eventually(5.0, 0.5)
