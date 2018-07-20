@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
-from azul.project.hca.metadata_api.bundle import Bundle
+from azul.project.hca.metadata_api import Bundle
 
 logging.basicConfig(level=logging.INFO)
 module_logger = logging.getLogger(__name__)
