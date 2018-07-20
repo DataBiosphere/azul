@@ -61,7 +61,21 @@ def setenv():
 
 
 def _run(command) -> str:
-    return subprocess.run(command, stdout=subprocess.PIPE, shell=True).stdout.decode()
+    bash = "/bin/bash"
+    try:
+        shell = os.environ['SHELL']
+    except KeyError:
+        shell = bash
+    else:
+        # allow a custom path to bash, but reject all other shells
+        if os.path.basename(shell) != 'bash':
+            shell = bash
+    args = [shell, '-c', command]
+    process = subprocess.run(args, stdout=subprocess.PIPE)
+    output = process.stdout.decode()
+    if process.returncode != 0:
+        raise RuntimeError(f'Running {args} failed with {process.returncode}:\n{output}')
+    return output
 
 
 def _parse(env: str):
