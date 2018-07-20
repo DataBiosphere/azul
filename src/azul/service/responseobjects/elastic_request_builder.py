@@ -450,6 +450,15 @@ class ElasticTransformDump(object):
         if not filters:
             filters = {"file": {}}
         filters = filters['file']
+
+        for fltr in filters:
+            if fltr not in request_config['translation']:
+                raise BadArgumentException(f"Unable to filter by {fltr}. The field, {fltr}, doesn't exist.")
+
+        sort_field = pagination["sort"]
+        if sort_field not in request_config['translation']:
+            raise BadArgumentException(f"Unable to sort by {sort_field}. The field, {sort_field}, doesn't exist.")
+
         # No faceting (i.e. do the faceting on the filtered query)
         self.logger.debug('Handling presence or absence of faceting')
         if post_filter is False:
