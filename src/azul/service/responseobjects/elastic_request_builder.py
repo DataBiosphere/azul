@@ -451,13 +451,14 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         filters = filters['file']
 
-        for fltr in filters:
-            if fltr not in request_config['translation']:
-                raise BadArgumentException(f"Unable to filter by {fltr}. The field, {fltr}, doesn't exist.")
+        translation_dict = request_config['translation']
+        for facet in filters:
+            if facet not in translation_dict:
+                raise BadArgumentException(f"Unable to filter by undefined facet, {facet}.")
 
-        sort_field = pagination["sort"]
-        if sort_field not in request_config['translation']:
-            raise BadArgumentException(f"Unable to sort by {sort_field}. The field, {sort_field}, doesn't exist.")
+        sort_facet = pagination["sort"]
+        if sort_facet not in translation_dict:
+            raise BadArgumentException(f"Unable to sort by undefined facet, {sort_facet}.")
 
         # No faceting (i.e. do the faceting on the filtered query)
         self.logger.debug('Handling presence or absence of faceting')
