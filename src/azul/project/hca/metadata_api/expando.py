@@ -1,6 +1,3 @@
-from typing import Any
-
-
 class Expando(dict):
     """
     Pass inital attributes to the constructor:
@@ -95,3 +92,4 @@ class Expando(dict):
     def copy(self):
         return type(self)(self)
 
+# source: https://github.com/BD2KGenomics/bd2k-python-lib/blob/master/src/bd2k/util/expando.py

@@ -186,16 +186,12 @@ class CellSuspension(Biomaterial):
 
 @mydataclass
 class CellLine(Biomaterial):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
 class Organoid(Biomaterial):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
@@ -242,17 +238,13 @@ class Process(LinkedEntity):
 # WILL BE DEPRECATED
 @mydataclass
 class DissociationProcess(Process):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 # WILL BE DEPRECATED
 @mydataclass
 class EnrichmentProcess(Process):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 # WILL BE DEPRECATED
@@ -313,58 +305,42 @@ class SequencingProtocol(Protocol):
 
 @mydataclass
 class AnalysisProtocol(Protocol):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
 class AggregateGenerationProtocol(Protocol):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
 class CollectionProtocol(Protocol):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
 class DifferentiationProtocol(Protocol):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
 class DissociationProtocol(Protocol):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
 class EnrichmentProtocol(Protocol):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
 class IpscInductionProtocol(Protocol):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
 class ImagingProtocol(Protocol):
-
-    def __init__(self, json: ObjectifiedJSON) -> None:
-        super().__init__(json)
+    pass
 
 
 @mydataclass
@@ -403,9 +379,7 @@ class SequenceFile(File):
 
 @mydataclass
 class AnalysisFile(File):
-
-    def __init__(self, json: ObjectifiedJSON):
-        super().__init__(json)
+    pass
 
 
 @mydataclass
