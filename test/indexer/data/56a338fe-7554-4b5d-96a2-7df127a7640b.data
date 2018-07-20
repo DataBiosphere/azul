@@ -1,5 +1,5 @@
-{
-    "22467_6#209_1.fastq.gz": {
+[
+    {
         "content-type": "application/gzip; dcp-type=data",
         "crc32c": "c3a170ed",
         "indexed": false,
@@ -11,7 +11,7 @@
         "uuid": "2d8cdf91-8162-4321-9923-e00e90fd9133",
         "version": "2018-03-29T153501.427209Z"
     },
-    "22467_6#209_2.fastq.gz": {
+    {
         "content-type": "application/gzip; dcp-type=data",
         "crc32c": "a39019f8",
         "indexed": false,
@@ -23,4 +23,4 @@
         "uuid": "d9087c74-a41e-4702-8481-cea3ef68379c",
         "version": "2018-03-29T153502.542108Z"
     }
-}
+]
