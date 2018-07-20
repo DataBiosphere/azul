@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Mapping, Any
 from uuid import uuid4
 
+from azul import eventually
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
 from azul.project.hca.metadata_api import Bundle
@@ -78,35 +79,16 @@ class TestDataExtractor(unittest.TestCase):
             module_logger.info("End computation %s",
                                datetime.now().isoformat(timespec='microseconds'))
         # Check values in ElasticSearch
-        es_client = index_properties.elastic_search_client
-        for entity_index in index_properties.index_names:
-            results = es_client.search(index=entity_index,
-                                       doc_type="doc",
-                                       size=100)
-        self.assertEqual("pass", "pass")
 
-    def test_same_id_different_bundles(self):
-        # Trigger the indexing operation
-        dss_url = "https://dss.data.humancellatlas.org/v1"
-        index_properties = IndexProperties(dss_url, es_endpoint=("localhost", 9200))
-        hca_indexer = Indexer(index_properties)
-        # Index the test bundles
-        for bundle_uuid, bundle_version in self.test_same_ids_different_bundles["production"]:
-            fake_event = make_fake_notification(bundle_uuid, bundle_version)
-            module_logger.info("Start computation %s",
-                               datetime.now().isoformat(timespec='microseconds'))
-            hca_indexer.index(fake_event)
-            module_logger.info("Indexing operation finished for %s. Check values in ElasticSearch",
-                               bundle_uuid+bundle_version)
-            module_logger.info("End computation %s",
-                               datetime.now().isoformat(timespec='microseconds'))
-        # Check values in ElasticSearch
-        es_client = index_properties.elastic_search_client
-        for entity_index in index_properties.index_names:
-            results = es_client.search(index=entity_index,
-                                       doc_type="doc",
-                                       size=100)
-        self.assertEqual("pass", "pass")
+        @eventually(5.0, 0.5)
+        def _assert_number_of_files():
+            es_client = index_properties.elastic_search_client
+            total_files = es_client.count(index="browser_files_dev", doc_type="doc")
+            self.assertEqual(776, total_files["count"])
+            total_specimens = es_client.count(index="browser_specimens_dev", doc_type="doc")
+            self.assertEqual(129, total_specimens["count"])
+
+        _assert_number_of_files()
 
     def test_accessor_class(self):
         from azul.downloader import MetadataDownloader
@@ -121,15 +103,11 @@ class TestDataExtractor(unittest.TestCase):
                                manifest=manifest,
                                metadata_files=metadata)
         reconstructed_bundle = Bundle(dss_bundle)
-        sequencing_input = reconstructed_bundle.sequencing_input
-        for si in sequencing_input:
-            print(si.biomaterial_id)
-        specimens = reconstructed_bundle.specimens
-        for sp in specimens:
-            print(sp.biomaterial_id)
         print(reconstructed_bundle.project)
-
-        self.assertEqual("pass", "pass")
+        sequencing_inputs = {si.biomaterial_id for si in reconstructed_bundle.sequencing_input}
+        specimens = {sp.biomaterial_id for sp in reconstructed_bundle.specimens}
+        self.assertEqual({"22011_1#268"}, sequencing_inputs)
+        self.assertEqual({"1139_T"}, specimens)
 
     def test_no_duplicate_files_in_specimen(self):
         # Trigger the indexing operation
