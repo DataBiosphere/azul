@@ -136,6 +136,7 @@ class BiomaterialVisitor(EntityVisitor):
                 b["storage_method"] = entity.storage_method
                 b["_type"] = "specimen"
             elif isinstance(entity, DonorOrganism):
+                b["donor_biomaterial_id"] = entity.biomaterial_id
                 b["genus_species"] = entity.genus_species
                 b["disease"] = list(entity.disease)
                 b["organism_age"] = entity.organism_age
