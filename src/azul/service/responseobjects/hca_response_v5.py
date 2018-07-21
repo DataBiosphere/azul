@@ -77,6 +77,7 @@ class HitEntry(JsonObject):
 
 
 class FileTypeSummary(JsonObject):
+    fileType = StringProperty()
     count = IntegerProperty()
     totalSize = FloatProperty()
 
@@ -85,6 +86,7 @@ class FileTypeSummary(JsonObject):
         new_object = FileTypeSummary()
         new_object.count = bucket['doc_count']
         new_object.totalSize = bucket['size_by_type']['value']
+        new_object.fileType = bucket['key']
         return new_object
 
 
@@ -104,7 +106,7 @@ class SummaryRepresentation(JsonObject):
     """
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
-    fileTypeSummary = DictProperty(FileTypeSummary)
+    fileTypeSummaries = ListProperty(FileTypeSummary)
 
 
 class FileIdAutoCompleteEntry(JsonObject):
@@ -277,8 +279,7 @@ class SummaryResponse(AbstractResponse):
                 aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(
                 aggregates, 'total_cell_count', agg_form='value'),
-            fileTypeSummary={bucket['key']: FileTypeSummary.create_object(bucket)
-                             for bucket in _sum['buckets']}
+            fileTypeSummaries=[FileTypeSummary.create_object(bucket) for bucket in _sum['buckets']]
         )
 
 
