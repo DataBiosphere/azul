@@ -52,48 +52,36 @@ The remaining infrastructure is managed internally with TerraForm.
 2) Choose a name for your personal deployment. The name should be a short
    handle that is unique within the AWS account you are deploying to. It should
    also be informative enough to let others know whose deployment this is. We'll
-   be using `foo` as an example here.
+   be using `foo` as an example here. The handle must only consist of alphabetic 
+   characters.
 
-3) Create a new directory for the configuration of your personal deployment, as 
-   a copy of the `dev` deployment: 
+3) Create a new directory for the configuration of your personal deployment: 
 
    ```
    cd deployments
-   cp -r dev foo.local
-   ln -snf foo.local .active
+   cp -r .example.local yourname.local
+   ln -snf yourname.local .active
    cd ..
    ```  
 
-4) In `deployments/.active/environment` change `AZUL_DEPLOYMENT_STAGE` to the
-   name of your deployment. In this example, we'd be setting it to `foo`. If you
-   don't have a Google service account in a GCP project that's white-listed for
-   subscriptions in DSS, set AZUL_SUBSCRIBE_TO_DSS to 0.
+4) Edit `deployments/.active/environment` and
+   `deployments/.active/environment.local` according to the comments in there.
 
-5) In the project root, create `deployments/.active/environment.local`
-   containing
-
-   ```
-   export AWS_PROFILE=...
-   export AWS_DEFAULT_REGION=...
-   ```
-
-6) Load the environment:
+5) Load the environment:
 
    ```
    source environment
    ```
    
-   Scrutinize the output. We copied the `dev` deployment configuration but then
-   changed `AZUL_DEPLOYMENT_STAGE` to ensure that we're not actually
-   touching anything in `dev`.
+   Examine the output.
 
-7) Install the development prerequisites
+6) Install the development prerequisites
    
    ```
    pip install -r requirements.dev.txt
    ```
 
-8) Run `make`. It should say `Looking good!` If one of the sanity checks fails,
+7) Run `make`. It should say `Looking good!` If one of the sanity checks fails,
    address the complaint and repeat. The various sanity checks are defined in
    `common.mk`.
 
