@@ -1,0 +1,13 @@
+export AWS_PROFILE=yourprofile
+export AWS_DEFAULT_REGION=us-east-1
+
+# If you have the credentials of a service account, uncomment these GOOGLE_
+# lines, change them accordingly and set AZUL_SUBSCRIBE_TO_DSS to 1.
+#
+# export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/gcp-credentials.json"
+
+# The GCP project you reference here needs to be whitelisted in the DSS instance
+# you are using for subscriptions to work. The service account whose credentials
+# you configured in must have owner permissions.
+#
+# export GOOGLE_PROJECT="human-cell-atlas-travis-test"
