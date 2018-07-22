@@ -156,7 +156,7 @@ _set AZUL_ES_INSTANCE_TYPE "m4.large.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 35
 _set AZUL_INDEX_WORKERS 16
 _set AZUL_DSS_WORKERS 8
-_set AZUL_SUBSCRIBE_TO_DSS 0
+_set AZUL_SUBSCRIBE_TO_DSS 1
 
 # FIXME: the index name should contain the stage name so we can share an ES
 # instance between deployments. However, the indexer seems to be hard-wired
