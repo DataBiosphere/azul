@@ -94,8 +94,6 @@ azul_vars=(
     # configure any Google credentials in that case. Note that disabling the
     # subscription registration won't remove any existing subscriptions. Use
     # `scripts/subscribe.py -U` for that.
-    # 
-    # If you want to use your personal Google service account 
     AZUL_SUBSCRIBE_TO_DSS
 )
 
