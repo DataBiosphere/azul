@@ -9,11 +9,9 @@ to drive the indexing operation.
 
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import importlib
 import json
 import logging
 import math
-import os
 import time
 
 import boto3
@@ -22,8 +20,8 @@ from chalice import Chalice
 from chalice.app import CloudWatchEvent
 import requests.adapters
 
-from azul.time import RemainingLambdaContextTime, RemainingTime
 from azul import config
+from azul.time import RemainingLambdaContextTime, RemainingTime
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
