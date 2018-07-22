@@ -1,5 +1,4 @@
 import ast
-
 import logging.config
 import os
 
@@ -30,7 +29,7 @@ app.log.setLevel(logging.DEBUG)  # please use module logger instead
 
 @app.route('/', cors=True)
 def hello():
-    return 'Hello World!'
+    return {'Hello': 'World!'}
 
 
 def _get_pagination(current_request):
