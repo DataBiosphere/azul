@@ -146,8 +146,8 @@ fi
 
 # Set the global defaults. This is the least specific level.
 
-_set AZUL_DOMAIN_NAME "azul.data.humancellatlas.org"  # FIXME: project-specific, is this the right place for this?
-_set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}.$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.explore.data.humancellatlas.org"  # FIXME: project-specific, is this the right place for this?
+_set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
 _set AZUL_RESOURCE_PREFIX "azul-"
 _set AZUL_ES_INDEX "azul-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
