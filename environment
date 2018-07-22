@@ -174,9 +174,24 @@ unset -f _set
 export ${azul_vars[*]}
 
 # A little helper to make re-sourcing this script easier.
-
+#
 _refresh () {
     source ${AZUL_HOME}/environment
+}
+
+# Manage the symlink to the active deployment
+#
+_select () {
+    if [[ $1 != "" ]]; then
+        ( # use sub-shell so `cd` is temporary
+            cd ${AZUL_HOME}/deployments &&
+            test -d "$1" &&
+            { [ ! -e .active ] || { [ -L .active ] && rm .active ;} ;} &&
+            ln -s "$1" .active
+        ) || { echo error: "$1" && return ;}
+        _refresh
+    fi
+    ( cd ${AZUL_HOME}/deployments && ls -l .active )
 }
 
 export PYTHONPATH="$AZUL_HOME/src"
