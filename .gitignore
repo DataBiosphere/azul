@@ -39,9 +39,11 @@ __pycache__/
 
 # Local environment configuration
 /deployments/.active
-/deployments/*.local
+/deployments/*.local/
+!/deployments/.example.local/
 /environment.local
 /deployments/*/environment.local
+!/deployments/.example.local/environment.local
 /deployments/*/.terraform/
 
 # PyTest
