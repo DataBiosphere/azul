@@ -12,4 +12,3 @@
 
 _set AZUL_DEPLOYMENT_STAGE prod
 _set AZUL_DSS_ENDPOINT "https://dss.data.humancellatlas.org/v1"
-_set AZUL_SUBSCRIBE_TO_DSS 1

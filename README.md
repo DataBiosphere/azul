@@ -160,11 +160,17 @@ bundles from the configured DSS instance.
 make subscribe
 ```
 
-By default, the provisioning of that subscription is disabled (see
-`AZUL_SUBSCRIBE_TO_DSS` in `environment`) but the shared deployments in
-`deployments/` have it enabled. If you want to subscribe your personal
-deployment to DSS you can set `AZUL_SUBSCRIBE_TO_DSS` or run
-`scripts/subscribe.py` manually.
+By default, the creation of that subscription is enabled (see
+`AZUL_SUBSCRIBE_TO_DSS` in `environment`). All shared deployments in
+`deployments/` inherit that default. If you don't want a personal deployment to
+subscribe to the configured DSS instance you should set `AZUL_SUBSCRIBE_TO_DSS`
+to 0. Subscription requires credentials to a service account that has the
+required privileges to create another service account under which the
+subscription is then made. This indirection exists to faciliate shared
+deployments without having to share any one person's Google credentials. The
+indexer service account must belong to a GCP project that is whitelisted in the
+DSS instance to which the indexer is subscribed to. The credentials of the
+indexer service account are stored in Amazon Secrets Manager.
 
 ### 2.5. Reindexing
 
