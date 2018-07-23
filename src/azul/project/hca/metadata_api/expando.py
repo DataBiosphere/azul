@@ -1,3 +1,6 @@
+# source: https://github.com/BD2KGenomics/bd2k-python-lib/blob/master/src/bd2k/util/expando.py
+
+
 class Expando(dict):
     """
     Pass inital attributes to the constructor:
@@ -65,23 +68,6 @@ class Expando(dict):
     True
     >>> o is p
     False
-
-    Same with MagicExpando ...
-
-    >>> o = MagicExpando()
-    >>> o.foo.bar = 42
-    >>> p = o.copy()
-    >>> isinstance(p,MagicExpando)
-    True
-    >>> o == p
-    True
-    >>> o is p
-    False
-
-    ... but the copy is shallow:
-
-    >>> o.foo is p.foo
-    True
     """
 
     def __init__( self, *args, **kwargs ):
@@ -91,5 +77,3 @@ class Expando(dict):
 
     def copy(self):
         return type(self)(self)
-
-# source: https://github.com/BD2KGenomics/bd2k-python-lib/blob/master/src/bd2k/util/expando.py
