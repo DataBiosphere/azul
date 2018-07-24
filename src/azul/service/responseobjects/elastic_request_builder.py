@@ -452,7 +452,7 @@ class ElasticTransformDump(object):
         filters = filters['file']
 
         translation_dict = request_config['translation']
-        for facet in filters:
+        for facet in filters.keys():
             if facet not in translation_dict:
                 raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
 
