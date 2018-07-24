@@ -26,19 +26,20 @@ def setUpModule():
 
 class TestHCAIndexer(AzulTestCase):
     @staticmethod
-    def _get_data_files(metadata_file, data_file):
+    def _get_data_files(filename, updated=False):
         data_prefix = "data/"
+        metadata_suffix = ".metadata.json"
+        manifest_suffix = ".manifest.json"
+        if updated:
+            filename += ".updated"
 
-        with open(data_prefix + metadata_file, 'r') as infile:
-            metadata = json.loads(infile.read())
+        with open(data_prefix + filename + metadata_suffix, 'r') as infile:
+            metadata = json.load(infile)
 
-        with open(data_prefix + data_file, 'r') as infile:
-            data = json.loads(infile.read())
+        with open(data_prefix + filename + manifest_suffix, 'r') as infile:
+            manifest = json.load(infile)
 
-        return metadata, data
-
-    def _get_data_by_uuid(self, uuid):
-        return self._get_data_files(uuid + '.metadata', uuid + '.data')
+        return metadata, manifest
 
     def _mock_index(self, test_bundles, data_pack):
         bundle_uuid, bundle_version = test_bundles
@@ -88,8 +89,7 @@ class TestHCAIndexer(AzulTestCase):
         """
         Index a bundle and check that the index contains the correct attributes
         """
-        data_pack = self._get_data_files('updated.metadata',
-                                         'updated.data')
+        data_pack = self._get_data_files(self.new_bundle[0], updated=True)
 
         self._mock_index(self.new_bundle, data_pack)
 
@@ -111,9 +111,8 @@ class TestHCAIndexer(AzulTestCase):
         """
         Updating a bundle with a future version should overwrite the old version.
         """
-        old_data = self._get_data_by_uuid(self.old_bundle[0])
-        new_data = self._get_data_files('updated.metadata',
-                                        'updated.data')
+        old_data = self._get_data_files(self.old_bundle[0])
+        new_data = self._get_data_files(self.new_bundle[0], updated=True)
 
         self._mock_index(self.old_bundle, old_data)
 
@@ -153,9 +152,8 @@ class TestHCAIndexer(AzulTestCase):
         """
         An attempt to overwrite a newer version of a bundle with an older version should fail.
         """
-        old_data = self._get_data_by_uuid(self.old_bundle[0])
-        new_data = self._get_data_files('updated.metadata',
-                                        'updated.data')
+        old_data = self._get_data_files(self.old_bundle[0])
+        new_data = self._get_data_files(self.new_bundle[0], updated=True)
 
         self._mock_index(self.new_bundle, new_data)
 
@@ -195,8 +193,8 @@ class TestHCAIndexer(AzulTestCase):
         """
         We submit two different bundles for the same specimen. What happens?
         """
-        spec1_pack = self._get_data_by_uuid(self.spec1_bundle[0])
-        spec2_pack = self._get_data_by_uuid(self.spec2_bundle[0])
+        spec1_pack = self._get_data_files(self.spec1_bundle[0])
+        spec2_pack = self._get_data_files(self.spec2_bundle[0])
         specimen_list = [(self.spec1_bundle, spec1_pack),
                          (self.spec2_bundle, spec2_pack)]
 
