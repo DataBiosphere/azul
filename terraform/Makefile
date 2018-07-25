@@ -4,7 +4,9 @@ templates=$(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
 all: apply
 
-init: $(templates)
+config: $(templates)
+
+init: config
 	terraform init
 
 validate: init
@@ -19,4 +21,4 @@ apply: validate
 clean:
 	-rm *.tf.json
 
-.PHONY: all init validate plan apply clean
+.PHONY: all init validate plan apply clean config
