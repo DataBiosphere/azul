@@ -92,6 +92,9 @@ class Config:
     def google_service_account(self, lambda_name):
         return f"dcp/azul/{self.deployment_stage}/{lambda_name}/google_service_account"
 
+    def enable_gcp(self):
+        return 'GOOGLE_PROJECT' in os.environ
+
     # FIXME: type hint return value
 
     def plugin(self):
