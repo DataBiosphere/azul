@@ -94,6 +94,11 @@ azul_vars=(
     # configure any Google credentials in that case. Note that disabling the
     # subscription registration won't remove any existing subscriptions. Use
     # `scripts/subscribe.py -U` for that.
+    #
+    # If you set this variable back from 1 to 0 on an existing deployment, be
+    # sure to run `make terraform` right afterwards so the Google cloud
+    # resources are physically deleted. After that you may also unset the
+    # GOOGLE_.. variables in your environment.
     AZUL_SUBSCRIBE_TO_DSS
 )
 
