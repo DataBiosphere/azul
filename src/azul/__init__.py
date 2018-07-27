@@ -28,7 +28,7 @@ class Config:
             return host, int(port)
 
     @property
-    def home_directory(self) -> str:
+    def project_root(self) -> str:
         return os.environ['AZUL_HOME']
 
     @property
