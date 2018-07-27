@@ -176,15 +176,15 @@ index them run:
 
 3) Run
 
-   ```
-   AWS_CONFIG_FILE='~/.aws/config' AWS_SHARED_CREDENTIALS_FILE='~/.aws/credentials' make local`
-   ````
+```
+AWS_CONFIG_FILE='~/.aws/config' AWS_SHARED_CREDENTIALS_FILE='~/.aws/credentials' make local
+```
 
 4) In another shell, run
 
-   ```
-   python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000/`
-   ```
+```
+python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000
+```
 
 The `--sync` argument causes the Chalice app to invoke the indexing code
 directly instead of queuing an SQS message to be consumed by the indexer worker
