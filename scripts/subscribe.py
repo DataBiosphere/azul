@@ -21,9 +21,7 @@ def main(argv):
     parser.add_argument('--unsubscribe', '-U', dest='subscribe', action='store_false', default=True)
     parser.add_argument('--shared', '-s', dest='shared', action='store_true', default=False)
     options = parser.parse_args(argv)
-    dss_client = DSSClient()
-    dss_client.host = config.dss_endpoint
-    dss_client.timeout_policy = Timeout(connect=10, read=40)
+    dss_client = config.dss_client()
     if options.shared:
         sm = boto3.client('secretsmanager')
         creds = sm.get_secret_value(SecretId=config.google_service_account('indexer'))
