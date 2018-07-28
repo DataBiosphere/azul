@@ -33,6 +33,10 @@ class Entity:
         self.json = json
         self.document_id = UUID4(json['hca_ingest']['document_id'])
 
+    @property
+    def address(self):
+        return schema_names[type(self)] + '@' + self.document_id
+
     def accept(self, visitor: 'EntityVisitor') -> None:
         visitor.visit(self)
 
@@ -75,7 +79,9 @@ class LinkedEntity(Entity, ABC):
 
 class LinkError(RuntimeError):
     def __init__(self, entity: LinkedEntity, other_entity: Entity, forward: bool) -> None:
-        super().__init__(f"{entity} cannot {'reference' if forward else 'be referenced by'} {other_entity}")
+        super().__init__(entity.address +
+                         " cannot " + ('reference' if forward else 'be referenced by') +
+                         other_entity.address)
 
 
 @dataclass(init=False)
@@ -331,8 +337,6 @@ class ManifestEntry:
         kwargs = dict(json)
         kwargs['content_type'] = kwargs.pop('content-type')
         kwargs['uuid'] = UUID4(json['uuid'])
-        # FIXME:
-        # noinspection PyArgumentList
         return cls(**kwargs)
 
 
@@ -392,8 +396,6 @@ class Link:
 
     @classmethod
     def from_json(cls, json: JSON):
-        # FIXME:
-        # noinspection PyArgumentList
         return cls(source_id=UUID4(json['source_id']),
                    source_type=json['source_type'],
                    destination_id=UUID4(json['destination_id']),
@@ -492,8 +494,7 @@ class Bundle:
     @property
     def sequencing_input(self) -> Iterable[CellSuspension]:
         return [cs for cs in self.biomaterials.values() if isinstance(cs, CellSuspension)
-                and any(isinstance(pr, SequencingProcess)
-                        for pr in cs.to_processes.values())]
+                and any(isinstance(pr, SequencingProcess) for pr in cs.to_processes.values())]
 
 
 entity_types = {
