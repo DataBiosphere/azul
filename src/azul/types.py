@@ -1,19 +1,17 @@
-from typing import Any, List, Mapping, Union
+from typing import Union, Mapping, Any, List
 
-JSONObj = Mapping[str, Any]
-
-# Strictly speaking, this is the generic JSON type:
-
-AnyJSON = Union[str, int, float, bool, None, JSONObj, List[Any]]
-
-# Most JSON structures, however, start with an JSON object, so we'll use the shorter name for that type:
-
+AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
+AnyJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyJSON2], List[AnyJSON2]]
+AnyJSON = Union[str, int, float, bool, None, Mapping[str, AnyJSON1], List[AnyJSON1]]
 JSON = Mapping[str, AnyJSON]
 
 
-# A stub for the AWS Lambda context
+#
 
 class LambdaContext(object):
+    """
+    A stub for the AWS Lambda context
+    """
 
     @property
     def aws_request_id(self) -> str:
