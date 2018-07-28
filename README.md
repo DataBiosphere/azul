@@ -165,7 +165,9 @@ indexer service account are stored in Amazon Secrets Manager.
 The DSS instance used by a deployment is likely to contain existing bundles. To
 index them run:
 
-`make reindex`
+```
+make reindex
+```
 
 ## 3. Running indexer locally
 
@@ -177,13 +179,13 @@ index them run:
 3) Run
 
    ```
-   AWS_CONFIG_FILE='~/.aws/config' AWS_SHARED_CREDENTIALS_FILE='~/.aws/credentials' make local`
+   AWS_CONFIG_FILE="$HOME/.aws/config" AWS_SHARED_CREDENTIALS_FILE="$HOME/.aws/credentials" make local
    ````
 
 4) In another shell, run
 
    ```
-   python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000/`
+   python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000/
    ```
 
 The `--sync` argument causes the Chalice app to invoke the indexing code
@@ -193,9 +195,6 @@ Lambda function in AWS.
 PyCharm recently added a feature that allows you to attach a debugger: From the
 main menu choose *Run*, *Attach to local process* and select the `chalice`
 process.
-
-The `make install` step needs to be repeated after every code change. This
-requirement should go away soon.
 
 Consider passing `--es-query` to restrict the set of bundles for which
 notifications are sent, especially if you are using a debugger.
