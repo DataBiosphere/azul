@@ -8,7 +8,6 @@ from elasticsearch.helpers import parallel_bulk, streaming_bulk
 
 from azul.base_config import BaseIndexProperties
 from azul.downloader import MetadataDownloader
-from azul.dss_bundle import DSSBundle
 
 log = logging.getLogger(__name__)
 
@@ -25,16 +24,12 @@ class BaseIndexer(ABC):
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
         metadata_downloader = MetadataDownloader(self.properties.dss_url)
-        metadata, manifest = metadata_downloader.extract_bundle(dss_notification)
-        dss_bundle = DSSBundle(uuid=bundle_uuid,
-                               version=bundle_version,
-                               manifest=manifest,
-                               metadata_files=metadata)
+        metadata_files, manifest = metadata_downloader.extract_bundle(dss_notification)
         es_client = self.properties.elastic_search_client
 
         # Create indices and populate mappings
         for index_name in self.properties.index_names:
-            # FIXME: explain why 400 is ignored
+            # 400 is the status code in case the index already exists
             es_client.indices.create(index=index_name, body=self.properties.settings, ignore=[400])
             es_client.indices.put_mapping(index=index_name, doc_type="doc", body=self.properties.mapping)
 
@@ -44,7 +39,10 @@ class BaseIndexer(ABC):
         # Collect the documents to be indexed
         indexable_documents = {}
         for transformer in self.properties.transformers:
-            es_documents = transformer.create_documents(dss_bundle)
+            es_documents = transformer.create_documents(uuid=bundle_uuid,
+                                                        version=bundle_version,
+                                                        manifest=manifest,
+                                                        metadata_files=metadata_files)
             for es_document in es_documents:
                 indexable_documents[es_document.document_id] = es_document
 

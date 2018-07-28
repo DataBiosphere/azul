@@ -1,11 +1,11 @@
+from abc import ABC, abstractmethod
+from itertools import filterfalse, tee
 import logging
 import os
 import re
-from abc import ABC, abstractmethod
-from itertools import filterfalse, tee
-from typing import Sequence
+from typing import List, Mapping, Sequence
 
-from azul.dss_bundle import DSSBundle
+from azul.types import JSON
 
 module_logger = logging.getLogger(__name__)
 
@@ -100,6 +100,11 @@ class Transformer(ABC):
         return simple_version
 
     @abstractmethod
-    def create_documents(self, dss_bundle: DSSBundle) -> Sequence[ElasticSearchDocument]:
+    def create_documents(self,
+                         uuid: str,
+                         version: str,
+                         manifest: List[JSON],
+                         metadata_files: Mapping[str, JSON]
+                         ) -> Sequence[ElasticSearchDocument]:
         raise NotImplementedError()
 

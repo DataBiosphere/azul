@@ -1,46 +1,43 @@
-import logging
 from collections import defaultdict
-from typing import Any, List, MutableMapping, Sequence
+import logging
+from typing import Any, List, Mapping, MutableMapping, Sequence
 
-from azul.dss_bundle import DSSBundle
+from humancellatlas.data import metadata as api
+from humancellatlas.data.metadata import AgeRange
+
 from azul.transformer import Document, ElasticSearchDocument, Transformer
-
-from azul.project.hca import metadata_api as api
-
+from azul.types import JSON
 
 log = logging.getLogger(__name__)
 
 
 def _project_dict(bundle: api.Bundle) -> dict:
     project = bundle.project
-    project = dict(project_shortname=project.project_shortname,
-                   laboratory=list(project.laboratory_names),
-                   document_id=project.document_id,
-                   _type="project")
-    return project
+    return {
+        'project_shortname': project.project_shortname,
+        'laboratory': list(project.laboratory_names),
+        'document_id': project.document_id,
+        '_type': 'project'
+    }
 
 
-def _specimen_dict(
-        biomaterials: MutableMapping[api.UUID4, api.Biomaterial]
-) -> List[MutableMapping[str, Any]]:
+def _specimen_dict(biomaterials: Mapping[api.UUID4, api.Biomaterial]) -> List[Mapping[str, Any]]:
     specimen_list = []
-    for specimen in (s for s in biomaterials.values() if isinstance(s, api.SpecimenFromOrganism)):
-        bio_visitor = BiomaterialVisitor()
-        specimen.accept(bio_visitor)
-        specimen.ancestors(bio_visitor)
-        merged_specimen = defaultdict(list)
-        for b in bio_visitor.biomaterial_lineage:
-            for key, value in b.items():
-                if isinstance(value, list) or isinstance(value, set):
-                    merged_specimen[key] += value
-                else:
-                    merged_specimen[key].extend([value])
-        # Make unique
-        for key, value in merged_specimen.items():
-            if isinstance(value, list):
-                merged_specimen[key] = list(set(value))
-        merged_specimen['biomaterial_id'] = specimen.biomaterial_id
-        specimen_list.append(merged_specimen)
+    for specimen in biomaterials.values():
+        if isinstance(specimen, api.SpecimenFromOrganism):
+            bio_visitor = BiomaterialVisitor()
+            specimen.accept(bio_visitor)
+            specimen.ancestors(bio_visitor)
+            merged_specimen = defaultdict(set)
+            for b in bio_visitor.biomaterial_lineage:
+                for key, value in b.items():
+                    if isinstance(value, (list, set)):
+                        merged_specimen[key].update(value)
+                    else:
+                        merged_specimen[key].add(value)
+            merged_specimen = {k: list(v) for k, v in merged_specimen.items()}
+            merged_specimen['biomaterial_id'] = specimen.biomaterial_id
+            specimen_list.append(merged_specimen)
     return specimen_list
 
 
@@ -49,44 +46,47 @@ class TransformerVisitor(api.EntityVisitor):
     processes: MutableMapping[str, Any]  # Merges process with protocol
     files: MutableMapping[api.UUID4, Any]  # Merges manifest + file metadata
 
-    @staticmethod
-    def _merge_process_protocol(pc: api.Process, pl: api.Protocol) -> MutableMapping[str, Any]:
-        d = dict(document_id=[pc.document_id, pl.document_id],
-                 process_id=pc.process_id,
-                 process_name=pc.process_name,
-                 protocol_id=pl.protocol_id,
-                 protocol_name=pl.protocol_name,
-                 _type="process")
-        if isinstance(pc, api.LibraryPreparationProcess):
-            d["library_construction_approach"] = pc.library_construction_approach
-        elif isinstance(pc, api.SequencingProcess):
-            d["instrument_manufacturer_model"] = pc.instrument_manufacturer_model
-        return d
-
-    @staticmethod
-    def _file_dict(f: api.File) -> MutableMapping[str, Any]:
-        d = {
-            "content-type": f.manifest_entry.content_type,
-            "crc32c": f.manifest_entry.crc32c,
-            "indexed": f.manifest_entry.indexed,
-            "name": f.manifest_entry.name,
-            "s3_etag": f.manifest_entry.s3_etag,
-            "sha1": f.manifest_entry.sha1,
-            "sha256": f.manifest_entry.sha256,
-            "size": f.manifest_entry.size,
-            "uuid": f.manifest_entry.uuid,
-            "version": f.manifest_entry.version,
-            "document_id": f.document_id,
-            "file_format": f.file_format,
-            "_type": "file"
+    def _merge_process_protocol(self, pc: api.Process, pl: api.Protocol) -> MutableMapping[str, Any]:
+        return {
+            'document_id': (pc.document_id, pl.document_id),
+            'process_id': pc.process_id,
+            'process_name': pc.process_name,
+            'protocol_id': pl.protocol_id,
+            'protocol_name': pl.protocol_name,
+            '_type': "process",
+            **(
+                {
+                    'library_construction_approach': pc.library_construction_approach
+                } if isinstance(pc, api.LibraryPreparationProcess) else {
+                    'instrument_manufacturer_model': pc.instrument_manufacturer_model
+                } if isinstance(pc, api.SequencingProcess) else {
+                }
+            )
         }
-        if isinstance(f, api.SequenceFile):
-            d = {
-                **d,
-                "read_index": f.read_index,
-                "lane_index": f.lane_index
-            }
-        return d
+
+    def _file_dict(self, f: api.File) -> MutableMapping[str, Any]:
+        return {
+            'content-type': f.manifest_entry.content_type,
+            'crc32c': f.manifest_entry.crc32c,
+            'indexed': f.manifest_entry.indexed,
+            'name': f.manifest_entry.name,
+            's3_etag': f.manifest_entry.s3_etag,
+            'sha1': f.manifest_entry.sha1,
+            'sha256': f.manifest_entry.sha256,
+            'size': f.manifest_entry.size,
+            'uuid': f.manifest_entry.uuid,
+            'version': f.manifest_entry.version,
+            'document_id': f.document_id,
+            'file_format': f.file_format,
+            '_type': 'file',
+            **(
+                {
+                    'read_index': f.read_index,
+                    'lane_index': f.lane_index
+                } if isinstance(f, api.SequenceFile) else {
+                }
+            )
+        }
 
     def __init__(self) -> None:
         self.specimens = {}
@@ -112,33 +112,43 @@ class BiomaterialVisitor(api.EntityVisitor):
         self.biomaterial_lineage = []
 
     def visit(self, entity: api.Entity) -> None:
-
         if isinstance(entity, api.Biomaterial):
-            # noinspection PyProtectedMember
-            b = dict(document_id=entity.document_id,
-                     has_input_biomaterial=entity.has_input_biomaterial,
-                     _source=entity._source)
-            if isinstance(entity, api.SpecimenFromOrganism):
-                b["biomaterial_id"] = entity.biomaterial_id
-                b["disease"] = list(entity.disease)
-                b["organ"] = entity.organ
-                b["organ_part"] = entity.organ_part
-                b["storage_method"] = entity.storage_method
-                b["_type"] = "specimen"
-            elif isinstance(entity, api.DonorOrganism):
-                b["donor_biomaterial_id"] = entity.biomaterial_id
-                b["genus_species"] = entity.genus_species
-                b["disease"] = list(entity.disease)
-                b["organism_age"] = entity.organism_age
-                b["organism_age_unit"] = entity.organism_age_unit
-                age_range = entity.organism_age_in_seconds
-                b["max_organism_age_in_seconds"] = age_range.max if age_range else None
-                b["min_organism_age_in_seconds"] = age_range.min if age_range else None
-                b["biological_sex"] = entity.biological_sex
-            elif isinstance(entity, api.CellSuspension):
-                b["total_estimated_cells"] = entity.total_estimated_cells
-            # As more facets are required by the browser, handle each biomateiral as appropriate
-            self.biomaterial_lineage.append(b)
+            # As more facets are required by the browser, handle each biomaterial as appropriate
+            self.biomaterial_lineage.append(
+                {
+                    'document_id': entity.document_id,
+                    'has_input_biomaterial': entity.has_input_biomaterial,
+                    '_source': api.schema_names[type(entity)],
+                    **(
+                        {
+                            'biomaterial_id': entity.biomaterial_id,
+                            'disease': list(entity.disease),
+                            'organ': entity.organ,
+                            'organ_part': entity.organ_part,
+                            'storage_method': entity.storage_method,
+                            '_type': "specimen",
+                        } if isinstance(entity, api.SpecimenFromOrganism) else {
+                            'donor_biomaterial_id': entity.biomaterial_id,
+                            'genus_species': entity.genus_species,
+                            'disease': list(entity.disease),
+                            'organism_age': entity.organism_age,
+                            'organism_age_unit': entity.organism_age_unit,
+                            **self._age_range(entity),
+                            'biological_sex': entity.biological_sex
+                        } if isinstance(entity, api.DonorOrganism) else {
+                            'total_estimated_cells': entity.total_estimated_cells
+                        } if isinstance(entity, api.CellSuspension) else {
+                        }
+                    )
+                }
+            )
+
+    def _age_range(self, entity: api.DonorOrganism):
+        age = entity.organism_age_in_seconds or AgeRange.any
+        return {
+            'max_organism_age_in_seconds': age.max,
+            'min_organism_age_in_seconds': age.min,
+        }
 
 
 class FileTransformer(Transformer):
@@ -147,10 +157,18 @@ class FileTransformer(Transformer):
 
     @property
     def entity_name(self):
-        return "files"
+        return 'files'
 
-    def create_documents(self, dss_bundle: DSSBundle) -> Sequence[ElasticSearchDocument]:
-        bundle = api.Bundle(dss_bundle)
+    def create_documents(self,
+                         uuid: str,
+                         version: str,
+                         manifest: List[JSON],
+                         metadata_files: Mapping[str, JSON]
+                         ) -> Sequence[ElasticSearchDocument]:
+        bundle = api.Bundle(uuid=uuid,
+                            version=version,
+                            manifest=manifest,
+                            metadata_files=metadata_files)
         for file in bundle.files.values():
             visitor = TransformerVisitor()
             # Visit the relatives of file
@@ -176,10 +194,18 @@ class SpecimenTransformer(Transformer):
 
     @property
     def entity_name(self):
-        return "specimens"
+        return 'specimens'
 
-    def create_documents(self, dss_bundle: DSSBundle) -> Sequence[ElasticSearchDocument]:
-        bundle = api.Bundle(dss_bundle)
+    def create_documents(self,
+                         uuid: str,
+                         version: str,
+                         manifest: List[JSON],
+                         metadata_files: Mapping[str, JSON]
+                         ) -> Sequence[ElasticSearchDocument]:
+        bundle = api.Bundle(uuid=uuid,
+                            version=version,
+                            manifest=manifest,
+                            metadata_files=metadata_files)
         for specimen in bundle.specimens:
             visitor = TransformerVisitor()
             # Visit the relatives of file
@@ -197,8 +223,3 @@ class SpecimenTransformer(Transformer):
                                          contents)
             es_document = ElasticSearchDocument(entity_id, document_contents, self.entity_name)
             yield es_document
-
-
-class ProjectTransformer(Transformer):
-    def create_documents(self, dss_bundle: DSSBundle) -> Sequence[ElasticSearchDocument]:
-        pass
