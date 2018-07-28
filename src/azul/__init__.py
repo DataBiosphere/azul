@@ -5,11 +5,11 @@ import time
 
 from typing import Tuple
 
-from azul.base_config import BaseIndexProperties
+from hca import HCAConfig
+from hca.dss import DSSClient
+from urllib3 import Timeout
+
 from azul.deployment import aws
-from azul.indexer import BaseIndexer
-
-
 
 
 class Config:
@@ -98,6 +98,8 @@ class Config:
     # FIXME: type hint return value
 
     def plugin(self):
+        from azul.base_config import BaseIndexProperties
+        from azul.indexer import BaseIndexer
         plugin_name = 'azul.project.' + os.environ.get('AZUL_PROJECT', 'hca')
         plugin = importlib.import_module(plugin_name)
         assert issubclass(plugin.Indexer, BaseIndexer)
@@ -107,6 +109,14 @@ class Config:
     @property
     def subscribe_to_dss(self):
         return 0 != int(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
+
+    def dss_client(self, dss_endpoint: str = None) -> DSSClient:
+        # Work around https://github.com/HumanCellAtlas/dcp-cli/issues/142
+        hca_config = HCAConfig("hca")
+        hca_config['DSSClient'].swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
+        client = DSSClient(config=hca_config)
+        client.timeout_policy = Timeout(connect=10, read=40)
+        return client
 
 
 config = Config()
@@ -173,4 +183,3 @@ def eventually(timeout: float, interval: float, errors: set={AssertionError}):
         return call
 
     return decorate
-
