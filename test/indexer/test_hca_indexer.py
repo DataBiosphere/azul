@@ -62,10 +62,10 @@ class TestHCAIndexer(unittest.TestCase):
         bundle_uuid, bundle_version = test_bundles
         metadata, manifest = data_pack
         fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
-
-        with patch.object(MetadataDownloader, 'extract_bundle') as mock_method:
-            mock_method.return_value = metadata, manifest
-            self.hca_indexer.index(fake_event)
+        with patch('azul.DSSClient'):
+            with patch.object(MetadataDownloader, 'extract_bundle') as mock_method:
+                mock_method.return_value = metadata, manifest
+                self.hca_indexer.index(fake_event)
 
     @eventually(5.0, 0.5)
     def _get_es_results(self, assert_func):

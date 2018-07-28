@@ -18,7 +18,6 @@ from urllib.parse import urlparse, urlencode, parse_qs
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
-from hca.dss import DSSClient
 
 from azul import config
 
@@ -88,8 +87,7 @@ def post_bundle(bundle_fqid, es_query, indexer_url):
 
 def main(argv: List[str]):
     args = parser.parse_args(argv)
-    dss_client = DSSClient()
-    dss_client.host = args.dss_url
+    dss_client = config.dss_client(dss_endpoint=args.dss_url)
     # noinspection PyUnresolvedReferences
     response = dss_client.post_search.iterate(es_query=args.es_query, replica="aws")
     bundle_fqids = [r['bundle_fqid'] for r in response]

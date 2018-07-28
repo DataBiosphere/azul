@@ -14,8 +14,9 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import os
 
-from hca.dss import DSSClient, SwaggerAPIException
-from urllib3 import Timeout
+from hca.dss import SwaggerAPIException
+
+from azul import config
 
 log = logging.getLogger(__name__)
 
@@ -38,9 +39,7 @@ class MetadataDownloader(object):
 
         :param dss_host: The formatted url for the DSS
         """
-        self.dss_client = DSSClient()
-        self.dss_client.host = dss_host
-        self.dss_client.timeout_policy = Timeout(connect=10, read=40)
+        self.dss_client = config.dss_client(dss_endpoint=dss_host)
 
     def __attempt(self, times, func, errors, **kwargs):
         """

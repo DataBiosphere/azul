@@ -120,7 +120,7 @@ def _index(worker: int, remaining_time: RemainingTime) -> None:
             if new_visibility_timeout > visibility_timeout:
                 message.change_visibility(VisibilityTimeout=int(new_visibility_timeout))
             notification = json.loads(message.body)
-            log.info(f'Worker {worker} handling notification {notification}')
+            log.info(f'Worker {worker} handling notification {notification}, attempt #{attempts} (approx).')
             start = time.time()
             indexer.index(notification)
             duration = time.time() - start
