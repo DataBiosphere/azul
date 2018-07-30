@@ -3,4 +3,5 @@ awscli==1.15.46
 docker==3.4.1
 locustio==0.8.1
 pytest==3.2.3
+gitpython==2.1.11
 -r requirements.txt
