@@ -87,6 +87,8 @@ class TestDataExtractor(AzulTestCase):
         self.assertEqual({"22011_1#268"}, sequencing_inputs)
         self.assertEqual({"1139_T"}, specimens)
 
+    # When two processes point at a file (this is the case for most files in production)
+    # there is a bug where the files index contains duplicate dictionaries for the file.
     def test_no_duplicate_files_in_specimen(self):
         bundle_uuid, bundle_version = self.test_duplicates_bundles[config.dss_endpoint][0]
         fake_event = self.make_fake_notification(bundle_uuid, bundle_version)
