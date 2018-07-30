@@ -44,7 +44,8 @@ emit({
                 "sqs:SendMessage"
             ],
             "Resource": [
-                f"arn:aws:sqs:{aws.region_name}:{aws.account}:azul-notify-{config.deployment_stage}"
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:azul-notify-{config.deployment_stage}",
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:azul-fail-{config.deployment_stage}"
             ]
         },
         {
