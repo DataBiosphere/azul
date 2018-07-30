@@ -8,8 +8,6 @@ from humancellatlas.data.metadata.age_range import AgeRange
 
 # A few helpful type aliases
 #
-from humancellatlas.data.metadata.helpers.json import as_json
-
 UUID4 = UUID
 AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
 AnyJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyJSON2], List[AnyJSON2]]
