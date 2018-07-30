@@ -22,8 +22,12 @@ class Entity:
 
     @classmethod
     def from_json(cls, json: JSON, **kwargs):
-        described_by = json['content']['describedBy'].rpartition('/')[2]
-        sub_cls = entity_types[described_by]
+        described_by = json['content']['describedBy']
+        schema_name = described_by.rpartition('/')[2]
+        try:
+            sub_cls = entity_types[schema_name]
+        except KeyError:
+            raise TypeLookupError(described_by)
         return sub_cls(json, **kwargs)
 
     def __init__(self, json: JSON) -> None:
@@ -37,6 +41,11 @@ class Entity:
 
     def accept(self, visitor: 'EntityVisitor') -> None:
         visitor.visit(self)
+
+
+class TypeLookupError(Exception):
+    def __init__(self, described_by: str) -> None:
+        super().__init__(f"No entity type for schema URL '{described_by}'")
 
 
 class EntityVisitor(ABC):
