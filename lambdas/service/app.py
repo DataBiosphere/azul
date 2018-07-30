@@ -32,6 +32,13 @@ def hello():
     return {'Hello': 'World!'}
 
 
+@app.route('/version', methods=['GET'], cors=True)
+def version():
+    return {
+        'git': config.git_version
+    }
+
+
 def _get_pagination(current_request):
     pagination = {
         "order": current_request.query_params.get('order', 'desc'),

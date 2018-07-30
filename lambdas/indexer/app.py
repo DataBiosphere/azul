@@ -42,6 +42,13 @@ indexer = plugin.Indexer(properties)
 requests.adapters.DEFAULT_POOLSIZE = config.num_workers * config.num_workers
 
 
+@app.route('/version', methods=['GET'], cors=True)
+def version():
+    return {
+        'git': config.git_version
+    }
+
+
 @app.route('/', methods=['POST'])
 def post_notification():
     """
