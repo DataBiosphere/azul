@@ -138,11 +138,11 @@ class MetadataDownloader(object):
         """
         bundle_uuid = request['match']['bundle_uuid']
         bundle_version = request['match']['bundle_version']
-        metadata_files, data_files = self.__get_bundle(bundle_uuid, bundle_version, replica)
+        metadata_files, manifest = self.__get_bundle(bundle_uuid, bundle_version, replica)
         num_workers = int(os.environ['AZUL_DSS_WORKERS'])
         with ThreadPoolExecutor(num_workers) as tpe:
             def get_metadata(item):
                 file_name, manifest_entry = item
                 return file_name, self.__get_file(manifest_entry['uuid'], manifest_entry['version'], replica)
             metadata_files = dict(tpe.map(get_metadata, metadata_files.items()))
-        return metadata_files, data_files
+        return metadata_files, manifest
