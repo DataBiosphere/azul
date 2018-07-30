@@ -49,6 +49,17 @@ def version():
     }
 
 
+@app.route('/health', methods=['GET'], cors=True)
+def health():
+    from azul.health import get_elasticsearch_health, get_queue_health
+
+    return {
+        'status': 'UP',
+        'elasticsearch': get_elasticsearch_health(),
+        'queues': get_queue_health()
+    }
+
+
 @app.route('/', methods=['POST'])
 def post_notification():
     """

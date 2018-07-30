@@ -27,18 +27,6 @@ app.log.setLevel(logging.DEBUG)  # please use module logger instead
 # how-to-write-docstring-for-url-parameters
 
 
-@app.route('/', cors=True)
-def hello():
-    return {'Hello': 'World!'}
-
-
-@app.route('/version', methods=['GET'], cors=True)
-def version():
-    return {
-        'git': config.git_status
-    }
-
-
 def _get_pagination(current_request):
     pagination = {
         "order": current_request.query_params.get('order', 'desc'),
@@ -59,6 +47,28 @@ def _get_pagination(current_request):
         raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
 
     return pagination
+
+
+@app.route('/', cors=True)
+def hello():
+    return {'Hello': 'World!'}
+
+
+@app.route('/health', methods=['GET'], cors=True)
+def health():
+    from azul.health import get_elasticsearch_health
+
+    return {
+        'status': 'UP',
+        'elasticsearch': get_elasticsearch_health()
+    }
+
+
+@app.route('/version', methods=['GET'], cors=True)
+def version():
+    return {
+        'git': config.git_status
+    }
 
 
 @app.route('/repository/files', methods=['GET'], cors=True)
