@@ -1,84 +1,92 @@
-#! /usr/bin/env python
-
-import boto3
-import botocore.session
+#! /usr/bin/env python3
 
 
-class S3FileHandler:
+import os
+from boto.s3.connection import S3Connection
 
-    def __init__(self, location):
-        """Expects AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to be in 
-        in a config dictionary or as environment variables."""
-        service = 's3'
-        self.bucket = boto3.client(service)
-        self.resource = boto3.resource(service)
-        session = botocore.session.get_session()
-        self.session = session.create_client(service, location)
-        self.location = location
 
-    def bucket_exists(self, bucket_name):
-        """
-        Check whether bucket with this name exists in AWS account.
-        :param bucket_name: name of bucket in account
-        :type str
-        :return: true if it exists
-        :rtype boolean:
-        """
-        return self.resource.Bucket(bucket_name) in self.resource.buckets.all()
+class S3FileManager:
 
-    def create_bucket(self, bucket_name):
-        """
-        :param bucket_name: name of bucket in account
-        :return: response with details
-        :rtype dict: JSON / Python dict
-        """
-        if not self.bucket_exists(bucket_name):
-            self.bucket_name = bucket_name
-            return self.bucket.create_bucket(
-                Bucket=bucket_name,
-                CreateBucketConfiguration={'LocationConstraint': self.location}
-            )
+    def __init__(self, aws_key, aws_secret, use_ssl):
+        self._aws_connection = S3Connection(aws_key, aws_secret,
+                                            is_secure=use_ssl)
 
-    def list_objects_in_bucket(self, bucket_name):
-        """
-        :param bucket_name: (str) name of bucket in account
-        :return: list of objects in bucket_name
-        :rtype list:
-        """
-        response = self.session.list_objects_v2(Bucket=bucket_name)
-        if response.has_key('Contents'):
-            L = [response['Contents'][x]['Key']
-                    for x in range(len(response['Contents']))]
-            return [str(r) for r in L]  # convert to utf-8 (is unicode)
+    def get_filenames_in_bucket(self, aws_bucketname):
+        if not self._bucketExists(aws_bucketname):
+            self._print_bucket_not_found_message(aws_bucketname)
+            return list()
         else:
-            return []
+            bucket = self._aws_connection.get_bucket(aws_bucketname)
+            return map(lambda aws_file_key: aws_file_key.name, bucket.list())
 
-    def get_bucket_list(self):
-        """
-        :returns a list of all buckets in AWS account
-        :rtype list:"""
-        buckets = self.bucket.list_buckets()
-        return [bucket['Name'] for bucket in buckets['Buckets']]
-
-    def upload_object_to_bucket(self, bucket_name, fname, name_in_bucket):
-        """Uploads some object (e.g., a file) to an S3 bucket.
-        :param bucket_name: name of bucket in AWS account
-        :type str:
-        :param fname: absolute name of the object to upload
-        :type str:
-        :param name_in_bucket: object name in bucket
-        :type str:
-        :returns: True if it went well, False if bucket does not exist
-        :rtype boolean:
-        """
-
-        if self.bucket_exists(bucket_name):
-            self.resource.meta.client.upload_file(
-                fname, bucket_name, name_in_bucket)  # executes silently
-            return True
+    def downloadFileFromBucket(self, aws_bucketname, filename,
+                               local_download_directory):
+        if not self._bucketExists(aws_bucketname):
+            self._print_bucket_not_found_message(aws_bucketname)
         else:
-            return False  # bucket_name doesn't exist
+            bucket = self._aws_connection.get_bucket(aws_bucketname)
+            for s3_file in bucket.list():
+                if filename == s3_file.name:
+                    self._downloadFile(s3_file, local_download_directory)
+                    break;
+
+    def downloadAllFilesFromBucket(self, aws_bucketname,
+                                   local_download_directory):
+        if not self._bucketExists(aws_bucketname):
+            self._print_bucket_not_found_message(aws_bucketname)
+        else:
+            bucket = self._aws_connection.get_bucket(aws_bucketname)
+            for s3_file in bucket.list():
+                self._downloadFile(s3_file, local_download_directory)
+
+    def deleteAllFilesFromBucket(self, aws_bucketname):
+        if not self._bucketExists(aws_bucketname):
+            self._print_bucket_not_found_message(aws_bucketname)
+        else:
+            bucket = self._aws_connection.get_bucket(aws_bucketname)
+            for s3_file in bucket.list():
+                self._deleteFile(bucket, s3_file)
+
+    def downloadFilesInBucketWithPredicate(self, aws_bucketname,
+                                           filename_predicate,
+                                           local_download_destination):
+        if not self._bucketExists(aws_bucketname):
+            self._print_bucket_not_found_message(aws_bucketname)
+        else:
+            bucket = self._aws_connection.get_bucket(aws_bucketname)
+            for s3_file in filter(lambda fkey: filename_predicate(fkey.name),
+                                  bucket.list()):
+                self._downloadFile(s3_file, local_download_destination)
+
+    def deleteFilesInBucketWithPredicate(self, aws_bucketname,
+                                         filename_predicate):
+        if not self._bucketExists(aws_bucketname):
+            self._print_bucket_not_found_message(aws_bucketname)
+        else:
+            bucket = self._aws_connection.get_bucket(aws_bucketname)
+            for s3_file in filter(lambda fkey: filename_predicate(fkey.name),
+                                  bucket.list()):
+                self._deleteFile(bucket, s3_file)
+
+    def _bucketExists(self, bucket_name):
+        return self._aws_connection.lookup(bucket_name) != None
+
+    def _print_bucket_not_found_message(self, bucket_name):
+        print("Error: bucket {} not found".format(bucket_name))
+
+    def _downloadFile(self, s3_file, local_download_destination):
+        full_local_path = os.path.expanduser(os.path.join(
+            local_download_destination, s3_file.name))
+        try:
+            print "Downloaded: %s" % (full_local_path)
+            s3_file.get_contents_to_filename(full_local_path)
+        except:
+            print "Error downloading"
+
+    def _deleteFile(self, bucket, s3_file):
+        bucket.delete_key(s3_file)
+        print "Deleted: %s" % s3_file.name
 
 
-if __name__ == '__main__':
+if __name__=='__main__':
     pass
