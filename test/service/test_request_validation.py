@@ -3,6 +3,7 @@ import sys
 import logging
 import time
 import requests
+from test.support import EnvironmentVarGuard
 from threading import Thread
 from chalice.local import LocalDevServer
 from chalice.config import Config as ChaliceConfig
@@ -91,6 +92,22 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(response.status_code, 200, response.json())
         self.assertEqual({"Hello": "World!"}, response.json())
+
+    def test_version(self):
+        git_commit_sha_env_key = 'GIT_COMMIT_SHA'
+        git_commit_repo_dirty_env_key = 'GIT_REPO_DIRTY'
+        self.env = EnvironmentVarGuard()
+        self.env.set(git_commit_sha_env_key, 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45')
+        self.env.set(git_commit_repo_dirty_env_key, 'True')
+
+        url = self.base_url + "version"
+        response = requests.get(url)
+        expected_response = {"git": {
+            "sha": self.env.get(git_commit_sha_env_key),
+            "dirty": bool(self.env.get(git_commit_repo_dirty_env_key))
+        }}
+        self.assertEqual(response.status_code, 200, response.json())
+        self.assertEqual(response.json(), expected_response)
 
     def test_bad_single_filter_facet_of_specimen(self):
         url = self.base_url + "repository/specimens?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
