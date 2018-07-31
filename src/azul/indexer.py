@@ -1,15 +1,7 @@
-# -*- coding: utf-8 -*-
-"""Base indexer class.
-
-The base indexer class provides the framework to do indexing.
-
-The based class Indexer serves as the basis for additional indexing classes.
-
-"""
 import logging
 from abc import ABC
 from collections import defaultdict
-from typing import Any, Mapping, MutableMapping
+from typing import Any, Mapping
 
 from elasticsearch import ConflictError, ElasticsearchException
 from elasticsearch.helpers import parallel_bulk, streaming_bulk
@@ -22,7 +14,9 @@ log = logging.getLogger(__name__)
 
 
 class BaseIndexer(ABC):
-
+    """
+    The base indexer class provides the framework to do indexing.
+    """
     def __init__(self, properties: BaseIndexProperties) -> None:
         self.properties = properties
 
@@ -56,7 +50,6 @@ class BaseIndexer(ABC):
 
         while indexable_documents:
             log.info("%s.%s: Indexing %i document(s).", bundle_uuid, bundle_version, len(indexable_documents))
-
             mget_body = dict(docs=[dict(_index=doc.document_index,
                                         _type=doc.document_type,
                                         _id=doc.document_id) for doc in indexable_documents.values()])
@@ -64,10 +57,14 @@ class BaseIndexer(ABC):
             cur_docs = [doc for doc in response["docs"] if doc['found']]
             if cur_docs:
                 log.info("%s.%s: Merging %i existing document(s).", bundle_uuid, bundle_version, len(cur_docs))
-                for doc in cur_docs:
-                    new_doc = indexable_documents[doc["_id"]]
-                    self.merge(new_doc.document_content, doc["_source"])
-                    new_doc.document_version = doc.get("_version", 0) + 1
+                for cur_doc in cur_docs:
+                    doc_id = cur_doc["_id"]
+                    new_doc = indexable_documents[doc_id]
+                    cur_doc_source, new_doc_source = cur_doc["_source"], new_doc.document_content
+                    cur_bundles, new_bundles = cur_doc_source['bundles'], new_doc_source['bundles']
+                    merged_bundles = self.merge(cur_bundles, new_bundles)
+                    new_doc_source['bundles'] = merged_bundles
+                    new_doc.document_version = cur_doc.get("_version", 0) + 1
             else:
                 log.info("%s.%s: No existing documents to merge with.", bundle_uuid, bundle_version)
 
@@ -96,14 +93,14 @@ class BaseIndexer(ABC):
                             bundle_uuid, bundle_version, doc_id, error, errored_documents[doc_id], action)
 
             if len(indexable_documents) < 32:
-                for doc in indexable_documents.values():
-                    doc_id = doc.document_id
+                for cur_doc in indexable_documents.values():
+                    doc_id = cur_doc.document_id
                     try:
-                        es_client.index(index=doc.document_index,
-                                        doc_type=doc.document_type,
-                                        body=doc.document_content,
+                        es_client.index(index=cur_doc.document_index,
+                                        doc_type=cur_doc.document_type,
+                                        body=cur_doc.document_content,
                                         id=doc_id,
-                                        version=doc.document_version,
+                                        version=cur_doc.document_version,
                                         version_type='external')
                     except ConflictError as e:
                         on_conflict(doc_id, e)
@@ -149,22 +146,40 @@ class BaseIndexer(ABC):
                                (bundle_uuid, bundle_version, len(errored_documents), len(conflict_documents)))
 
     @staticmethod
-    def merge(new_doc: MutableMapping[str, Any], cur_doc: Mapping[str, Any]):
-        # FIXME: I think this condition is redundant
-        if cur_doc:
-            # The new document contains data for one bundle only
-            new_bundle = new_doc["bundles"][0]
-            updated_bundles = []
-            bundle_found = False
-            for bundle in cur_doc["bundles"]:
-                if bundle["uuid"] == new_bundle["uuid"]:
-                    latest_bundle = max(bundle,
-                                        new_bundle,
-                                        key=lambda x: x["version"])
-                    updated_bundles.append(latest_bundle)
-                    bundle_found = True
-                else:
-                    updated_bundles.append(bundle)
-            if not bundle_found:
-                updated_bundles.append(new_bundle)
-            new_doc["bundles"] = updated_bundles
+    def merge(cur_bundles, new_bundles):
+        """
+        Bundles without a match in the other list are chosen:
+        >>> BaseIndexer.merge([dict(uuid=0, version=0),                        ],
+        ...                   [                         dict(uuid=2, version=0)])
+        [{'uuid': 2, 'version': 0}, {'uuid': 0, 'version': 0}]
+
+        If the UUID matches, the more recent bundle version is chosen:
+        >>> BaseIndexer.merge([dict(uuid=0, version=0), dict(uuid=2, version=1)],
+        ...                   [dict(uuid=0, version=1), dict(uuid=2, version=0)])
+        [{'uuid': 0, 'version': 1}, {'uuid': 2, 'version': 1}]
+
+        Ties (identical UUID and version) are broken by favoring the bundle from the second argument:
+        >>> BaseIndexer.merge([dict(uuid=1, version=0, x=1)],
+        ...                   [dict(uuid=1, version=0, x=2)])
+        [{'uuid': 1, 'version': 0, 'x': 2}]
+
+        A more complicated case:
+        >>> BaseIndexer.merge([dict(uuid=0, version=0), dict(uuid=1, version=0, x=1), dict(uuid=2, version=0)],
+        ...                   [                         dict(uuid=1, version=0, x=2), dict(uuid=2, version=1)])
+        [{'uuid': 1, 'version': 0, 'x': 2}, {'uuid': 2, 'version': 1}, {'uuid': 0, 'version': 0}]
+        """
+        cur_bundles_by_id = {cur_bundle['uuid']: cur_bundle for cur_bundle in cur_bundles}
+        assert len(cur_bundles_by_id) == len(cur_bundles)
+        bundles = {}
+        for new_bundle in new_bundles:
+            bundle_uuid = new_bundle['uuid']
+            try:
+                cur_bundle = cur_bundles_by_id.pop(bundle_uuid)
+            except KeyError:
+                bundle = new_bundle
+            else:
+                bundle = new_bundle if new_bundle['version'] >= cur_bundle['version'] else cur_bundle
+            assert bundles.setdefault(bundle_uuid, bundle) is bundle
+        for bundle in cur_bundles_by_id.values():
+            assert bundles.setdefault(bundle['uuid'], bundle) is bundle
+        return list(bundles.values())
