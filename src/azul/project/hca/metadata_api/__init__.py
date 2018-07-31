@@ -158,7 +158,10 @@ class DonorOrganism(Biomaterial):
 
     @property
     def organism_age_in_seconds(self):
-        return AgeRange(self.organism_age, self.organism_age_unit)
+        if self.organism_age and self.organism_age_unit:
+            return AgeRange(self.organism_age, self.organism_age_unit)
+        else:
+            return None
 
 
 @mydataclass
