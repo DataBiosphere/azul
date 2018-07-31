@@ -131,8 +131,9 @@ class BiomaterialVisitor(api.EntityVisitor):
                 b["disease"] = list(entity.disease)
                 b["organism_age"] = entity.organism_age
                 b["organism_age_unit"] = entity.organism_age_unit
-                b["max_organism_age_in_seconds"] = entity.organism_age_in_seconds.max
-                b["min_organism_age_in_seconds"] = entity.organism_age_in_seconds.min
+                age_range = entity.organism_age_in_seconds
+                b["max_organism_age_in_seconds"] = age_range.max if age_range else None
+                b["min_organism_age_in_seconds"] = age_range.min if age_range else None
                 b["biological_sex"] = entity.biological_sex
             elif isinstance(entity, api.CellSuspension):
                 b["total_estimated_cells"] = entity.total_estimated_cells
