@@ -225,3 +225,12 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
+
+    def test_summary_endpoint(self):
+        url = self.base_url + "repository/files/summary"
+        response = requests.get(url)
+        response.raise_for_status()
+        summary_object = response.json()
+        self.assertGreater(summary_object['fileCount'], 0)
+        self.assertGreater(summary_object['organCount'], 0)
+        self.assertIsNotNone(summary_object['organSummaries'])
