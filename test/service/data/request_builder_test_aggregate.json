@@ -1,6 +1,14 @@
 {
   "filter": {
-    "match_all": {}
+    "bool": {
+      "must_not": [
+        {
+          "term": {
+            "bundles.contents.deleted": true
+          }
+        }
+      ]
+    }
   },
   "aggs": {
     "myTerms": {

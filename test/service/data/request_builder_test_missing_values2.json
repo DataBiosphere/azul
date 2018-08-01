@@ -43,6 +43,13 @@
             }
           }
         }
+      ],
+      "must_not": [
+        {
+          "term": {
+            "bundles.contents.deleted": true
+          }
+        }
       ]
     }
   },

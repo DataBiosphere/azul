@@ -18,6 +18,10 @@ class Bundle:
     version: str
     contents: JSON = field(default_factory=dict)
 
+    @property
+    def deleted(self) -> bool:
+        return 'deleted' in self.contents and self.contents['deleted']
+
 
 @dataclass
 class ElasticSearchDocument:
