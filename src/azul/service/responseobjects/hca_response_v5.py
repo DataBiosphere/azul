@@ -408,7 +408,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         if key == "id":
                             continue
                         else:
-                            translated_specimen[key] = list(set(filter(None, value)))
+                            translated_specimen[key] = [] if value is None else list(set(filter(None, value)))
                     translated_specimen["totalCells"] = sum(translated_specimen["totalCells"])
                     specimens[specimen_id] = translated_specimen
                 else:
