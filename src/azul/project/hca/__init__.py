@@ -23,3 +23,17 @@ dss_subscription_query = {
         }
     }
 }
+
+dss_deletion_subscription_query = {
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "term": {
+                        "admin_deleted": True
+                    }
+                }
+            ]
+        }
+    }
+}
