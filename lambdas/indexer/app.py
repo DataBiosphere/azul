@@ -75,7 +75,7 @@ old_handler = chalice.app.ScheduledEventHandler.__call__
 chalice.app.ScheduledEventHandler.__call__ = new_handler
 
 
-@app.schedule("rate(1 minute)", name='worker')
+@app.schedule("rate(4 minutes)", name='worker')
 def index(event: CloudWatchEvent):
     log.info(f'Starting worker threads')
     remaining_time = RemainingLambdaContextTime(app.lambda_context)

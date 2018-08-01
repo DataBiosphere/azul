@@ -22,5 +22,5 @@ emit({
         "HOME": "/tmp"
     },
     "lambda_timeout": 300,
-    "lambda_memory_size": 512
+    "lambda_memory_size": 1024
 })
