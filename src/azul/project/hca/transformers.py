@@ -51,7 +51,7 @@ class TransformerVisitor(api.EntityVisitor):
 
     @staticmethod
     def _merge_process_protocol(pc: api.Process, pl: api.Protocol) -> MutableMapping[str, Any]:
-        d = dict(documet_id=[pc.document_id, pl.document_id],
+        d = dict(document_id=[pc.document_id, pl.document_id],
                  process_id=pc.process_id,
                  process_name=pc.process_name,
                  protocol_id=pl.protocol_id,
