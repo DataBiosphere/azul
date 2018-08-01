@@ -3,7 +3,6 @@ import os
 import sys
 import tempfile
 from unittest.mock import patch
-
 import boto3
 
 from azul import config
@@ -20,6 +19,7 @@ def main(argv):
     parser.add_argument('--shared', '-s', dest='shared', action='store_true', default=False)
     options = parser.parse_args(argv)
     dss_client = config.dss_client()
+
     if options.shared:
         sm = boto3.client('secretsmanager')
         creds = sm.get_secret_value(SecretId=config.google_service_account('indexer'))
@@ -34,27 +34,37 @@ def main(argv):
 
 def subscribe(options, dss_client):
     response = dss_client.get_subscriptions(replica='aws')
-    subscriptions = freeze(response['subscriptions'])
-    plugin = config.plugin()
-    if options.subscribe:
-        new_subscription = freeze(dict(replica='aws',
-                                       es_query=plugin.dss_subscription_query,
-                                       callback_url="https://" + config.api_lambda_domain('indexer') + "/"))
-    else:
-        new_subscription = None
-    for subscription in subscriptions:
-        if new_subscription and new_subscription.items() <= subscription.items():
+    dss_subscriptions = freeze(response['subscriptions'])
+    new_subscriptions = _make_subscriptions(options.subscribe)
+
+    duplicate_subscription = []
+    for subscription in dss_subscriptions:
+        matching_subscription = next((new_subscription for new_subscription in new_subscriptions
+                                      if new_subscription <= subscription))
+        if matching_subscription:
             logging.info('Already subscribed: %r', thaw(subscription))
-            new_subscription = None
+            duplicate_subscription.append(matching_subscription)
         else:
-            logging.log(logging.WARNING if options.subscribe else logging.INFO,
-                        'Removing subscription: %r', thaw(subscription))
+            logging.info('Removing subscription: %r', thaw(subscription))
             dss_client.delete_subscription(uuid=subscription['uuid'], replica=subscription['replica'])
-    if new_subscription:
-        subscription = thaw(new_subscription)
-        response = dss_client.put_subscription(**subscription)
-        subscription['uuid'] = response['uuid']
-        logging.info('Registered subscription %r.', subscription)
+    new_subscriptions = [subs for subs in new_subscriptions if subs not in duplicate_subscription]
+
+    for subscription in new_subscriptions:
+        dss_subscription = thaw(subscription)
+        response = dss_client.put_subscription(**dss_subscription)
+        dss_subscription['uuid'] = response['uuid']
+        logging.info('Registered subscription %r.', dss_subscription)
+
+
+def _make_subscriptions(subscribe):
+    if subscribe:
+        plugin = config.plugin()
+        base_url = "https://" + config.api_lambda_domain('indexer')
+        return [freeze(dict(replica='aws', es_query=query, callback_url=base_url + path))
+                for query, path in [(plugin.dss_subscription_query, '/'),
+                                    (plugin.dss_deletion_subscription_query, '/delete')]]
+    else:
+        return []
 
 
 if __name__ == '__main__':

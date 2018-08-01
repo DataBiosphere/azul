@@ -40,9 +40,6 @@ class BaseIndexer(ABC):
             es_client.indices.create(index=index_name, body=self.properties.settings, ignore=[400])
             es_client.indices.put_mapping(index=index_name, doc_type="doc", body=self.properties.mapping)
 
-        errored_documents = defaultdict(int)
-        conflict_documents = defaultdict(int)
-
         # Collect the documents to be indexed
         indexable_documents = {}
         for transformer in self.properties.transformers:
@@ -53,11 +50,16 @@ class BaseIndexer(ABC):
             for es_document in es_documents:
                 indexable_documents[es_document.document_id] = es_document
 
+        self._update_index(bundle_uuid, bundle_version, indexable_documents)
+
+    def _update_index(self, bundle_uuid, bundle_version, indexable_documents):
+        errored_documents = defaultdict(int)
+        conflict_documents = defaultdict(int)
+        es_client = ESClientFactory.get()
         while indexable_documents:
             log.info("%s.%s: Indexing %i document(s).", bundle_uuid, bundle_version, len(indexable_documents))
-            mget_body = dict(docs=[dict(_index=doc.document_index,
-                                        _type=doc.document_type,
-                                        _id=doc.document_id) for doc in indexable_documents.values()])
+            mget_body = dict(docs=[dict(_index=doc.document_index, _type=doc.document_type, _id=doc.document_id)
+                                   for doc in indexable_documents.values()])
             response = es_client.mget(body=mget_body)
             cur_docs = [doc for doc in response["docs"] if doc['found']]
             if cur_docs:
@@ -141,9 +143,48 @@ class BaseIndexer(ABC):
 
             # Collect the set of documents to be retried
             indexable_documents = {k: v for k, v in indexable_documents.items() if k in retry_ids}
-
         if errored_documents or conflict_documents:
             log.warning('%s.%s: failures: %r', bundle_uuid, bundle_version, errored_documents)
             log.warning('%s.%s: conflicts: %r', bundle_uuid, bundle_version, conflict_documents)
             raise RuntimeError('%s.%s: Failed to index bundle. Failures: %i, conflicts: %i.' %
                                (bundle_uuid, bundle_version, len(errored_documents), len(conflict_documents)))
+
+    def delete(self, dss_notification: Mapping[str, Any]) -> None:
+        bundle_uuid = dss_notification['match']['bundle_uuid']
+        bundle_version = dss_notification['match']['bundle_version']
+        docs = self._get_docs_by_uuid_and_version(bundle_uuid, bundle_version)
+
+        indexable_documents = {}
+        for hit in docs['hits']['hits']:
+            for bundle in hit['_source']['bundles']:
+                if bundle['uuid'] == bundle_uuid and bundle['version'] == bundle_version:
+                    bundle['contents'] = {"deleted": True}
+            indexable_documents[hit['_id']] = ElasticSearchDocument.from_index(hit)
+        self._update_index(bundle_uuid, bundle_version, indexable_documents)
+
+    def _get_docs_by_uuid_and_version(self, bundle_uuid, bundle_version):
+        search_query = {
+            "version": True,
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "term": {
+                                "bundles.uuid.keyword": {
+                                    "value": bundle_uuid
+                                }
+                            }
+                        },
+                        {
+                            "term": {
+                                "bundles.version.keyword": {
+                                    "value": bundle_version
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+        es_client = ESClientFactory.get()
+        return es_client.search(doc_type="doc", body=search_query)
