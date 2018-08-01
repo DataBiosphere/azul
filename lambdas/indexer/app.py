@@ -122,9 +122,13 @@ def _index(worker: int, remaining_time: RemainingTime) -> None:
             notification = json.loads(message.body)
             log.info(f'Worker {worker} handling notification {notification}, attempt #{attempts} (approx).')
             start = time.time()
-            indexer.index(notification)
-            duration = time.time() - start
-            log.info(f'Worker {worker} successfully handled notification {notification} in {duration:.3f}s.')
-            message.delete()
+            try:
+                indexer.index(notification)
+            except:
+                log.warning(f"Worker {worker} failed to handle notification {notification}.", exc_info=True)
+            else:
+                duration = time.time() - start
+                log.info(f'Worker {worker} successfully handled notification {notification} in {duration:.3f}s.')
+                message.delete()
     else:
         log.info(f"Exiting worker.")
