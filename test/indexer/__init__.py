@@ -63,3 +63,11 @@ class IndexerTestCase(ElasticsearchTestCase):
         with patch('azul.DSSClient'):
             with patch('azul.indexer.download_bundle_metadata', new=mocked_extract_bundle):
                 self.hca_indexer.index(fake_event)
+
+    def _mock_delete(self, test_bundle, data_pack):
+        bundle_uuid, bundle_version = test_bundle
+        self._mock_index(test_bundle, data_pack)
+
+        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+        with patch('azul.DSSClient'):
+            self.hca_indexer.delete(fake_event)

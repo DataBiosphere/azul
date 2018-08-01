@@ -1,6 +1,7 @@
 """
 Chalice application module to receive and process DSS event notifications.
 """
+import http
 import json
 import logging
 import time
@@ -8,7 +9,7 @@ import time
 import boto3
 import chalice
 from chalice import Chalice
-from chalice.app import SQSEvent
+from chalice.app import SQSEvent, Response
 
 from azul import config
 
@@ -58,12 +59,31 @@ def post_notification():
     if params and params.get('sync', 'False').lower() == 'true':
         indexer.index(notification)
     else:
-        queue('notify').send_message(MessageBody=json.dumps(notification))
+        queue('notify').send_message(MessageBody=_make_message(action='add', payload=notification))
         log.info("Queued notification %r", notification)
     return {"status": "done"}
 
 
+@app.route('/delete', methods=['POST'])
+def delete_notification():
+    """
+    Receive a deletion event and process it asynchronously
+    """
+    notification = app.current_request.json_body
+    log.info("Received deletion notification %r", notification)
+    queue('notify').send_message(MessageBody=_make_message(action='delete', payload=notification))
+    log.info("Queued notification %r", notification)
+
+    return Response(body='', status_code=http.HTTPStatus.ACCEPTED)
+
 # Work around https://github.com/aws/chalice/issues/856
+
+
+def _make_message(action, payload):
+    if action not in ['add', 'delete']:
+        raise ValueError(action)
+    return json.dumps({'action': action, 'payload': payload})
+
 
 def new_handler(self, event, context):
     app.lambda_context = context
@@ -89,7 +109,12 @@ def index(event: SQSEvent):
         log.info(f'Worker handling notification {notification}, attempt #{attempts} (approx).')
         start = time.time()
         try:
-            indexer.index(notification)
+            action = notification['action']
+            payload = notification['payload']
+            if action == 'add':
+                indexer.index(payload)
+            if action == 'delete':
+                indexer.delete(payload)
         except:
             log.warning(f"Worker failed to handle notification {notification}.", exc_info=True)
             raise

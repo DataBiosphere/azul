@@ -18,6 +18,8 @@ from azul import config, eventually
 from azul.json_freeze import freeze
 from indexer import IndexerTestCase
 
+from azul.transformer import ElasticSearchDocument
+
 logger = logging.getLogger(__name__)
 
 
@@ -79,6 +81,26 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertIn(index_id, expected_ids)
 
         self._get_es_results(check_bundle_correctness)
+
+    def test_delete_correctness(self):
+        """
+        Delete a bundle and check that the index contains the appropriate flags
+        """
+        data_pack = self._get_data_files(self.new_bundle[0], self.new_bundle[1], updated=True)
+
+        self._mock_delete(self.new_bundle, data_pack)
+
+        def check_bundle_delete_correctness(es_results):
+            self.assertGreater(len(es_results), 0)
+            for result_dict in es_results:
+                result_doc = ElasticSearchDocument.from_index(result_dict)
+                self.assertEqual(result_doc.bundles[0].uuid, self.new_bundle[0])
+                self.assertEqual(result_doc.bundles[0].version, self.new_bundle[1])
+                self.assertEqual(result_doc.bundles[0].contents, {'deleted': True})
+                self.assertTrue(result_doc.bundles[0].deleted)
+
+        self._get_es_results(check_bundle_delete_correctness)
+
 
     def test_update_with_newer_version(self):
         """
