@@ -365,7 +365,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             if project_shortname not in projects:
                 projects[project_shortname] = translated_project
             else:
-                merged_project = self._merge(projects[project_shortname], translated_project, "shortname")
+                merged_project = self._merge(projects[project_shortname], translated_project, "projectShortname")
                 projects[project_shortname] = merged_project
         return list(projects.values())
 
