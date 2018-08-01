@@ -90,6 +90,20 @@ class FileTypeSummary(JsonObject):
         return new_object
 
 
+class OrganCellCountSummary(JsonObject):
+    organType = StringProperty()
+    countOfDocsWithOrganType = IntegerProperty()
+    totalCellCountByOrgan = FloatProperty()
+
+    @staticmethod
+    def create_object(bucket):
+        new_object = OrganCellCountSummary()
+        new_object.organType = bucket['key']
+        new_object.countOfDocsWithOrganType = bucket['doc_count']
+        new_object.totalCellCountByOrgan = bucket['cell_count']['value']
+        return new_object
+
+
 class ApiResponse(JsonObject):
     """
     Class defining an API response
@@ -107,6 +121,7 @@ class SummaryRepresentation(JsonObject):
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
     fileTypeSummaries = ListProperty(FileTypeSummary)
+    organSummaries = ListProperty(OrganCellCountSummary)
 
 
 class FileIdAutoCompleteEntry(JsonObject):
@@ -262,6 +277,8 @@ class SummaryResponse(AbstractResponse):
         hits = raw_response['hits']
         aggregates = raw_response['aggregations']
         _sum = raw_response['aggregations']['by_type']
+        _organ_group = raw_response['aggregations']['group_by_organ']
+    
         # Create a SummaryRepresentation object
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
@@ -279,7 +296,8 @@ class SummaryResponse(AbstractResponse):
                 aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(
                 aggregates, 'total_cell_count', agg_form='value'),
-            fileTypeSummaries=[FileTypeSummary.create_object(bucket) for bucket in _sum['buckets']]
+            fileTypeSummaries=[FileTypeSummary.create_object(bucket) for bucket in _sum['buckets']],
+            organSummaries=[OrganCellCountSummary.create_object(bucket) for bucket in _organ_group['buckets']]
         )
 
 

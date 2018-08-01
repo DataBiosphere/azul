@@ -41,7 +41,7 @@ class FakerSchemaGenerator(object):
 
 
 class ElasticsearchFakeDataLoader(object):
-    test_index_name = 'test-index'
+    test_index_name = 'browser_files_dev'
 
     def __init__(self, number_of_documents=1000, azul_es_endpoint=None):
 
