@@ -4,10 +4,10 @@ import logging
 import time
 import requests
 from threading import Thread
-from unittest import TestCase
 from chalice.local import LocalDevServer
 from chalice.config import Config as ChaliceConfig
 from azul import Config as AzulConfig
+from service import WebServiceTestCase
 
 
 log = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class ChaliceServerThread(Thread):
         return self.server_wrapper.server.server_address
 
 
-class FacetNameValidationTest(TestCase):
+class FacetNameValidationTest(WebServiceTestCase):
     filter_facet_message = {"Code": "BadRequestError",
                             "Message": "BadRequestError: Unable to filter by undefined facet bad-facet."}
     sort_facet_message = {"Code": "BadRequestError",
@@ -48,6 +48,7 @@ class FacetNameValidationTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.path_to_app = os.path.join(AzulConfig().project_root, 'lambdas', 'service')
         sys.path.append(cls.path_to_app)
         from app import app
@@ -55,9 +56,11 @@ class FacetNameValidationTest(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass()
         sys.path.remove(cls.path_to_app)
 
     def setUp(self):
+        super().setUp()
         log.debug("Setting up tests")
         log.debug("Created Thread")
         self.server_thread = ChaliceServerThread(self.app, ChaliceConfig(), 'localhost', 0)

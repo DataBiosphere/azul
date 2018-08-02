@@ -4,7 +4,7 @@ from datetime import datetime
 
 from azul import config, eventually
 from azul.project.hca.metadata_api import Bundle
-from indexer.azul_test_case import AzulTestCase
+from indexer.test_hca_indexer import IndexerTestCase
 
 module_logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ def setUpModule():
     logging.basicConfig(level=logging.INFO)
 
 
-class TestDataExtractor(AzulTestCase):
+class TestDataExtractorTestCase(IndexerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -41,7 +41,8 @@ class TestDataExtractor(AzulTestCase):
             "https://dss.staging.data.humancellatlas.org/v1": [],
             "https://dss.data.humancellatlas.org/v1": [("8543d32f-4c01-48d5-a79f-1c5439659da3", "2018-03-29T143828.884167Z")]
         }
-        cls.es_client = cls.get_es_client()
+        cls.es_client = cls.index_properties.elastic_search_client
+
 
     @classmethod
     def tearDownClass(cls):
