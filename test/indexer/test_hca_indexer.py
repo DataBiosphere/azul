@@ -11,11 +11,13 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from elasticsearch import Elasticsearch
 from functools import partial
+from typing import Mapping, Any
 from unittest.mock import patch
+from uuid import uuid4
 
 from azul import eventually
 from azul.downloader import MetadataDownloader
-from indexer.azul_test_case import AzulTestCase
+from indexer import IndexerTestCase
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,20 @@ def setUpModule():
     logging.basicConfig(level=logging.INFO)
 
 
-class TestHCAIndexer(AzulTestCase):
+class TestHCAIndexer(IndexerTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.old_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b",
+                          "2018-03-29T152812.404846Z")
+        cls.new_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b",
+                          "2018-03-30T152812.404846Z")
+        cls.spec1_bundle = ("9dec1bd6-ced8-448a-8e45-1fc7846d8995",
+                            "2018-03-29T154319.834528Z")
+        cls.spec2_bundle = ("56a338fe-7554-4b5d-96a2-7df127a7640b",
+                            "2018-03-29T153507.198365Z")
+        cls.es_client = cls.get_es_client()
+
     @staticmethod
     def _get_data_files(filename, updated=False):
         data_prefix = "data/"
@@ -40,6 +55,20 @@ class TestHCAIndexer(AzulTestCase):
             manifest = json.load(infile)
 
         return metadata, manifest
+
+    @staticmethod
+    def _make_fake_notification(uuid: str, version: str) -> Mapping[str, Any]:
+        return {
+            "query": {
+                "match_all": {}
+            },
+            "subscription_id": str(uuid4()),
+            "transaction_id": str(uuid4()),
+            "match": {
+                "bundle_uuid": uuid,
+                "bundle_version": version
+            }
+        }
 
     def _mock_index(self, test_bundles, data_pack):
         bundle_uuid, bundle_version = test_bundles
@@ -63,19 +92,6 @@ class TestHCAIndexer(AzulTestCase):
 
         assert_func(es_results)
         return es_results
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.old_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b",
-                          "2018-03-29T152812.404846Z")
-        cls.new_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b",
-                          "2018-03-30T152812.404846Z")
-        cls.spec1_bundle = ("9dec1bd6-ced8-448a-8e45-1fc7846d8995",
-                            "2018-03-29T154319.834528Z")
-        cls.spec2_bundle = ("56a338fe-7554-4b5d-96a2-7df127a7640b",
-                            "2018-03-29T153507.198365Z")
-        cls.es_client = cls.get_es_client()
 
     @classmethod
     def tearDownClass(cls):
