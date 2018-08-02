@@ -209,3 +209,18 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
+
+    def test_summary_endpont(self):
+        url = self.base_url + "repository/files/summary"
+        response = requests.get(url)
+        summary_object = response.json()
+        self.assertGreater(summary_object['fileCount'], 0)
+        self.assertGreater(summary_object['organCount'], 0)
+        self.assertIsNotNone(summary_object['organSummaries'])
+
+    def test_summary_end_point_bad_filter(self):
+        url = self.base_url + "repository/files/summary" \
+                              "?filters={'file':{'organPart':{'is':['fake-val']},'bad-facet':{'is':['fake-val']}}}"
+        response = requests.get(url)
+        self.assertEqual(400, response.status_code, response.json())
+        self.assertEqual(self.filter_facet_message, response.json())
