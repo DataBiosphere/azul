@@ -76,10 +76,6 @@ class TestHCAIndexer(IndexerTestCase):
         assert_func(es_results)
         return es_results
 
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-
     def tearDown(self):
         for index_name in self.index_properties.index_names:
             self.es_client.indices.delete(index=index_name, ignore=[400, 404])
