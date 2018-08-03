@@ -54,24 +54,10 @@ class TestHCAIndexer(IndexerTestCase):
 
         return metadata, manifest
 
-    @staticmethod
-    def _make_fake_notification(uuid: str, version: str) -> Mapping[str, Any]:
-        return {
-            "query": {
-                "match_all": {}
-            },
-            "subscription_id": str(uuid4()),
-            "transaction_id": str(uuid4()),
-            "match": {
-                "bundle_uuid": uuid,
-                "bundle_version": version
-            }
-        }
-
     def _mock_index(self, test_bundles, data_pack):
         bundle_uuid, bundle_version = test_bundles
         metadata, manifest = data_pack
-        fake_event = self.make_fake_notification(bundle_uuid, bundle_version)
+        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
         with patch('azul.DSSClient'):
             with patch.object(MetadataDownloader, 'extract_bundle') as mock_method:
                 mock_method.return_value = metadata, manifest
