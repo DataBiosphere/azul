@@ -1,3 +1,6 @@
+from typing import Mapping, Any
+from uuid import uuid4
+
 from azul import config
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
@@ -29,3 +32,16 @@ class IndexerTestCase(AzulTestCase):
         else:
             os.environ['AZUL_DSS_ENDPOINT'] = cls._old_dss_endpoint
         super().tearDownClass()
+
+    def _make_fake_notification(self, uuid: str, version: str) -> Mapping[str, Any]:
+        return {
+            "query": {
+                "match_all": {}
+            },
+            "subscription_id": str(uuid4()),
+            "transaction_id": str(uuid4()),
+            "match": {
+                "bundle_uuid": uuid,
+                "bundle_version": version
+            }
+        }
