@@ -3,17 +3,15 @@
 Suite for unit testing indexer.py
 """
 
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 import json
 import logging
 import time
 import unittest
-
-from concurrent.futures import ThreadPoolExecutor
-from elasticsearch import Elasticsearch
-from functools import partial
-from typing import Mapping, Any
 from unittest.mock import patch
-from uuid import uuid4
+
+from elasticsearch import Elasticsearch
 
 from azul import eventually
 from azul.downloader import MetadataDownloader
