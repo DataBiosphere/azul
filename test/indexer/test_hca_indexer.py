@@ -36,7 +36,6 @@ class TestHCAIndexer(IndexerTestCase):
                             "2018-03-29T154319.834528Z")
         cls.spec2_bundle = ("56a338fe-7554-4b5d-96a2-7df127a7640b",
                             "2018-03-29T153507.198365Z")
-        cls.es_client = cls.get_es_client()
 
     @staticmethod
     def _get_data_files(filename, updated=False):
