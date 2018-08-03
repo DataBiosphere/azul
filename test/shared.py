@@ -15,6 +15,7 @@ class AzulTestCase(unittest.TestCase):
     es_client = None
 
     _es_docker_container = None
+    _old_es_endpoint = None
 
     @classmethod
     def setUpClass(cls):
@@ -34,6 +35,7 @@ class AzulTestCase(unittest.TestCase):
         es_host_port = int(container_port['HostPort'])
         es_host_ip = container_port['HostIp']
         es_host = f'{es_host_ip}:{es_host_port}'
+        cls._old_es_endpoint = os.environ.get('AZUL_ES_ENDPOINT')
         os.environ['AZUL_ES_ENDPOINT'] = es_host
         cls.es_client = Elasticsearch(hosts=[es_host], use_ssl=False)
         cls._wait_for_es()
@@ -51,9 +53,12 @@ class AzulTestCase(unittest.TestCase):
                 time.sleep(1)
         logger.info('Elasticsearch appears to be up.')
 
-
     @classmethod
     def tearDownClass(cls):
-        cls.es_docker_container.kill()
+        if cls._old_es_endpoint is None:
+            del os.environ['AZUL_ES_ENDPOINT']
+        else:
+            os.environ['AZUL_ES_ENDPOINT'] = cls._old_es_endpoint
+        cls._es_docker_container.kill()
         cls._es_docker_container = None
         super().tearDownClass()
