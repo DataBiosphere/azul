@@ -51,7 +51,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
     def test_hca_extraction(self):
         # Index the test bundles
         for bundle_uuid, bundle_version in self.test_bundles[config.dss_endpoint]:
-            fake_event = self.make_fake_notification(bundle_uuid, bundle_version)
+            fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
             module_logger.info("Start computation %s",
                                datetime.now().isoformat(timespec='microseconds'))
             self.hca_indexer.index(fake_event)
@@ -74,7 +74,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
         from azul.downloader import MetadataDownloader
         from azul.dss_bundle import DSSBundle
         bundle_uuid, bundle_version = self.test_same_ids_different_bundles[config.dss_endpoint][0]
-        fake_event = self.make_fake_notification(bundle_uuid, bundle_version)
+        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
         metadata_downloader = MetadataDownloader(config.dss_endpoint)
         metadata, manifest = metadata_downloader.extract_bundle(fake_event)
         dss_bundle = DSSBundle(uuid=bundle_uuid,
@@ -92,7 +92,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
     # there is a bug where the files index contains duplicate dictionaries for the file.
     def test_no_duplicate_files_in_specimen(self):
         bundle_uuid, bundle_version = self.test_duplicates_bundles[config.dss_endpoint][0]
-        fake_event = self.make_fake_notification(bundle_uuid, bundle_version)
+        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
         module_logger.info("Start computation %s",
                            datetime.now().isoformat(timespec='microseconds'))
         self.hca_indexer.index(fake_event)
