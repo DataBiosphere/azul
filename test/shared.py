@@ -21,18 +21,6 @@ class AzulTestCase(unittest.TestCase):
     def get_es_client(cls):
         return cls._es_client
 
-    def make_fake_notification(self, uuid: str, version: str) -> Mapping[str, Any]:
-        return {
-            "query": {
-                "match_all": {}
-            },
-            "subscription_id": str(uuid4()),
-            "transaction_id": str(uuid4()),
-            "match": {
-                "bundle_uuid": uuid,
-                "bundle_version": version
-            }
-        }
 
     @classmethod
     def setUpClass(cls):
