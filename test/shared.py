@@ -30,8 +30,6 @@ class AzulTestCase(unittest.TestCase):
         container_info = docker_client.api.inspect_container(cls._es_docker_container.name)
         container_ports = container_info['NetworkSettings']['Ports']
         container_port = container_ports[api_container_port][0]
-        # FIXME: https://github.com/DataBiosphere/azul/issues/134
-        # deprecate use of production server in favor of local, farm-to-table data files
         es_host_port = int(container_port['HostPort'])
         es_host_ip = container_port['HostIp']
         es_host = f'{es_host_ip}:{es_host_port}'
