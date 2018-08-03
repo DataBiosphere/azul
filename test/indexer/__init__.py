@@ -6,6 +6,7 @@ import os
 
 
 class IndexerTestCase(AzulTestCase):
+
     index_properties = None
     hca_indexer = None
 

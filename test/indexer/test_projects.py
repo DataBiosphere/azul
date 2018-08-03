@@ -14,6 +14,7 @@ def setUpModule():
 
 
 class TestDataExtractorTestCase(IndexerTestCase):
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -42,7 +43,6 @@ class TestDataExtractorTestCase(IndexerTestCase):
             "https://dss.data.humancellatlas.org/v1": [("8543d32f-4c01-48d5-a79f-1c5439659da3", "2018-03-29T143828.884167Z")]
         }
         cls.es_client = cls.index_properties.elastic_search_client
-
 
     @classmethod
     def tearDownClass(cls):
