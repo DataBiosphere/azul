@@ -1,12 +1,10 @@
-import docker
 import logging
 import os
 import time
 import unittest
-
-from typing import Mapping, Any
 from unittest.mock import patch
-from uuid import uuid4
+
+import docker
 from elasticsearch5 import Elasticsearch
 
 logger = logging.getLogger(__name__)
