@@ -28,7 +28,7 @@ clean:
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
 
 test:
-	$(MAKE) -C test/service testme
+	$(MAKE) -C test
 
 travis:
 	$(MAKE) -C test/service travistest

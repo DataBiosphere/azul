@@ -4,11 +4,13 @@ import requests
 import json
 import unittest
 import os
+from service import WebServiceTestCase
 
 
 # Assumes a database initialized with >SEARCH_AFTER_THRESHOLD records, where
 # SEARCH_AFTER_THRESHOLD is defined in responseobjects/elastic_request_builder.py
-class PaginationTestCase(unittest.TestCase):
+@unittest.skip('https://github.com/DataBiosphere/azul/issues/164')
+class PaginationTestCase(WebServiceTestCase):
     @staticmethod
     def get_base_url():
         """

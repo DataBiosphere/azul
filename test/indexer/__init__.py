@@ -12,7 +12,6 @@ from shared import AzulTestCase
 
 
 class IndexerTestCase(AzulTestCase):
-
     index_properties = None
     hca_indexer = None
 
@@ -50,6 +49,21 @@ class IndexerTestCase(AzulTestCase):
             }
         }
 
+    def _get_data_files(self, filename, updated=False):
+        data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+        metadata_suffix = ".metadata.json"
+        manifest_suffix = ".manifest.json"
+        if updated:
+            filename += ".updated"
+
+        with open(os.path.join(data_prefix, filename + metadata_suffix, 'r')) as infile:
+            metadata = json.load(infile)
+
+        with open(os.path.join(data_prefix, filename + manifest_suffix, 'r')) as infile:
+            manifest = json.load(infile)
+
+        return metadata, manifest
+
     def _mock_index(self, test_bundles, data_pack):
         bundle_uuid, bundle_version = test_bundles
         metadata, manifest = data_pack
@@ -58,19 +72,3 @@ class IndexerTestCase(AzulTestCase):
             with patch.object(MetadataDownloader, 'extract_bundle') as mock_method:
                 mock_method.return_value = metadata, manifest
                 self.hca_indexer.index(fake_event)
-
-    @staticmethod
-    def _get_data_files(filename, updated=False):
-        data_prefix = "data/"
-        metadata_suffix = ".metadata.json"
-        manifest_suffix = ".manifest.json"
-        if updated:
-            filename += ".updated"
-
-        with open(data_prefix + filename + metadata_suffix, 'r') as infile:
-            metadata = json.load(infile)
-
-        with open(data_prefix + filename + manifest_suffix, 'r') as infile:
-            manifest = json.load(infile)
-
-        return metadata, manifest
