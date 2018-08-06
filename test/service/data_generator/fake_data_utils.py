@@ -6,11 +6,6 @@ import logging
 import os
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-
-class setUpModule():
-    logging.basicConfig(level=logging.WARNING)
 
 
 class FakerSchemaGenerator(object):
@@ -48,17 +43,12 @@ class FakerSchemaGenerator(object):
 class ElasticsearchFakeDataLoader(object):
     test_index_name = 'test-index'
 
-    def __init__(self, faker_settings_filepath, number_of_documents,
-                 azul_es_endpoint=None,
-                 settings_filepath='td_settings.json',
-                 mapping_filepath='td_mapping.json'):
+    def __init__(self, number_of_documents=1000, azul_es_endpoint=None):
 
-        with(open(faker_settings_filepath, 'r')) as template_file:
+        service_tests_folder = os.path.dirname(os.path.realpath(__file__))
+        fake_data_template_file = open(os.path.join(service_tests_folder, 'fake_data_template.json'), 'r')
+        with fake_data_template_file as template_file:
             self.doc_template = json.load(template_file)
-        with(open(settings_filepath, 'r')) as settings_file:
-            self.settings = json.load(settings_file)
-        with(open(mapping_filepath, 'r')) as mapping_file:
-            self.mapping = json.load(mapping_file)
 
         self.azul_es_url = azul_es_endpoint or os.environ['AZUL_ES_ENDPOINT']
         self.elasticsearch_client = elasticsearch5.Elasticsearch(hosts=[self.azul_es_url], port=9200)
@@ -76,7 +66,6 @@ class ElasticsearchFakeDataLoader(object):
         except elasticsearch5.exceptions.NotFoundError:
             logger.log(logging.DEBUG, f"The index {self.test_index_name} doesn't exist yet. Skipping clean up.")
 
-        #TODO Find valid settings and mapping files
         logger.log(logging.INFO, f"Creating new test index '{self.test_index_name}' at\n{self.azul_es_url}.")
         self.elasticsearch_client.indices.create(self.test_index_name)
 
