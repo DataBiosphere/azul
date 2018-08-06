@@ -3,13 +3,15 @@
 import json
 import difflib
 import unittest
+from service import WebServiceTestCase
 from azul.service.responseobjects.hca_response_v5 import KeywordSearchResponse, FileSearchResponse
 import os
 
-base_path = os.path.dirname(os.path.abspath(__file__))
 
+@unittest.skip("https://github.com/DataBiosphere/azul/issues/165")
+class TestResponse(WebServiceTestCase):
+    data_folder_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
-class MyTestCase(unittest.TestCase):
     def test_key_search_response(self):
         """
         This method tests the KeywordSearchResponse object.
@@ -19,11 +21,11 @@ class MyTestCase(unittest.TestCase):
         :return:
         """
 
-        with open('{}/test1index.json'.format(base_path)) as json_test:
+        with open('{}/test1index.json'.format(self.data_folder_filepath)) as json_test:
             test_json_input = json.load(json_test)
             json_test.close()
 
-        with open('{}/keyword_test1.json'.format(base_path)) as test1:
+        with open('{}/keyword_test1.json'.format(self.data_folder_filepath)) as test1:
             expected_output = json.load(test1)
             test1.close()
         # Still need a way to test the response.
@@ -55,11 +57,11 @@ class MyTestCase(unittest.TestCase):
         the same as expected.
         :return:
         """
-        with open('{}/test1index.json'.format(base_path)) as json_test:
+        with open('{}/test1index.json'.format(self.data_folder_filepath)) as json_test:
             test_json = json.load(json_test)
             json_test.close()
 
-        with open('{}/keyword_null_test1.json'.format(base_path)) as test1:
+        with open('{}/keyword_null_test1.json'.format(self.data_folder_filepath)) as test1:
             keyword_test = json.load(test1)
             test1.close()
         # Still need a way to test the response.
@@ -92,22 +94,22 @@ class MyTestCase(unittest.TestCase):
         :return:
         """
 
-        with open('{}/test1index.json'.format(base_path)) as json_test:
+        with open('{}/test1index.json'.format(self.data_folder_filepath)) as json_test:
             test_json = json.load(json_test)
             json_test.close()
 
-        with open('{}/filesearch_test1.json'.format(base_path)) as test1:
+        with open('{}/filesearch_test1.json'.format(self.data_folder_filepath)) as test1:
             file_search_test = json.load(test1)
             test1.close()
 
         # This is what will be used as the comparing standard
         with open('{}/facets_test_input1.json'.format(
-                base_path)) as facet_input:
+                self.data_folder_filepath)) as facet_input:
             facet_test = json.load(facet_input)
             facet_input.close()
 
         with open('{}/pagination_test_input1.json'.format(
-                base_path)) as pagination_input:
+                self.data_folder_filepath)) as pagination_input:
             pagination_test = json.load(pagination_input)
             pagination_input.close()
 
@@ -144,22 +146,22 @@ class MyTestCase(unittest.TestCase):
         :return:
         """
 
-        with open('{}/test1index.json'.format(base_path)) as json_test:
+        with open('{}/test1index.json'.format(self.data_folder_filepath)) as json_test:
             test_json = json.load(json_test)
             json_test.close()
 
-        with open('{}/filesearch_test2.json'.format(base_path)) as test1:
+        with open('{}/filesearch_test2.json'.format(self.data_folder_filepath)) as test1:
             file_search_test = json.load(test1)
             test1.close()
 
         # This is what will be used as the comparing standard
         with open('{}/facets_test_input1.json'.format(
-                base_path)) as facet_input:
+                self.data_folder_filepath)) as facet_input:
             facet_test = json.load(facet_input)
             facet_input.close()
 
         with open('{}/pagination_test_input2.json'.format(
-                base_path)) as pagination_input:
+                self.data_folder_filepath)) as pagination_input:
             pagination_test = json.load(pagination_input)
             pagination_input.close()
 

@@ -9,7 +9,6 @@ from chalice.config import Config as ChaliceConfig
 from azul import Config as AzulConfig
 from service import WebServiceTestCase
 
-
 log = logging.getLogger(__name__)
 
 
