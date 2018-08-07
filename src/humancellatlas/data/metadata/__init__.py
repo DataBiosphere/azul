@@ -164,7 +164,7 @@ class SpecimenFromOrganism(Biomaterial):
         super().__init__(json)
         content = json['content']
         self.storage_method = content.get('preservation_storage', {}).get('storage_method')
-        self.disease = {d.text for d in content.get('disease', []) if d}
+        self.disease = {d['text'] for d in content.get('disease', []) if d}
         self.organ = content.get('organ', {}).get('text')
         self.organ_part = content.get('organ_part', {}).get('text')
 
