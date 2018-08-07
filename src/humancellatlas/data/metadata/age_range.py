@@ -88,3 +88,8 @@ class AgeRange:
             return cls(min=cvt(age_[0], 0), max=cvt(age_[-1], cls.MAX_AGE))
         else:
             raise fail()
+
+    any = None
+
+
+AgeRange.any = AgeRange(min=0, max=AgeRange.MAX_AGE)
