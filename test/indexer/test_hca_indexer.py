@@ -14,7 +14,6 @@ from unittest.mock import patch
 from elasticsearch import Elasticsearch
 
 from azul import eventually
-from azul.downloader import MetadataDownloader
 from indexer import IndexerTestCase
 
 logger = logging.getLogger(__name__)
@@ -36,31 +35,6 @@ class TestHCAIndexer(IndexerTestCase):
                             "2018-03-29T154319.834528Z")
         cls.spec2_bundle = ("56a338fe-7554-4b5d-96a2-7df127a7640b",
                             "2018-03-29T153507.198365Z")
-
-    @staticmethod
-    def _get_data_files(filename, updated=False):
-        data_prefix = "data/"
-        metadata_suffix = ".metadata.json"
-        manifest_suffix = ".manifest.json"
-        if updated:
-            filename += ".updated"
-
-        with open(data_prefix + filename + metadata_suffix, 'r') as infile:
-            metadata = json.load(infile)
-
-        with open(data_prefix + filename + manifest_suffix, 'r') as infile:
-            manifest = json.load(infile)
-
-        return metadata, manifest
-
-    def _mock_index(self, test_bundles, data_pack):
-        bundle_uuid, bundle_version = test_bundles
-        metadata, manifest = data_pack
-        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
-        with patch('azul.DSSClient'):
-            with patch.object(MetadataDownloader, 'extract_bundle') as mock_method:
-                mock_method.return_value = metadata, manifest
-                self.hca_indexer.index(fake_event)
 
     @eventually(5.0, 0.5)
     def _get_es_results(self, assert_func):
