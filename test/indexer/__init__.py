@@ -1,11 +1,14 @@
+import json
+import os
 from typing import Mapping, Any
+from unittest.mock import patch
 from uuid import uuid4
 
 from azul import config
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
+from azul.downloader import MetadataDownloader
 from shared import AzulTestCase
-import os
 
 
 class IndexerTestCase(AzulTestCase):
@@ -46,3 +49,28 @@ class IndexerTestCase(AzulTestCase):
                 "bundle_version": version
             }
         }
+
+    def _mock_index(self, test_bundles, data_pack):
+        bundle_uuid, bundle_version = test_bundles
+        metadata, manifest = data_pack
+        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+        with patch('azul.DSSClient'):
+            with patch.object(MetadataDownloader, 'extract_bundle') as mock_method:
+                mock_method.return_value = metadata, manifest
+                self.hca_indexer.index(fake_event)
+
+    @staticmethod
+    def _get_data_files(filename, updated=False):
+        data_prefix = "data/"
+        metadata_suffix = ".metadata.json"
+        manifest_suffix = ".manifest.json"
+        if updated:
+            filename += ".updated"
+
+        with open(data_prefix + filename + metadata_suffix, 'r') as infile:
+            metadata = json.load(infile)
+
+        with open(data_prefix + filename + manifest_suffix, 'r') as infile:
+            manifest = json.load(infile)
+
+        return metadata, manifest
