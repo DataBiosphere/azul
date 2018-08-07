@@ -51,10 +51,11 @@ class TestDataExtractorTestCase(IndexerTestCase):
     def test_hca_extraction(self):
         # Index the test bundles
         for bundle_uuid, bundle_version in self.test_bundles[config.dss_endpoint]:
-            fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
             module_logger.info("Start computation %s",
                                datetime.now().isoformat(timespec='microseconds'))
-            self.hca_indexer.index(fake_event)
+            bundle_pack = (bundle_uuid, bundle_version)
+            data_pack = self._get_data_files(bundle_uuid)
+            self._mock_index(bundle_pack, data_pack)
             module_logger.info("Indexing operation finished for %s. Check values in ElasticSearch",
                                bundle_uuid + bundle_version)
             module_logger.info("End computation %s",
@@ -92,10 +93,11 @@ class TestDataExtractorTestCase(IndexerTestCase):
     # there is a bug where the files index contains duplicate dictionaries for the file.
     def test_no_duplicate_files_in_specimen(self):
         bundle_uuid, bundle_version = self.test_duplicates_bundles[config.dss_endpoint][0]
-        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+        bundle_pack = (bundle_uuid, bundle_version)
+        data_pack = self._get_data_files(bundle_uuid)
         module_logger.info("Start computation %s",
                            datetime.now().isoformat(timespec='microseconds'))
-        self.hca_indexer.index(fake_event)
+        self._mock_index(bundle_pack, data_pack)
         module_logger.info("Indexing operation finished for %s. Check values in ElasticSearch",
                            bundle_uuid + bundle_version)
         module_logger.info("End computation %s",
