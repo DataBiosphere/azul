@@ -6,20 +6,45 @@ from dataclasses import dataclass
 @dataclass
 class AgeRange:
     """
-    >>> AgeRange('', 'second')
-    AgeRange(min=None, max=None)
-
-    >>> AgeRange(' 1 - 2 ', 'second')
+    >>> AgeRange.parse(' 1 - 2 ', 'second')
     AgeRange(min=1, max=2)
 
-    >>> AgeRange(' - ', 'second')
+    >>> AgeRange.parse(' - ', 'second')
     AgeRange(min=0, max=315360000000)
 
-    >>> AgeRange('1-', 'seconds')
+    >>> AgeRange.parse('', 'years')
+    AgeRange(min=0, max=315360000000)
+
+    >>> r = AgeRange.parse('0-1', 'year'); r
+    AgeRange(min=0, max=31536000)
+    >>> 365 * 24 * 60 * 60 == r.max
+    True
+
+    >>> AgeRange.parse('1-', 'seconds')
     AgeRange(min=1, max=315360000000)
 
-    >>> AgeRange('-2', 'seconds')
+    >>> AgeRange.parse('-2', 'seconds')
     AgeRange(min=0, max=2)
+
+    >>> AgeRange.parse('', 'blink')
+    Traceback (most recent call last):
+    ...
+    ValueError: Cannot convert age '' with unit 'blink' to an AgeRange object
+
+    >>> AgeRange.parse(' 1 - 2 ', 'blinks')
+    Traceback (most recent call last):
+    ...
+    ValueError: Cannot convert age ' 1 - 2 ' with unit 'blinks' to an AgeRange object
+
+    >>> AgeRange.parse('1-2-3', 'hours')
+    Traceback (most recent call last):
+    ...
+    ValueError: Cannot convert age '1-2-3' with unit 'hours' to an AgeRange object
+
+    >>> AgeRange.parse('one-2', 'days')
+    Traceback (most recent call last):
+    ...
+    ValueError: Cannot convert age 'one-2' with unit 'days' to an AgeRange object
     """
     min: int
     max: int
@@ -36,34 +61,30 @@ class AgeRange:
 
     @classmethod
     def parse(cls, age: str, unit: str) -> 'AgeRange':
-        age = [s.strip() for s in age.split('-')]
+        def fail():
+            return ValueError(f"Cannot convert age '{age}' with unit '{unit}' to an AgeRange object")
 
-        def cvt(value: str, default: Optional[int]) -> Optional[int]:
-            if value:
-                u = unit.lower().strip()
+        age_ = [s.strip() for s in age.split('-')]
+        unit_ = unit.lower().strip()
+
+        try:
+            factor = cls.FACTORS[unit_]
+        except KeyError as e1:
+            if unit_.endswith('s'):
                 try:
-                    f = cls.FACTORS[u]
-                except KeyError:
-                    if u.endswith('s'):
-                        try:
-                            f = cls.FACTORS[u[:-1]]
-                        except KeyError:
-                            return None
-                    else:
-                        return None
-                return f * int(value)
+                    factor = cls.FACTORS[unit_[:-1]]
+                except KeyError as e2:
+                    raise fail() from e2
             else:
-                return default
+                raise fail() from e1
 
-        if len(age) == 1:
-            # FIXME
-            # noinspection PyArgumentList
-            return cls(min=cvt(age[0], None), max=cls.min)
-        elif len(age) == 2:
-            # FIXME
-            # noinspection PyArgumentList
-            return cls(min=cvt(age[0], 0), max=cvt(age[1], cls.MAX_AGE))
+        def cvt(value: str, default: int) -> Optional[int]:
+            try:
+                return factor * int(value) if value else default
+            except ValueError as e:
+                raise fail() from e
+
+        if len(age_) in (1, 2):
+            return cls(min=cvt(age_[0], 0), max=cvt(age_[-1], cls.MAX_AGE))
         else:
-            # FIXME
-            # noinspection PyArgumentList
-            return cls(min=None, max=None)
+            raise fail()
