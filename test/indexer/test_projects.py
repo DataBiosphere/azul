@@ -3,7 +3,6 @@ import unittest
 from datetime import datetime
 
 from azul import config, eventually
-from azul.project.hca.metadata_api import Bundle
 from indexer.test_hca_indexer import IndexerTestCase
 
 module_logger = logging.getLogger(__name__)
@@ -70,24 +69,6 @@ class TestDataExtractorTestCase(IndexerTestCase):
             self.assertEqual(129, total_specimens["count"])
 
         _assert_number_of_files()
-
-    def test_accessor_class(self):
-        from azul.downloader import MetadataDownloader
-        from azul.dss_bundle import DSSBundle
-        bundle_uuid, bundle_version = self.test_same_ids_different_bundles[config.dss_endpoint][0]
-        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
-        metadata_downloader = MetadataDownloader(config.dss_endpoint)
-        metadata, manifest = metadata_downloader.extract_bundle(fake_event)
-        dss_bundle = DSSBundle(uuid=bundle_uuid,
-                               version=bundle_version,
-                               manifest=manifest,
-                               metadata_files=metadata)
-        reconstructed_bundle = Bundle(dss_bundle)
-        print(reconstructed_bundle.project)
-        sequencing_inputs = {si.biomaterial_id for si in reconstructed_bundle.sequencing_input}
-        specimens = {sp.biomaterial_id for sp in reconstructed_bundle.specimens}
-        self.assertEqual({"22011_1#268"}, sequencing_inputs)
-        self.assertEqual({"1139_T"}, specimens)
 
     # When two processes point at a file (this is the case for most files in production)
     # there is a bug where the files index contains duplicate dictionaries for the file.
