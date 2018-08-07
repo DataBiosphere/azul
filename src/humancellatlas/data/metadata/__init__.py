@@ -37,7 +37,7 @@ class Entity:
 
     @property
     def address(self):
-        return schema_names[type(self)] + '@' + self.document_id
+        return schema_names[type(self)] + '@' + str(self.document_id)
 
     def accept(self, visitor: 'EntityVisitor') -> None:
         visitor.visit(self)

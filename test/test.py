@@ -40,6 +40,7 @@ class TestAccessorApi(TestCase):
         self.assertEqual(str(bundle.uuid), uuid)
         root_entities = bundle.root_entities()
         root_entity = next(iter(root_entities.values()))
+        self.assertEqual(root_entity.address, 'donor_organism@bf8492ad-1d45-46aa-9fe9-67058b8c2410')
         root_entity_json = as_json(root_entity)
         assert isinstance(root_entity, DonorOrganism)
         self.assertEqual(root_entity.organism_age_in_seconds, AgeRange(min=3628800, max=7257600))
