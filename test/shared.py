@@ -45,8 +45,7 @@ class AzulTestCase(unittest.TestCase):
         with patch.object(logging.getLogger('elasticsearch'), 'level', new=patched_log_level):
             while not cls.es_client.ping():
                 if time.time() - start_time > 60:
-                    logger.error('Docker container took more than a minute to set up')
-                    raise AssertionError
+                    raise AssertionError('Docker container took more than a minute to set up')
                 logger.info('Could not ping Elasticsearch. Retrying...')
                 time.sleep(1)
         logger.info('Elasticsearch appears to be up.')
