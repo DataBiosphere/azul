@@ -1,0 +1,26 @@
+[
+    {
+        "sha1": "284b9be625b43327f353fd3d77b6aa5b4d32e69c", 
+        "name": "22011_1#268_2.fastq.gz", 
+        "uuid": "aa662c76-d220-49f4-8316-f4af5820d60b", 
+        "crc32c": "1b953a24", 
+        "version": "2018-03-29T142045.025802Z", 
+        "indexed": false, 
+        "s3_etag": "a9ec4ab980a8ef01ad111e667d2c50ae-2", 
+        "sha256": "124645d6130107c1368568b91a37f7ea08dc7eae57bcd9eb519ac8ddb328880d", 
+        "content-type": "application/gzip; dcp-type=data", 
+        "size": 88782381
+    }, 
+    {
+        "sha1": "beeb73e062974cd9f37fc09822fea4fec2ceb609", 
+        "name": "22011_1#268_1.fastq.gz", 
+        "uuid": "d2f32681-9c1a-4dfd-b506-c24327afb8d1", 
+        "crc32c": "f93b9d00", 
+        "version": "2018-03-29T142044.370144Z", 
+        "indexed": false, 
+        "s3_etag": "7d462983b8d41346d61513f9e03f8036-2", 
+        "sha256": "ee09a5fc9ba7ce42f8ebef0904950f6cf017cff3b0e4882b7b35ce26e20158f7", 
+        "content-type": "application/gzip; dcp-type=data", 
+        "size": 74420452
+    }
+]
