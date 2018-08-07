@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, wait
+import doctest
 import json
 import logging
 import os
@@ -9,7 +10,7 @@ from hca import HCAConfig
 from hca.dss import DSSClient
 from urllib3 import Timeout
 
-from humancellatlas.data.metadata import AgeRange, Bundle, DonorOrganism
+from humancellatlas.data.metadata import AgeRange, Bundle, DonorOrganism, age_range
 from humancellatlas.data.metadata.helpers.download import download_bundle_metadata
 from humancellatlas.data.metadata.helpers.json import as_json
 
@@ -102,3 +103,8 @@ class TestAccessorApi(TestCase):
         # FIXME: How to assert JSON output?
 
         self.assertEqual({}, errors)
+
+
+def load_tests(loader, tests, ignore):
+    tests.addTests(doctest.DocTestSuite(age_range))
+    return tests
