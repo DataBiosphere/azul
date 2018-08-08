@@ -32,27 +32,6 @@ class TestResponse(WebServiceTestCase):
         json_actual_output = json.dumps(keyword_response, sort_keys=True)
         self.assertEqual(json_actual_output, json_expected_output)
 
-    def test_null_key_search_response(self):
-        """
-        This method tests the KeywordSearchResponse object.
-        It will make sure the functionality works as
-        appropriate by asserting the apiResponse attribute is
-        the same as expected.
-        :return:
-        """
-        with open('{}/test1index.json'.format(self.data_folder_filepath)) as json_test:
-            test_json = json.load(json_test)
-
-        with open('{}/keyword_null_test1.json'.format(self.data_folder_filepath)) as test1:
-            keyword_test = json.load(test1)
-
-        # Still need a way to test the response.
-        keyword_response = KeywordSearchResponse(test_json).return_response().to_json()
-        # Transform both json objects to a string
-        json_expected_output = json.dumps(keyword_test, sort_keys=True)
-        json_actual_output = json.dumps(keyword_response, sort_keys=True)
-        self.assertEqual(json_actual_output, json_expected_output)
-
     def test_file_search_response(self):
         """
         This method tests the FileSearchResponse object.
