@@ -2,13 +2,14 @@
 
 import json
 import unittest
-from service import WebServiceTestCase
 from azul.service.responseobjects.hca_response_v5 import KeywordSearchResponse, FileSearchResponse
 import os
 
+from service import WebServiceTestCase
 
-@unittest.skip("https://github.com/DataBiosphere/azul/issues/165")
+
 class TestResponse(WebServiceTestCase):
+
     data_folder_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
     def test_key_search_response(self):
