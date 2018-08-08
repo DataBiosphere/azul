@@ -24,7 +24,9 @@ generic with minimal need for project-specific behavior.
 
 ### 1.1. Development Preequisites
 
-- Python 3.6 with virtualenv and pip
+- Python 3.6 with `virtualenv` and `pip`
+
+- Make sure that you are using the `bash` shell.
 
 - Terraform (optional, to create new deployments):
   https://www.terraform.io/intro/getting-started/install.html On macOS with
@@ -42,20 +44,66 @@ The remaining infrastructure is managed internally with TerraForm.
 
 ### 1.3. Project configuration
 
-1) Create a Python 3.6 virtualenv and activate it, for example 
+Getting started without attempting to make contributions does not require AWS 
+credentials. A subset of the test suite passes without configured AWS 
+credentials. To validate your setup, we'll be running one of those tests at the
+end.
+
+1) Create a Python 3.6 `virtualenv` and activate it, for example 
    
    ```
-   virtualenv .venv
+   cd azul
+   virtualenv -p python3 .venv
    source .venv/bin/activate
    ```
 
-2) Choose a name for your personal deployment. The name should be a short
+2) Setup configuration for dev deployment: 
+   
+   ```
+   cd deployments
+   ln -snf dev .active
+   cd ..
+   ```
+
+3) Load the environment:
+
+   ```
+   source environment
+   ```
+   
+   Examine the output.
+
+4) Install the development prerequisites
+
+   ```
+   pip install -r requirements.dev.txt
+   ```
+
+5) Run `make`. It should say `Looking good!` If one of the sanity checks fails,
+   address the complaint and repeat. The various sanity checks are defined in
+   `common.mk`.
+   
+6) Confirm proper configuration, run the following:
+   
+   ```
+   python scripts/test/indexer/test_hca_indexer.py
+   ``` 
+
+#### 1.3.1 For personal deployment (AWS credentials available)
+
+Creating a personal deployment of Azul allows you test changes on a live system
+in complete isolation from other users. If you intend to make contributions,
+this is preferred. You will need IAM user credentials to the AWS account you
+are deploying to.
+
+
+1) Choose a name for your personal deployment. The name should be a short
    handle that is unique within the AWS account you are deploying to. It should
    also be informative enough to let others know whose deployment this is. We'll
    be using `foo` as an example here. The handle must only consist of alphabetic 
    characters.
 
-3) Create a new directory for the configuration of your personal deployment: 
+2) Create a new directory for the configuration of your personal deployment: 
 
    ```
    cd deployments
@@ -64,27 +112,29 @@ The remaining infrastructure is managed internally with TerraForm.
    cd ..
    ```  
 
-4) Edit `deployments/.active/environment` and
+3) Edit `deployments/.active/environment` and
    `deployments/.active/environment.local` according to the comments in there.
 
-5) Load the environment:
+
+### 1.4. PyCharm configuration specifics
+
+Running tests from PyCharm requires `environment` to be sourced. The easiest way
+to do this is to install `envhook.py`, a helper script that injects the
+environment variables from `environment` into the Python interpreter process
+started from the project's virtualenv in `.venv`:   
 
    ```
-   source environment
+   python scripts/envhook.py install
    ```
+
+- Under *Settings* -> *Project—Interpreter* select the virtual environment created
+above.
+   * Under show all, select `.venv/bin/python` if not already selected.
+
+
+- Set `src` & `test` folder as Source Root.
+   * Right click the folder name and select `Mark Directory as` `->` `Source Root`
    
-   Examine the output.
-
-6) Install the development prerequisites
-   
-   ```
-   pip install -r requirements.dev.txt
-   ```
-
-7) Run `make`. It should say `Looking good!` If one of the sanity checks fails,
-   address the complaint and repeat. The various sanity checks are defined in
-   `common.mk`.
-
 ## 2. Deployment
 
 ### 2.1. Provisioning cloud infrastructure
