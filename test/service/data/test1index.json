@@ -8,7 +8,7 @@
               "_type": "fuchsia",
               "content-type": "green",
               "crc32c": "61bd62c582e698313bc2bd60fbfbfb55211a71d5",
-              "format": "csv",
+              "file_format": "csv",
               "hca_id": "a350b29c-2609-7b92-0c49-23971a4f9371",
               "indexed": true,
               "lane": 5108,
@@ -28,11 +28,11 @@
               "hca_id": [
                 "4188ddbe-8865-a433-a1f6-213d49aa5719"
               ],
-              "instrument": "green",
-              "library_construction": "fuchsia",
+              "instrument_manufacturer_model": "green",
+              "library_construction_approach": "fuchsia",
               "process_id": "maroon",
               "process_name": "olive",
-              "protocol": "olive",
+              "protocol_name": "olive",
               "protocol_id": "green"
             }
           ],
@@ -42,24 +42,24 @@
             "laboratory": [
               "silver"
             ],
-            "project": "blue"
+            "project_shortname": "blue"
           },
           "specimens": [
             {
               "_type": [
                 "teal"
               ],
-              "age": [
+              "organism_age": [
                 "purple"
               ],
-              "age_unit": [
+              "organism_age_unit": [
                 "navy"
               ],
               "biomaterial_id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
               "disease": [
                 "yellow"
               ],
-              "hca_id": [
+              "id": [
                 "1cae440e-3be6-ce39-49e9-74721f0066e0"
               ],
               "organ": [
@@ -71,19 +71,19 @@
               "parent": [
                 "aqua"
               ],
-              "sex": [
+              "biological_sex": [
                 "silver"
               ],
-              "source": [
+              "_source": [
                 "purple"
               ],
-              "species": [
+              "genus_species": [
                 "teal"
               ],
               "storage_method": [
                 "aqua"
               ],
-              "total_cells": [
+              "total_estimated_cells": [
                 5306
               ]
             }
