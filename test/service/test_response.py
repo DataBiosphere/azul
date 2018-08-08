@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import json
-import difflib
 import unittest
 from service import WebServiceTestCase
 from azul.service.responseobjects.hca_response_v5 import KeywordSearchResponse, FileSearchResponse
@@ -33,20 +32,6 @@ class TestResponse(WebServiceTestCase):
         # Transform both json objects to a string
         json_expected_output = json.dumps(expected_output, sort_keys=True)
         json_actual_output = json.dumps(keyword_response, sort_keys=True)
-
-        print("expected: " + json_expected_output)
-        print("actual: " + json_actual_output)
-
-        # Now show differences so message is helpful
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(json_actual_output[:20], json_expected_output[:20]))
-        for i, s in enumerate(difflib.ndiff(json_actual_output, json_expected_output)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
         self.assertEqual(json_actual_output, json_expected_output)
 
     def test_null_key_search_response(self):
@@ -69,20 +54,6 @@ class TestResponse(WebServiceTestCase):
         # Transform both json objects to a string
         json_expected_output = json.dumps(keyword_test, sort_keys=True)
         json_actual_output = json.dumps(keyword_response, sort_keys=True)
-
-        print("expected: " + json_expected_output)
-        print("actual: " + json_actual_output)
-
-        # Now show differences so message is helpful
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(json_actual_output[:20], json_expected_output[:20]))
-        for i, s in enumerate(difflib.ndiff(json_actual_output, json_expected_output)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
         self.assertEqual(json_actual_output, json_expected_output)
 
     def test_file_search_response(self):
@@ -123,20 +94,6 @@ class TestResponse(WebServiceTestCase):
         # Transform both json objects to a string
         json_response = json.dumps(file_search_test, sort_keys=True)  # loaded from json
         json_test = json.dumps(file_search_response, sort_keys=True)  # generated
-
-        print("expected: " + json_response)
-        print("actual: " + json_test)
-
-        # Now show differences so message is helpful
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(json_test[:20], json_response[:20]))
-        for i, s in enumerate(difflib.ndiff(json_test, json_response)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
         self.assertEqual(json_test, json_response)
 
     def test_file_search_response_sapagination(self):
@@ -175,20 +132,6 @@ class TestResponse(WebServiceTestCase):
         # Transform both json objects to a string
         json_response = json.dumps(file_search_test, sort_keys=True)  # loaded from json
         json_test = json.dumps(file_search_response, sort_keys=True)  # generated
-
-        print("expected: " + json_response)
-        print("actual: " + json_test)
-
-        # Now show differences so message is helpful
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(json_test[:20], json_response[:20]))
-        for i, s in enumerate(difflib.ndiff(json_test, json_response)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
         self.assertEqual(json_test, json_response)
 
 
