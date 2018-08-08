@@ -2,9 +2,9 @@
 
 import json
 import unittest
-from azul.service.responseobjects.hca_response_v5 import KeywordSearchResponse, FileSearchResponse
 import os
 
+from azul.service.responseobjects.hca_response_v5 import KeywordSearchResponse, FileSearchResponse
 from service import WebServiceTestCase
 
 
@@ -18,16 +18,13 @@ class TestResponse(WebServiceTestCase):
         It will make sure the functionality works as
         appropriate by asserting the apiResponse attribute
         is the same as expected.
-        :return:
         """
-
         with open('{}/test1index.json'.format(self.data_folder_filepath)) as json_test:
             test_json_input = json.load(json_test)
-            json_test.close()
 
         with open('{}/keyword_test1.json'.format(self.data_folder_filepath)) as test1:
             expected_output = json.load(test1)
-            test1.close()
+
         # Still need a way to test the response.
         keyword_response = KeywordSearchResponse(test_json_input).return_response().to_json()
         # Transform both json objects to a string
@@ -45,11 +42,10 @@ class TestResponse(WebServiceTestCase):
         """
         with open('{}/test1index.json'.format(self.data_folder_filepath)) as json_test:
             test_json = json.load(json_test)
-            json_test.close()
 
         with open('{}/keyword_null_test1.json'.format(self.data_folder_filepath)) as test1:
             keyword_test = json.load(test1)
-            test1.close()
+
         # Still need a way to test the response.
         keyword_response = KeywordSearchResponse(test_json).return_response().to_json()
         # Transform both json objects to a string
@@ -63,27 +59,21 @@ class TestResponse(WebServiceTestCase):
         It will make sure the functionality works as
         appropriate by asserting the apiResponse attribute
         is the same as expected.
-        :return:
         """
-
         with open('{}/test1index.json'.format(self.data_folder_filepath)) as json_test:
             test_json = json.load(json_test)
-            json_test.close()
 
         with open('{}/filesearch_test1.json'.format(self.data_folder_filepath)) as test1:
             file_search_test = json.load(test1)
-            test1.close()
 
         # This is what will be used as the comparing standard
         with open('{}/facets_test_input1.json'.format(
                 self.data_folder_filepath)) as facet_input:
             facet_test = json.load(facet_input)
-            facet_input.close()
 
         with open('{}/pagination_test_input1.json'.format(
                 self.data_folder_filepath)) as pagination_input:
             pagination_test = json.load(pagination_input)
-            pagination_input.close()
 
         # Still need a way to test the response.
         file_search_response = FileSearchResponse(
@@ -101,27 +91,21 @@ class TestResponse(WebServiceTestCase):
         """
         This method tests the FileSearchResponse object,
         using 'search_after' pagination.
-        :return:
         """
-
         with open('{}/test1index.json'.format(self.data_folder_filepath)) as json_test:
             test_json = json.load(json_test)
-            json_test.close()
 
         with open('{}/filesearch_test2.json'.format(self.data_folder_filepath)) as test1:
             file_search_test = json.load(test1)
-            test1.close()
 
         # This is what will be used as the comparing standard
         with open('{}/facets_test_input1.json'.format(
                 self.data_folder_filepath)) as facet_input:
             facet_test = json.load(facet_input)
-            facet_input.close()
 
         with open('{}/pagination_test_input2.json'.format(
                 self.data_folder_filepath)) as pagination_input:
             pagination_test = json.load(pagination_input)
-            pagination_input.close()
 
         # Still need a way to test the response.
         file_search_response = FileSearchResponse(
