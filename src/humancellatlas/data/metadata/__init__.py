@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, MutableMapping, Optional, Set, Union, Mapping
+from collections import defaultdict
+from itertools import chain
+from typing import Any, Iterable, List, MutableMapping, Optional, Set, Union, Mapping, TypeVar, Type
 from uuid import UUID
+import warnings
 
 from dataclasses import dataclass, field
 
@@ -22,7 +25,8 @@ class Entity:
 
     @classmethod
     def from_json(cls, json: JSON, **kwargs):
-        described_by = json['content']['describedBy']
+        content = json.get('content', json)
+        described_by = content['describedBy']
         schema_name = described_by.rpartition('/')[2]
         try:
             sub_cls = entity_types[schema_name]
@@ -33,14 +37,24 @@ class Entity:
     def __init__(self, json: JSON) -> None:
         super().__init__()
         self.json = json
-        self.document_id = UUID4(json['hca_ingest']['document_id'])
+        provenance = json.get('hca_ingest') or json['provenance']
+        self.document_id = UUID4(provenance['document_id'])
 
     @property
     def address(self):
-        return schema_names[type(self)] + '@' + str(self.document_id)
+        return self.schema_name + '@' + str(self.document_id)
+
+    @property
+    def schema_name(self):
+        return schema_names[type(self)]
 
     def accept(self, visitor: 'EntityVisitor') -> None:
         visitor.visit(self)
+
+
+# A type variable for subtypes of Entity
+#
+E = TypeVar('E', bound=Entity)
 
 
 class TypeLookupError(Exception):
@@ -56,8 +70,8 @@ class EntityVisitor(ABC):
 
 @dataclass(init=False)
 class LinkedEntity(Entity, ABC):
-    children_: MutableMapping[UUID4, Entity] = field(repr=False)
-    parents_: MutableMapping[UUID4, 'LinkedEntity'] = field(repr=False)
+    children: MutableMapping[UUID4, Entity] = field(repr=False)
+    parents: MutableMapping[UUID4, 'LinkedEntity'] = field(repr=False)
 
     @abstractmethod
     def _connect_to(self, other: Entity, forward: bool) -> None:
@@ -65,42 +79,49 @@ class LinkedEntity(Entity, ABC):
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
-        self.children_ = {}
-        self.parents_ = {}
+        self.children = {}
+        self.parents = {}
 
     def connect_to(self, other: Entity, forward: bool) -> None:
-        mapping = self.children_ if forward else self.parents_
+        mapping = self.children if forward else self.parents
         mapping[other.document_id] = other
         self._connect_to(other, forward)
 
     def ancestors(self, visitor: EntityVisitor):
-        for parent in self.parents_.values():
+        for parent in self.parents.values():
             parent.ancestors(visitor)
             visitor.visit(parent)
 
     def accept(self, visitor: EntityVisitor):
         super().accept(visitor)
-        for child in self.children_.values():
+        for child in self.children.values():
             child.accept(visitor)
 
 
 class LinkError(RuntimeError):
     def __init__(self, entity: LinkedEntity, other_entity: Entity, forward: bool) -> None:
         super().__init__(entity.address +
-                         " cannot " + ('reference' if forward else 'be referenced by') +
+                         ' cannot ' + ('reference ' if forward else 'be referenced by ') +
                          other_entity.address)
 
 
 @dataclass(init=False)
 class Project(Entity):
-    project_shortname: Optional[str]
+    project_short_name: Optional[str]
     laboratory_names: Set[str]
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
-        content = json['content']
-        self.project_shortname = content['project_core']['project_shortname']
+        content = json.get('content', json)
+        core = content['project_core']
+        self.project_short_name = core.get('project_shortname') or core['project_short_name']
         self.laboratory_names = {c.get('laboratory') for c in content['contributors']} - {None}
+
+    @property
+    def project_shortname(self):
+        warnings.warn(f"Project.project_shortname is deprecated. "
+                      f"Use project_short_name instead.", DeprecationWarning)
+        return self.project_short_name
 
 
 @dataclass(init=False)
@@ -112,7 +133,7 @@ class Biomaterial(LinkedEntity):
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
-        content = json['content']
+        content = json.get('content', json)
         self.biomaterial_id = content['biomaterial_core']['biomaterial_id']
         self.has_input_biomaterial = content['biomaterial_core'].get('has_input_biomaterial')
         self.from_processes = {}
@@ -138,7 +159,7 @@ class DonorOrganism(Biomaterial):
 
     def __init__(self, json: JSON):
         super().__init__(json)
-        content = json['content']
+        content = json.get('content', json)
         self.genus_species = {gs['text'] for gs in content['genus_species']}
         self.disease = {d['text'] for d in content.get('disease', []) if d}
         self.organism_age = content.get('organism_age')
@@ -162,7 +183,7 @@ class SpecimenFromOrganism(Biomaterial):
 
     def __init__(self, json: JSON):
         super().__init__(json)
-        content = json['content']
+        content = json.get('content', json)
         self.storage_method = content.get('preservation_storage', {}).get('storage_method')
         self.disease = {d['text'] for d in content.get('disease', []) if d}
         self.organ = content.get('organ', {}).get('text')
@@ -175,7 +196,8 @@ class CellSuspension(Biomaterial):
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
-        self.total_estimated_cells = json['content'].get('total_estimated_cells')
+        content = json.get('content', json)
+        self.total_estimated_cells = content.get('total_estimated_cells')
 
 
 @dataclass(init=False)
@@ -200,7 +222,8 @@ class Process(LinkedEntity):
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
-        process_core = json['content']['process_core']
+        content = json.get('content', json)
+        process_core = content['process_core']
         self.process_id = process_core['process_id']
         self.process_name = process_core.get('process_name')
         self.input_biomaterials = {}
@@ -226,13 +249,22 @@ class Process(LinkedEntity):
 
 
 @dataclass(init=False)
-class DissociationProcess(Process):
+class AnalysisProcess(Process):
     pass
 
 
 @dataclass(init=False)
+class DissociationProcess(Process):
+    def __init__(self, json: JSON) -> None:
+        warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
+        super().__init__(json)
+
+
+@dataclass(init=False)
 class EnrichmentProcess(Process):
-    pass
+    def __init__(self, json: JSON) -> None:
+        warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
+        super().__init__(json)
 
 
 @dataclass(init=False)
@@ -240,8 +272,10 @@ class LibraryPreparationProcess(Process):
     library_construction_approach: str
 
     def __init__(self, json: JSON):
+        warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
         super().__init__(json)
-        self.library_construction_approach = json['content']['library_construction_approach']
+        content = json.get('content', json)
+        self.library_construction_approach = content['library_construction_approach']
 
 
 @dataclass(init=False)
@@ -249,8 +283,10 @@ class SequencingProcess(Process):
     instrument_manufacturer_model: str
 
     def __init__(self, json: JSON):
+        warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
         super().__init__(json)
-        self.instrument_manufacturer_model = json['content']['instrument_manufacturer_model']['text']
+        content = json.get('content', json)
+        self.instrument_manufacturer_model = content['instrument_manufacturer_model']['text']
 
 
 @dataclass(init=False)
@@ -260,7 +296,8 @@ class Protocol(LinkedEntity):
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
-        protocol_core = json['content']['protocol_core']
+        content = json.get('content', json)
+        protocol_core = content['protocol_core']
         self.protocol_id = protocol_core['protocol_id']
         self.protocol_name = protocol_core.get('protocol_name')
 
@@ -277,7 +314,9 @@ class LibraryPreparationProtocol(Protocol):
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
-        self.library_construction_approach = json['content'].get('library_construction_approach')
+        content = json.get('content', json)
+        lca = content.get('library_construction_approach')
+        self.library_construction_approach = lca['text'] if isinstance(lca, dict) else lca
 
 
 @dataclass(init=False)
@@ -286,7 +325,8 @@ class SequencingProtocol(Protocol):
 
     def __init__(self, json: JSON):
         super().__init__(json)
-        self.instrument_manufacturer_model = json['content'].get('instrument_manufacturer_model', {}).get('text')
+        content = json.get('content', json)
+        self.instrument_manufacturer_model = content.get('instrument_manufacturer_model', {}).get('text')
 
 
 @dataclass(init=False)
@@ -359,7 +399,8 @@ class File(LinkedEntity):
 
     def __init__(self, json: JSON, manifest: Mapping[str, ManifestEntry]):
         super().__init__(json)
-        core = json['content']['file_core']
+        content = json.get('content', json)
+        core = content['file_core']
         self.file_format = core['file_format']
         self.manifest_entry = manifest[core['file_name']]
         self.from_processes = {}
@@ -382,9 +423,14 @@ class SequenceFile(File):
 
     def __init__(self, json: JSON, manifest: Mapping[str, ManifestEntry]):
         super().__init__(json, manifest)
-        content = json['content']
+        content = json.get('content', json)
         self.read_index = content['read_index']
         self.lane_index = content.get('lane_index')
+
+
+@dataclass(init=False)
+class SupplementaryFile(File):
+    pass
 
 
 @dataclass(init=False)
@@ -405,117 +451,147 @@ class Link:
     destination_type: str
 
     @classmethod
-    def from_json(cls, json: JSON):
-        return cls(source_id=UUID4(json['source_id']),
-                   source_type=json['source_type'],
-                   destination_id=UUID4(json['destination_id']),
-                   destination_type=json['destination_type'])
+    def from_json(cls, json: JSON) -> Iterable['Link']:
+        if 'source_id' in json:
+            # v5
+            yield cls(source_id=UUID4(json['source_id']),
+                      source_type=json['source_type'],
+                      destination_id=UUID4(json['destination_id']),
+                      destination_type=json['destination_type'])
+        else:
+            # vx
+            process_id = UUID4(json['process'])
+            for source_id in json['inputs']:
+                yield cls(source_id=UUID4(source_id), source_type=json['input_type'],
+                          destination_id=process_id, destination_type='process')
+            for destination_id in json['outputs']:
+                yield cls(source_id=process_id, source_type='process',
+                          destination_id=UUID4(destination_id), destination_type=json['output_type'])
+            for protocol in json['protocols']:
+                yield cls(source_id=process_id, source_type='process',
+                          destination_id=UUID4(protocol['protocol_id']), destination_type=protocol['protocol_type'])
 
 
 @dataclass(init=False)
 class Bundle:
     uuid: UUID4
     version: str
-    project: Project
+    projects: MutableMapping[UUID4, Project]
     biomaterials: MutableMapping[UUID4, Biomaterial]
     processes: MutableMapping[UUID4, Process]
     protocols: MutableMapping[UUID4, Protocol]
     files: MutableMapping[UUID4, File]
 
-    entities_: MutableMapping[UUID4, Entity] = field(repr=False)
-    links_: List[Link]
-    manifest_: MutableMapping[str, ManifestEntry]
+    manifest: MutableMapping[str, ManifestEntry]
+    entities: MutableMapping[UUID4, Entity] = field(repr=False)
+    links: List[Link]
 
-    def __init__(self,
-                 uuid: str,
-                 version: str,
-                 manifest: List[JSON],
-                 metadata_files: Mapping[str, JSON]
-                 ) -> None:
+    def __init__(self, uuid: str, version: str, manifest: List[JSON], metadata_files: Mapping[str, JSON]):
         self.uuid = UUID4(uuid)
         self.version = version
-        manifest = (ManifestEntry.from_json(m) for m in manifest)
-        manifest = {m.name: m for m in manifest}
+        self.manifest = {m.name: m for m in map(ManifestEntry.from_json, manifest)}
 
-        project = metadata_files['project.json']
-        project = Project.from_json(project)
+        def from_json(core_cls: Type[E], json_entities: List[JSON], **kwargs) -> MutableMapping[UUID4, E]:
+            entities = (core_cls.from_json(entity, **kwargs) for entity in json_entities)
+            return {entity.document_id: entity for entity in entities}
 
-        biomaterials = metadata_files['biomaterial.json']['biomaterials']
-        biomaterials = (Biomaterial.from_json(b) for b in biomaterials)
-        biomaterials = {b.document_id: b for b in biomaterials}
+        if 'project.json' in metadata_files:
 
-        processes = metadata_files['process.json']['processes']
-        processes = (Process.from_json(p) for p in processes)
-        processes = {p.document_id: p for p in processes}
+            def from_json_v5(core_cls: Type[E], file_name, key=None, **kwargs) -> MutableMapping[UUID4, E]:
+                file_content = metadata_files.get(file_name)
+                if file_content:
+                    json_entities = file_content[key] if key else [file_content]
+                    return from_json(core_cls, json_entities, **kwargs)
+                else:
+                    return {}
 
-        protocols = metadata_files['protocol.json']['protocols']
-        protocols = (Protocol.from_json(p) for p in protocols)
-        protocols = {p.document_id: p for p in protocols}
+            self.projects = from_json_v5(Project, 'project.json')
+            self.biomaterials = from_json_v5(Biomaterial, 'biomaterial.json', 'biomaterials')
+            self.processes = from_json_v5(Process, 'process.json', 'processes')
+            self.protocols = from_json_v5(Protocol, 'protocol.json', 'protocols')
+            self.files = from_json_v5(File, 'file.json', 'files', manifest=self.manifest)
 
-        files = metadata_files['file.json']['files']
-        files = (File.from_json(f, manifest=manifest) for f in files)
-        files = {f.document_id: f for f in files}
+        elif 'project_0.json' in metadata_files:
+
+            json_by_core_cls: MutableMapping[Type[E], List[JSON]] = defaultdict(list)
+            for file_name, json in metadata_files.items():
+                assert file_name.endswith('.json')
+                schema_name, _, suffix = file_name[:-5].rpartition('_')
+                if schema_name and suffix.isdigit():
+                    entity_cls = entity_types.get(schema_name)
+                    core_cls = core_types[entity_cls]
+                    json_by_core_cls[core_cls].append(json)
+
+            def from_json_vx(core_cls: Type[E], **kwargs) -> MutableMapping[UUID4, E]:
+                json_entities = json_by_core_cls[core_cls]
+                return from_json(core_cls, json_entities, **kwargs)
+
+            self.projects = from_json_vx(Project)
+            self.biomaterials = from_json_vx(Biomaterial)
+            self.processes = from_json_vx(Process)
+            self.protocols = from_json_vx(Protocol)
+            self.files = from_json_vx(File, manifest=self.manifest)
+
+        else:
+
+            raise RuntimeError('Unable to detect bundle structure')
+
+        self.entities = {**self.projects, **self.biomaterials, **self.processes, **self.protocols, **self.files}
 
         links = metadata_files['links.json']['links']
-        links = [Link.from_json(l) for l in links]
+        self.links = list(chain.from_iterable(map(Link.from_json, links)))
 
-        entities = {**biomaterials,
-                    **processes,
-                    **protocols,
-                    **files,
-                    project.document_id: project}
-
-        for link in links:
-            source_entity = entities[link.source_id]
-            destination_entity = entities[link.destination_id]
+        for link in self.links:
+            source_entity = self.entities[link.source_id]
+            destination_entity = self.entities[link.destination_id]
             assert isinstance(source_entity, LinkedEntity)
             assert isinstance(destination_entity, LinkedEntity)
             source_entity.connect_to(destination_entity, forward=True)
             destination_entity.connect_to(source_entity, forward=False)
 
-        self.project = project
-        self.biomaterials = biomaterials
-        self.processes = processes
-        self.protocols = protocols
-        self.files = files
-        self.entities_ = entities
-        self.links_ = links
-        self.manifest_ = manifest
-
     def root_entities(self) -> Mapping[UUID4, LinkedEntity]:
-
         roots = {}
 
         class RootFinder(EntityVisitor):
             def visit(self, entity: Entity) -> None:
-                if isinstance(entity, LinkedEntity) and not entity.parents_:
+                if isinstance(entity, LinkedEntity) and not entity.parents:
                     roots[entity.document_id] = entity
 
         visitor = RootFinder()
-        for entity in self.entities_.values():
+        for entity in self.entities.values():
             entity.accept(visitor)
 
         return roots
 
     @property
-    def specimens(self) -> Iterable[SpecimenFromOrganism]:
+    def specimens(self) -> List[SpecimenFromOrganism]:
         return [s for s in self.biomaterials.values() if isinstance(s, SpecimenFromOrganism)]
 
     @property
-    def sequencing_input(self) -> Iterable[CellSuspension]:
-        return [cs for cs in self.biomaterials.values() if isinstance(cs, CellSuspension)
-                and any(isinstance(pr, SequencingProcess) for pr in cs.to_processes.values())]
+    def sequencing_input(self) -> List[CellSuspension]:
+        return [bm for bm in self.biomaterials.values()
+                if isinstance(bm, CellSuspension)
+                and any(isinstance(ps, SequencingProcess)
+                        or any(isinstance(pl, SequencingProtocol) for pl in ps.protocols.values())
+                        for ps in bm.to_processes.values())]
 
 
 entity_types = {
+    # Biomaterials
     'donor_organism': DonorOrganism,
     'specimen_from_organism': SpecimenFromOrganism,
     'cell_suspension': CellSuspension,
     'cell_line': CellLine,
     'organoid': Organoid,
+
+    # Files
     'analysis_file': AnalysisFile,
     'reference_file': ReferenceFile,
     'sequence_file': SequenceFile,
+    'supplementary_file': SupplementaryFile,
+
+    # Protocols
+    'protocol': Protocol,
     'analysis_protocol': AnalysisProtocol,
     'aggregate_generation_protocol': AggregateGenerationProtocol,
     'collection_protocol': CollectionProtocol,
@@ -526,9 +602,12 @@ entity_types = {
     'imaging_protocol': ImagingProtocol,
     'library_preparation_protocol': LibraryPreparationProtocol,
     'sequencing_protocol': SequencingProtocol,
+
     'project': Project,
-    'protocol': Protocol,
+
+    # Processes
     'process': Process,
+    'analysis_process': AnalysisProcess,
     'dissociation_process': DissociationProcess,
     'enrichment_process': EnrichmentProcess,
     'library_preparation_process': LibraryPreparationProcess,
@@ -537,6 +616,13 @@ entity_types = {
 
 schema_names = {
     v: k for k, v in entity_types.items()
+}
+
+core_types = {
+    entity_type: core_type
+    for core_type in (Project, Biomaterial, Process, Protocol, File)
+    for entity_type in entity_types.values()
+    if issubclass(entity_type, core_type)
 }
 
 assert len(entity_types) == len(schema_names), "The mapping from schema name to entity type is not bijective"

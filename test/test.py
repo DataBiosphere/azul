@@ -6,12 +6,15 @@ import os
 from unittest import TestCase
 import warnings
 
-from hca import HCAConfig
-from hca.dss import DSSClient
-from urllib3 import Timeout
+from humancellatlas.data.metadata import (AgeRange,
+                                          Bundle,
+                                          DonorOrganism,
+                                          age_range,
+                                          SpecimenFromOrganism,
+                                          CellSuspension,
+                                          Project)
 
-from humancellatlas.data.metadata import AgeRange, Bundle, DonorOrganism, age_range
-from humancellatlas.data.metadata.helpers.download import download_bundle_metadata
+from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
 from humancellatlas.data.metadata.helpers.json import as_json
 
 
@@ -25,27 +28,29 @@ class TestAccessorApi(TestCase):
     def setUp(self):
         # Suppress `sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=6, family=AddressFamily.AF_INET, ...`
         warnings.simplefilter("ignore", ResourceWarning)
-        # Work around https://github.com/HumanCellAtlas/dcp-cli/issues/142
-        hca_config = HCAConfig("hca")
-        hca_config['DSSClient'].swagger_url = 'https://dss.data.humancellatlas.org/v1/swagger.json'
-        client = DSSClient(config=hca_config)
-        client.timeout_policy = Timeout(connect=10, read=40)
-        self.dss_client = client
 
     def test_one_bundle(self):
-        uuid = "b2216048-7eaa-45f4-8077-5a3fb4204953"
-        version = "2018-03-29T142048.835519Z"
-        manifest, metadata_files = download_bundle_metadata(self.dss_client, uuid, version, 'aws')
-        bundle = Bundle(uuid=uuid, version=version, manifest=manifest, metadata_files=metadata_files)
-        self.assertEqual(str(bundle.uuid), uuid)
-        root_entities = bundle.root_entities()
-        root_entity = next(iter(root_entities.values()))
-        self.assertEqual(root_entity.address, 'donor_organism@bf8492ad-1d45-46aa-9fe9-67058b8c2410')
-        root_entity_json = as_json(root_entity)
-        assert isinstance(root_entity, DonorOrganism)
-        self.assertEqual(root_entity.organism_age_in_seconds, AgeRange(min=3628800, max=7257600))
-        print(json.dumps(root_entity_json, indent=4))
-        # FIXME: more assertions
+        for deployment, replica, uuid, version, age_range in [
+            (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None, AgeRange(min=3628800, max=7257600)),  # v5
+            ('integration', 'aws', '1e276fdd-d885-4a18-b5b8-df33f1347c1a', '2018-08-03T082009.272868Z', None)  # vx
+        ]:
+            with self.subTest(deployment=deployment, replica=replica, uuid=uuid, age_range=age_range):
+                client = dss_client(deployment)
+                version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
+                bundle = Bundle(uuid, version, manifest, metadata_files)
+                self.assertEqual(str(bundle.uuid), uuid)
+                self.assertEqual(bundle.version, version)
+                self.assertEqual(1, len(bundle.projects))
+                self.assertEqual({Project}, {type(e) for e in bundle.projects.values()})
+                root_entities = bundle.root_entities().values()
+                self.assertEqual({DonorOrganism}, {type(e) for e in root_entities})
+                root_entity = next(iter(root_entities))
+                self.assertRegex(root_entity.address, 'donor_organism@.*')
+                self.assertIsInstance(root_entity, DonorOrganism)
+                self.assertEqual(root_entity.organism_age_in_seconds, age_range)
+                self.assertEqual({CellSuspension}, {type(x) for x in bundle.sequencing_input})
+                self.assertEqual({SpecimenFromOrganism}, {type(s) for s in bundle.specimens})
+                print(json.dumps(as_json(bundle), indent=4))
 
     dss_subscription_query = {
         "query": {
@@ -74,18 +79,15 @@ class TestAccessorApi(TestCase):
     }
 
     def test_many_bundles(self):
+        client = dss_client()
         # noinspection PyUnresolvedReferences
-        response = self.dss_client.post_search.iterate(es_query=self.dss_subscription_query, replica="aws")
+        response = client.post_search.iterate(es_query=self.dss_subscription_query, replica="aws")
         fqids = [r['bundle_fqid'] for r in response]
 
         def to_json(fqid):
             uuid, _, version = fqid.partition('.')
-            manifest, metadata_files = download_bundle_metadata(client=self.dss_client,
-                                                                uuid=uuid,
-                                                                version=version,
-                                                                replica='aws',
-                                                                num_workers=0)
-            bundle = Bundle(uuid=uuid, version=version, manifest=manifest, metadata_files=metadata_files)
+            version, manifest, metadata_files = download_bundle_metadata(client, 'aws', uuid, version, num_workers=0)
+            bundle = Bundle(uuid, version, manifest, metadata_files)
             return as_json(bundle)
 
         with ThreadPoolExecutor(os.cpu_count() * 16) as tpe:
@@ -101,11 +103,12 @@ class TestAccessorApi(TestCase):
             else:
                 bundles[futures[future]] = future.result()
 
-        # FIXME: How to assert JSON output?
+        # FIXME: Assert JSON output?
 
         self.assertEqual({}, errors)
 
 
+# noinspection PyUnusedLocal
 def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(age_range))
     return tests
