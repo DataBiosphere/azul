@@ -35,7 +35,7 @@ def hello():
 @app.route('/version', methods=['GET'], cors=True)
 def version():
     return {
-        'git': config.git_version
+        'git': config.git_status
     }
 
 
