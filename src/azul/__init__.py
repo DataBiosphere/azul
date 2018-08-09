@@ -94,19 +94,11 @@ class Config:
         return os.environ['AZUL_DOMAIN_NAME']
 
     @property
-    def git_version(self):
+    def git_status(self):
         return {
-            'sha': config.git_commit_sha,
-            'dirty': config.git_repo_dirty,
+            'commit': os.environ['azul_git_commit'],
+            'dirty': bool(os.environ['azul_git_dirty']),
         }
-
-    @property
-    def git_commit_sha(self) -> str:
-        return os.environ['GIT_COMMIT_SHA']
-
-    @property
-    def git_repo_dirty(self) -> bool:
-        return bool(os.environ['GIT_REPO_DIRTY'])
 
     def google_service_account(self, lambda_name):
         return f"dcp/azul/{self.deployment_stage}/{lambda_name}/google_service_account"

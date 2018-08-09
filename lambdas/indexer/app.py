@@ -45,7 +45,7 @@ requests.adapters.DEFAULT_POOLSIZE = config.num_workers * config.num_workers
 @app.route('/version', methods=['GET'], cors=True)
 def version():
     return {
-        'git': config.git_version
+        'git': config.git_status
     }
 
 
