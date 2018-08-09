@@ -21,8 +21,8 @@ emit({
         **{k: v for k, v in os.environ.items() if k.startswith('AZUL_') and k != 'AZUL_HOME'},
         # Hard-wire the ES endpoint, so we don't need to look it up at run-time, for every request/invocation
         'AZUL_ES_ENDPOINT': f'{host}:{port}',
-        'GIT_COMMIT_SHA': repo.head.object.hexsha,
-        'GIT_REPO_DIRTY': str(repo.is_dirty()),
+        'azul_git_commit': repo.head.object.hexsha,
+        'azul_git_dirty': str(repo.is_dirty()),
         'HOME': '/tmp'
     },
     'lambda_timeout': 31,
