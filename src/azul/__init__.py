@@ -3,7 +3,7 @@ import importlib
 import os
 import time
 
-from typing import Tuple
+from typing import Tuple, Mapping
 
 from hca import HCAConfig
 from hca.dss import DSSClient
@@ -98,6 +98,22 @@ class Config:
         return {
             'commit': os.environ['azul_git_commit'],
             'dirty': bool(os.environ['azul_git_dirty']),
+        }
+
+    @property
+    def lambda_env(self) -> Mapping[str, str]:
+        """
+        A dictionary with the enviroment variables to be used by a deployed AWS Lambda function or `chalice local`
+        """
+        import git
+        repo = git.Repo(self.project_root)
+        host, port = self.es_endpoint
+        return {
+            **{k: v for k, v in os.environ.items() if k.startswith('AZUL_') and k != 'AZUL_HOME'},
+            # Hard-wire the ES endpoint, so we don't need to look it up at run-time, for every request/invocation
+            'AZUL_ES_ENDPOINT': f"{host}:{port}",
+            'azul_git_commit': repo.head.object.hexsha,
+            'azul_git_dirty': str(repo.is_dirty()),
         }
 
     def google_service_account(self, lambda_name):
