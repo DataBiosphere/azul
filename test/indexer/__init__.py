@@ -56,10 +56,10 @@ class IndexerTestCase(AzulTestCase):
         if updated:
             filename += ".updated"
 
-        with open(os.path.join(data_prefix, filename + metadata_suffix, 'r')) as infile:
+        with open(os.path.join(data_prefix, filename + metadata_suffix), 'r') as infile:
             metadata = json.load(infile)
 
-        with open(os.path.join(data_prefix, filename + manifest_suffix, 'r')) as infile:
+        with open(os.path.join(data_prefix, filename + manifest_suffix), 'r') as infile:
             manifest = json.load(infile)
 
         return metadata, manifest
