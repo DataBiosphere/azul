@@ -19,18 +19,16 @@ class S3FileHandler:
     def bucket_exists(self, bucket_name):
         """
         Check whether bucket with this name exists in AWS account.
-        :param bucket_name: name of bucket in account
-        :type str
-        :return: true if it exists
-        :rtype boolean:
+        :param bucket_name: (str)
+        :return:(bool) True for exists
         """
         return self.resource.Bucket(bucket_name) in self.resource.buckets.all()
 
     def create_bucket(self, bucket_name):
         """
-        :param bucket_name: name of bucket in account
+        :param bucket_name: name of the bucket 
         :return: response with details
-        :rtype dict: JSON / Python dict
+        :rtype: JSON / Python dict
         """
         if not self.bucket_exists(bucket_name):
             self.bucket_name = bucket_name
@@ -42,10 +40,9 @@ class S3FileHandler:
     def list_objects_in_bucket(self, bucket_name):
         """
         :param bucket_name: (str) name of bucket in account
-        :return: list of objects in bucket_name
-        :rtype list:
+        :return: list of objects in bucket_name  
         """
-        response = self.session.list_objects_v2(Bucket=bucket_name)
+        response = self.session.list_objects(Bucket=bucket_name)
         if response.has_key('Contents'):
             L = [response['Contents'][x]['Key']
                     for x in range(len(response['Contents']))]
@@ -56,21 +53,31 @@ class S3FileHandler:
     def get_bucket_list(self):
         """
         :returns a list of all buckets in AWS account
-        :rtype list:"""
+        :rtype list"""
         buckets = self.bucket.list_buckets()
         return [bucket['Name'] for bucket in buckets['Buckets']]
 
+    def delete_bucket(self, bucket_name):
+        """
+        :param bucket_name: (str)
+        :return: (bool) True if bucket could be delete, False if 
+        """
+        if self.bucket_exists(bucket_name):
+            bucket = self.resource.Bucket(bucket_name)
+            # This could be more complicated if the bucket is versioned.
+            bucket.objects.all().delete()
+            bucket.delete()
+            if not self.bucket_exists(bucket_name):
+                return True
+        else:
+            return False  # bucket_name doesn't exist
+
     def upload_object_to_bucket(self, bucket_name, fname, name_in_bucket):
         """Uploads some object (e.g., a file) to an S3 bucket.
-        :param bucket_name: name of bucket in AWS account
-        :type str:
-        :param fname: absolute name of the object to upload
-        :type str:
-        :param name_in_bucket: object name in bucket
-        :type str:
-        :returns: True if it went well, False if bucket does not exist
-        :rtype boolean:
-        """
+        :param bucket_name: (str) name of bucket in AWS account
+        :param fname: (str) absolute name of the object to upload
+        :param name_in_bucket: (str) object name in bucket
+        :returns: (bool) True if it went well, False if bucket does not exist"""
 
         if self.bucket_exists(bucket_name):
             self.resource.meta.client.upload_file(
