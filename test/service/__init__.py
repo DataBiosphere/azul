@@ -6,7 +6,9 @@ import requests
 from shared import AzulTestCase
 from threading import Thread
 from service.data_generator.fake_data_utils import ElasticsearchFakeDataLoader
+# noinspection PyPackageRequirements
 from chalice.local import LocalDevServer
+# noinspection PyPackageRequirements
 from chalice.config import Config as ChaliceConfig
 from azul import Config as AzulConfig
 
@@ -25,17 +27,14 @@ class ChaliceServerThread(Thread):
         self.server_wrapper.server.shutdown()
         self.server_wrapper.server.server_close()
 
+    @property
     def address(self):
         return self.server_wrapper.server.server_address
 
 
 class WebServiceTestCase(AzulTestCase):
     data_loader = None
-
-    @property
-    def base_url(self):
-        address = self.server_thread.address()
-        return f"http://{address[0]}:{address[1]}/"
+    path_to_app = None
 
     @classmethod
     def setUpClass(cls):
@@ -44,6 +43,7 @@ class WebServiceTestCase(AzulTestCase):
         cls.data_loader.load_data()
         cls.path_to_app = os.path.join(AzulConfig().project_root, 'lambdas', 'service')
         sys.path.append(cls.path_to_app)
+        # noinspection PyUnresolvedReferences, PyPackageRequirements
         from app import app
         cls.app = app
 
@@ -52,6 +52,11 @@ class WebServiceTestCase(AzulTestCase):
         cls.data_loader.clean_up()
         sys.path.remove(cls.path_to_app)
         super().tearDownClass()
+
+    @property
+    def base_url(self):
+        host, port = self.server_thread.address
+        return f"http://{host}:{port}/"
 
     def setUp(self):
         super().setUp()
