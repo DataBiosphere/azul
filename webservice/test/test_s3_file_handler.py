@@ -51,6 +51,12 @@ class TestS3FileHandler(unittest.TestCase):
         L = self.bucket.get_bucket_list()
         self.assertListEqual(L, self.bucket_list)
 
+    @patch('s3_file_handler.S3FileHandler.delete_bucket')
+    def test_delete_bucket(self, mock_delete_bucket):
+        mock_delete_bucket.return_value = True
+        tf = self.bucket.delete_bucket('my_bucket')
+        self.assertTrue(tf)
+
     @patch('s3_file_handler.S3FileHandler.upload_object_to_bucket')
     def test_upload_object_to_bucket(self, mock_upload_object_to_bucket):
         mock_upload_object_to_bucket.return_value = True
