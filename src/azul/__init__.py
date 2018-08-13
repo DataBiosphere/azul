@@ -114,6 +114,7 @@ class Config:
             'AZUL_ES_ENDPOINT': f"{host}:{port}",
             'azul_git_commit': repo.head.object.hexsha,
             'azul_git_dirty': str(repo.is_dirty()),
+            'HOME': '/tmp'
         }
 
     def google_service_account(self, lambda_name):
