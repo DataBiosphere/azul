@@ -199,5 +199,5 @@ _select () {
     ( cd ${AZUL_HOME}/deployments && ls -l .active )
 }
 
-export PYTHONPATH="$AZUL_HOME/src"
+export PYTHONPATH="$AZUL_HOME/src:$AZUL_HOME/test"
 export TF_DATA_DIR="${AZUL_HOME}/deployments/.active/.terraform"
