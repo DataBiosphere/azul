@@ -10,7 +10,7 @@ Faker==0.8.11
 future==0.16.0
 hca==4.1.0
 git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
-git+git://github.com/HumanCellAtlas/metadata-api@release/1.0a3#egg=hca-metadata-api
+git+git://github.com/HumanCellAtlas/metadata-api@release/1.0b1#egg=hca-metadata-api
 requests==2.19.1
 requests-aws4auth==0.9
 requests-http-signature==0.0.3

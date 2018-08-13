@@ -5,6 +5,7 @@ from typing import Any, List, Mapping, MutableMapping, Sequence
 from humancellatlas.data import metadata as api
 from humancellatlas.data.metadata import AgeRange
 
+from azul import reject
 from azul.transformer import Document, ElasticSearchDocument, Transformer
 from azul.types import JSON
 
@@ -12,7 +13,9 @@ log = logging.getLogger(__name__)
 
 
 def _project_dict(bundle: api.Bundle) -> dict:
-    project = bundle.project
+    project: api.Project
+    project, *additional_projects = bundle.projects.values()
+    reject(additional_projects, "Azul can currently only handle a single project per bundle")
     return {
         'project_shortname': project.project_shortname,
         'laboratory': list(project.laboratory_names),
