@@ -64,7 +64,7 @@ class S3FileHandler:
         """
         :param bucket_name: name of bucket in account
         :type str
-        :return: True if bucket could be delete, false if bucket does not exist.
+        :return: True if bucket was deleted, false if bucket does not exist.
         :rtype boolean:"""
         if self.bucket_exists(bucket_name):
             bucket = self.resource.Bucket(bucket_name)
