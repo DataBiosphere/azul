@@ -42,7 +42,7 @@ class S3FileHandler:
         :param bucket_name: (str) name of bucket in account
         :return: list of objects in bucket_name  
         """
-        response = self.session.list_objects(Bucket=bucket_name)
+        response = self.session.list_objects_v2(Bucket=bucket_name)
         if response.has_key('Contents'):
             L = [response['Contents'][x]['Key']
                     for x in range(len(response['Contents']))]
