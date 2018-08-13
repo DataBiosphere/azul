@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 import logging
-from typing import Tuple, List, Optional
+from typing import List, Optional, Tuple
 
 from hca import HCAConfig
 from hca.dss import DSSClient
