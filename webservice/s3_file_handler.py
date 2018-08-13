@@ -60,22 +60,6 @@ class S3FileHandler:
         buckets = self.bucket.list_buckets()
         return [bucket['Name'] for bucket in buckets['Buckets']]
 
-    def delete_bucket(self, bucket_name):
-        """
-        :param bucket_name: name of bucket in account
-        :type str
-        :return: True if bucket was deleted, false if bucket does not exist.
-        :rtype boolean:"""
-        if self.bucket_exists(bucket_name):
-            bucket = self.resource.Bucket(bucket_name)
-            # This could be more complicated if the bucket is versioned.
-            bucket.objects.all().delete()
-            bucket.delete()
-            if not self.bucket_exists(bucket_name):
-                return True
-        else:
-            return False  # bucket_name doesn't exist
-
     def upload_object_to_bucket(self, bucket_name, fname, name_in_bucket):
         """Uploads some object (e.g., a file) to an S3 bucket.
         :param bucket_name: name of bucket in AWS account
