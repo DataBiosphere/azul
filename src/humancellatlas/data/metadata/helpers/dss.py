@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 import logging
-from typing import Tuple, List, Optional
+from typing import List, Optional, Tuple
 
 from hca import HCAConfig
 from hca.dss import DSSClient
@@ -68,7 +68,7 @@ def dss_client(deployment: Optional[str] = None) -> DSSClient:
                        deployment (`prod`) will be used.
     """
     # Work around https://github.com/HumanCellAtlas/dcp-cli/issues/142
-    hca_config = HCAConfig("hca")
+    hca_config = HCAConfig()
     deployment = deployment + "." if deployment else ""
     hca_config['DSSClient'].swagger_url = f'https://dss.{deployment}data.humancellatlas.org/v1/swagger.json'
     # Clear the cached swagger specs that may come from a different deployment. This work-around isn't thread safe but
