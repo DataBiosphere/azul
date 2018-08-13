@@ -4,7 +4,7 @@ import logging
 from unittest import mock
 import requests
 
-from azul import Config as AzulConfig
+from azul import config
 from service import WebServiceTestCase
 
 log = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         expected_json = {
             'status': 'UP',
             'elasticsearch': {
-                'domain': AzulConfig().es_domain,
+                'domain': config.es_domain,
                 'status': 'UP'
             }
         }
@@ -48,7 +48,7 @@ class FacetNameValidationTest(WebServiceTestCase):
             expected_json = {
                 'status': 'UP',
                 'elasticsearch': {
-                    'domain': AzulConfig().es_domain,
+                    'domain': config.es_domain,
                     'message': 'Unable to reach the host',
                     'status': 'DOWN'
                 }

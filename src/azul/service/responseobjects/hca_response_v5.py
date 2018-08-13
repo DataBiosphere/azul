@@ -66,27 +66,34 @@ class PaginationObj(JsonObject):
     order = StringProperty(choices=['asc', 'desc'])
 
 
-class HitEntry(JsonObject):
-    """
-    Class defining a hit entry in the Api response
-    """
-    # entity_id = StringProperty()
-    # entity_version = StringProperty()
-    # bundleUuid = StringProperty()
-    # bundleVersion = StringProperty()
-
-
 class FileTypeSummary(JsonObject):
     fileType = StringProperty()
     count = IntegerProperty()
-    totalSize = FloatProperty()
+    totalSize = IntegerProperty()
 
-    @staticmethod
-    def create_object(bucket):
-        new_object = FileTypeSummary()
+    @classmethod
+    def create_object(cls, **kwargs):
+        if "bucket" in kwargs:
+            return cls._create_object_with_bucket(kwargs["bucket"])
+        else:
+            return cls._create_object_with_args(
+                file_type=kwargs["file_type"], total_size=kwargs["total_size"], count=kwargs["count"]
+            )
+
+    @classmethod
+    def _create_object_with_bucket(cls, bucket):
+        new_object = cls()
         new_object.count = bucket['doc_count']
         new_object.totalSize = bucket['size_by_type']['value']
         new_object.fileType = bucket['key']
+        return new_object
+
+    @classmethod
+    def _create_object_with_args(cls, file_type, total_size, count):
+        new_object = cls()
+        new_object.count = count
+        new_object.totalSize = total_size
+        new_object.fileType = file_type
         return new_object
 
 
@@ -95,13 +102,20 @@ class OrganCellCountSummary(JsonObject):
     countOfDocsWithOrganType = IntegerProperty()
     totalCellCountByOrgan = FloatProperty()
 
-    @staticmethod
-    def create_object(bucket):
-        new_object = OrganCellCountSummary()
+    @classmethod
+    def create_object(cls, bucket):
+        new_object = cls()
         new_object.organType = bucket['key']
         new_object.countOfDocsWithOrganType = bucket['doc_count']
         new_object.totalCellCountByOrgan = bucket['cell_count']['value']
         return new_object
+
+
+class HitEntry(JsonObject):
+    """
+    Class defining a hit entry in the Api response
+    """
+    fileTypeSummaries = ListProperty(FileTypeSummary)
 
 
 class ApiResponse(JsonObject):
@@ -278,7 +292,7 @@ class SummaryResponse(AbstractResponse):
         aggregates = raw_response['aggregations']
         _sum = raw_response['aggregations']['by_type']
         _organ_group = raw_response['aggregations']['group_by_organ']
-    
+
         # Create a SummaryRepresentation object
         self.apiResponse = SummaryRepresentation(
             fileCount=hits['total'],
@@ -296,7 +310,7 @@ class SummaryResponse(AbstractResponse):
                 aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(
                 aggregates, 'total_cell_count', agg_form='value'),
-            fileTypeSummaries=[FileTypeSummary.create_object(bucket) for bucket in _sum['buckets']],
+            fileTypeSummaries=[FileTypeSummary.create_object(bucket=bucket) for bucket in _sum['buckets']],
             organSummaries=[OrganCellCountSummary.create_object(bucket) for bucket in _organ_group['buckets']]
         )
 
@@ -402,6 +416,15 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 all_files.append(new_file)
         return all_files
 
+    def make_file_type_summaries(self, files):
+        file_type_summaries = {}
+        for file in files:
+            if not file['format'] in file_type_summaries:
+                file_type_summaries[file['format']] = {}
+            file_type_summaries[file['format']]['size'] = file_type_summaries[file['format']].get('size', 0) + file['size']
+            file_type_summaries[file['format']]['count'] = file_type_summaries[file['format']].get('count', 0) + 1
+        return file_type_summaries
+
     def make_specimens(self, entry):
         specimens = {}
         for bundle in entry["bundles"]:
@@ -442,11 +465,15 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
+        file_type_summaries = self.make_file_type_summaries(self.make_files(entry))
 
         return HitEntry(
             processes=self.make_processes(entry),
             entryId=entry["entity_id"],
-            files=self.make_files(entry),
+            fileTypeSummaries=[FileTypeSummary.create_object(file_type=file_type,
+                                                             total_size=file_type_summary['size'],
+                                                             count=file_type_summary['count'])
+                               for file_type, file_type_summary in file_type_summaries.items()],
             projects=self.make_projects(entry),
             specimens=self.make_specimens(entry),
             bundles=self.make_bundles(entry)
