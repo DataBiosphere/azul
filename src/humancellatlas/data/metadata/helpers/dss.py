@@ -15,6 +15,8 @@ def download_bundle_metadata(client: DSSClient,
                              replica: str,
                              uuid: str,
                              version: Optional[str] = None,
+                             directurls: bool = False,
+                             presignedurls: bool = False,
                              num_workers: Optional[int] = None) -> Tuple[str, List[JSON], JSON]:
     """
     Download the metadata for a given bundle from the HCA data store (DSS).
@@ -27,7 +29,18 @@ def download_bundle_metadata(client: DSSClient,
 
     :param version: The version of the bundle. if None, the most recent version of the bundle will be downloaded.
 
-    :param num_workers: the size of the thread pool to use for downloading metadata files in parallel. If None, the
+    :param directurls: Whether to include direct-access URLs in the response. This is mutually
+                       exclusive with the presignedurls parameter. Note: including `directurls` and `presignedurls` in
+                       the function call will cause the DSS to copy metadata and data files in the bundle to another
+                       bucket first. That could be time-consuming and/or inefficient for users who only want to work
+                       with the metadata instead of the files. It is very likely `directurls` and `presignedurls` will
+                       be removed or changed in the future.
+
+    :param presignedurls: A boolean controls whether to include presigned URLs in the response. This is mutually
+                          exclusive with the directurls parameter. Note this parameter, similar to the `directurls`,
+                          is a temporary parameter, and it's not guaranteed to stay in this place in the future.
+
+    :param num_workers: The size of the thread pool to use for downloading metadata files in parallel. If None, the
                         default pool size will be used, typically a small multiple of the number of cores on the system
                         executing this function. If 0, no thread pool will be used and all files will be downloaded
                         sequentially by the current thread.
@@ -36,9 +49,17 @@ def download_bundle_metadata(client: DSSClient,
              in the bundle (data and metadata) and a dictionary mapping the file name of each metadata file in the
              bundle to the JSON contents of that file.
     """
+    if directurls or presignedurls:
+        logger.warning("PendingDeprecationWarning: `directurls` and `presignedurls` are temporary parameters and not"
+                       " guaranteed to stay in the code base in the future!")
+
     logger.debug("Getting bundle %s.%s from DSS.", uuid, version)
     # noinspection PyUnresolvedReferences
-    response = client.get_bundle(uuid=uuid, version=version, replica=replica)
+    response = client.get_bundle(uuid=uuid,
+                                 version=version,
+                                 replica=replica,
+                                 directurls=directurls,
+                                 presignedurls=presignedurls)
     bundle = response['bundle']
     manifest = bundle['files']
     metadata_files = {f["name"]: f for f in manifest if f["indexed"]}

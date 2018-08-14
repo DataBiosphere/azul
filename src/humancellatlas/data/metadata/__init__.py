@@ -385,6 +385,7 @@ class ManifestEntry:
     sha1: str
     sha256: str
     size: int
+    url: str
     uuid: UUID4
     version: str
 
@@ -393,6 +394,7 @@ class ManifestEntry:
         kwargs = dict(json)
         kwargs['content_type'] = kwargs.pop('content-type')
         kwargs['uuid'] = UUID4(json['uuid'])
+        kwargs.setdefault('url')
         return cls(**kwargs)
 
 
