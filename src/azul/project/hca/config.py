@@ -1,9 +1,4 @@
-from functools import lru_cache
 from typing import Any, Iterable, Mapping, Tuple
-
-import boto3
-from elasticsearch import Elasticsearch, RequestsHttpConnection
-from requests_aws4auth import AWS4Auth
 
 from azul.base_config import BaseIndexProperties
 from azul.transformer import Transformer
@@ -62,36 +57,6 @@ class IndexProperties(BaseIndexProperties):
     @property
     def dss_url(self) -> str:
         return self._dss_url
-
-    @property
-    def elastic_search_client(self) -> Elasticsearch:
-        host, port = self._es_endpoint
-        return self._elastic_search_client(host, port, 60)
-
-    # Stolen from https://github.com/HumanCellAtlas/data-store/blob/master/dss/index/es/__init__.py#L66
-
-    @lru_cache(maxsize=32)
-    def _elastic_search_client(self, host, port, timeout):
-
-        common_params = dict(hosts=[dict(host=host, port=port)],
-                             timeout=timeout)
-        if host.endswith(".amazonaws.com"):
-            session = boto3.session.Session()
-            current_credentials = session.get_credentials().get_frozen_credentials()
-            es_auth = AWS4Auth(current_credentials.access_key,
-                               current_credentials.secret_key,
-                               session.region_name,
-                               "es",
-                               session_token=current_credentials.token)
-            client = Elasticsearch(use_ssl=True,
-                                   verify_certs=True,
-                                   connection_class=RequestsHttpConnection,
-                                   http_auth=es_auth,
-                                   **common_params)
-        else:
-            client = Elasticsearch(use_ssl=False,
-                                   **common_params)
-        return client
 
     @property
     def mapping(self) -> Mapping[str, Any]:

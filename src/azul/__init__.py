@@ -36,6 +36,10 @@ class Config:
         return os.environ['AZUL_ES_DOMAIN']
 
     @property
+    def es_timeout(self) -> int:
+        return int(os.environ['AZUL_ES_TIMEOUT'])
+
+    @property
     def dss_endpoint(self) -> str:
         return os.environ['AZUL_DSS_ENDPOINT']
 

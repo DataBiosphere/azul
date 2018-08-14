@@ -1,4 +1,4 @@
-aws-requests-auth==0.3.3
+aws-requests-auth==0.4.2
 boto==2.48.0
 boto3==1.7.46
 botocore==1.10.46
@@ -12,6 +12,5 @@ hca==4.1.0
 git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
 git+git://github.com/HumanCellAtlas/metadata-api@release/1.0b1#egg=hca-metadata-api
 requests==2.19.1
-requests-aws4auth==0.9
 requests-http-signature==0.0.3
 urllib3==1.23
