@@ -79,7 +79,7 @@ def post_notification():
 @app.route('/escheck')
 def es_check():
     """Check the status of ElasticSearch by returning its info."""
-    return json.dumps(properties.elastic_search_client.info())
+    return json.dumps(ElasticsearchClientFactory.get().info())
 
 
 # Work around https://github.com/aws/chalice/issues/856

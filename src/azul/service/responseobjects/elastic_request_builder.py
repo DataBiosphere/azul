@@ -3,14 +3,10 @@ from copy import deepcopy
 import json
 import logging
 import os
-from typing import Tuple
 
-from aws_requests_auth import boto_utils
-from aws_requests_auth.aws_auth import AWSRequestsAuth
-from elasticsearch import Elasticsearch, RequestsHttpConnection
 from elasticsearch_dsl import A, Q, Search
 
-from azul.deployment import aws
+from azul.es import ESClientFactory
 from azul.service import config
 from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse,
                                                           FileSearchResponse,
@@ -42,34 +38,13 @@ class ElasticTransformDump(object):
         to ElasticSearch
     """
 
-    def __init__(self, es_endpoint: Tuple[str, int]):
+    def __init__(self):
         """
         The constructor simply initializes the ElasticSearch client object
         to be used for making requests.
-
-        :param es_endpoint: Host name and port number of the Elasticsearch instance to use.
-                            The protocol (HTTP vs HTTPS) is inferred.
         """
         self.logger = logging.getLogger('dashboardService.elastic_request_builder.ElasticTransformDump')
-
-        host, port = es_endpoint
-        self.logger.debug(f'Elasticsearch endpoint: {host}:{port}')
-
-        kwargs = dict(hosts=[dict(host=host, port=port)],
-                      timeout=90)
-        if host.endswith('.es.amazonaws.com'):
-            awsauth = AWSRequestsAuth(aws_host=host,
-                                      aws_region=aws.region_name,
-                                      aws_service='es',
-                                      **boto_utils.get_credentials())
-            self.es_client = Elasticsearch(http_auth=awsauth,
-                                           use_ssl=True,
-                                           verify_certs=True,
-                                           connection_class=RequestsHttpConnection,
-                                           **kwargs)
-        else:
-            self.es_client = Elasticsearch(**kwargs)
-        self.logger.info('Creating an instance of ElasticTransformDump')
+        self.es_client = ESClientFactory.get()
 
     @staticmethod
     def translate_filters(filters, field_mapping):
