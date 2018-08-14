@@ -8,6 +8,7 @@ from elasticsearch.helpers import parallel_bulk, streaming_bulk
 
 from azul.base_config import BaseIndexProperties
 from azul.downloader import MetadataDownloader
+from azul.es import ESClientFactory
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class BaseIndexer(ABC):
         bundle_version = dss_notification['match']['bundle_version']
         metadata_downloader = MetadataDownloader(self.properties.dss_url)
         metadata_files, manifest = metadata_downloader.extract_bundle(dss_notification)
-        es_client = self.properties.elastic_search_client
+        es_client = ESClientFactory.get()
 
         # Create indices and populate mappings
         for index_name in self.properties.index_names:

@@ -136,7 +136,7 @@ def get_data(file_id=None):
             filters['file']['fileId'] = {"is": [file_id]}
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd(es_endpoint=config.es_endpoint)
+        es_td = EsTd()
         # Get the response back
         logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
@@ -216,7 +216,7 @@ def get_specimen_data(specimen_id=None):
             filters['file']['fileId'] = {"is": [specimen_id]}
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd(es_endpoint=config.es_endpoint)
+        es_td = EsTd()
         # Get the response back
         logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
@@ -292,7 +292,7 @@ def get_data_pie():
         pagination = _get_pagination(app.current_request)
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd(es_endpoint=config.es_endpoint)
+        es_td = EsTd()
         # Get the response back
         logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
@@ -335,7 +335,7 @@ def get_summary():
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_endpoint=config.es_endpoint)
+    es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_summary(filters=filters)
@@ -421,7 +421,7 @@ def get_search():
         field = 'donor'
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_endpoint=config.es_endpoint)
+    es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_autocomplete_request(pagination,
@@ -474,7 +474,7 @@ def get_manifest():
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd(es_endpoint=config.es_endpoint)
+    es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_manifest(filters=filters)
