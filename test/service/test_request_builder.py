@@ -7,7 +7,6 @@ import os
 import unittest
 from service import WebServiceTestCase
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
-from azul import config
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ class TestRequestBuilder(WebServiceTestCase):
         # - The complex multiple filters case
 
         # Create ElasticTransformDump instance
-        es_ts_instance = EsTd(es_endpoint=config.es_endpoint)
+        es_ts_instance = EsTd()
         # Create a request object
         es_search = EsTd.create_request(
             sample_filter,
@@ -85,7 +84,7 @@ class TestRequestBuilder(WebServiceTestCase):
         # TODO: Need some form of handler for the query language
         sample_filter = {}
         # Create ElasticTransformDump instance
-        es_ts_instance = EsTd(es_endpoint=config.es_endpoint)
+        es_ts_instance = EsTd()
         # Create a request object
         es_search = EsTd.create_request(
             sample_filter,
@@ -134,7 +133,7 @@ class TestRequestBuilder(WebServiceTestCase):
         }
 
         # Create ElasticTransformDump instance
-        es_ts_instance = EsTd(es_endpoint=config.es_endpoint)
+        es_ts_instance = EsTd()
         # Create a request object
         es_search = EsTd.create_request(
             sample_filter,

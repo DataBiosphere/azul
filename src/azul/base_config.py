@@ -2,15 +2,10 @@ from abc import ABC
 import os
 from typing import Any, Iterable, Mapping
 
-from elasticsearch import Elasticsearch
-
 from azul.transformer import Transformer
 
 
 class BaseIndexProperties(ABC):
-    @property
-    def elastic_search_client(self) -> Elasticsearch:
-        return Elasticsearch()
 
     @property
     def dss_url(self) -> str:

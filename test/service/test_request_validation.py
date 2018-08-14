@@ -41,7 +41,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(response.json(), expected_json)
 
     def test_health_es_unreachable(self):
-        with mock.patch.dict(os.environ, AZUL_ES_ENDPOINT='nonexisting-index.us-east-1.es.amazonaws.com:80'):
+        with mock.patch.dict(os.environ, AZUL_ES_ENDPOINT='nonexisting-index.com:80'):
             url = self.base_url + "health"
             response = requests.get(url)
             response.raise_for_status()

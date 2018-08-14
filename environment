@@ -49,6 +49,9 @@ azul_vars=(
     # The name of the ES index to be populated in response to events from DSS
     AZUL_ES_INDEX
 
+    # Elasticsearch operation timeout in seconds
+    AZUL_ES_TIMEOUT
+
     # The name of the index containing Specimen entities
     AZUL_SPECIMEN_INDEX
 
@@ -159,6 +162,7 @@ _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "m4.xlarge.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 35
+_set AZUL_ES_TIMEOUT 60
 _set AZUL_INDEX_WORKERS 16
 _set AZUL_DSS_WORKERS 8
 _set AZUL_SUBSCRIBE_TO_DSS 1
