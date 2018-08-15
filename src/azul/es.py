@@ -3,6 +3,7 @@ from aws_requests_auth import boto_utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 
 from azul import config
+from azul.deployment import aws
 
 
 def es_client():
@@ -11,7 +12,7 @@ def es_client():
     ssl_required = True if port == 443 else False
     if ssl_required:
         aws_auth = AWSRequestsAuth(aws_host=host,
-                                   aws_region='us-east-1',
+                                   aws_region=aws.region_name,
                                    aws_service='es',
                                    **boto_utils.get_credentials())
         return Elasticsearch(hosts=[{'host': host, 'port': port}],
