@@ -247,6 +247,9 @@ class Process(LinkedEntity):
         else:
             raise LinkError(self, other, forward)
 
+    def is_sequencing_process(self):
+        return any(isinstance(pl, SequencingProtocol) for pl in self.protocols.values())
+
 
 @dataclass(init=False)
 class AnalysisProcess(Process):
@@ -287,6 +290,9 @@ class SequencingProcess(Process):
         super().__init__(json)
         content = json.get('content', json)
         self.instrument_manufacturer_model = content['instrument_manufacturer_model']['text']
+
+    def is_sequencing_process(self):
+        return True
 
 
 @dataclass(init=False)
@@ -571,9 +577,13 @@ class Bundle:
     def sequencing_input(self) -> List[CellSuspension]:
         return [bm for bm in self.biomaterials.values()
                 if isinstance(bm, CellSuspension)
-                and any(isinstance(ps, SequencingProcess)
-                        or any(isinstance(pl, SequencingProtocol) for pl in ps.protocols.values())
-                        for ps in bm.to_processes.values())]
+                and any(ps.is_sequencing_process() for ps in bm.to_processes.values())]
+
+    @property
+    def sequencing_output(self) -> List[SequenceFile]:
+        return [f for f in self.files.values()
+                if isinstance(f, SequenceFile)
+                and any(ps.is_sequencing_process() for ps in f.from_processes.values())]
 
 
 entity_types = {

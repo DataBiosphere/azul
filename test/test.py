@@ -50,6 +50,8 @@ class TestAccessorApi(TestCase):
                 self.assertEqual(root_entity.organism_age_in_seconds, age_range)
                 self.assertEqual({CellSuspension}, {type(x) for x in bundle.sequencing_input})
                 self.assertEqual({SpecimenFromOrganism}, {type(s) for s in bundle.specimens})
+                self.assertTrue(all(bm.schema_name == 'cell_suspension' for bm in bundle.sequencing_input))
+                self.assertTrue(all(f.manifest_entry.name.endswith('.fastq.gz') for f in bundle.sequencing_output))
                 print(json.dumps(as_json(bundle), indent=4))
 
     dss_subscription_query = {
