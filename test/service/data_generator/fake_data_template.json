@@ -41,7 +41,7 @@
           "laboratory": [
             "safe_color_name"         
           ],
-          "project": "safe_color_name"
+          "project_shortname": "safe_color_name"
         },
         "specimens": [
           {
