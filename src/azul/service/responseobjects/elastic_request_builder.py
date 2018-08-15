@@ -10,6 +10,7 @@ from aws_requests_auth.aws_auth import AWSRequestsAuth
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from elasticsearch_dsl import A, Q, Search
 
+from azul.deployment import aws
 from azul.service import config
 from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse,
                                                           FileSearchResponse,
@@ -58,7 +59,7 @@ class ElasticTransformDump(object):
                       timeout=90)
         if host.endswith('.es.amazonaws.com'):
             awsauth = AWSRequestsAuth(aws_host=host,
-                                      aws_region='us-east-1',
+                                      aws_region=aws.region_name,
                                       aws_service='es',
                                       **boto_utils.get_credentials())
             self.es_client = Elasticsearch(http_auth=awsauth,
