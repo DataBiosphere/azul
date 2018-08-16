@@ -3,19 +3,25 @@ import sys
 import logging
 from unittest import mock
 import requests
-from service import WebServiceTestCase
+
+from app_test_case import LocalAppTestCase
 from azul import Config as AzulConfig
 
 log = logging.getLogger(__name__)
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     log.setLevel(logging.DEBUG)
     stream_handler = logging.StreamHandler(sys.stdout)
     log.addHandler(stream_handler)
 
 
-class FacetNameValidationTest(WebServiceTestCase):
+class FacetNameValidationTest(LocalAppTestCase):
+    @classmethod
+    def lambda_name(cls) -> str:
+        return "service"
+
     filter_facet_message = {"Code": "BadRequestError",
                             "Message": "BadRequestError: Unable to filter by undefined facet bad-facet."}
     sort_facet_message = {"Code": "BadRequestError",
@@ -180,12 +186,3 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
-
-    def test_summary_endpoint(self):
-        url = self.base_url + "repository/files/summary"
-        response = requests.get(url)
-        response.raise_for_status()
-        summary_object = response.json()
-        self.assertGreater(summary_object['fileCount'], 0)
-        self.assertGreater(summary_object['organCount'], 0)
-        self.assertIsNotNone(summary_object['organSummaries'])
