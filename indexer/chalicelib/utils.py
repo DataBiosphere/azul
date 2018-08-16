@@ -10,6 +10,7 @@ that can be used by the Indexer subclasses.
 
 """
 from collections import ChainMap
+from hca import HCAConfig
 from hca.dss import DSSClient, SwaggerAPIException
 import logging
 from multiprocessing.dummy import Pool as ThreadPool
@@ -18,6 +19,24 @@ import os
 
 indexer_name = os.getenv('INDEXER_NAME', 'dss-indigo')
 module_logger = logging.getLogger(indexer_name + ".indexer")
+
+
+def create_dss_client(dss_host):
+    """
+    This is a workaround for problems with DSSClient initialization.
+    Tweak, which underpins the :class:`~hca.HCAConfig` object, will try to
+    create a config directory if one does not exist. This is fine if we're
+    running locally, yet not if this is deployed on AWS Lambda as
+    the home directory is read-only. AWS Lambda provides /tmp as a non-persistent
+    storage area, so set the `_user_config_home` variable to /tmp so that
+    dos-dss-lambda doesn't die when we try to instantiate :class:`~hca.dss.DSSClient`.
+    :param dss_host: DSS URL, including schema (`https`) and Swagger base path (e.g. `v1`)
+    :return: instance of `DSSClient`
+    """
+    HCAConfig._user_config_home = '/tmp/'
+    config = HCAConfig(save_on_exit=False, autosave=False)
+    config['DSSClient'].swagger_url = dss_host + '/swagger.json'
+    return DSSClient(config=config)
 
 
 class DataExtractor(object):
@@ -39,8 +58,9 @@ class DataExtractor(object):
         :param dss_host: The formatted url for the DSS
         """
         self.will_include_urls = will_include_urls
-        self.dss_client = DSSClient()
-        self.dss_client.host = dss_host
+
+        self.dss_client = create_dss_client(dss_host)
+
         self.log = logging.getLogger(indexer_name + ".indexer.DataExtractor")
 
     def __attempt(self, times, func, errors, **kwargs):
