@@ -1,16 +1,18 @@
+from abc import abstractmethod, ABCMeta
 import os
 import sys
 import time
 import logging
+import unittest
+
 import requests
-from es_test_case import AzulTestCase
 from threading import Thread
-from service.data_generator.fake_data_utils import ElasticsearchFakeDataLoader
 # noinspection PyPackageRequirements
 from chalice.local import LocalDevServer
 # noinspection PyPackageRequirements
 from chalice.config import Config as ChaliceConfig
-from azul import Config as AzulConfig
+from azul import config
+
 
 log = logging.getLogger(__name__)
 
@@ -32,31 +34,48 @@ class ChaliceServerThread(Thread):
         return self.server_wrapper.server.server_address
 
 
-class WebServiceTestCase(AzulTestCase):
-    data_loader = None
-    path_to_app = None
+class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
+    """
+    A mixin for test cases against a locally running instance of a AWS Lambda Function aka Chalice application. By
+    default, the local instance will use the remote AWS Elasticsearch domain configured via AZUL_ES_DOMAIN or
+    AZUL_ES_ENDPOINT. To use a locally running ES instance, combine this mixin with ElasticsearchTestCase. Be sure to
+    list ElasticsearchTestCase first such that this mixin picks up the environment overrides made by
+    ElasticsearchTestCase.
+    """
+
+    @classmethod
+    @abstractmethod
+    def lambda_name(cls) -> str:
+        """
+        Return the name of the AWS Lambda function aka. Chalice app to start locally. Must match the name of a
+        subdirectory of $AZUL_HOME/lambdas. Subclasses must override this to select which Chalice app to start locally.
+        """
+        raise NotImplementedError()
+
+    @property
+    def base_url(self):
+        """
+        The HTTP endpoint of the locally running Chalice application. Subclasses should use this to derive the URLs
+        for the test requests that they issue.
+        """
+        host, port = self.server_thread.address
+        return f"http://{host}:{port}/"
+
+    _path_to_app = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.data_loader = ElasticsearchFakeDataLoader()
-        cls.data_loader.load_data()
-        cls.path_to_app = os.path.join(AzulConfig().project_root, 'lambdas', 'service')
-        sys.path.append(cls.path_to_app)
+        cls._path_to_app = os.path.join(config.project_root, 'lambdas', cls.lambda_name())
+        sys.path.append(cls._path_to_app)
         # noinspection PyUnresolvedReferences, PyPackageRequirements
         from app import app
         cls.app = app
 
     @classmethod
     def tearDownClass(cls):
-        cls.data_loader.clean_up()
-        sys.path.remove(cls.path_to_app)
+        sys.path.remove(cls._path_to_app)
         super().tearDownClass()
-
-    @property
-    def base_url(self):
-        host, port = self.server_thread.address
-        return f"http://{host}:{port}/"
 
     def setUp(self):
         super().setUp()
