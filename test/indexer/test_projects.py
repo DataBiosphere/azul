@@ -55,7 +55,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
                                datetime.now().isoformat(timespec='microseconds'))
             bundle_pack = (bundle_uuid, bundle_version)
             data_pack = self._get_data_files(bundle_uuid)
-            self._mock_index(bundle_pack, data_pack)
+            self._mock_index(bundle_pack)
             module_logger.info("Indexing operation finished for %s. Check values in ElasticSearch",
                                bundle_uuid + bundle_version)
             module_logger.info("End computation %s",
@@ -79,7 +79,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
         data_pack = self._get_data_files(bundle_uuid)
         module_logger.info("Start computation %s",
                            datetime.now().isoformat(timespec='microseconds'))
-        self._mock_index(bundle_pack, data_pack)
+        self._mock_index(bundle_pack)
         module_logger.info("Indexing operation finished for %s. Check values in ElasticSearch",
                            bundle_uuid + bundle_version)
         module_logger.info("End computation %s",
