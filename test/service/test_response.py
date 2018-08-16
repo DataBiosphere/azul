@@ -4,6 +4,8 @@ import json
 import unittest
 import os
 
+import requests
+
 from azul.service.responseobjects.hca_response_v5 import KeywordSearchResponse, FileSearchResponse
 from service import WebServiceTestCase
 
@@ -97,6 +99,15 @@ class TestResponse(WebServiceTestCase):
         json_response = json.dumps(file_search_test, sort_keys=True)  # loaded from json
         json_test = json.dumps(file_search_response, sort_keys=True)  # generated
         self.assertEqual(json_test, json_response)
+
+    def test_summary_endpoint(self):
+        url = self.base_url + "repository/files/summary"
+        response = requests.get(url)
+        response.raise_for_status()
+        summary_object = response.json()
+        self.assertGreater(summary_object['fileCount'], 0)
+        self.assertGreater(summary_object['organCount'], 0)
+        self.assertIsNotNone(summary_object['organSummaries'])
 
 
 if __name__ == '__main__':

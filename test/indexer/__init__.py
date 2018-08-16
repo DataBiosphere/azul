@@ -8,10 +8,10 @@ from azul import config
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
 from azul.downloader import MetadataDownloader
-from es_test_case import AzulTestCase
+from es_test_case import ElasticsearchTestCase
 
 
-class IndexerTestCase(AzulTestCase):
+class IndexerTestCase(ElasticsearchTestCase):
     index_properties = None
     hca_indexer = None
 
