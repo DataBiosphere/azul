@@ -8,7 +8,7 @@ from azul import config
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
 from azul.downloader import MetadataDownloader
-from shared import AzulTestCase
+from es_test_case import AzulTestCase
 
 
 class IndexerTestCase(AzulTestCase):
