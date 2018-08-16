@@ -10,7 +10,7 @@ from elasticsearch5 import Elasticsearch
 logger = logging.getLogger(__name__)
 
 
-class AzulTestCase(unittest.TestCase):
+class ElasticsearchTestCase(unittest.TestCase):
 
     es_client = None
 
