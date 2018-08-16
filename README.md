@@ -24,7 +24,7 @@ generic with minimal need for project-specific behavior.
 
 ### 1.1. Development Preequisites
 
-- Python 3.6 with `virtualenv` and `pip`
+- Python 3.6 with `pip`
 
 - Make sure that you are using the `bash` shell.
 
@@ -49,11 +49,11 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1) Create a Python 3.6 `virtualenv` and activate it, for example 
+1) Create a Python 3.6 `venv` and activate it, for example 
    
    ```
    cd azul
-   virtualenv -p python3 .venv
+   python3 -m venv .venv
    source .venv/bin/activate
    ```
 
