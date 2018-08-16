@@ -1,3 +1,4 @@
+import functools
 import json
 import os
 from typing import Mapping, Any
@@ -64,11 +65,13 @@ class IndexerTestCase(ElasticsearchTestCase):
 
         return metadata, manifest
 
-    def _mock_index(self, test_bundles, data_pack):
-        bundle_uuid, bundle_version = test_bundles
-        metadata, manifest = data_pack
+    def _mock_index(self, test_bundle):
+        bundle_uuid, bundle_version = test_bundle
         fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+
+        def mocked_extract_bundle(get_data_func, fake_notification):
+            return get_data_func(fake_notification["match"]["bundle_uuid"])
+
         with patch('azul.DSSClient'):
-            with patch.object(MetadataDownloader, 'extract_bundle') as mock_method:
-                mock_method.return_value = metadata, manifest
+            with patch.object(MetadataDownloader, 'extract_bundle', new=functools.partial(mocked_extract_bundle, self._get_data_files)):
                 self.hca_indexer.index(fake_event)
