@@ -2,6 +2,7 @@
 """Command line utility to trigger indexing of bundles based on a query."""
 import argparse
 from collections import defaultdict
+from hca import HCAConfig
 from hca.dss import DSSClient
 import json
 from pprint import pprint
@@ -38,7 +39,6 @@ class DefaultProperties:
 
 
 default = DefaultProperties()
-dss_client = DSSClient()
 
 parser = argparse.ArgumentParser(
     description='Process options the finder of golden bundles.')
@@ -105,7 +105,14 @@ def post_bundle(bundle_uuid, bundle_version):
 
 def main():
     """Entrypoint method for the script."""
-    dss_client.host = args.dss_url
+
+    # Workaround known issues with setting-up HCAConfig/DSSClient
+    # See: https://github.com/HumanCellAtlas/dcp-cli/issues/170
+    HCAConfig._user_config_home = '/tmp/'
+    config = HCAConfig(save_on_exit=False, autosave=False)
+    config['DSSClient'].swagger_url = args.dss_url + '/swagger.json'
+    dss_client = DSSClient(config=config)
+
     parameters = {
         "es_query": args.es_query,
         "replica": "aws"
