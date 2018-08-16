@@ -1,5 +1,7 @@
 language: python
 
+cache: pip
+
 sudo: required
 
 services:
@@ -16,5 +18,5 @@ install:
   - pip install -r requirements.dev.txt
 
 script:
-  - source environment
   - make test
+  
