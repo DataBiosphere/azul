@@ -3,7 +3,7 @@ import sys
 import time
 import logging
 import requests
-from shared import AzulTestCase
+from es_test_case import AzulTestCase
 from threading import Thread
 from service.data_generator.fake_data_utils import ElasticsearchFakeDataLoader
 # noinspection PyPackageRequirements
