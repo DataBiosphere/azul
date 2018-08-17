@@ -459,13 +459,15 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         filters = filters['file']
 
-        translation_dict = request_config['translation']
+        translation = request_config['translation']
+        inverse_translation = {v: k for k, v in translation.items()}
+
         for facet in filters.keys():
-            if facet not in translation_dict:
+            if facet not in translation:
                 raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
 
         facet = pagination["sort"]
-        if facet not in translation_dict:
+        if facet not in translation:
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         # No faceting (i.e. do the faceting on the filtered query)
@@ -500,9 +502,8 @@ class ElasticTransformDump(object):
         else:
             # It's a full file search
             # Translate the sort field if there is any translation available
-            if pagination['sort'] in request_config['translation']:
-                pagination['sort'] = request_config[
-                    'translation'][pagination['sort']]
+            if pagination['sort'] in translation:
+                pagination['sort'] = translation[pagination['sort']]
             # Apply paging
             es_search = self.apply_paging(es_search, pagination)
             # Execute ElasticSearch request
@@ -525,6 +526,9 @@ class ElasticTransformDump(object):
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             paging = self.generate_paging_dict(es_response_dict, pagination)
+            # Translate the sort field back to external name
+            if paging['sort'] in inverse_translation:
+                paging['sort'] = inverse_translation[paging['sort']]
             # Creating FileSearchResponse object
             self.logger.info('Creating FileSearchResponse')
 
