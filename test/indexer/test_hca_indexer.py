@@ -158,6 +158,7 @@ class TestHCAIndexer(IndexerTestCase):
 
         self._get_es_results(partial(check_for_overwrite, old_results))
 
+    @unittest.skip('https://github.com/DataBiosphere/azul/issues/198')
     def test_concurrent_specimen_submissions(self):
         """
         We submit two different bundles for the same specimen. What happens?

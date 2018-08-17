@@ -47,6 +47,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
     def tearDownClass(cls):
         super().tearDownClass()
 
+    @unittest.skip('https://github.com/DataBiosphere/azul/issues/207')
     def test_hca_extraction(self):
         # Index the test bundles
         for bundle_uuid, bundle_version in self.test_bundles[config.dss_endpoint]:

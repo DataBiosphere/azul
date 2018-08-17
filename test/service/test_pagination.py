@@ -112,6 +112,7 @@ class PaginationTestCase(WebServiceTestCase):
         json_response_second = json.loads(content)
         self.assert_page2_correct(json_response, json_response_second, "desc")
 
+    @unittest.skip('https://github.com/DataBiosphere/azul/issues/205')
     def test_search_after_last_page(self):
         """
         Tests that the last page returned in search_after pagination mode is correct.

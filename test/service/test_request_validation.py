@@ -4,8 +4,8 @@ import logging
 from unittest import mock
 import requests
 
-from app_test_case import LocalAppTestCase
 from azul import Config as AzulConfig
+from service import WebServiceTestCase
 
 log = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def setUpModule():
     log.addHandler(stream_handler)
 
 
-class FacetNameValidationTest(LocalAppTestCase):
+class FacetNameValidationTest(WebServiceTestCase):
     @classmethod
     def lambda_name(cls) -> str:
         return "service"
