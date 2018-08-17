@@ -82,7 +82,7 @@ def post_notification():
     # Create a DataExtractor instance
     extractor = DataExtractor(bb_host)
     # Extract the relevant files and metadata to the bundle
-    metadata_files, data_files = extractor.extract_bundle(payload, replica, will_include_urls=True)
+    metadata_files, data_files = extractor.extract_bundle(payload, replica, will_include_urls=False)
     # Create an instance of the Indexers and run it
     file_indexer = FileIndexer(metadata_files,
                                data_files,
