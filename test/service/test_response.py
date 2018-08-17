@@ -109,6 +109,13 @@ class TestResponse(WebServiceTestCase):
         self.assertGreater(summary_object['organCount'], 0)
         self.assertIsNotNone(summary_object['organSummaries'])
 
+    def test_default_sorting_parameter(self):
+        base_url = self.base_url
+        url = base_url + "repository/files"
+        response = requests.get(url)
+        response.raise_for_status()
+        summary_object = response.json()
+        self.assertEqual(summary_object['pagination']["sort"], "entryId")
 
 if __name__ == '__main__':
     unittest.main()
