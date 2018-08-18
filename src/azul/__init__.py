@@ -121,7 +121,7 @@ class Config:
             'AZUL_ES_ENDPOINT': f"{host}:{port}",
             'azul_git_commit': repo.head.object.hexsha,
             'azul_git_dirty': str(repo.is_dirty()),
-            'HOME': '/tmp'
+            'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
 
     def google_service_account(self, lambda_name):
