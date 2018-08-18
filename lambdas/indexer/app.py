@@ -83,8 +83,8 @@ def new_handler(self, event, context):
     return old_handler(self, event, context)
 
 
-old_handler = chalice.app.ScheduledEventHandler.__call__
-chalice.app.ScheduledEventHandler.__call__ = new_handler
+old_handler = chalice.app.EventSourceHandler.__call__
+chalice.app.EventSourceHandler.__call__ = new_handler
 
 
 @app.schedule("rate(4 minutes)", name='worker')
