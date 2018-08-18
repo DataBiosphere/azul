@@ -11,14 +11,19 @@ if api_gateway_id is None:
           "with `Function already exists`, you may need to delete the function and try again.", file=sys.stderr)
 
 emit(None if api_gateway_id is None else {
-    config.deployment_stage: {
-        "api_handler_name": config.service_name,
-        "api_handler_arn": f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{config.service_name}",
-        "rest_api_id": api_gateway_id,
-        "lambda_functions": {},
-        "backend": "api",
-        "chalice_version": "",
-        "api_gateway_stage": config.deployment_stage,
-        "region": aws.region_name
-    }
+    "resources": [
+        {
+            "name": "api_handler",
+            "resource_type": "lambda_function",
+            "lambda_arn": f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{config.service_name}"
+        },
+        {
+            "name": "rest_api",
+            "resource_type": "rest_api",
+            "rest_api_id": api_gateway_id,
+            "rest_api_url": f"https://{api_gateway_id}.execute-api.{aws.region_name}.amazonaws.com/{config.deployment_stage}/"
+        }
+    ],
+    "schema_version": "2.0",
+    "backend": "api"
 })
