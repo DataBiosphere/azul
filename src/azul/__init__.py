@@ -44,10 +44,6 @@ class Config:
         return os.environ['AZUL_DSS_ENDPOINT']
 
     @property
-    def num_workers(self) -> int:
-        return int(os.environ['AZUL_INDEX_WORKERS'])
-
-    @property
     def num_dss_workers(self) -> int:
         return int(os.environ['AZUL_DSS_WORKERS'])
 
