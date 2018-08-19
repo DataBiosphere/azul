@@ -1,27 +1,17 @@
-# -*- coding: utf-8 -*-
-"""App module to receive event notifications.
-
-This chalice web services receives BlueBox event notifications
-and triggers indexing of the bundle within the POST notification..
-
-This module makes use of the indexer module and its components
-to drive the indexing operation.
-
 """
-from concurrent.futures import ThreadPoolExecutor, as_completed
+Chalice application module to receive and process DSS event notifications.
+"""
 import json
 import logging
-import math
 import time
 
 import boto3
 import chalice
 from chalice import Chalice
-from chalice.app import CloudWatchEvent
+from chalice.app import SQSEvent
 import requests.adapters
 
 from azul import config
-from azul.time import RemainingLambdaContextTime, RemainingTime
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
@@ -38,8 +28,6 @@ plugin = config.plugin()
 properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
                                     es_endpoint=config.es_endpoint)
 indexer = plugin.Indexer(properties)
-
-requests.adapters.DEFAULT_POOLSIZE = config.num_workers * config.num_workers
 
 
 @app.route('/version', methods=['GET'], cors=True)
@@ -86,18 +74,7 @@ def new_handler(self, event, context):
 old_handler = chalice.app.EventSourceHandler.__call__
 chalice.app.EventSourceHandler.__call__ = new_handler
 
-
-@app.schedule("rate(4 minutes)", name='worker')
-def index(event: CloudWatchEvent):
-    log.info(f'Starting worker threads')
-    remaining_time = RemainingLambdaContextTime(app.lambda_context)
-    with ThreadPoolExecutor(config.num_workers) as tpe:
-        futures = [tpe.submit(_index, i, remaining_time) for i in range(config.num_workers)]
-        for future in as_completed(futures):
-            e = future.exception()
-            if e:
-                log.error("Exception in worker thread", exc_info=e)
-    log.info(f'Shutting down')
+queue_name = "azul-notify-" + config.deployment_stage
 
 
 def queue():
@@ -107,40 +84,18 @@ def queue():
     return queue
 
 
-def _index(worker: int, remaining_time: RemainingTime) -> None:
-    _queue = queue()
-    # Min. time to wait after this lambda execution finishes before another attempt should be made to process a
-    # notification that failed to be processed in the current lambda execution. This is to make sure that 1) the next
-    # attempt is not made in the same lambda execution in case there is something wrong with the current execution
-    # and 2) to dissipate the worker's attention away from a potentially problematic notification.
-    backoff_time = 10
-    polling_time = 20  # SQS long-polling time, max. is 20
-    indexing_time = 60  # estimated time for indexing one bundle, if less time is left we won't attempt the indexing
-    shutdown_time = 5  # max. time it takes the lambda to shut down
-    while polling_time + shutdown_time + indexing_time < remaining_time.get():
-        visibility_timeout = remaining_time.get() + backoff_time
-        messages = _queue.receive_messages(MaxNumberOfMessages=1,
-                                           WaitTimeSeconds=polling_time,
-                                           AttributeNames=['All'],
-                                           MessageAttributeNames=['*'],
-                                           VisibilityTimeout=int(math.ceil(visibility_timeout)))
-        if messages and shutdown_time + indexing_time < remaining_time.get():
-            assert len(messages) == 1
-            message = messages[0]
-            attempts = int(message.attributes['ApproximateReceiveCount'])
-            new_visibility_timeout = remaining_time.get() + min(1000.0, backoff_time ** (attempts / 2))
-            if new_visibility_timeout > visibility_timeout:
-                message.change_visibility(VisibilityTimeout=int(new_visibility_timeout))
-            notification = json.loads(message.body)
-            log.info(f'Worker {worker} handling notification {notification}, attempt #{attempts} (approx).')
-            start = time.time()
-            try:
-                indexer.index(notification)
-            except:
-                log.warning(f"Worker {worker} failed to handle notification {notification}.", exc_info=True)
-            else:
-                duration = time.time() - start
-                log.info(f'Worker {worker} successfully handled notification {notification} in {duration:.3f}s.')
-                message.delete()
-    else:
-        log.info(f"Exiting worker.")
+@app.on_sqs_message(queue=queue_name, batch_size=1)
+def index(event: SQSEvent):
+    for record in event:
+        notification = json.loads(record.body)
+        attempts = record.to_dict()['attributes']['ApproximateReceiveCount']
+        log.info(f'Worker handling notification {notification}, attempt #{attempts} (approx).')
+        start = time.time()
+        try:
+            indexer.index(notification)
+        except:
+            log.warning(f"Worker failed to handle notification {notification}.", exc_info=True)
+            raise
+        else:
+            duration = time.time() - start
+            log.info(f'Worker successfully handled notification {notification} in {duration:.3f}s.')

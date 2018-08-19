@@ -63,9 +63,6 @@ azul_vars=(
     # AWS account the currently configured AWS credentials belong to.
     AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE
 
-    # The number of workers polling queues for each Lambda invocation
-    AZUL_INDEX_WORKERS
-
     # The number of workers pulling files from DSS. There is one such set of DSS
     # workers per index worker!
     AZUL_DSS_WORKERS
@@ -158,7 +155,6 @@ _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "m4.xlarge.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 35
 _set AZUL_ES_TIMEOUT 60
-_set AZUL_INDEX_WORKERS 16
 _set AZUL_DSS_WORKERS 8
 _set AZUL_SUBSCRIBE_TO_DSS 1
 
