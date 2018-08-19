@@ -10,6 +10,7 @@ emit(
                 "aws_sqs_queue": {
                     "notification_queue": {
                         "name": f"azul-notify-{config.deployment_stage}",
+                        "visibility_timeout_seconds": 300,  # must match Lambda timeout
                         "message_retention_seconds": 24 * 60 * 60,
                         "redrive_policy": json.dumps({
                             "maxReceiveCount": 10,
