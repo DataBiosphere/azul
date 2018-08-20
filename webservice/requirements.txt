@@ -50,6 +50,7 @@ python-daemon==2.1.2
 python-dateutil==2.6.0
 python-editor==1.0.3
 pytz==2016.10
+requests==2.19.1
 singledispatch==3.4.0.3
 six==1.10.0
 SQLAlchemy==1.1.5
