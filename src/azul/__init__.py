@@ -101,7 +101,7 @@ class Config:
     def git_status(self):
         return {
             'commit': os.environ['azul_git_commit'],
-            'dirty': bool(os.environ['azul_git_dirty']),
+            'dirty': str_to_bool(os.environ['azul_git_dirty'])
         }
 
     @property
@@ -215,3 +215,12 @@ def eventually(timeout: float, interval: float, errors: set={AssertionError}):
         return call
 
     return decorate
+
+
+def str_to_bool(string: str):
+    if string == 'True':
+        return True
+    elif string == 'False':
+        return False
+    else:
+        raise ValueError(string)
