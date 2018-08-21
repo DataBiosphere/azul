@@ -9,7 +9,6 @@ import boto3
 import chalice
 from chalice import Chalice
 from chalice.app import SQSEvent
-import requests.adapters
 
 from azul import config
 
@@ -59,7 +58,7 @@ def post_notification():
     if params and params.get('sync', 'False').lower() == 'true':
         indexer.index(notification)
     else:
-        queue().send_message(MessageBody=json.dumps(notification))
+        queue('notify').send_message(MessageBody=json.dumps(notification))
         log.info("Queued notification %r", notification)
     return {"status": "done"}
 
@@ -74,17 +73,15 @@ def new_handler(self, event, context):
 old_handler = chalice.app.EventSourceHandler.__call__
 chalice.app.EventSourceHandler.__call__ = new_handler
 
-queue_name = "azul-notify-" + config.deployment_stage
 
-
-def queue():
+def queue(queue_name):
     session = boto3.session.Session()  # See https://github.com/boto/boto3/issues/801
-    queue_name = "azul-notify-" + config.deployment_stage
-    queue = session.resource("sqs").get_queue_by_name(QueueName=queue_name)
+    queue_name = config.qualified_resource_name(queue_name)
+    queue = session.resource('sqs').get_queue_by_name(QueueName=queue_name)
     return queue
 
 
-@app.on_sqs_message(queue=queue_name, batch_size=1)
+@app.on_sqs_message(queue=config.qualified_resource_name('notify'), batch_size=1)
 def index(event: SQSEvent):
     for record in event:
         notification = json.loads(record.body)
