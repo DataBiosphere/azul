@@ -4,72 +4,104 @@ import logging
 import re
 from typing import List, Mapping, Sequence
 
+from dataclasses import dataclass, field, asdict
+
 from azul import config
 from azul.types import JSON
 
-module_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
-class Document:
-    def __init__(self, entity_id: str, bundle_uuid: str, bundle_version: str, content: dict) -> None:
-        self.entity_id = entity_id
-        self.bundle_uuid = bundle_uuid
-        self.bundle_version = bundle_version
-        self._document = {
-            "entity_id": self.entity_id,
-            "bundles": [
-                {
-                    "uuid": self.bundle_uuid,
-                    "version": self.bundle_version,
-                    "contents": content
-                }
-            ]
-        }
-
-    @property
-    def document(self) -> dict:
-        return self._document
-
-    @document.setter
-    def document(self, new_content: dict) -> None:
-        self._document = new_content
+@dataclass
+class Bundle:
+    uuid: str
+    version: str
+    contents: JSON = field(default_factory=dict)
 
 
+@dataclass
 class ElasticSearchDocument:
-    def __init__(self, elastic_search_id: str, content: Document, entity_type: str, _type: str="doc") -> None:
-        self.elastic_search_id = elastic_search_id
-        self._content = content
-        self.index = config.es_index_name(entity_type)
-        self._type = _type
-        self._version = 1
+    entity_type: str
+    entity_id: str
+    bundles: List[Bundle]
+    document_type: str = "doc"
+    document_version: int = 1
 
     @property
     def document_id(self) -> str:
-        return self.elastic_search_id
-
-    @property
-    def document_content(self) -> dict:
-        return self._content.document
+        return self.entity_id
 
     @property
     def document_index(self) -> str:
-        return self.index
+        return config.es_index_name(self.entity_type)
 
-    @property
-    def document_type(self) -> str:
-        return self._type
+    def to_source(self) -> dict:
+        return {
+            "entity_id": self.entity_id,
+            "bundles": [asdict(b) for b in self.bundles]
+        }
 
-    @property
-    def document_version(self) -> int:
-        return self._version
+    @classmethod
+    def from_index(cls, hit: JSON):
+        source = hit["_source"]
+        # FIXME: move logic to Config
+        prefix, entity_type, _ = hit['_index'].split('_')
+        return cls(entity_type=entity_type,
+                   entity_id=source['entity_id'],
+                   bundles=[Bundle(**b) for b in source['bundles']],
+                   document_version=hit.get("_version", 0))
 
-    @document_content.setter
-    def document_content(self, new_content: dict) -> None:
-        self._content.document = new_content
+    def merge(self, other):
+        assert self.document_id == other.document_id
+        assert self.document_index == other.document_index
+        assert self.document_type == other.document_type
+        assert self.entity_type == other.entity_type
+        self.bundles = self._merge_bundles(other.bundles, self.bundles)
+        self.document_version = other.document_version + 1
 
-    @document_version.setter
-    def document_version(self, new_version) -> None:
-        self._version = new_version
+    @staticmethod
+    def _merge_bundles(current: List[Bundle], updates: List[Bundle]):
+        """
+        >>> merge = ElasticSearchDocument._merge_bundles
+        >>> B = Bundle
+
+        Bs without a match in the other list are chosen:
+        >>> merge([B(uuid='0', version='0'),                        ],
+        ...       [                               B(uuid='2', version='0')])
+        [Bundle(uuid='2', version='0', content={}), Bundle(uuid='0', version='0', content={})]
+
+        If the UUID matches, the more recent bundle version is chosen:
+        >>> merge([B(uuid='0', version='0'), B(uuid='2', version='1')],
+        ...       [B(uuid='0', version='1'), B(uuid='2', version='0')])
+        [Bundle(uuid='0', version='1', content={}), Bundle(uuid='2', version='1', content={})]
+
+        Ties (identical UUID and version) are broken by favoring the bundle from the second argument:
+        >>> merge([B(uuid='1', version='0', content={'x':1})],
+        ...       [B(uuid='1', version='0', content={'x':2})])
+        [Bundle(uuid='1', version='0', content={'x': 2})]
+
+        A more complicated case:
+        >>> merge([B(uuid='0', version='0'), B(uuid='1', version='0', content={'x':1}), B(uuid='2', version='0')],
+        ...       [                          B(uuid='1', version='0', content={'x':2}), B(uuid='2', version='1')])
+        ... # doctest: +NORMALIZE_WHITESPACE
+        [Bundle(uuid='1', version='0', content={'x': 2}),
+        Bundle(uuid='2', version='1', content={}),
+        Bundle(uuid='0', version='0', content={})]
+        """
+        current_by_id = {bundle.uuid: bundle for bundle in current}
+        assert len(current_by_id) == len(current)
+        bundles = {}
+        for update in updates:
+            try:
+                cur_bundle = current_by_id.pop(update.uuid)
+            except KeyError:
+                bundle = update
+            else:
+                bundle = update if update.version >= cur_bundle.version else cur_bundle
+            assert bundles.setdefault(update.uuid, bundle) is bundle
+        for bundle in current_by_id.values():
+            assert bundles.setdefault(bundle.uuid, bundle) is bundle
+        return list(bundles.values())
 
 
 class Transformer(ABC):
@@ -107,4 +139,3 @@ class Transformer(ABC):
                          metadata_files: Mapping[str, JSON]
                          ) -> Sequence[ElasticSearchDocument]:
         raise NotImplementedError()
-
