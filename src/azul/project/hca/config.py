@@ -15,7 +15,7 @@ class IndexProperties(BaseIndexProperties):
         self._es_mapping = {
             "dynamic_templates": [
                 {
-                    "strings": {
+                    "strings_as_text": {
                         "match_mapping_type": "string",
                         "mapping": {
                             "type": "text",
@@ -29,6 +29,20 @@ class IndexProperties(BaseIndexProperties):
                             }
                         }
                     }
+                },
+                {
+                    "longs_with_keyword": {
+                        "match_mapping_type": "long",
+                        "mapping": {
+                            "type": "long",
+                            "fields": {
+                                "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                }
+                            }
+                        }
+                    },
                 }
             ]
         }
