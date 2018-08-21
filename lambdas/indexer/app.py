@@ -82,6 +82,17 @@ def es_check():
     return json.dumps(properties.elastic_search_client.info())
 
 
+@app.route('/delete', methods=['POST'])
+def delete_notification():
+    """
+    Receive a deletion event and process it synchronously
+    """
+    delete_notification = app.current_request.json_body
+    log.info("Received deletion notification %r", delete_notification)
+    response = indexer.delete(delete_notification)
+    return response
+
+
 # Work around https://github.com/aws/chalice/issues/856
 
 def new_handler(self, event, context):
