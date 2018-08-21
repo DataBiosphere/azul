@@ -71,6 +71,29 @@ class TestHCAIndexer(IndexerTestCase):
 
         self._get_es_results(check_bundle_correctness)
 
+    def test_delete_correctness(self):
+        """
+        Delete a bundle and check that the index contains the appropriate flags
+        """
+        data_pack = self._get_data_files(self.new_bundle[0], updated=True)
+
+        self._mock_delete(self.new_bundle, data_pack)
+
+        def check_bundle_delete_correctness(es_results):
+            for result_dict in es_results:
+                result_uuid = result_dict["_source"]["bundles"][0]["uuid"]
+                result_version = result_dict["_source"]["bundles"][0]["version"]
+                result_contents = result_dict["_source"]["bundles"][0]["contents"]
+                result_admin_deleted = result_dict["_source"]["bundles"][0]["admin_deleted"]
+
+                self.assertEqual(self.new_bundle[0], result_uuid)
+                self.assertEqual(self.new_bundle[1], result_version)
+                self.assertEqual(result_contents, None)
+                self.assertTrue(result_admin_deleted)
+
+        self._get_es_results(check_bundle_delete_correctness)
+
+
     def test_update_with_newer_version(self):
         """
         Updating a bundle with a future version should overwrite the old version.

@@ -50,6 +50,14 @@ class IndexerTestCase(ElasticsearchTestCase):
             }
         }
 
+    def _make_fake_delete_notification(self, uuid: str, version: str) -> Mapping[str, Any]:
+        return {
+            "match": {
+                "bundle_uuid": uuid,
+                "bundle_version": version
+            }
+        }
+
     def _get_data_files(self, filename, updated=False):
         data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
         metadata_suffix = ".metadata.json"
@@ -75,3 +83,11 @@ class IndexerTestCase(ElasticsearchTestCase):
         with patch('azul.DSSClient'):
             with patch.object(MetadataDownloader, 'extract_bundle', new=functools.partial(mocked_extract_bundle, self._get_data_files)):
                 self.hca_indexer.index(fake_event)
+
+    def _mock_delete(self, test_bundles, data_pack):
+        bundle_uuid, bundle_version = test_bundles
+        self._mock_index(test_bundles, data_pack)
+
+        fake_event = self._make_fake_delete_notification(bundle_uuid, bundle_version)
+        with patch('azul.DSSClient'):
+            self.hca_indexer.delete(fake_event)
