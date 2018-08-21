@@ -47,9 +47,9 @@ class Config:
     def num_dss_workers(self) -> int:
         return int(os.environ['AZUL_DSS_WORKERS'])
 
-    def resource_name(self, lambda_name):
+    def qualified_resource_name(self, resource_name):
         prefix = os.environ['AZUL_RESOURCE_PREFIX']
-        return f"{prefix}{lambda_name}-{self.deployment_stage}"
+        return f"{prefix}{resource_name}-{self.deployment_stage}"
 
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].format(lambda_name=lambda_name)
@@ -59,11 +59,11 @@ class Config:
 
     @property
     def indexer_name(self) -> str:
-        return self.resource_name('indexer')
+        return self.qualified_resource_name('indexer')
 
     @property
     def service_name(self) -> str:
-        return self.resource_name('service')
+        return self.qualified_resource_name('service')
 
     @property
     def deployment_stage(self) -> str:

@@ -7,7 +7,7 @@ emit({
             "google_service_account": {
                 "indexer": {
                     "project": "${local.google_project}",
-                    "account_id": config.resource_name('indexer'),
+                    "account_id": config.qualified_resource_name('indexer'),
                     "display_name": f"Azul indexer in {config.deployment_stage}"
                 }
             }
