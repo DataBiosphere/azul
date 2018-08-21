@@ -6,7 +6,7 @@ from humancellatlas.data import metadata as api
 from humancellatlas.data.metadata import AgeRange
 
 from azul import reject
-from azul.transformer import Document, ElasticSearchDocument, Transformer
+from azul.transformer import ElasticSearchDocument, Transformer, Bundle
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -182,12 +182,11 @@ class FileTransformer(Transformer):
                             files=list(visitor.files.values()),
                             processes=list(visitor.processes.values()),
                             project=_project_dict(bundle))
-            entity_id = str(file.document_id)
-            document_contents = Document(entity_id,
-                                         str(bundle.uuid),
-                                         bundle.version,
-                                         contents)
-            es_document = ElasticSearchDocument(entity_id, document_contents, self.entity_name)
+            es_document = ElasticSearchDocument(entity_type=self.entity_name,
+                                                entity_id=str(file.document_id),
+                                                bundles=[Bundle(uuid=str(bundle.uuid),
+                                                                version=bundle.version,
+                                                                contents=contents)])
             yield es_document
 
 
@@ -215,14 +214,13 @@ class SpecimenTransformer(Transformer):
             specimen.accept(visitor)  # Visit descendants
             specimen.ancestors(visitor)
             # Assign the contents to the ES doc
-            entity_id = str(specimen.document_id)
             contents = dict(specimens=_specimen_dict(visitor.specimens),
                             files=list(visitor.files.values()),
                             processes=list(visitor.processes.values()),
                             project=_project_dict(bundle))
-            document_contents = Document(entity_id,
-                                         str(bundle.uuid),
-                                         bundle.version,
-                                         contents)
-            es_document = ElasticSearchDocument(entity_id, document_contents, self.entity_name)
+            es_document = ElasticSearchDocument(entity_type=self.entity_name,
+                                                entity_id=str(specimen.document_id),
+                                                bundles=[Bundle(uuid=str(bundle.uuid),
+                                                                version=bundle.version,
+                                                                contents=contents)])
             yield es_document
