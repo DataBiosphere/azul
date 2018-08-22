@@ -2,6 +2,7 @@ import ast
 import requests
 import config
 import datetime
+import uuid
 from flask import jsonify, request, Blueprint
 import logging.config
 import os
@@ -398,31 +399,42 @@ def export_to_firecloud():
     # Pathname of compressed bag.
     zipped_bag = bag.create_bag()  # path to compressed bag
     logger.info("Creating a compressed BDbag containing manifest.")
-    fileobj = open(zipped_bag, 'rb')
-    domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com"
-    fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
-    fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
-    fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '443')
+    #fileobj = open(zipped_bag, 'rb')
+    #domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com"
+    # fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
+    # fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
+    # fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '443')
 
     # Import bucket environment variable, launch instance of S3-file handler,
     # and upload the BDBag file to S3.
 
-
-
+    # Transfer parameters.
+    aws_location = 'us-west-2'
+    file_name_in_bucket = str(uuid.uuid4())
     s3_azul_bucket = os.getenv("S3_AZUL_BUCKET")
-    s3 = s3_azul_bucket()
-    s3.
-    url = '{}://{}:{}/api/exportBag?workspace={}&namespace={}'.format(
-        fc_lambda_protocol,  fc_lambda_domain, fc_lambda_port,
-        workspace, namespace)
-    logger.info("going to hit {}".format(url))
-    headers = {'Content-Type': 'application/octet-stream',
-               'Accept': 'application/json',
-               'Authorization': auth}
-    post = requests.post(url=url, data=fileobj, headers=headers)
-    fileobj.close()
-    os.remove(zipped_bag)
+
+    s3 = S3FileHandler(aws_location)
+    if s3.upload_object_to_bucket(s3_azul_bucket,
+                                  zipped_bag,
+                                  file_name_in_bucket):
+        status_code = 200
+    else:
+        status_code = 400
+    logger.info("Uploaded BDbag {} to S3 bucket {}.".format(file_name_in_bucket,
+                                                            s3_azul_bucket))
+
+    # url = '{}://{}:{}/api/exportBag?workspace={}&namespace={}'.format(
+    #     fc_lambda_protocol,  fc_lambda_domain, fc_lambda_port,
+    #     workspace, namespace)
+    # logger.info("going to hit {}".format(url))
+    # headers = {'Content-Type': 'application/octet-stream',
+    #            'Accept': 'application/json',
+    #            'Authorization': auth}
+    # post = requests.post(url=url, data=fileobj, headers=headers)
+    # fileobj.close()
+    # os.remove(zipped_bag)
+
     response = {
-        'reason': post.reason
+        'reason': 'S3-upload'
     }
-    return jsonify(response), post.status_code
+    return jsonify(response), status_code
