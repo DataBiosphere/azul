@@ -25,11 +25,11 @@
     "cellCount": "bundles.contents.specimens.total_estimated_cells"
   },
   "autocomplete-translation": {
-    "AZUL_FILE_INDEX": {
+    "files": {
       "entity_id": "entity_id",
       "entity_version":"entity_version"
     },
-    "AZUL_DONOR_INDEX": {
+    "donor": {
       "donor": "donor_uuid"
     }
   },
