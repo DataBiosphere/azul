@@ -9,6 +9,7 @@ from responseobjects.elastic_request_builder import \
     ElasticTransformDump as EsTd
 from responseobjects.utilities import json_pp
 from bagitutils import BagHandler
+from s3_file_handler import S3FileHandler
 from StringIO import StringIO
 
 
@@ -402,6 +403,15 @@ def export_to_firecloud():
     fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
     fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
     fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '443')
+
+    # Import bucket environment variable, launch instance of S3-file handler,
+    # and upload the BDBag file to S3.
+
+
+
+    s3_azul_bucket = os.getenv("S3_AZUL_BUCKET")
+    s3 = s3_azul_bucket()
+    s3.
     url = '{}://{}:{}/api/exportBag?workspace={}&namespace={}'.format(
         fc_lambda_protocol,  fc_lambda_domain, fc_lambda_port,
         workspace, namespace)
