@@ -45,10 +45,17 @@ and use Elasticsearch version 5.5 and click next.
    ```
 1. Install and configure the AWS CLI with credentials to be used (AWS Access Keys and AWS Secret Keys)
 
+<<<<<<< HEAD
     ```
     pip install awscli --upgrade
     aws configure
     ```
+=======
+```
+pip install awscli --upgrade
+aws configure
+```
+>>>>>>> a0153ab7d0ada10fc14462baba2eab86e82e4215
 
 ### 3. Setup Chalice
 
@@ -64,7 +71,11 @@ add the `--stage <stage name>` option.
 1. Record the URL returned in the last line of stdout returned by this command - henceforth referred to as `<azul-indexer-url>`.
 This will create an AWS Lambda function with the name of your application name which will be updated using `chalice deploy`.
 1. Chalice will automatically generate a folder with the name of your application name. The folder will contain the files `app.py` and `requirements.txt`
+<<<<<<< HEAD
 and a `.chalice` folder containing a `config.json` file. Overwrite those by copying `app.py`, `requirements.txt` and `chalicelib/` from this repo to the generated folder.
+=======
+and a `.chalice` folder containing a `config.json` file. Overwrite those by copying `app.py`, `requirements.txt` and `chalicelib/` from this repo and the generated folder.
+>>>>>>> a0153ab7d0ada10fc14462baba2eab86e82e4215
 1. Then, execute `pip install -r requirements.txt`.
 1. Open `.chalice/config.json`, remove any existing text in the file and copy the text below into `config.json`.
     ```json
@@ -72,6 +83,7 @@ and a `.chalice` folder containing a `config.json` file. Overwrite those by copy
       "version": "2.0",
       "app_name": "<your-indexer-lambda-application-name>",
       "stages": {
+<<<<<<< HEAD
         "<stage_name>": {
           "api_gateway_stage": "<stage_name>",
           "manage_iam_role":false,
@@ -81,6 +93,16 @@ and a `.chalice` folder containing a `config.json` file. Overwrite those by copy
              "BLUE_BOX_ENDPOINT":"<your DSS URL>",
              "GOOGLE_APPLICATION_CREDENTIALS": "chalicelib/gcp-credentials.json",
              "ES_INDEX":"fb_index",
+=======
+        "<stage name>": {
+          "api_gateway_stage": "<stage_name>",
+          "manage_iam_role":false,
+          "iam_role_arn":"arn:aws:iam::<AWS-account-ID>:role/<your-indexer-lambda-application-name>-dev",
+          "environment_variables": {
+             "ES_ENDPOINT":"<your elasticsearch endpoint>",
+             "BLUE_BOX_ENDPOINT":"<your DSS URL>",
+             "ES_INDEX":"<elasticsearch domain endpoint>",
+>>>>>>> a0153ab7d0ada10fc14462baba2eab86e82e4215
              "INDEXER_NAME":"<your-indexer-lambda-application-name>",
              "HOME":"/tmp"
           }
@@ -92,6 +114,7 @@ and a `.chalice` folder containing a `config.json` file. Overwrite those by copy
     - `<stage_name>` is the intended stage name of the Lambda
     - `<your-indexer-lambda-application-name>` is the name that you will give the Lambda project.
     - `<AWS-account-ID>` is one of the values in the access policy of your Elasticsearch. An numerical id of your AWS Account. 
+<<<<<<< HEAD
     - `<your elasticsearch endpoint>` is url you will use to access Azul's Elasticsearch Domain, **without** the HTTP scheme (`https://`). This url can be found by returning to your Elasticsearch Service Dashboard,
        clicking the link of your Elasticsearch Domain. The url should be labled as **Endpoint** in the Overview Tab.
     - `<your DSS URL>` is the endpoint of the HCA DSS, **without** the HTTP scheme (`https://`) and **with** the Swagger base path (e.g. `v1`).
@@ -101,11 +124,22 @@ and a `.chalice` folder containing a `config.json` file. Overwrite those by copy
        In this case, the file `chalicelib/gcp-credentials.json` must contain the credentials for a Google Service Account included in the authorization whitelist for the DSS.
 
 ### 4. Modifying IAM Access Policy for the Lambda
+=======
+    - `<your blue box>` is the endpoint of the HCA DSS.
+    - `<your elasticsearch endpoint>` is url you will use to access Azul's Elasticsearch Domain. This url can be found by returning to your Elasticsearch Service Dashboard,
+    clicking the link of your Elasticsearch Domain. The url should be labled as **Endpoint** in the Overview Tab.
+
+### 4. Modifying IAM Access Policies
+>>>>>>> a0153ab7d0ada10fc14462baba2eab86e82e4215
 
 1. In the AWS Console, click Services in the top toolbar, and click IAM in the Security, Identity & Compliance subsection.
 1. On the side menu bar, click **Roles**, then search for your Lambda function, `<your-indexer-lambda-application-name>`. Once you find it, click on it.
 1. Find a table in the Permissions tab under the blue Attach Policy button. You should see for Lambda name in the table. Click on the caret on the right side of the Lambda name. Then, click on "Edit Policy".
+<<<<<<< HEAD
 1. Add the policy found in `indexer/policies/lambda-policy.json` file in the azul repository (Make sure to change the `Resource` value to the ARN of your elasticsearch box).
+=======
+1. Add the policy found in `policies/elasticsearch-policy.json` file in the cgp-dss-azul-indexer repository (Make sure to change the `Resource` value to the ARN of your elasticsearch box).
+>>>>>>> a0153ab7d0ada10fc14462baba2eab86e82e4215
 
 ### 5. Deploying Indexer Lambda
 
@@ -114,7 +148,11 @@ and a `.chalice` folder containing a `config.json` file. Overwrite those by copy
    chalice deploy --no-autogen-policy
    ```
    **Note:** If you are deploying an AWS API Gateway stage other than the default (dev)
+<<<<<<< HEAD
 add the `--stage <stage name> --api-gateway-stage <stage name>` options. Since we have created a policy in AWS we do not want chalice to automatically create a policy for us.
+=======
+add the `--stage <stage name>` option. Since we have created a policy in AWS we do not want chalice to automatically create a policy for us.
+>>>>>>> a0153ab7d0ada10fc14462baba2eab86e82e4215
 
 ### 6. Registering a Subscription for Notification with the DSS
 
@@ -126,6 +164,7 @@ add the `--stage <stage name> --api-gateway-stage <stage name>` options. Since w
    pip install --upgrade hca
    ```
 1. Setting up config file using the instructions located [here](https://github.com/HumanCellAtlas/dcp-cli#development).
+<<<<<<< HEAD
 1. Setup credentials for accessing the DSS. This may be done in one of two ways:
    * Login to HCA using the command. This user must be in the authorization whitelist for the DSS that inludes the `PUT /subscription` API operation.
        ```
@@ -137,6 +176,12 @@ add the `--stage <stage name> --api-gateway-stage <stage name>` options. Since w
        ```
        export GOOGLE_APPLICATION_CREDENTIALS=/<fully qualified path>/gcp-credentials.json
        ```
+=======
+1. Login to HCA using the command
+   ```
+   hca dss login
+   ```
+>>>>>>> a0153ab7d0ada10fc14462baba2eab86e82e4215
 1. Check if your HCA DSS deployment has been configured correctly by running
    ```
    hca dss post-search --replica aws --es-query '{}'
@@ -150,11 +195,16 @@ Click on link. Your web browser should appear requesting you to login. Login wit
    ```
 
     - `<aws or gcp>`: your preferred storage bucket service
+<<<<<<< HEAD
     - `<azul-indexer-url>`: If you need to know what is your url, following the directions 
+=======
+    - `<azul-indexer-url>`: your azul indexer's url. If you need to know what is your url, following the directions 
+>>>>>>> a0153ab7d0ada10fc14462baba2eab86e82e4215
     in the below section *Finding the URL of your Azul Indexer Lambda*.
 1. Copy down the uuid for the subscription.
 
 ## Reindexing
+<<<<<<< HEAD
 In cases where the Azul index in Elasticsearch may have become inconsistent with the data stored in the DSS, reindexing of the DSS content
 to the Elasticsearch Azul index may be performed as follows:
 1. If the DSS to be reindexed requires authentication/authorization for access to the `GET /bundles`, `GET /files` or `POST /search` API operations,
@@ -172,6 +222,17 @@ where you replace the `<>` value with your own values.
 - `<your DSS URL>` is the endpoint of the HCA DSS plus the Swagger base path (e.g. `/v1`, as in `example-dss.ucsc-cgp.org/v1`)
 - `<azul-indexer-url>`: If you need to know what is your url, following the directions 
     in the below section *Finding the URL of your Azul Indexer Lambda*.       
+=======
+
+Run the command below.
+```
+python test/find-golden-tickets.py --dss-url https://<your DSS URL> --indexer-url https://<your elasticsearch endpoint> --es-query {}`
+```
+where you replace the `<>` value with your own values.
+- `<your DSS URL>` is the endpoint of the HCA DSS and the /v1 url path. (e.g. example-dss.ucsc-cgp.org/v1)
+- `<your elasticsearch endpoint>` is url of Azul's Elasticsearch Domain. (e.g. search-example-lambda-abcdefghijklmnopqrstuvwxyz.us-west-2.es.amazonaws.com)
+       
+>>>>>>> a0153ab7d0ada10fc14462baba2eab86e82e4215
 
 ## Finding the URL of your Azul Indexer Lambda
 
