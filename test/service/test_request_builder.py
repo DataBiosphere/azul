@@ -16,7 +16,7 @@ class TestRequestBuilder(WebServiceTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
-        cls.request_config_filepath = os.path.join(cls.data_directory, 'test_request_config.json')
+        cls.request_config_filepath = os.path.join(cls.data_directory, 'request_builder_test_config.json')
 
     def _load_json(self, name):
         return EsTd.open_and_return_json(os.path.join(os.path.dirname(__file__), name))
@@ -28,7 +28,7 @@ class TestRequestBuilder(WebServiceTestCase):
         """
         # Load files required for this test
         request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test1.json'))
+        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test_input1.json'))
         # Create a simple filter to test on
         sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
         # Need to work on a couple cases:
@@ -79,7 +79,7 @@ class TestRequestBuilder(WebServiceTestCase):
         # Testing with default (that is, no) filter
         # Load files required for this test
         request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test2.json'))
+        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test_input2.json'))
         # Create empty filter
         # TODO: Need some form of handler for the query language
         sample_filter = {}
@@ -119,7 +119,7 @@ class TestRequestBuilder(WebServiceTestCase):
         # Testing with default (that is, no) filter
         # Load files required for this test
         request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test3.json'))
+        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test_input3.json'))
         # Create sample filter
         sample_filter = {
             "entity_id":
