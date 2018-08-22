@@ -414,12 +414,15 @@ def export_to_firecloud():
     s3_azul_bucket = os.getenv("S3_AZUL_BUCKET")
 
     s3 = S3FileHandler(aws_location)
-    if s3.upload_object_to_bucket(s3_azul_bucket,
-                                  zipped_bag,
-                                  file_name_in_bucket):
-        status_code = 200
-    else:
-        status_code = 400
+    s3.upload_object_to_bucket(s3_azul_bucket,
+                               zipped_bag,
+                               file_name_in_bucket)
+    # if s3.upload_object_to_bucket(s3_azul_bucket,
+    #                               zipped_bag,
+    #                               file_name_in_bucket):
+    #     status_code = 200
+    # else:
+    #     status_code = 400
     logger.info("Uploaded BDbag {} to S3 bucket {}.".format(file_name_in_bucket,
                                                             s3_azul_bucket))
 
@@ -437,4 +440,4 @@ def export_to_firecloud():
     response = {
         'reason': 'S3-upload'
     }
-    return jsonify(response), status_code
+    return jsonify(response), post.status_code
