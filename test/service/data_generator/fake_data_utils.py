@@ -75,7 +75,7 @@ class ElasticsearchFakeDataLoader(object):
         for i in range(self.number_of_documents):
             fake_data_body += json.dumps({"index": {"_type": "meta", "_id": i}}) + "\n"
             fake_data_body += json.dumps(faker.generate_fake(self.doc_template)) + "\n"
-        self.elasticsearch_client.bulk(fake_data_body, index=self.test_index_name, doc_type='meta')
+        self.elasticsearch_client.bulk(fake_data_body, index=self.test_index_name, doc_type='meta', refresh=True)
 
     def clean_up(self):
         try:
