@@ -399,11 +399,11 @@ def export_to_firecloud():
     # Pathname of compressed bag.
     zipped_bag = bag.create_bag()  # path to compressed bag
     logger.info("Creating a compressed BDbag containing manifest.")
-    #fileobj = open(zipped_bag, 'rb')
-    #domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com"
-    # fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
-    # fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
-    # fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '443')
+    fileobj = open(zipped_bag, 'rb')
+    domain = "egyjdjlme2.execute-api.us-west-2.amazonaws.com"
+    fc_lambda_protocol = os.getenv("FC_LAMBDA_PROTOCOL", "https")
+    fc_lambda_domain = os.getenv("FC_LAMBDA_DOMAIN", domain)
+    fc_lambda_port = os.getenv("FC_LAMBDA_PORT", '443')
 
     # Import bucket environment variable, launch instance of S3-file handler,
     # and upload the BDBag file to S3.
@@ -423,16 +423,16 @@ def export_to_firecloud():
     logger.info("Uploaded BDbag {} to S3 bucket {}.".format(file_name_in_bucket,
                                                             s3_azul_bucket))
 
-    # url = '{}://{}:{}/api/exportBag?workspace={}&namespace={}'.format(
-    #     fc_lambda_protocol,  fc_lambda_domain, fc_lambda_port,
-    #     workspace, namespace)
-    # logger.info("going to hit {}".format(url))
-    # headers = {'Content-Type': 'application/octet-stream',
-    #            'Accept': 'application/json',
-    #            'Authorization': auth}
-    # post = requests.post(url=url, data=fileobj, headers=headers)
-    # fileobj.close()
-    # os.remove(zipped_bag)
+    url = '{}://{}:{}/api/exportBag?workspace={}&namespace={}'.format(
+        fc_lambda_protocol,  fc_lambda_domain, fc_lambda_port,
+        workspace, namespace)
+    logger.info("going to hit {}".format(url))
+    headers = {'Content-Type': 'application/octet-stream',
+               'Accept': 'application/json',
+               'Authorization': auth}
+    post = requests.post(url=url, data=fileobj, headers=headers)
+    fileobj.close()
+    os.remove(zipped_bag)
 
     response = {
         'reason': 'S3-upload'
