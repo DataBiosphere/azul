@@ -1,7 +1,7 @@
 from abc import ABC
-import os
 from typing import Any, Iterable, Mapping
 
+from azul import config
 from azul.transformer import Transformer
 
 
@@ -30,5 +30,4 @@ class BaseIndexProperties(ABC):
     @property
     def index_names(self) -> Iterable[str]:
         entities = self.entities
-        environment = os.getenv("STAGE_ENVIRONMENT", "dev")
-        return ["browser_{}_{}".format(entity, environment) for entity in entities]
+        return [config.es_index_name(entity) for entity in entities]
