@@ -65,9 +65,11 @@ class TestDataExtractorTestCase(IndexerTestCase):
 
         @eventually(5.0, 0.5)
         def _assert_number_of_files():
-            total_files = self.es_client.count(index="browser_files_dev", doc_type="doc")
+            total_files = self.es_client.count(
+                index=config.es_index_name('files'), doc_type='doc')
             self.assertEqual(776, total_files["count"])
-            total_specimens = self.es_client.count(index="browser_specimens_dev", doc_type="doc")
+            total_specimens = self.es_client.count(
+                index=config.es_index_name('specimens'), doc_type='doc')
             self.assertEqual(129, total_specimens["count"])
 
         _assert_number_of_files()
@@ -86,8 +88,9 @@ class TestDataExtractorTestCase(IndexerTestCase):
         module_logger.info("End computation %s",
                            datetime.now().isoformat(timespec='microseconds'))
         # Check values in ElasticSearch
-        results = self.es_client.get(index="browser_specimens_dev",
-                                     id="b3623b88-c369-46c9-a2e9-a16042d2c589")
+        results = self.es_client.get(
+            index=config.es_index_name('specimens'),
+            id='b3623b88-c369-46c9-a2e9-a16042d2c589')
         file_ids = [f["uuid"] for f in
                     results["_source"]["bundles"][0]["contents"]["files"]]
         self.assertEqual(len(file_ids), len(set(file_ids)))

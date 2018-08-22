@@ -6,8 +6,9 @@ import os
 
 from elasticsearch_dsl import A, Q, Search
 
+from azul import config
 from azul.es import ESClientFactory
-from azul.service import config
+from azul.service import config as service_config
 from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse,
                                                           FileSearchResponse,
                                                           KeywordSearchResponse,
@@ -126,7 +127,7 @@ class ElasticTransformDump(object):
             filters, es_client,
             req_config,
             post_filter=False,
-        index='AZUL_FILE_INDEX'):
+            entity_type='files'):
         """
         This function will create an ElasticSearch request based on
         the filters and facet_config passed into the function
@@ -139,8 +140,8 @@ class ElasticTransformDump(object):
         config
         :param post_filter: Flag for doing either post_filter or regular
         querying (i.e. faceting or not)
-        :param index: the string referring to the environmental variable
-        containing the ElasticSearch index to search
+        :param entity_type: the string referring to the entity type used to get
+        the ElasticSearch index to search
         :return: Returns the Search object that can be used for executing
         the request
         """
@@ -151,7 +152,7 @@ class ElasticTransformDump(object):
         # Create the Search Object
         es_search = Search(
             using=es_client,
-            index=os.getenv(index, 'browser_files_dev'))
+            index=config.es_index_name(entity_type))
         # Translate the filters keys
         filters = ElasticTransformDump.translate_filters(
             filters, field_mapping)
@@ -177,7 +178,7 @@ class ElasticTransformDump(object):
             req_config,
             _query,
             search_field,
-        index='AZUL_FILE_INDEX'):
+            entity_type='files'):
         """
         This function will create an ElasticSearch request based on
          the filters passed to the function
@@ -189,17 +190,17 @@ class ElasticTransformDump(object):
          config
         :param _query: The query (string) to use for querying.
         :param search_field: The field to do the query on.
-        :param index: the string referring to the environmental variable
-         containing the ElasticSearch index to search
+        :param entity_type: the string referring to the entity type used to get
+        the ElasticSearch index to search
         :return: Returns the Search object that can be used for
         executing the request
         """
         # Get the field mapping and facet configuration from the config
-        field_mapping = req_config['autocomplete-translation'][index]
+        field_mapping = req_config['autocomplete-translation'][entity_type]
         # Create the Search Object
         es_search = Search(
             using=es_client,
-            index=os.getenv(index, 'fb_index'))
+            index=config.es_index_name(entity_type))
         # Translate the filters keys
         filters = ElasticTransformDump.translate_filters(
             filters,
@@ -321,7 +322,7 @@ class ElasticTransformDump(object):
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
         self.logger.info('Transforming /summary request')
-        config_folder = os.path.dirname(config.__file__)
+        config_folder = os.path.dirname(service_config.__file__)
         # Create the path for the request_config_file
         request_config_path = "{}/{}".format(
             config_folder, request_config_file)
@@ -392,7 +393,7 @@ class ElasticTransformDump(object):
                           filters=None,
                           pagination=None,
                           post_filter=False,
-                          index="AZUL_FILE_INDEX"):
+                          entity_type='files'):
         """
         This function does the whole transformation process. It takes
         the path of the config file, the filters, and
@@ -408,6 +409,8 @@ class ElasticTransformDump(object):
         :param pagination: Pagination to be used for the API
         :param post_filter: Flag to indicate whether to do a post_filter
         call instead of the regular query.
+        :param entity_type: the string referring to the entity type used to get
+        the ElasticSearch index to search
         :return: Returns the transformed request
         """
         # Use this as the base to construct the paths
@@ -415,7 +418,7 @@ class ElasticTransformDump(object):
         # Use that to get the path of the config module
 
         self.logger.info('Transforming /specimens request')
-        config_folder = os.path.dirname(config.__file__)
+        config_folder = os.path.dirname(service_config.__file__)
         # Create the path for the mapping config file
         mapping_config_path = "{}/{}".format(
             config_folder, mapping_config_file)
@@ -461,7 +464,7 @@ class ElasticTransformDump(object):
                 self.es_client,
                 request_config,
                 post_filter=post_filter,
-                index=index)
+                entity_type=entity_type)
         # Handle pagination
         self.logger.debug('Handling pagination')
 
@@ -533,7 +536,7 @@ class ElasticTransformDump(object):
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
-        config_folder = os.path.dirname(config.__file__)
+        config_folder = os.path.dirname(service_config.__file__)
         self.logger.info('Transforming /export request')
         # Create the path for the config_path
         request_config_path = "{}/{}".format(
@@ -587,7 +590,7 @@ class ElasticTransformDump(object):
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
-        config_folder = os.path.dirname(config.__file__)
+        config_folder = os.path.dirname(service_config.__file__)
         self.logger.info('Transforming /keywords request')
         # Create the path for the mapping config file
         mapping_config_path = "{}/{}".format(
@@ -611,8 +614,7 @@ class ElasticTransformDump(object):
         if not filters:
             filters = {"file": {}}
 
-        index = 'AZUL_FILE_INDEX' if entry_format == 'file' \
-            else 'AZUL_DONOR_INDEX'
+        entity_type = 'files' if entry_format == 'file' else 'donor'
         # Create an ElasticSearch autocomplete request
         es_search = self.create_autocomplete_request(
             filters,
@@ -620,7 +622,7 @@ class ElasticTransformDump(object):
             request_config,
             _query,
             search_field,
-            index=index)
+            entity_type=entity_type)
         # Handle pagination
         self.logger.info("Handling pagination")
         pagination['sort'] = '_score'

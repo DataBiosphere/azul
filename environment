@@ -52,14 +52,8 @@ azul_vars=(
     # Elasticsearch operation timeout in seconds
     AZUL_ES_TIMEOUT
 
-    # The name of the index containing Specimen entities
-    AZUL_SPECIMEN_INDEX
-
-    # The name of the index containing File entities
-    AZUL_FILE_INDEX
-
-    # The name of the index containing Donor entities
-    AZUL_DONOR_INDEX
+    # The template for the name of the ES index to use
+    AZUL_ES_INDEX_NAME_TEMPLATE
 
     # The name of the bucket where TerraForm maintains its state, allowing
     # multiple developers to collaboratively use TerraForm in a single AWS
@@ -159,6 +153,7 @@ _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
 _set AZUL_RESOURCE_PREFIX "azul-"
 _set AZUL_ES_INDEX "azul-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_ES_INDEX_NAME_TEMPLATE "azul_{entity_type}_$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "m4.xlarge.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 35
@@ -166,14 +161,6 @@ _set AZUL_ES_TIMEOUT 60
 _set AZUL_INDEX_WORKERS 16
 _set AZUL_DSS_WORKERS 8
 _set AZUL_SUBSCRIBE_TO_DSS 1
-
-# FIXME: the index name should contain the stage name so we can share an ES
-# instance between deployments. However, the indexer seems to be hard-wired
-# to this particular index name.
-
-_set AZUL_FILE_INDEX "browser_files_dev"
-_set AZUL_SPECIMEN_INDEX "browser_specimens_dev"
-_set AZUL_DONOR_INDEX "browser_donor_dev"
 
 # This is the same TF bucket as the one DSS uses
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"

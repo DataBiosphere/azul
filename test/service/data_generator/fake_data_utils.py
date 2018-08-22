@@ -5,6 +5,8 @@ import elasticsearch5
 import logging
 import os
 
+from azul import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +43,7 @@ class FakerSchemaGenerator(object):
 
 
 class ElasticsearchFakeDataLoader(object):
-    test_index_name = 'browser_files_dev'
+    test_index_name = config.es_index_name('files')
 
     def __init__(self, number_of_documents=1000, azul_es_endpoint=None):
 

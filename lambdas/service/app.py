@@ -142,7 +142,7 @@ def get_data(file_id=None):
         response = es_td.transform_request(filters=filters,
                                            pagination=pagination,
                                            post_filter=True,
-                                           index="AZUL_FILE_INDEX")
+                                           entity_type='files')
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
     else:
@@ -222,7 +222,7 @@ def get_specimen_data(specimen_id=None):
         response = es_td.transform_request(filters=filters,
                                            pagination=pagination,
                                            post_filter=True,
-                                           index="AZUL_SPECIMEN_INDEX")
+                                           entity_type='specimens')
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
     else:
