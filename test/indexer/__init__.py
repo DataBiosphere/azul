@@ -2,14 +2,14 @@ import functools
 import json
 import os
 from typing import Mapping, Any
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from uuid import uuid4
 
 from azul import config
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
-from azul.downloader import MetadataDownloader
 from es_test_case import ElasticsearchTestCase
+from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 
 
 class IndexerTestCase(ElasticsearchTestCase):
@@ -38,7 +38,7 @@ class IndexerTestCase(ElasticsearchTestCase):
             }
         }
 
-    def _get_data_files(self, filename, updated=False):
+    def _get_data_files(self, filename, bundle_version, updated=False):
         data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
         metadata_suffix = ".metadata.json"
         manifest_suffix = ".manifest.json"
@@ -51,15 +51,15 @@ class IndexerTestCase(ElasticsearchTestCase):
         with open(os.path.join(data_prefix, filename + manifest_suffix), 'r') as infile:
             manifest = json.load(infile)
 
-        return metadata, manifest
+        return bundle_version, manifest, metadata
 
     def _mock_index(self, test_bundle, updated=False):
         bundle_uuid, bundle_version = test_bundle
         fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
 
-        def mocked_extract_bundle(self_, fake_notification):
-            return self._get_data_files(fake_notification["match"]["bundle_uuid"], updated=updated)
+        def mocked_extract_bundle(**kwargs):
+            return self._get_data_files(filename=kwargs['uuid'], bundle_version=kwargs['version'], updated=updated)
 
         with patch('azul.DSSClient'):
-            with patch.object(MetadataDownloader, 'extract_bundle', new=mocked_extract_bundle):
+            with patch('azul.indexer.download_bundle_metadata', new=mocked_extract_bundle):
                 self.hca_indexer.index(fake_event)
