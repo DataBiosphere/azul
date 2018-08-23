@@ -6,11 +6,14 @@ import botocore.session
 
 class S3FileHandler:
 
-    def __init__(self, location):
+    def __init__(self, location, access_key_id, secret_key):
         """Expects AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to be in 
         in a config dictionary or as environment variables."""
+
         service = 's3'
-        self.bucket = boto3.client(service)
+        self.bucket = boto3.client(service,
+                                   aws_access_key_id=access_key_id,
+                                   aws_secret_access_key=secret_key)
         self.resource = boto3.resource(service)
         session = botocore.session.get_session()
         self.session = session.create_client(service, location)
