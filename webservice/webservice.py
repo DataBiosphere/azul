@@ -412,7 +412,7 @@ def export_to_firecloud():
     aws_location = 'us-west-2'
     file_name_in_bucket = str(uuid.uuid4())
     s3_azul_bucket = os.getenv("S3_AZUL_BUCKET")
-    access_key_id = os.getenv("AWS_ACCESS_KEY_ID")\
+    access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
     secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 
     s3 = S3FileHandler(aws_location, access_key_id, secret_key)
