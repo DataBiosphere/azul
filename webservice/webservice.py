@@ -426,7 +426,7 @@ def export_to_firecloud():
     # else:
     #     status_code = 400
     logger.info("Uploaded BDbag {} to S3 bucket {}.".format(file_name_in_bucket,
-                                                            s3_azul_bucket))
+                                                            azul_s3_bucket))
 
     url = '{}://{}:{}/api/exportBag?workspace={}&namespace={}'.format(
         fc_lambda_protocol,  fc_lambda_domain, fc_lambda_port,
