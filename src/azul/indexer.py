@@ -7,9 +7,11 @@ from elasticsearch import ConflictError, ElasticsearchException
 from elasticsearch.helpers import parallel_bulk, streaming_bulk
 
 from azul.base_config import BaseIndexProperties
-from azul.downloader import MetadataDownloader
+from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from azul.es import ESClientFactory
 from azul.transformer import ElasticSearchDocument
+
+from azul import config
 
 log = logging.getLogger(__name__)
 
@@ -25,10 +27,13 @@ class BaseIndexer(ABC):
         # Calls extract, transform, merge, and load
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
-        metadata_downloader = MetadataDownloader(self.properties.dss_url)
-        metadata_files, manifest = metadata_downloader.extract_bundle(dss_notification)
-        es_client = ESClientFactory.get()
+        _, manifest, metadata_files = download_bundle_metadata(client=config.dss_client(self.properties.dss_url),
+                                                               replica='aws',
+                                                               uuid=bundle_uuid,
+                                                               version=bundle_version,
+                                                               num_workers=config.num_dss_workers)
 
+        es_client = ESClientFactory.get()
         # Create indices and populate mappings
         for index_name in self.properties.index_names:
             # 400 is the status code in case the index already exists
