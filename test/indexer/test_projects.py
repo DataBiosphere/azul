@@ -50,18 +50,9 @@ class TestDataExtractorTestCase(IndexerTestCase):
 
     @unittest.skip('https://github.com/DataBiosphere/azul/issues/207')
     def test_hca_extraction(self):
-        # Index the test bundles
         for bundle_uuid, bundle_version in self.test_bundles[config.dss_endpoint]:
-            module_logger.info("Start computation %s",
-                               datetime.now().isoformat(timespec='microseconds'))
             bundle_pack = (bundle_uuid, bundle_version)
-            data_pack = self._get_data_files(bundle_uuid)
             self._mock_index(bundle_pack)
-            module_logger.info("Indexing operation finished for %s. Check values in ElasticSearch",
-                               bundle_uuid + bundle_version)
-            module_logger.info("End computation %s",
-                               datetime.now().isoformat(timespec='microseconds'))
-        # Check values in ElasticSearch
 
         @eventually(5.0, 0.5)
         def _assert_number_of_files():
@@ -79,15 +70,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
     def test_no_duplicate_files_in_specimen(self):
         bundle_uuid, bundle_version = self.test_duplicates_bundles[config.dss_endpoint][0]
         bundle_pack = (bundle_uuid, bundle_version)
-        data_pack = self._get_data_files(bundle_uuid)
-        module_logger.info("Start computation %s",
-                           datetime.now().isoformat(timespec='microseconds'))
         self._mock_index(bundle_pack)
-        module_logger.info("Indexing operation finished for %s. Check values in ElasticSearch",
-                           bundle_uuid + bundle_version)
-        module_logger.info("End computation %s",
-                           datetime.now().isoformat(timespec='microseconds'))
-        # Check values in ElasticSearch
         results = self.es_client.get(
             index=config.es_index_name('specimens'),
             id='b3623b88-c369-46c9-a2e9-a16042d2c589')
