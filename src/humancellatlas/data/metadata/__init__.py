@@ -155,7 +155,7 @@ class DonorOrganism(Biomaterial):
     disease: Set[str]
     organism_age: str
     organism_age_unit: str
-    biological_sex: str
+    sex: Optional[str]
 
     def __init__(self, json: JSON):
         super().__init__(json)
@@ -164,7 +164,7 @@ class DonorOrganism(Biomaterial):
         self.disease = {d['text'] for d in content.get('disease', []) if d}
         self.organism_age = content.get('organism_age')
         self.organism_age_unit = content.get('organism_age_unit', {}).get('text')
-        self.biological_sex = content['biological_sex']
+        self.sex = content.get('biological_sex') or content['sex']
 
     @property
     def organism_age_in_seconds(self) -> Optional[AgeRange]:
@@ -172,6 +172,12 @@ class DonorOrganism(Biomaterial):
             return AgeRange.parse(self.organism_age, self.organism_age_unit)
         else:
             return None
+
+    @property
+    def biological_sex(self):
+        warnings.warn(f"DonorOrganism.biological_sex is deprecated. "
+                      f"Use DonorOrganism.sex instead.", DeprecationWarning)
+        return self.sex
 
 
 @dataclass(init=False)
