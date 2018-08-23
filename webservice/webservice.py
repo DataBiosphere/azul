@@ -411,7 +411,7 @@ def export_to_firecloud():
     # Transfer parameters.
     aws_location = 'us-west-2'
     file_name_in_bucket = str(uuid.uuid4())
-    s3_azul_bucket = os.getenv("S3_AZUL_BUCKET")
+    s3_azul_bucket = os.getenv("AZUL_S3_BUCKET")
     access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
     secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 
