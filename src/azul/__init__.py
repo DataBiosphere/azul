@@ -205,6 +205,13 @@ def eventually(timeout: float, interval: float, errors: set={AssertionError}):
     def decorate(func):
         @functools.wraps(func)
         def call(*args, **kwargs):
+            """
+            This timeout eliminates the retry feature of eventually.
+            The reason for this change is described here:
+            https://github.com/DataBiosphere/azul/issues/233
+            """
+            timeout = 0
+
             timeout_time = time.time() + timeout
             error_tuple = tuple(errors)
             while True:

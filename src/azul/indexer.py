@@ -99,6 +99,7 @@ class BaseIndexer(ABC):
                                         doc_type=cur_doc.document_type,
                                         body=cur_doc.document_content,
                                         id=doc_id,
+                                        refresh="wait_for",
                                         version=cur_doc.document_version,
                                         version_type='external')
                     except ConflictError as e:
@@ -123,6 +124,7 @@ class BaseIndexer(ABC):
                     helper = parallel_bulk
                 response = helper(client=es_client,
                                   actions=actions,
+                                  refresh="wait_for",
                                   raise_on_error=False,
                                   max_chunk_bytes=10485760)
                 for success, info in response:
