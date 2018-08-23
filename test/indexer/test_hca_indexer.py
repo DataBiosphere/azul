@@ -203,8 +203,8 @@ class TestHCAIndexer(IndexerTestCase):
                     continue
 
             self.assertEqual(len(file_doc_ids), 4)
-            for spec_uuid, _ in self.specimens:
-                spec_metadata, _ = self._get_data_files(spec_uuid)
+            for spec_uuid, spec_version in self.specimens:
+                _, _, spec_metadata = self._get_data_files(spec_uuid, spec_version)
                 for file_dict in spec_metadata["file.json"]["files"]:
                     self.assertIn(file_dict["hca_ingest"]["document_id"], file_doc_ids)
 
