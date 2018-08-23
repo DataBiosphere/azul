@@ -155,7 +155,7 @@ class DonorOrganism(Biomaterial):
     disease: Set[str]
     organism_age: str
     organism_age_unit: str
-    sex: Optional[str]
+    sex: str
 
     def __init__(self, json: JSON):
         super().__init__(json)
