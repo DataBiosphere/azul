@@ -582,10 +582,9 @@ class Bundle:
         return [s for s in self.biomaterials.values() if isinstance(s, SpecimenFromOrganism)]
 
     @property
-    def sequencing_input(self) -> List[CellSuspension]:
+    def sequencing_input(self) -> List[Biomaterial]:
         return [bm for bm in self.biomaterials.values()
-                if isinstance(bm, CellSuspension)
-                and any(ps.is_sequencing_process() for ps in bm.to_processes.values())]
+                if any(ps.is_sequencing_process() for ps in bm.to_processes.values())]
 
     @property
     def sequencing_output(self) -> List[SequenceFile]:
