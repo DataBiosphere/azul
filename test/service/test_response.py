@@ -11,47 +11,37 @@ from service import WebServiceTestCase
 
 
 class TestResponse(WebServiceTestCase):
-    def load_webservice_data(self, filename):
-        data_folder_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
-        with open(os.path.join(data_folder_filepath, filename)) as fp:
-            return json.load(fp)
 
     def test_key_search_response(self):
         """
-        This method tests the KeywordSearchResponse object.
-        It will make sure the functionality works as
-        appropriate by asserting the apiResponse attribute
-        is the same as expected.
+        This method tests the KeywordSearchResponse object. It will make sure the functionality works as appropriate
+        by asserting the apiResponse attribute is the same as expected.
         """
         # Still need a way to test the response.
         keyword_response = KeywordSearchResponse(
-            self.load_webservice_data("response_test_input.json")
+            hits=self._load("response_test_input.json")
         ).return_response().to_json()
 
         self.assertEqual(json.dumps(keyword_response, sort_keys=True),
-                         json.dumps(self.load_webservice_data("response_keysearch_output.json"), sort_keys=True))
+                         json.dumps(self._load("response_keysearch_output.json"), sort_keys=True))
 
     def test_file_search_response(self):
         """
-        n=1
-        This method tests the FileSearchResponse object.
-        It will make sure the functionality works as
-        appropriate by asserting the apiResponse attribute
-        is the same as expected.
+        n=1: Test the FileSearchResponse object, making sure the functionality works as appropriate by asserting the
+        apiResponse attribute is the same as expected.
 
-        n=2 (test_file_search_response_sapagination)
-        This method tests the FileSearchResponse object,
-        using 'search_after' pagination.
+        n=2: Tests the FileSearchResponse object, using 'search_after' pagination.
         """
-        for n in [1,2]:
-            filesearch_response = FileSearchResponse(
-                self.load_webservice_data("response_test_input.json"),
-                self.load_webservice_data(f"response_pagination_input{n}.json"),
-                self.load_webservice_data("response_facets_input.json")
-            ).return_response().to_json()
+        for n in 1, 2:
+            with self.subTest(n=n):
+                filesearch_response = FileSearchResponse(
+                    hits=self._load("response_test_input.json"),
+                    pagination=self._load(f"response_pagination_input{n}.json"),
+                    facets=self._load("response_facets_input.json")
+                ).return_response().to_json()
 
-            self.assertEqual(json.dumps(filesearch_response, sort_keys=True),
-                             json.dumps(self.load_webservice_data(f"response_filesearch_output{n}.json"), sort_keys=True))
+                self.assertEqual(json.dumps(filesearch_response, sort_keys=True),
+                                 json.dumps(self._load(f"response_filesearch_output{n}.json"), sort_keys=True))
 
     def test_summary_endpoint(self):
         url = self.base_url + "repository/files/summary"
@@ -69,6 +59,12 @@ class TestResponse(WebServiceTestCase):
         response.raise_for_status()
         summary_object = response.json()
         self.assertEqual(summary_object['pagination']["sort"], "entryId")
+
+    def _load(self, filename):
+        data_folder_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+        with open(os.path.join(data_folder_filepath, filename)) as fp:
+            return json.load(fp)
+
 
 if __name__ == '__main__':
     unittest.main()
