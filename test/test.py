@@ -12,8 +12,7 @@ from humancellatlas.data.metadata import (AgeRange,
                                           DonorOrganism,
                                           Project,
                                           SequenceFile,
-                                          SpecimenFromOrganism,
-                                          age_range)
+                                          SpecimenFromOrganism)
 
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -140,5 +139,6 @@ class TestAccessorApi(TestCase):
 
 # noinspection PyUnusedLocal
 def load_tests(loader, tests, ignore):
-    tests.addTests(doctest.DocTestSuite(age_range))
+    tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.age_range'))
+    tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.lookup'))
     return tests

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from itertools import chain
-from typing import Any, Iterable, List, MutableMapping, Optional, Set, Union, Mapping, TypeVar, Type
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Set, Type, TypeVar, Union
 from uuid import UUID
 import warnings
 
@@ -11,6 +11,8 @@ from humancellatlas.data.metadata.age_range import AgeRange
 
 # A few helpful type aliases
 #
+from humancellatlas.data.metadata.lookup import lookup
+
 UUID4 = UUID
 AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
 AnyJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyJSON2], List[AnyJSON2]]
@@ -114,7 +116,7 @@ class Project(Entity):
         super().__init__(json)
         content = json.get('content', json)
         core = content['project_core']
-        self.project_short_name = core.get('project_shortname') or core['project_short_name']
+        self.project_short_name = lookup(core, 'project_short_name', 'project_shortname')
         self.laboratory_names = {c.get('laboratory') for c in content['contributors']} - {None}
 
     @property
@@ -164,7 +166,7 @@ class DonorOrganism(Biomaterial):
         self.disease = {d['text'] for d in content.get('disease', []) if d}
         self.organism_age = content.get('organism_age')
         self.organism_age_unit = content.get('organism_age_unit', {}).get('text')
-        self.sex = content.get('biological_sex') or content['sex']
+        self.sex = lookup(content, 'sex', 'biological_sex')
 
     @property
     def organism_age_in_seconds(self) -> Optional[AgeRange]:
