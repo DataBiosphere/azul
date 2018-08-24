@@ -294,25 +294,24 @@ class SummaryResponse(AbstractResponse):
         _organ_group = raw_response['aggregations']['group_by_organ']
 
         # Create a SummaryRepresentation object
-        self.apiResponse = SummaryRepresentation(
-            fileCount=hits['total'],
-            specimenCount=self.agg_contents(
-                aggregates, 'specimenCount', agg_form='value'),
-            projectCount=self.agg_contents(
-                aggregates, 'projectCode', agg_form='value'),
-            totalFileSize=self.agg_contents(
-                aggregates, 'total_size', agg_form='value'),
-            organCount=self.agg_contents(
-                aggregates, 'organCount', agg_form='value'),
-            donorCount=self.agg_contents(
-                aggregates, 'donorCount', agg_form='value'),
-            labCount=self.agg_contents(
-                aggregates, 'labCount', agg_form='value'),
-            totalCellCount=self.agg_contents(
-                aggregates, 'total_cell_count', agg_form='value'),
+        kwargs = dict(
+            projectCount=self.agg_contents(aggregates, 'projectCode', agg_form='value'),
+            totalFileSize=self.agg_contents(aggregates, 'total_size', agg_form='value'),
+            organCount=self.agg_contents(aggregates, 'organCount', agg_form='value'),
+            donorCount=self.agg_contents(aggregates, 'donorCount', agg_form='value'),
+            labCount=self.agg_contents(aggregates, 'labCount', agg_form='value'),
+            totalCellCount=self.agg_contents(aggregates, 'total_cell_count', agg_form='value'),
             fileTypeSummaries=[FileTypeSummary.create_object(bucket=bucket) for bucket in _sum['buckets']],
-            organSummaries=[OrganCellCountSummary.create_object(bucket) for bucket in _organ_group['buckets']]
-        )
+            organSummaries=[OrganCellCountSummary.create_object(bucket) for bucket in _organ_group['buckets']])
+
+        if 'specimenCount' in aggregates:
+            kwargs['fileCount'] = hits['total']
+            kwargs['specimenCount'] = self.agg_contents(aggregates, 'specimenCount', agg_form='value')
+        elif 'fileCount' in aggregates:
+            kwargs['fileCount'] = self.agg_contents(aggregates, 'fileCount', agg_form='value')
+            kwargs['specimenCount'] = hits['total']
+
+        self.apiResponse = SummaryRepresentation(**kwargs)
 
 
 class KeywordSearchResponse(AbstractResponse, EntryFetcher):
