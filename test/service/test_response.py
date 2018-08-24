@@ -101,7 +101,7 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(json_test, json_response)
 
     def test_summary_endpoint(self):
-        url = self.base_url + "repository/files/summary"
+        url = self.base_url + "repository/summary/files"
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
