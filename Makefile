@@ -28,7 +28,7 @@ clean:
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
 
 test:
-	$(MAKE) -C test
+	PYTHONWARNINGS=ignore:ResourceWarning coverage run -m unittest discover test --verbose
 
 travis:
 	$(MAKE) -C test/service travistest

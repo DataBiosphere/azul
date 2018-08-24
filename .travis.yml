@@ -16,7 +16,10 @@ before_install:
 
 install:
   - pip install -r requirements.dev.txt
+  - pip install coverage coveralls
 
 script:
   - make test
-  
+
+after_success:
+  - coveralls
