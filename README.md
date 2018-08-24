@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/DataBiosphere/azul.svg?branch=develop)](https://travis-ci.org/DataBiosphere/azul)
+[![Coverage Status](https://coveralls.io/repos/github/DataBiosphere/azul/badge.svg?branch=feature%2Fgeryl%2F235-add-coveralls)](https://coveralls.io/github/DataBiosphere/azul?branch=feature%2Fgeryl%2F235-add-coveralls)
+
 The Azul project contains the components that together serve as the backend to
 Boardwalk, a web application for browsing genomic data sets. 
 
