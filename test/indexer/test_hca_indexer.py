@@ -55,7 +55,7 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Index a bundle and check that the index contains the correct attributes
         """
-        self._mock_index(self.new_bundle)
+        self._mock_index(self.old_bundle)
 
         def check_bundle_correctness(es_results):
             self.assertGreater(len(es_results), 0)
@@ -64,11 +64,11 @@ class TestHCAIndexer(IndexerTestCase):
                 result_version = result_dict["_source"]["bundles"][0]["version"]
                 result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
-                self.assertEqual(self.new_bundle[0], result_uuid)
-                self.assertEqual(self.new_bundle[1], result_version)
-                self.assertEqual("Aardvark Ailment", result_contents["project"]["project"])
-                self.assertIn("John Denver", result_contents["project"]["laboratory"])
-                self.assertIn("Lorem ipsum", result_contents["specimens"][0]["species"])
+                self.assertEqual(self.old_bundle[0], result_uuid)
+                self.assertEqual(self.old_bundle[1], result_version)
+                self.assertEqual("Mouse Melanoma", result_contents["project"]["project_shortname"])
+                self.assertIn("Sarah Teichmann", result_contents["project"]["laboratory"])
+                self.assertIn("Mus musculus", result_contents["specimens"][0]["genus_species"])
 
         self._get_es_results(check_bundle_correctness)
 
@@ -85,13 +85,13 @@ class TestHCAIndexer(IndexerTestCase):
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(self.old_bundle[1], old_result_version)
-                self.assertEqual("Mouse Melanoma", old_result_contents["project"]["project"])
+                self.assertEqual("Mouse Melanoma", old_result_contents["project"]["project_shortname"])
                 self.assertIn("Sarah Teichmann", old_result_contents["project"]["laboratory"])
-                self.assertIn("Mus musculus", old_result_contents["specimens"][0]["species"])
+                self.assertIn("Mus musculus", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_old_submission)
 
-        self._mock_index(self.new_bundle)
+        self._mock_index(self.new_bundle, updated=True)
 
         def check_updated_submission(old_results_list, new_results_list):
             for old_result_dict, new_result_dict in list(zip(old_results_list, new_results_list)):
@@ -102,12 +102,12 @@ class TestHCAIndexer(IndexerTestCase):
                 new_result_contents = new_result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertNotEqual(old_result_version, new_result_version)
-                self.assertNotEqual(old_result_contents["project"]["project"],
-                                    new_result_contents["project"]["project"])
+                self.assertNotEqual(old_result_contents["project"]["project_shortname"],
+                                    new_result_contents["project"]["project_shortname"])
                 self.assertNotEqual(old_result_contents["project"]["laboratory"],
                                     new_result_contents["project"]["laboratory"])
-                self.assertNotEqual(old_result_contents["specimens"][0]["species"],
-                                    new_result_contents["specimens"][0]["species"])
+                self.assertNotEqual(old_result_contents["specimens"][0]["genus_species"],
+                                    new_result_contents["specimens"][0]["genus_species"])
 
         self._get_es_results(partial(check_updated_submission, old_results))
 
@@ -115,7 +115,7 @@ class TestHCAIndexer(IndexerTestCase):
         """
         An attempt to overwrite a newer version of a bundle with an older version should fail.
         """
-        self._mock_index(self.new_bundle)
+        self._mock_index(self.new_bundle, updated=True)
 
         def check_new_submission(es_results):
             self.assertGreater(len(es_results), 0)
@@ -124,9 +124,9 @@ class TestHCAIndexer(IndexerTestCase):
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(self.new_bundle[1], old_result_version)
-                self.assertEqual("Aardvark Ailment", old_result_contents["project"]["project"])
+                self.assertEqual("Aardvark Ailment", old_result_contents["project"]["project_shortname"])
                 self.assertIn("John Denver", old_result_contents["project"]["laboratory"])
-                self.assertIn("Lorem ipsum", old_result_contents["specimens"][0]["species"])
+                self.assertIn("Lorem ipsum", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_new_submission)
 
@@ -141,12 +141,12 @@ class TestHCAIndexer(IndexerTestCase):
                 new_result_contents = new_result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(old_result_version, new_result_version)
-                self.assertEqual(old_result_contents["project"]["project"],
-                                 new_result_contents["project"]["project"])
+                self.assertEqual(old_result_contents["project"]["project_shortname"],
+                                 new_result_contents["project"]["project_shortname"])
                 self.assertEqual(old_result_contents["project"]["laboratory"],
                                  new_result_contents["project"]["laboratory"])
-                self.assertEqual(old_result_contents["specimens"][0]["species"],
-                                 new_result_contents["specimens"][0]["species"])
+                self.assertEqual(old_result_contents["specimens"][0]["genus_species"],
+                                 new_result_contents["specimens"][0]["genus_species"])
 
         self._get_es_results(partial(check_for_overwrite, old_results))
 
