@@ -172,27 +172,30 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(1, num_hits)
 
         def check_specimen_merge(es_results):
-            specimen_uuids = []
-            file_uuids = []
+            file_doc_ids = set()
+            self.assertEqual(len(es_results), 5)
             for result_dict in es_results:
-                result_contents = result_dict["_source"]["bundles"][0]["contents"]
+                self.assertEqual(result_dict["_id"], result_dict["_source"]["entity_id"])
                 if "files" in result_dict["_index"]:
-                    for file_dict in result_contents["files"]:
-                        file_uuids.append(file_dict["uuid"])
+                    # files assumes one bundle per result
+                    self.assertEqual(len(result_dict["_source"]["bundles"]), 1)
+                    result_contents = result_dict["_source"]["bundles"][0]["contents"]
+                    self.assertEqual(1, len(result_contents["files"]))
+                    file_doc_ids.add(result_contents["files"][0]["uuid"])
                 elif "specimens" in result_dict["_index"]:
-                    # Each bundle in specimen list contains two files
-                    self.assertEqual(2, len(result_contents["files"]))
-                    specimen_uuids.append(result_dict["_id"])
+                    self.assertEqual(len(result_dict["_source"]["bundles"]), 2)
+                    for bundle in result_dict["_source"]["bundles"]:
+                        result_contents = bundle["contents"]
+                        # Each bundle in specimen list contains two files
+                        self.assertEqual(2, len(result_contents["files"]))
                 else:
                     continue
 
+            self.assertEqual(len(file_doc_ids), 4)
             for spec_uuid, _ in self.specimens:
                 spec_metadata, _ = self._get_data_files(spec_uuid)
-                for biomaterials_dict in spec_metadata["biomaterial.json"]["biomaterials"]:
-                    if "specimen_from_organism" in biomaterials_dict["content"]["describedBy"]:
-                        self.assertIn(biomaterials_dict["hca_ingest"]["document_id"], specimen_uuids)
                 for file_dict in spec_metadata["file.json"]["files"]:
-                    self.assertIn(file_dict["hca_ingest"]["document_id"], file_uuids)
+                    self.assertIn(file_dict["hca_ingest"]["document_id"], file_doc_ids)
 
         self._get_es_results(check_specimen_merge)
 
