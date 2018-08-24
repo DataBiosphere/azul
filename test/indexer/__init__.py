@@ -21,21 +21,9 @@ class IndexerTestCase(ElasticsearchTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls._old_dss_endpoint = os.environ.get('AZUL_DSS_ENDPOINT')
-        # FIXME: https://github.com/DataBiosphere/azul/issues/134
-        # FIXME: deprecate use of production server in favor of local, farm-to-table data files
-        os.environ['AZUL_DSS_ENDPOINT'] = "https://dss.data.humancellatlas.org/v1"
         cls.index_properties = IndexProperties(dss_url=config.dss_endpoint,
                                                es_endpoint=config.es_endpoint)
         cls.hca_indexer = Indexer(cls.index_properties)
-
-    @classmethod
-    def tearDownClass(cls):
-        if cls._old_dss_endpoint is None:
-            del os.environ['AZUL_DSS_ENDPOINT']
-        else:
-            os.environ['AZUL_DSS_ENDPOINT'] = cls._old_dss_endpoint
-        super().tearDownClass()
 
     def _make_fake_notification(self, uuid: str, version: str) -> Mapping[str, Any]:
         return {
