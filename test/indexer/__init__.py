@@ -65,13 +65,13 @@ class IndexerTestCase(ElasticsearchTestCase):
 
         return metadata, manifest
 
-    def _mock_index(self, test_bundle):
+    def _mock_index(self, test_bundle, updated=False):
         bundle_uuid, bundle_version = test_bundle
         fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
 
-        def mocked_extract_bundle(get_data_func, fake_notification):
-            return get_data_func(fake_notification["match"]["bundle_uuid"])
+        def mocked_extract_bundle(self_, fake_notification):
+            return self._get_data_files(fake_notification["match"]["bundle_uuid"], updated=updated)
 
         with patch('azul.DSSClient'):
-            with patch.object(MetadataDownloader, 'extract_bundle', new=functools.partial(mocked_extract_bundle, self._get_data_files)):
+            with patch.object(MetadataDownloader, 'extract_bundle', new=mocked_extract_bundle):
                 self.hca_indexer.index(fake_event)
