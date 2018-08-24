@@ -7,12 +7,12 @@ from unittest import TestCase
 import warnings
 
 from humancellatlas.data.metadata import (AgeRange,
+                                          Biomaterial,
                                           Bundle,
                                           DonorOrganism,
-                                          age_range,
-                                          SpecimenFromOrganism,
-                                          CellSuspension,
-                                          Project)
+                                          Project,
+                                          SequenceFile,
+                                          SpecimenFromOrganism)
 
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -31,8 +31,12 @@ class TestAccessorApi(TestCase):
 
     def test_one_bundle(self):
         for deployment, replica, uuid, version, age_range in [
-            (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None, AgeRange(min=3628800, max=7257600)),  # v5
-            ('integration', 'aws', '1e276fdd-d885-4a18-b5b8-df33f1347c1a', '2018-08-03T082009.272868Z', None)  # vx
+            # A v5 bundle
+            (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None, AgeRange(min=3628800, max=7257600)),
+            # A vx bundle with a cell_suspension as sequencing input
+            ('integration', 'aws', '1e276fdd-d885-4a18-b5b8-df33f1347c1a', '2018-08-03T082009.272868Z', None),
+            # A vx bundle with a specimen_from_organism as sequencing input
+            ('integration', 'aws', '17ef531b-1bb7-425d-bbf7-32721242dde7', '2018-08-17T203538.886280Z', None),
         ]:
             with self.subTest(deployment=deployment, replica=replica, uuid=uuid, age_range=age_range):
                 client = dss_client(deployment)
@@ -48,9 +52,34 @@ class TestAccessorApi(TestCase):
                 self.assertRegex(root_entity.address, 'donor_organism@.*')
                 self.assertIsInstance(root_entity, DonorOrganism)
                 self.assertEqual(root_entity.organism_age_in_seconds, age_range)
-                self.assertEqual({CellSuspension}, {type(x) for x in bundle.sequencing_input})
-                self.assertEqual({SpecimenFromOrganism}, {type(s) for s in bundle.specimens})
+                self.assertTrue(root_entity.sex in ('female', 'unknown'))
+
+                sequencing_input = bundle.sequencing_input
+                self.assertGreater(len(sequencing_input), 0,
+                                   "There should be at least one sequencing input")
+                self.assertEqual(len(set(si.document_id for si in sequencing_input)), len(sequencing_input),
+                                 "Sequencing inputs should be distinct entities")
+                self.assertEqual(len(set(si.biomaterial_id for si in sequencing_input)), len(sequencing_input),
+                                 "Sequencing inputs should have distinct biomaterial IDs")
+                self.assertTrue(all(isinstance(si, Biomaterial) for si in sequencing_input),
+                                "All sequencing inputs should be instances of Biomaterial")
+                sequencing_input_schema_names = set(si.schema_name for si in sequencing_input)
+                self.assertTrue({'cell_suspension', 'specimen_from_organism'}.issuperset(sequencing_input_schema_names),
+                                "The sequencing inputs in the test bundle are of specific schemas")
+
+                sequencing_output = bundle.sequencing_output
+                self.assertGreater(len(sequencing_output), 0,
+                                   "There should be at least one sequencing output")
+                self.assertEqual(len(set(so.document_id for so in sequencing_output)), len(sequencing_output),
+                                 "Sequencing outputs should be distinct entities")
+                self.assertTrue(all(isinstance(so, SequenceFile) for so in sequencing_output),
+                                "All sequencing outputs should be instances of SequenceFile")
+                self.assertTrue(all(so.manifest_entry.name.endswith('.fastq.gz') for so in sequencing_output),
+                                "All sequencing outputs in the test bundle are fastq files.")
+
                 print(json.dumps(as_json(bundle), indent=4))
+
+                self.assertEqual({SpecimenFromOrganism}, {type(s) for s in bundle.specimens})
 
     dss_subscription_query = {
         "query": {
@@ -110,5 +139,6 @@ class TestAccessorApi(TestCase):
 
 # noinspection PyUnusedLocal
 def load_tests(loader, tests, ignore):
-    tests.addTests(doctest.DocTestSuite(age_range))
+    tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.age_range'))
+    tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.lookup'))
     return tests

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from itertools import chain
-from typing import Any, Iterable, List, MutableMapping, Optional, Set, Union, Mapping, TypeVar, Type
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Set, Type, TypeVar, Union
 from uuid import UUID
 import warnings
 
@@ -11,6 +11,8 @@ from humancellatlas.data.metadata.age_range import AgeRange
 
 # A few helpful type aliases
 #
+from humancellatlas.data.metadata.lookup import lookup
+
 UUID4 = UUID
 AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
 AnyJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyJSON2], List[AnyJSON2]]
@@ -114,7 +116,7 @@ class Project(Entity):
         super().__init__(json)
         content = json.get('content', json)
         core = content['project_core']
-        self.project_short_name = core.get('project_shortname') or core['project_short_name']
+        self.project_short_name = lookup(core, 'project_short_name', 'project_shortname')
         self.laboratory_names = {c.get('laboratory') for c in content['contributors']} - {None}
 
     @property
@@ -155,7 +157,7 @@ class DonorOrganism(Biomaterial):
     disease: Set[str]
     organism_age: str
     organism_age_unit: str
-    biological_sex: str
+    sex: str
 
     def __init__(self, json: JSON):
         super().__init__(json)
@@ -164,7 +166,7 @@ class DonorOrganism(Biomaterial):
         self.disease = {d['text'] for d in content.get('disease', []) if d}
         self.organism_age = content.get('organism_age')
         self.organism_age_unit = content.get('organism_age_unit', {}).get('text')
-        self.biological_sex = content['biological_sex']
+        self.sex = lookup(content, 'sex', 'biological_sex')
 
     @property
     def organism_age_in_seconds(self) -> Optional[AgeRange]:
@@ -172,6 +174,12 @@ class DonorOrganism(Biomaterial):
             return AgeRange.parse(self.organism_age, self.organism_age_unit)
         else:
             return None
+
+    @property
+    def biological_sex(self):
+        warnings.warn(f"DonorOrganism.biological_sex is deprecated. "
+                      f"Use DonorOrganism.sex instead.", DeprecationWarning)
+        return self.sex
 
 
 @dataclass(init=False)
@@ -247,6 +255,9 @@ class Process(LinkedEntity):
         else:
             raise LinkError(self, other, forward)
 
+    def is_sequencing_process(self):
+        return any(isinstance(pl, SequencingProtocol) for pl in self.protocols.values())
+
 
 @dataclass(init=False)
 class AnalysisProcess(Process):
@@ -287,6 +298,9 @@ class SequencingProcess(Process):
         super().__init__(json)
         content = json.get('content', json)
         self.instrument_manufacturer_model = content['instrument_manufacturer_model']['text']
+
+    def is_sequencing_process(self):
+        return True
 
 
 @dataclass(init=False)
@@ -379,6 +393,7 @@ class ManifestEntry:
     sha1: str
     sha256: str
     size: int
+    url: str
     uuid: UUID4
     version: str
 
@@ -387,6 +402,7 @@ class ManifestEntry:
         kwargs = dict(json)
         kwargs['content_type'] = kwargs.pop('content-type')
         kwargs['uuid'] = UUID4(json['uuid'])
+        kwargs.setdefault('url')
         return cls(**kwargs)
 
 
@@ -568,12 +584,15 @@ class Bundle:
         return [s for s in self.biomaterials.values() if isinstance(s, SpecimenFromOrganism)]
 
     @property
-    def sequencing_input(self) -> List[CellSuspension]:
+    def sequencing_input(self) -> List[Biomaterial]:
         return [bm for bm in self.biomaterials.values()
-                if isinstance(bm, CellSuspension)
-                and any(isinstance(ps, SequencingProcess)
-                        or any(isinstance(pl, SequencingProtocol) for pl in ps.protocols.values())
-                        for ps in bm.to_processes.values())]
+                if any(ps.is_sequencing_process() for ps in bm.to_processes.values())]
+
+    @property
+    def sequencing_output(self) -> List[SequenceFile]:
+        return [f for f in self.files.values()
+                if isinstance(f, SequenceFile)
+                and any(ps.is_sequencing_process() for ps in f.from_processes.values())]
 
 
 entity_types = {
