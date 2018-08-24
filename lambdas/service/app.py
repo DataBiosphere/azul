@@ -232,8 +232,8 @@ def get_specimen_data(specimen_id=None):
         return response
 
 
-@app.route('/repository/files/summary', methods=['GET'], cors=True)
-def get_summary():
+@app.route('/repository/summary/{entity_type}', methods=['GET'], cors=True)
+def get_summary(entity_type=None):
     """
     Returns a summary based on the filters passed on to the call. Based on the
     ICGC endpoint.
@@ -246,6 +246,10 @@ def get_summary():
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_summary")
+    # Determine index
+    if entity_type not in ('specimens', 'files'):
+        raise BadRequestError("Bad arguments, entity_type must be 'files' or 'specimens'")
+
     if app.current_request.query_params is None:
         app.current_request.query_params = {}
     # Get the filters from the URL
@@ -263,7 +267,7 @@ def get_summary():
     es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_summary(filters=filters)
+    response = es_td.transform_summary(filters=filters, entity_type=entity_type)
     # Returning a single response if <file_id> request form is used
     return response
 

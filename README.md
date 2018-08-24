@@ -654,7 +654,7 @@ The responseobjects module is responsible for handling the faceting and API resp
 There are currently five working endpoints:
 <ul>
 <li>"<code>/repository/files/</code>" returns the index search results along with a count of the terms available for the facets.</li>
-<li>"<code>/repository/files/summary</code>" returns a summary of the current data stored.</li>
+<li>"<code>/repository/summary/files</code>" returns a summary of the current data stored.</li>
 <li>"<code>/repository/files/export</code>" returns a manifest file with the filters provided.</li>
 <li>"<code>/repository/files/order</code>" returns the desired order for the facets.</li>
 <li>"<code>/keywords</code>" returns a list of search results for some search query.</li>
@@ -685,11 +685,11 @@ Currently there are 6 parameters supported. They are as follows:<br>
 
 <br>
 
-***/repository/files/summary***<br>
+***/repository/summary/files***<br>
 
 |Parameter|Description|Data Type|Example|
 |--- |--- |--- |--- |
-|filters|Specifies which filters to use to return only the summary with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgp.org/api/v1/repository/files/summary?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
+|filters|Specifies which filters to use to return only the summary with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgp.org/api/v1/repository/summary/files?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
 
 <br>
 
