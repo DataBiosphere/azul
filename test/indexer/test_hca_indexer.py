@@ -58,6 +58,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._mock_index(self.new_bundle)
 
         def check_bundle_correctness(es_results):
+            self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
                 result_uuid = result_dict["_source"]["bundles"][0]["uuid"]
                 result_version = result_dict["_source"]["bundles"][0]["version"]
@@ -78,6 +79,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._mock_index(self.old_bundle)
 
         def check_old_submission(es_results):
+            self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
                 old_result_version = result_dict["_source"]["bundles"][0]["version"]
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
@@ -116,6 +118,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._mock_index(self.new_bundle)
 
         def check_new_submission(es_results):
+            self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
                 old_result_version = result_dict["_source"]["bundles"][0]["version"]
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
