@@ -325,7 +325,8 @@ class ElasticTransformDump(object):
     def transform_summary(
             self,
             request_config_file='request_config.json',
-            filters=None):
+            filters=None,
+            entity_type=None):
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
@@ -345,7 +346,7 @@ class ElasticTransformDump(object):
         es_search = self.create_request(
             filters, self.es_client,
             request_config,
-            post_filter=False)
+            post_filter=False, entity_type=entity_type)
         # Add a total_size aggregate to the ElasticSearch request
         es_search.aggs.metric(
             'total_size',
@@ -372,9 +373,13 @@ class ElasticTransformDump(object):
         es_search.aggs['by_type'].metric('size_by_type', 'sum', field=request_config['translation']['fileSize'])
         # Override the aggregates for Samples,
         # Primary site count, and project count
+        if entity_type == 'specimens':
+            type_id, type_count = ['fileId', 'fileCount']
+        elif entity_type == 'files':
+            type_id, type_count = ['specimenId', 'specimenCount']
+
         for field, agg_name in (
-                ('specimenId',
-                 'specimenCount'),
+                (type_id, type_count),
                 ('organ', 'organCount'),
                 ('donorId', 'donorCount'),
                 ('lab', 'labCount'),
