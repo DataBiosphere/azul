@@ -5,11 +5,9 @@ import tempfile
 from unittest.mock import patch
 
 import boto3
-from hca.dss import DSSClient
-from urllib3 import Timeout
 
 from azul import config
-from azul.vendored.frozendict import frozendict
+from azul.json_freeze import freeze, thaw
 
 logger = logging.getLogger(__name__)
 
@@ -57,28 +55,6 @@ def subscribe(options, dss_client):
         response = dss_client.put_subscription(**subscription)
         subscription['uuid'] = response['uuid']
         logging.info('Registered subscription %r.', subscription)
-
-
-def freeze(x):
-    if isinstance(x, dict):
-        return frozendict((k, freeze(v)) for k, v in x.items())
-    elif isinstance(x, list):
-        return [freeze(v) for v in x]
-    elif isinstance(x, (bool, str, int, float)) or x is None:
-        return x
-    else:
-        assert False, f'Cannot handle values of type {type(x)}'
-
-
-def thaw(x):
-    if isinstance(x, frozendict):
-        return {k: thaw(v) for k, v in x.items()}
-    elif isinstance(x, list):
-        return [thaw(v) for v in x]
-    elif isinstance(x, (bool, str, int, float)) or x is None:
-        return x
-    else:
-        assert False, f'Cannot handle values of type {type(x)}'
 
 
 if __name__ == '__main__':
