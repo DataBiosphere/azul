@@ -14,7 +14,7 @@ dss_subscription_query = {
             "must": [
                 {
                     "exists": {
-                        "field": "files.biomaterial_json"
+                        "field": "files.donor_organism_json"
                     }
                 }
             ]

@@ -1,23 +1,22 @@
 language: python
 
+cache: pip
+
 sudo: required
 
 services:
   - docker
 
 python:
-  - "2.7"
+  - 3.6
 
-env:
-  - ES_VERSION=5.1.1 ES_DOWNLOAD_URL=https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${ES_VERSION}.tar.gz
+before_install:
+  - (cd deployments && ln -snf dev .active)
+  - source environment
 
 install:
-  - wget ${ES_DOWNLOAD_URL}
-  - tar -xzf elasticsearch-${ES_VERSION}.tar.gz
-  - pip install flake8
-  - ./elasticsearch-${ES_VERSION}/bin/elasticsearch &
+  - pip install -r requirements.dev.txt
 
 script:
-  - flake8 --max-line-length=160 .
-  - wget -q --waitretry=1 --retry-connrefused -T 10 -O - http://127.0.0.1:9200  
-  - make travis
+  - make test
+  

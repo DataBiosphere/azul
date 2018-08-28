@@ -5,12 +5,13 @@ import unittest
 from unittest.mock import patch
 
 import docker
-from elasticsearch5 import Elasticsearch
+
+from azul.es import ESClientFactory
 
 logger = logging.getLogger(__name__)
 
 
-class AzulTestCase(unittest.TestCase):
+class ElasticsearchTestCase(unittest.TestCase):
 
     es_client = None
 
@@ -35,7 +36,7 @@ class AzulTestCase(unittest.TestCase):
         es_host = f'{es_host_ip}:{es_host_port}'
         cls._old_es_endpoint = os.environ.get('AZUL_ES_ENDPOINT')
         os.environ['AZUL_ES_ENDPOINT'] = es_host
-        cls.es_client = Elasticsearch(hosts=[es_host], use_ssl=False)
+        cls.es_client = ESClientFactory.get()
         cls._wait_for_es()
 
     @classmethod

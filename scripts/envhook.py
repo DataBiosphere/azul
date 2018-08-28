@@ -12,10 +12,15 @@ def main(argv):
     parser = argparse.ArgumentParser(description='Install a hook into Python that automatically sources `environment`')
     parser.add_argument('action', choices=['install', 'remove'])
     options = parser.parse_args(argv)
-    import site
-    if hasattr(sys, 'real_prefix'):
-        # virtualenv's site does not have getsitepackages()
-        link_dir = os.path.abspath(os.path.join(os.path.dirname(site.__file__), 'site-packages'))
+    if 'VIRTUAL_ENV' in os.environ:  # Confirm virtual environment is active `venv || virtualenv`
+        import site
+        if hasattr(site, 'getsitepackages'):
+            # Both plain Python and `venv` have `getsitepackages()`
+            sys_prefix = os.path.abspath(sys.prefix)
+            link_dir = next(p for p in site.getsitepackages() if os.path.abspath(p).startswith(sys_prefix))
+        else:
+            # virtualenv's `site` does not have getsitepackages()
+            link_dir = os.path.abspath(os.path.join(os.path.dirname(site.__file__), 'site-packages'))
     else:
         raise RuntimeError('Need to be run from within a virtualenv')
     link = os.path.join(link_dir, 'sitecustomize.py')
