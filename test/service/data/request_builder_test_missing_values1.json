@@ -1,0 +1,26 @@
+{
+  "post_filter": {
+    "bool": {
+      "must": [
+        {
+          "constant_score": {
+            "filter": {
+              "bool": {
+                "must_not": [
+                  {
+                    "exists": {
+                      "field": "entity_id.keyword"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "query": {
+    "match_all": {}
+  }
+}
