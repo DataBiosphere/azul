@@ -30,7 +30,4 @@ clean:
 test:
 	PYTHONWARNINGS=ignore:ResourceWarning coverage run -m unittest discover test --verbose
 
-travis:
-	$(MAKE) -C test/service travistest
-
 .PHONY: all terraform deploy subscribe everything reindex clean test travis
