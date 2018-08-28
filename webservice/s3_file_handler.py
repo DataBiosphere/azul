@@ -11,7 +11,7 @@ class S3FileHandler:
         """
         This class simplifies some actions with AWS S3 storage.
         See https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList
-        for a list of error codes.
+        for an exhaustive list of error codes.
         
         :param region: AWS region
         :type region: str
@@ -34,8 +34,8 @@ class S3FileHandler:
         Check whether bucket with this name exists in AWS account.
         :param bucket: name of bucket in account
         :type bucket: str
-        :return: true if it exists
-        :rtype: boolean
+        :return: HTTP status code
+        :rtype: integer
         """
         try:
             self.resource.meta.client.head_bucket(Bucket=bucket)
@@ -57,7 +57,7 @@ class S3FileHandler:
         :return: response with details
         :rtype: JSON / Python dict
         """
-        if not self.bucket_exists(bucket_name):
+        if self.bucket_exists(bucket_name) == 200:
             self.bucket_name = bucket_name
             return self.bucket.create_bucket(
                 Bucket=bucket_name,
@@ -98,12 +98,16 @@ class S3FileHandler:
         :rtype:bool
         """
 
-        if self.bucket_exists(bucket):
-            self.resource.meta.client.upload_file(
-                filename, bucket, key)  # executes silently
-            return True
+        status_code = self.bucket_exists(bucket)
+        if status_code == 200:
+            try:
+                self.resource.meta.client.upload_file(
+                    filename, bucket, key)  # executes silently
+                return 200
+            except Exception as e:
+                print(e)
         else:
-            return False  # bucket_name doesn't exist
+            return status_code  # e.g., NoSuchBucket = 404
 
 
 if __name__ == '__main__':
