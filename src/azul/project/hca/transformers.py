@@ -18,7 +18,7 @@ def _project_dict(bundle: api.Bundle) -> dict:
     reject(additional_projects, "Azul can currently only handle a single project per bundle")
     return {
         'project_shortname': project.project_shortname,
-        'laboratory': list(project.laboratory_names),
+        'laboratory': sorted(list(project.laboratory_names)),
         'document_id': project.document_id,
         '_type': 'project'
     }
@@ -38,7 +38,7 @@ def _specimen_dict(biomaterials: Mapping[api.UUID4, api.Biomaterial]) -> List[Ma
                         merged_specimen[key].update(value)
                     else:
                         merged_specimen[key].add(value)
-            merged_specimen = {k: list(v) for k, v in merged_specimen.items()}
+            merged_specimen = {k: list(sorted(v, key=lambda x: (x is not None, x))) for k, v in merged_specimen.items()}
             merged_specimen['biomaterial_id'] = specimen.biomaterial_id
             specimen_list.append(merged_specimen)
     return specimen_list
