@@ -2,12 +2,17 @@
 
 import boto3
 import botocore.session
+from botocore.exceptions import ClientError
 
 
 class S3FileHandler:
 
     def __init__(self, region, access_key_id, secret_key):
         """
+        This class simplifies some actions with AWS S3 storage.
+        See https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList
+        for a list of error codes.
+        
         :param region: AWS region
         :type region: str
         :param access_key_id: AWS access key ID
@@ -15,7 +20,6 @@ class S3FileHandler:
         :param secret_key: AWS secret access key
         :type secret_key: str
         """
-
         service = 's3'
         self.bucket = boto3.client(service,
                                    aws_access_key_id=access_key_id,
@@ -33,7 +37,18 @@ class S3FileHandler:
         :return: true if it exists
         :rtype: boolean
         """
-        return self.resource.Bucket(bucket) in self.resource.buckets.all()
+        try:
+            self.resource.meta.client.head_bucket(Bucket=bucket)
+            print("Bucket Exists!")
+            return 200
+        except ClientError as e:
+            # If a client error is thrown, then check that it was a 404 error.
+            # If it was a 404 error, then the bucket does not exist.
+            error_code = int(e.response['Error']['Code'])
+            if error_code == 403:
+                return 403
+            elif error_code == 404:
+                return 404
 
     def create_bucket(self, bucket_name):
         """
