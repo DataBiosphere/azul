@@ -22,14 +22,14 @@
     "fileId": "bundles.contents.files.uuid",
     "donorId": "bundles.contents.specimens.donor_biomaterial_id",
     "lab": "bundles.contents.project.laboratory",
-    "cellCount": "bundles.contents.specimens.total_cells"
+    "cellCount": "bundles.contents.specimens.total_estimated_cells"
   },
   "autocomplete-translation": {
-    "AZUL_FILE_INDEX": {
+    "files": {
       "entity_id": "entity_id",
       "entity_version":"entity_version"
     },
-    "AZUL_DONOR_INDEX": {
+    "donor": {
       "donor": "donor_uuid"
     }
   },
@@ -62,6 +62,7 @@
     "protocol",
     "fileFormat",
     "laboratory",
-    "preservationMethod"
+    "preservationMethod",
+    "cellCount"
   ]
 }

@@ -27,11 +27,11 @@
             "hca_id": [
               "uuid4"
             ],
-            "instrument": "safe_color_name",
-            "library_construction": "safe_color_name",
+            "instrument_manufacturer_model": "safe_color_name",
+            "library_construction_approach": "safe_color_name",
             "process_id": "safe_color_name",
             "process_name": "safe_color_name",
-            "protocol": "safe_color_name",
+            "protocol_name": "safe_color_name",
             "protocol_id": "safe_color_name"
           }
         ],
@@ -41,24 +41,24 @@
           "laboratory": [
             "safe_color_name"         
           ],
-          "project": "safe_color_name"
+          "project_shortname": "safe_color_name"
         },
         "specimens": [
           {
             "_type": [
               "safe_color_name"             
             ],
-            "age": [
+            "organism_age": [
               "safe_color_name"
             ],
-            "age_unit": [
+            "organism_age_unit": [
               "safe_color_name"             
             ],
             "biomaterial_id": "uuid4",
             "disease": [
               "safe_color_name"              
             ],
-            "hca_id": [
+            "id": [
               "uuid4"              
             ],
             "organ": [
@@ -70,19 +70,19 @@
             "parent": [
               "safe_color_name"              
             ],
-            "sex": [
+            "biological_sex": [
               "safe_color_name"            
             ],
-            "source": [
+            "_source": [
               "safe_color_name"              
             ],
-            "species": [
+            "genus_species": [
               "safe_color_name"              
             ],
             "storage_method": [
               "safe_color_name"              
             ],
-            "total_cells": [
+            "total_estimated_cells": [
              "pyint"            
             ]
           }

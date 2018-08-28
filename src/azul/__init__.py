@@ -36,6 +36,10 @@ class Config:
         return os.environ['AZUL_ES_DOMAIN']
 
     @property
+    def es_timeout(self) -> int:
+        return int(os.environ['AZUL_ES_TIMEOUT'])
+
+    @property
     def dss_endpoint(self) -> str:
         return os.environ['AZUL_DSS_ENDPOINT']
 
@@ -89,6 +93,9 @@ class Config:
     def es_index(self) -> str:
         return os.environ['AZUL_ES_INDEX']
 
+    def es_index_name(self, entity_type) -> str:
+        return os.environ['AZUL_ES_INDEX_NAME_TEMPLATE'].format(entity_type=entity_type)
+
     @property
     def domain_name(self) -> str:
         return os.environ['AZUL_DOMAIN_NAME']
@@ -97,7 +104,7 @@ class Config:
     def git_status(self):
         return {
             'commit': os.environ['azul_git_commit'],
-            'dirty': bool(os.environ['azul_git_dirty']),
+            'dirty': str_to_bool(os.environ['azul_git_dirty'])
         }
 
     @property
@@ -198,6 +205,13 @@ def eventually(timeout: float, interval: float, errors: set={AssertionError}):
     def decorate(func):
         @functools.wraps(func)
         def call(*args, **kwargs):
+            """
+            This timeout eliminates the retry feature of eventually.
+            The reason for this change is described here:
+            https://github.com/DataBiosphere/azul/issues/233
+            """
+            timeout = 0
+
             timeout_time = time.time() + timeout
             error_tuple = tuple(errors)
             while True:
@@ -211,3 +225,12 @@ def eventually(timeout: float, interval: float, errors: set={AssertionError}):
         return call
 
     return decorate
+
+
+def str_to_bool(string: str):
+    if string == 'True':
+        return True
+    elif string == 'False':
+        return False
+    else:
+        raise ValueError(string)

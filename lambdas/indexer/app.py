@@ -76,12 +76,6 @@ def post_notification():
     return {"status": "done"}
 
 
-@app.route('/escheck')
-def es_check():
-    """Check the status of ElasticSearch by returning its info."""
-    return json.dumps(properties.elastic_search_client.info())
-
-
 # Work around https://github.com/aws/chalice/issues/856
 
 def new_handler(self, event, context):

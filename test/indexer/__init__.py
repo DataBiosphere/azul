@@ -1,3 +1,4 @@
+import functools
 import json
 import os
 from typing import Mapping, Any
@@ -8,10 +9,10 @@ from azul import config
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
 from azul.downloader import MetadataDownloader
-from shared import AzulTestCase
+from es_test_case import ElasticsearchTestCase
 
 
-class IndexerTestCase(AzulTestCase):
+class IndexerTestCase(ElasticsearchTestCase):
     index_properties = None
     hca_indexer = None
 
@@ -64,11 +65,13 @@ class IndexerTestCase(AzulTestCase):
 
         return metadata, manifest
 
-    def _mock_index(self, test_bundles, data_pack):
-        bundle_uuid, bundle_version = test_bundles
-        metadata, manifest = data_pack
+    def _mock_index(self, test_bundle, updated=False):
+        bundle_uuid, bundle_version = test_bundle
         fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+
+        def mocked_extract_bundle(self_, fake_notification):
+            return self._get_data_files(fake_notification["match"]["bundle_uuid"], updated=updated)
+
         with patch('azul.DSSClient'):
-            with patch.object(MetadataDownloader, 'extract_bundle') as mock_method:
-                mock_method.return_value = metadata, manifest
+            with patch.object(MetadataDownloader, 'extract_bundle', new=mocked_extract_bundle):
                 self.hca_indexer.index(fake_event)

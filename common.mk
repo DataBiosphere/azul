@@ -4,7 +4,7 @@ ifndef AZUL_HOME
 $(error Please run "source environment" from the project root directory before running make commands)
 endif
 
-ifneq ($(shell python -c "import sys; print(hasattr(sys, 'real_prefix'))"),True)
+ifneq ($(shell python -c "import os; print('VIRTUAL_ENV' in os.environ)"),True)
 $(error Looks like no virtualenv is active)
 endif
 
