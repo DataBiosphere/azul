@@ -3,12 +3,14 @@ import sys
 import logging
 from unittest import mock
 import requests
-from service import WebServiceTestCase
+
 from azul import Config as AzulConfig
+from service import WebServiceTestCase
 
 log = logging.getLogger(__name__)
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     log.setLevel(logging.DEBUG)
     stream_handler = logging.StreamHandler(sys.stdout)
@@ -16,6 +18,10 @@ def setUpModule():
 
 
 class FacetNameValidationTest(WebServiceTestCase):
+    @classmethod
+    def lambda_name(cls) -> str:
+        return "service"
+
     filter_facet_message = {"Code": "BadRequestError",
                             "Message": "BadRequestError: Unable to filter by undefined facet bad-facet."}
     sort_facet_message = {"Code": "BadRequestError",
@@ -35,7 +41,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(response.json(), expected_json)
 
     def test_health_es_unreachable(self):
-        with mock.patch.dict(os.environ, AZUL_ES_ENDPOINT='nonexisting-index.us-east-1.es.amazonaws.com:80'):
+        with mock.patch.dict(os.environ, AZUL_ES_ENDPOINT='nonexisting-index.com:80'):
             url = self.base_url + "health"
             response = requests.get(url)
             response.raise_for_status()
@@ -51,18 +57,19 @@ class FacetNameValidationTest(WebServiceTestCase):
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
-        dirty = True
-        with mock.patch.dict(os.environ, azul_git_commit=commit, azul_git_dirty=str(dirty)):
-            url = self.base_url + "version"
-            response = requests.get(url)
-            response.raise_for_status()
-            expected_json = {
-                'git': {
-                    'commit': commit,
-                    'dirty': dirty
-                }
-            }
-            self.assertEqual(response.json(), expected_json)
+        for dirty in True, False:
+            with self.subTest(is_repo_dirty=dirty):
+                with mock.patch.dict(os.environ, azul_git_commit=commit, azul_git_dirty=str(dirty)):
+                    url = self.base_url + "version"
+                    response = requests.get(url)
+                    response.raise_for_status()
+                    expected_json = {
+                        'git': {
+                            'commit': commit,
+                            'dirty': dirty
+                        }
+                    }
+                    self.assertEqual(response.json(), expected_json)
 
     def test_bad_single_filter_facet_of_specimen(self):
         url = self.base_url + "repository/specimens?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
@@ -180,12 +187,3 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
-
-    def test_summary_endpoint(self):
-        url = self.base_url + "repository/files/summary"
-        response = requests.get(url)
-        response.raise_for_status()
-        summary_object = response.json()
-        self.assertGreater(summary_object['fileCount'], 0)
-        self.assertGreater(summary_object['organCount'], 0)
-        self.assertIsNotNone(summary_object['organSummaries'])

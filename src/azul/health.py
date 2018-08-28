@@ -1,13 +1,12 @@
 import boto3
-
 from botocore.exceptions import ClientError
 
 from azul import config
-from azul.es import es_client
+from azul.es import ESClientFactory
 
 
 def get_elasticsearch_health():
-    is_es_reachable = es_client().ping()
+    is_es_reachable = ESClientFactory.get().ping()
 
     result = {
         'status': 'UP' if is_es_reachable else 'DOWN',

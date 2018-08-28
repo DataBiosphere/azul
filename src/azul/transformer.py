@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from itertools import filterfalse, tee
 import logging
-import os
 import re
 from typing import List, Mapping, Sequence
 
+from azul import config
 from azul.types import JSON
 
 module_logger = logging.getLogger(__name__)
@@ -36,10 +36,10 @@ class Document:
 
 
 class ElasticSearchDocument:
-    def __init__(self, elastic_search_id: str, content: Document, entity_name: str, _type: str="doc") -> None:
+    def __init__(self, elastic_search_id: str, content: Document, entity_type: str, _type: str="doc") -> None:
         self.elastic_search_id = elastic_search_id
         self._content = content
-        self.index = "browser_{}_{}".format(entity_name, os.getenv("STAGE_ENVIRONMENT", "dev"))
+        self.index = config.es_index_name(entity_type)
         self._type = _type
         self._version = 1
 

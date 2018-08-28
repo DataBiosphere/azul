@@ -5,7 +5,6 @@ Suite for unit testing indexer.py
 
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
-import json
 import logging
 import time
 import unittest
@@ -31,10 +30,8 @@ class TestHCAIndexer(IndexerTestCase):
                           "2018-03-29T152812.404846Z")
         cls.new_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b",
                           "2018-03-30T152812.404846Z")
-        cls.spec1_bundle = ("9dec1bd6-ced8-448a-8e45-1fc7846d8995",
-                            "2018-03-29T154319.834528Z")
-        cls.spec2_bundle = ("56a338fe-7554-4b5d-96a2-7df127a7640b",
-                            "2018-03-29T153507.198365Z")
+        cls.specimens = [("9dec1bd6-ced8-448a-8e45-1fc7846d8995", "2018-03-29T154319.834528Z"),
+                         ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
 
     @eventually(5.0, 0.5)
     def _get_es_results(self, assert_func):
@@ -58,21 +55,20 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Index a bundle and check that the index contains the correct attributes
         """
-        data_pack = self._get_data_files(self.new_bundle[0], updated=True)
-
-        self._mock_index(self.new_bundle, data_pack)
+        self._mock_index(self.old_bundle)
 
         def check_bundle_correctness(es_results):
+            self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
                 result_uuid = result_dict["_source"]["bundles"][0]["uuid"]
                 result_version = result_dict["_source"]["bundles"][0]["version"]
                 result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
-                self.assertEqual(self.new_bundle[0], result_uuid)
-                self.assertEqual(self.new_bundle[1], result_version)
-                self.assertEqual("Aardvark Ailment", result_contents["project"]["project"])
-                self.assertIn("John Denver", result_contents["project"]["laboratory"])
-                self.assertIn("Lorem ipsum", result_contents["specimens"][0]["species"])
+                self.assertEqual(self.old_bundle[0], result_uuid)
+                self.assertEqual(self.old_bundle[1], result_version)
+                self.assertEqual("Mouse Melanoma", result_contents["project"]["project_shortname"])
+                self.assertIn("Sarah Teichmann", result_contents["project"]["laboratory"])
+                self.assertIn("Mus musculus", result_contents["specimens"][0]["genus_species"])
 
         self._get_es_results(check_bundle_correctness)
 
@@ -80,24 +76,22 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Updating a bundle with a future version should overwrite the old version.
         """
-        old_data = self._get_data_files(self.old_bundle[0])
-        new_data = self._get_data_files(self.new_bundle[0], updated=True)
-
-        self._mock_index(self.old_bundle, old_data)
+        self._mock_index(self.old_bundle)
 
         def check_old_submission(es_results):
+            self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
                 old_result_version = result_dict["_source"]["bundles"][0]["version"]
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(self.old_bundle[1], old_result_version)
-                self.assertEqual("Mouse Melanoma", old_result_contents["project"]["project"])
+                self.assertEqual("Mouse Melanoma", old_result_contents["project"]["project_shortname"])
                 self.assertIn("Sarah Teichmann", old_result_contents["project"]["laboratory"])
-                self.assertIn("Mus musculus", old_result_contents["specimens"][0]["species"])
+                self.assertIn("Mus musculus", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_old_submission)
 
-        self._mock_index(self.new_bundle, new_data)
+        self._mock_index(self.new_bundle, updated=True)
 
         def check_updated_submission(old_results_list, new_results_list):
             for old_result_dict, new_result_dict in list(zip(old_results_list, new_results_list)):
@@ -108,12 +102,12 @@ class TestHCAIndexer(IndexerTestCase):
                 new_result_contents = new_result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertNotEqual(old_result_version, new_result_version)
-                self.assertNotEqual(old_result_contents["project"]["project"],
-                                    new_result_contents["project"]["project"])
+                self.assertNotEqual(old_result_contents["project"]["project_shortname"],
+                                    new_result_contents["project"]["project_shortname"])
                 self.assertNotEqual(old_result_contents["project"]["laboratory"],
                                     new_result_contents["project"]["laboratory"])
-                self.assertNotEqual(old_result_contents["specimens"][0]["species"],
-                                    new_result_contents["specimens"][0]["species"])
+                self.assertNotEqual(old_result_contents["specimens"][0]["genus_species"],
+                                    new_result_contents["specimens"][0]["genus_species"])
 
         self._get_es_results(partial(check_updated_submission, old_results))
 
@@ -121,24 +115,22 @@ class TestHCAIndexer(IndexerTestCase):
         """
         An attempt to overwrite a newer version of a bundle with an older version should fail.
         """
-        old_data = self._get_data_files(self.old_bundle[0])
-        new_data = self._get_data_files(self.new_bundle[0], updated=True)
-
-        self._mock_index(self.new_bundle, new_data)
+        self._mock_index(self.new_bundle, updated=True)
 
         def check_new_submission(es_results):
+            self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
                 old_result_version = result_dict["_source"]["bundles"][0]["version"]
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(self.new_bundle[1], old_result_version)
-                self.assertEqual("Aardvark Ailment", old_result_contents["project"]["project"])
+                self.assertEqual("Aardvark Ailment", old_result_contents["project"]["project_shortname"])
                 self.assertIn("John Denver", old_result_contents["project"]["laboratory"])
-                self.assertIn("Lorem ipsum", old_result_contents["specimens"][0]["species"])
+                self.assertIn("Lorem ipsum", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_new_submission)
 
-        self._mock_index(self.old_bundle, old_data)
+        self._mock_index(self.old_bundle)
 
         def check_for_overwrite(old_results_list, new_results_list):
             for old_result_dict, new_result_dict in list(zip(old_results_list, new_results_list)):
@@ -149,12 +141,12 @@ class TestHCAIndexer(IndexerTestCase):
                 new_result_contents = new_result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(old_result_version, new_result_version)
-                self.assertEqual(old_result_contents["project"]["project"],
-                                 new_result_contents["project"]["project"])
+                self.assertEqual(old_result_contents["project"]["project_shortname"],
+                                 new_result_contents["project"]["project_shortname"])
                 self.assertEqual(old_result_contents["project"]["laboratory"],
                                  new_result_contents["project"]["laboratory"])
-                self.assertEqual(old_result_contents["specimens"][0]["species"],
-                                 new_result_contents["specimens"][0]["species"])
+                self.assertEqual(old_result_contents["specimens"][0]["genus_species"],
+                                 new_result_contents["specimens"][0]["genus_species"])
 
         self._get_es_results(partial(check_for_overwrite, old_results))
 
@@ -162,11 +154,6 @@ class TestHCAIndexer(IndexerTestCase):
         """
         We submit two different bundles for the same specimen. What happens?
         """
-        spec1_pack = self._get_data_files(self.spec1_bundle[0])
-        spec2_pack = self._get_data_files(self.spec2_bundle[0])
-        specimen_list = [(self.spec1_bundle, spec1_pack),
-                         (self.spec2_bundle, spec2_pack)]
-
         unmocked_mget = Elasticsearch.mget
 
         def mocked_mget(self, body):
@@ -175,41 +162,43 @@ class TestHCAIndexer(IndexerTestCase):
             time.sleep(0.5)
             return mget_return
 
-        def help_index(specimen_tuple):
-            self._mock_index(specimen_tuple[0], specimen_tuple[1])
-
         with patch.object(Elasticsearch, 'mget', new=mocked_mget):
             with self.assertLogs(level='WARNING') as cm:
-                with ThreadPoolExecutor(max_workers=2) as executor:
-                    thread_results = executor.map(help_index, specimen_list)
-                    self.assertNotEqual(None, thread_results)
+                with ThreadPoolExecutor(max_workers=len(self.specimens)) as executor:
+                    thread_results = executor.map(self._mock_index, self.specimens)
+                    self.assertIsNotNone(thread_results)
                     self.assertTrue(all(r is None for r in thread_results))
-                self.assertNotEqual(None, cm.records)
+                self.assertIsNotNone(cm.records)
 
-                num_hits = 0
-                for log_msg in cm.output:
-                    if "There was a conflict with document" in log_msg:
-                        num_hits += 1
-                self.assertEqual(3, num_hits)
+                num_hits = sum(1 for log_msg in cm.output
+                               if "There was a conflict with document" in log_msg)
+                self.assertEqual(1, num_hits)
 
         def check_specimen_merge(es_results):
-            specimen_uuids = []
-            file_uuids = []
+            file_doc_ids = set()
+            self.assertEqual(len(es_results), 5)
             for result_dict in es_results:
-                result_contents = result_dict["_source"]["bundles"][0]["contents"]
+                self.assertEqual(result_dict["_id"], result_dict["_source"]["entity_id"])
                 if "files" in result_dict["_index"]:
-                    for file_dict in result_contents["files"]:
-                        file_uuids.append(file_dict["uuid"])
+                    # files assumes one bundle per result
+                    self.assertEqual(len(result_dict["_source"]["bundles"]), 1)
+                    result_contents = result_dict["_source"]["bundles"][0]["contents"]
+                    self.assertEqual(1, len(result_contents["files"]))
+                    file_doc_ids.add(result_contents["files"][0]["uuid"])
                 elif "specimens" in result_dict["_index"]:
-                    self.assertLess(1, len(result_contents["files"]))
-                    for file_dict in result_contents["files"]:
-                        specimen_uuids.append(file_dict["uuid"])
+                    self.assertEqual(len(result_dict["_source"]["bundles"]), 2)
+                    for bundle in result_dict["_source"]["bundles"]:
+                        result_contents = bundle["contents"]
+                        # Each bundle in specimen list contains two files
+                        self.assertEqual(2, len(result_contents["files"]))
                 else:
                     continue
 
-            self.assertEqual(len(file_uuids), len(specimen_uuids))
-            for uuid in specimen_uuids:
-                self.assertIn(uuid, file_uuids)
+            self.assertEqual(len(file_doc_ids), 4)
+            for spec_uuid, _ in self.specimens:
+                spec_metadata, _ = self._get_data_files(spec_uuid)
+                for file_dict in spec_metadata["file.json"]["files"]:
+                    self.assertIn(file_dict["hca_ingest"]["document_id"], file_doc_ids)
 
         self._get_es_results(check_specimen_merge)
 
