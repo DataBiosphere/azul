@@ -25,15 +25,15 @@ class S3FileHandler:
         self.session = session.create_client(service, region)
         self.region = region
 
-    def bucket_exists(self, bucket_name):
+    def bucket_exists(self, bucket):
         """
         Check whether bucket with this name exists in AWS account.
-        :param bucket_name: name of bucket in account
-        :type bucket_name: str
+        :param bucket: name of bucket in account
+        :type bucket: str
         :return: true if it exists
         :rtype: boolean
         """
-        return self.resource.Bucket(bucket_name) in self.resource.buckets.all()
+        return self.resource.Bucket(bucket) in self.resource.buckets.all()
 
     def create_bucket(self, bucket_name):
         """
@@ -49,14 +49,14 @@ class S3FileHandler:
                 CreateBucketConfiguration={'LocationConstraint': self.region}
             )
 
-    def list_objects_in_bucket(self, bucket_name):
+    def list_objects_in_bucket(self, bucket):
         """
-        :param bucket_name: name of bucket in account
-        :type bucket_name: str
+        :param bucket: name of bucket in account
+        :type bucket: str
         :return: list of objects in bucket_name
         :rtype: list
         """
-        response = self.session.list_objects_v2(Bucket=bucket_name)
+        response = self.session.list_objects_v2(Bucket=bucket)
         if response.has_key('Contents'):
             L = [response['Contents'][x]['Key']
                     for x in range(len(response['Contents']))]
@@ -71,21 +71,21 @@ class S3FileHandler:
         buckets = self.bucket.list_buckets()
         return [bucket['Name'] for bucket in buckets['Buckets']]
 
-    def upload_object_to_bucket(self, bucket_name, fname, name_in_bucket):
+    def upload_object_to_bucket(self, bucket, filename, key):
         """Uploads some object (e.g., a file) to an S3 bucket.
-        :param bucket_name: name of bucket in AWS account
-        :type bucket_name: str
-        :param fname: absolute name of the object to upload
-        :type fname: str
-        :param name_in_bucket: object name in bucket
-        :type name_in_bucket: str
+        :param bucket: name of bucket in AWS account
+        :type bucket: str
+        :param filename: absolute name of the object to upload
+        :type filename: str
+        :param key: object name in bucket on S3
+        :type key: str
         :returns: True if it went well, False if bucket does not exist
         :rtype:bool
         """
 
-        if self.bucket_exists(bucket_name):
+        if self.bucket_exists(bucket):
             self.resource.meta.client.upload_file(
-                fname, bucket_name, name_in_bucket)  # executes silently
+                filename, bucket, key)  # executes silently
             return True
         else:
             return False  # bucket_name doesn't exist
