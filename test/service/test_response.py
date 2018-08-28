@@ -37,11 +37,22 @@ class TestResponse(WebServiceTestCase):
                 filesearch_response = FileSearchResponse(
                     hits=self._load("response_test_input.json"),
                     pagination=self._load(f"response_pagination_input{n}.json"),
-                    facets=self._load("response_facets_input.json")
+                    facets=self._load("response_facets_empty.json")
                 ).return_response().to_json()
 
                 self.assertEqual(json.dumps(filesearch_response, sort_keys=True),
                                  json.dumps(self._load(f"response_filesearch_output{n}.json"), sort_keys=True))
+
+    def test_file_search_response_add_facets(self):
+        """
+        Test adding facets to FileSearchResponse with missing values in one facet
+        and no missing values in the other
+
+        null term should not appear if there are no missing values
+        """
+        facets = FileSearchResponse.add_facets(self._load('response_facets_populated.json'))
+        self.assertEqual(json.dumps(facets, sort_keys=True),
+                         json.dumps(self._load('response_filesearch_add_facets_output.json'), sort_keys=True))
 
     def test_summary_endpoint(self):
         url = self.base_url + "repository/files/summary"
