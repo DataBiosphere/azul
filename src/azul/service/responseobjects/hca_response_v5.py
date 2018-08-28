@@ -532,9 +532,15 @@ class FileSearchResponse(KeywordSearchResponse):
             else:
                 return _term['key']
 
-        term_list = [TermObj(**{"term": choose_entry(term),
-                                "count": term['doc_count']})
+        term_list = [TermObj(**{'term': choose_entry(term),
+                                'count': term['doc_count']})
                      for term in contents['myTerms']['buckets']]
+
+        # Add 'unspecified' term if there is at least one unlabelled document
+        untagged_count = contents['untagged']['doc_count']
+        if untagged_count > 0:
+            term_list.append(TermObj(term=None, count=untagged_count))
+
         facet = FacetObj(
             terms=term_list,
             total=0 if len(
