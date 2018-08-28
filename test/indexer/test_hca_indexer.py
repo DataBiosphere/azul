@@ -40,7 +40,7 @@ class TestHCAIndexer(IndexerTestCase):
             results = self.es_client.search(index=entity_index,
                                             doc_type="doc",
                                             size=100)
-            if "project" not in entity_index:
+            if entity_index != config.es_index_name("projects"):
                 for result_dict in results["hits"]["hits"]:
                     es_results.append(result_dict)
 
@@ -179,13 +179,13 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertEqual(len(es_results), 5)
             for result_dict in es_results:
                 self.assertEqual(result_dict["_id"], result_dict["_source"]["entity_id"])
-                if "files" in result_dict["_index"]:
+                if result_dict["_index"] == config.es_index_name("files"):
                     # files assumes one bundle per result
                     self.assertEqual(len(result_dict["_source"]["bundles"]), 1)
                     result_contents = result_dict["_source"]["bundles"][0]["contents"]
                     self.assertEqual(1, len(result_contents["files"]))
                     file_doc_ids.add(result_contents["files"][0]["uuid"])
-                elif "specimens" in result_dict["_index"]:
+                elif result_dict["_index"] == config.es_index_name("specimens"):
                     self.assertEqual(len(result_dict["_source"]["bundles"]), 2)
                     for bundle in result_dict["_source"]["bundles"]:
                         result_contents = bundle["contents"]
