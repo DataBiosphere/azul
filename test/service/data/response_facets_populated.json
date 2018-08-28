@@ -1,0 +1,38 @@
+{
+  "organ": {
+    "doc_count": 21,
+    "untagged": {
+      "doc_count": 0
+    },
+    "myTerms": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "silver",
+          "doc_count": 11
+        },
+        {
+          "key": "teal",
+          "doc_count": 10
+        }
+      ]
+    }
+  },
+  "disease": {
+    "doc_count": 21,
+    "untagged": {
+      "doc_count": 12
+    },
+    "myTerms": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "silver",
+          "doc_count": 9
+        }
+      ]
+    }
+  }
+}

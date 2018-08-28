@@ -78,11 +78,18 @@ class ElasticTransformDump(object):
         translated (es_keys) keys
         :return: Returns Query object with appropriate filters
         """
+        filter_list = []
+        for facet, values in filters.items():
+            value = values.get('is', {})
+            if value is None:
+                # If filter is {"is": None}, search for values where field does not exist
+                f = Q('bool', must_not=Q('exists', field=f'{facet}.keyword'))
+            else:
+                f = Q('terms', **{f'{facet.replace(".", "__")}__keyword': value})
+            filter_list.append(f)
+
         # Each iteration will AND the contents of the list
-        query_list = [Q('constant_score', filter=Q(
-            'terms', **{'{}__keyword'.format(
-                facet.replace(".", "__")): values.get('is', {})}))
-                      for facet, values in filters.items()]
+        query_list = [Q('constant_score', filter=f) for f in filter_list]
         #        Return a Query object. Make it match_all
         return Q('bool', must=query_list) if len(query_list) > 0 else Q()
 
@@ -115,6 +122,7 @@ class ElasticTransformDump(object):
             'terms',
             field=_field,
             size=99999)
+        aggregate.bucket('untagged', 'missing', field=_field)
         # If the aggregate in question didn't have any filter on the API
         #  call, skip it. Otherwise insert the popped
         # value back in
