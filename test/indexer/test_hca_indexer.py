@@ -5,14 +5,17 @@ Suite for unit testing indexer.py
 
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
+import json
 import logging
+import os
 import time
 import unittest
 from unittest.mock import patch
 
 from elasticsearch import Elasticsearch
 
-from azul import eventually
+from azul import config, eventually
+from azul.json_freeze import freeze
 from indexer import IndexerTestCase
 
 logger = logging.getLogger(__name__)
@@ -59,16 +62,15 @@ class TestHCAIndexer(IndexerTestCase):
 
         def check_bundle_correctness(es_results):
             self.assertGreater(len(es_results), 0)
+            data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
             for result_dict in es_results:
-                result_uuid = result_dict["_source"]["bundles"][0]["uuid"]
-                result_version = result_dict["_source"]["bundles"][0]["version"]
-                result_contents = result_dict["_source"]["bundles"][0]["contents"]
-
-                self.assertEqual(self.old_bundle[0], result_uuid)
-                self.assertEqual(self.old_bundle[1], result_version)
-                self.assertEqual("Mouse Melanoma", result_contents["project"]["project_shortname"])
-                self.assertIn("Sarah Teichmann", result_contents["project"]["laboratory"])
-                self.assertIn("Mus musculus", result_contents["specimens"][0]["genus_species"])
+                index_name = result_dict["_index"]
+                index_id = result_dict["_id"]
+                with open(os.path.join(data_prefix, f'aee55415-d128-4b30-9644-e6b2742fa32b.{index_name}.results.json'), 'r') as fp:
+                    expected_dict = json.load(fp)
+                    for expected_hit in expected_dict["hits"]["hits"]:
+                        if index_id == expected_hit["_id"]:
+                            self.assertEqual(freeze(expected_hit), freeze(result_dict))
 
         self._get_es_results(check_bundle_correctness)
 
