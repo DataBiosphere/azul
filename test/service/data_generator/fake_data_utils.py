@@ -43,7 +43,7 @@ class FakerSchemaGenerator(object):
 
 
 class ElasticsearchFakeDataLoader(object):
-    indices = [config.es_index_name('files'), config.es_index_name('specimens')]
+    test_index_name = config.es_index_name('files')
 
     def __init__(self, number_of_documents=1000, azul_es_endpoint=None):
 
@@ -56,26 +56,31 @@ class ElasticsearchFakeDataLoader(object):
         self.elasticsearch_client = elasticsearch5.Elasticsearch(hosts=[self.azul_es_url], port=9200)
         self.number_of_documents = number_of_documents
 
-    def load_data(self):
-        self.clean_up()
+    def load_data(self, will_clean_up=True):
+        logger.log(logging.INFO, f"Deleting leftover data in test index "
+                                 f"'{self.test_index_name}' at\n{self.azul_es_url}.")
+
+        if will_clean_up:
+            self.clean_up()
+
         try:
-            for index in self.indices:
-                logger.log(logging.INFO, f"Creating new test index '{index}'.")
-                self.elasticsearch_client.indices.create(index)
-                logger.log(logging.INFO, f"Loading data into test index '{index}'.")
-                faker = FakerSchemaGenerator()
-                fake_data_body = ""
-                for i in range(self.number_of_documents):
-                    fake_data_body += json.dumps({"index": {"_type": "meta", "_id": i}}) + "\n"
-                    fake_data_body += json.dumps(faker.generate_fake(self.doc_template)) + "\n"
-                self.elasticsearch_client.bulk(fake_data_body, index=index, doc_type='meta', refresh='wait_for')
+            self.elasticsearch_client.indices.delete(index=self.test_index_name)
         except elasticsearch5.exceptions.NotFoundError:
-            logger.log(logging.DEBUG, f"The index {index} doesn't exist yet.")
+            logger.log(logging.DEBUG, f"The index {self.test_index_name} doesn't exist yet. Skipping clean up.")
+
+        logger.log(logging.INFO, f"Creating new test index '{self.test_index_name}' at\n{self.azul_es_url}.")
+        self.elasticsearch_client.indices.create(self.test_index_name)
+
+        logger.log(logging.INFO, f"Loading data into test index '{self.test_index_name}' at\n{self.azul_es_url}.")
+        faker = FakerSchemaGenerator()
+        fake_data_body = ""
+        for i in range(self.number_of_documents):
+            fake_data_body += json.dumps({"index": {"_type": "meta", "_id": i}}) + "\n"
+            fake_data_body += json.dumps(faker.generate_fake(self.doc_template)) + "\n"
+        self.elasticsearch_client.bulk(fake_data_body, index=self.test_index_name, doc_type='meta', refresh='wait_for')
 
     def clean_up(self):
-        logger.log(logging.INFO, "Deleting leftover data in test indices")
         try:
-            for index in self.indices:
-                self.elasticsearch_client.indices.delete(index=index)
+            self.elasticsearch_client.indices.delete(index=self.test_index_name)
         except elasticsearch5.exceptions.NotFoundError:
-            logger.log(logging.DEBUG, f"The index {index} doesn't exist yet.")
+            logger.log(logging.DEBUG, f"The index {self.test_index_name} doesn't exist yet. Skipping clean up.")
