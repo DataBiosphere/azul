@@ -7,7 +7,6 @@ from s3_file_handler import S3FileHandler as s3handler
 import botocore
 from botocore.exceptions import ClientError
 
-
 class TestS3FileHandler(unittest.TestCase):
 
     def setUp(self):
