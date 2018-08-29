@@ -100,6 +100,7 @@ class S3FileHandler:
         status_code = self.bucket_exists(bucket)
         if status_code == 200:
             try:
+                # If it throws no exception we assume all went well.
                 self.resource.meta.client.upload_file(
                     filename, bucket, key)  # executes silently
                 return  {'status_code': 200}
