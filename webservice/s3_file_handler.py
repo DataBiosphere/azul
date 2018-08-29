@@ -39,16 +39,15 @@ class S3FileHandler:
         """
         try:
             self.resource.meta.client.head_bucket(Bucket=bucket)
-            print("Bucket Exists!")
-            return 200
+            return 200  # bucket exists and access authorized
         except ClientError as e:
             # If a client error is thrown, then check that it was a 404 error.
             # If it was a 404 error, then the bucket does not exist.
             error_code = int(e.response['Error']['Code'])
             if error_code == 403:
-                return 403
+                return 403  # access to bucket not authorized
             elif error_code == 404:
-                return 404
+                return 404  # bucket does not exist
 
     def create_bucket(self, bucket_name):
         """
@@ -94,8 +93,8 @@ class S3FileHandler:
         :type filename: str
         :param key: object name in bucket on S3
         :type key: str
-        :returns: True if it went well, False if bucket does not exist
-        :rtype:bool
+        :returns: status code, and msg if not 200
+        :rtype: JSON
         """
 
         status_code = self.bucket_exists(bucket)
@@ -103,11 +102,11 @@ class S3FileHandler:
             try:
                 self.resource.meta.client.upload_file(
                     filename, bucket, key)  # executes silently
-                return 200
-            except Exception as e:
-                print(e)
+                return  {'status_code': 200}
+            except ClientError as e:
+                return {'status_code': e.response['Error']['Code']}
         else:
-            return status_code  # e.g., NoSuchBucket = 404
+            return {'status_code': status_code}  # e.g., NoSuchBucket = 404
 
 
 if __name__ == '__main__':
