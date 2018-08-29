@@ -26,6 +26,7 @@ class ElasticsearchTestCase(unittest.TestCase):
 
         cls._es_docker_container = docker_client.containers.run("docker.elastic.co/elasticsearch/elasticsearch:5.5.3",
                                                                 detach=True,
+                                                                auto_remove=True, # Automatically remove an ES container upon stop/kill
                                                                 ports={api_container_port: ('127.0.0.1', None)},
                                                                 environment=["xpack.security.enabled=false",
                                                                              "discovery.type=single-node"])
