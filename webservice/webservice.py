@@ -410,23 +410,21 @@ def export_to_firecloud():
 
     # Transfer parameters.
     aws_region = 'us-west-2'
-    file_name_in_bucket = str(uuid.uuid4())
+    bucket_key = str(uuid.uuid4())
     azul_s3_bucket = os.getenv("AZUL_S3_BUCKET")
     access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
     secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 
     s3 = S3FileHandler(aws_region, access_key_id, secret_key)
-    s3.upload_object_to_bucket(azul_s3_bucket,
-                               zipped_bag,
-                               file_name_in_bucket)
-    # if s3.upload_object_to_bucket(s3_azul_bucket,
-    #                               zipped_bag,
-    #                               file_name_in_bucket):
-    #     status_code = 200
-    # else:
-    #     status_code = 400
-    logger.info("Uploaded BDbag {} to S3 bucket {}.".format(file_name_in_bucket,
-                                                            azul_s3_bucket))
+    r = s3.upload_object_to_bucket(azul_s3_bucket,
+                                   zipped_bag,
+                                   bucket_key)
+    if r.status_code == 200:
+        logger.info("Uploaded BDbag {} to S3 bucket {}.".format(bucket_key,
+                                                                azul_s3_bucket))
+    else:
+        logger.error("Upload to S3 bucket {} failed: {}".format(
+            azul_s3_bucket, r.status_code))
 
     url = '{}://{}:{}/api/exportBag?workspace={}&namespace={}'.format(
         fc_lambda_protocol,  fc_lambda_domain, fc_lambda_port,
