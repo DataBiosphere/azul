@@ -1,11 +1,12 @@
 #!/usr/bin/python
 import json
 from faker import Faker
-import elasticsearch5
+from elasticsearch.exceptions import NotFoundError
 import logging
 import os
 
 from azul import config
+from azul.es import ESClientFactory
 
 logger = logging.getLogger(__name__)
 
@@ -45,33 +46,30 @@ class FakerSchemaGenerator(object):
 class ElasticsearchFakeDataLoader(object):
     test_index_name = config.es_index_name('files')
 
-    def __init__(self, number_of_documents=1000, azul_es_endpoint=None):
-
+    def __init__(self, number_of_documents=1000):
         service_tests_folder = os.path.dirname(os.path.realpath(__file__))
         fake_data_template_file = open(os.path.join(service_tests_folder, 'fake_data_template.json'), 'r')
         with fake_data_template_file as template_file:
             self.doc_template = json.load(template_file)
 
-        self.azul_es_url = azul_es_endpoint or os.environ['AZUL_ES_ENDPOINT']
-        self.elasticsearch_client = elasticsearch5.Elasticsearch(hosts=[self.azul_es_url], port=9200)
+        self.elasticsearch_client = ESClientFactory.get()
         self.number_of_documents = number_of_documents
 
     def load_data(self, will_clean_up=True):
-        logger.log(logging.INFO, f"Deleting leftover data in test index "
-                                 f"'{self.test_index_name}' at\n{self.azul_es_url}.")
+        logger.log(logging.INFO, f"Deleting leftover data in test index '{self.test_index_name}'.")
 
         if will_clean_up:
             self.clean_up()
 
         try:
             self.elasticsearch_client.indices.delete(index=self.test_index_name)
-        except elasticsearch5.exceptions.NotFoundError:
+        except NotFoundError:
             logger.log(logging.DEBUG, f"The index {self.test_index_name} doesn't exist yet. Skipping clean up.")
 
-        logger.log(logging.INFO, f"Creating new test index '{self.test_index_name}' at\n{self.azul_es_url}.")
+        logger.log(logging.INFO, f"Creating new test index '{self.test_index_name}'.")
         self.elasticsearch_client.indices.create(self.test_index_name)
 
-        logger.log(logging.INFO, f"Loading data into test index '{self.test_index_name}' at\n{self.azul_es_url}.")
+        logger.log(logging.INFO, f"Loading data into test index '{self.test_index_name}'.")
         faker = FakerSchemaGenerator()
         fake_data_body = ""
         for i in range(self.number_of_documents):
@@ -82,5 +80,5 @@ class ElasticsearchFakeDataLoader(object):
     def clean_up(self):
         try:
             self.elasticsearch_client.indices.delete(index=self.test_index_name)
-        except elasticsearch5.exceptions.NotFoundError:
+        except NotFoundError:
             logger.log(logging.DEBUG, f"The index {self.test_index_name} doesn't exist yet. Skipping clean up.")
