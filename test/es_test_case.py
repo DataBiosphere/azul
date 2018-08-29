@@ -23,6 +23,7 @@ class ElasticsearchTestCase(unittest.TestCase):
         super().setUpClass()
         docker_client = docker.from_env()
         api_container_port = '9200/tcp'
+
         cls._es_docker_container = docker_client.containers.run("docker.elastic.co/elasticsearch/elasticsearch:5.5.3",
                                                                 detach=True,
                                                                 ports={api_container_port: ('127.0.0.1', None)},
@@ -36,6 +37,7 @@ class ElasticsearchTestCase(unittest.TestCase):
         es_host = f'{es_host_ip}:{es_host_port}'
         cls._old_es_endpoint = os.environ.get('AZUL_ES_ENDPOINT')
         os.environ['AZUL_ES_ENDPOINT'] = es_host
+
         cls.es_client = ESClientFactory.get()
         cls._wait_for_es()
 
@@ -49,6 +51,7 @@ class ElasticsearchTestCase(unittest.TestCase):
                     raise AssertionError('Docker container took more than a minute to set up')
                 logger.info('Could not ping Elasticsearch. Retrying...')
                 time.sleep(1)
+        logger.info(f'Took {time.time() - start_time:.3f}s to have ES reachable')
         logger.info('Elasticsearch appears to be up.')
 
     @classmethod
