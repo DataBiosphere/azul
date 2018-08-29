@@ -84,7 +84,7 @@ class FileTypeSummary(JsonObject):
     def _create_object_with_bucket(cls, bucket):
         new_object = cls()
         new_object.count = bucket['doc_count']
-        new_object.totalSize = bucket['size_by_type']['value']
+        new_object.totalSize = int(bucket['size_by_type']['value'])  # Casting to integer since ES returns a double
         new_object.fileType = bucket['key']
         return new_object
 
