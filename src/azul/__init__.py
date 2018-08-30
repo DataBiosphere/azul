@@ -89,10 +89,6 @@ class Config:
     def es_volume_size(self) -> int:
         return int(os.environ['AZUL_ES_VOLUME_SIZE'])
 
-    @property
-    def es_index(self) -> str:
-        return os.environ['AZUL_ES_INDEX']
-
     def es_index_name(self, entity_type) -> str:
         return os.environ['AZUL_ES_INDEX_NAME_TEMPLATE'].format(entity_type=entity_type)
 
