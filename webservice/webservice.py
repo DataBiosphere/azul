@@ -5,11 +5,12 @@ import datetime
 from flask import jsonify, request, Blueprint
 import logging.config
 import os
+import uuid
 from responseobjects.elastic_request_builder import \
     ElasticTransformDump as EsTd
 from responseobjects.utilities import json_pp
 from bagitutils import BagHandler
-from StringIO import StringIO
+from s3_file_handler import S3FileHandler
 
 
 # Setting up logging
@@ -291,22 +292,38 @@ def get_order():
     return jsonify({'order': order_list})
 
 
-@webservicebp.route('/repository/files/export', methods=['GET'])
+@webservicebp.route('/repository/files/export',
+                    methods=['GET'])
 def get_manifest():
     """
-    Creates and returns a manifest based on the filters pased on
-    to this endpoint
+    Creates and returns a manifest based on the filters and format passed on
+    to this endpoint.
+
     parameters:
         - name: filters
           in: query
           type: string
           description: Filters to be applied when generating the manifest
+          
+        - name: format
+          in: query
+          type: string
+          values: 'tsv' (default), 'bdbag'
+          description: Output format. If format is 'bdbag' the output is a
+            presigned URL to the S3 temporary storage. Any other format string
+            or none will output a TSV file.
     :return: A manifest that the user can use to download the files in there
     """
     # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_manifest")
     filters = request.args.get('filters', '{"file": {}}')
     logger.debug("Filters string is: {}".format(filters))
+
+    # NOTE: "format" here is a HTTP query parameter, not a Python command.
+    format = request.args.get('format', default='tsv')
+    logger.info("Returning with format={}".format(format))
+
+    logger.debug("Output format is: {}".format(format))
     try:
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
@@ -322,7 +339,86 @@ def get_manifest():
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_manifest(filters=filters)
-    # Return the excel file
+    if format == 'bdbag':  # returns URL to BDBag
+        response_bag = bdbag_response(response)
+        if 'status' in response_bag:
+            http_status = response_bag['status']
+        else:
+            logger.debug(
+                "Response object {} has no status".format(response_bag))
+            http_status = 200
+        return jsonify(response_bag), http_status
+    else:
+        return response
+
+def bdbag_response(response_obj):
+    """
+    Create a response for BDBag upload to S3. Returns just the presigned URL of
+    the S3 location if all goes well. Otherwise the HTTP status code, error
+    code, and a message are returned in JSON format.
+    
+    :param response_obj: Contains the selected metadata as a TSV.
+    :type response_obj: A Flask response object.
+    :return response: Information depends on status of actions.
+    :rtype response: JSON
+    """
+    logger = logging.getLogger('dashboardService.webservice.bdbag_response')
+    # Create and return the BDbag folder.
+    bag_name = 'manifest'
+    bag_info = {'organization': '',
+                'data_type': '',
+                'date_created': datetime.datetime.now().isoformat()}
+
+    # Instantiate bag object.
+    bag = BagHandler(data=response_obj.get_data(),
+                     bag_info=bag_info,
+                     bag_name=bag_name)
+    zipped_bag = bag.create_bag()  # path to compressed bag
+    logger.info('Creating a compressed BDbag containing manifest.')
+
+    # Import bucket environment variable, launch instance of S3-file handler,
+    # and upload the BDBag file to S3.
+
+    # Transfer parameters.
+    azul_s3_aws_region = os.getenv('AZUL_S3_AWS_REGION', 'us-west-2')
+    azul_presigned_url_expiration = \
+        os.getenv('AZUL_PRESIGNED_URL_EXPIRATION', 3600)  # in seconds
+    bucket_key = str(uuid.uuid4())
+    azul_s3_bucket = os.getenv('AZUL_S3_BUCKET', 'azul-s3-bucket')
+    access_key_id = os.getenv('AWS_ACCESS_KEY_ID', None)
+    secret_key = os.getenv('AWS_SECRET_ACCESS_KEY', None)
+
+    s3 = S3FileHandler(azul_s3_aws_region, access_key_id, secret_key)
+    r = s3.upload_object_to_bucket(azul_s3_bucket,
+                                   zipped_bag,
+                                   bucket_key)
+    os.remove(zipped_bag)
+
+    if r['status_code'] == 200:
+        logger.info("Uploaded BDbag {} to S3 bucket {}.".format(bucket_key,
+                                                                azul_s3_bucket))
+        # Generate presigned URL to access that s3 location.
+        result = s3.create_presigned_url(azul_s3_bucket, bucket_key,
+                                         azul_presigned_url_expiration)
+        if result['status_code'] == 200:
+            # Happy path: bag is uploaded, and presigned URL generated.
+            logger.info("Successfully created presigned URL for bucket {}.".
+                        format(''.join([azul_s3_bucket, '/', bucket_key])))
+            response = {'url': result['presigned_url']}
+        else:
+            logger.error("Failed to create presigned URL for bucket {}.".
+                        format(''.join([azul_s3_bucket, '/', bucket_key])))
+            response = {'status': result['status_code'],
+                        'msg': 'BDBag uploaded to S3, '
+                               'but could not generate presigned URL.'}
+    else:
+        logger.error("Upload to S3 bucket {} failed: {}".format(
+            azul_s3_bucket, r['status_code']))
+        response = {
+            'msg': 'BDBag upload to S3 bucket {} failed.'
+                .format(azul_s3_bucket),
+            'status': r['status_code']
+        }
     return response
 
 
@@ -416,3 +512,4 @@ def export_to_firecloud():
         'reason': post.reason
     }
     return jsonify(response), post.status_code
+
