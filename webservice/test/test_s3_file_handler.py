@@ -162,6 +162,33 @@ class TestS3FileHandler(unittest.TestCase):
 
         self.assertEqual(result, mock_result)
 
+    @patch('s3_file_handler.S3FileHandler.bucket_exists')
+    @patch('s3_file_handler.boto3')
+    def test_create_presigned_url_ClientError(self, boto3, mock_bucketexists):
+        """This mocks a client error when using the generate_presigned_url
+        method in boto3. In that case we return the status code and an empty
+        string for the presigned URL."""
+
+        # Mock value for bucket exists.
+        mock_bucketexists.return_value = 200
+
+        boto3.return_value.resource.return_value.Object.return_value.\
+            upload_file.side_effect = botocore.exceptions.ClientError(
+            {'Error': {'Code': '301', 'Message': 'something'}},
+            'PutObject'
+        )
+
+        # Run method and return mocked result.
+        bucket = 'test_bucket'
+        key = 'test_file'
+        mock_result = self.bucket.create_presigned_url(bucket, key)
+
+        # Define expected result.
+        result = {'status_code': 301,
+                  'presigned_url': ''}
+
+        self.assertEqual(result, mock_result)
+
 
 if __name__ == '__main__':
     unittest.main()
