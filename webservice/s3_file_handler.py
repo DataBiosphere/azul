@@ -114,6 +114,10 @@ class S3FileHandler:
         :return: the presigned URL of the key `key_name` in bucket `bucket_name`
         :rtype: str
         """
+        result = {
+            'status_code': '',
+            'presigned_url': ''
+            }
         status_code = self.bucket_exists(bucket_name)
         if status_code == 200:
             url = self.bucket.generate_presigned_url(
@@ -126,10 +130,11 @@ class S3FileHandler:
 
             response = requests.get(url)
             _presigned_url = response.url
-            presigned_url = _presigned_url.encode('utf-8')
-            return presigned_url
+            result['presigned_url'] = _presigned_url.encode('utf-8')
+            result['status_code'] = status_code
+            return  result
         else:
-            return status_code
+            return result
 
 
 if __name__ == '__main__':
