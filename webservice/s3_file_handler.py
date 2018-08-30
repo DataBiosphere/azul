@@ -111,8 +111,8 @@ class S3FileHandler:
 
     def create_presigned_url(self, bucket_name, key_name):
         """
-        :return: the presigned URL of the key `key_name` in bucket `bucket_name`
-        :rtype: str
+        :return result: status code and presigned URL (in case of success)
+        :rtype: dict
         """
         result = {
             'status_code': '',
@@ -129,10 +129,14 @@ class S3FileHandler:
             )
 
             response = requests.get(url)
-            _presigned_url = response.url
-            result['presigned_url'] = _presigned_url.encode('utf-8')
-            result['status_code'] = status_code
-            return  result
+            if response.status_code == 200:
+                _presigned_url = response.url
+                result['presigned_url'] = _presigned_url.encode('utf-8')
+                result['status_code'] = response.status_code
+                return  result
+            else:
+                result['status_code'] = response.status_code
+                return result
         else:
             return result
 
