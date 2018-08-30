@@ -129,20 +129,19 @@ class S3FileHandler:
                         'Key': key_name
                     }
                 )
-
-                response = requests.get(url)
-                if response.status_code == 200:
-                    _presigned_url = response.url
-                    result['presigned_url'] = _presigned_url.encode('utf-8')
-                    result['status_code'] = response.status_code
-                    return result
-                else:
-                    result['status_code'] = response.status_code
-                    return result
-
             except ClientError as e:
                 result['status_code'] = \
                     {'status_code': e.response['Error']['Code']}
+                return result
+
+            response = requests.get(url)
+            if response.status_code == 200:
+                _presigned_url = response.url
+                result['presigned_url'] = _presigned_url.encode('utf-8')
+                result['status_code'] = response.status_code
+                return result
+            else:
+                result['status_code'] = response.status_code
                 return result
         else:
             return result
