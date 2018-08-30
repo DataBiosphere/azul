@@ -121,7 +121,7 @@ class TestS3FileHandler(unittest.TestCase):
         """The bucket bucket_name does not exist. It returns an empty
         dictionary."""
 
-        # Mock values for the happy path.
+        # Mock value for error message "NoSuchBucket".
         mock_bucketexists.return_value = 404
 
         # Run the function and return mock result.
@@ -138,10 +138,11 @@ class TestS3FileHandler(unittest.TestCase):
     @patch('s3_file_handler.S3FileHandler.bucket_exists')
     @patch.object(requests, 'get')
     def test_create_presigned_url_get_fails(self, mock_get, mock_bucketexists):
-        """This mocks the happy path: the bucket exists, the presigned URL can
-         be generated, and the GET request is successful."""
+        """This mocks the case that the GET request fails, resulting in a
+         status code that's not 200. In that case we return that status code
+         and an empty string for the presigned URL."""
 
-        # Mock values for the happy path.
+        # Mock value for bucket exists.
         mock_bucketexists.return_value = 200
 
         # Mock values for requests response.
