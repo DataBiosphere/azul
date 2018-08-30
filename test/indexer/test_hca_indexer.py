@@ -66,11 +66,13 @@ class TestHCAIndexer(IndexerTestCase):
             for result_dict in es_results:
                 index_name = result_dict["_index"]
                 index_id = result_dict["_id"]
-                with open(os.path.join(data_prefix, f'aee55415-d128-4b30-9644-e6b2742fa32b.{index_name}.results.json'), 'r') as fp:
+                # FIXME: https://github.com/DataBiosphere/azul/issues/273
+                index_type = index_name.split('_')[1]
+                with open(os.path.join(data_prefix, f'aee55415-d128-4b30-9644-e6b2742fa32b.{index_type}.results.json'), 'r') as fp:
                     expected_dict = json.load(fp)
                     for expected_hit in expected_dict["hits"]["hits"]:
                         if index_id == expected_hit["_id"]:
-                            self.assertEqual(freeze(expected_hit), freeze(result_dict))
+                            self.assertEqual(freeze(expected_hit["_source"]), freeze(result_dict["_source"]))
 
         self._get_es_results(check_bundle_correctness)
 
