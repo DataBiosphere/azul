@@ -47,11 +47,6 @@ azul_vars=(
     # The size of the EBS volume backing each cluster node
     AZUL_ES_VOLUME_SIZE
 
-    # FIXME: not actually used outside of tests
-    
-    # The name of the ES index to be populated in response to events from DSS
-    AZUL_ES_INDEX
-
     # Elasticsearch operation timeout in seconds
     AZUL_ES_TIMEOUT
 
@@ -151,7 +146,6 @@ fi
 _set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.explore.data.humancellatlas.org"  # FIXME: project-specific, is this the right place for this?
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
 _set AZUL_RESOURCE_PREFIX "azul-"
-_set AZUL_ES_INDEX "azul-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_SHARE_ES_DOMAIN 0
 _set AZUL_ES_INDEX_NAME_TEMPLATE "azul_{entity_type}_$AZUL_DEPLOYMENT_STAGE"
