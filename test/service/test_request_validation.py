@@ -4,7 +4,8 @@ import logging
 from unittest import mock
 import requests
 
-from azul import config
+from azul import config as config
+from azul.service import service_config
 from service import WebServiceTestCase
 
 log = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                             "Message": "BadRequestError: Unable to filter by undefined facet bad-facet."}
     sort_facet_message = {"Code": "BadRequestError",
                           "Message": "BadRequestError: Unable to sort by undefined facet bad-facet."}
+    service_config_folder = os.path.dirname(service_config.__file__)
 
     def test_health(self):
         url = self.base_url + "health"
@@ -70,6 +72,27 @@ class FacetNameValidationTest(WebServiceTestCase):
                         }
                     }
                     self.assertEqual(response.json(), expected_json)
+
+    def test_specimen(self):
+        url = self.base_url + "repository/files?from=1&size=1"
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, response.content)
+
+    def test_valid_filter_facet_of_specimen(self):
+        url = self.base_url + "repository/specimens?from=1&size=1&filters={'file':{'organ':{'is':['fake-val']}}}"
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, response.content)
+
+    def test_valid_sort_facet_of_specimen(self):
+        url = self.base_url + "repository/specimens?size=15&sort=organ&order=asc"
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, response.content)
+
+    def test_valid_sort_and_filter_facet_of_specimen(self):
+        url = self.base_url + "repository/specimens?size=15&sort=organ&order=asc" \
+                              "&filters={'file':{'organ':{'is':['fake-val2']}}}"
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, response.json())
 
     def test_bad_single_filter_facet_of_specimen(self):
         url = self.base_url + "repository/specimens?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
@@ -118,6 +141,27 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
+
+    def test_file(self):
+        url = self.base_url + "repository/files?from=1&size=1"
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, response.content)
+
+    def test_valid_filter_facet_of_file(self):
+        url = self.base_url + "repository/files?from=1&size=1&filters={'file':{'organ':{'is':['fake-val']}}}"
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, response.content)
+
+    def test_valid_sort_facet_of_file(self):
+        url = self.base_url + "repository/specimens?size=15&sort=organ&order=asc"
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, response.content)
+
+    def test_valid_sort_and_filter_facet_of_file(self):
+        url = self.base_url + "repository/specimens?size=15&sort=organ&order=asc" \
+                              "&filters={'file':{'organ':{'is':['fake-val2']}}}"
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, response.content)
 
     def test_bad_single_filter_facet_of_file(self):
         url = self.base_url + "repository/files?from=1&size=1" \
@@ -168,27 +212,31 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
-    def test_bad_filter_facet_of_piechart(self):
-        url = self.base_url + "repository/files/piecharts?filters={'file':{'bad-facet':{'is':['fake-val2']}}}"
-        response = requests.get(url)
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
-
-    def test_bad_multiple_filter_facet_of_piechart(self):
-        url = self.base_url + "repository/files/piecharts" \
-                              "?filters={'file':{'bad-facet':{'is':['fake-val']},'bad-facet2':{'is':['fake-val']}}}"
-        response = requests.get(url)
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
-
-    def test_mixed_multiple_filter_facet_of_piechart(self):
-        url = self.base_url + "repository/files/piecharts" \
-                              "?filters={'file':{'organPart':{'is':['fake-val']},'bad-facet':{'is':['fake-val']}}}"
-        response = requests.get(url)
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
-
     def test_summary_endpoint_for_bad_entity_id(self):
         url = self.base_url + "repository/summary/bad_entity_id"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
+
+    def test_file_order(self):
+        url = self.base_url + 'repository/files/order'
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, response.json())
+
+        order_config_filepath = '{}/order_config'.format(self.service_config_folder)
+        with open(order_config_filepath, 'r') as order_settings_file:
+            actual_field_order = [entity_field for entity_field in response.json()['order']]
+            expected_field_order = [entity_field.strip() for entity_field in order_settings_file.readlines()]
+            self.assertEqual(expected_field_order, actual_field_order, "Field order is not configured correctly")
+
+    def test_manifest(self):
+        import csv
+        import json
+
+        url = self.base_url + 'repository/files/export?filters={"file":{}}'
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+        tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
+        self.assertEqual(len(list(tsv_file)), 1000, 'Wrong number of bundles were found.')
+        manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_folder), 'r'))['manifest']
+        expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['files'].keys())
+        self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
