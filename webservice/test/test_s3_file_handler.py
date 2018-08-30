@@ -115,6 +115,52 @@ class TestS3FileHandler(unittest.TestCase):
 
         self.assertEqual(result, mock_result)
 
+    @patch('s3_file_handler.S3FileHandler.bucket_exists')
+    def test_create_presigned_url_no_such_bucket(
+            self, mock_bucketexists):
+        """The bucket bucket_name does not exist. It returns an empty
+        dictionary."""
+
+        # Mock values for the happy path.
+        mock_bucketexists.return_value = 404
+
+        # Run the function and return mock result.
+        bucket = 'test_bucket'
+        key = 'test_file'
+        mock_result = self.bucket.create_presigned_url(bucket, key)
+
+        # Define expected result.
+        result = {'status_code': '',
+                  'presigned_url': ''}
+
+        self.assertEqual(result, mock_result)
+
+    @patch('s3_file_handler.S3FileHandler.bucket_exists')
+    @patch.object(requests, 'get')
+    def test_create_presigned_url_get_fails(self, mock_get, mock_bucketexists):
+        """This mocks the happy path: the bucket exists, the presigned URL can
+         be generated, and the GET request is successful."""
+
+        # Mock values for the happy path.
+        mock_bucketexists.return_value = 200
+
+        # Mock values for requests response.
+        mockresponse = Mock()
+        mock_get.return_value = mockresponse
+        mockresponse.status_code = 300
+        mockresponse.url = ''
+
+        # Run method and return mocked result.
+        bucket = 'test_bucket'
+        key = 'test_file'
+        mock_result = self.bucket.create_presigned_url(bucket, key)
+
+        # Define expected result.
+        result = {'status_code': 300,
+                  'presigned_url': ''}
+
+        self.assertEqual(result, mock_result)
+
 
 if __name__ == '__main__':
     unittest.main()
