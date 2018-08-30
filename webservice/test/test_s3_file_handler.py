@@ -1,10 +1,12 @@
 #! /usr/bin/env python
 
 import unittest
-from mock import patch
+import requests
+from mock import patch, Mock
 from s3_file_handler import S3FileHandler as s3handler
 import botocore
 from botocore.exceptions import ClientError
+
 
 class TestS3FileHandler(unittest.TestCase):
 
@@ -88,6 +90,31 @@ class TestS3FileHandler(unittest.TestCase):
         mock_list_objects_in_bucket.return_value = self.list_objects_in_bucket
         L = self.bucket.list_objects_in_bucket('my_bucket')
         self.assertListEqual(L, self.list_objects_in_bucket)
+
+    @patch('s3_file_handler.S3FileHandler.bucket_exists')
+    @patch.object(requests, 'get')
+    def test_create_presigned_url(self, mock_get, mock_bucketexists):
+        """This mocks the happy path: the bucket exists, the presigned URL can
+         be generated, and the GET request is successful."""
+
+        # Mock values for the happy path.
+        mock_bucketexists.return_value = 200
+        mockresponse = Mock()
+        mock_get.return_value = mockresponse
+        mockresponse.status_code = 200
+        mockresponse.url = u'http://aws.s3.test_presigned_url'
+
+        # Run the function and return mock result.
+        bucket = 'test_bucket'
+        key = 'test_file'
+        mock_result = self.bucket.create_presigned_url(bucket, key)
+
+        # Define expected result.
+        result = {'status_code': 200,
+                  'presigned_url': 'http://aws.s3.test_presigned_url'}
+
+        self.assertEqual(result, mock_result)
+
 
 if __name__ == '__main__':
     unittest.main()
