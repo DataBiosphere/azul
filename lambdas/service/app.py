@@ -31,7 +31,7 @@ def _get_pagination(current_request):
     pagination = {
         "order": current_request.query_params.get('order', 'desc'),
         "size": int(current_request.query_params.get('size', ENTRIES_PER_PAGE)),
-        "sort": current_request.query_params.get('sort', 'entryId'),
+        "sort": current_request.query_params.get('sort', 'specimenId'),
     }
 
     sa = current_request.query_params.get('search_after')
