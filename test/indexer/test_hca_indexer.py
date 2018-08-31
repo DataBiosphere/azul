@@ -68,7 +68,7 @@ class TestHCAIndexer(IndexerTestCase):
                 index_id = result_dict["_id"]
                 expected_ids = set()
                 # FIXME: https://github.com/DataBiosphere/azul/issues/273
-                index_type = index_name.split('_')[1]
+                index_type = config.get_entity_index(index_name)
                 with open(os.path.join(data_prefix, f'aee55415-d128-4b30-9644-e6b2742fa32b.{index_type}.results.json'), 'r') as fp:
                     expected_dict = json.load(fp)
                     self.assertGreater(len(expected_dict["hits"]["hits"]), 0)
