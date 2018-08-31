@@ -41,13 +41,10 @@ class S3FileHandler:
             self.resource.meta.client.head_bucket(Bucket=bucket)
             return 200  # bucket exists and access authorized
         except ClientError as e:
-            # If a client error is thrown, then check that it was a 404 error.
-            # If it was a 404 error, then the bucket does not exist.
-            error_code = int(e.response['Error']['Code'])
-            if error_code == 403:
-                return 403  # access to bucket not authorized
-            elif error_code == 404:
-                return 404  # bucket does not exist
+            # If a client error is thrown just return status code. For example,
+            # 404 indicates that the bucket does not exist.
+            status_code = int(e.response['Error']['Code'])
+            return status_code
 
     def create_bucket(self, bucket_name):
         """
