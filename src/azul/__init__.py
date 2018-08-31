@@ -95,6 +95,9 @@ class Config:
         self._validate_term('AZUL_INDEX_PREFIX')
         return f"{os.environ['AZUL_INDEX_PREFIX']}_{entity_type}_{self.deployment_stage}"
 
+    def get_entity_index(self, index_name) -> str:
+        return index_name.split('_')[1]
+
     @property
     def domain_name(self) -> str:
         return os.environ['AZUL_DOMAIN_NAME']
