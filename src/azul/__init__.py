@@ -1,6 +1,7 @@
 import functools
 import importlib
 import os
+import re
 import time
 
 from typing import Tuple, Mapping
@@ -52,8 +53,8 @@ class Config:
         return int(os.environ['AZUL_DSS_WORKERS'])
 
     def qualified_resource_name(self, resource_name):
-        prefix = os.environ['AZUL_RESOURCE_PREFIX']
-        return f"{prefix}{resource_name}-{self.deployment_stage}"
+        self._validate_term('AZUL_RESOURCE_PREFIX')
+        return f"{os.environ['AZUL_RESOURCE_PREFIX']}-{resource_name}-{self.deployment_stage}"
 
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].format(lambda_name=lambda_name)
@@ -71,6 +72,7 @@ class Config:
 
     @property
     def deployment_stage(self) -> str:
+        self._validate_term('AZUL_DEPLOYMENT_STAGE')
         return os.environ['AZUL_DEPLOYMENT_STAGE']
 
     @property
@@ -90,7 +92,8 @@ class Config:
         return int(os.environ['AZUL_ES_VOLUME_SIZE'])
 
     def es_index_name(self, entity_type) -> str:
-        return os.environ['AZUL_ES_INDEX_NAME_TEMPLATE'].format(entity_type=entity_type)
+        self._validate_term('AZUL_INDEX_PREFIX')
+        return f"{os.environ['AZUL_INDEX_PREFIX']}_{entity_type}_{self.deployment_stage}"
 
     @property
     def domain_name(self) -> str:
@@ -119,6 +122,10 @@ class Config:
             'azul_git_dirty': str(repo.is_dirty()),
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
+
+    def _validate_term(self, env_var):
+        assert re.fullmatch("[a-z][a-z0-9]{2,14}", os.environ[env_var]) is not None, \
+               "Separator character found in {env_var}: {os.environ[env_var]}."
 
     def google_service_account(self, lambda_name):
         return f"dcp/azul/{self.deployment_stage}/{lambda_name}/google_service_account"
