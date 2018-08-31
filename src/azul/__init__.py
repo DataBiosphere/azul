@@ -32,8 +32,12 @@ class Config:
         return os.environ['AZUL_HOME']
 
     @property
-    def es_domain(self):
+    def es_domain(self) -> str:
         return os.environ['AZUL_ES_DOMAIN']
+
+    @property
+    def share_es_domain(self) -> bool:
+        return 0 != int(os.environ['AZUL_SHARE_ES_DOMAIN'])
 
     @property
     def es_timeout(self) -> int:
