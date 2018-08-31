@@ -346,7 +346,8 @@ class ElasticTransformDump(object):
         es_search = self.create_request(
             filters, self.es_client,
             request_config,
-            post_filter=False, entity_type=entity_type)
+            post_filter=False,
+            entity_type=entity_type)
         # Add a total_size aggregate to the ElasticSearch request
         es_search.aggs.metric(
             'total_size',

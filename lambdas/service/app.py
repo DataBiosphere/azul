@@ -244,12 +244,9 @@ def get_summary(entity_type=None):
           description: Filters to be applied when calling ElasticSearch
     :return: Returns a jsonified Summary API response
     """
-    # Setup logging
     logger = logging.getLogger("dashboardService.webservice.get_summary")
-    # Determine index
     if entity_type not in ('specimens', 'files'):
         raise BadRequestError("Bad arguments, entity_type must be 'files' or 'specimens'")
-
     if app.current_request.query_params is None:
         app.current_request.query_params = {}
     # Get the filters from the URL
