@@ -71,7 +71,7 @@ class TestResponse(WebServiceTestCase):
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
-        self.assertEqual(summary_object['pagination']["sort"], "entryId")
+        self.assertEqual(summary_object['pagination']["sort"], "specimenId")
 
     def _load(self, filename):
         data_folder_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
