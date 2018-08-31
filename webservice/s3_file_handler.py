@@ -46,20 +46,6 @@ class S3FileHandler:
             status_code = int(e.response['Error']['Code'])
             return status_code
 
-    def create_bucket(self, bucket_name):
-        """
-        :param bucket_name: name of bucket in account
-        :type bucket_name: str
-        :return: response with details
-        :rtype: JSON / Python dict
-        """
-        if self.bucket_exists(bucket_name) == 200:
-            self.bucket_name = bucket_name
-            return self.bucket.create_bucket(
-                Bucket=bucket_name,
-                CreateBucketConfiguration={'LocationConstraint': self.region}
-            )
-
     def list_objects_in_bucket(self, bucket):
         """
         :param bucket: name of bucket in account

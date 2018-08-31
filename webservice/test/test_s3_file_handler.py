@@ -37,13 +37,6 @@ class TestS3FileHandler(unittest.TestCase):
         # Mocked return value from method list_objects_in_bucket.
         self.list_objects_in_bucket = ['file1.txt', 'file2.txt', 'file3.txt']
 
-    @patch('s3_file_handler.S3FileHandler.create_bucket')
-    def test_create_bucket(self, mock_create_bucket):
-        mock_create_bucket.return_value = self.response
-        r = self.bucket.create_bucket(
-            bucket_name='bagtest')
-        self.assertDictEqual(r, self.response)
-
     @patch('s3_file_handler.S3FileHandler.bucket_exists')
     def test_bucket_exists(self, mock_bucket_exists):
         mock_bucket_exists.return_value = 200
