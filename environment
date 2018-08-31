@@ -35,6 +35,9 @@ azul_vars=(
     # use. The given ES domain's endpoint will be looked up dynamically.
     AZUL_ES_DOMAIN
 
+    # Boolean value, 1 to share `dev` ES domain, 0 (default) to create your own
+    AZUL_SHARE_ES_DOMAIN
+
     # The number of nodes in the AWS-hosted Elasticsearch cluster
     AZUL_ES_INSTANCE_COUNT
 
@@ -150,6 +153,7 @@ _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
 _set AZUL_RESOURCE_PREFIX "azul-"
 _set AZUL_ES_INDEX "azul-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_SHARE_ES_DOMAIN 0
 _set AZUL_ES_INDEX_NAME_TEMPLATE "azul_{entity_type}_$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "m4.xlarge.elasticsearch"
