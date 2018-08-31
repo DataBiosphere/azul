@@ -23,10 +23,7 @@ class TestRequestBuilder(WebServiceTestCase):
 
     @staticmethod
     def compare_dicts(actual_output, expected_output):
-        # Print the 2 strings for reference
-        # print "Printing expected output: \n %s" % expected_output
-        # print "Printing actual output: \n %s" % actual_output
-        # Now show differences so message is helpful
+        """"Print the two outputs along with a diff of the two"""
         print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(
             actual_output[:20],

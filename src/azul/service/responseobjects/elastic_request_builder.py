@@ -79,12 +79,13 @@ class ElasticTransformDump(object):
         :return: Returns Query object with appropriate filters
         """
         filter_list = []
-        # If filter is {"is": None}, search for values where field does not exist
         for facet, values in filters.items():
-            if values.get('is', {}) is None:
+            value = values.get('is', {})
+            if value is None:
+                # If filter is {"is": None}, search for values where field does not exist
                 f = Q('bool', must_not=Q('exists', field=f'{facet}.keyword'))
             else:
-                f = Q('terms', **{f'{facet.replace(".", "__")}__keyword': values.get('is')})
+                f = Q('terms', **{f'{facet.replace(".", "__")}__keyword': value})
             filter_list.append(f)
 
         # Each iteration will AND the contents of the list
