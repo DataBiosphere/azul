@@ -189,7 +189,6 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_summary_endpoint_for_bad_entity_id(self):
-        entity_id = "bad_index_name"
-        url = self.base_url + "repository/summary/{entity_id}"
+        url = self.base_url + "repository/summary/bad_entity_id"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
