@@ -1,7 +1,7 @@
 from azul import config
 from azul.template import emit
 
-emit({
+emit(None if config.share_es_domain else {
     "data": [
         {
             "aws_iam_policy_document": {
