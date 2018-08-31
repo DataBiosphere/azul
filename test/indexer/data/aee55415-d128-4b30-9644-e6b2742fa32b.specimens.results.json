@@ -140,12 +140,20 @@
                                     }
                                 ],
                                 "project": {
+                                    "project_title": "Melanoma infiltration of stromal and immune cells",
                                     "project_shortname": "Mouse Melanoma",
                                     "laboratory": [
                                         "MRC Cancer Unit",
                                         "Sarah Teichmann"
                                     ],
                                     "document_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
+                                    "contributors": [
+                                        "DKFZ German Cancer Research Center",
+                                        "EMBL-EBI",
+                                        "University of Cambridge",
+                                        "University of Helsinki",
+                                        "Wellcome Trust Sanger Institute"
+                                    ],
                                     "_type": "project"
                                 }
                             }
