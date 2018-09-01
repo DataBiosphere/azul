@@ -13,11 +13,13 @@ from urllib3 import Timeout
 from azul.deployment import aws
 
 
+# FIXME: This class collides conceptually with the plugin config classes derived from BaseIndexerConfig.
+
 class Config:
     """
     See `environment` for documentation of these settings.
     """
-    # FIXME: This collides with the plugin config classes derived from BaseIndexerConfig, they should be consolidated
+
     @property
     def es_endpoint(self) -> Tuple[str, int]:
         try:
@@ -200,7 +202,7 @@ def reject(condition: bool, *args, exception: type = RequirementError):
 
 # Taken from:
 # https://github.com/HumanCellAtlas/data-store/blob/90ffc8fccd2591dc21dab48ccfbba6e9ac29a063/tests/__init__.py
-def eventually(timeout: float, interval: float, errors: set={AssertionError}):
+def eventually(timeout: float, interval: float, errors: set = {AssertionError}):
     """
     @eventually runs a test until all assertions are satisfied or a timeout is reached.
     :param timeout: time until the test fails
@@ -208,6 +210,7 @@ def eventually(timeout: float, interval: float, errors: set={AssertionError}):
     :param errors: the exceptions to catch and retry on
     :return: the result of the function or a raised assertion error
     """
+
     def decorate(func):
         @functools.wraps(func)
         def call(*args, **kwargs):
