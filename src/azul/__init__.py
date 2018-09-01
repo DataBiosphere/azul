@@ -54,9 +54,13 @@ class Config:
     def num_dss_workers(self) -> int:
         return int(os.environ['AZUL_DSS_WORKERS'])
 
+    @property
+    def _resource_prefix(self):
+        return self._term_from_env('AZUL_RESOURCE_PREFIX')
+
     def qualified_resource_name(self, resource_name):
-        self._validate_term('AZUL_RESOURCE_PREFIX')
-        return f"{os.environ['AZUL_RESOURCE_PREFIX']}-{resource_name}-{self.deployment_stage}"
+        self._validate_term(resource_name)
+        return f"{self._resource_prefix}-{resource_name}-{self.deployment_stage}"
 
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].format(lambda_name=lambda_name)
@@ -74,8 +78,7 @@ class Config:
 
     @property
     def deployment_stage(self) -> str:
-        self._validate_term('AZUL_DEPLOYMENT_STAGE')
-        return os.environ['AZUL_DEPLOYMENT_STAGE']
+        return self._term_from_env('AZUL_DEPLOYMENT_STAGE')
 
     @property
     def terraform_backend_bucket_template(self) -> str:
@@ -93,12 +96,19 @@ class Config:
     def es_volume_size(self) -> int:
         return int(os.environ['AZUL_ES_VOLUME_SIZE'])
 
-    def es_index_name(self, entity_type) -> str:
-        self._validate_term('AZUL_INDEX_PREFIX')
-        return f"{os.environ['AZUL_INDEX_PREFIX']}_{entity_type}_{self.deployment_stage}"
+    @property
+    def _index_prefix(self) -> str:
+        return self._term_from_env('AZUL_INDEX_PREFIX')
 
-    def get_entity_index(self, index_name) -> str:
-        return index_name.split('_')[1]
+    def es_index_name(self, entity_type) -> str:
+        self._validate_term(entity_type)
+        return f"{self._index_prefix}_{entity_type}_{self.deployment_stage}"
+
+    def entity_type_for_es_index(self, index_name) -> str:
+        prefix, entity_type, deployment_stage = index_name.split('_')
+        assert prefix == self._index_prefix
+        assert deployment_stage == self.deployment_stage
+        return entity_type
 
     @property
     def domain_name(self) -> str:
@@ -128,9 +138,16 @@ class Config:
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
 
-    def _validate_term(self, env_var):
-        assert re.fullmatch("[a-z][a-z0-9]{2,14}", os.environ[env_var]) is not None, \
-               "Separator character found in {env_var}: {os.environ[env_var]}."
+    term_re = re.compile("[a-z][a-z0-9]{2,29}")
+
+    def _term_from_env(self, env_var_name: str) -> str:
+        value = os.environ[env_var_name]
+        self._validate_term(value, name=env_var_name)
+        return value
+
+    def _validate_term(self, term: str, name: str = 'Term'):
+        require(self.term_re.fullmatch(term) is not None,
+                f"{name} is either too short, too long or contains invalid characters: '{term}'")
 
     def google_service_account(self, lambda_name):
         return f"dcp/azul/{self.deployment_stage}/{lambda_name}/google_service_account"
