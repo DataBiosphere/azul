@@ -8,7 +8,7 @@ from elasticsearch_dsl import A, Q, Search
 
 from azul import config
 from azul.es import ESClientFactory
-from azul.service import config as service_config
+from azul.service import service_config
 from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse,
                                                           FileSearchResponse,
                                                           KeywordSearchResponse,

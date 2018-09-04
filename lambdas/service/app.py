@@ -5,7 +5,7 @@ import os
 from chalice import Chalice, BadRequestError
 
 from azul import config
-import azul.service.config
+from azul.service import service_config
 from azul.service.responseobjects.elastic_request_builder import BadArgumentException, ElasticTransformDump as EsTd
 from azul.service.responseobjects.utilities import json_pp
 
@@ -368,7 +368,7 @@ def get_order():
     logger = logging.getLogger("dashboardService.webservice.get_order")
     # Open the order_config file and get the order list
     logger.info("Getting t")
-    with open('{}/order_config'.format(os.path.dirname(azul.service.config.__file__))) as order:
+    with open('{}/order_config'.format(os.path.dirname(service_config.__file__))) as order:
         order_list = [line.rstrip('\n') for line in order]
     return {'order': order_list}
 
