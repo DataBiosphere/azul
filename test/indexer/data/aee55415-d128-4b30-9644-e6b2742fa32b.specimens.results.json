@@ -140,12 +140,143 @@
                                     }
                                 ],
                                 "project": {
+                                    "project_title": "Melanoma infiltration of stromal and immune cells",
+                                    "project_description": "The cancer microenvironment is a complex ecosystem characterized by dynamic interactions between diverse cell types, including malignant, immune and stromal cells. Here, we performed single-cell RNA sequencing on CD45+ and CD45- cells isolated from tumour and lymph nodes during a mouse model of melanoma. The transcriptional profiles of these individual cells taken at different time points coupled with assembled T cell receptor sequences, allowed us to identify distinct immune subpopulations and delineate their developmental trajectory. Our study provides insights into the complex interplay among cells within the tumour microenvironment and presents a valuable resource for future translational applications.",
                                     "project_shortname": "Mouse Melanoma",
                                     "laboratory": [
                                         "MRC Cancer Unit",
                                         "Sarah Teichmann"
                                     ],
+                                    "institutions": [
+                                        "DKFZ German Cancer Research Center",
+                                        "EMBL-EBI",
+                                        "University of Cambridge",
+                                        "University of Helsinki",
+                                        "Wellcome Trust Sanger Institute"
+                                    ],
+                                    "contact_names": [
+                                        "Angela,,Riedel",
+                                        "Bidesh,,Mahata",
+                                        "Gozde,,Kar",
+                                        "Jacqueline,D,Shields",
+                                        "Jani,,Huuhtanen",
+                                        "Jhuma,,Pramanik",
+                                        "Mirjana,,Efremova",
+                                        "Roser,,Veno-Tormo",
+                                        "Sarah,,Davidson",
+                                        "Sarah,A,Teichmann"
+                                    ],
                                     "document_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
+                                    "contributors": [
+                                        {
+                                            "contact_name": "Angela,,Riedel",
+                                            "corresponding_contributor": false,
+                                            "email": "a.riedel@dkfz-heidelberg.de",
+                                            "institution": "DKFZ German Cancer Research Center",
+                                            "laboratory": null,
+                                            "orcid_id": null,
+                                            "phone": null
+                                        },
+                                        {
+                                            "contact_name": "Bidesh,,Mahata",
+                                            "corresponding_contributor": false,
+                                            "email": "bm11@sanger.ac.uk",
+                                            "institution": "Wellcome Trust Sanger Institute",
+                                            "laboratory": "Sarah Teichmann",
+                                            "orcid_id": null,
+                                            "phone": null
+                                        },
+                                        {
+                                            "contact_name": "Gozde,,Kar",
+                                            "corresponding_contributor": false,
+                                            "email": "gkar@ebi.ac.uk",
+                                            "institution": "EMBL-EBI",
+                                            "laboratory": "Sarah Teichmann",
+                                            "orcid_id": null,
+                                            "phone": null
+                                        },
+                                        {
+                                            "contact_name": "Jani,,Huuhtanen",
+                                            "corresponding_contributor": true,
+                                            "email": "jani.huuhtanen@helsinki.fi",
+                                            "institution": "University of Helsinki",
+                                            "laboratory": null,
+                                            "orcid_id": null,
+                                            "phone": null
+                                        },
+                                        {
+                                            "contact_name": "Jhuma,,Pramanik",
+                                            "corresponding_contributor": false,
+                                            "email": "jp19@sanger.ac.uk",
+                                            "institution": "Wellcome Trust Sanger Institute",
+                                            "laboratory": "Sarah Teichmann",
+                                            "orcid_id": null,
+                                            "phone": null
+                                        },
+                                        {
+                                            "contact_name": "Jacqueline,D,Shields",
+                                            "corresponding_contributor": false,
+                                            "email": "JS970@MRCCU.cam.ac.uk",
+                                            "institution": "University of Cambridge",
+                                            "laboratory": "MRC Cancer Unit",
+                                            "orcid_id": null,
+                                            "phone": null
+                                        },
+                                        {
+                                            "contact_name": "Mirjana,,Efremova",
+                                            "corresponding_contributor": false,
+                                            "email": "me5@sanger.ac.uk",
+                                            "institution": "Wellcome Trust Sanger Institute",
+                                            "laboratory": "Sarah Teichmann",
+                                            "orcid_id": null,
+                                            "phone": null
+                                        },
+                                        {
+                                            "contact_name": "Roser,,Veno-Tormo",
+                                            "corresponding_contributor": false,
+                                            "email": "rv4@sanger.ac.uk",
+                                            "institution": "Wellcome Trust Sanger Institute",
+                                            "laboratory": "Sarah Teichmann",
+                                            "orcid_id": null,
+                                            "phone": null
+                                        },
+                                        {
+                                            "contact_name": "Sarah,,Davidson",
+                                            "corresponding_contributor": false,
+                                            "email": "SED49@MRCCU.cam.ac.uk",
+                                            "institution": "University of Cambridge",
+                                            "laboratory": "MRC Cancer Unit",
+                                            "orcid_id": null,
+                                            "phone": null
+                                        },
+                                        {
+                                            "contact_name": "Sarah,A,Teichmann",
+                                            "corresponding_contributor": false,
+                                            "email": "st9@sanger.ac.uk",
+                                            "institution": "Wellcome Trust Sanger Institute",
+                                            "laboratory": "Sarah Teichmann",
+                                            "orcid_id": null,
+                                            "phone": null
+                                        }
+                                    ],
+                                    "publication_titles": [
+                                        "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations"
+                                    ],
+                                    "publications": [
+                                        {
+                                            "authors": [
+                                                "Katrina Meeth",
+                                                "Jake Wang",
+                                                "Goran Micevic",
+                                                "William Damsky",
+                                                "Marcus W. Bosenberg"
+                                            ],
+                                            "publication_title": "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations",
+                                            "doi": "10.1111/pcmr.12498",
+                                            "pmid": 5331933,
+                                            "publication_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5331933/"
+                                        }
+                                    ],
                                     "_type": "project"
                                 }
                             }

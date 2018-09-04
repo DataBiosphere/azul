@@ -1,6 +1,6 @@
 from collections import defaultdict
 import logging
-from typing import Any, List, Mapping, MutableMapping, Sequence
+from typing import Any, List, Mapping, MutableMapping, Sequence, Set
 
 from humancellatlas.data.metadata import api
 
@@ -13,12 +13,44 @@ log = logging.getLogger(__name__)
 
 def _project_dict(bundle: api.Bundle) -> dict:
     project: api.Project
+    laboratories: Set[str]
+    institutions: Set[str]
+    contact_names: Set[str]
+    publication_titles: Set[str]
+
     project, *additional_projects = bundle.projects.values()
     reject(additional_projects, "Azul can currently only handle a single project per bundle")
+
+    # Store lists of all values of each of these facets to allow facet filtering
+    # and term counting on the webservice
+    laboratories = set()
+    institutions = set()
+    contact_names = set()
+    publication_titles = set()
+
+    for contributor in project.contributors:
+        if contributor.laboratory:
+            laboratories.add(contributor.laboratory)
+        if contributor.contact_name:
+            contact_names.add(contributor.contact_name)
+        if contributor.institution:
+            institutions.add(contributor.institution)
+
+    for publication in project.publications:
+        if publication.publication_title:
+            publication_titles.add(publication.publication_title)
+
     return {
-        'project_shortname': project.project_shortname,
-        'laboratory': sorted(list(project.laboratory_names)),
+        'project_title': project.project_title,
+        'project_description': project.project_description,
+        'project_shortname': project.project_short_name,
+        'laboratory': sorted(laboratories),
+        'institutions': sorted(institutions),
+        'contact_names': sorted(contact_names),
+        'contributors': sorted(project.contributors, key=lambda contributor: contributor.email.lower() if contributor.email else None),
         'document_id': project.document_id,
+        'publication_titles': sorted(publication_titles),
+        'publications': sorted(project.publications),
         '_type': 'project'
     }
 
@@ -94,11 +126,13 @@ class TransformerVisitor(api.EntityVisitor):
 
     def visit(self, entity: api.Entity) -> None:
         if isinstance(entity, api.SpecimenFromOrganism):
+            # This is to ensure that we have a unique set of specimens.
             self.specimens[entity.document_id] = entity
         elif isinstance(entity, api.Process):
             for pl in entity.protocols.values():
-                pl_pr_id = f"{str(pl.document_id)}-{str(entity.document_id)}"
-                self.processes[pl_pr_id] = self._merge_process_protocol(entity, pl)
+                pl_pr_id = f"{pl.document_id}-{entity.document_id}"
+                # This is to ensure that we have a unique set of processes.
+                self.processes[pl_pr_id] = TransformerVisitor.merge_process_protocol(entity, pl)
         elif isinstance(entity, api.File):
             self.files[entity.document_id] = _file_dict(entity)
 
@@ -151,9 +185,6 @@ class BiomaterialVisitor(api.EntityVisitor):
 
 
 class FileTransformer(Transformer):
-    def __init__(self):
-        super().__init__()
-
     @property
     def entity_name(self):
         return 'files'
@@ -168,11 +199,15 @@ class FileTransformer(Transformer):
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files)
+
+        # Create ElasticSearch documents
         for file in bundle.files.values():
             visitor = TransformerVisitor()
+
             # Visit the relatives of file
             file.accept(visitor)
             file.ancestors(visitor)
+
             # Assign the contents to the ES doc
             contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
                             files=[_file_dict(file)],
@@ -187,9 +222,6 @@ class FileTransformer(Transformer):
 
 
 class SpecimenTransformer(Transformer):
-    def __init__(self):
-        super().__init__()
-
     @property
     def entity_name(self):
         return 'specimens'
@@ -204,11 +236,15 @@ class SpecimenTransformer(Transformer):
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files)
+
+        # Create ElasticSearch documents
         for specimen in bundle.specimens:
             visitor = TransformerVisitor()
+
             # Visit the relatives of file
             specimen.accept(visitor)
             specimen.ancestors(visitor)
+
             # Assign the contents to the ES doc
             contents = dict(specimens=[_specimen_dict(specimen)],
                             files=list(visitor.files.values()),
@@ -220,3 +256,50 @@ class SpecimenTransformer(Transformer):
                                                                 version=bundle.version,
                                                                 contents=contents)])
             yield es_document
+
+
+class ProjectTransformer(Transformer):
+    @property
+    def entity_name(self):
+        return 'projects'
+
+    def create_documents(self,
+                         uuid: str,
+                         version: str,
+                         manifest: List[JSON],
+                         metadata_files: Mapping[str, JSON]
+                         ) -> Sequence[ElasticSearchDocument]:
+        # Create a bundle object.
+        bundle = api.Bundle(uuid=uuid,
+                            version=version,
+                            manifest=manifest,
+                            metadata_files=metadata_files)
+
+        bundle_uuid = str(bundle.uuid)
+        simplified_project = _project_dict(bundle)
+
+        # Gather information on specimens and files in the bundle with a separate visitor
+        data_visitor = TransformerVisitor()
+
+        for specimen in bundle.specimens:
+            # Visit the relatives
+            specimen.accept(data_visitor)  # Visit descendants
+            specimen.ancestors(data_visitor)
+
+        for file in bundle.files.values():
+            # Visit the relatives
+            file.accept(data_visitor)  # Visit descendants
+            file.ancestors(data_visitor)
+
+        # Create ElasticSearch documents
+        for project in bundle.projects.values():
+            contents = dict(specimens=_specimen_dict(data_visitor.specimens),
+                            files=list(data_visitor.files.values()),
+                            processes=list(data_visitor.processes.values()),
+                            project=simplified_project)
+
+            yield ElasticSearchDocument(entity_type=self.entity_name,
+                                        entity_id=str(project.document_id),
+                                        bundles=[Bundle(uuid=bundle_uuid,
+                                                        version=bundle.version,
+                                                        contents=contents)])
