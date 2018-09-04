@@ -179,7 +179,8 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertIsNotNone(cm.records)
 
                 num_hits = sum(1 for log_msg in cm.output
-                               if "There was a conflict with document" in log_msg)
+                               if "There was a conflict with document" in log_msg and "azul_specimens" in log_msg)
+
                 self.assertEqual(1, num_hits)
 
         def check_specimen_merge(es_results):
@@ -199,7 +200,8 @@ class TestHCAIndexer(IndexerTestCase):
                         result_contents = bundle["contents"]
                         # Each bundle in specimen list contains two files
                         self.assertEqual(2, len(result_contents["files"]))
-                else:
+                elif result_dict["_index"] == config.es_index_name("projects"):
+                    # FIXME The current test setup does not trigger this set of assertions.
                     continue
 
             self.assertEqual(len(file_doc_ids), 4)
