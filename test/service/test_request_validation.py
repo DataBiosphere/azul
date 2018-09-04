@@ -27,7 +27,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                             "Message": "BadRequestError: Unable to filter by undefined facet bad-facet."}
     sort_facet_message = {"Code": "BadRequestError",
                           "Message": "BadRequestError: Unable to sort by undefined facet bad-facet."}
-    service_config_folder = os.path.dirname(service_config.__file__)
+    service_config_dir = os.path.dirname(service_config.__file__)
 
     def test_health(self):
         url = self.base_url + "health"
@@ -222,7 +222,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.json())
 
-        order_config_filepath = '{}/order_config'.format(self.service_config_folder)
+        order_config_filepath = '{}/order_config'.format(self.service_config_dir)
         with open(order_config_filepath, 'r') as order_settings_file:
             actual_field_order = [entity_field for entity_field in response.json()['order']]
             expected_field_order = [entity_field.strip() for entity_field in order_settings_file.readlines()]
@@ -236,7 +236,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(200, response.status_code, 'Unable to download manifest')
         tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
-        self.assertEqual(len(list(tsv_file)), 1000, 'Wrong number of bundles were found.')
-        manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_folder), 'r'))['manifest']
+        self.assertEqual(len(list(tsv_file)), 1000, 'Wrong number of files were found.')
+        manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
         expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['files'].keys())
         self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
