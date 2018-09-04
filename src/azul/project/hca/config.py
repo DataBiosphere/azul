@@ -2,7 +2,7 @@ from typing import Any, Iterable, Mapping, Tuple
 
 from azul.base_config import BaseIndexProperties
 from azul.transformer import Transformer
-from .transformers import FileTransformer, SpecimenTransformer
+from .transformers import FileTransformer, SpecimenTransformer, ProjectTransformer
 
 
 class IndexProperties(BaseIndexProperties):
@@ -82,8 +82,10 @@ class IndexProperties(BaseIndexProperties):
 
     @property
     def transformers(self) -> Iterable[Transformer]:
-        transformers = [FileTransformer(), SpecimenTransformer()]
-        return transformers
+        return (FileTransformer(),
+                SpecimenTransformer(),
+                ProjectTransformer(),
+                )
 
     @property
     def entities(self) -> Iterable[str]:
