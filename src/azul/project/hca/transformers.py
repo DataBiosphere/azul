@@ -17,8 +17,10 @@ def _project_dict(bundle: api.Bundle) -> dict:
     project, *additional_projects = bundle.projects.values()
     reject(additional_projects, "Azul can currently only handle a single project per bundle")
     return {
+        'project_title': project.project_title,
         'project_shortname': project.project_shortname,
         'laboratory': sorted(list(project.laboratory_names)),
+        'contributors': sorted(list(project.contributors)),
         'document_id': project.document_id,
         '_type': 'project'
     }
