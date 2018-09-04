@@ -155,9 +155,6 @@ class BiomaterialVisitor(api.EntityVisitor):
 
 
 class FileTransformer(Transformer):
-    def __init__(self):
-        super().__init__()
-
     @property
     def entity_name(self):
         return 'files'
@@ -168,15 +165,20 @@ class FileTransformer(Transformer):
                          manifest: List[JSON],
                          metadata_files: Mapping[str, JSON]
                          ) -> Sequence[ElasticSearchDocument]:
+        # Create a bundle object.
         bundle = api.Bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files)
+
+        # Create ElasticSearch documents
         for file in bundle.files.values():
             visitor = TransformerVisitor()
+
             # Visit the relatives of file
             file.accept(visitor)  # Visit descendants
             file.ancestors(visitor)
+
             # Assign the contents to the ES doc
             contents = dict(specimens=_specimen_dict(visitor.specimens),
                             files=list(visitor.files.values()),
@@ -191,9 +193,6 @@ class FileTransformer(Transformer):
 
 
 class SpecimenTransformer(Transformer):
-    def __init__(self):
-        super().__init__()
-
     @property
     def entity_name(self):
         return 'specimens'
@@ -204,15 +203,20 @@ class SpecimenTransformer(Transformer):
                          manifest: List[JSON],
                          metadata_files: Mapping[str, JSON]
                          ) -> Sequence[ElasticSearchDocument]:
+        # Create a bundle object.
         bundle = api.Bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files)
+
+        # Create ElasticSearch documents
         for specimen in bundle.specimens:
             visitor = TransformerVisitor()
+
             # Visit the relatives of file
             specimen.accept(visitor)  # Visit descendants
             specimen.ancestors(visitor)
+
             # Assign the contents to the ES doc
             contents = dict(specimens=_specimen_dict(visitor.specimens),
                             files=list(visitor.files.values()),
@@ -220,6 +224,44 @@ class SpecimenTransformer(Transformer):
                             project=_project_dict(bundle))
             es_document = ElasticSearchDocument(entity_type=self.entity_name,
                                                 entity_id=str(specimen.document_id),
+                                                bundles=[Bundle(uuid=str(bundle.uuid),
+                                                                version=bundle.version,
+                                                                contents=contents)])
+            yield es_document
+
+
+class ProjectTransformer(Transformer):
+    @property
+    def entity_name(self):
+        return 'projects'
+
+    def create_documents(self,
+                         uuid: str,
+                         version: str,
+                         manifest: List[JSON],
+                         metadata_files: Mapping[str, JSON]
+                         ) -> Sequence[ElasticSearchDocument]:
+        # Create a bundle object.
+        bundle = api.Bundle(uuid=uuid,
+                            version=version,
+                            manifest=manifest,
+                            metadata_files=metadata_files)
+
+        # Create ElasticSearch documents
+        for project in bundle.projects.values():
+            visitor = TransformerVisitor()
+
+            # Visit the relatives of file
+            # project.accept(visitor)  # Visit descendants
+            # project.ancestors(visitor)
+
+            # Assign the contents to the ES doc
+            contents = dict(specimens=_specimen_dict(visitor.specimens),
+                            files=list(visitor.files.values()),
+                            processes=list(visitor.processes.values()),
+                            project=_project_dict(bundle))
+            es_document = ElasticSearchDocument(entity_type=self.entity_name,
+                                                entity_id=str(project.document_id),
                                                 bundles=[Bundle(uuid=str(bundle.uuid),
                                                                 version=bundle.version,
                                                                 contents=contents)])
