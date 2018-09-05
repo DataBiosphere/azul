@@ -43,9 +43,8 @@ class TestHCAIndexer(IndexerTestCase):
             results = self.es_client.search(index=entity_index,
                                             doc_type="doc",
                                             size=100)
-            if entity_index != config.es_index_name("projects"):
-                for result_dict in results["hits"]["hits"]:
-                    es_results.append(result_dict)
+            for result_dict in results["hits"]["hits"]:
+                es_results.append(result_dict)
 
         assert_func(es_results)
         return es_results
@@ -93,8 +92,11 @@ class TestHCAIndexer(IndexerTestCase):
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(self.old_bundle[1], old_result_version)
+                self.assertEqual("Melanoma infiltration of stromal and immune cells",
+                                 old_result_contents["project"]["project_title"])
                 self.assertEqual("Mouse Melanoma", old_result_contents["project"]["project_shortname"])
                 self.assertIn("Sarah Teichmann", old_result_contents["project"]["laboratory"])
+                self.assertIn("University of Helsinki", old_result_contents["project"]["contributors"])
                 self.assertIn("Mus musculus", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_old_submission)
@@ -110,10 +112,24 @@ class TestHCAIndexer(IndexerTestCase):
                 new_result_contents = new_result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertNotEqual(old_result_version, new_result_version)
+                self.assertNotEqual(old_result_contents["project"]["project_title"],
+                                    new_result_contents["project"]["project_title"])
+                self.assertEqual("Melanoma infiltration of stromal and immune cells 2",
+                                 new_result_contents["project"]["project_title"])
+
                 self.assertNotEqual(old_result_contents["project"]["project_shortname"],
                                     new_result_contents["project"]["project_shortname"])
+                self.assertEqual("Aardvark Ailment", new_result_contents["project"]["project_shortname"])
+
                 self.assertNotEqual(old_result_contents["project"]["laboratory"],
                                     new_result_contents["project"]["laboratory"])
+                self.assertNotIn("Sarah Teichmann", new_result_contents["project"]["laboratory"])
+                self.assertIn("John Denver", new_result_contents["project"]["laboratory"])
+
+                self.assertNotEqual(old_result_contents["project"]["contributors"],
+                                    new_result_contents["project"]["contributors"])
+                self.assertNotIn("University of Helsinki", new_result_contents["project"]["contributors"])
+
                 self.assertNotEqual(old_result_contents["specimens"][0]["genus_species"],
                                     new_result_contents["specimens"][0]["genus_species"])
 
@@ -132,8 +148,11 @@ class TestHCAIndexer(IndexerTestCase):
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(self.new_bundle[1], old_result_version)
+                self.assertEqual("Melanoma infiltration of stromal and immune cells 2",
+                                 old_result_contents["project"]["project_title"])
                 self.assertEqual("Aardvark Ailment", old_result_contents["project"]["project_shortname"])
                 self.assertIn("John Denver", old_result_contents["project"]["laboratory"])
+                self.assertNotIn("University of Helsinki", old_result_contents["project"]["contributors"])
                 self.assertIn("Lorem ipsum", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_new_submission)
@@ -149,10 +168,14 @@ class TestHCAIndexer(IndexerTestCase):
                 new_result_contents = new_result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(old_result_version, new_result_version)
+                self.assertEqual(old_result_contents["project"]["project_title"],
+                                 new_result_contents["project"]["project_title"])
                 self.assertEqual(old_result_contents["project"]["project_shortname"],
                                  new_result_contents["project"]["project_shortname"])
                 self.assertEqual(old_result_contents["project"]["laboratory"],
                                  new_result_contents["project"]["laboratory"])
+                self.assertEqual(old_result_contents["project"]["contributors"],
+                                 new_result_contents["project"]["contributors"])
                 self.assertEqual(old_result_contents["specimens"][0]["genus_species"],
                                  new_result_contents["specimens"][0]["genus_species"])
 
@@ -185,7 +208,7 @@ class TestHCAIndexer(IndexerTestCase):
 
         def check_specimen_merge(es_results):
             file_doc_ids = set()
-            self.assertEqual(len(es_results), 5)
+            self.assertEqual(len(es_results), 6)
             for result_dict in es_results:
                 self.assertEqual(result_dict["_id"], result_dict["_source"]["entity_id"])
                 if result_dict["_index"] == config.es_index_name("files"):
@@ -194,15 +217,13 @@ class TestHCAIndexer(IndexerTestCase):
                     result_contents = result_dict["_source"]["bundles"][0]["contents"]
                     self.assertEqual(1, len(result_contents["files"]))
                     file_doc_ids.add(result_contents["files"][0]["uuid"])
-                elif result_dict["_index"] == config.es_index_name("specimens"):
+                elif (result_dict["_index"] == config.es_index_name("specimens") or
+                      result_dict["_index"] == config.es_index_name("projects")):
                     self.assertEqual(len(result_dict["_source"]["bundles"]), 2)
                     for bundle in result_dict["_source"]["bundles"]:
                         result_contents = bundle["contents"]
-                        # Each bundle in specimen list contains two files
+                        # Each bundle in should contain two files
                         self.assertEqual(2, len(result_contents["files"]))
-                elif result_dict["_index"] == config.es_index_name("projects"):
-                    # FIXME The current test setup does not trigger this set of assertions.
-                    continue
 
             self.assertEqual(len(file_doc_ids), 4)
             for spec_uuid, spec_version in self.specimens:
