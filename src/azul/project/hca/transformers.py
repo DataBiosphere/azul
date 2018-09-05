@@ -275,7 +275,7 @@ class ProjectTransformer(Transformer):
         return _specimen_dict({
             specimen.document_id: specimen
             for specimen in bundle.specimens
-        }),
+        })
 
     def _get_unique_list_of_files(self, bundle):
         return [
