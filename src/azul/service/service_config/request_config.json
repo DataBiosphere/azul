@@ -12,6 +12,7 @@
     "biologicalSex": "bundles.contents.specimens.biological_sex",
     "disease": "bundles.contents.specimens.disease",
     "instrumentManufacturerModel": "bundles.contents.processes.instrument",
+    "projectId": "bundles.contents.project.document_id",
     "project": "bundles.contents.project.project_shortname",
     "protocol": "bundles.contents.processes.protocol_id",
     "fileFormat": "bundles.contents.files.file_format",
@@ -22,7 +23,12 @@
     "fileId": "bundles.contents.files.uuid",
     "donorId": "bundles.contents.specimens.donor_biomaterial_id",
     "lab": "bundles.contents.project.laboratory",
-    "cellCount": "bundles.contents.specimens.total_estimated_cells"
+    "cellCount": "bundles.contents.specimens.total_estimated_cells",
+    "projectTitle": "bundles.contents.project.project_title",
+    "projectDescription": "bundles.contents.project.project_description",
+    "institution": "bundles.contents.project.institutions",
+    "contactName": "bundles.contents.project.contact_names",
+    "publicationTitle": "bundles.contents.project.publication_titles"
   },
   "autocomplete-translation": {
     "files": {
@@ -63,6 +69,10 @@
     "fileFormat",
     "laboratory",
     "preservationMethod",
-    "cellCount"
+    "projectTitle",
+    "projectDescription",
+    "institution",
+    "contactName",
+    "publicationTitle"
   ]
 }
