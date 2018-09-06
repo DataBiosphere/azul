@@ -10,12 +10,13 @@ class WebServiceTestCase(ElasticsearchTestCase, LocalAppTestCase):
         return "service"
 
     _data_loader = None
+    seed = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls._data_loader = ElasticsearchFakeDataLoader()
-        cls._data_loader.load_data()
+        cls._data_loader.load_data(seed=cls.seed)
 
     @classmethod
     def tearDownClass(cls):
