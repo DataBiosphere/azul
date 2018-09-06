@@ -39,10 +39,14 @@
           "project": {
             "_type": "maroon",
             "hca_id": "37a92077-530f-fdbb-df14-2926665cc697",
+            "project_title": "purple",
             "laboratory": [
               "silver"
             ],
-            "project_shortname": "blue"
+            "project_shortname": "blue",
+            "contributors": [
+              "silver"
+            ]
           },
           "specimens": [
             {
