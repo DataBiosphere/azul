@@ -18,6 +18,7 @@ from jsonobject import (DictProperty,
                         StringProperty)
 
 from azul.service.responseobjects.utilities import json_pp
+from azul.json_freeze import freeze, thaw
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
@@ -331,7 +332,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 merged_dict[key] = list(merged_dict[key] + [value])
             elif isinstance(value, list):
                 cleaned_list = list(filter(None, chain(value, merged_dict[key])))
-                merged_dict[key] = list(set(cleaned_list))
+                if len(cleaned_list) > 0 and isinstance(cleaned_list[0], dict):  # make dicts hashable
+                    hashable_dicts = [freeze(d) for d in cleaned_list]
+                    merged_dict[key] = [thaw(d) for d in list(set(hashable_dicts))]
+                else:
+                    merged_dict[key] = list(set(cleaned_list))
             elif value is None:
                 merged_dict[key] = []
         merged_dict[identifier] = dict_id
@@ -339,6 +344,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def return_response(self):
         return self.apiResponse
+
+    @staticmethod
+    def to_camel_case(text: str):
+        camel_cased = ''.join(part.title() for part in text.split('_'))
+        return camel_cased[0].lower() + camel_cased[1:]
 
     def make_file_copy(self, entry):
         """
@@ -390,9 +400,22 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             project.pop("_type")
             project_shortname = project["project_shortname"]
             translated_project = {
+                "projectTitle": project.get("project_title"),
+                "projectDescription": project.get("project_description"),
                 "projectShortname": project_shortname,
-                "laboratory": list(set(project.get("laboratory")) if project.get("laboratory") else [])
+                "laboratory": list(set(project.get("laboratory", []))),
+                "contributors": project.get("contributors", []),
+                "publications": project.get("publications", [])
             }
+
+            for contributor in translated_project['contributors']:
+                for key in list(contributor.keys())[:]:
+                    contributor[KeywordSearchResponse.to_camel_case(key)] = contributor.pop(key)
+
+            for publication in translated_project['publications']:
+                for key in list(publication.keys())[:]:
+                    publication[KeywordSearchResponse.to_camel_case(key)] = publication.pop(key)
+
             if project_shortname not in projects:
                 projects[project_shortname] = translated_project
             else:
