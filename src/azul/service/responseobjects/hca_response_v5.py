@@ -390,8 +390,10 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             project.pop("_type")
             project_shortname = project["project_shortname"]
             translated_project = {
+                "projectTitle": project.get("project_title"),
                 "projectShortname": project_shortname,
-                "laboratory": list(set(project.get("laboratory")) if project.get("laboratory") else [])
+                "laboratory": list(set(project.get("laboratory")) if project.get("laboratory") else []),
+                "contributors": list(set(project.get("contributors")) if project.get("contributors") else [])
             }
             if project_shortname not in projects:
                 projects[project_shortname] = translated_project

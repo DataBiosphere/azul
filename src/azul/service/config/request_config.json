@@ -22,7 +22,9 @@
     "fileId": "bundles.contents.files.uuid",
     "donorId": "bundles.contents.specimens.donor_biomaterial_id",
     "lab": "bundles.contents.project.laboratory",
-    "cellCount": "bundles.contents.specimens.total_estimated_cells"
+    "cellCount": "bundles.contents.specimens.total_estimated_cells",
+    "projectTitle": "bundles.contents.project.project_title",
+    "contributors": "bundles.contents.project.contributors"
   },
   "autocomplete-translation": {
     "files": {
@@ -63,6 +65,8 @@
     "fileFormat",
     "laboratory",
     "preservationMethod",
-    "cellCount"
+    "cellCount",
+    "projectTitle",
+    "contributors"
   ]
 }

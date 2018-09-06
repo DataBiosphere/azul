@@ -27,10 +27,14 @@
       ],
       "projects": [
         {
+          "projectTitle": "purple",
           "laboratory": [
             "silver"
           ],
-          "projectShortname": "blue"
+          "projectShortname": "blue",
+          "contributors": [
+              "silver"
+            ]
         }
       ],
       "specimens": [
