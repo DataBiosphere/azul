@@ -27,10 +27,39 @@
       ],
       "projects": [
         {
+          "projectTitle": "purple",
+          "projectDescription": "navy",
           "laboratory": [
             "silver"
           ],
-          "projectShortname": "blue"
+          "projectShortname": "blue",
+          "contributors": [
+            {
+              "contactName": "yellow",
+              "correspondingContributor": false,
+              "email": "gray"
+            },
+            {
+              "contactName": "teal",
+              "correspondingContributor": true,
+              "email": "purple",
+              "institution": "yellow",
+              "laboratory": "silver"
+            }
+          ],
+          "publications": [
+            {
+              "authors": [
+                "green",
+                "maroon",
+                "gray"
+              ],
+              "publicationTitle": "gray",
+              "doi": "green",
+              "pmid": 5331933,
+              "publicationUrl": "black"
+            }
+          ]
         }
       ],
       "specimens": [
