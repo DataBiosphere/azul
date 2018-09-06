@@ -51,7 +51,8 @@ class TransformerVisitor(api.EntityVisitor):
     processes: MutableMapping[str, Any]  # Merges process with protocol
     files: MutableMapping[api.UUID4, Any]  # Merges manifest + file metadata
 
-    def _merge_process_protocol(self, pc: api.Process, pl: api.Protocol) -> MutableMapping[str, Any]:
+    @staticmethod
+    def merge_process_protocol(pc: api.Process, pl: api.Protocol) -> MutableMapping[str, Any]:
         return {
             'document_id': (pc.document_id, pl.document_id),
             'process_id': pc.process_id,
@@ -69,7 +70,8 @@ class TransformerVisitor(api.EntityVisitor):
             )
         }
 
-    def _file_dict(self, f: api.File) -> MutableMapping[str, Any]:
+    @staticmethod
+    def file_dict(f: api.File) -> MutableMapping[str, Any]:
         return {
             'content-type': f.manifest_entry.content_type,
             'crc32c': f.manifest_entry.crc32c,
@@ -100,13 +102,16 @@ class TransformerVisitor(api.EntityVisitor):
 
     def visit(self, entity: api.Entity) -> None:
         if isinstance(entity, api.SpecimenFromOrganism):
+            # This is to ensure that we have a unique set of specimens.
             self.specimens[entity.document_id] = entity
         elif isinstance(entity, api.Process):
             for pl in entity.protocols.values():
-                pl_pr_id = f"{str(pl.document_id)}-{str(entity.document_id)}"
-                self.processes[pl_pr_id] = self._merge_process_protocol(entity, pl)
+                pl_pr_id = f"{pl.document_id}-{entity.document_id}"
+                # This is to ensure that we have a unique set of processes.
+                self.processes[pl_pr_id] = TransformerVisitor.merge_process_protocol(entity, pl)
         elif isinstance(entity, api.File):
-            self.files[entity.document_id] = self._file_dict(entity)
+            # This is to ensure that we have a unique set of files.
+            self.files[entity.document_id] = TransformerVisitor.file_dict(entity)
 
 
 class BiomaterialVisitor(api.EntityVisitor):
@@ -249,22 +254,46 @@ class ProjectTransformer(Transformer):
                             manifest=manifest,
                             metadata_files=metadata_files)
 
+        bundle_uuid = str(bundle.uuid)
+        simplified_project = _project_dict(bundle)
+
         # Create ElasticSearch documents
         for project in bundle.projects.values():
-            visitor = TransformerVisitor()
+            contents = dict(specimens=self._get_unique_list_of_specimens(bundle),
+                            files=self._get_unique_list_of_files(bundle),
+                            processes=self._get_unique_list_of_process(bundle),
+                            project=simplified_project)
 
-            # Visit the relatives of file
-            # project.accept(visitor)  # Visit descendants
-            # project.ancestors(visitor)
-
-            # Assign the contents to the ES doc
-            contents = dict(specimens=_specimen_dict(visitor.specimens),
-                            files=list(visitor.files.values()),
-                            processes=list(visitor.processes.values()),
-                            project=_project_dict(bundle))
             es_document = ElasticSearchDocument(entity_type=self.entity_name,
                                                 entity_id=str(project.document_id),
-                                                bundles=[Bundle(uuid=str(bundle.uuid),
+                                                bundles=[Bundle(uuid=bundle_uuid,
                                                                 version=bundle.version,
                                                                 contents=contents)])
             yield es_document
+
+    def _get_unique_list_of_specimens(self, bundle):
+        return _specimen_dict({
+            specimen.document_id: specimen
+            for specimen in bundle.specimens
+        }),
+
+    def _get_unique_list_of_files(self, bundle):
+        return [
+            TransformerVisitor.file_dict(file)
+            for file in bundle.files.values()
+        ]
+
+    def _get_unique_list_of_process(self, bundle):
+        process_map = dict()
+
+        for process in bundle.processes.values():
+            if not process.protocols:
+                continue
+
+            process_map.update({
+                f'PC{process.document_id}-PL{protocol.document_id}': TransformerVisitor.merge_process_protocol(process,
+                                                                                                               protocol)
+                for protocol in process.protocols.values()
+            })
+
+        return list(process_map.values())
