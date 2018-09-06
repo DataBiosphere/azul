@@ -12,6 +12,7 @@
     "biologicalSex": "bundles.contents.specimens.biological_sex",
     "disease": "bundles.contents.specimens.disease",
     "instrumentManufacturerModel": "bundles.contents.processes.instrument",
+    "projectId": "bundles.contents.project.document_id",
     "project": "bundles.contents.project.project_shortname",
     "protocol": "bundles.contents.processes.protocol_id",
     "fileFormat": "bundles.contents.files.file_format",
