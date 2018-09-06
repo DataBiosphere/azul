@@ -18,6 +18,7 @@ from jsonobject import (DictProperty,
                         StringProperty)
 
 from azul.service.responseobjects.utilities import json_pp
+from azul.json_freeze import freeze, thaw
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
@@ -110,6 +111,14 @@ class OrganCellCountSummary(JsonObject):
         new_object.totalCellCountByOrgan = bucket['cell_count']['value']
         return new_object
 
+    @classmethod
+    def create_object_from_simple_count(cls, count):
+        new_object = cls()
+        new_object.organType = count['key']
+        new_object.countOfDocsWithOrganType = 1
+        new_object.totalCellCountByOrgan = count['value']
+        return new_object
+
 
 class HitEntry(JsonObject):
     """
@@ -136,6 +145,18 @@ class SummaryRepresentation(JsonObject):
     totalFileSize = FloatProperty()
     fileTypeSummaries = ListProperty(FileTypeSummary)
     organSummaries = ListProperty(OrganCellCountSummary)
+
+
+class ProjectSummaryRepresentation(JsonObject):
+    """
+    Class defining the Project Summary Response
+    """
+    totalCellCount = FloatProperty()
+    donorCount = IntegerProperty()
+    organSummaries = ListProperty(OrganCellCountSummary)
+    genusSpecies = ListProperty(StringProperty)
+    libraryConstructionApproach = ListProperty(StringProperty)
+    disease = ListProperty(StringProperty)
 
 
 class FileIdAutoCompleteEntry(JsonObject):
@@ -255,11 +276,10 @@ class EntryFetcher:
             'dashboardService.api_response.EntryFetcher')
 
 
-class SummaryResponse(AbstractResponse):
+class BaseSummaryResponse(AbstractResponse):
     """
-    Class for the summary response. Based on the AbstractResponse class
+    Base class for the summary response. Based on the AbstractResponse class
     """
-
     def return_response(self):
         return self.apiResponse
 
@@ -288,30 +308,162 @@ class SummaryResponse(AbstractResponse):
 
     def __init__(self, raw_response):
         # Separate the raw_response into hits and aggregates
-        hits = raw_response['hits']
-        aggregates = raw_response['aggregations']
+        self.hits = raw_response['hits']
+        self.aggregates = raw_response['aggregations']
+
+
+class SummaryResponse(BaseSummaryResponse):
+    """
+    Class for the summary response. Based on the BaseSummaryResponse class
+    """
+
+    def __init__(self, raw_response):
+        super().__init__(raw_response)
+
         _sum = raw_response['aggregations']['by_type']
         _organ_group = raw_response['aggregations']['group_by_organ']
 
         # Create a SummaryRepresentation object
         kwargs = dict(
-            projectCount=self.agg_contents(aggregates, 'projectCode', agg_form='value'),
-            totalFileSize=self.agg_contents(aggregates, 'total_size', agg_form='value'),
-            organCount=self.agg_contents(aggregates, 'organCount', agg_form='value'),
-            donorCount=self.agg_contents(aggregates, 'donorCount', agg_form='value'),
-            labCount=self.agg_contents(aggregates, 'labCount', agg_form='value'),
-            totalCellCount=self.agg_contents(aggregates, 'total_cell_count', agg_form='value'),
+            projectCount=self.agg_contents(self.aggregates, 'projectCode', agg_form='value'),
+            totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
+            organCount=self.agg_contents(self.aggregates, 'organCount', agg_form='value'),
+            donorCount=self.agg_contents(self.aggregates, 'donorCount', agg_form='value'),
+            labCount=self.agg_contents(self.aggregates, 'labCount', agg_form='value'),
+            totalCellCount=self.agg_contents(self.aggregates, 'total_cell_count', agg_form='value'),
             fileTypeSummaries=[FileTypeSummary.create_object(bucket=bucket) for bucket in _sum['buckets']],
             organSummaries=[OrganCellCountSummary.create_object(bucket) for bucket in _organ_group['buckets']])
 
-        if 'specimenCount' in aggregates:
-            kwargs['fileCount'] = hits['total']
-            kwargs['specimenCount'] = self.agg_contents(aggregates, 'specimenCount', agg_form='value')
-        elif 'fileCount' in aggregates:
-            kwargs['fileCount'] = self.agg_contents(aggregates, 'fileCount', agg_form='value')
-            kwargs['specimenCount'] = hits['total']
+        if 'specimenCount' in self.aggregates:
+            kwargs['fileCount'] = self.hits['total']
+            kwargs['specimenCount'] = self.agg_contents(self.aggregates, 'specimenCount', agg_form='value')
+        elif 'fileCount' in self.aggregates:
+            kwargs['fileCount'] = self.agg_contents(self.aggregates, 'fileCount', agg_form='value')
+            kwargs['specimenCount'] = self.hits['total']
 
         self.apiResponse = SummaryRepresentation(**kwargs)
+
+
+class ProjectSummaryResponse(BaseSummaryResponse):
+
+    @staticmethod
+    def get_bucket_terms(project_id, project_buckets, agg_key):
+        """
+        Return a list of the keys of the buckets from an ElasticSearch aggregate
+        of a given project with the format:
+        {
+          "buckets": [
+            {
+              "key": $project_id,
+              $agg_key: {
+                "buckets": [
+                  {
+                    "key": "a",
+                    "doc_count": 2
+                  }
+                ]
+              }
+            },
+            ...
+          ]
+        }
+
+        :param project_id: string UUID of the project info to retrieve
+        :param project_buckets: A dictionary from an ElasticSearch aggregate
+        :param agg_key: Key of aggregation to use
+        :return: list of bucket keys
+        """
+        for project_bucket in project_buckets['buckets']:
+            if project_bucket['key'] != project_id:
+                continue
+            return [bucket['key'] for bucket in project_bucket[agg_key]['buckets']]
+        return []
+
+    @staticmethod
+    def get_bucket_value(project_id, project_buckets, agg_key):
+        """
+        Return a value of the bucket of the given project from an
+        ElasticSearch aggregate with the format:
+        {
+          "buckets": [
+            {
+              "key": $project_id,
+              $agg_key: {
+                "value" : value
+              }
+            },
+            ...
+          ]
+        }
+
+        :param project_id: string UUID of the project info to retrieve
+        :param project_buckets: A dictionary from an ElasticSearch aggregate
+        :param agg_key: Key of aggregation to use
+        :return: value in given project
+        """
+        for project_bucket in project_buckets['buckets']:
+            if project_bucket['key'] != project_id:
+                continue
+            return project_bucket[agg_key]['value']
+        return -1
+
+    @staticmethod
+    def get_cell_count(hit):
+        """Iterate through specimens to get per organ cell count"""
+        # FIXME: This should ideally be done through elasticsearch
+        specimen_ids = set()
+        organ_cell_count = dict()
+        total_cell_count = 0
+        for bundle in hit['_source']['bundles']:
+            specimens = bundle['contents']['specimens']
+            for specimen in specimens:
+                if specimen['biomaterial_id'] in specimen_ids:
+                    continue
+                specimen_ids.add(specimen['biomaterial_id'])
+                if len(list(filter(None, specimen['organ']))) == 0:  # check if specimen has no organ
+                    continue
+                if 'total_estimated_cells' not in specimen:
+                    estimated_cells = 0
+                else:
+                    estimated_cells = sum(list(filter(None, specimen['total_estimated_cells'])))
+                total_cell_count += estimated_cells
+                if specimen['organ'][0] in organ_cell_count:
+                    organ_cell_count[specimen['organ'][0]] += estimated_cells
+                else:
+                    organ_cell_count[specimen['organ'][0]] = estimated_cells
+
+        organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
+        return total_cell_count, organ_cell_count
+
+    def __init__(self, project_id, raw_response):
+        super().__init__(raw_response)
+
+        total_cell_count = 0
+        organ_cell_count = []
+        for hit in raw_response['hits']['hits']:
+            if hit['_id'] == project_id:
+                total_cell_count, organ_cell_count = (
+                    ProjectSummaryResponse.get_cell_count(hit))
+                break
+
+        project_aggregates = self.aggregates['_project_agg']
+
+        # Create a ProjectSummaryRepresentation object
+        kwargs = dict(
+            donorCount=ProjectSummaryResponse.get_bucket_value(
+                project_id, project_aggregates, 'donor_count'),
+            totalCellCount=total_cell_count,
+            organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
+                            for count in organ_cell_count],
+            genusSpecies=ProjectSummaryResponse.get_bucket_terms(
+                project_id, project_aggregates, 'species'),
+            libraryConstructionApproach=ProjectSummaryResponse.get_bucket_terms(
+                project_id, project_aggregates, 'libraryConstructionApproach'),
+            disease=ProjectSummaryResponse.get_bucket_terms(
+                project_id, project_aggregates, 'disease')
+        )
+
+        self.apiResponse = ProjectSummaryRepresentation(**kwargs)
 
 
 class KeywordSearchResponse(AbstractResponse, EntryFetcher):
@@ -331,7 +483,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 merged_dict[key] = list(merged_dict[key] + [value])
             elif isinstance(value, list):
                 cleaned_list = list(filter(None, chain(value, merged_dict[key])))
-                merged_dict[key] = list(set(cleaned_list))
+                if len(cleaned_list) > 0 and isinstance(cleaned_list[0], dict):  # make dicts hashable
+                    hashable_dicts = [freeze(d) for d in cleaned_list]
+                    merged_dict[key] = [thaw(d) for d in list(set(hashable_dicts))]
+                else:
+                    merged_dict[key] = list(set(cleaned_list))
             elif value is None:
                 merged_dict[key] = []
         merged_dict[identifier] = dict_id
@@ -339,6 +495,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def return_response(self):
         return self.apiResponse
+
+    @staticmethod
+    def to_camel_case(text: str):
+        camel_cased = ''.join(part.title() for part in text.split('_'))
+        return camel_cased[0].lower() + camel_cased[1:]
 
     def make_file_copy(self, entry):
         """
@@ -390,9 +551,24 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             project.pop("_type")
             project_shortname = project["project_shortname"]
             translated_project = {
+                "projectTitle": project.get("project_title"),
                 "projectShortname": project_shortname,
-                "laboratory": list(set(project.get("laboratory")) if project.get("laboratory") else [])
+                "laboratory": list(set(project.get("laboratory", [])))
             }
+
+            if self.projects_response:
+                translated_project["projectDescription"] = project.get("project_description", [])
+                translated_project["contributors"] = project.get("contributors", [])
+                translated_project["publications"] = project.get("publications", [])
+
+                for contributor in translated_project['contributors']:
+                    for key in list(contributor.keys()):
+                        contributor[KeywordSearchResponse.to_camel_case(key)] = contributor.pop(key)
+
+                for publication in translated_project['publications']:
+                    for key in list(publication.keys()):
+                        publication[KeywordSearchResponse.to_camel_case(key)] = publication.pop(key)
+
             if project_shortname not in projects:
                 projects[project_shortname] = translated_project
             else:
@@ -490,6 +666,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         """
         Constructs the object and initializes the apiResponse attribute
         :param hits: A list of hits from ElasticSearch
+        :param projects_response: True if creating response for projects endpoint
         """
         # Setup the logger
         self.logger = logging.getLogger(
@@ -498,6 +675,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
+        self.projects_response = projects_response
         self.logger.info('Creating the entries in ApiResponse')
         class_entries = {'hits': [
             self.map_entries(x) for x in hits], 'pagination': None}
@@ -568,13 +746,15 @@ class FileSearchResponse(KeywordSearchResponse):
         """
         facets = {}
         for facet, contents in facets_response.items():
-            facets[facet] = FileSearchResponse.create_facet(contents)
+            if facet != '_project_agg':  # Filter out project specific aggs
+                facets[facet] = FileSearchResponse.create_facet(contents)
         return facets
 
     def __init__(self, hits, pagination, facets, entity_type):
         """
         Constructs the object and initializes the apiResponse attribute
         :param hits: A list of hits from ElasticSearch
+        :param projects_response: True if creating response for projects endpoint
         """
         # Setup the logger
         self.logger = logging.getLogger(
