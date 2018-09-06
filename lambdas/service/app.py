@@ -239,6 +239,94 @@ def get_specimen_data(specimen_id=None):
         return response
 
 
+@app.route('/repository/projects', methods=['GET'], cors=True)
+@app.route('/repository/projects/{project_id}', methods=['GET'], cors=True)
+def get_project_data(project_id=None):
+    """
+    Returns a dictionary with entries that can be used by the browser
+    to display the data and facets
+    parameters:
+        - name: filters
+          in: query
+          type: string
+          description: Filters to be applied when calling ElasticSearch
+        - name: size
+          in: integer
+          type: string
+          description: Size of the page being returned
+        - name: order
+          in: query
+          type: string
+          description: Whether it should be in ascending or descending order
+        - name: sort
+          in: query
+          type: string
+          description: Which field to sort by
+        - name: search_after
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
+          to set both this and search_before.
+        - name: search_after_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
+        - name: search_before
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
+          to set both this and search_after.
+        - name: search_before_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
+    :return: Returns a dictionary with the entries to be used when generating
+    the facets and/or table data
+    """
+    # Setup logging
+    logger = app.log
+    # Get all the parameters from the URL
+    logger.debug('Parameter specimen_id: {}'.format(project_id))
+    if app.current_request.query_params is None:
+        app.current_request.query_params = {}
+    filters = app.current_request.query_params.get('filters', '{"file": {}}')
+    logger.debug("Filters string is: {}".format(filters))
+    try:
+        logger.info("Extracting the filter parameter from the request")
+        filters = ast.literal_eval(filters)
+        # Make the default pagination
+        logger.info("Creating pagination")
+        pagination = _get_pagination(app.current_request)
+        logger.debug("Pagination: \n".format(json_pp(pagination)))
+        # Handle <file_id> request form
+        if project_id is not None:
+            logger.info("Handling single file id search")
+            filters['file']['projectId'] = {"is": [project_id]}
+        # Create and instance of the ElasticTransformDump
+        logger.info("Creating ElasticTransformDump object")
+        es_td = EsTd()
+        # Get the response back
+        logger.info("Creating the API response")
+        response = es_td.transform_request(filters=filters,
+                                           pagination=pagination,
+                                           post_filter=True,
+                                           entity_type='projects')
+    except BadArgumentException as bae:
+        raise BadRequestError(msg=bae.message)
+    else:
+        # Return a single response if <project_id> request form is used
+        if project_id is not None:
+            return response['hits'][0]
+
+        # Filter out certain fields if getting list of projects
+        for hit in response['hits']:
+            for project in hit['projects']:
+                project.pop('contributors')
+                project.pop('projectDescription')
+                project.pop('publications')
+        return response
+
+
 @app.route('/repository/summary/{entity_type}', methods=['GET'], cors=True)
 def get_summary(entity_type=None):
     """

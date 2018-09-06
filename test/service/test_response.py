@@ -6,7 +6,8 @@ import os
 
 import requests
 
-from azul.service.responseobjects.hca_response_v5 import KeywordSearchResponse, FileSearchResponse
+from azul.service.responseobjects.hca_response_v5 import (
+    KeywordSearchResponse, FileSearchResponse, ProjectSummaryResponse)
 from service import WebServiceTestCase
 
 
@@ -103,6 +104,76 @@ class TestResponse(WebServiceTestCase):
         response.raise_for_status()
         summary_object = response.json()
         self.assertEqual(summary_object['pagination']["sort"], "specimenId")
+
+    def test_project_summary_cell_count(self):
+        """
+        Test per organ and total cell counter in ProjectSummaryResponse
+        Should return a correct total cell count and per organ cell count
+        Should not double count cell count from specimens with an already counted id
+            (i.e. each unique specimen counted exactly once)
+        """
+        es_hit = self._load('response_project_cell_count_input.json')
+        expected_output = self._load('response_project_cell_count_output.json')
+
+        total_cell_count, organ_cell_count = ProjectSummaryResponse.get_cell_count(es_hit)
+
+        self.assertEqual(total_cell_count,
+                         sum([cell_count['value'] for cell_count in expected_output]))
+        self.assertEqual(json.dumps(organ_cell_count, sort_keys=True),
+                         json.dumps(expected_output, sort_keys=True))
+
+    def test_project_get_bucket_terms(self):
+        """
+        Test getting all unique terms of a given facet of a given project
+        Should only return values of the given project
+        Should return an empty list if project has no values in the term or if project does not exist
+        """
+        project_buckets = self._load('response_project_get_bucket_input.json')
+
+        bucket_terms_1 = ProjectSummaryResponse.get_bucket_terms(
+            'project1', project_buckets, 'term_bucket')
+        self.assertEqual(bucket_terms_1, ['term1', 'term2', 'term3'])
+
+        bucket_terms_2 = ProjectSummaryResponse.get_bucket_terms(
+            'project2', project_buckets, 'term_bucket')
+        self.assertEqual(bucket_terms_2, [])
+
+        bucket_terms_3 = ProjectSummaryResponse.get_bucket_terms(
+            'project3', project_buckets, 'term_bucket')
+        self.assertEqual(bucket_terms_3, [])
+
+    def test_project_get_bucket_values(self):
+        """
+        Test getting value of a given aggregation of a given project
+        Should only value of the given project
+        Should return -1 if project is not found
+        """
+        project_buckets = self._load('response_project_get_bucket_input.json')
+
+        bucket_terms_1 = ProjectSummaryResponse.get_bucket_value(
+            'project1', project_buckets, 'value_bucket')
+        self.assertEqual(bucket_terms_1, 2)
+
+        bucket_terms_2 = ProjectSummaryResponse.get_bucket_value(
+            'project2', project_buckets, 'value_bucket')
+        self.assertEqual(bucket_terms_2, 4)
+
+        bucket_terms_3 = ProjectSummaryResponse.get_bucket_value(
+            'project3', project_buckets, 'value_bucket')
+        self.assertEqual(bucket_terms_3, -1)
+
+    def test_projects_key_search_response(self):
+        """
+        Test building response for projects
+        Response should include project detail fields that do not appear for other entity type repsponses
+        """
+        keyword_response = KeywordSearchResponse(
+            hits=self._load("response_test_input.json"),
+            projects_response=True
+        ).return_response().to_json()
+
+        self.assertEqual(json.dumps(keyword_response, sort_keys=True),
+                         json.dumps(self._load("response_projects_keysearch_output.json"), sort_keys=True))
 
     def _load(self, filename):
         data_folder_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')

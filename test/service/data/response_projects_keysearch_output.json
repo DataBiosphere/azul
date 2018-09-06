@@ -8,14 +8,11 @@
         }
       ],
       "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
-      "files": [
+      "fileTypeSummaries": [
         {
-          "format": "csv",
-          "name": "billion.key",
-          "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
-          "size": 6667,
-          "uuid": "e9772583-4240-4757-6357-32bef0e51150",
-          "version": "2001-03-16T05:26:40"
+          "count": 1,
+          "fileType": "csv",
+          "totalSize": 6667
         }
       ],
       "processes": [
@@ -31,10 +28,38 @@
       "projects": [
         {
           "projectTitle": "purple",
+          "projectDescription": "navy",
           "laboratory": [
             "silver"
           ],
-          "projectShortname": "blue"
+          "projectShortname": "blue",
+          "contributors": [
+            {
+              "contactName": "yellow",
+              "correspondingContributor": false,
+              "email": "gray"
+            },
+            {
+              "contactName": "teal",
+              "correspondingContributor": true,
+              "email": "purple",
+              "institution": "yellow",
+              "laboratory": "silver"
+            }
+          ],
+          "publications": [
+            {
+              "authors": [
+                "green",
+                "maroon",
+                "gray"
+              ],
+              "publicationTitle": "gray",
+              "doi": "green",
+              "pmid": 5331933,
+              "publicationUrl": "black"
+            }
+          ]
         }
       ],
       "specimens": [
@@ -71,20 +96,5 @@
         }
       ]
     }
-  ],
-  "pagination": {
-    "count": 2,
-    "order": "desc",
-    "pages": 1,
-    "search_after": null,
-    "search_after_uid": null,
-    "search_before": null,
-    "search_before_uid": null,
-    "size": 5,
-    "sort": "entryId",
-    "total": 2
-  },
-  "termFacets": {
-
-  }
+  ]
 }

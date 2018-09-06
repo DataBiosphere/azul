@@ -37,11 +37,44 @@
         ],
         "project": {
           "_type": "safe_color_name",
-          "hca_id": "uuid4",
+          "document_id": "uuid4",
+          "project_title": "safe_color_name",
+          "project_description": "safe_color_name",
           "laboratory": [
-            "safe_color_name"         
+            "safe_color_name"
           ],
-          "project_shortname": "safe_color_name"
+          "institutions": [
+            "safe_color_name"
+          ],
+          "contact_names": [
+            "safe_color_name"
+          ],
+          "project_shortname": "safe_color_name",
+          "contributors": [
+            {
+              "contact_name": "safe_color_name",
+              "corresponding_contributor": "pybool",
+              "email": "safe_color_name",
+              "institution": "safe_color_name",
+              "laboratory": "safe_color_name",
+              "orcid_id": "safe_color_name",
+              "phone": "safe_color_name"
+            }
+          ],
+          "publication_titles": [
+            "safe_color_name"
+          ],
+          "publications": [
+            {
+              "authors": [
+                "safe_color_name"
+              ],
+              "publication_title": "safe_color_name",
+              "doi": "safe_color_name",
+              "pmid": "pyint",
+              "publication_url": "safe_color_name"
+            }
+          ]
         },
         "specimens": [
           {
