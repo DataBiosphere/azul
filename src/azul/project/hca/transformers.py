@@ -172,7 +172,6 @@ class FileTransformer(Transformer):
                          manifest: List[JSON],
                          metadata_files: Mapping[str, JSON]
                          ) -> Sequence[ElasticSearchDocument]:
-        # Create a bundle object.
         bundle = api.Bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
@@ -210,7 +209,6 @@ class SpecimenTransformer(Transformer):
                          manifest: List[JSON],
                          metadata_files: Mapping[str, JSON]
                          ) -> Sequence[ElasticSearchDocument]:
-        # Create a bundle object.
         bundle = api.Bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
@@ -257,43 +255,31 @@ class ProjectTransformer(Transformer):
         bundle_uuid = str(bundle.uuid)
         simplified_project = _project_dict(bundle)
 
+        # Gather information on files in the bundle with a separate visitor
+        files_visitor = TransformerVisitor()
+
+        for file in bundle.files.values():
+            # Visit the relatives
+            file.accept(files_visitor)  # Visit descendants
+            file.ancestors(files_visitor)
+
+        # Gather information on specimens in the bundle with a separate visitor
+        specimen_visitor = TransformerVisitor()
+
+        for specimen in bundle.specimens:
+            # Visit the relatives
+            specimen.accept(specimen_visitor)  # Visit descendants
+            specimen.ancestors(specimen_visitor)
+
         # Create ElasticSearch documents
         for project in bundle.projects.values():
-            contents = dict(specimens=self._get_unique_list_of_specimens(bundle),
-                            files=self._get_unique_list_of_files(bundle),
-                            processes=self._get_unique_list_of_process(bundle),
+            contents = dict(specimens=_specimen_dict(specimen_visitor.specimens),
+                            files=list(files_visitor.files.values()),
+                            processes=list(specimen_visitor.processes.values()),
                             project=simplified_project)
 
-            es_document = ElasticSearchDocument(entity_type=self.entity_name,
-                                                entity_id=str(project.document_id),
-                                                bundles=[Bundle(uuid=bundle_uuid,
-                                                                version=bundle.version,
-                                                                contents=contents)])
-            yield es_document
-
-    def _get_unique_list_of_specimens(self, bundle):
-        return _specimen_dict({
-            specimen.document_id: specimen
-            for specimen in bundle.specimens
-        })
-
-    def _get_unique_list_of_files(self, bundle):
-        return [
-            TransformerVisitor.file_dict(file)
-            for file in bundle.files.values()
-        ]
-
-    def _get_unique_list_of_process(self, bundle):
-        process_map = dict()
-
-        for process in bundle.processes.values():
-            if not process.protocols:
-                continue
-
-            process_map.update({
-                f'PC{process.document_id}-PL{protocol.document_id}': TransformerVisitor.merge_process_protocol(process,
-                                                                                                               protocol)
-                for protocol in process.protocols.values()
-            })
-
-        return list(process_map.values())
+            yield ElasticSearchDocument(entity_type=self.entity_name,
+                                        entity_id=str(project.document_id),
+                                        bundles=[Bundle(uuid=bundle_uuid,
+                                                        version=bundle.version,
+                                                        contents=contents)])
