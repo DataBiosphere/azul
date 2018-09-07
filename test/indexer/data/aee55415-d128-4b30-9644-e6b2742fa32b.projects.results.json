@@ -105,17 +105,6 @@
                                     },
                                     {
                                         "document_id": [
-                                            "2b258172-eb5f-4a7a-96a5-f4c2cfdec7d8",
-                                            "a1c80daf-58b0-4b7a-8e29-d0130493c8e6"
-                                        ],
-                                        "process_id": "FACS4.2",
-                                        "process_name": null,
-                                        "protocol_id": "FACS_sorting_protocol",
-                                        "protocol_name": "FACS sorting cells by surface markers",
-                                        "_type": "process"
-                                    },
-                                    {
-                                        "document_id": [
                                             "687065f3-c70f-46c3-8452-a5eead33a1bf",
                                             "52d79a89-4b49-4c1b-b857-5cc5da07f643"
                                         ],
@@ -137,6 +126,17 @@
                                         "protocol_name": "Sequencing SmartSeq2 cells",
                                         "_type": "process",
                                         "instrument_manufacturer_model": "Illumina HiSeq 2500"
+                                    },
+                                    {
+                                        "document_id": [
+                                            "2b258172-eb5f-4a7a-96a5-f4c2cfdec7d8",
+                                            "a1c80daf-58b0-4b7a-8e29-d0130493c8e6"
+                                        ],
+                                        "process_id": "FACS4.2",
+                                        "process_name": null,
+                                        "protocol_id": "FACS_sorting_protocol",
+                                        "protocol_name": "FACS sorting cells by surface markers",
+                                        "_type": "process"
                                     }
                                 ],
                                 "project": {
