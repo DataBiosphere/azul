@@ -255,27 +255,24 @@ class ProjectTransformer(Transformer):
         bundle_uuid = str(bundle.uuid)
         simplified_project = _project_dict(bundle)
 
-        # Gather information on files in the bundle with a separate visitor
-        files_visitor = TransformerVisitor()
-
-        for file in bundle.files.values():
-            # Visit the relatives
-            file.accept(files_visitor)  # Visit descendants
-            file.ancestors(files_visitor)
-
-        # Gather information on specimens in the bundle with a separate visitor
-        specimen_visitor = TransformerVisitor()
+        # Gather information on specimens and files in the bundle with a separate visitor
+        data_visitor = TransformerVisitor()
 
         for specimen in bundle.specimens:
             # Visit the relatives
-            specimen.accept(specimen_visitor)  # Visit descendants
-            specimen.ancestors(specimen_visitor)
+            specimen.accept(data_visitor)  # Visit descendants
+            specimen.ancestors(data_visitor)
+
+        for file in bundle.files.values():
+            # Visit the relatives
+            file.accept(data_visitor)  # Visit descendants
+            file.ancestors(data_visitor)
 
         # Create ElasticSearch documents
         for project in bundle.projects.values():
-            contents = dict(specimens=_specimen_dict(specimen_visitor.specimens),
-                            files=list(files_visitor.files.values()),
-                            processes=list(specimen_visitor.processes.values()),
+            contents = dict(specimens=_specimen_dict(data_visitor.specimens),
+                            files=list(data_visitor.files.values()),
+                            processes=list(data_visitor.processes.values()),
                             project=simplified_project)
 
             yield ElasticSearchDocument(entity_type=self.entity_name,
