@@ -137,6 +137,8 @@
                                         "University of Helsinki",
                                         "Wellcome Trust Sanger Institute"
                                     ],
+                                    "contact": null,
+                                    "publications": [],
                                     "_type": "project"
                                 }
                             }
@@ -271,6 +273,8 @@
                                         "University of Helsinki",
                                         "Wellcome Trust Sanger Institute"
                                     ],
+                                    "contact": null,
+                                    "publications": [],
                                     "_type": "project"
                                 }
                             }
