@@ -237,6 +237,60 @@ class TestRequestBuilder(WebServiceTestCase):
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
+    def test_create_request_projects(self):
+        """
+        Test creation of a projects index request
+        Request should have _project aggregations containing project_id buckets at the top level
+        and sub-aggregations within each project bucket
+        """
+        # Load files required for this test
+        request_config = self._load_json(self.request_config_filepath)
+        expected_output = self._load_json(
+            os.path.join(self.data_directory, 'request_builder_test_input_projects.json'))
+
+        sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
+
+        # Create ElasticTransformDump instance
+        es_ts_instance = EsTd()
+        # Create a request object
+        es_search = EsTd.create_request(
+            sample_filter,
+            es_ts_instance.es_client,
+            request_config,
+            post_filter=True,
+            entity_type='projects')
+        # Convert objects to be compared to strings
+        expected_output = json.dumps(
+            expected_output,
+            sort_keys=True)
+        actual_output = json.dumps(
+            es_search.to_dict(),
+            sort_keys=True)
+
+        self.compare_dicts(actual_output, expected_output)
+
+        self.assertEqual(actual_output, expected_output)
+
+    def test_project_summaries(self):
+        """
+        Test creation of project summary
+        Summary should be added to dict of corresponding project id in hits.
+        """
+        hits = [{'entryId': 'a'}, {'entryId': 'b'}]
+        es_response = self._load_json(
+            os.path.join(self.data_directory, 'request_builder_project_summaries_input.json'))
+        EsTd.add_project_summaries(hits, es_response)
+
+        expected_output = self._load_json(
+            os.path.join(self.data_directory, 'request_builder_project_summaries_output.json'))
+
+        expected_output = json.dumps(expected_output, sort_keys=True)
+        actual_output = json.dumps(hits, sort_keys=True)
+
+        self.compare_dicts(actual_output, expected_output)
+
+        self.assertEqual(actual_output, expected_output)
+
 
 if __name__ == '__main__':
     unittest.main()

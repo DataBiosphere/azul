@@ -12,8 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class FakerSchemaGenerator(object):
-    def __init__(self, faker=None, locale=None, providers=None, includes=None):
+    def __init__(self, faker=None, locale=None, providers=None, includes=None, seed=None):
         self._faker = faker or Faker(locale=locale, providers=providers, includes=includes)
+        if seed:
+            self._faker.seed(seed)
 
     def generate_fake(self, schema, iterations=1):
         result = [self._generate_one_fake(schema) for _ in range(iterations)]
@@ -44,7 +46,11 @@ class FakerSchemaGenerator(object):
 
 
 class ElasticsearchFakeDataLoader(object):
-    indices = [config.es_index_name('files'), config.es_index_name('specimens')]
+    indices = [
+        config.es_index_name('files'),
+        config.es_index_name('specimens'),
+        config.es_index_name('projects')
+    ]
 
     def __init__(self, number_of_documents=1000):
         service_tests_folder = os.path.dirname(os.path.realpath(__file__))
@@ -55,14 +61,14 @@ class ElasticsearchFakeDataLoader(object):
         self.elasticsearch_client = ESClientFactory.get()
         self.number_of_documents = number_of_documents
 
-    def load_data(self):
+    def load_data(self, seed=None):
         self.clean_up()
         try:
             for index in self.indices:
                 logger.log(logging.INFO, f"Creating new test index '{index}'.")
                 self.elasticsearch_client.indices.create(index)
                 logger.log(logging.INFO, f"Loading data into test index '{index}'.")
-                faker = FakerSchemaGenerator()
+                faker = FakerSchemaGenerator(seed=seed)
                 fake_data_body = ""
                 for i in range(self.number_of_documents):
                     fake_data_body += json.dumps({"index": {"_type": "meta", "_id": i}}) + "\n"
