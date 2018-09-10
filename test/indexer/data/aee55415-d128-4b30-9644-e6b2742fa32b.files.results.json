@@ -138,7 +138,21 @@
                                         "Wellcome Trust Sanger Institute"
                                     ],
                                     "contact": null,
-                                    "publications": [],
+                                    "publications": [
+                                        {
+                                            "authors": [
+                                                "Katrina Meeth",
+                                                "Jake Wang",
+                                                "Goran Micevic",
+                                                "William Damsky",
+                                                "Marcus W. Bosenberg"
+                                            ],
+                                            "publication_title": "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations",
+                                            "doi": "10.1111/pcmr.12498",
+                                            "pmid": 5331933,
+                                            "publication_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5331933/"
+                                        }
+                                    ],
                                     "_type": "project"
                                 }
                             }
@@ -274,7 +288,21 @@
                                         "Wellcome Trust Sanger Institute"
                                     ],
                                     "contact": null,
-                                    "publications": [],
+                                    "publications": [
+                                        {
+                                            "authors": [
+                                                "Katrina Meeth",
+                                                "Jake Wang",
+                                                "Goran Micevic",
+                                                "William Damsky",
+                                                "Marcus W. Bosenberg"
+                                            ],
+                                            "publication_title": "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations",
+                                            "doi": "10.1111/pcmr.12498",
+                                            "pmid": 5331933,
+                                            "publication_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5331933/"
+                                        }
+                                    ],
                                     "_type": "project"
                                 }
                             }
