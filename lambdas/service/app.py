@@ -307,9 +307,16 @@ def get_project_data(project_id=None):
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
     else:
-        # Returning a single response if <specimen_id> request form is used
+        # Return a single response if <project_id> request form is used
         if project_id is not None:
-            response = response['hits'][0]
+            return response['hits'][0]
+
+        # Filter out certain fields if getting list of projects
+        for hit in response['hits']:
+            for project in hit['projects']:
+                project.pop('contributors')
+                project.pop('projectDescription')
+                project.pop('publications')
         return response
 
 

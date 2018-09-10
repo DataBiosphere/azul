@@ -28,10 +28,38 @@
       "projects": [
         {
           "projectTitle": "purple",
+          "projectDescription": "navy",
           "laboratory": [
             "silver"
           ],
-          "projectShortname": "blue"
+          "projectShortname": "blue",
+          "contributors": [
+            {
+              "contactName": "yellow",
+              "correspondingContributor": false,
+              "email": "gray"
+            },
+            {
+              "contactName": "teal",
+              "correspondingContributor": true,
+              "email": "purple",
+              "institution": "yellow",
+              "laboratory": "silver"
+            }
+          ],
+          "publications": [
+            {
+              "authors": [
+                "green",
+                "maroon",
+                "gray"
+              ],
+              "publicationTitle": "gray",
+              "doi": "green",
+              "pmid": 5331933,
+              "publicationUrl": "black"
+            }
+          ]
         }
       ],
       "specimens": [
@@ -68,20 +96,5 @@
         }
       ]
     }
-  ],
-  "pagination": {
-    "count": 2,
-    "order": "desc",
-    "pages": 1,
-    "search_after": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
-    "search_after_uid": "meta#32",
-    "search_before": null,
-    "search_before_uid": null,
-    "size": 5,
-    "sort": "entryId",
-    "total": 2
-  },
-  "termFacets": {
-
-  }
+  ]
 }
