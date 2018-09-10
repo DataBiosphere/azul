@@ -37,7 +37,7 @@
         ],
         "project": {
           "_type": "safe_color_name",
-          "hca_id": "uuid4",
+          "document_id": "uuid4",
           "project_title": "safe_color_name",
           "project_description": "safe_color_name",
           "laboratory": [
