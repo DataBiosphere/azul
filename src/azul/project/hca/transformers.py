@@ -36,8 +36,8 @@ def _project_dict(bundle: api.Bundle) -> dict:
         'laboratory': sorted(laboratories),
         'contributors': sorted(contributors),
         'document_id': project.document_id,
-        # 'contact': _project_contact_dict(project.contributors),
-        # 'publications': sorted(project.publications),
+        'contact': _project_contact_dict(project.contributors),
+        'publications': sorted(project.publications),
         '_type': 'project'
     }
 
