@@ -1,6 +1,6 @@
 from collections import defaultdict
 import logging
-from typing import Any, List, Mapping, MutableMapping, Sequence
+from typing import Any, List, Mapping, MutableMapping, Sequence, Dict, Iterable
 
 from humancellatlas.data import metadata as api
 from humancellatlas.data.metadata import AgeRange
@@ -14,16 +14,52 @@ log = logging.getLogger(__name__)
 
 def _project_dict(bundle: api.Bundle) -> dict:
     project: api.Project
+    laboratories: List[str]
+    contributors: List[str]
+
     project, *additional_projects = bundle.projects.values()
     reject(additional_projects, "Azul can currently only handle a single project per bundle")
+
+    laboratories = set()
+    contributors = set()
+
+    for contributor in project.contributors:
+        if contributor.laboratory:
+            laboratories.add(contributor.laboratory)
+
+        if contributor.contact_name:
+            contributors.add(contributor.institution)
+
     return {
         'project_title': project.project_title,
-        'project_shortname': project.project_shortname,
-        'laboratory': sorted(list(project.laboratory_names)),
-        'contributors': sorted(list(project.contributors)),
+        'project_shortname': project.project_short_name,
+        'laboratory': sorted(laboratories),
+        'contributors': sorted(contributors),
         'document_id': project.document_id,
+        # 'contact': _project_contact_dict(project.contributors),
+        # 'publications': sorted(project.publications),
         '_type': 'project'
     }
+
+
+def _project_contact_dict(contributors: Iterable[api.ProjectContact]) -> dict:
+    """
+    Find and extract the primary contact from the given list of contributors.
+
+    :param list contributors: The list of contributors
+    :rtype: dict
+    """
+    for contributor in contributors:
+        if not contributor.corresponding_contributor:
+            continue
+
+        return {
+            'contact_name': contributor.contact_name,
+            'contact_institute': contributor.institution,
+            'contact_email': contributor.email,
+        }
+
+    return None
 
 
 def _specimen_dict(biomaterials: Mapping[api.UUID4, api.Biomaterial]) -> List[Mapping[str, Any]]:
