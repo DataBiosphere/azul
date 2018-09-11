@@ -137,7 +137,11 @@
                                         "University of Helsinki",
                                         "Wellcome Trust Sanger Institute"
                                     ],
-                                    "contact": null,
+                                    "contact": {
+                                        "contact_name": "Jani,,Huuhtanen",
+                                        "contact_email": "jani.huuhtanen@helsinki.fi",
+                                        "contact_institute": "University of Helsinki"
+                                    },
                                     "publications": [
                                         {
                                             "authors": [
@@ -287,7 +291,11 @@
                                         "University of Helsinki",
                                         "Wellcome Trust Sanger Institute"
                                     ],
-                                    "contact": null,
+                                    "contact": {
+                                        "contact_name": "Jani,,Huuhtanen",
+                                        "contact_email": "jani.huuhtanen@helsinki.fi",
+                                        "contact_institute": "University of Helsinki"
+                                    },
                                     "publications": [
                                         {
                                             "authors": [
