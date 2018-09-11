@@ -145,7 +145,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Sarah,A,Teichmann",
-                    "email": "st9@sanger.ac.uk"
+                    "email": "st9@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -153,7 +154,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Mirjana,,Efremova",
-                    "email": "me5@sanger.ac.uk"
+                    "email": "me5@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -161,7 +163,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Bidesh,,Mahata",
-                    "email": "bm11@sanger.ac.uk"
+                    "email": "bm11@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -169,7 +172,8 @@
                     "address": "Box 197, Cambridge Biomedical Campus, Cambridge, CB2 0XZ",
                     "laboratory": "MRC Cancer Unit",
                     "contact_name": "Jacqueline,D,Shields",
-                    "email": "JS970@MRCCU.cam.ac.uk"
+                    "email": "JS970@MRCCU.cam.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -177,13 +181,15 @@
                     "address": "Box 197, Cambridge Biomedical Campus, Cambridge, CB2 0XZ",
                     "laboratory": "MRC Cancer Unit",
                     "contact_name": "Sarah,,Davidson",
-                    "email": "SED49@MRCCU.cam.ac.uk"
+                    "email": "SED49@MRCCU.cam.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "Germany",
                     "contact_name": "Angela,,Riedel",
                     "email": "a.riedel@dkfz-heidelberg.de",
-                    "institution": "DKFZ German Cancer Research Center"
+                    "institution": "DKFZ German Cancer Research Center",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -191,7 +197,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Roser,,Veno-Tormo",
-                    "email": "rv4@sanger.ac.uk"
+                    "email": "rv4@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -199,7 +206,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Jhuma,,Pramanik",
-                    "email": "jp19@sanger.ac.uk"
+                    "email": "jp19@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -207,13 +215,15 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Gozde,,Kar",
-                    "email": "gkar@ebi.ac.uk"
+                    "email": "gkar@ebi.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "Finland",
                     "contact_name": "Jani,,Huuhtanen",
                     "email": "jani.huuhtanen@helsinki.fi",
-                    "institution": "University of Helsinki"
+                    "institution": "University of Helsinki",
+                    "corresponding_contributor": true
                 }
             ],
             "schema_type": "project"
