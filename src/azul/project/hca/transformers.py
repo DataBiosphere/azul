@@ -1,6 +1,6 @@
 from collections import defaultdict
 import logging
-from typing import Any, List, Mapping, MutableMapping, Sequence, Set, Iterable
+from typing import Any, List, Mapping, MutableMapping, Sequence, Set
 
 from humancellatlas.data import metadata as api
 from humancellatlas.data.metadata import AgeRange
@@ -19,7 +19,7 @@ def _project_dict(bundle: api.Bundle) -> dict:
     project, *additional_projects = bundle.projects.values()
     reject(additional_projects, "Azul can currently only handle a single project per bundle")
 
-    laboratories = set()\
+    laboratories = set()
 
     # Extract the list of laboratories from contributors.
     # NOTE: This is for backward compatibility. The list of contact names and institutes
