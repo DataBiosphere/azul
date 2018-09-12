@@ -96,7 +96,8 @@ class TestHCAIndexer(IndexerTestCase):
                                  old_result_contents["project"]["project_title"])
                 self.assertEqual("Mouse Melanoma", old_result_contents["project"]["project_shortname"])
                 self.assertIn("Sarah Teichmann", old_result_contents["project"]["laboratory"])
-                self.assertIn("University of Helsinki", old_result_contents["project"]["contributors"])
+                self.assertIn("University of Helsinki",
+                              [c.get('institution') for c in old_result_contents["project"]["contributors"]])
                 self.assertIn("Mus musculus", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_old_submission)
@@ -128,7 +129,8 @@ class TestHCAIndexer(IndexerTestCase):
 
                 self.assertNotEqual(old_result_contents["project"]["contributors"],
                                     new_result_contents["project"]["contributors"])
-                self.assertNotIn("University of Helsinki", new_result_contents["project"]["contributors"])
+                self.assertNotIn("University of Helsinki",
+                                 [c.get('institution') for c in new_result_contents["project"]["contributors"]])
 
                 self.assertNotEqual(old_result_contents["specimens"][0]["genus_species"],
                                     new_result_contents["specimens"][0]["genus_species"])
@@ -152,7 +154,8 @@ class TestHCAIndexer(IndexerTestCase):
                                  old_result_contents["project"]["project_title"])
                 self.assertEqual("Aardvark Ailment", old_result_contents["project"]["project_shortname"])
                 self.assertIn("John Denver", old_result_contents["project"]["laboratory"])
-                self.assertNotIn("University of Helsinki", old_result_contents["project"]["contributors"])
+                self.assertNotIn("University of Helsinki",
+                                 [c.get('institution') for c in old_result_contents["project"]["contributors"]])
                 self.assertIn("Lorem ipsum", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_new_submission)
