@@ -141,6 +141,7 @@
                                 ],
                                 "project": {
                                     "project_title": "Melanoma infiltration of stromal and immune cells",
+                                    "project_description": "The cancer microenvironment is a complex ecosystem characterized by dynamic interactions between diverse cell types, including malignant, immune and stromal cells. Here, we performed single-cell RNA sequencing on CD45+ and CD45- cells isolated from tumour and lymph nodes during a mouse model of melanoma. The transcriptional profiles of these individual cells taken at different time points coupled with assembled T cell receptor sequences, allowed us to identify distinct immune subpopulations and delineate their developmental trajectory. Our study provides insights into the complex interplay among cells within the tumour microenvironment and presents a valuable resource for future translational applications.",
                                     "project_shortname": "Mouse Melanoma",
                                     "laboratory": [
                                         "MRC Cancer Unit",
