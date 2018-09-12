@@ -30,6 +30,7 @@ def _project_dict(bundle: api.Bundle) -> dict:
 
     return {
         'project_title': project.project_title,
+        'project_description': project.project_description,
         'project_shortname': project.project_short_name,
         'laboratory': sorted(laboratories),
         'contributors': sorted(project.contributors, key=lambda contributor: contributor.email.lower() if contributor.email else None),
