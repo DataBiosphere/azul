@@ -15,6 +15,20 @@ class IndexProperties(BaseIndexProperties):
         self._es_mapping = {
             "dynamic_templates": [
                 {
+                    "project_nested_contributors": {
+                        "match_pattern": "regex",
+                        "path_match": ".*projects?\.contributors",
+                        "mapping": {}
+                    }
+                },
+                {
+                    "project_nested_publications": {
+                        "match_pattern": "regex",
+                        "path_match": ".*projects?\.publications",
+                        "mapping": {}
+                    }
+                },
+                {
                     "strings_as_text": {
                         "match_mapping_type": "string",
                         "mapping": {

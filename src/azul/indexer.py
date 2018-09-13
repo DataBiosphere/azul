@@ -34,7 +34,7 @@ class BaseIndexer(ABC):
                                                                num_workers=config.num_dss_workers)
 
         es_client = ESClientFactory.get()
-        # Create indices and populate mappings
+
         for index_name in self.properties.index_names:
             # 400 is the status code in case the index already exists
             es_client.indices.create(index=index_name, body=self.properties.settings, ignore=[400])
