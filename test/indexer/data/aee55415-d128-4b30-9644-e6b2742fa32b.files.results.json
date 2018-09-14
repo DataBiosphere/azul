@@ -130,6 +130,25 @@
                                         "MRC Cancer Unit",
                                         "Sarah Teichmann"
                                     ],
+                                    "institutions": [
+                                        "DKFZ German Cancer Research Center",
+                                        "EMBL-EBI",
+                                        "University of Cambridge",
+                                        "University of Helsinki",
+                                        "Wellcome Trust Sanger Institute"
+                                    ],
+                                    "contact_names": [
+                                        "Angela,,Riedel",
+                                        "Bidesh,,Mahata",
+                                        "Gozde,,Kar",
+                                        "Jacqueline,D,Shields",
+                                        "Jani,,Huuhtanen",
+                                        "Jhuma,,Pramanik",
+                                        "Mirjana,,Efremova",
+                                        "Roser,,Veno-Tormo",
+                                        "Sarah,,Davidson",
+                                        "Sarah,A,Teichmann"
+                                    ],
                                     "document_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
                                     "contributors": [
                                         {
@@ -222,6 +241,9 @@
                                             "orcid_id": null,
                                             "phone": null
                                         }
+                                    ],
+                                    "publication_titles": [
+                                        "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations"
                                     ],
                                     "publications": [
                                         {
@@ -365,6 +387,25 @@
                                         "MRC Cancer Unit",
                                         "Sarah Teichmann"
                                     ],
+                                    "institutions": [
+                                        "DKFZ German Cancer Research Center",
+                                        "EMBL-EBI",
+                                        "University of Cambridge",
+                                        "University of Helsinki",
+                                        "Wellcome Trust Sanger Institute"
+                                    ],
+                                    "contact_names": [
+                                        "Angela,,Riedel",
+                                        "Bidesh,,Mahata",
+                                        "Gozde,,Kar",
+                                        "Jacqueline,D,Shields",
+                                        "Jani,,Huuhtanen",
+                                        "Jhuma,,Pramanik",
+                                        "Mirjana,,Efremova",
+                                        "Roser,,Veno-Tormo",
+                                        "Sarah,,Davidson",
+                                        "Sarah,A,Teichmann"
+                                    ],
                                     "document_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
                                     "contributors": [
                                         {
@@ -457,6 +498,9 @@
                                             "orcid_id": null,
                                             "phone": null
                                         }
+                                    ],
+                                    "publication_titles": [
+                                        "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations"
                                     ],
                                     "publications": [
                                         {
