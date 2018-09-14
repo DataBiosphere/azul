@@ -3,7 +3,8 @@ import sys
 import logging
 from unittest import mock
 import requests
-
+import json
+import jsonschema
 from azul import config as config
 from azul.service import service_config
 from service import WebServiceTestCase
@@ -28,6 +29,14 @@ class FacetNameValidationTest(WebServiceTestCase):
     sort_facet_message = {"Code": "BadRequestError",
                           "Message": "BadRequestError: Unable to sort by undefined facet bad-facet."}
     service_config_dir = os.path.dirname(service_config.__file__)
+
+    def assert_correct_response_schema(self, response_json: dict):
+        with open(os.path.join(self.data_directory, 'entity_reponse_jsonschema.json'), 'r') as schema_file:
+            schema_dict = json.load(schema_file)
+            try:
+                jsonschema.validate(response_json, schema_dict)
+            except jsonschema.ValidationError:
+                self.fail('Response schema is malformed.')
 
     def test_health(self):
         url = self.base_url + "health"
@@ -77,22 +86,26 @@ class FacetNameValidationTest(WebServiceTestCase):
         url = self.base_url + "repository/files?from=1&size=1"
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.content)
+        self.assert_correct_response_schema(response.json())
 
     def test_valid_filter_facet_of_specimen(self):
         url = self.base_url + "repository/specimens?from=1&size=1&filters={'file':{'organ':{'is':['fake-val']}}}"
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.content)
+        self.assert_correct_response_schema(response.json())
 
     def test_valid_sort_facet_of_specimen(self):
         url = self.base_url + "repository/specimens?size=15&sort=organ&order=asc"
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.content)
+        self.assert_correct_response_schema(response.json())
 
     def test_valid_sort_and_filter_facet_of_specimen(self):
         url = self.base_url + "repository/specimens?size=15&sort=organ&order=asc" \
                               "&filters={'file':{'organ':{'is':['fake-val2']}}}"
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.json())
+        self.assert_correct_response_schema(response.json())
 
     def test_bad_single_filter_facet_of_specimen(self):
         url = self.base_url + "repository/specimens?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
@@ -146,22 +159,26 @@ class FacetNameValidationTest(WebServiceTestCase):
         url = self.base_url + "repository/files?from=1&size=1"
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.content)
+        self.assert_correct_response_schema(response.json())
 
     def test_valid_filter_facet_of_file(self):
         url = self.base_url + "repository/files?from=1&size=1&filters={'file':{'organ':{'is':['fake-val']}}}"
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.content)
+        self.assert_correct_response_schema(response.json())
 
     def test_valid_sort_facet_of_file(self):
         url = self.base_url + "repository/specimens?size=15&sort=organ&order=asc"
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.content)
+        self.assert_correct_response_schema(response.json())
 
     def test_valid_sort_and_filter_facet_of_file(self):
         url = self.base_url + "repository/specimens?size=15&sort=organ&order=asc" \
                               "&filters={'file':{'organ':{'is':['fake-val2']}}}"
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.content)
+        self.assert_correct_response_schema(response.json())
 
     def test_bad_single_filter_facet_of_file(self):
         url = self.base_url + "repository/files?from=1&size=1" \
