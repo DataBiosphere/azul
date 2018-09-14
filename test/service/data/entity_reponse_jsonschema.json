@@ -1,0 +1,805 @@
+{
+  "definitions": {
+    "terms": {
+      "$id": "#/definitions/terms",
+      "type": "array",
+      "title": "The Terms Schema",
+      "items": {
+        "$id": "#/definitions/terms/items",
+        "type": "object",
+        "title": "The Items Schema",
+        "required": [
+          "term",
+          "count"
+        ],
+        "properties": {
+          "term": {
+            "$id": "#/definitions/terms/items/term",
+            "type": ["string", "null"],
+            "title": "The Term Schema"
+          },
+          "count": {
+            "$id": "#/definitions/terms/items/count",
+            "type": "integer",
+            "title": "The Count Schema",
+            "default": 0
+          }
+        }
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "description": "A schema for the response of a Specimen Entity in Azul's webservice",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "hits",
+    "pagination",
+    "termFacets"
+  ],
+  "properties": {
+    "hits": {
+      "$id": "#/properties/hits",
+      "type": "array",
+      "title": "The Hits Schema",
+      "items": {
+        "$id": "#/properties/hits/items",
+        "type": "object",
+        "title": "The Items Schema",
+        "required": [
+          "processes",
+          "entryId",
+          "fileTypeSummaries",
+          "projects",
+          "specimens",
+          "bundles"
+        ],
+        "properties": {
+          "processes": {
+            "$id": "#/properties/hits/items/properties/processes",
+            "type": "array",
+            "title": "The Processes Schema",
+            "items": {
+              "$id": "#/properties/hits/items/properties/processes/items",
+              "type": "object",
+              "title": "The Items Schema",
+              "required": [
+                "processId",
+                "processName",
+                "libraryConstructionApproach",
+                "instrument",
+                "protocolId",
+                "protocol"
+              ],
+              "properties": {
+                "processId": {
+                  "$id": "#/properties/hits/items/properties/processes/items/properties/processId",
+                  "type": ["string", "null"],
+                  "title": "The Processes Id Schema"
+                },
+                "processName": {
+                  "$id": "#/properties/hits/items/properties/processes/items/properties/processName",
+                  "type": ["string", "null"],
+                  "title": "The Process Name Schema"
+                },
+                "libraryConstructionApproach": {
+                  "$id": "#/properties/hits/items/properties/processes/items/properties/libraryConstructionApproach",
+                  "type": ["string", "null"],
+                  "title": "The Library Construction Approach Schema"
+                },
+                "instrument": {
+                  "$id": "#/properties/hits/items/properties/processes/items/properties/instrument",
+                  "type": ["string", "null"],
+                  "title": "The Instrument Schema"
+                },
+                "protocolId": {
+                  "$id": "#/properties/hits/items/properties/processes/items/properties/protocolId",
+                  "type": ["string", "null"],
+                  "title": "The Protocol Id Schema"
+                },
+                "protocol": {
+                  "$id": "#/properties/hits/items/properties/processes/items/properties/protocol",
+                  "type": ["string", "null"],
+                  "title": "The Protocol Schema"
+                }
+              }
+            }
+          },
+          "entryId": {
+            "$id": "#/properties/hits/items/properties/entryId",
+            "type": "string",
+            "title": "The Entry Id Schema",
+            "examples": [
+              "12345678-1234-1234-1234-1234567890ab"
+            ],
+            "pattern": "^[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$"
+          },
+          "fileTypeSummaries": {
+            "$id": "#/properties/hits/items/properties/fileTypeSummaries",
+            "type": "array",
+            "title": "The File Type Summaries Schema",
+            "items": {
+              "$id": "#/properties/hits/items/properties/fileTypeSummaries/items",
+              "type": "object",
+              "title": "The Items Schema",
+              "required": [
+                "fileType",
+                "count",
+                "totalSize"
+              ],
+              "properties": {
+                "fileType": {
+                  "$id": "#/properties/hits/items/properties/fileTypeSummaries/items/properties/fileType",
+                  "type": ["string", "null"],
+                  "title": "The File Type Schema"
+                },
+                "count": {
+                  "$id": "#/properties/hits/items/properties/fileTypeSummaries/items/properties/count",
+                  "type": "integer",
+                  "title": "The Count Schema",
+                  "default": 0
+                },
+                "totalSize": {
+                  "$id": "#/properties/hits/items/properties/fileTypeSummaries/items/properties/totalSize",
+                  "type": "integer",
+                  "title": "The Total Size Schema",
+                  "default": 0
+                }
+              }
+            }
+          },
+          "projects": {
+            "$id": "#/properties/hits/items/properties/projects",
+            "type": "array",
+            "title": "The Projects Schema",
+            "items": {
+              "$id": "#/properties/hits/items/properties/projects/items",
+              "type": "object",
+              "title": "The Items Schema",
+              "required": [
+                "projectShortname",
+                "laboratory"
+              ],
+              "properties": {
+                "projectShortname": {
+                  "$id": "#/properties/hits/items/properties/projects/items/properties/projectShortname",
+                  "type": ["string", "null"],
+                  "title": "The Project Short Name Schema"
+                },
+                "laboratory": {
+                  "$id": "#/properties/hits/items/properties/projects/items/properties/laboratory",
+                  "type": "array",
+                  "title": "The Laboratory Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/projects/items/properties/laboratory/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema"
+                  }
+                }
+              }
+            }
+          },
+          "specimens": {
+            "$id": "#/properties/hits/items/properties/specimens",
+            "type": "array",
+            "title": "The Specimens Schema",
+            "items": {
+              "$id": "#/properties/hits/items/properties/specimens/items",
+              "type": "object",
+              "title": "The Items Schema",
+              "required": [
+                "id",
+                "genusSpecies",
+                "organ",
+                "organPart",
+                "organismAge",
+                "organismAgeUnit",
+                "biologicalSex",
+                "disease",
+                "storageMethod",
+                "source",
+                "totalCells"
+              ],
+              "properties": {
+                "id": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/id",
+                  "type": "string",
+                  "title": "The Id Schema",
+                  "examples": [
+                    "12345678-1234-1234-1234-1234567890ab"
+                  ],
+                  "pattern": "^[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$"
+                },
+                "genusSpecies": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/genusSpecies",
+                  "type": "array",
+                  "title": "The Genus Species Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/specimens/items/properties/genusSpecies/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema"
+                  }
+                },
+                "organ": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/organ",
+                  "type": "array",
+                  "title": "The Organ Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/specimens/items/properties/organ/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema"
+                  }
+                },
+                "organPart": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/organPart",
+                  "type": "array",
+                  "title": "The Organ Part Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/specimens/items/properties/organPart/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema"
+                  }
+                },
+                "organismAge": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/organismAge",
+                  "type": "array",
+                  "title": "The Organism Age Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/specimens/items/properties/organismAge/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema"
+                  }
+                },
+                "organismAgeUnit": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/organismAgeUnit",
+                  "type": "array",
+                  "title": "The Organism Age Unit Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/specimens/items/properties/organismAgeUnit/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema"
+                  }
+                },
+                "biologicalSex": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/biologicalSex",
+                  "type": "array",
+                  "title": "The Biological Sex Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/specimens/items/properties/biologicalSex/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema"
+                  }
+                },
+                "disease": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/disease",
+                  "type": "array",
+                  "title": "The Disease Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/specimens/items/properties/disease/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema"
+                  }
+                },
+                "storageMethod": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/storageMethod",
+                  "type": "array",
+                  "title": "The Storage Method Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/specimens/items/properties/storageMethod/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema",
+                    "default": ""
+                  }
+                },
+                "source": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/source",
+                  "type": "array",
+                  "title": "The Source Schema",
+                  "items": {
+                    "$id": "#/properties/hits/items/properties/specimens/items/properties/source/items",
+                    "type": ["string", "null"],
+                    "title": "The Items Schema",
+                    "default": ""
+                  }
+                },
+                "totalCells": {
+                  "$id": "#/properties/hits/items/properties/specimens/items/properties/totalCells",
+                  "type": "integer",
+                  "title": "The Total Cells Schema",
+                  "default": 0
+                }
+              }
+            }
+          },
+          "bundles": {
+            "$id": "#/properties/hits/items/properties/bundles",
+            "type": "array",
+            "title": "The Bundles Schema",
+            "items": {
+              "$id": "#/properties/hits/items/properties/bundles/items",
+              "type": "object",
+              "title": "The Items Schema",
+              "required": [
+                "bundleUuid",
+                "bundleVersion"
+              ],
+              "properties": {
+                "bundleUuid": {
+                  "$id": "#/properties/hits/items/properties/bundles/items/properties/bundleUuid",
+                  "type": "string",
+                  "title": "The Bundle UUID Schema",
+                  
+                  "examples": [
+                    "12345678-1234-1234-1234-1234567890ab"
+                  ],
+                  "pattern": "^[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$"
+                },
+                "bundleVersion": {
+                  "$id": "#/properties/hits/items/properties/bundles/items/properties/bundleVersion",
+                  "type": "string",
+                  "title": "The Bundle Version Schema",
+                  "examples": [
+                    "2015-12-27T15:54:05"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pagination": {
+      "$id": "#/properties/pagination",
+      "type": "object",
+      "title": "The Pagination Schema",
+      "required": [
+        "count",
+        "total",
+        "size",
+        "search_after",
+        "search_after_uid",
+        "search_before",
+        "search_before_uid",
+        "pages",
+        "sort",
+        "order"
+      ],
+      "properties": {
+        "count": {
+          "$id": "#/properties/pagination/properties/count",
+          "type": "integer",
+          "title": "The Count Schema"},
+        "total": {
+          "$id": "#/properties/pagination/properties/total",
+          "type": "integer",
+          "title": "The Total Schema"
+        },
+        "size": {
+          "$id": "#/properties/pagination/properties/size",
+          "type": "integer",
+          "title": "The Size Schema"
+        },
+        "search_after": {
+          "$id": "#/properties/pagination/properties/search_after",
+          "type": ["string", "null"],
+          "title": "The Search_after Schema"
+        },
+        "search_after_uid": {
+          "$id": "#/properties/pagination/properties/search_after_uid",
+          "type": ["string", "null"],
+          "title": "The Search_after_uid Schema"
+        },
+        "search_before": {
+          "$id": "#/properties/pagination/properties/search_before",
+          "type": "null",
+          "title": "The Search_before Schema"
+        },
+        "search_before_uid": {
+          "$id": "#/properties/pagination/properties/search_before_uid",
+          "type": "null",
+          "title": "The Search_before_uid Schema"
+        },
+        "pages": {
+          "$id": "#/properties/pagination/properties/pages",
+          "type": "integer",
+          "title": "The Pages Schema"
+        },
+        "sort": {
+          "$id": "#/properties/pagination/properties/sort",
+          "type": ["string", "null"],
+          "title": "The Sort Schema"
+        },
+        "order": {
+          "$id": "#/properties/pagination/properties/order",
+          "type": ["string", "null"],
+          "title": "The Order Schema"
+        }
+      }
+    },
+    "termFacets": {
+      "$id": "#/properties/termFacets",
+      "type": "object",
+      "title": "The Term Facets Schema",
+      "required": [
+        "organ",
+        "disease",
+        "project",
+        "organPart",
+        "instrumentManufacturerModel",
+        "libraryConstructionApproach",
+        "organismAgeUnit",
+        "protocol",
+        "biologicalSex",
+        "cellCount",
+        "organismAge",
+        "laboratory",
+        "preservationMethod",
+        "genusSpecies",
+        "fileFormat"
+      ],
+      "properties": {
+        "organ": {
+          "$id": "#/properties/termFacets/properties/organ",
+          "type": "object",
+          "title": "The Organ Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/organ/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/organ/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "disease": {
+          "$id": "#/properties/termFacets/properties/disease",
+          "type": "object",
+          "title": "The Disease Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/disease/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/disease/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "project": {
+          "$id": "#/properties/termFacets/properties/project",
+          "type": "object",
+          "title": "The Project Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/project/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/project/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "organPart": {
+          "$id": "#/properties/termFacets/properties/organPart",
+          "type": "object",
+          "title": "The Organ Part Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/organPart/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/organPart/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "instrumentManufacturerModel": {
+          "$id": "#/properties/termFacets/properties/instrumentManufacturerModel",
+          "type": "object",
+          "title": "The Instrument Manufacturer Model Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/instrumentManufacturerModel/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/instrumentManufacturerModel/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "libraryConstructionApproach": {
+          "$id": "#/properties/termFacets/properties/libraryConstructionApproach",
+          "type": "object",
+          "title": "The Library Construction Approach Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/libraryConstructionApproach/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/libraryConstructionApproach/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "organismAgeUnit": {
+          "$id": "#/properties/termFacets/properties/organismAgeUnit",
+          "type": "object",
+          "title": "The Organism Age Unit Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/organismAgeUnit/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/organismAgeUnit/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "protocol": {
+          "$id": "#/properties/termFacets/properties/protocol",
+          "type": "object",
+          "title": "The Protocol Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/protocol/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/protocol/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "biologicalSex": {
+          "$id": "#/properties/termFacets/properties/biologicalSex",
+          "type": "object",
+          "title": "The Biological Sex Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/biologicalSex/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/biologicalSex/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "cellCount": {
+          "$id": "#/properties/termFacets/properties/cellCount",
+          "type": "object",
+          "title": "The Cell Count Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/cellCount/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/cellCount/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "organismAge": {
+          "$id": "#/properties/termFacets/properties/organismAge",
+          "type": "object",
+          "title": "The Organism Age Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/organismAge/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/organismAge/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "laboratory": {
+          "$id": "#/properties/termFacets/properties/laboratory",
+          "type": "object",
+          "title": "The Laboratory Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/laboratory/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/laboratory/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "preservationMethod": {
+          "$id": "#/properties/termFacets/properties/preservationMethod",
+          "type": "object",
+          "title": "The Preservation Method Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/preservationMethod/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/preservationMethod/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "genusSpecies": {
+          "$id": "#/properties/termFacets/properties/genusSpecies",
+          "type": "object",
+          "title": "The Genus Species Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/genusSpecies/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/genusSpecies/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        },
+        "fileFormat": {
+          "$id": "#/properties/termFacets/properties/fileFormat",
+          "type": "object",
+          "title": "The File Format Schema",
+          "required": [
+            "terms",
+            "total",
+            "type"
+          ],
+          "properties": {
+            "terms": {"$ref": "#/definitions/terms"},
+            "total": {
+              "$id": "#/properties/termFacets/properties/fileFormat/properties/total",
+              "type": "integer",
+              "title": "The Total Schema",
+              "default": 0
+            },
+            "type": {
+              "$id": "#/properties/termFacets/properties/fileFormat/properties/type",
+              "type": ["string", "null"],
+              "title": "The Type Schema"
+            }
+          }
+        }
+      }
+    }
+  }
+}
