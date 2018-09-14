@@ -15,26 +15,42 @@ log = logging.getLogger(__name__)
 def _project_dict(bundle: api.Bundle) -> dict:
     project: api.Project
     laboratories: Set[str]
+    institutions: Set[str]
+    contact_names: Set[str]
+    publication_titles: Set[str]
 
     project, *additional_projects = bundle.projects.values()
     reject(additional_projects, "Azul can currently only handle a single project per bundle")
 
+    # Store lists of all values of each of these facets to allow facet filtering
+    # and term counting on the webservice
     laboratories = set()
+    institutions = set()
+    contact_names = set()
+    publication_titles = set()
 
-    # Extract the list of laboratories from contributors.
-    # NOTE: This is for backward compatibility. The list of contact names and institutes
-    #       can be extract from project.contributors.
     for contributor in project.contributors:
         if contributor.laboratory:
             laboratories.add(contributor.laboratory)
+        if contributor.contact_name:
+            contact_names.add(contributor.contact_name)
+        if contributor.institution:
+            institutions.add(contributor.institution)
+
+    for publication in project.publications:
+        if publication.publication_title:
+            publication_titles.add(publication.publication_title)
 
     return {
         'project_title': project.project_title,
         'project_description': project.project_description,
         'project_shortname': project.project_short_name,
         'laboratory': sorted(laboratories),
+        'institutions': sorted(institutions),
+        'contact_names': sorted(contact_names),
         'contributors': sorted(project.contributors, key=lambda contributor: contributor.email.lower() if contributor.email else None),
         'document_id': project.document_id,
+        'publication_titles': sorted(publication_titles),
         'publications': sorted(project.publications),
         '_type': 'project'
     }
