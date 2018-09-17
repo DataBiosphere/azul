@@ -50,10 +50,10 @@ class RequiredFirecloudColumns:
     def __init__(self):
         pass
 
-    # The column in the participant.tsv
+    # The column in the participants.tsv
     PARTICIPANT_ENTITY_ID = 'entity:participant_id'
 
-    # Columns in sample.tsv
+    # Columns in samples.tsv
     SAMPLE_SAMPLE_ID = 'entity:sample_id'
     SAMPLE_PARTICIPANT = 'participant'
 
@@ -70,9 +70,9 @@ class BagHandler:
     For FireCloud, the data needs to be broken up into two TSVs, a participant
     and a sample TSV.
 
-    The participant TSV is a one column TSV with the unique participant UUIDs.
+    The participants TSV is a one column TSV with the unique participant UUIDs.
 
-    The sample TSV has one row per sample, linked to the participant TSV by
+    The sample TSV has one row per sample, linked to the participants TSV by
     a participant column. Because a sample may contain multiple files, each
     file for a sample is added as an additional column.
 
@@ -83,13 +83,13 @@ class BagHandler:
     d1           s1             f2
     d2           s2             f3
 
-    This gets transformed to a participant TSV, with the two unique donors:
+    This gets transformed to a participants TSV, with the two unique donors:
 
     entity:participant_id
     d1
     d2
 
-    And a sample TSV, with the two samples, linked to participant.tsv by the
+    And a sample TSV, with the two samples, linked to participants.tsv by the
     participant column:
 
     entity:sample_id  participant  file1 file2
@@ -97,8 +97,8 @@ class BagHandler:
     s2                d2           f3
 
     In FireCloud, the name of column "entity:participant_id" in
-    participant.tsv, and the name of the columns "entity:sample_id" and
-    "participant" in sample.tsv must be exactly those. Additional columns in
+    participants.tsv, and the name of the columns "entity:sample_id" and
+    "participant" in samples.tsv must be exactly those. Additional columns in
     sample can have any name, although the convention seems to be lower
     case with underscores, so we convert the Boardwalk column names to follow
     that convention.
@@ -148,14 +148,14 @@ class BagHandler:
 
     def write_csv_files(self, data_path):
         """
-        Generates and writes participant.tsv and sample.tsv to data_path
+        Generates and writes participants.tsv and samples.tsv to data_path
         directory.
         :param data_path: Where to write the files
         :return: None
         """
         participants, samples = self.convert_to_participant_and_sample()
 
-        with open(data_path + '/participant.tsv', 'w') as tsv:
+        with open(data_path + '/participants.tsv', 'w') as tsv:
             writer = csv.DictWriter(tsv, fieldnames=[
                 RequiredFirecloudColumns.PARTICIPANT_ENTITY_ID], delimiter='\t')
             writer.writeheader()
@@ -163,7 +163,7 @@ class BagHandler:
                 writer.writerow(
                     {RequiredFirecloudColumns.PARTICIPANT_ENTITY_ID: p})
 
-        with open(data_path + '/sample.tsv', 'w') as tsv:
+        with open(data_path + '/samples.tsv', 'w') as tsv:
             first_row = True
             for sample in samples:
                 if first_row:
