@@ -9,6 +9,8 @@ jsonobject==0.7.1
 Faker==0.8.11
 future==0.16.0
 hca==4.1.0
+# Work around https://github.com/DataBiosphere/azul/issues/306, obsoleted by https://github.com/DataBiosphere/azul/issues/309:
+commonmark >= 0.7.4, < 0.8
 git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
 git+git://github.com/HumanCellAtlas/metadata-api@release/1.0b2#egg=hca-metadata-api
 requests==2.19.1
