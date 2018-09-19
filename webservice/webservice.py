@@ -12,8 +12,10 @@ from responseobjects.utilities import json_pp
 from bagitutils import BagHandler
 from s3_file_handler import S3FileHandler
 
+import functools
 
 # Setting up logging
+
 base_path = os.path.dirname(os.path.abspath(__file__))
 logging.config.fileConfig('{}/config/logging.conf'.format(base_path))
 bp_logger = logging.getLogger("dashboardService.webservice")
@@ -25,9 +27,33 @@ webservicebp = Blueprint('webservicebp', 'webservicebp')
 # how-to-write-docstring-for-url-parameters
 
 
+def authorize_with_dashboard(f):
+    @functools.wraps(f)
+    def check_auth(*args, **kwargs):
+        headers = {}
+        # look at header for what we need
+        if 'Authorization' in request.headers:
+            headers['Authorization'] = request.headers['Authorization']
+        # add cookie to request for auth
+        if 'Cookie' in request.headers:
+            headers['Cookie'] = request.headers['Cookie']
+        # set the X-Forwarded-For and User-agent to prevent session protection on dashboard from causing problems
+        headers['X-Forwarded-For'] = request.headers.get('X-Forwarded-For', request.remote_addr)
+        if 'User-Agent' in request.headers:
+            headers['User-Agent'] = request.headers['User-Agent']
+        # make call to dashboard
+        res = requests.get(request.url_root + 'authorization', headers=headers)
+        if res.status_code == 204:
+            return f(*args, **kwargs)
+        else:
+            return '', res.status_code
+    return check_auth
+
+
 @webservicebp.route('/repository/files', methods=['GET'])
 @webservicebp.route('/repository/files/', methods=['GET'])
 @webservicebp.route('/repository/files/<file_id>', methods=['GET'])
+@authorize_with_dashboard
 def get_data(file_id=None):
     """
     Returns a dictionary with entries that can be used by the browser
@@ -99,6 +125,7 @@ def get_data(file_id=None):
 
 
 @webservicebp.route('/repository/files/piecharts', methods=['GET'])
+@authorize_with_dashboard
 def get_data_pie():
     """
     Returns a dictionary with entries that can be used by the
@@ -163,6 +190,7 @@ def get_data_pie():
 
 
 @webservicebp.route('/repository/files/summary', methods=['GET'])
+@authorize_with_dashboard
 def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
@@ -199,6 +227,7 @@ def get_summary():
 
 
 @webservicebp.route('/keywords', methods=['GET'])
+@authorize_with_dashboard
 def get_search():
     """
     Creates and returns a dictionary with entries that best match the query
@@ -277,6 +306,7 @@ def get_search():
 
 
 @webservicebp.route('/repository/files/order', methods=['GET'])
+@authorize_with_dashboard
 def get_order():
     """
     Get the order of the facets from the order_config file
@@ -294,6 +324,7 @@ def get_order():
 
 @webservicebp.route('/repository/files/export',
                     methods=['GET'])
+@authorize_with_dashboard
 def get_manifest():
     """
     Creates and returns a manifest based on the filters and format passed on
@@ -304,7 +335,6 @@ def get_manifest():
           in: query
           type: string
           description: Filters to be applied when generating the manifest
-          
         - name: format
           in: query
           type: string
@@ -356,7 +386,7 @@ def bdbag_response(response_obj):
     Create a response for BDBag upload to S3. Returns just the presigned URL of
     the S3 location if all goes well. Otherwise the HTTP status code, error
     code, and a message are returned in JSON format.
-    
+
     :param response_obj: Contains the selected metadata as a TSV.
     :type response_obj: A Flask response object.
     :return response: Information depends on status of actions.
@@ -424,6 +454,7 @@ def bdbag_response(response_obj):
 
 @webservicebp.route('/repository/files/export/firecloud',
                     methods=['GET'])
+@authorize_with_dashboard
 def export_to_firecloud():
     """
     Creates a FireCloud workspace based on the filters, workspace,
