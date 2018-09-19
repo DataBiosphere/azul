@@ -59,7 +59,7 @@ def post_notification():
     if params and params.get('sync', 'False').lower() == 'true':
         indexer.index(notification)
     else:
-        queue('notify').send_message(MessageBody=_make_message(action='add', payload=notification))
+        queue('notify').send_message(MessageBody=_make_message(action='add', notification=notification))
         log.info("Queued notification %r", notification)
     return {"status": "done"}
 
@@ -71,19 +71,19 @@ def delete_notification():
     """
     notification = app.current_request.json_body
     log.info("Received deletion notification %r", notification)
-    queue('notify').send_message(MessageBody=_make_message(action='delete', payload=notification))
+    queue('notify').send_message(MessageBody=_make_message(action='delete', notification=notification))
     log.info("Queued notification %r", notification)
 
     return Response(body='', status_code=http.HTTPStatus.ACCEPTED)
 
-# Work around https://github.com/aws/chalice/issues/856
 
-
-def _make_message(action, payload):
+def _make_message(action, notification):
     if action not in ['add', 'delete']:
         raise ValueError(action)
-    return json.dumps({'action': action, 'payload': payload})
+    return json.dumps({'action': action, 'notification': notification})
 
+
+# Work around https://github.com/aws/chalice/issues/856
 
 def new_handler(self, event, context):
     app.lambda_context = context
@@ -104,20 +104,20 @@ def queue(queue_name):
 @app.on_sqs_message(queue=config.qualified_resource_name('notify'), batch_size=1)
 def index(event: SQSEvent):
     for record in event:
-        notification = json.loads(record.body)
+        message = json.loads(record.body)
         attempts = record.to_dict()['attributes']['ApproximateReceiveCount']
-        log.info(f'Worker handling notification {notification}, attempt #{attempts} (approx).')
+        log.info(f'Worker handling message {message}, attempt #{attempts} (approx).')
         start = time.time()
         try:
-            action = notification['action']
-            payload = notification['payload']
+            action = message['action']
+            notification = message['notification']
             if action == 'add':
-                indexer.index(payload)
+                indexer.index(notification)
             if action == 'delete':
-                indexer.delete(payload)
+                indexer.delete(notification)
         except:
-            log.warning(f"Worker failed to handle notification {notification}.", exc_info=True)
+            log.warning(f"Worker failed to handle message {message}.", exc_info=True)
             raise
         else:
             duration = time.time() - start
-            log.info(f'Worker successfully handled notification {notification} in {duration:.3f}s.')
+            log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')

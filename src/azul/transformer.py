@@ -20,7 +20,10 @@ class Bundle:
 
     @property
     def deleted(self) -> bool:
-        return 'deleted' in self.contents and self.contents['deleted']
+        return self.contents.get('deleted', False)
+
+    def delete(self):
+        self.contents = {'deleted': True}
 
 
 @dataclass

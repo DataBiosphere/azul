@@ -20,6 +20,7 @@ class BaseIndexer(ABC):
     """
     The base indexer class provides the framework to do indexing.
     """
+
     def __init__(self, properties: BaseIndexProperties) -> None:
         self.properties = properties
 
@@ -56,10 +57,18 @@ class BaseIndexer(ABC):
         errored_documents = defaultdict(int)
         conflict_documents = defaultdict(int)
         es_client = ESClientFactory.get()
+
         while indexable_documents:
             log.info("%s.%s: Indexing %i document(s).", bundle_uuid, bundle_version, len(indexable_documents))
-            mget_body = dict(docs=[dict(_index=doc.document_index, _type=doc.document_type, _id=doc.document_id)
-                                   for doc in indexable_documents.values()])
+            mget_body = {
+                'docs': [
+                    {
+                        '_index': doc.document_index,
+                        '_type': doc.document_type,
+                        '_id': doc.document_id
+                    } for doc in indexable_documents.values()
+                ]
+            }
             response = es_client.mget(body=mget_body)
             cur_docs = [doc for doc in response["docs"] if doc['found']]
             if cur_docs:
@@ -156,10 +165,12 @@ class BaseIndexer(ABC):
 
         indexable_documents = {}
         for hit in docs['hits']['hits']:
-            for bundle in hit['_source']['bundles']:
-                if bundle['uuid'] == bundle_uuid and bundle['version'] == bundle_version:
-                    bundle['contents'] = {"deleted": True}
-            indexable_documents[hit['_id']] = ElasticSearchDocument.from_index(hit)
+            doc = ElasticSearchDocument.from_index(hit)
+            for bundle in doc.bundles:
+                if bundle.version == bundle_version and bundle.uuid == bundle_uuid:
+                    bundle.delete()
+            indexable_documents[doc.document_id] = doc
+
         self._update_index(bundle_uuid, bundle_version, indexable_documents)
 
     def _get_docs_by_uuid_and_version(self, bundle_uuid, bundle_version):

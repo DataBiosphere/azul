@@ -96,7 +96,6 @@ class TestHCAIndexer(IndexerTestCase):
                 result_doc = ElasticSearchDocument.from_index(result_dict)
                 self.assertEqual(result_doc.bundles[0].uuid, self.new_bundle[0])
                 self.assertEqual(result_doc.bundles[0].version, self.new_bundle[1])
-                self.assertEqual(result_doc.bundles[0].contents, {'deleted': True})
                 self.assertTrue(result_doc.bundles[0].deleted)
 
         self._get_es_results(check_bundle_delete_correctness)

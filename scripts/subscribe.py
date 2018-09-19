@@ -3,6 +3,7 @@ import os
 import sys
 import tempfile
 from unittest.mock import patch
+
 import boto3
 
 from azul import config
@@ -34,37 +35,37 @@ def main(argv):
 
 def subscribe(options, dss_client):
     response = dss_client.get_subscriptions(replica='aws')
-    dss_subscriptions = freeze(response['subscriptions'])
-    new_subscriptions = _make_subscriptions(options.subscribe)
+    current_subscriptions = freeze(response['subscriptions'])
 
-    duplicate_subscription = []
-    for subscription in dss_subscriptions:
+    if options.subscribe:
+        plugin = config.plugin()
+        base_url = "https://" + config.api_lambda_domain('indexer')
+        new_subscriptions = [freeze(dict(replica='aws', es_query=query, callback_url=base_url + path))
+                             for query, path in [(plugin.dss_subscription_query, '/'),
+                                                 (plugin.dss_deletion_subscription_query, '/delete')]]
+    else:
+        new_subscriptions = []
+
+    matching_subscriptions = []
+    for subscription in current_subscriptions:
+        # Note the use of <= to allow for the fact that DSS returns subscriptions with additional attributes, more
+        # than were originally supplied. If the subscription returned by DSS is a superset of the subscription we want
+        # to create, we can skip the update.
         matching_subscription = next((new_subscription for new_subscription in new_subscriptions
                                       if new_subscription <= subscription))
         if matching_subscription:
             logging.info('Already subscribed: %r', thaw(subscription))
-            duplicate_subscription.append(matching_subscription)
+            matching_subscriptions.append(matching_subscription)
         else:
             logging.info('Removing subscription: %r', thaw(subscription))
             dss_client.delete_subscription(uuid=subscription['uuid'], replica=subscription['replica'])
-    new_subscriptions = [subs for subs in new_subscriptions if subs not in duplicate_subscription]
 
     for subscription in new_subscriptions:
-        dss_subscription = thaw(subscription)
-        response = dss_client.put_subscription(**dss_subscription)
-        dss_subscription['uuid'] = response['uuid']
-        logging.info('Registered subscription %r.', dss_subscription)
-
-
-def _make_subscriptions(subscribe):
-    if subscribe:
-        plugin = config.plugin()
-        base_url = "https://" + config.api_lambda_domain('indexer')
-        return [freeze(dict(replica='aws', es_query=query, callback_url=base_url + path))
-                for query, path in [(plugin.dss_subscription_query, '/'),
-                                    (plugin.dss_deletion_subscription_query, '/delete')]]
-    else:
-        return []
+        if subscription not in matching_subscriptions:
+            subscription = thaw(subscription)
+            response = dss_client.put_subscription(**subscription)
+            subscription['uuid'] = response['uuid']
+            logging.info('Registered subscription %r.', subscription)
 
 
 if __name__ == '__main__':
