@@ -1,6 +1,9 @@
-FROM nginx:1.10
+FROM nginx:1.15
 # upgrade pip and install required python packages
 RUN apt-get update
+# See https://github.com/debuerreotype/debuerreotype/issues/10
+RUN mkdir /usr/share/man/man1
+RUN mkdir /usr/share/man/man7
 RUN apt-get install -y build-essential libpq-dev libssl-dev libffi-dev python-dev
 RUN apt-get install -y python-pip postgresql
 RUN pip install -U pip setuptools
@@ -50,14 +53,5 @@ RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | te
 RUN echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
 RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886 && apt-get update && apt-get install -y curl dnsutils oracle-java8-installer ca-certificates
-
-# Install Consonance
-RUN apt-get -qq update
-RUN apt-get -qq -y install wget
-RUN wget https://github.com/Consonance/consonance/releases/download/2.0-alpha.10/consonance -O /bin/consonance 
-RUN chmod a+x /bin/consonance
-
-# Place the config in $HOME
-COPY consonance_config /root/.consonance/config
 
 CMD ["/usr/bin/supervisord"]
