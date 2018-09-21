@@ -6,7 +6,7 @@ from hca import HCAConfig
 from hca.dss import DSSClient
 from urllib3 import Timeout
 
-from humancellatlas.data.metadata import JSON
+from humancellatlas.data.metadata.api import JSON
 
 logger = logging.getLogger(__name__)
 

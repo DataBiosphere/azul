@@ -6,13 +6,13 @@ import os
 from unittest import TestCase
 import warnings
 
-from humancellatlas.data.metadata import (AgeRange,
-                                          Biomaterial,
-                                          Bundle,
-                                          DonorOrganism,
-                                          Project,
-                                          SequenceFile,
-                                          SpecimenFromOrganism)
+from humancellatlas.data.metadata.api import (AgeRange,
+                                              Biomaterial,
+                                              Bundle,
+                                              DonorOrganism,
+                                              Project,
+                                              SequenceFile,
+                                              SpecimenFromOrganism)
 
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
 from humancellatlas.data.metadata.helpers.json import as_json

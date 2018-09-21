@@ -3,7 +3,7 @@ from uuid import UUID
 
 from dataclasses import field, fields, is_dataclass
 
-from humancellatlas.data.metadata import Entity
+from humancellatlas.data.metadata.api import Entity
 
 
 def as_json(obj, fld: field = None):
@@ -37,5 +37,5 @@ def _issubclass_(t, s):
     # humancellatlas.data.metadata. _ForwardRef and _eval_type are internals of `typing`. They are exposed via
     # typing.get_type_hints but I am currently struggling to make that work.
     if t.__class__.__name__ == '_ForwardRef':
-        t = t._eval_type(localns={}, globalns=humancellatlas.data.metadata.__dict__)
+        t = t._eval_type(localns={}, globalns=humancellatlas.data.metadata.api.__dict__)
     return isinstance(t, type) and isinstance(s, type) and issubclass(t, s)
