@@ -3,9 +3,8 @@ from copy import deepcopy
 import json
 import logging
 import os
-
+import elasticsearch
 from elasticsearch_dsl import A, Q, Search
-
 from azul import config
 from azul.es import ESClientFactory
 from azul.service import service_config
@@ -24,6 +23,12 @@ SEARCH_AFTER_THRESHOLD = 10000
 
 
 class BadArgumentException(Exception):
+    def __init__(self, message):
+        Exception.__init__(self)
+        self.message = message
+
+
+class ElasticsearchIndexNotFoundError(Exception):
     def __init__(self, message):
         Exception.__init__(self)
         self.message = message
@@ -500,7 +505,14 @@ class ElasticTransformDump(object):
             # Apply paging
             es_search = self.apply_paging(es_search, pagination)
             # Execute ElasticSearch request
-            es_response = es_search.execute(ignore_cache=True)
+
+            try:
+                es_response = es_search.execute(ignore_cache=True)
+            except elasticsearch.NotFoundError:
+                raise ElasticsearchIndexNotFoundError(f'Could not find the Elasticsearch index,'
+                                                      f' {config.es_index_name(entity_type)}'
+                                                      f' in ES domain, {config.es_endpoint[0]}.')
+
             es_response_dict = es_response.to_dict()
             self.logger.debug("Printing ES_SEARCH response dict:\n {}".format(
                 json.dumps(es_response_dict)))
