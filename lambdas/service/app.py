@@ -2,11 +2,12 @@ import ast
 import logging.config
 import os
 
-from chalice import Chalice, BadRequestError
+from chalice import Chalice, BadRequestError, NotFoundError
 
 from azul import config
 from azul.service import service_config
-from azul.service.responseobjects.elastic_request_builder import BadArgumentException, ElasticTransformDump as EsTd
+from azul.service.responseobjects.elastic_request_builder import BadArgumentException, ElasticsearchIndexNotFoundError,\
+    ElasticTransformDump as EsTd
 from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
@@ -145,6 +146,8 @@ def get_data(file_id=None):
                                            entity_type='files')
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
+    except ElasticsearchIndexNotFoundError as enfe:
+        raise NotFoundError(msg=enfe.message)
     else:
         if file_id is not None:
             response = response['hits'][0]
@@ -203,28 +206,31 @@ def get_specimen_data(specimen_id=None):
         app.current_request.query_params = {}
     filters = app.current_request.query_params.get('filters', '{"file": {}}')
     logger.debug("Filters string is: {}".format(filters))
+    logger.info("Extracting the filter parameter from the request")
+    filters = ast.literal_eval(filters)
+    # Make the default pagination
+    logger.info("Creating pagination")
+    pagination = _get_pagination(app.current_request)
+    logger.debug("Pagination: \n".format(json_pp(pagination)))
+    # Handle <file_id> request form
+    if specimen_id is not None:
+        logger.info("Handling single file id search")
+        filters['file']['fileId'] = {"is": [specimen_id]}
+    # Create and instance of the ElasticTransformDump
+    logger.info("Creating ElasticTransformDump object")
+    es_td = EsTd()
+    # Get the response back
+    logger.info("Creating the API response")
+
     try:
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        # Make the default pagination
-        logger.info("Creating pagination")
-        pagination = _get_pagination(app.current_request)
-        logger.debug("Pagination: \n".format(json_pp(pagination)))
-        # Handle <file_id> request form
-        if specimen_id is not None:
-            logger.info("Handling single file id search")
-            filters['file']['fileId'] = {"is": [specimen_id]}
-        # Create and instance of the ElasticTransformDump
-        logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd()
-        # Get the response back
-        logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
                                            pagination=pagination,
                                            post_filter=True,
                                            entity_type='specimens')
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
+    except ElasticsearchIndexNotFoundError as enfe:
+        raise NotFoundError(msg=enfe.message)
     else:
         # Returning a single response if <specimen_id> request form is used
         if specimen_id is not None:
