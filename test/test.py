@@ -33,10 +33,14 @@ class TestAccessorApi(TestCase):
         for deployment, replica, uuid, version, age_range in [
             # A v5 bundle
             (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None, AgeRange(min=3628800, max=7257600)),
-            # A vx bundle with a cell_suspension as sequencing input
-            ('integration', 'aws', '1e276fdd-d885-4a18-b5b8-df33f1347c1a', '2018-08-03T082009.272868Z', None),
-            # A vx bundle with a specimen_from_organism as sequencing input
-            ('integration', 'aws', '17ef531b-1bb7-425d-bbf7-32721242dde7', '2018-08-17T203538.886280Z', None),
+            # A vx primary bundle with a cell_suspension as sequencing input
+            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', None, None),
+            # A vx analysis bundle for the primary bundle with a cell_suspension as sequencing input
+            ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z', None),
+            # A vx primary bundle with a specimen_from_organism as sequencing input
+            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', '2018-09-20T230221.622042Z', None),
+            # A vx analysis bundle for the primary with a specimen_from_organism as sequencing input
+            ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z', None),
         ]:
             with self.subTest(deployment=deployment, replica=replica, uuid=uuid, age_range=age_range):
                 client = dss_client(deployment)
