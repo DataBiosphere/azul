@@ -91,7 +91,7 @@ class BaseIndexer(ABC):
                 log.warning('%s.%s: There was a general error with document %s: %r. Total # of errors: %i, %s.',
                             bundle_uuid, bundle_version, doc_id, error, errored_documents[doc_id], action)
 
-            if len(indexable_documents) < 32:
+            if len(indexable_documents) < 128:
                 for cur_doc in indexable_documents.values():
                     doc_id = cur_doc.document_id
                     try:
