@@ -27,7 +27,7 @@ generic with minimal need for project-specific behavior.
 
 ### 1.1. Development Preequisites
 
-- Python 3.6 with `pip`
+- Python 3.6 with `virtualenv` and `pip`
 
 - Make sure that you are using the `bash` shell.
 
@@ -52,13 +52,17 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1) Create a Python 3.6 `venv` and activate it, for example 
+1) Create a Python 3.6 virtualenv and activate it, for example 
    
    ```
    cd azul
-   python3 -m venv .venv
+   virtualenv -p python3 .venv
    source .venv/bin/activate
    ```
+   
+   Important: Note that Python 3's built-in virtual environment module 
+   (`python3 -m venv`) is currently not supported. See 
+   https://github.com/DataBiosphere/azul/issues/340 for details.
 
 2) Setup configuration for dev deployment: 
    
