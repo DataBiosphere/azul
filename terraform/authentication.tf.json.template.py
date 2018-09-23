@@ -22,7 +22,8 @@ emit({
         {
             "aws_secretsmanager_secret": {
                 "indexer_google_service_account": {
-                    "name": config.google_service_account('indexer')
+                    "name": config.google_service_account('indexer'),
+                    "recovery_window_in_days": 0  # force immediate deletion
                 }
             },
             "aws_secretsmanager_secret_version": {
