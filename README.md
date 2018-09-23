@@ -465,245 +465,62 @@ fast-forward. A push to any of the deployment branches will trigger a CI/CD
 build that performs the deployment. The promotion could be automatic and/or
 gated on a condition, like tests passing.
 
-## 6. Indexer
+### 6. Cheat sheets
 
-### 6.1. Config File
+## 6.1. Deploying to `dev`, `integration`, `staging` or `prod`
 
-[This section is out of date.]
+1) Change into the Azul project root directory: `cd azul`
 
-`chalicelib/config.json` should contain the keys that you wish to add to the
-index documents. The structure of the config.json should mimic the metadata
-json file being looked at.
+2) Run `git checkout develop` (alternatively `integration`, `staging` or `prod`)
 
-For example, the following metadata for assay.json:
+3) This cheat sheet may differ from branch to branch. Be sure to follow the
+   cheat sheet in the README on the branch currently checked out.
 
-```
-{
-  "rna": {
-    "primer": "random"
-  },
-  "seq": {
-    "machine": "Illumina HiSeq 2000",
-    "molecule": "total RNA",
-    "paired_ends": "no",
-    "prep": "TruSeq"
-  },
-  "single_cell": {
-    "method": "mouth pipette"
-  },
-  "sra_experiment": "SRX129997",
-  "sra_run": [
-    "SRR445718"
-  ],
-  "files": [
-    {
-      "name": "SRR445718_1.fastq.gz",
-      "format": ".fastq.gz",
-      "type": "reads",
-      "lane": 1
-    }
-  ]
-}
-```
+4) Run `git status` and make sure that your working copy is clean and the
+   branch is up-to-date.
 
-and this cell.json
+5) Run `source environment`
 
+6) Run `_select dev` (alternatively `integration`, `staging` or `prod`). Except
+   for `dev` and `develop`, the branch name matches the name of the deployment.
 
-```
-{
-  "type": "oocyte",
-  "ontology": "CL_0000023",
-  "id": "oocyte #1"
-}
-```
+7) Run `deactivate; rm -rf .venv`
 
-Could have a config like such:
+8) Run `virtualenv -p python3 .venv && source .venv/bin/activate` followed by …
 
-```
-{
-  "assay.json": [
-    {
-      "rna": [
-        "primer"
-      ]
-    },
-    {
-      "single_cell": [
-        "method"
-      ]
-    },
-    "sra_experiment",
-    {
-      "files":[
-        "format"
-      ]
-    }
-  ],
-  "cell.json":[
-    "type",
-    "ontology",
-    "id"
-  ]
- }
-```
+9) Run `pip install -r requirements.dev.txt` to ensure a consistent set of 
+   dependencies.
 
-***NOTE***: The config should be rooted under a version of the metadata being received.
+10) Run `python scripts/envhook.py install` if you use envhook.py
 
-In Elasticsearch, the fields for the File Indexer will be
+11) Run `make terraform`
 
-```
-assay,json|rna|primer
-assay,json|single_cell|method
-assay,json|sra_experiment
-assay,json|files|format
-cell,json|type
-cell,json|ontology
-cell,json|id
-```
+12) Run `make deploy`
 
-Notice the commas(,) where there were previously periods(.). Also, the pipe (|) is used as the separator between levels in the config.
+13) Run `make subscribe`
 
-#### Adding Mappings
+14) Run `make reindex` or `make delete_and_reindex`
 
-Given a config:
+## 6.2 Promoting changes
 
-```
-{
-  "cell.json":[
-    "type",
-    "ontology",
-    "id"
-  ]
- }
-```
+For promoting `dev` to `integration` use the steps outlined below. For higher
+promotions (`integration` to `staging`, or `staging` to `prod`) change the
+source and target branches accordingly.
 
-### 6.2. Manual Loading
+1) Change into the Azul project root directory: `cd azul`
 
-Download and expand import.tgz from Data-Bundle-Examples:
-https://github.com/HumanCellAtlas/data-bundle-examples/blob/master/import/import
-.tgz Download the test/indexer/local-import.py file from this repo. Create an
-environmental variable `BUNDLE_PATH` that points to the import.tgz files.
-(Note: There are thousands of files in import.tgz, can specify parts of bundles
-to download: `import/geo/GSE67835` or `import/geo` or `import`) Add
-environmental variable `ES_ENDPOINT` which points to your ES box or have a
-localhost running. Optionally, create the name of the ES index to add the files
-to with the environmental variable `AZUL_ES_INDEX` (default index is
-`test-import`) Required to have a config.json (like the one in
-`chalicelib/config.json`)
+2) Checkout the target branch: `git checkout integration`
 
-Run `local-import.py`. Open Kibana to see your files appear. The
+3) This cheat sheet may differ from branch to branch. Be sure to follow the
+   cheat sheet in the README on the branch currently checked out.
 
-Note: Manual loading creates mappings for ES, has some list parsing capability,
-and if `key` in config.json does not exist, returns a value of "no `key`".
-(This functionality is not present in the Chalice function yet)
+4) Run `git status` and make sure that your working copy is clean and the
+   branch is up-to-date.
 
-### 6.3. Stress test
+5) Merge the source branch: `git merge develop` and resolve conflicts (should
+   only be necessary if cherry-picks occured on the target branch)
 
-The test data can be populated under `test/data_generator` directory to an
-ElasticSearch instance by updating the ES URL and directory name in
-`make_fake_data`.
+6) Deploy, see section 6.1, starting at step 5). In step 6) use the deployment
+   that matches the target branch
 
-To run the stress test, first update the `host` variable in
-`test_stress_indexer.py`, or pass it as a flag when running the test. The query
-by default matches all of the elements in elasticsearch to stress the system to
-the maximum, but that can be optionally changed `json` parameter in the
-`query_indexer` method.
-
-To run the test, use `locust -f test_stress_indexer.py --no-web -c 10 -r 2 -n
-10` , where `-c` represents the number of concurrent users to simulate, `-r`
-the number of new users generated per second and `-n` the number of times this
-is run. You can optionally specify the total run time instead of the number of
-times by passing in `-t HHh:MMm:SSs` in place of `-n`. If you want to use a
-different host, you can pass the Elasticsearch URL by passing it in using the
-`-host <HOST_URL>` option
-
-If `--no-web` is not generated, locust will create an UI on port `8089` where
-you can configure the parameters.
-
-
-### 6.4. Todo List
-
-[This section needs to be converted to tickets and then removed]
-
-* how to setup Kibana for security group reasons
-* how to run find-golden-tickets.py
-* improve mappings to Chalice
-* list handling in json files
-* cron deduplication
-* capibility to download files that are not json
-* multiple version handling (per file version or per file?)
-* Unit testing: Flask mock up of the Blue Box endpoints
-    * We need something that will generate POSTS to the lambda, such as a shell script.
-    * Flask has endpoints for looking up bundles, and get a particular manifest.
-    * Assume  bundles uuid always exist. generate a request to download anything indexable ? 
-* Improve debugging (config for turning on/off debug)
-
-
-## 7. Service
-
-### 7.1. General Overview
-The web app is subdivided into different flask blueprints, each filling out a particular function. The current blueprints are:
-
-* action
-  * Responsible for returning the status of jobs running on Consonance.
-* billing
-  * Responsible for returning the prices of storage and computing cost. It reads from a billing index in ElasticSearch.
-* webservice
-  * The backend that powers the Boardwalk portal. Queries ElasticSearch to serve an API that allows to apply filters and do faceting on entries within ElasticSearch.
-  
-### 7.2. On the Webservice
-
-The responseobjects module is responsible for handling the faceting and API response creation. Within this module, `elastic_request_builder` is responsible for taking in the parameters passed in through the `HTTP` request and creating a query to ElasticSearch. Then, `api_response` is responsible for parsing the data from ElasticSearch and creating the API response.
-
-There are currently five working endpoints:
-<ul>
-<li>"<code>/repository/files/</code>" returns the index search results along with a count of the terms available for the facets.</li>
-<li>"<code>/repository/summary/files</code>" returns a summary of the current data stored.</li>
-<li>"<code>/repository/files/export</code>" returns a manifest file with the filters provided.</li>
-<li>"<code>/repository/files/order</code>" returns the desired order for the facets.</li>
-<li>"<code>/keywords</code>" returns a list of search results for some search query.</li>
-</ul>
-
-<h4>Webservice Endpoints</h4>
-
-***/repository/files***<br>
-Currently there are 6 parameters supported. They are as follows:<br>
-
-|Parameter|Description|Data Type|Example|
-|--- |--- |--- |--- |
-|filters|Specifies which filters to use to return only the files with the matching criteria. Supplied as a string with the format: {"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}|String|http://ucsc-cgp.org/api/v1/repository/files/?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return only those files who have a file format of type "bam"|
-|from|Specifies the start index. Defaults to 1 if not specified:|Integer|http://ucsc-cgp.org/api/v1/repository/files/?from=26  This will return the next 25 results starting at index 26|
-|size|Specifies how many hits to return. Defaults to 10|Integer|http://ucsc-cgp.org/api/v1/repository/files/?size=50  This will return 50 hits starting from 1|
-|sort|Specifies the field under which the list of hits should be sorted. Defaults to "center_name"|String|http://ucsc-cgp.org/api/v1/repository/files/?sort=donor  This will return the hits sorted by the "donor" field.|
-|order|Specifies the order in which the hits should be sorted; two options, "asc" and "desc". Defaults to "desc".|String|http://ucsc-cgp.org/api/v1/repository/files/?order=desc  This will return the hits in descending order.|
-
-<br>
-
-
-***/repository/files/export***<br>
-
-|Parameter|Description|Data Type|Example|
-|--- |--- |--- |--- |
-|filters|Specifies which filters to use to return only the manifest with of the files that matching the criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgp.org/api/v1/repository/files/export?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
-
-
-<br>
-
-***/repository/summary/files***<br>
-
-|Parameter|Description|Data Type|Example|
-|--- |--- |--- |--- |
-|filters|Specifies which filters to use to return only the summary with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgp.org/api/v1/repository/summary/files?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
-
-<br>
-
-***/keywords***<br>
-
-|Parameter|Description|Data Type|Example|
-|--- |--- |--- |--- |
-|type|Specifies which type of format to return (file or file-donor). Supplied as a string. Defaults to 'file'.|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1 This will return files based on the search query 8f1.|
-|field|Specifies which field to perform the search on. Defaults to 'fileId'.|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=UCSC&field=centerName would search for files with center name `UCSC` |
-|filters|Specifies which filters to use to return only the search results with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return only those files who have a file format of type "bam" for the query 8f1 .|
-|from|Specifies the start index. Defaults to 1 if not specified:|Integer|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&from=26 This will return the search results from result 26 onwards|
-|size|Specifies how many hits to return. Defaults to 5|Integer|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&size=5 This will return at most 5 hits.|
-|q|Specifies the query for search|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&size=5 This will return at most 5 hits for the query 8f1.|
+7) Run `git push origin`
