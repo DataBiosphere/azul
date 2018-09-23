@@ -18,9 +18,8 @@ from urllib.parse import urlparse, urlencode, parse_qs
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
-
 from azul import config
-
+from azul.es import ESClientFactory
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +61,10 @@ parser.add_argument('--async',
                     action='store_false',
                     help='Have the indexer lambda queue the notification for asynchronous processing by a worker '
                          'lambda instead of processing it directly.')
+parser.add_argument('--delete',
+                    default=False,
+                    action='store_true',
+                    help='Delete all entity indices before reindexing.')
 
 
 def post_bundle(bundle_fqid, es_query, indexer_url):
@@ -87,6 +90,17 @@ def post_bundle(bundle_fqid, es_query, indexer_url):
 
 def main(argv: List[str]):
     args = parser.parse_args(argv)
+
+    if args.delete:
+        plugin = config.plugin()
+        es_client = ESClientFactory.get()
+        properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
+                                            es_endpoint=config.es_endpoint)
+        for entity_type in properties.entities:
+            index_name = config.es_index_name(entity_type)
+            if es_client.indices.exists(index_name):
+                es_client.indices.delete(index=index_name)
+
     dss_client = config.dss_client(dss_endpoint=args.dss_url)
     # noinspection PyUnresolvedReferences
     response = dss_client.post_search.iterate(es_query=args.es_query, replica="aws")

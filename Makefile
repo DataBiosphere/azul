@@ -17,12 +17,8 @@ subscribe:
 reindex:
 	python scripts/reindex.py
 
-everything:
-	$(MAKE) terraform
-	$(MAKE) deploy
-	$(MAKE) terraform  # for custom domain names
-	$(MAKE) subscribe
-	$(MAKE) reindex
+delete_and_reindex:
+	python scripts/reindex.py --delete
 
 clean:
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
