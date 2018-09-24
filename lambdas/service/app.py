@@ -6,8 +6,9 @@ from chalice import Chalice, BadRequestError, NotFoundError
 
 from azul import config
 from azul.service import service_config
-from azul.service.responseobjects.elastic_request_builder import BadArgumentException, ElasticsearchIndexNotFoundError,\
-    ElasticTransformDump as EsTd
+from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
+                                                                  IndexNotFoundError,
+                                                                  ElasticTransformDump as EsTd)
 from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
@@ -146,8 +147,8 @@ def get_data(file_id=None):
                                            entity_type='files')
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
-    except ElasticsearchIndexNotFoundError as enfe:
-        raise NotFoundError(msg=enfe.message)
+    except IndexNotFoundError as infe:
+        raise NotFoundError(msg=infe.message)
     else:
         if file_id is not None:
             response = response['hits'][0]
@@ -229,8 +230,8 @@ def get_specimen_data(specimen_id=None):
                                            entity_type='specimens')
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
-    except ElasticsearchIndexNotFoundError as enfe:
-        raise NotFoundError(msg=enfe.message)
+    except IndexNotFoundError as infe:
+        raise NotFoundError(msg=infe.message)
     else:
         # Returning a single response if <specimen_id> request form is used
         if specimen_id is not None:
