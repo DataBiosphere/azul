@@ -28,10 +28,10 @@ class BadArgumentException(Exception):
         self.message = message
 
 
-class ElasticsearchIndexNotFoundError(Exception):
-    def __init__(self, message):
+class IndexNotFoundError(Exception):
+    def __init__(self, missing_index: str):
         Exception.__init__(self)
-        self.message = message
+        self.message = f'Could not find the Elasticsearch index, {missing_index}.'
 
 
 class ElasticTransformDump(object):
@@ -508,10 +508,8 @@ class ElasticTransformDump(object):
 
             try:
                 es_response = es_search.execute(ignore_cache=True)
-            except elasticsearch.NotFoundError:
-                raise ElasticsearchIndexNotFoundError(f'Could not find the Elasticsearch index,'
-                                                      f' {config.es_index_name(entity_type)}'
-                                                      f' in ES domain, {config.es_endpoint[0]}.')
+            except elasticsearch.NotFoundError as e:
+                raise IndexNotFoundError(e.info["error"]["index"])
 
             es_response_dict = es_response.to_dict()
             self.logger.debug("Printing ES_SEARCH response dict:\n {}".format(
