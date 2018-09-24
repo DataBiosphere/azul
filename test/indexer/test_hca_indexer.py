@@ -124,6 +124,9 @@ class TestHCAIndexer(IndexerTestCase):
                 elif index_name == config.es_index_name("specimens"):
                     self.assertEqual(1, len(result_contents["specimens"]))
                     self.assertGreater(len(result_contents["files"]), 0)
+                elif index_name == config.es_index_name("projects"):
+                    self.assertGreater(len(result_contents["files"]), 0)
+                    self.assertGreater(len(result_contents["specimens"]), 0)
                 else:
                     self.fail(index_name)
 
@@ -275,7 +278,6 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertEqual(len(result_dict["_source"]["bundles"]), 2)
                     for bundle in result_dict["_source"]["bundles"]:
                         result_contents = bundle["contents"]
-                        # Each bundle in should contain two files
                         self.assertEqual(2, len(result_contents["files"]))
 
             self.assertEqual(len(file_doc_ids), 4)
