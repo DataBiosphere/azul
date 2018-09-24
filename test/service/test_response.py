@@ -6,8 +6,9 @@ import os
 
 import requests
 
-from azul.service.responseobjects.hca_response_v5 import (
-    KeywordSearchResponse, FileSearchResponse, ProjectSummaryResponse)
+from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
+                                                          KeywordSearchResponse,
+                                                          ProjectSummaryResponse)
 from service import WebServiceTestCase
 
 
@@ -130,16 +131,13 @@ class TestResponse(WebServiceTestCase):
         """
         project_buckets = self._load('response_project_get_bucket_input.json')
 
-        bucket_terms_1 = ProjectSummaryResponse.get_bucket_terms(
-            'project1', project_buckets, 'term_bucket')
+        bucket_terms_1 = ProjectSummaryResponse.get_bucket_terms('project1', project_buckets, 'term_bucket')
         self.assertEqual(bucket_terms_1, ['term1', 'term2', 'term3'])
 
-        bucket_terms_2 = ProjectSummaryResponse.get_bucket_terms(
-            'project2', project_buckets, 'term_bucket')
+        bucket_terms_2 = ProjectSummaryResponse.get_bucket_terms('project2', project_buckets, 'term_bucket')
         self.assertEqual(bucket_terms_2, [])
 
-        bucket_terms_3 = ProjectSummaryResponse.get_bucket_terms(
-            'project3', project_buckets, 'term_bucket')
+        bucket_terms_3 = ProjectSummaryResponse.get_bucket_terms('project3', project_buckets, 'term_bucket')
         self.assertEqual(bucket_terms_3, [])
 
     def test_project_get_bucket_values(self):
@@ -150,16 +148,13 @@ class TestResponse(WebServiceTestCase):
         """
         project_buckets = self._load('response_project_get_bucket_input.json')
 
-        bucket_terms_1 = ProjectSummaryResponse.get_bucket_value(
-            'project1', project_buckets, 'value_bucket')
+        bucket_terms_1 = ProjectSummaryResponse.get_bucket_value('project1', project_buckets, 'value_bucket')
         self.assertEqual(bucket_terms_1, 2)
 
-        bucket_terms_2 = ProjectSummaryResponse.get_bucket_value(
-            'project2', project_buckets, 'value_bucket')
+        bucket_terms_2 = ProjectSummaryResponse.get_bucket_value('project2', project_buckets, 'value_bucket')
         self.assertEqual(bucket_terms_2, 4)
 
-        bucket_terms_3 = ProjectSummaryResponse.get_bucket_value(
-            'project3', project_buckets, 'value_bucket')
+        bucket_terms_3 = ProjectSummaryResponse.get_bucket_value('project3', project_buckets, 'value_bucket')
         self.assertEqual(bucket_terms_3, -1)
 
     def test_projects_key_search_response(self):
@@ -169,11 +164,26 @@ class TestResponse(WebServiceTestCase):
         """
         keyword_response = KeywordSearchResponse(
             hits=self._load("response_test_input.json"),
-            projects_response=True
+            entity_type='projects'
         ).return_response().to_json()
 
         self.assertEqual(json.dumps(keyword_response, sort_keys=True),
                          json.dumps(self._load("response_projects_keysearch_output.json"), sort_keys=True))
+
+    def test_projects_file_search_response(self):
+        """
+        Test building response for projects
+        Response should include project detail fields that do not appear for other entity type repsponses
+        """
+        keyword_response = FileSearchResponse(
+            hits=self._load("response_test_input.json"),
+            pagination=self._load(f"response_pagination_input1.json"),
+            facets=self._load("response_facets_populated.json"),
+            entity_type='projects'
+        ).return_response().to_json()
+
+        self.assertEqual(json.dumps(keyword_response, sort_keys=True),
+                         json.dumps(self._load("response_projects_filesearch_output.json"), sort_keys=True))
 
     def _load(self, filename):
         data_folder_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')

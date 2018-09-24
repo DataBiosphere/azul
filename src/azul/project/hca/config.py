@@ -82,10 +82,7 @@ class IndexProperties(BaseIndexProperties):
 
     @property
     def transformers(self) -> Iterable[Transformer]:
-        return (FileTransformer(),
-                SpecimenTransformer(),
-                ProjectTransformer(),
-                )
+        return FileTransformer(), SpecimenTransformer(), ProjectTransformer()
 
     @property
     def entities(self) -> Iterable[str]:

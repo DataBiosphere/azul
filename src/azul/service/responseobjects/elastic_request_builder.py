@@ -10,12 +10,9 @@ from elasticsearch_dsl import A, Q, Search
 from azul import config
 from azul.es import ESClientFactory
 from azul.service import service_config
-from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse,
-                                                          FileSearchResponse,
-                                                          KeywordSearchResponse,
-                                                          ManifestResponse,
-                                                          SummaryResponse,
-                                                          ProjectSummaryResponse)
+from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse, FileSearchResponse,
+                                                          KeywordSearchResponse, ManifestResponse,
+                                                          ProjectSummaryResponse, SummaryResponse)
 from azul.service.responseobjects.utilities import json_pp
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
@@ -187,7 +184,7 @@ class ElasticTransformDump(object):
                 ElasticTransformDump.create_aggregate(
                     filters, facet_config, agg))
 
-        if entity_type == 'projects':  # Make project specific aggregations
+        if entity_type == 'projects':  # Make project-specific aggregations
             ElasticTransformDump.create_project_summary_aggregates(es_search, req_config)
 
         return es_search
@@ -541,18 +538,14 @@ class ElasticTransformDump(object):
                 paging['sort'] = inverse_translation[paging['sort']]
             # Creating FileSearchResponse object
             self.logger.info('Creating FileSearchResponse')
+            final_response = FileSearchResponse(hits, paging, facets, entity_type)
 
-            final_response = FileSearchResponse(
-                hits,
-                paging,
-                facets,
-                entity_type)
         self.logger.info(
             'Returning the final response for transform_request()')
         final_response = final_response.apiResponse.to_json()
 
         if entity_type == 'projects':  # Add project summaries to each project hit
-            ElasticTransformDump.add_project_summaries(final_response['hits'], es_response)
+            self.add_project_summaries(final_response['hits'], es_response)
 
         return final_response
 
@@ -693,7 +686,9 @@ class ElasticTransformDump(object):
 
     @staticmethod
     def create_project_summary_aggregates(es_search, request_config):
-        """Add per project aggregations to the request, specific to project response"""
+        """
+        Add per-project aggregations to the request, specific to project response
+        """
         es_search.aggs.bucket(
             '_project_agg', 'terms',
             field=f'{request_config["translation"]["projectId"]}.keyword'
@@ -721,8 +716,7 @@ class ElasticTransformDump(object):
             field=f'{request_config["translation"]["disease"]}.keyword'
         )
 
-    @staticmethod
-    def add_project_summaries(hits, es_response):
+    def add_project_summaries(self, hits, es_response):
         """
         Create a project summary response for each project in hits.
         The hits list is modified in place to add a summary to each element.
@@ -734,4 +728,4 @@ class ElasticTransformDump(object):
                 ProjectSummaryResponse(project_id, es_response).apiResponse.to_json())
 
         for hit in hits:
-            hit['summary'] = summary_responses[hit['entryId']]
+            hit['projectSummary'] = summary_responses[hit['entryId']]

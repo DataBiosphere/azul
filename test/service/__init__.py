@@ -10,7 +10,7 @@ class WebServiceTestCase(ElasticsearchTestCase, LocalAppTestCase):
         return "service"
 
     _data_loader = None
-    seed = None
+    seed = None  # seed is used to set a seed for the fake data loader so we can reproduce tests if needed
 
     @classmethod
     def setUpClass(cls):

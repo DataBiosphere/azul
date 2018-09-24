@@ -279,7 +279,7 @@ class TestRequestBuilder(WebServiceTestCase):
         hits = [{'entryId': 'a'}, {'entryId': 'b'}]
         es_response = self._load_json(
             os.path.join(self.data_directory, 'request_builder_project_summaries_input.json'))
-        EsTd.add_project_summaries(hits, es_response)
+        EsTd().add_project_summaries(hits, es_response)
 
         expected_output = self._load_json(
             os.path.join(self.data_directory, 'request_builder_project_summaries_output.json'))

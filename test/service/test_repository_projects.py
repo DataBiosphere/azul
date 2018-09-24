@@ -5,12 +5,8 @@ from service import WebServiceTestCase
 
 class RepositoryProjectsEndpointTest(WebServiceTestCase):
 
+    # Set a seed so that we can test the detail response with a stable project ID
     seed = 123
-
-    @classmethod
-    def setUpClass(cls):
-        """Set a seed so that we can test the detail response with a stable project ID"""
-        super().setUpClass()
 
     @staticmethod
     def get_project_detail_properties():
@@ -43,7 +39,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             self.assertTrue('projects' in hit)
             self.assertTrue('specimens' in hit)
             self.assertTrue('bundles' in hit)
-            self.assertTrue('summary' in hit)
+            self.assertTrue('projectSummary' in hit)
             self.assertFalse('files' in hit)
             for project in hit['projects']:
                 for prop in RepositoryProjectsEndpointTest.get_project_detail_properties():
@@ -72,7 +68,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         self.assertTrue('projects' in hit)
         self.assertTrue('specimens' in hit)
         self.assertTrue('bundles' in hit)
-        self.assertTrue('summary' in hit)
+        self.assertTrue('projectSummary' in hit)
         self.assertFalse('files' in hit)
 
         for project in hit['projects']:
