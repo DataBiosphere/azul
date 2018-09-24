@@ -19,6 +19,7 @@ from jsonobject import (DictProperty,
 
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
+from azul.strings import to_camel_case
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
 
@@ -277,9 +278,6 @@ class EntryFetcher:
 
 
 class BaseSummaryResponse(AbstractResponse):
-    """
-    Base class for the summary response. Based on the AbstractResponse class
-    """
     def return_response(self):
         return self.apiResponse
 
@@ -314,7 +312,7 @@ class BaseSummaryResponse(AbstractResponse):
 
 class SummaryResponse(BaseSummaryResponse):
     """
-    Class for the summary response. Based on the BaseSummaryResponse class
+    Build response for the summary endpoint
     """
 
     def __init__(self, raw_response):
@@ -345,9 +343,12 @@ class SummaryResponse(BaseSummaryResponse):
 
 
 class ProjectSummaryResponse(BaseSummaryResponse):
+    """
+    Build summary field for each project in projects endpoint
+    """
 
-    @staticmethod
-    def get_bucket_terms(project_id, project_buckets, agg_key):
+    @classmethod
+    def get_bucket_terms(cls, project_id, project_buckets, agg_key):
         """
         Return a list of the keys of the buckets from an ElasticSearch aggregate
         of a given project with the format:
@@ -379,8 +380,8 @@ class ProjectSummaryResponse(BaseSummaryResponse):
             return [bucket['key'] for bucket in project_bucket[agg_key]['buckets']]
         return []
 
-    @staticmethod
-    def get_bucket_value(project_id, project_buckets, agg_key):
+    @classmethod
+    def get_bucket_value(cls, project_id, project_buckets, agg_key):
         """
         Return a value of the bucket of the given project from an
         ElasticSearch aggregate with the format:
@@ -407,9 +408,11 @@ class ProjectSummaryResponse(BaseSummaryResponse):
             return project_bucket[agg_key]['value']
         return -1
 
-    @staticmethod
-    def get_cell_count(hit):
-        """Iterate through specimens to get per organ cell count"""
+    @classmethod
+    def get_cell_count(cls, hit):
+        """
+        Iterate through specimens to get per organ cell count
+        """
         # FIXME: This should ideally be done through elasticsearch
         specimen_ids = set()
         organ_cell_count = dict()
@@ -442,25 +445,21 @@ class ProjectSummaryResponse(BaseSummaryResponse):
         organ_cell_count = []
         for hit in raw_response['hits']['hits']:
             if hit['_id'] == project_id:
-                total_cell_count, organ_cell_count = (
-                    ProjectSummaryResponse.get_cell_count(hit))
+                total_cell_count, organ_cell_count = (self.get_cell_count(hit))
                 break
 
         project_aggregates = self.aggregates['_project_agg']
 
         # Create a ProjectSummaryRepresentation object
         kwargs = dict(
-            donorCount=ProjectSummaryResponse.get_bucket_value(
-                project_id, project_aggregates, 'donor_count'),
+            donorCount=self.get_bucket_value(project_id, project_aggregates, 'donor_count'),
             totalCellCount=total_cell_count,
             organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
                             for count in organ_cell_count],
-            genusSpecies=ProjectSummaryResponse.get_bucket_terms(
-                project_id, project_aggregates, 'species'),
-            libraryConstructionApproach=ProjectSummaryResponse.get_bucket_terms(
-                project_id, project_aggregates, 'libraryConstructionApproach'),
-            disease=ProjectSummaryResponse.get_bucket_terms(
-                project_id, project_aggregates, 'disease')
+            genusSpecies=self.get_bucket_terms(project_id, project_aggregates, 'species'),
+            libraryConstructionApproach=self.get_bucket_terms(project_id, project_aggregates,
+                                                              'libraryConstructionApproach'),
+            disease=self.get_bucket_terms(project_id, project_aggregates, 'disease')
         )
 
         self.apiResponse = ProjectSummaryRepresentation(**kwargs)
@@ -483,9 +482,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 merged_dict[key] = list(merged_dict[key] + [value])
             elif isinstance(value, list):
                 cleaned_list = list(filter(None, chain(value, merged_dict[key])))
-                if len(cleaned_list) > 0 and isinstance(cleaned_list[0], dict):  # make dicts hashable
-                    hashable_dicts = [freeze(d) for d in cleaned_list]
-                    merged_dict[key] = [thaw(d) for d in list(set(hashable_dicts))]
+                if len(cleaned_list) > 0 and isinstance(cleaned_list[0], dict):
+                    # Make each dict hashable so we can deduplicate the list
+                    merged_dict[key] = thaw(list(set(freeze(cleaned_list))))
                 else:
                     merged_dict[key] = list(set(cleaned_list))
             elif value is None:
@@ -495,11 +494,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def return_response(self):
         return self.apiResponse
-
-    @staticmethod
-    def to_camel_case(text: str):
-        camel_cased = ''.join(part.title() for part in text.split('_'))
-        return camel_cased[0].lower() + camel_cased[1:]
 
     def make_file_copy(self, entry):
         """
@@ -549,26 +543,26 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for bundle in entry["bundles"]:
             project = bundle["contents"]["project"]
             project.pop("_type")
-            project_shortname = project["project_shortname"]
             translated_project = {
                 "projectTitle": project.get("project_title"),
-                "projectShortname": project_shortname,
+                "projectShortname": project["project_shortname"],
                 "laboratory": list(set(project.get("laboratory", [])))
             }
 
-            if self.projects_response:
-                translated_project["projectDescription"] = project.get("project_description", [])
-                translated_project["contributors"] = project.get("contributors", [])
-                translated_project["publications"] = project.get("publications", [])
+            if self.entity_type == 'projects':
+                translated_project['projectDescription'] = project.get('project_description', [])
+                translated_project['contributors'] = project.get('contributors', [])
+                translated_project['publications'] = project.get('publications', [])
 
                 for contributor in translated_project['contributors']:
                     for key in list(contributor.keys()):
-                        contributor[KeywordSearchResponse.to_camel_case(key)] = contributor.pop(key)
+                        contributor[to_camel_case(key)] = contributor.pop(key)
 
                 for publication in translated_project['publications']:
                     for key in list(publication.keys()):
-                        publication[KeywordSearchResponse.to_camel_case(key)] = publication.pop(key)
+                        publication[to_camel_case(key)] = publication.pop(key)
 
+            project_shortname = project["project_shortname"]
             if project_shortname not in projects:
                 projects[project_shortname] = translated_project
             else:
@@ -675,7 +669,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
-        self.projects_response = projects_response
         self.logger.info('Creating the entries in ApiResponse')
         class_entries = {'hits': [
             self.map_entries(x) for x in hits], 'pagination': None}
@@ -754,7 +747,6 @@ class FileSearchResponse(KeywordSearchResponse):
         """
         Constructs the object and initializes the apiResponse attribute
         :param hits: A list of hits from ElasticSearch
-        :param projects_response: True if creating response for projects endpoint
         """
         # Setup the logger
         self.logger = logging.getLogger(
