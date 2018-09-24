@@ -1,7 +1,7 @@
 [
   {
     "entryId": "a",
-    "summary": {
+    "projectSummary": {
       "donorCount": 0,
       "totalCellCount": 0.0,
       "organSummaries": [],
@@ -12,7 +12,7 @@
   },
   {
     "entryId": "b",
-    "summary": {
+    "projectSummary": {
       "donorCount": 1,
       "totalCellCount": 2.0,
       "organSummaries": [

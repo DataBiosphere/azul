@@ -45,6 +45,9 @@ class TestDataExtractorTestCase(IndexerTestCase):
             total_specimens = self.es_client.count(
                 index=config.es_index_name('specimens'), doc_type='doc')
             self.assertEqual(129, total_specimens["count"])
+            total_projects = self.es_client.count(
+                index=config.es_index_name('projects'), doc_type='doc')
+            self.assertEqual(3, total_projects["count"])
 
         _assert_number_of_files()
 
