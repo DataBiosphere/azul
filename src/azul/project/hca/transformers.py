@@ -2,8 +2,7 @@ from collections import defaultdict
 import logging
 from typing import Any, List, Mapping, MutableMapping, Sequence
 
-from humancellatlas.data import metadata as api
-from humancellatlas.data.metadata import AgeRange
+from humancellatlas.data.metadata import api
 
 from azul import reject
 from azul.transformer import ElasticSearchDocument, Transformer, Bundle
@@ -147,7 +146,7 @@ class BiomaterialVisitor(api.EntityVisitor):
             )
 
     def _age_range(self, entity: api.DonorOrganism):
-        age = entity.organism_age_in_seconds or AgeRange.any
+        age = entity.organism_age_in_seconds or api.AgeRange.any
         return {
             'max_organism_age_in_seconds': age.max,
             'min_organism_age_in_seconds': age.min,
