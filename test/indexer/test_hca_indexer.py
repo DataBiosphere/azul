@@ -37,6 +37,8 @@ class TestHCAIndexer(IndexerTestCase):
                           "2018-03-30T152812.404846Z")
         cls.specimens = [("9dec1bd6-ced8-448a-8e45-1fc7846d8995", "2018-03-29T154319.834528Z"),
                          ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
+        cls.analysis_bundle = ("d5e01f9d-615f-4153-8a56-f2317d7d9ce8",
+                               "2018-09-06T185759.326912Z")
 
     @eventually(5.0, 0.5)
     def _get_es_results(self, assert_func):
@@ -100,6 +102,33 @@ class TestHCAIndexer(IndexerTestCase):
 
         self._get_es_results(check_bundle_delete_correctness)
 
+    def test_single_file_object_for_files_index(self):
+        """
+        Index an analysis bundle, which, unlike a primary bundle, has data files derived from other data
+        files, and assert that the resulting `files` index document contains exactly one file entry.
+        """
+        self._mock_index(self.analysis_bundle)
+
+        def ensure_singletons(es_results):
+            self.assertGreater(len(es_results), 0)
+            for result_dict in es_results:
+                result_uuid = result_dict["_source"]["bundles"][0]["uuid"]
+                result_version = result_dict["_source"]["bundles"][0]["version"]
+                result_contents = result_dict["_source"]["bundles"][0]["contents"]
+
+                self.assertEqual(self.analysis_bundle[0], result_uuid)
+                self.assertEqual(self.analysis_bundle[1], result_version)
+                index_name = result_dict['_index']
+                if index_name == config.es_index_name("files"):
+                    self.assertEqual(1, len(result_contents["files"]))
+                    self.assertGreater(len(result_contents["specimens"]), 0)
+                elif index_name == config.es_index_name("specimens"):
+                    self.assertEqual(1, len(result_contents["specimens"]))
+                    self.assertGreater(len(result_contents["files"]), 0)
+                else:
+                    self.fail(index_name)
+
+        self._get_es_results(ensure_singletons)
 
     def test_update_with_newer_version(self):
         """
