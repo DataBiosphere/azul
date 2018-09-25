@@ -3,8 +3,10 @@ from copy import deepcopy
 import json
 import logging
 import os
+
 import elasticsearch
 from elasticsearch_dsl import A, Q, Search
+
 from azul import config
 from azul.es import ESClientFactory
 from azul.service import service_config
@@ -31,7 +33,7 @@ class BadArgumentException(Exception):
 class IndexNotFoundError(Exception):
     def __init__(self, missing_index: str):
         Exception.__init__(self)
-        self.message = f'Could not find the Elasticsearch index, {missing_index}.'
+        self.message = f'Could not find the Elasticsearch index: {missing_index}.'
 
 
 class ElasticTransformDump(object):
