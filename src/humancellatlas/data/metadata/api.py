@@ -393,7 +393,7 @@ class ManifestEntry:
     sha1: str
     sha256: str
     size: int
-    url: str
+    url: str  # only populated if bundle was requested with `directurls` or `directurls` set
     uuid: UUID4
     version: str
 

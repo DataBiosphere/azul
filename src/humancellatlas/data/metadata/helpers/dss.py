@@ -6,7 +6,7 @@ from hca import HCAConfig
 from hca.dss import DSSClient
 from urllib3 import Timeout
 
-from humancellatlas.data.metadata import JSON
+from humancellatlas.data.metadata.api import JSON
 
 logger = logging.getLogger(__name__)
 
@@ -88,13 +88,8 @@ def dss_client(deployment: Optional[str] = None) -> DSSClient:
     :param deployment: The name of a DSS deployment like `dev`, `integration` or `staging`. If None, the production
                        deployment (`prod`) will be used.
     """
-    # Work around https://github.com/HumanCellAtlas/dcp-cli/issues/142
-    hca_config = HCAConfig()
     deployment = deployment + "." if deployment else ""
-    hca_config['DSSClient'].swagger_url = f'https://dss.{deployment}data.humancellatlas.org/v1/swagger.json'
-    # Clear the cached swagger specs that may come from a different deployment. This work-around isn't thread safe but
-    # neither is the caching iteself.
-    DSSClient._swagger_spec = None
-    client = DSSClient(config=hca_config)
+    swagger_url = f'https://dss.{deployment}data.humancellatlas.org/v1/swagger.json'
+    client = DSSClient(swagger_url=swagger_url)
     client.timeout_policy = Timeout(connect=10, read=40)
     return client
