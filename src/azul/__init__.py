@@ -171,10 +171,8 @@ class Config:
         return 0 != int(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
 
     def dss_client(self, dss_endpoint: str = None) -> DSSClient:
-        # Work around https://github.com/HumanCellAtlas/dcp-cli/issues/142
-        hca_config = HCAConfig("hca")
-        hca_config['DSSClient'].swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
-        client = DSSClient(config=hca_config)
+        swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
+        client = DSSClient(swagger_url=swagger_url)
         client.timeout_policy = Timeout(connect=10, read=40)
         return client
 
