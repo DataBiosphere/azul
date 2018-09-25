@@ -52,7 +52,7 @@ def subscribe(options, dss_client):
         # than were originally supplied. If the subscription returned by DSS is a superset of the subscription we want
         # to create, we can skip the update.
         matching_subscription = next((new_subscription for new_subscription in new_subscriptions
-                                      if new_subscription <= subscription))
+                                      if new_subscription.items() <= subscription.items()))
         if matching_subscription:
             logging.info('Already subscribed: %r', thaw(subscription))
             matching_subscriptions.append(matching_subscription)
