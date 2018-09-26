@@ -115,7 +115,7 @@ class HitEntry(JsonObject):
     """
     Class defining a hit entry in the Api response
     """
-    fileTypeSummaries = ListProperty(FileTypeSummary)
+    pass
 
 
 class ApiResponse(JsonObject):
@@ -464,21 +464,29 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        file_type_summaries = self.make_file_type_summaries(self.make_files(entry))
+        if self.entity_type == 'files':
+            files = {
+                'files': self.make_files(entry)
+            }
+        else:
+            file_type_summaries = self.make_file_type_summaries(self.make_files(entry))
+            files = {
+                'fileTypeSummaries': [FileTypeSummary.create_object(file_type=file_type,
+                                                                    total_size=file_type_summary['size'],
+                                                                    count=file_type_summary['count']).to_json()
+                                      for file_type, file_type_summary in file_type_summaries.items()]
+            }
 
         return HitEntry(
             processes=self.make_processes(entry),
             entryId=entry["entity_id"],
-            fileTypeSummaries=[FileTypeSummary.create_object(file_type=file_type,
-                                                             total_size=file_type_summary['size'],
-                                                             count=file_type_summary['count'])
-                               for file_type, file_type_summary in file_type_summaries.items()],
             projects=self.make_projects(entry),
             specimens=self.make_specimens(entry),
-            bundles=self.make_bundles(entry)
+            bundles=self.make_bundles(entry),
+            **files
         )
 
-    def __init__(self, hits):
+    def __init__(self, hits, entity_type):
         """
         Constructs the object and initializes the apiResponse attribute
         :param hits: A list of hits from ElasticSearch
@@ -486,6 +494,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # Setup the logger
         self.logger = logging.getLogger(
             'dashboardService.api_response.KeywordSearchResponse')
+        self.entity_type = entity_type
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
@@ -562,7 +571,7 @@ class FileSearchResponse(KeywordSearchResponse):
             facets[facet] = FileSearchResponse.create_facet(contents)
         return facets
 
-    def __init__(self, hits, pagination, facets):
+    def __init__(self, hits, pagination, facets, entity_type):
         """
         Constructs the object and initializes the apiResponse attribute
         :param hits: A list of hits from ElasticSearch
@@ -571,7 +580,7 @@ class FileSearchResponse(KeywordSearchResponse):
         self.logger = logging.getLogger(
             'dashboardService.api_response.FileSearchResponse')
         # This should initialize the self.apiResponse attribute of the object
-        KeywordSearchResponse.__init__(self, hits)
+        KeywordSearchResponse.__init__(self, hits, entity_type)
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)
         # Add the facets

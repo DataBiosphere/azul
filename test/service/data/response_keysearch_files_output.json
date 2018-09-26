@@ -70,20 +70,5 @@
         }
       ]
     }
-  ],
-  "pagination": {
-    "count": 2,
-    "order": "desc",
-    "pages": 1,
-    "search_after": null,
-    "search_after_uid": null,
-    "search_before": null,
-    "search_before_uid": null,
-    "size": 5,
-    "sort": "entryId",
-    "total": 2
-  },
-  "termFacets": {
-
-  }
+  ]
 }
