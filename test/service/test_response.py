@@ -12,18 +12,33 @@ from service import WebServiceTestCase
 
 class TestResponse(WebServiceTestCase):
 
-    def test_key_search_response(self):
+    def test_key_search_files_response(self):
         """
-        This method tests the KeywordSearchResponse object. It will make sure the functionality works as appropriate
-        by asserting the apiResponse attribute is the same as expected.
+        This method tests the KeywordSearchResponse object for the files entity type.
+        It will make sure the functionality works as appropriate by asserting the
+        apiResponse attribute is the same as expected.
         """
         # Still need a way to test the response.
         keyword_response = KeywordSearchResponse(
-            hits=self._load("response_test_input.json")
+            hits=self._load("response_test_input.json"),
+            entity_type='files'
         ).return_response().to_json()
 
         self.assertEqual(json.dumps(keyword_response, sort_keys=True),
-                         json.dumps(self._load("response_keysearch_output.json"), sort_keys=True))
+                         json.dumps(self._load("response_keysearch_files_output.json"), sort_keys=True))
+
+    def test_key_search_specimens_response(self):
+        """
+        KeywordSearchResponse for the specimens endpoint should return file type summaries instead of files
+        """
+        # Still need a way to test the response.
+        keyword_response = KeywordSearchResponse(
+            hits=self._load("response_test_input.json"),
+            entity_type='specimens'
+        ).return_response().to_json()
+
+        self.assertEqual(json.dumps(keyword_response, sort_keys=True),
+                         json.dumps(self._load("response_keysearch_specimens_output.json"), sort_keys=True))
 
     def test_file_search_response(self):
         """
@@ -37,11 +52,27 @@ class TestResponse(WebServiceTestCase):
                 filesearch_response = FileSearchResponse(
                     hits=self._load("response_test_input.json"),
                     pagination=self._load(f"response_pagination_input{n}.json"),
-                    facets=self._load("response_facets_empty.json")
+                    facets=self._load("response_facets_empty.json"),
+                    entity_type="files"
                 ).return_response().to_json()
 
                 self.assertEqual(json.dumps(filesearch_response, sort_keys=True),
                                  json.dumps(self._load(f"response_filesearch_output{n}.json"), sort_keys=True))
+
+    def test_file_search_response_file_summaries(self):
+        """
+        Test non-'files' entity type passed to FileSearchResponse will give file summaries
+        """
+        filesearch_response = FileSearchResponse(
+            hits=self._load("response_test_input.json"),
+            pagination=self._load(f"response_pagination_input1.json"),
+            facets=self._load("response_facets_empty.json"),
+            entity_type="specimens"
+        ).return_response().to_json()
+
+        for hit in filesearch_response['hits']:
+            self.assertTrue('fileTypeSummaries' in hit)
+            self.assertFalse('files' in hit)
 
     def test_file_search_response_add_facets(self):
         """

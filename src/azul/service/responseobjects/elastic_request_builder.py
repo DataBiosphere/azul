@@ -491,7 +491,7 @@ class ElasticTransformDump(object):
                     for x in es_response_dict['hits']['hits']]
             # Create a KeywordSearchResponse object
             self.logger.info('Creating KeywordSearchResponse')
-            final_response = KeywordSearchResponse(hits)
+            final_response = KeywordSearchResponse(hits, entity_type)
         else:
             # It's a full file search
             # Translate the sort field if there is any translation available
@@ -528,7 +528,8 @@ class ElasticTransformDump(object):
             final_response = FileSearchResponse(
                 hits,
                 paging,
-                facets)
+                facets,
+                entity_type)
         self.logger.info(
             'Returning the final response for transform_request()')
         final_response = final_response.apiResponse.to_json()
