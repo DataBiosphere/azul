@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import config
-from elasticsearch import Elasticsearch
+from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
+from elasticsearch import Elasticsearch, RequestsHttpConnection
 from elasticsearch_dsl import Search, Q, A
 import json
 import logging
@@ -42,8 +43,13 @@ class ElasticTransformDump(object):
             "Protocol must be 'http' or 'https'"
         self.logger.debug('ElasticSearch url: {}://{}:{}/'.format(
             es_protocol, es_domain, es_port))
-        self.es_client = Elasticsearch(
-            ['{}://{}:{}/'.format(es_protocol, es_domain, es_port)])
+        common_params = dict(hosts=[dict(host=es_domain, port=int(es_port))], timeout=10)
+        if es_domain.endswith(".amazonaws.com"):
+            aws_auth = BotoAWSRequestsAuth(aws_host=es_domain, aws_region=os.environ['AWS_DEFAULT_REGION'], aws_service='es')
+            self.es_client = Elasticsearch(http_auth=aws_auth, use_ssl=True, verify_certs=True,
+                                           connection_class=RequestsHttpConnection, **common_params)
+        else:
+            self.es_client = Elasticsearch(**common_params)
         self.logger.info('Creating an instance of ElasticTransformDump')
 
     @staticmethod
