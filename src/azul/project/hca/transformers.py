@@ -43,6 +43,32 @@ def _specimen_dict(biomaterials: Mapping[api.UUID4, api.Biomaterial]) -> List[Ma
     return specimen_list
 
 
+
+def _file_dict(f: api.File) -> MutableMapping[str, Any]:
+    return {
+        'content-type': f.manifest_entry.content_type,
+        'crc32c': f.manifest_entry.crc32c,
+        'indexed': f.manifest_entry.indexed,
+        'name': f.manifest_entry.name,
+        's3_etag': f.manifest_entry.s3_etag,
+        'sha1': f.manifest_entry.sha1,
+        'sha256': f.manifest_entry.sha256,
+        'size': f.manifest_entry.size,
+        'uuid': f.manifest_entry.uuid,
+        'version': f.manifest_entry.version,
+        'document_id': f.document_id,
+        'file_format': f.file_format,
+        '_type': 'file',
+        **(
+            {
+                'read_index': f.read_index,
+                'lane_index': f.lane_index
+            } if isinstance(f, api.SequenceFile) else {
+            }
+        )
+    }
+
+
 class TransformerVisitor(api.EntityVisitor):
     specimens: MutableMapping[api.UUID4, api.SpecimenFromOrganism]
     processes: MutableMapping[str, Any]  # Merges process with protocol
@@ -62,30 +88,6 @@ class TransformerVisitor(api.EntityVisitor):
                 } if isinstance(pc, api.LibraryPreparationProcess) else {
                     'instrument_manufacturer_model': pc.instrument_manufacturer_model
                 } if isinstance(pc, api.SequencingProcess) else {
-                }
-            )
-        }
-
-    def _file_dict(self, f: api.File) -> MutableMapping[str, Any]:
-        return {
-            'content-type': f.manifest_entry.content_type,
-            'crc32c': f.manifest_entry.crc32c,
-            'indexed': f.manifest_entry.indexed,
-            'name': f.manifest_entry.name,
-            's3_etag': f.manifest_entry.s3_etag,
-            'sha1': f.manifest_entry.sha1,
-            'sha256': f.manifest_entry.sha256,
-            'size': f.manifest_entry.size,
-            'uuid': f.manifest_entry.uuid,
-            'version': f.manifest_entry.version,
-            'document_id': f.document_id,
-            'file_format': f.file_format,
-            '_type': 'file',
-            **(
-                {
-                    'read_index': f.read_index,
-                    'lane_index': f.lane_index
-                } if isinstance(f, api.SequenceFile) else {
                 }
             )
         }
