@@ -105,7 +105,7 @@ class TransformerVisitor(api.EntityVisitor):
                 pl_pr_id = f"{str(pl.document_id)}-{str(entity.document_id)}"
                 self.processes[pl_pr_id] = self._merge_process_protocol(entity, pl)
         elif isinstance(entity, api.File):
-            self.files[entity.document_id] = self._file_dict(entity)
+            self.files[entity.document_id] = _file_dict(entity)
 
 
 class BiomaterialVisitor(api.EntityVisitor):
@@ -176,11 +176,11 @@ class FileTransformer(Transformer):
         for file in bundle.files.values():
             visitor = TransformerVisitor()
             # Visit the relatives of file
-            file.accept(visitor)  # Visit descendants
+            file.accept(visitor)
             file.ancestors(visitor)
             # Assign the contents to the ES doc
             contents = dict(specimens=_specimen_dict(visitor.specimens),
-                            files=list(visitor.files.values()),
+                            files=[_file_dict(file)],
                             processes=list(visitor.processes.values()),
                             project=_project_dict(bundle))
             es_document = ElasticSearchDocument(entity_type=self.entity_name,
