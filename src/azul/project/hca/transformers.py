@@ -23,25 +23,20 @@ def _project_dict(bundle: api.Bundle) -> dict:
     }
 
 
-def _specimen_dict(biomaterials: Mapping[api.UUID4, api.Biomaterial]) -> List[Mapping[str, Any]]:
-    specimen_list = []
-    for specimen in biomaterials.values():
-        if isinstance(specimen, api.SpecimenFromOrganism):
-            bio_visitor = BiomaterialVisitor()
-            specimen.accept(bio_visitor)
-            specimen.ancestors(bio_visitor)
-            merged_specimen = defaultdict(set)
-            for b in bio_visitor.biomaterial_lineage:
-                for key, value in b.items():
-                    if isinstance(value, (list, set)):
-                        merged_specimen[key].update(value)
-                    else:
-                        merged_specimen[key].add(value)
-            merged_specimen = {k: list(sorted(v, key=lambda x: (x is not None, x))) for k, v in merged_specimen.items()}
-            merged_specimen['biomaterial_id'] = specimen.biomaterial_id
-            specimen_list.append(merged_specimen)
-    return specimen_list
-
+def _specimen_dict(specimen: api.SpecimenFromOrganism) -> MutableMapping[str, Any]:
+    bio_visitor = BiomaterialVisitor()
+    specimen.accept(bio_visitor)
+    specimen.ancestors(bio_visitor)
+    merged_specimen = defaultdict(set)
+    for b in bio_visitor.biomaterial_lineage:
+        for key, value in b.items():
+            if isinstance(value, (list, set)):
+                merged_specimen[key].update(value)
+            else:
+                merged_specimen[key].add(value)
+    merged_specimen = {k: list(sorted(v, key=lambda x: (x is not None, x))) for k, v in merged_specimen.items()}
+    merged_specimen['biomaterial_id'] = specimen.biomaterial_id
+    return merged_specimen
 
 
 def _file_dict(f: api.File) -> MutableMapping[str, Any]:
@@ -179,7 +174,7 @@ class FileTransformer(Transformer):
             file.accept(visitor)
             file.ancestors(visitor)
             # Assign the contents to the ES doc
-            contents = dict(specimens=_specimen_dict(visitor.specimens),
+            contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
                             files=[_file_dict(file)],
                             processes=list(visitor.processes.values()),
                             project=_project_dict(bundle))
@@ -212,10 +207,10 @@ class SpecimenTransformer(Transformer):
         for specimen in bundle.specimens:
             visitor = TransformerVisitor()
             # Visit the relatives of file
-            specimen.accept(visitor)  # Visit descendants
+            specimen.accept(visitor)
             specimen.ancestors(visitor)
             # Assign the contents to the ES doc
-            contents = dict(specimens=_specimen_dict(visitor.specimens),
+            contents = dict(specimens=[_specimen_dict(specimen)],
                             files=list(visitor.files.values()),
                             processes=list(visitor.processes.values()),
                             project=_project_dict(bundle))
