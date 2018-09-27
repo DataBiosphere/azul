@@ -497,9 +497,11 @@ gated on a condition, like tests passing.
 
 12) Run `make deploy`
 
-13) Run `make subscribe`
+13) Run `make tag` and the `git push …` invocation that it echoes 
 
-14) Run `make reindex` or `make delete_and_reindex`
+14) Run `make subscribe`
+
+15) Run `make reindex` or `make delete_and_reindex`
 
 ## 6.2 Promoting changes
 
