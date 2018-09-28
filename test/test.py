@@ -75,7 +75,10 @@ class TestAccessorApi(TestCase):
         self.assertEqual(str(bundle.uuid), uuid)
         self.assertEqual(bundle.version, version)
         self.assertEqual(1, len(bundle.projects))
-        self.assertEqual({Project}, {type(e) for e in bundle.projects.values()})
+        project = list(bundle.projects.values())[0]
+        self.assertEqual(Project, type(project))
+        self.assertLessEqual(len(project.laboratory_names), len(project.contributors))
+        self.assertEqual(project.project_short_name, project.project_shortname)
         root_entities = bundle.root_entities().values()
         root_entity_types = {type(e) for e in root_entities}
         self.assertIn(DonorOrganism, root_entity_types)
