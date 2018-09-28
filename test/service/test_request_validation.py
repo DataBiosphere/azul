@@ -168,26 +168,6 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
-    def test_bad_filter_facet_of_piechart(self):
-        url = self.base_url + "repository/files/piecharts?filters={'file':{'bad-facet':{'is':['fake-val2']}}}"
-        response = requests.get(url)
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
-
-    def test_bad_multiple_filter_facet_of_piechart(self):
-        url = self.base_url + "repository/files/piecharts" \
-                              "?filters={'file':{'bad-facet':{'is':['fake-val']},'bad-facet2':{'is':['fake-val']}}}"
-        response = requests.get(url)
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
-
-    def test_mixed_multiple_filter_facet_of_piechart(self):
-        url = self.base_url + "repository/files/piecharts" \
-                              "?filters={'file':{'organPart':{'is':['fake-val']},'bad-facet':{'is':['fake-val']}}}"
-        response = requests.get(url)
-        self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
-
     def test_summary_endpoint_for_bad_entity_id(self):
         url = self.base_url + "repository/summary/bad_entity_id"
         response = requests.get(url)
