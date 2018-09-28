@@ -3,6 +3,7 @@
 import requests
 import boto3
 import botocore.session
+import botocore.config
 from botocore.exceptions import ClientError
 
 
@@ -23,7 +24,8 @@ class S3FileHandler:
         service = 's3'
         self.bucket = boto3.client(service,
                                    aws_access_key_id=access_key_id,
-                                   aws_secret_access_key=secret_key)
+                                   aws_secret_access_key=secret_key,
+                                   config=botocore.config.Config(signature_version='s3v4'))
         self.resource = boto3.resource(service)
         session = botocore.session.get_session()
         self.session = session.create_client(service, region)
