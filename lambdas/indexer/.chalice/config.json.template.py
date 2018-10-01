@@ -14,5 +14,5 @@ emit({
     "environment_variables": config.lambda_env,
     "lambda_timeout": 300,
     "lambda_memory_size": 128,
-    "reserved_concurrency": 64
+    "reserved_concurrency": config.indexer_concurrency
 })

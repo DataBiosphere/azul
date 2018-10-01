@@ -176,6 +176,10 @@ class Config:
         client.timeout_policy = Timeout(connect=10, read=40)
         return client
 
+    @property
+    def indexer_concurrency(self):
+        return int(os.environ['AZUL_INDEXER_CONCURRENCY'])
+
 
 config = Config()
 
