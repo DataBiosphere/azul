@@ -1,5 +1,6 @@
 from typing import Any, Iterable, Mapping, Tuple
 
+from azul import config
 from azul.base_config import BaseIndexProperties
 from azul.transformer import Transformer
 from .transformers import FileTransformer, SpecimenTransformer
@@ -45,6 +46,11 @@ class IndexProperties(BaseIndexProperties):
             ]
         }
         self._es_settings = {
+            "index": {
+                # This is important. It may slow down searches but it does increase concurrency during indexing,
+                # currently our biggest performance bottleneck.
+                "number_of_shards": config.indexer_concurrency,
+                "number_of_replicas": 1
             }
         }
 
