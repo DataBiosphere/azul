@@ -162,7 +162,8 @@ _set AZUL_SHARE_ES_DOMAIN 0
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "m4.xlarge.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 70
-_set AZUL_ES_TIMEOUT 60
+_set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front of ES:
+                         # https://forums.aws.amazon.com/thread.jspa?threadID=233378
 _set AZUL_DSS_WORKERS 8
 _set AZUL_INDEXER_CONCURRENCY 64
 _set AZUL_SUBSCRIBE_TO_DSS 1
