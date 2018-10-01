@@ -19,8 +19,6 @@ class IndexProperties(BaseIndexProperties):
                         "match_mapping_type": "string",
                         "mapping": {
                             "type": "text",
-                            "analyzer": "autocomplete",
-                            "search_analyzer": "standard",
                             "fields": {
                                 "keyword": {
                                     "type": "keyword",
@@ -47,24 +45,6 @@ class IndexProperties(BaseIndexProperties):
             ]
         }
         self._es_settings = {
-            "analysis": {
-                "filter": {
-                    "autocomplete_filter": {
-                        "type": "ngram",
-                        "min_gram": 1,
-                        "max_gram": 36
-                    }
-                },
-                "analyzer": {
-                    "autocomplete": {
-                        "type": "custom",
-                        "tokenizer": "keyword",
-                        "filter": [
-                            "lowercase",
-                            "autocomplete_filter"
-                        ]
-                    }
-                }
             }
         }
 
