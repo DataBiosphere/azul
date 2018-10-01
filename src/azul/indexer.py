@@ -21,8 +21,9 @@ class BaseIndexer(ABC):
     The base indexer class provides the framework to do indexing.
     """
 
-    def __init__(self, properties: BaseIndexProperties) -> None:
+    def __init__(self, properties: BaseIndexProperties, refresh: Union[bool, str] = False) -> None:
         self.properties = properties
+        self.refresh = refresh
 
     def index(self, dss_notification: Mapping[str, Any]) -> None:
         # Calls extract, transform, merge, and load
@@ -112,7 +113,7 @@ class BaseIndexer(ABC):
                                         doc_type=cur_doc.document_type,
                                         body=cur_doc.to_source(),
                                         id=doc_id,
-                                        refresh="wait_for",
+                                        refresh=self.refresh,
                                         version=cur_doc.document_version,
                                         version_type='external')
                     except ConflictError as e:
@@ -137,7 +138,7 @@ class BaseIndexer(ABC):
                     helper = parallel_bulk
                 response = helper(client=es_client,
                                   actions=actions,
-                                  refresh="wait_for",
+                                  refresh=self.refresh,
                                   raise_on_error=False,
                                   max_chunk_bytes=10485760)
                 for success, info in response:

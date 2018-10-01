@@ -219,11 +219,15 @@ def reject(condition: bool, *args, exception: type = RequirementError):
         raise exception(*args)
 
 
-# Taken from:
+# Taken from
 # https://github.com/HumanCellAtlas/data-store/blob/90ffc8fccd2591dc21dab48ccfbba6e9ac29a063/tests/__init__.py
-def eventually(timeout: float, interval: float, errors: set = {AssertionError}):
+
+# noinspection PyUnusedLocal
+# (see below)
+def eventually(timeout: float, interval: float, errors: set = frozenset((AssertionError,))):
     """
-    @eventually runs a test until all assertions are satisfied or a timeout is reached.
+    Runs a test until all assertions are satisfied or a timeout is reached.
+
     :param timeout: time until the test fails
     :param interval: time between attempts of the test
     :param errors: the exceptions to catch and retry on
