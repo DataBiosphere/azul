@@ -92,6 +92,16 @@ azul_vars=(
     # resources are physically deleted. After that you may also unset the
     # GOOGLE_.. variables in your environment.
     AZUL_SUBSCRIBE_TO_DSS
+
+    # The number of concurrently running indexer lambda executions. Chalice
+    # creates one Lambda function for handling HTTP requests from API Gateway
+    # and one additional Lambda function per event handler. The concurrency
+    # limit applies to each such function independently. See
+    # https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
+    # for details. This setting may also be used to drive other scaling choices,
+    # like the number of shards in Elasticsearch.
+    #
+    AZUL_INDEXER_CONCURRENCY
 )
 
 unset ${azul_vars[*]}
@@ -154,6 +164,7 @@ _set AZUL_ES_INSTANCE_TYPE "m4.xlarge.elasticsearch"
 _set AZUL_ES_VOLUME_SIZE 70
 _set AZUL_ES_TIMEOUT 60
 _set AZUL_DSS_WORKERS 8
+_set AZUL_INDEXER_CONCURRENCY 64
 _set AZUL_SUBSCRIBE_TO_DSS 1
 
 # This is the same TF bucket as the one DSS uses
