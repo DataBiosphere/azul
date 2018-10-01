@@ -6,7 +6,6 @@ import time
 
 from typing import Tuple, Mapping
 
-from hca import HCAConfig
 from hca.dss import DSSClient
 from urllib3 import Timeout
 
@@ -58,9 +57,9 @@ class Config:
     def _resource_prefix(self):
         return self._term_from_env('AZUL_RESOURCE_PREFIX')
 
-    def qualified_resource_name(self, resource_name):
+    def qualified_resource_name(self, resource_name, suffix=''):
         self._validate_term(resource_name)
-        return f"{self._resource_prefix}-{resource_name}-{self.deployment_stage}"
+        return f"{self._resource_prefix}-{resource_name}-{self.deployment_stage}{suffix}"
 
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].format(lambda_name=lambda_name)
@@ -138,6 +137,8 @@ class Config:
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
 
+    lambda_timeout = 300
+
     term_re = re.compile("[a-z][a-z0-9]{2,29}")
 
     def _term_from_env(self, env_var_name: str) -> str:
@@ -179,6 +180,18 @@ class Config:
     @property
     def indexer_concurrency(self):
         return int(os.environ['AZUL_INDEXER_CONCURRENCY'])
+
+    @property
+    def notify_queue_name(self):
+        return self.qualified_resource_name('notify')
+
+    @property
+    def token_queue_name(self):
+        return config.qualified_resource_name('documents')
+
+    @property
+    def document_queue_name(self):
+        return config.qualified_resource_name('documents', suffix='.fifo')
 
 
 config = Config()
