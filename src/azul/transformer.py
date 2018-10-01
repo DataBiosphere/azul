@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+import itertools
 from itertools import filterfalse, tee
 import logging
 import re
-from typing import List, Mapping, Sequence
+from typing import List, Mapping, Sequence, Iterable
 
 from dataclasses import dataclass, field, asdict
 
@@ -17,6 +18,10 @@ class Bundle:
     uuid: str
     version: str
     contents: JSON = field(default_factory=dict)
+
+    @classmethod
+    def from_json(cls, json):
+        return cls(**json)
 
     @property
     def deleted(self) -> bool:
@@ -58,13 +63,20 @@ class ElasticSearchDocument:
                    bundles=[Bundle(**b) for b in source['bundles']],
                    document_version=hit.get("_version", 0))
 
-    def merge(self, other):
-        assert self.document_id == other.document_id
-        assert self.document_index == other.document_index
-        assert self.document_type == other.document_type
-        assert self.entity_type == other.entity_type
-        self.bundles = self._merge_bundles(other.bundles, self.bundles)
-        self.document_version = other.document_version + 1
+    def update_with(self, other: 'ElasticSearchDocument'):
+        """
+        Merge updates from another instance into this one. Typically, `self` represents a persistent document loaded
+        from the index while `other` contains contributions from newly indexed bundles.
+        """
+        assert self._is_compatible_with(other)
+        self.bundles = self._merge_bundles(self.bundles, other.bundles)
+        self.document_version = self.document_version + 1
+
+    def _is_compatible_with(self, other):
+        return (self.document_id == other.document_id and
+                self.document_index == other.document_index and
+                self.document_type == other.document_type and
+                self.entity_type == other.entity_type)
 
     @staticmethod
     def _merge_bundles(current: List[Bundle], updates: List[Bundle]):
@@ -109,6 +121,28 @@ class ElasticSearchDocument:
         for bundle in current_by_id.values():
             assert bundles.setdefault(bundle.uuid, bundle) is bundle
         return list(bundles.values())
+
+    def consolidate(self, others: Iterable['ElasticSearchDocument']):
+        """
+        Combine bundle contributions from multiple other instances into this one. All involved instances must
+        represent the same metadata entity or an exception wioll be raised. The bundle contributions from all
+        involved instances must be disjunctive or an exception will be raised. See `:py:methd:`update_with` for a way
+        to reconcile two instances with non-disjunctive bundle contributions.
+        """
+        assert all(self._is_compatible_with(other) for other in others)
+        bundles = {}
+        for bundle in itertools.chain(self.bundles, *(other.bundles for other in others)):
+            assert bundles.setdefault(bundle.uuid, bundle) is bundle
+        self.bundles = list(bundles.values())
+
+    def to_json(self):
+        return asdict(self)
+
+    @classmethod
+    def from_json(cls, json: JSON):
+        self = cls(**json)
+        self.bundles = list(map(Bundle.from_json, self.bundles))
+        return self
 
 
 class Transformer(ABC):

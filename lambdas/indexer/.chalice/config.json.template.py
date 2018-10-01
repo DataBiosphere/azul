@@ -12,7 +12,7 @@ emit({
     "manage_iam_role": False,
     "iam_role_arn": f"arn:aws:iam::{aws.account}:role/{config.indexer_name}",
     "environment_variables": config.lambda_env,
-    "lambda_timeout": 300,
-    "lambda_memory_size": 128,
+    "lambda_timeout": config.lambda_timeout,
+    "lambda_memory_size": 256,
     "reserved_concurrency": config.indexer_concurrency
 })
