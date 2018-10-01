@@ -23,7 +23,7 @@ class IndexerTestCase(ElasticsearchTestCase):
         super().setUpClass()
         cls.index_properties = IndexProperties(dss_url=config.dss_endpoint,
                                                es_endpoint=config.es_endpoint)
-        cls.hca_indexer = Indexer(cls.index_properties)
+        cls.hca_indexer = Indexer(cls.index_properties, refresh='wait_for')
 
     def _make_fake_notification(self, uuid: str, version: str) -> Mapping[str, Any]:
         return {
