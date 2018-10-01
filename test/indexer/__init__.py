@@ -1,15 +1,13 @@
-import functools
 import json
 import os
-from typing import Mapping, Any
-from unittest.mock import patch, Mock
+from typing import Any, Mapping
+from unittest.mock import patch
 from uuid import uuid4
 
 from azul import config
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
 from es_test_case import ElasticsearchTestCase
-from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 
 
 class IndexerTestCase(ElasticsearchTestCase):
