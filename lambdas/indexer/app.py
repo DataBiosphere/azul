@@ -105,9 +105,7 @@ chalice.app.EventSourceHandler.__call__ = new_handler
 
 
 def queue(queue_name):
-    session = boto3.session.Session()  # See https://github.com/boto/boto3/issues/801
-    queue = session.resource('sqs').get_queue_by_name(QueueName=queue_name)
-    return queue
+    return boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
 
 
 @app.on_sqs_message(queue=config.notify_queue_name, batch_size=1)
