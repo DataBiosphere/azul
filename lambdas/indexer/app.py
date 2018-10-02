@@ -134,21 +134,31 @@ def index(event: chalice.app.SQSEvent):
 def handle_documents(documents_by_id: DocumentsById) -> None:
     log.info("Queueing %i document(s) for indexing.", len(documents_by_id))
     json_serializer = JSONSerializer()  # Elasticsearch's serializer translates UUIDs
+    sqs = boto3.client('sqs')
+    token_queue = queue(config.token_queue_name)
+    document_queue = queue(config.document_queue_name)
+
+    def message(doc):
+        return dict(MessageBody=json_serializer.dumps(doc.to_json()),
+                    MessageGroupId=doc.document_id,
+                    MessageDeduplicationId=str(uuid.uuid4()))
+
     for batch in chunked(documents_by_id.values(), document_batch_size):
         value = len(batch)
-        document_queue = queue(config.document_queue_name)
-        token_queue = queue(config.token_queue_name)
-        document_queue.send_messages(Entries=[dict(MessageBody=json_serializer.dumps(doc.to_json()),
-                                                   MessageGroupId=doc.document_id,
-                                                   MessageDeduplicationId=str(uuid.uuid4()),
-                                                   Id=str(i))
-                                              for i, doc in enumerate(batch)])
-        # One might think that we'd want to avoid token debt by queueing tokens *before* documents. However,
-        # this is not a good idea: the queueing of documents is more likely to fail due to batch size constraints
-        # etc. The resulting surplus in tokens would cause those excess tokens to circulate indefinitely,
-        # eating up SQS and Lambda fees. Tokens aren't returned via visibility timeout (or raising an exception) but
-        # rather by requeueing new tokens of equivalent value.
-        token_queue.send_message(MessageBody=json_serializer.dumps(dict(token=uuid.uuid4(), value=value)))
+        try:
+            document_queue.send_messages(Entries=[dict(message(doc), Id=str(i)) for i, doc in enumerate(batch)])
+        except sqs.exceptions.BatchRequestTooLong:
+            log.info('Message batch was too big. Sending messages individually.', exc_info=True)
+            for doc in batch:
+                document_queue.send_message(**message(doc))
+                token_queue.send_message(MessageBody=json_serializer.dumps(dict(token=uuid.uuid4(), value=1)))
+        else:
+            # One might think that we'd want to avoid token debt by queueing tokens *before* documents. However,
+            # this is not a good idea: the queueing of documents is more likely to fail due to batch size constraints
+            # etc. The resulting surplus in tokens would cause those excess tokens to circulate indefinitely,
+            # eating up SQS and Lambda fees. Tokens aren't returned via visibility timeout (or raising an exception)
+            # but rather by requeueing new tokens of equivalent value.
+            token_queue.send_message(MessageBody=json_serializer.dumps(dict(token=uuid.uuid4(), value=value)))
 
 
 # The number of documents to be queued in a single SQS `send_messages`. Theoretically, larger batches are better but
