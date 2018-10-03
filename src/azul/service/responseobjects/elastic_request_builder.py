@@ -13,6 +13,7 @@ from azul.service import service_config
 from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse, FileSearchResponse,
                                                           KeywordSearchResponse, ManifestResponse,
                                                           ProjectSummaryResponse, SummaryResponse)
+from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.utilities import json_pp
 
 module_logger = logging.getLogger("dashboardService.elastic_request_builder")
@@ -51,6 +52,7 @@ class ElasticTransformDump(object):
         """
         self.logger = logging.getLogger('dashboardService.elastic_request_builder.ElasticTransformDump')
         self.es_client = ESClientFactory.get()
+        self.storage_service = StorageService()
 
     @staticmethod
     def translate_filters(filters, field_mapping):
@@ -579,14 +581,9 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         # Create an ElasticSearch request
         filters = filters['file']
-
-        es_search = self.create_request(
-            filters,
-            self.es_client,
-            request_config,
-            post_filter=False)
-
-        manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
+        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
+        manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'],
+                                    self.storage_service)
 
         return manifest.return_response()
 
