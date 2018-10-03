@@ -16,7 +16,7 @@
       },
       {
         "source": "metadata.json",
-        "dss_field": "case.project_id",
+        "dss_field": "project",
         "index_field": "project"
       },
       {
@@ -25,7 +25,8 @@
         "index_field": "lastModified"
       },
       {
-        "constant": "TOPMed",
+        "source": "metadata.json",
+        "dss_field": "program",
         "index_field": "program"
       },
       {
