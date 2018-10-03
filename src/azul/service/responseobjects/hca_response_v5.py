@@ -66,27 +66,34 @@ class PaginationObj(JsonObject):
     order = StringProperty(choices=['asc', 'desc'])
 
 
-class HitEntry(JsonObject):
-    """
-    Class defining a hit entry in the Api response
-    """
-    # entity_id = StringProperty()
-    # entity_version = StringProperty()
-    # bundleUuid = StringProperty()
-    # bundleVersion = StringProperty()
-
-
 class FileTypeSummary(JsonObject):
     fileType = StringProperty()
     count = IntegerProperty()
-    totalSize = FloatProperty()
+    totalSize = IntegerProperty()
 
-    @staticmethod
-    def create_object(bucket):
-        new_object = FileTypeSummary()
+    @classmethod
+    def create_object(cls, **kwargs):
+        if "bucket" in kwargs:
+            return cls._create_object_with_bucket(kwargs["bucket"])
+        else:
+            return cls._create_object_with_args(
+                file_type=kwargs["file_type"], total_size=kwargs["total_size"], count=kwargs["count"]
+            )
+
+    @classmethod
+    def _create_object_with_bucket(cls, bucket):
+        new_object = cls()
         new_object.count = bucket['doc_count']
-        new_object.totalSize = bucket['size_by_type']['value']
+        new_object.totalSize = int(bucket['size_by_type']['value'])  # Casting to integer since ES returns a double
         new_object.fileType = bucket['key']
+        return new_object
+
+    @classmethod
+    def _create_object_with_args(cls, file_type, total_size, count):
+        new_object = cls()
+        new_object.count = count
+        new_object.totalSize = total_size
+        new_object.fileType = file_type
         return new_object
 
 
@@ -95,13 +102,20 @@ class OrganCellCountSummary(JsonObject):
     countOfDocsWithOrganType = IntegerProperty()
     totalCellCountByOrgan = FloatProperty()
 
-    @staticmethod
-    def create_object(bucket):
-        new_object = OrganCellCountSummary()
+    @classmethod
+    def create_object(cls, bucket):
+        new_object = cls()
         new_object.organType = bucket['key']
         new_object.countOfDocsWithOrganType = bucket['doc_count']
         new_object.totalCellCountByOrgan = bucket['cell_count']['value']
         return new_object
+
+
+class HitEntry(JsonObject):
+    """
+    Class defining a hit entry in the Api response
+    """
+    pass
 
 
 class ApiResponse(JsonObject):
@@ -278,27 +292,26 @@ class SummaryResponse(AbstractResponse):
         aggregates = raw_response['aggregations']
         _sum = raw_response['aggregations']['by_type']
         _organ_group = raw_response['aggregations']['group_by_organ']
-    
+
         # Create a SummaryRepresentation object
-        self.apiResponse = SummaryRepresentation(
-            fileCount=hits['total'],
-            specimenCount=self.agg_contents(
-                aggregates, 'specimenCount', agg_form='value'),
-            projectCount=self.agg_contents(
-                aggregates, 'projectCode', agg_form='value'),
-            totalFileSize=self.agg_contents(
-                aggregates, 'total_size', agg_form='value'),
-            organCount=self.agg_contents(
-                aggregates, 'organCount', agg_form='value'),
-            donorCount=self.agg_contents(
-                aggregates, 'donorCount', agg_form='value'),
-            labCount=self.agg_contents(
-                aggregates, 'labCount', agg_form='value'),
-            totalCellCount=self.agg_contents(
-                aggregates, 'total_cell_count', agg_form='value'),
-            fileTypeSummaries=[FileTypeSummary.create_object(bucket) for bucket in _sum['buckets']],
-            organSummaries=[OrganCellCountSummary.create_object(bucket) for bucket in _organ_group['buckets']]
-        )
+        kwargs = dict(
+            projectCount=self.agg_contents(aggregates, 'projectCode', agg_form='value'),
+            totalFileSize=self.agg_contents(aggregates, 'total_size', agg_form='value'),
+            organCount=self.agg_contents(aggregates, 'organCount', agg_form='value'),
+            donorCount=self.agg_contents(aggregates, 'donorCount', agg_form='value'),
+            labCount=self.agg_contents(aggregates, 'labCount', agg_form='value'),
+            totalCellCount=self.agg_contents(aggregates, 'total_cell_count', agg_form='value'),
+            fileTypeSummaries=[FileTypeSummary.create_object(bucket=bucket) for bucket in _sum['buckets']],
+            organSummaries=[OrganCellCountSummary.create_object(bucket) for bucket in _organ_group['buckets']])
+
+        if 'specimenCount' in aggregates:
+            kwargs['fileCount'] = hits['total']
+            kwargs['specimenCount'] = self.agg_contents(aggregates, 'specimenCount', agg_form='value')
+        elif 'fileCount' in aggregates:
+            kwargs['fileCount'] = self.agg_contents(aggregates, 'fileCount', agg_form='value')
+            kwargs['specimenCount'] = hits['total']
+
+        self.apiResponse = SummaryRepresentation(**kwargs)
 
 
 class KeywordSearchResponse(AbstractResponse, EntryFetcher):
@@ -402,6 +415,15 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 all_files.append(new_file)
         return all_files
 
+    def make_file_type_summaries(self, files):
+        file_type_summaries = {}
+        for file in files:
+            if not file['format'] in file_type_summaries:
+                file_type_summaries[file['format']] = {}
+            file_type_summaries[file['format']]['size'] = file_type_summaries[file['format']].get('size', 0) + file['size']
+            file_type_summaries[file['format']]['count'] = file_type_summaries[file['format']].get('count', 0) + 1
+        return file_type_summaries
+
     def make_specimens(self, entry):
         specimens = {}
         for bundle in entry["bundles"]:
@@ -442,17 +464,29 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
+        if self.entity_type == 'files':
+            files = {
+                'files': self.make_files(entry)
+            }
+        else:
+            file_type_summaries = self.make_file_type_summaries(self.make_files(entry))
+            files = {
+                'fileTypeSummaries': [FileTypeSummary.create_object(file_type=file_type,
+                                                                    total_size=file_type_summary['size'],
+                                                                    count=file_type_summary['count']).to_json()
+                                      for file_type, file_type_summary in file_type_summaries.items()]
+            }
 
         return HitEntry(
             processes=self.make_processes(entry),
             entryId=entry["entity_id"],
-            files=self.make_files(entry),
             projects=self.make_projects(entry),
             specimens=self.make_specimens(entry),
-            bundles=self.make_bundles(entry)
+            bundles=self.make_bundles(entry),
+            **files
         )
 
-    def __init__(self, hits):
+    def __init__(self, hits, entity_type):
         """
         Constructs the object and initializes the apiResponse attribute
         :param hits: A list of hits from ElasticSearch
@@ -460,6 +494,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # Setup the logger
         self.logger = logging.getLogger(
             'dashboardService.api_response.KeywordSearchResponse')
+        self.entity_type = entity_type
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
@@ -505,9 +540,15 @@ class FileSearchResponse(KeywordSearchResponse):
             else:
                 return _term['key']
 
-        term_list = [TermObj(**{"term": choose_entry(term),
-                                "count": term['doc_count']})
+        term_list = [TermObj(**{'term': choose_entry(term),
+                                'count': term['doc_count']})
                      for term in contents['myTerms']['buckets']]
+
+        # Add 'unspecified' term if there is at least one unlabelled document
+        untagged_count = contents['untagged']['doc_count']
+        if untagged_count > 0:
+            term_list.append(TermObj(term=None, count=untagged_count))
+
         facet = FacetObj(
             terms=term_list,
             total=0 if len(
@@ -530,7 +571,7 @@ class FileSearchResponse(KeywordSearchResponse):
             facets[facet] = FileSearchResponse.create_facet(contents)
         return facets
 
-    def __init__(self, hits, pagination, facets):
+    def __init__(self, hits, pagination, facets, entity_type):
         """
         Constructs the object and initializes the apiResponse attribute
         :param hits: A list of hits from ElasticSearch
@@ -539,7 +580,7 @@ class FileSearchResponse(KeywordSearchResponse):
         self.logger = logging.getLogger(
             'dashboardService.api_response.FileSearchResponse')
         # This should initialize the self.apiResponse attribute of the object
-        KeywordSearchResponse.__init__(self, hits)
+        KeywordSearchResponse.__init__(self, hits, entity_type)
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)
         # Add the facets

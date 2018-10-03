@@ -18,6 +18,9 @@ plan: validate
 apply: validate
 	terraform apply
 
+destroy: validate
+	terraform destroy
+
 clean:
 	-rm *.tf.json
 

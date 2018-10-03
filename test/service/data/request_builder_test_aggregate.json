@@ -1,0 +1,26 @@
+{
+  "filter": {
+    "bool": {
+      "must_not": [
+        {
+          "term": {
+            "bundles.contents.deleted": true
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "myTerms": {
+      "terms": {
+        "field": "facet1.translation.keyword",
+        "size": 99999
+      }
+    },
+    "untagged": {
+      "missing": {
+        "field": "facet1.translation.keyword"
+      }
+    }
+  }
+}

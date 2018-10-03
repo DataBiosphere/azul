@@ -9,15 +9,40 @@ emit(
             {
                 "aws_sqs_queue": {
                     "notification_queue": {
-                        "name": f"azul-notify-{config.deployment_stage}",
+                        "name": config.notify_queue_name,
+                        "visibility_timeout_seconds": config.lambda_timeout,
                         "message_retention_seconds": 24 * 60 * 60,
                         "redrive_policy": json.dumps({
                             "maxReceiveCount": 10,
                             "deadLetterTargetArn": "${aws_sqs_queue.failure_queue.arn}"
                         })
                     },
+                    "token_queue": {
+                        "name": config.token_queue_name,
+                        "visibility_timeout_seconds": config.lambda_timeout,
+                        "message_retention_seconds": 24 * 60 * 60,
+                        "redrive_policy": json.dumps({
+                            "maxReceiveCount": 10,
+                            "deadLetterTargetArn": "${aws_sqs_queue.failure_queue.arn}"
+                        })
+                    },
+                    "document_queue": {
+                        "name": config.document_queue_name,
+                        "fifo_queue": True,
+                        "visibility_timeout_seconds": config.lambda_timeout,
+                        "message_retention_seconds": 24 * 60 * 60,
+                        "redrive_policy": json.dumps({
+                            "maxReceiveCount": 10,
+                            "deadLetterTargetArn": "${aws_sqs_queue.fifo_failure_queue.arn}"
+                        })
+                    },
                     "failure_queue": {
-                        "name": f"azul-fail-{config.deployment_stage}",
+                        "name": config.qualified_resource_name('fail'),
+                        "message_retention_seconds": 14 * 24 * 60 * 60,
+                    },
+                    "fifo_failure_queue": {
+                        "fifo_queue": True,
+                        "name": config.qualified_resource_name('fail', suffix='.fifo'),
                         "message_retention_seconds": 14 * 24 * 60 * 60,
                     }
                 }

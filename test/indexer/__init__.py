@@ -1,14 +1,12 @@
-import functools
 import json
 import os
-from typing import Mapping, Any
+from typing import Any, Mapping
 from unittest.mock import patch
 from uuid import uuid4
 
 from azul import config
 from azul.project.hca.config import IndexProperties
 from azul.project.hca.indexer import Indexer
-from azul.downloader import MetadataDownloader
 from es_test_case import ElasticsearchTestCase
 
 
@@ -21,21 +19,9 @@ class IndexerTestCase(ElasticsearchTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls._old_dss_endpoint = os.environ.get('AZUL_DSS_ENDPOINT')
-        # FIXME: https://github.com/DataBiosphere/azul/issues/134
-        # FIXME: deprecate use of production server in favor of local, farm-to-table data files
-        os.environ['AZUL_DSS_ENDPOINT'] = "https://dss.data.humancellatlas.org/v1"
         cls.index_properties = IndexProperties(dss_url=config.dss_endpoint,
                                                es_endpoint=config.es_endpoint)
-        cls.hca_indexer = Indexer(cls.index_properties)
-
-    @classmethod
-    def tearDownClass(cls):
-        if cls._old_dss_endpoint is None:
-            del os.environ['AZUL_DSS_ENDPOINT']
-        else:
-            os.environ['AZUL_DSS_ENDPOINT'] = cls._old_dss_endpoint
-        super().tearDownClass()
+        cls.hca_indexer = Indexer(cls.index_properties, refresh='wait_for')
 
     def _make_fake_notification(self, uuid: str, version: str) -> Mapping[str, Any]:
         return {
@@ -50,7 +36,7 @@ class IndexerTestCase(ElasticsearchTestCase):
             }
         }
 
-    def _get_data_files(self, filename, updated=False):
+    def _get_data_files(self, filename, bundle_version, updated=False):
         data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
         metadata_suffix = ".metadata.json"
         manifest_suffix = ".manifest.json"
@@ -63,15 +49,23 @@ class IndexerTestCase(ElasticsearchTestCase):
         with open(os.path.join(data_prefix, filename + manifest_suffix), 'r') as infile:
             manifest = json.load(infile)
 
-        return metadata, manifest
+        return bundle_version, manifest, metadata
 
     def _mock_index(self, test_bundle, updated=False):
         bundle_uuid, bundle_version = test_bundle
         fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
 
-        def mocked_extract_bundle(self_, fake_notification):
-            return self._get_data_files(fake_notification["match"]["bundle_uuid"], updated=updated)
+        def mocked_extract_bundle(**kwargs):
+            return self._get_data_files(filename=kwargs['uuid'], bundle_version=kwargs['version'], updated=updated)
 
         with patch('azul.DSSClient'):
-            with patch.object(MetadataDownloader, 'extract_bundle', new=mocked_extract_bundle):
+            with patch('azul.indexer.download_bundle_metadata', new=mocked_extract_bundle):
                 self.hca_indexer.index(fake_event)
+
+    def _mock_delete(self, test_bundle, data_pack):
+        bundle_uuid, bundle_version = test_bundle
+        self._mock_index(test_bundle, data_pack)
+
+        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+        with patch('azul.DSSClient'):
+            self.hca_indexer.delete(fake_event)

@@ -5,15 +5,20 @@ Suite for unit testing indexer.py
 
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
+import json
 import logging
+import os
 import time
 import unittest
 from unittest.mock import patch
 
 from elasticsearch import Elasticsearch
 
-from azul import eventually
+from azul import config, eventually
+from azul.json_freeze import freeze
 from indexer import IndexerTestCase
+
+from azul.transformer import ElasticSearchDocument
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +37,8 @@ class TestHCAIndexer(IndexerTestCase):
                           "2018-03-30T152812.404846Z")
         cls.specimens = [("9dec1bd6-ced8-448a-8e45-1fc7846d8995", "2018-03-29T154319.834528Z"),
                          ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
+        cls.analysis_bundle = ("d5e01f9d-615f-4153-8a56-f2317d7d9ce8",
+                               "2018-09-06T185759.326912Z")
 
     @eventually(5.0, 0.5)
     def _get_es_results(self, assert_func):
@@ -40,7 +47,7 @@ class TestHCAIndexer(IndexerTestCase):
             results = self.es_client.search(index=entity_index,
                                             doc_type="doc",
                                             size=100)
-            if "project" not in entity_index:
+            if entity_index != config.es_index_name("projects"):
                 for result_dict in results["hits"]["hits"]:
                     es_results.append(result_dict)
 
@@ -59,18 +66,69 @@ class TestHCAIndexer(IndexerTestCase):
 
         def check_bundle_correctness(es_results):
             self.assertGreater(len(es_results), 0)
+            data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+            for result_dict in es_results:
+                index_name = result_dict["_index"]
+                index_id = result_dict["_id"]
+                expected_ids = set()
+                entity_type = config.entity_type_for_es_index(index_name)
+                path = os.path.join(data_prefix, f'aee55415-d128-4b30-9644-e6b2742fa32b.{entity_type}.results.json')
+                with open(path, 'r') as fp:
+                    expected_dict = json.load(fp)
+                    self.assertGreater(len(expected_dict["hits"]["hits"]), 0)
+                    for expected_hit in expected_dict["hits"]["hits"]:
+                        expected_ids.add(expected_hit["_id"])
+                        if index_id == expected_hit["_id"]:
+                            self.assertEqual(freeze(expected_hit["_source"]), freeze(result_dict["_source"]))
+                self.assertIn(index_id, expected_ids)
+
+        self._get_es_results(check_bundle_correctness)
+
+    def test_delete_correctness(self):
+        """
+        Delete a bundle and check that the index contains the appropriate flags
+        """
+        data_pack = self._get_data_files(self.new_bundle[0], self.new_bundle[1], updated=True)
+
+        self._mock_delete(self.new_bundle, data_pack)
+
+        def check_bundle_delete_correctness(es_results):
+            self.assertGreater(len(es_results), 0)
+            for result_dict in es_results:
+                result_doc = ElasticSearchDocument.from_index(result_dict)
+                self.assertEqual(result_doc.bundles[0].uuid, self.new_bundle[0])
+                self.assertEqual(result_doc.bundles[0].version, self.new_bundle[1])
+                self.assertTrue(result_doc.bundles[0].deleted)
+
+        self._get_es_results(check_bundle_delete_correctness)
+
+    def test_single_file_object_for_files_index(self):
+        """
+        Index an analysis bundle, which, unlike a primary bundle, has data files derived from other data
+        files, and assert that the resulting `files` index document contains exactly one file entry.
+        """
+        self._mock_index(self.analysis_bundle)
+
+        def ensure_singletons(es_results):
+            self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
                 result_uuid = result_dict["_source"]["bundles"][0]["uuid"]
                 result_version = result_dict["_source"]["bundles"][0]["version"]
                 result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
-                self.assertEqual(self.old_bundle[0], result_uuid)
-                self.assertEqual(self.old_bundle[1], result_version)
-                self.assertEqual("Mouse Melanoma", result_contents["project"]["project_shortname"])
-                self.assertIn("Sarah Teichmann", result_contents["project"]["laboratory"])
-                self.assertIn("Mus musculus", result_contents["specimens"][0]["genus_species"])
+                self.assertEqual(self.analysis_bundle[0], result_uuid)
+                self.assertEqual(self.analysis_bundle[1], result_version)
+                index_name = result_dict['_index']
+                if index_name == config.es_index_name("files"):
+                    self.assertEqual(1, len(result_contents["files"]))
+                    self.assertGreater(len(result_contents["specimens"]), 0)
+                elif index_name == config.es_index_name("specimens"):
+                    self.assertEqual(1, len(result_contents["specimens"]))
+                    self.assertGreater(len(result_contents["files"]), 0)
+                else:
+                    self.fail(index_name)
 
-        self._get_es_results(check_bundle_correctness)
+        self._get_es_results(ensure_singletons)
 
     def test_update_with_newer_version(self):
         """
@@ -179,13 +237,13 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertEqual(len(es_results), 5)
             for result_dict in es_results:
                 self.assertEqual(result_dict["_id"], result_dict["_source"]["entity_id"])
-                if "files" in result_dict["_index"]:
+                if result_dict["_index"] == config.es_index_name("files"):
                     # files assumes one bundle per result
                     self.assertEqual(len(result_dict["_source"]["bundles"]), 1)
                     result_contents = result_dict["_source"]["bundles"][0]["contents"]
                     self.assertEqual(1, len(result_contents["files"]))
                     file_doc_ids.add(result_contents["files"][0]["uuid"])
-                elif "specimens" in result_dict["_index"]:
+                elif result_dict["_index"] == config.es_index_name("specimens"):
                     self.assertEqual(len(result_dict["_source"]["bundles"]), 2)
                     for bundle in result_dict["_source"]["bundles"]:
                         result_contents = bundle["contents"]
@@ -195,8 +253,8 @@ class TestHCAIndexer(IndexerTestCase):
                     continue
 
             self.assertEqual(len(file_doc_ids), 4)
-            for spec_uuid, _ in self.specimens:
-                spec_metadata, _ = self._get_data_files(spec_uuid)
+            for spec_uuid, spec_version in self.specimens:
+                _, _, spec_metadata = self._get_data_files(spec_uuid, spec_version)
                 for file_dict in spec_metadata["file.json"]["files"]:
                     self.assertIn(file_dict["hca_ingest"]["document_id"], file_doc_ids)
 

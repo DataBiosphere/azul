@@ -2,11 +2,10 @@ from collections import defaultdict
 import logging
 from typing import Any, List, Mapping, MutableMapping, Sequence
 
-from humancellatlas.data import metadata as api
-from humancellatlas.data.metadata import AgeRange
+from humancellatlas.data.metadata import api
 
 from azul import reject
-from azul.transformer import Document, ElasticSearchDocument, Transformer
+from azul.transformer import ElasticSearchDocument, Transformer, Bundle
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -18,30 +17,51 @@ def _project_dict(bundle: api.Bundle) -> dict:
     reject(additional_projects, "Azul can currently only handle a single project per bundle")
     return {
         'project_shortname': project.project_shortname,
-        'laboratory': list(project.laboratory_names),
+        'laboratory': sorted(list(project.laboratory_names)),
         'document_id': project.document_id,
         '_type': 'project'
     }
 
 
-def _specimen_dict(biomaterials: Mapping[api.UUID4, api.Biomaterial]) -> List[Mapping[str, Any]]:
-    specimen_list = []
-    for specimen in biomaterials.values():
-        if isinstance(specimen, api.SpecimenFromOrganism):
-            bio_visitor = BiomaterialVisitor()
-            specimen.accept(bio_visitor)
-            specimen.ancestors(bio_visitor)
-            merged_specimen = defaultdict(set)
-            for b in bio_visitor.biomaterial_lineage:
-                for key, value in b.items():
-                    if isinstance(value, (list, set)):
-                        merged_specimen[key].update(value)
-                    else:
-                        merged_specimen[key].add(value)
-            merged_specimen = {k: list(v) for k, v in merged_specimen.items()}
-            merged_specimen['biomaterial_id'] = specimen.biomaterial_id
-            specimen_list.append(merged_specimen)
-    return specimen_list
+def _specimen_dict(specimen: api.SpecimenFromOrganism) -> MutableMapping[str, Any]:
+    bio_visitor = BiomaterialVisitor()
+    specimen.accept(bio_visitor)
+    specimen.ancestors(bio_visitor)
+    merged_specimen = defaultdict(set)
+    for b in bio_visitor.biomaterial_lineage:
+        for key, value in b.items():
+            if isinstance(value, (list, set)):
+                merged_specimen[key].update(value)
+            else:
+                merged_specimen[key].add(value)
+    merged_specimen = {k: list(sorted(v, key=lambda x: (x is not None, x))) for k, v in merged_specimen.items()}
+    merged_specimen['biomaterial_id'] = specimen.biomaterial_id
+    return merged_specimen
+
+
+def _file_dict(f: api.File) -> MutableMapping[str, Any]:
+    return {
+        'content-type': f.manifest_entry.content_type,
+        'crc32c': f.manifest_entry.crc32c,
+        'indexed': f.manifest_entry.indexed,
+        'name': f.manifest_entry.name,
+        's3_etag': f.manifest_entry.s3_etag,
+        'sha1': f.manifest_entry.sha1,
+        'sha256': f.manifest_entry.sha256,
+        'size': f.manifest_entry.size,
+        'uuid': f.manifest_entry.uuid,
+        'version': f.manifest_entry.version,
+        'document_id': f.document_id,
+        'file_format': f.file_format,
+        '_type': 'file',
+        **(
+            {
+                'read_index': f.read_index,
+                'lane_index': f.lane_index
+            } if isinstance(f, api.SequenceFile) else {
+            }
+        )
+    }
 
 
 class TransformerVisitor(api.EntityVisitor):
@@ -67,30 +87,6 @@ class TransformerVisitor(api.EntityVisitor):
             )
         }
 
-    def _file_dict(self, f: api.File) -> MutableMapping[str, Any]:
-        return {
-            'content-type': f.manifest_entry.content_type,
-            'crc32c': f.manifest_entry.crc32c,
-            'indexed': f.manifest_entry.indexed,
-            'name': f.manifest_entry.name,
-            's3_etag': f.manifest_entry.s3_etag,
-            'sha1': f.manifest_entry.sha1,
-            'sha256': f.manifest_entry.sha256,
-            'size': f.manifest_entry.size,
-            'uuid': f.manifest_entry.uuid,
-            'version': f.manifest_entry.version,
-            'document_id': f.document_id,
-            'file_format': f.file_format,
-            '_type': 'file',
-            **(
-                {
-                    'read_index': f.read_index,
-                    'lane_index': f.lane_index
-                } if isinstance(f, api.SequenceFile) else {
-                }
-            )
-        }
-
     def __init__(self) -> None:
         self.specimens = {}
         self.processes = {}
@@ -104,7 +100,7 @@ class TransformerVisitor(api.EntityVisitor):
                 pl_pr_id = f"{str(pl.document_id)}-{str(entity.document_id)}"
                 self.processes[pl_pr_id] = self._merge_process_protocol(entity, pl)
         elif isinstance(entity, api.File):
-            self.files[entity.document_id] = self._file_dict(entity)
+            self.files[entity.document_id] = _file_dict(entity)
 
 
 class BiomaterialVisitor(api.EntityVisitor):
@@ -147,7 +143,7 @@ class BiomaterialVisitor(api.EntityVisitor):
             )
 
     def _age_range(self, entity: api.DonorOrganism):
-        age = entity.organism_age_in_seconds or AgeRange.any
+        age = entity.organism_age_in_seconds or api.AgeRange.any
         return {
             'max_organism_age_in_seconds': age.max,
             'min_organism_age_in_seconds': age.min,
@@ -175,19 +171,18 @@ class FileTransformer(Transformer):
         for file in bundle.files.values():
             visitor = TransformerVisitor()
             # Visit the relatives of file
-            file.accept(visitor)  # Visit descendants
+            file.accept(visitor)
             file.ancestors(visitor)
             # Assign the contents to the ES doc
-            contents = dict(specimens=_specimen_dict(visitor.specimens),
-                            files=list(visitor.files.values()),
+            contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
+                            files=[_file_dict(file)],
                             processes=list(visitor.processes.values()),
                             project=_project_dict(bundle))
-            entity_id = str(file.document_id)
-            document_contents = Document(entity_id,
-                                         str(bundle.uuid),
-                                         bundle.version,
-                                         contents)
-            es_document = ElasticSearchDocument(entity_id, document_contents, self.entity_name)
+            es_document = ElasticSearchDocument(entity_type=self.entity_name,
+                                                entity_id=str(file.document_id),
+                                                bundles=[Bundle(uuid=str(bundle.uuid),
+                                                                version=bundle.version,
+                                                                contents=contents)])
             yield es_document
 
 
@@ -212,17 +207,16 @@ class SpecimenTransformer(Transformer):
         for specimen in bundle.specimens:
             visitor = TransformerVisitor()
             # Visit the relatives of file
-            specimen.accept(visitor)  # Visit descendants
+            specimen.accept(visitor)
             specimen.ancestors(visitor)
             # Assign the contents to the ES doc
-            entity_id = str(specimen.document_id)
-            contents = dict(specimens=_specimen_dict(visitor.specimens),
+            contents = dict(specimens=[_specimen_dict(specimen)],
                             files=list(visitor.files.values()),
                             processes=list(visitor.processes.values()),
                             project=_project_dict(bundle))
-            document_contents = Document(entity_id,
-                                         str(bundle.uuid),
-                                         bundle.version,
-                                         contents)
-            es_document = ElasticSearchDocument(entity_id, document_contents, self.entity_name)
+            es_document = ElasticSearchDocument(entity_type=self.entity_name,
+                                                entity_id=str(specimen.document_id),
+                                                bundles=[Bundle(uuid=str(bundle.uuid),
+                                                                version=bundle.version,
+                                                                contents=contents)])
             yield es_document
