@@ -1,5 +1,5 @@
 /.chalice/deployments/
 /.chalice/venv/
 /.chalice/config.json
-/.chalice/deployed.json
+/.chalice/deployed/*.json
 /lambda-policy.json
