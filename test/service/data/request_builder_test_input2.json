@@ -1,5 +1,13 @@
 {
   "query": {
-    "match_all": {}
+    "bool": {
+      "must_not": [
+        {
+          "term": {
+            "bundles.contents.deleted": true
+          }
+        }
+      ]
+    }
   }
 }
