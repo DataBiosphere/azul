@@ -168,7 +168,7 @@ class TestDCCTransformer(TestCase):
             },
             {
                 "index_field": "submittedDonorId",
-                "value": ""
+                "value": "NA12878"
             },
             {
                 "index_field": "submittedSampleId",
@@ -180,7 +180,7 @@ class TestDCCTransformer(TestCase):
             },
             {
                 "index_field": "submittedSpecimenId",
-                "value": ""
+                "value": "NWD119844"
             },
             {
                 "index_field": "submitterDonorPrimarySite",
