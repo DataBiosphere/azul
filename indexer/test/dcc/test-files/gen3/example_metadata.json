@@ -1,5 +1,7 @@
 {
   "metadata.json": {
+    "program": "TOPMed",
+    "project": "topmed-public",
     "aligned_reads_index": {
       "data_category": "Sequencing Reads",
       "data_format": "CRAI",
