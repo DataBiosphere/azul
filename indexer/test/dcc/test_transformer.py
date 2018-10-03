@@ -112,7 +112,7 @@ class TestDCCTransformer(TestCase):
             },
             {
                 "index_field": "fileMd5sum",
-                "value": "bbafabaffbbabdafbabbafafbafbbafafbafffaf"
+                "value": ""
             },
             {
                 "index_field": "download_id",

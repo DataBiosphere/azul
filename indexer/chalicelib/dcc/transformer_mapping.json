@@ -48,8 +48,7 @@
         "index_field": "file_version"
       },
       {
-        "from_file_data": true,
-        "dss_field": "sha1",
+        "constant": "",
         "index_field": "fileMd5sum"
       },
       {
