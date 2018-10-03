@@ -1,0 +1,71 @@
+{
+  "hits": [
+    {
+      "bundles": [
+        {
+          "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+          "bundleVersion": "2003-08-12T00:52:21"
+        }
+      ],
+      "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+      "fileTypeSummaries": [
+        {
+          "count": 1,
+          "fileType": "csv",
+          "totalSize": 6667
+        }
+      ],
+      "processes": [
+        {
+          "instrument": "green",
+          "libraryConstructionApproach": "fuchsia",
+          "processId": "maroon",
+          "processName": "olive",
+          "protocol": "olive",
+          "protocolId": "green"
+        }
+      ],
+      "projects": [
+        {
+          "laboratory": [
+            "silver"
+          ],
+          "projectShortname": "blue"
+        }
+      ],
+      "specimens": [
+        {
+          "biologicalSex": [
+            "silver"
+          ],
+          "disease": [
+            "yellow"
+          ],
+          "genusSpecies": [
+            "teal"
+          ],
+          "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+          "organ": [
+            "purple"
+          ],
+          "organPart": [
+            "black"
+          ],
+          "organismAge": [
+            "purple"
+          ],
+          "organismAgeUnit": [
+            "navy"
+          ],
+          "source": [
+            "purple"
+          ],
+          "storageMethod": [
+            "aqua"
+          ],
+          "totalCells": 5306
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ emit({
             "google_service_account": {
                 "indexer": {
                     "project": "${local.google_project}",
-                    "account_id": config.resource_name('indexer'),
+                    "account_id": config.qualified_resource_name('indexer'),
                     "display_name": f"Azul indexer in {config.deployment_stage}"
                 }
             }
@@ -22,7 +22,8 @@ emit({
         {
             "aws_secretsmanager_secret": {
                 "indexer_google_service_account": {
-                    "name": config.google_service_account('indexer')
+                    "name": config.google_service_account('indexer'),
+                    "recovery_window_in_days": 0  # force immediate deletion
                 }
             },
             "aws_secretsmanager_secret_version": {

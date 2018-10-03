@@ -4,11 +4,12 @@ import json
 import logging
 import os
 
+import elasticsearch
 from elasticsearch_dsl import A, Q, Search
 
 from azul import config
 from azul.es import ESClientFactory
-from azul.service import config as service_config
+from azul.service import service_config
 from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse,
                                                           FileSearchResponse,
                                                           KeywordSearchResponse,
@@ -27,6 +28,12 @@ class BadArgumentException(Exception):
     def __init__(self, message):
         Exception.__init__(self)
         self.message = message
+
+
+class IndexNotFoundError(Exception):
+    def __init__(self, missing_index: str):
+        Exception.__init__(self)
+        self.message = f'Could not find the Elasticsearch index: {missing_index}.'
 
 
 class ElasticTransformDump(object):
@@ -78,13 +85,21 @@ class ElasticTransformDump(object):
         translated (es_keys) keys
         :return: Returns Query object with appropriate filters
         """
+        filter_list = []
+        for facet, values in filters.items():
+            value = values.get('is', {})
+            if value is None:
+                # If filter is {"is": None}, search for values where field does not exist
+                f = Q('bool', must_not=Q('exists', field=f'{facet}.keyword'))
+            else:
+                f = Q('terms', **{f'{facet.replace(".", "__")}__keyword': value})
+            filter_list.append(f)
+
         # Each iteration will AND the contents of the list
-        query_list = [Q('constant_score', filter=Q(
-            'terms', **{'{}__keyword'.format(
-                facet.replace(".", "__")): values.get('is', {})}))
-                      for facet, values in filters.items()]
+        query_list = [Q('constant_score', filter=f) for f in filter_list]
         #        Return a Query object. Make it match_all
-        return Q('bool', must=query_list) if len(query_list) > 0 else Q()
+        ignore_deleted = Q("bool", must_not=[{'term': {'bundles.contents.deleted': True}}])
+        return Q('bool', must=query_list) & ignore_deleted if query_list else ignore_deleted
 
     @staticmethod
     def create_aggregate(filters, facet_config, agg):
@@ -115,6 +130,7 @@ class ElasticTransformDump(object):
             'terms',
             field=_field,
             size=99999)
+        aggregate.bucket('untagged', 'missing', field=_field)
         # If the aggregate in question didn't have any filter on the API
         #  call, skip it. Otherwise insert the popped
         # value back in
@@ -317,7 +333,8 @@ class ElasticTransformDump(object):
     def transform_summary(
             self,
             request_config_file='request_config.json',
-            filters=None):
+            filters=None,
+            entity_type=None):
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
@@ -337,7 +354,8 @@ class ElasticTransformDump(object):
         es_search = self.create_request(
             filters, self.es_client,
             request_config,
-            post_filter=False)
+            post_filter=False,
+            entity_type=entity_type)
         # Add a total_size aggregate to the ElasticSearch request
         es_search.aggs.metric(
             'total_size',
@@ -364,9 +382,13 @@ class ElasticTransformDump(object):
         es_search.aggs['by_type'].metric('size_by_type', 'sum', field=request_config['translation']['fileSize'])
         # Override the aggregates for Samples,
         # Primary site count, and project count
+        if entity_type == 'specimens':
+            type_id, type_count = ['fileId', 'fileCount']
+        elif entity_type == 'files':
+            type_id, type_count = ['specimenId', 'specimenCount']
+
         for field, agg_name in (
-                ('specimenId',
-                 'specimenCount'),
+                (type_id, type_count),
                 ('organ', 'organCount'),
                 ('donorId', 'donorCount'),
                 ('lab', 'labCount'),
@@ -476,7 +498,7 @@ class ElasticTransformDump(object):
                     for x in es_response_dict['hits']['hits']]
             # Create a KeywordSearchResponse object
             self.logger.info('Creating KeywordSearchResponse')
-            final_response = KeywordSearchResponse(hits)
+            final_response = KeywordSearchResponse(hits, entity_type)
         else:
             # It's a full file search
             # Translate the sort field if there is any translation available
@@ -485,7 +507,12 @@ class ElasticTransformDump(object):
             # Apply paging
             es_search = self.apply_paging(es_search, pagination)
             # Execute ElasticSearch request
-            es_response = es_search.execute(ignore_cache=True)
+
+            try:
+                es_response = es_search.execute(ignore_cache=True)
+            except elasticsearch.NotFoundError as e:
+                raise IndexNotFoundError(e.info["error"]["index"])
+
             es_response_dict = es_response.to_dict()
             self.logger.debug("Printing ES_SEARCH response dict:\n {}".format(
                 json.dumps(es_response_dict)))
@@ -513,7 +540,8 @@ class ElasticTransformDump(object):
             final_response = FileSearchResponse(
                 hits,
                 paging,
-                facets)
+                facets,
+                entity_type)
         self.logger.info(
             'Returning the final response for transform_request()')
         final_response = final_response.apiResponse.to_json()

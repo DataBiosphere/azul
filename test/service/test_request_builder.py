@@ -21,6 +21,22 @@ class TestRequestBuilder(WebServiceTestCase):
     def _load_json(self, name):
         return EsTd.open_and_return_json(os.path.join(os.path.dirname(__file__), name))
 
+    @staticmethod
+    def compare_dicts(actual_output, expected_output):
+        """"Print the two outputs along with a diff of the two"""
+        print("Comparing the two dictionaries built.")
+        print('{}... => {}...'.format(
+            actual_output[:20],
+            expected_output[:20]))
+        for i, s in enumerate(
+                difflib.ndiff(actual_output, expected_output)):
+            if s[0] == ' ':
+                continue
+            elif s[0] == '-':
+                print(u'Delete "{}" from position {}'.format(s[-1], i))
+            elif s[0] == '+':
+                print(u'Add "{}" to position {}'.format(s[-1], i))
+
     def test_create_request(self):
         """
         Tests creation of a simple request
@@ -51,23 +67,9 @@ class TestRequestBuilder(WebServiceTestCase):
         actual_output = json.dumps(
             es_search.to_dict(),
             sort_keys=True)
-        # Print the 2 strings for reference
-        # print "Printing expected output: \n %s" % expected_output
-        # print "Printing actual output: \n %s" % actual_output
-        # Now show differences so message is helpful
 
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(
-            actual_output[:20],
-            expected_output[:20]))
-        for i, s in enumerate(
-                difflib.ndiff(actual_output, expected_output)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
+        self.compare_dicts(actual_output, expected_output)
+
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
@@ -93,21 +95,9 @@ class TestRequestBuilder(WebServiceTestCase):
         # Convert objects to be compared to strings
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
-        # Print the 2 strings for reference
-        # print "Printing expected output: \n %s" % expected_output
-        # print "Printing actual output: \n %s" % actual_output
-        # Now show differences so message is helpful
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(
-            actual_output[:20], expected_output[:20]))
-        for i, s in enumerate(
-                difflib.ndiff(actual_output, expected_output)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
+
+        self.compare_dicts(actual_output, expected_output)
+
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
@@ -143,20 +133,107 @@ class TestRequestBuilder(WebServiceTestCase):
         # Convert objects to be compared to strings
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
-        # Print the 2 strings for reference
-        print("Printing expected output: \n %s" % expected_output)
-        print("Printing actual output: \n %s" % actual_output)
-        # Now show differences so message is helpful
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
-        for i, s in enumerate(
-                difflib.ndiff(actual_output, expected_output)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
+
+        self.compare_dicts(actual_output, expected_output)
+
+        # Testing first case with 1 filter
+        self.assertEqual(actual_output, expected_output)
+
+    def test_create_request_missing_values(self):
+        """
+        Tests creation of a request for facets that do not have a value
+        """
+        # Load files required for this test
+        request_config = self._load_json(self.request_config_filepath)
+        expected_output = self._load_json(
+            os.path.join(self.data_directory, 'request_builder_test_missing_values1.json'))
+        # Create a filter for missing values
+        sample_filter = {"entity_id": {"is": None}}
+
+        # Create ElasticTransformDump instance
+        es_ts_instance = EsTd()
+        # Create a request object
+        es_search = EsTd.create_request(
+            sample_filter,
+            es_ts_instance.es_client,
+            request_config,
+            post_filter=True)
+        # Convert objects to be compared to strings
+        expected_output = json.dumps(
+            expected_output,
+            sort_keys=True)
+        actual_output = json.dumps(
+            es_search.to_dict(),
+            sort_keys=True)
+
+        self.compare_dicts(actual_output, expected_output)
+
+        # Testing first case with 1 filter
+        self.assertEqual(actual_output, expected_output)
+
+    def test_create_request_terms_and_missing_values(self):
+        """
+        Tests creation of a request for a combination of facets that do and do not have a value
+        """
+        # Load files required for this test
+        request_config = self._load_json(self.request_config_filepath)
+        expected_output = self._load_json(
+            os.path.join(self.data_directory, 'request_builder_test_missing_values2.json'))
+        # Create a filter for missing values
+        sample_filter = {
+            "term1": {"is": None},
+            "term2": {"is": ["test"]},
+            "term3": {"is": None},
+        }
+
+        # Create ElasticTransformDump instance
+        es_ts_instance = EsTd()
+        # Create a request object
+        es_search = EsTd.create_request(
+            sample_filter,
+            es_ts_instance.es_client,
+            request_config,
+            post_filter=True)
+        # Convert objects to be compared to strings
+        expected_output = json.dumps(
+            expected_output,
+            sort_keys=True)
+        actual_output = json.dumps(
+            es_search.to_dict(),
+            sort_keys=True)
+
+        self.compare_dicts(actual_output, expected_output)
+
+        # Testing first case with 1 filter
+        self.assertEqual(actual_output, expected_output)
+
+    def test_create_request_aggregate(self):
+        """
+        Tests creation of an ES aggregate
+        """
+        # Load files required for this test
+        expected_output = self._load_json(
+            os.path.join(self.data_directory, 'request_builder_test_aggregate.json'))
+
+        sample_filter = {}
+
+        # Create a request object
+        agg_field = 'facet1'
+        aggregation = EsTd.create_aggregate(
+            sample_filter,
+            facet_config={agg_field: f'{agg_field}.translation'},
+            agg=agg_field
+        )
+        # Convert objects to be compared to strings
+        expected_output = json.dumps(
+            expected_output,
+            sort_keys=True)
+        actual_output = json.dumps(
+            aggregation.to_dict(),
+            sort_keys=True)
+
+        self.compare_dicts(actual_output, expected_output)
+
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 

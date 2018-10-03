@@ -1,34 +1,30 @@
-# -*- coding: utf-8 -*-
-"""App module to receive event notifications.
-
-This chalice web services receives BlueBox event notifications
-and triggers indexing of the bundle within the POST notification..
-
-This module makes use of the indexer module and its components
-to drive the indexing operation.
-
 """
-from concurrent.futures import ThreadPoolExecutor, as_completed
+Chalice application module to receive and process DSS event notifications.
+"""
+from collections import Counter
+import http
 import json
 import logging
-import math
 import time
+import uuid
 
 import boto3
+# noinspection PyPackageRequirements
 import chalice
-from chalice import Chalice
-from chalice.app import CloudWatchEvent
-import requests.adapters
+from elasticsearch import JSONSerializer
+from more_itertools import chunked
 
 from azul import config
-from azul.time import RemainingLambdaContextTime, RemainingTime
+from azul.indexer import DocumentsById
+from azul.time import RemainingLambdaContextTime
+from azul.transformer import ElasticSearchDocument
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 for top_level_pkg in (__name__, 'azul'):
     logging.getLogger(top_level_pkg).setLevel(logging.DEBUG)
 
-app = Chalice(app_name=config.indexer_name)
+app = chalice.Chalice(app_name=config.indexer_name)
 app.debug = True
 app.log.setLevel(logging.DEBUG)  # please use module logger instead
 
@@ -37,9 +33,6 @@ app.log.setLevel(logging.DEBUG)  # please use module logger instead
 plugin = config.plugin()
 properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
                                     es_endpoint=config.es_endpoint)
-indexer = plugin.Indexer(properties)
-
-requests.adapters.DEFAULT_POOLSIZE = config.num_workers * config.num_workers
 
 
 @app.route('/version', methods=['GET'], cors=True)
@@ -69,11 +62,35 @@ def post_notification():
     log.info("Received notification %r", notification)
     params = app.current_request.query_params
     if params and params.get('sync', 'False').lower() == 'true':
+        indexer = plugin.Indexer(properties)
         indexer.index(notification)
     else:
-        queue().send_message(MessageBody=json.dumps(notification))
+        message = _make_message(action='add', notification=notification)
+        notify_queue = queue(config.notify_queue_name)
+        notify_queue.send_message(MessageBody=message)
         log.info("Queued notification %r", notification)
     return {"status": "done"}
+
+
+@app.route('/delete', methods=['POST'])
+def delete_notification():
+    """
+    Receive a deletion event and process it asynchronously
+    """
+    notification = app.current_request.json_body
+    log.info("Received deletion notification %r", notification)
+    message = _make_message(action='delete', notification=notification)
+    notify_queue = queue(config.notify_queue_name)
+    notify_queue.send_message(MessageBody=message)
+    log.info("Queued notification %r", notification)
+
+    return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
+
+
+def _make_message(action, notification):
+    if action not in ['add', 'delete']:
+        raise ValueError(action)
+    return json.dumps({'action': action, 'notification': notification})
 
 
 # Work around https://github.com/aws/chalice/issues/856
@@ -83,64 +100,145 @@ def new_handler(self, event, context):
     return old_handler(self, event, context)
 
 
-old_handler = chalice.app.ScheduledEventHandler.__call__
-chalice.app.ScheduledEventHandler.__call__ = new_handler
+old_handler = chalice.app.EventSourceHandler.__call__
+chalice.app.EventSourceHandler.__call__ = new_handler
 
 
-@app.schedule("rate(4 minutes)", name='worker')
-def index(event: CloudWatchEvent):
-    log.info(f'Starting worker threads')
-    remaining_time = RemainingLambdaContextTime(app.lambda_context)
-    with ThreadPoolExecutor(config.num_workers) as tpe:
-        futures = [tpe.submit(_index, i, remaining_time) for i in range(config.num_workers)]
-        for future in as_completed(futures):
-            e = future.exception()
-            if e:
-                log.error("Exception in worker thread", exc_info=e)
-    log.info(f'Shutting down')
+def queue(queue_name):
+    return boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
 
 
-def queue():
-    session = boto3.session.Session()  # See https://github.com/boto/boto3/issues/801
-    queue_name = "azul-notify-" + config.deployment_stage
-    queue = session.resource("sqs").get_queue_by_name(QueueName=queue_name)
-    return queue
-
-
-def _index(worker: int, remaining_time: RemainingTime) -> None:
-    _queue = queue()
-    # Min. time to wait after this lambda execution finishes before another attempt should be made to process a
-    # notification that failed to be processed in the current lambda execution. This is to make sure that 1) the next
-    # attempt is not made in the same lambda execution in case there is something wrong with the current execution
-    # and 2) to dissipate the worker's attention away from a potentially problematic notification.
-    backoff_time = 10
-    polling_time = 20  # SQS long-polling time, max. is 20
-    indexing_time = 60  # estimated time for indexing one bundle, if less time is left we won't attempt the indexing
-    shutdown_time = 5  # max. time it takes the lambda to shut down
-    while polling_time + shutdown_time + indexing_time < remaining_time.get():
-        visibility_timeout = remaining_time.get() + backoff_time
-        messages = _queue.receive_messages(MaxNumberOfMessages=1,
-                                           WaitTimeSeconds=polling_time,
-                                           AttributeNames=['All'],
-                                           MessageAttributeNames=['*'],
-                                           VisibilityTimeout=int(math.ceil(visibility_timeout)))
-        if messages and shutdown_time + indexing_time < remaining_time.get():
-            assert len(messages) == 1
-            message = messages[0]
-            attempts = int(message.attributes['ApproximateReceiveCount'])
-            new_visibility_timeout = remaining_time.get() + min(1000.0, backoff_time ** (attempts / 2))
-            if new_visibility_timeout > visibility_timeout:
-                message.change_visibility(VisibilityTimeout=int(new_visibility_timeout))
-            notification = json.loads(message.body)
-            log.info(f'Worker {worker} handling notification {notification}, attempt #{attempts} (approx).')
-            start = time.time()
-            try:
+@app.on_sqs_message(queue=config.notify_queue_name, batch_size=1)
+def index(event: chalice.app.SQSEvent):
+    for record in event:
+        message = json.loads(record.body)
+        attempts = record.to_dict()['attributes']['ApproximateReceiveCount']
+        log.info(f'Worker handling message {message}, attempt #{attempts} (approx).')
+        start = time.time()
+        try:
+            indexer = plugin.Indexer(properties, handle_documents)
+            action = message['action']
+            notification = message['notification']
+            if action == 'add':
                 indexer.index(notification)
-            except:
-                log.warning(f"Worker {worker} failed to handle notification {notification}.", exc_info=True)
-            else:
-                duration = time.time() - start
-                log.info(f'Worker {worker} successfully handled notification {notification} in {duration:.3f}s.')
-                message.delete()
-    else:
-        log.info(f"Exiting worker.")
+            if action == 'delete':
+                indexer.delete(notification)
+        except:
+            log.warning(f"Worker failed to handle message {message}.", exc_info=True)
+            raise
+        else:
+            duration = time.time() - start
+            log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
+
+
+def handle_documents(documents_by_id: DocumentsById) -> None:
+    log.info("Queueing %i document(s) for indexing.", len(documents_by_id))
+    json_serializer = JSONSerializer()  # Elasticsearch's serializer translates UUIDs
+    sqs = boto3.client('sqs')
+    token_queue = queue(config.token_queue_name)
+    document_queue = queue(config.document_queue_name)
+
+    def message(doc):
+        return dict(MessageBody=json_serializer.dumps(doc.to_json()),
+                    MessageGroupId=doc.document_id,
+                    MessageDeduplicationId=str(uuid.uuid4()))
+
+    for batch in chunked(documents_by_id.values(), document_batch_size):
+        value = len(batch)
+        try:
+            document_queue.send_messages(Entries=[dict(message(doc), Id=str(i)) for i, doc in enumerate(batch)])
+        except sqs.exceptions.BatchRequestTooLong:
+            log.info('Message batch was too big. Sending messages individually.', exc_info=True)
+            for doc in batch:
+                document_queue.send_message(**message(doc))
+                token_queue.send_message(MessageBody=json_serializer.dumps(dict(token=uuid.uuid4(), value=1)))
+        else:
+            # One might think that we'd want to avoid token debt by queueing tokens *before* documents. However,
+            # this is not a good idea: the queueing of documents is more likely to fail due to batch size constraints
+            # etc. The resulting surplus in tokens would cause those excess tokens to circulate indefinitely,
+            # eating up SQS and Lambda fees. Tokens aren't returned via visibility timeout (or raising an exception)
+            # but rather by requeueing new tokens of equivalent value.
+            token_queue.send_message(MessageBody=json_serializer.dumps(dict(token=uuid.uuid4(), value=value)))
+
+
+# The number of documents to be queued in a single SQS `send_messages`. Theoretically, larger batches are better but
+# SQS currently limits the batch size to 10.
+#
+document_batch_size = 10
+
+# The maximum number of tokens to be processed by a single Lambda invocation. This should be at least 2 to allow for
+# token reconciliation to occur (two smaller tokens being merged into one). It must be at most 10 because of a limit
+# imposed by SQS and Lambda. The higher this value, the more token reconcilation will occur at the expense of
+# increased token churn (unused token value being returned to the queue). One token can be at most
+# document_batch_size in value, and one Lambda invocation consumes at most document_batch_size in token value so
+# retrieving ten tokens may cause nine tokens to be returned.
+#
+token_batch_size = 2
+
+
+@app.on_sqs_message(queue=config.token_queue_name, batch_size=token_batch_size)
+def write(event: chalice.app.SQSEvent):
+    remaining_time = RemainingLambdaContextTime(app.lambda_context)
+    tokens = [json.loads(token.body) for token in event]
+    total = sum(token['value'] for token in tokens)
+    assert 0 < total <= document_batch_size * token_batch_size
+    document_queue = queue(config.document_queue_name)
+    token_queue = queue(config.token_queue_name)
+    messages = document_queue.receive_messages(WaitTimeSeconds=20,
+                                               AttributeNames=['ApproximateReceiveCount', 'MessageGroupId'],
+                                               VisibilityTimeout=round(remaining_time.get()) + 10,
+                                               MaxNumberOfMessages=min(document_batch_size, total))
+    log.info('Received %i messages for %i token(s) with a total value of %i',
+             len(messages), len(tokens), total)
+    assert len(messages) <= document_batch_size
+
+    if messages:
+        _log_document_grouping(messages)
+        documents = []
+        for message in messages:
+            document = ElasticSearchDocument.from_json(json.loads(message.body))
+            attempts = int(message.attributes['ApproximateReceiveCount'])
+            assert len(document.bundles) == 1
+            bundle = document.bundles[0]
+            log.info('Attempt %i of writing document %s/%s from bundle %s, version %s',
+                     attempts, document.entity_type, document.document_id, bundle.uuid, bundle.version)
+            documents.append(document)
+
+        indexer = plugin.Indexer(properties)
+        documents_by_id = indexer.collate(documents)
+        # Merge documents into index, without retries (let SQS take care of that)
+        indexer.write(documents_by_id, conflict_retry_limit=0, error_retry_limit=0)
+
+        document_queue.delete_messages(Entries=[dict(Id=str(i), ReceiptHandle=message.receipt_handle)
+                                                for i, message in enumerate(messages)])
+        total -= len(messages)
+
+    assert total >= 0
+
+    if total:
+        tokens = [dict(token=str(uuid.uuid4()), value=value)
+                  for value in _dispense_tokens(document_batch_size, total)]
+        log.info('Returning %i token(s) for a total value of %i', len(tokens), total)
+        token_queue.send_messages(Entries=[dict(Id=str(i), MessageBody=json.dumps(token))
+                                           for i, token in enumerate(tokens)])
+
+
+def _log_document_grouping(messages):
+    message_group_sizes = Counter()
+    for message in messages:
+        message_group_sizes[message.attributes['MessageGroupId']] += 1
+    log.info('Document grouping for received messages: %r', dict(message_group_sizes))
+
+
+def _dispense_tokens(size, total):
+    """
+    >>> _dispense_tokens(3, 0)
+    []
+    >>> _dispense_tokens(3, 1)
+    [1]
+    >>> _dispense_tokens(3, 3)
+    [3]
+    >>> _dispense_tokens(3, 4)
+    [3, 1]
+    """
+    return [min(i, size) for i in range(total, 0, -size)]

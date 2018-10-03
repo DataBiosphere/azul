@@ -1,0 +1,30 @@
+{
+  "organ": {
+    "terms": [
+      {
+        "term": "silver",
+        "count": 11
+      },
+      {
+        "term": "teal",
+        "count": 10
+      }
+    ],
+    "total": 21,
+    "type": "terms"
+  },
+  "disease": {
+    "terms": [
+      {
+        "term": "silver",
+        "count": 9
+      },
+      {
+        "term": null,
+        "count": 12
+      }
+    ],
+    "total": 21,
+    "type": "terms"
+  }
+}
