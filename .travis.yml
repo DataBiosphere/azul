@@ -20,6 +20,7 @@ install:
   - pip install coveralls
 
 script:
+  - export BOTO_CONFIG=/dev/null
   - make test
 
 after_success:

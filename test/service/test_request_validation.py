@@ -1,12 +1,17 @@
-import os
-import sys
 import csv
-import logging
-from unittest import mock
-import requests
 import json
-from azul import config as config
+import logging
+import os
+import requests
+import responses
+import sys
+from unittest import mock
+
+from moto import mock_s3, mock_sts
+
+from azul import config
 from azul.service import service_config
+from azul.service.responseobjects.storage_service import StorageService
 from service import WebServiceTestCase
 
 log = logging.getLogger(__name__)
@@ -182,7 +187,16 @@ class FacetNameValidationTest(WebServiceTestCase):
             expected_field_order = [entity_field.strip() for entity_field in order_settings_file.readlines()]
             self.assertEqual(expected_field_order, actual_field_order, "Field order is not configured correctly")
 
+    @mock_s3
+    @mock_sts
     def test_manifest(self):
+        logging.getLogger('test_request_validation').warning('test_manifest is invoked')
+        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
+        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        responses.add_passthru('http://')
+        storage_service = StorageService()
+        storage_service.create_bucket()
+
         url = self.base_url + 'repository/files/export?filters={"file":{}}'
         response = requests.get(url)
         self.assertEqual(200, response.status_code, 'Unable to download manifest')

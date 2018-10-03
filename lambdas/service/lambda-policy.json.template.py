@@ -32,6 +32,14 @@ emit({
                 "es:DescribeElasticsearchDomain"
             ],
             "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{config.es_domain}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+            ],
+            "Resource": f"arn:aws:s3:::{config.s3_bucket}/*"
         }
     ]
 })
