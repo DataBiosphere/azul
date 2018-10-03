@@ -205,7 +205,7 @@ def write(event: chalice.app.SQSEvent):
             documents.append(document)
 
         indexer = plugin.Indexer(properties)
-        documents_by_id = indexer.consolidate(documents)
+        documents_by_id = indexer.collate(documents)
         # Merge documents into index, without retries (let SQS take care of that)
         indexer.write(documents_by_id, conflict_retry_limit=0, error_retry_limit=0)
 

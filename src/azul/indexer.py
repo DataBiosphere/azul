@@ -62,9 +62,9 @@ class BaseIndexer(ABC):
 
         self.document_handler(indexable_documents)
 
-    def consolidate(self, documents: Sequence[ElasticSearchDocument]) -> DocumentsById:
+    def collate(self, documents: Sequence[ElasticSearchDocument]) -> DocumentsById:
         """
-        Group the given documents by ID and combine the documents within each group.
+        Group the given documents by ID and consolidate the documents within each group into a single document.
         """
         groups_by_id: MutableMapping[str, List[ElasticSearchDocument]] = defaultdict(list)
         for document in documents:
