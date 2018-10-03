@@ -1,4 +1,5 @@
 import ast
+import json
 import logging.config
 import os
 
@@ -488,7 +489,7 @@ def get_manifest():
     logger.debug("Filters string is: {}".format(filters))
     try:
         logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
+        filters = json.loads(filters)
         filters = {"file": {}} if filters == {} else filters
     except Exception as e:
         logger.error("Malformed filters parameter: {}".format(e))

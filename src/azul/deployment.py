@@ -30,6 +30,10 @@ class AWS:
         return boto3.client('lambda')
 
     @memoized_property
+    def s3(self):
+        return boto3.client('s3')
+
+    @memoized_property
     def apigateway(self):
         return boto3.client('apigateway')
 
