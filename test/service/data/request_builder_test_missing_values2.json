@@ -1,0 +1,59 @@
+{
+  "post_filter": {
+    "bool": {
+      "must": [
+        {
+          "constant_score": {
+            "filter": {
+              "bool": {
+                "must_not": [
+                  {
+                    "exists": {
+                      "field": "term1.keyword"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "constant_score": {
+            "filter": {
+              "terms": {
+                "term2.keyword": [
+                  "test"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "constant_score": {
+            "filter": {
+              "bool": {
+                "must_not": [
+                  {
+                    "exists": {
+                      "field": "term3.keyword"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "term": {
+            "bundles.contents.deleted": true
+          }
+        }
+      ]
+    }
+  },
+  "query": {
+    "match_all": {}
+  }
+}
