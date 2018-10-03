@@ -577,13 +577,7 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         # Create an ElasticSearch request
         filters = filters['file']
-
-        es_search = self.create_request(
-            filters,
-            self.es_client,
-            request_config,
-            post_filter=False)
-
+        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
 
         return manifest.return_response()
