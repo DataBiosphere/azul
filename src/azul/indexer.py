@@ -170,18 +170,20 @@ class BaseIndexer(ABC):
             raise RuntimeError('Failed to index documents. Failures: %i, conflicts: %i.' %
                                (len(errored_documents), len(conflict_documents)))
 
-    def _merge_existing_docs(self, documents_by_id: DocumentsById):
+    def _merge_existing_docs(self, documents_by_id: DocumentsById) -> DocumentsById:
         mget_body = dict(docs=[dict(_index=doc.document_index,
                                     _type=doc.document_type,
                                     _id=doc.document_id) for doc in documents_by_id.values()])
         response = ESClientFactory.get().mget(body=mget_body)
         cur_docs = [doc for doc in response["docs"] if doc['found']]
         if cur_docs:
-            merged_documents_by_id = {}
             log.info("Merging %i existing document(s).", len(cur_docs))
+            # Make a mutable copy …
+            merged_documents_by_id = dict(documents_by_id)
+            # … and update with documents already in index
             for cur_doc in cur_docs:
                 cur_doc = ElasticSearchDocument.from_index(cur_doc)
-                new_doc = documents_by_id[cur_doc.document_id]
+                new_doc = merged_documents_by_id[cur_doc.document_id]
                 cur_doc.update_with(new_doc)
                 merged_documents_by_id[cur_doc.document_id] = cur_doc
             return merged_documents_by_id
