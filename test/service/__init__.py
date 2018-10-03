@@ -1,9 +1,11 @@
 from app_test_case import LocalAppTestCase
 from es_test_case import ElasticsearchTestCase
 from service.data_generator.fake_data_utils import ElasticsearchFakeDataLoader
+import os
 
 
 class WebServiceTestCase(ElasticsearchTestCase, LocalAppTestCase):
+    data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 
     @classmethod
     def lambda_name(cls) -> str:
