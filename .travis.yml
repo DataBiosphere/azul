@@ -15,8 +15,12 @@ before_install:
   - source environment
 
 install:
+  - pip install -U setuptools>=40.1.0
   - pip install -r requirements.dev.txt
+  - pip install coveralls
 
 script:
   - make test
-  
+
+after_success:
+  - coveralls

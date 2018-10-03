@@ -1,22 +1,24 @@
 import functools
 import importlib
 import os
+import re
 import time
 
 from typing import Tuple, Mapping
 
-from hca import HCAConfig
 from hca.dss import DSSClient
 from urllib3 import Timeout
 
 from azul.deployment import aws
 
 
+# FIXME: This class collides conceptually with the plugin config classes derived from BaseIndexerConfig.
+
 class Config:
     """
     See `environment` for documentation of these settings.
     """
-    # FIXME: This collides with the plugin config classes derived from BaseIndexerConfig, they should be consolidated
+
     @property
     def es_endpoint(self) -> Tuple[str, int]:
         try:
@@ -32,8 +34,12 @@ class Config:
         return os.environ['AZUL_HOME']
 
     @property
-    def es_domain(self):
+    def es_domain(self) -> str:
         return os.environ['AZUL_ES_DOMAIN']
+
+    @property
+    def share_es_domain(self) -> bool:
+        return 0 != int(os.environ['AZUL_SHARE_ES_DOMAIN'])
 
     @property
     def es_timeout(self) -> int:
@@ -44,16 +50,16 @@ class Config:
         return os.environ['AZUL_DSS_ENDPOINT']
 
     @property
-    def num_workers(self) -> int:
-        return int(os.environ['AZUL_INDEX_WORKERS'])
-
-    @property
     def num_dss_workers(self) -> int:
         return int(os.environ['AZUL_DSS_WORKERS'])
 
-    def resource_name(self, lambda_name):
-        prefix = os.environ['AZUL_RESOURCE_PREFIX']
-        return f"{prefix}{lambda_name}-{self.deployment_stage}"
+    @property
+    def _resource_prefix(self):
+        return self._term_from_env('AZUL_RESOURCE_PREFIX')
+
+    def qualified_resource_name(self, resource_name, suffix=''):
+        self._validate_term(resource_name)
+        return f"{self._resource_prefix}-{resource_name}-{self.deployment_stage}{suffix}"
 
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].format(lambda_name=lambda_name)
@@ -63,15 +69,15 @@ class Config:
 
     @property
     def indexer_name(self) -> str:
-        return self.resource_name('indexer')
+        return self.qualified_resource_name('indexer')
 
     @property
     def service_name(self) -> str:
-        return self.resource_name('service')
+        return self.qualified_resource_name('service')
 
     @property
     def deployment_stage(self) -> str:
-        return os.environ['AZUL_DEPLOYMENT_STAGE']
+        return self._term_from_env('AZUL_DEPLOYMENT_STAGE')
 
     @property
     def terraform_backend_bucket_template(self) -> str:
@@ -90,11 +96,18 @@ class Config:
         return int(os.environ['AZUL_ES_VOLUME_SIZE'])
 
     @property
-    def es_index(self) -> str:
-        return os.environ['AZUL_ES_INDEX']
+    def _index_prefix(self) -> str:
+        return self._term_from_env('AZUL_INDEX_PREFIX')
 
     def es_index_name(self, entity_type) -> str:
-        return os.environ['AZUL_ES_INDEX_NAME_TEMPLATE'].format(entity_type=entity_type)
+        self._validate_term(entity_type)
+        return f"{self._index_prefix}_{entity_type}_{self.deployment_stage}"
+
+    def entity_type_for_es_index(self, index_name) -> str:
+        prefix, entity_type, deployment_stage = index_name.split('_')
+        assert prefix == self._index_prefix
+        assert deployment_stage == self.deployment_stage
+        return entity_type
 
     @property
     def domain_name(self) -> str:
@@ -121,8 +134,21 @@ class Config:
             'AZUL_ES_ENDPOINT': f"{host}:{port}",
             'azul_git_commit': repo.head.object.hexsha,
             'azul_git_dirty': str(repo.is_dirty()),
-            'HOME': '/tmp'
+            'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
+
+    lambda_timeout = 300
+
+    term_re = re.compile("[a-z][a-z0-9]{2,29}")
+
+    def _term_from_env(self, env_var_name: str) -> str:
+        value = os.environ[env_var_name]
+        self._validate_term(value, name=env_var_name)
+        return value
+
+    def _validate_term(self, term: str, name: str = 'Term'):
+        require(self.term_re.fullmatch(term) is not None,
+                f"{name} is either too short, too long or contains invalid characters: '{term}'")
 
     def google_service_account(self, lambda_name):
         return f"dcp/azul/{self.deployment_stage}/{lambda_name}/google_service_account"
@@ -146,12 +172,26 @@ class Config:
         return 0 != int(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
 
     def dss_client(self, dss_endpoint: str = None) -> DSSClient:
-        # Work around https://github.com/HumanCellAtlas/dcp-cli/issues/142
-        hca_config = HCAConfig("hca")
-        hca_config['DSSClient'].swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
-        client = DSSClient(config=hca_config)
+        swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
+        client = DSSClient(swagger_url=swagger_url)
         client.timeout_policy = Timeout(connect=10, read=40)
         return client
+
+    @property
+    def indexer_concurrency(self):
+        return int(os.environ['AZUL_INDEXER_CONCURRENCY'])
+
+    @property
+    def notify_queue_name(self):
+        return self.qualified_resource_name('notify')
+
+    @property
+    def token_queue_name(self):
+        return config.qualified_resource_name('documents')
+
+    @property
+    def document_queue_name(self):
+        return config.qualified_resource_name('documents', suffix='.fifo')
 
 
 config = Config()
@@ -192,16 +232,21 @@ def reject(condition: bool, *args, exception: type = RequirementError):
         raise exception(*args)
 
 
-# Taken from:
+# Taken from
 # https://github.com/HumanCellAtlas/data-store/blob/90ffc8fccd2591dc21dab48ccfbba6e9ac29a063/tests/__init__.py
-def eventually(timeout: float, interval: float, errors: set={AssertionError}):
+
+# noinspection PyUnusedLocal
+# (see below)
+def eventually(timeout: float, interval: float, errors: set = frozenset((AssertionError,))):
     """
-    @eventually runs a test until all assertions are satisfied or a timeout is reached.
+    Runs a test until all assertions are satisfied or a timeout is reached.
+
     :param timeout: time until the test fails
     :param interval: time between attempts of the test
     :param errors: the exceptions to catch and retry on
     :return: the result of the function or a raised assertion error
     """
+
     def decorate(func):
         @functools.wraps(func)
         def call(*args, **kwargs):

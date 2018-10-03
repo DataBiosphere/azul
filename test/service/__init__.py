@@ -21,4 +21,3 @@ class WebServiceTestCase(ElasticsearchTestCase, LocalAppTestCase):
     def tearDownClass(cls):
         cls._data_loader.clean_up()
         super().tearDownClass()
-
