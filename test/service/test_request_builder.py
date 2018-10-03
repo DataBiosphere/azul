@@ -15,7 +15,6 @@ class TestRequestBuilder(WebServiceTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
         cls.request_config_filepath = os.path.join(cls.data_directory, 'request_builder_test_config.json')
 
     def _load_json(self, name):
