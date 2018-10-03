@@ -75,6 +75,10 @@ class TestDCCTransformer(TestCase):
         expected_index = 'fb_index'
         expected_results = [
             {
+                "index_field": "access",
+                "value": ""
+            },
+            {
                 "index_field": "analysis_type",
                 "value": ""
             },
