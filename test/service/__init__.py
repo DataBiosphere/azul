@@ -3,10 +3,9 @@ import os
 from app_test_case import LocalAppTestCase
 from es_test_case import ElasticsearchTestCase
 from service.data_generator.fake_data_utils import ElasticsearchFakeDataLoader
-from s3_test_case_mixin import S3TestCaseMixin
 
 
-class WebServiceTestCase(ElasticsearchTestCase, LocalAppTestCase, S3TestCaseMixin):
+class WebServiceTestCase(ElasticsearchTestCase, LocalAppTestCase):
     data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 
     @classmethod
@@ -19,12 +18,10 @@ class WebServiceTestCase(ElasticsearchTestCase, LocalAppTestCase, S3TestCaseMixi
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.start_s3_server()
         cls._data_loader = ElasticsearchFakeDataLoader()
         cls._data_loader.load_data(seed=cls.seed)
 
     @classmethod
     def tearDownClass(cls):
         cls._data_loader.clean_up()
-        cls.stop_s3_server()
         super().tearDownClass()

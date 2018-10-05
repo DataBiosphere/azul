@@ -9,6 +9,9 @@ class StorageService:
         self.__bucket_name = bucket_name or config.s3_bucket
         self.__s3 = s3 or aws.s3
 
+    def set_client(self, client):
+        self.__s3 = client
+
     def get(self, object_key: str):
         try:
             return self.__s3.get_object(Bucket=self.__bucket_name, Key=object_key)['Body'].read().decode()
