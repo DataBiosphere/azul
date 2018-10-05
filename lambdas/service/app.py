@@ -7,6 +7,7 @@ from chalice import Chalice, BadRequestError, NotFoundError
 
 from azul import config
 from azul.service import service_config
+from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   IndexNotFoundError,
                                                                   ElasticTransformDump as EsTd)
@@ -22,6 +23,8 @@ for top_level_pkg in (__name__, 'azul'):
 app = Chalice(app_name=config.service_name)
 app.debug = True
 app.log.setLevel(logging.DEBUG)  # please use module logger instead
+
+storage_service = StorageService()
 
 
 # TODO: Write the docstrings so they can support swagger.
@@ -139,7 +142,7 @@ def get_data(file_id=None):
             filters['file']['fileId'] = {"is": [file_id]}
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd()
+        es_td = EsTd(storage_service=storage_service)
         # Get the response back
         logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
@@ -220,7 +223,7 @@ def get_specimen_data(specimen_id=None):
         filters['file']['fileId'] = {"is": [specimen_id]}
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
+    es_td = EsTd(storage_service=storage_service)
     # Get the response back
     logger.info("Creating the API response")
 
@@ -305,7 +308,7 @@ def get_project_data(project_id=None):
             filters['file']['projectId'] = {"is": [project_id]}
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd()
+        es_td = EsTd(storage_service=storage_service)
         # Get the response back
         logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
@@ -357,7 +360,7 @@ def get_summary(entity_type=None):
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
+    es_td = EsTd(storage_service=storage_service)
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_summary(filters=filters, entity_type=entity_type)
@@ -443,7 +446,7 @@ def get_search():
         field = 'donor'
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
+    es_td = EsTd(storage_service=storage_service)
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_autocomplete_request(pagination,
@@ -496,7 +499,7 @@ def get_manifest():
         return "Malformed filters parameter"
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
+    es_td = EsTd(storage_service=storage_service)
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_manifest(filters=filters)

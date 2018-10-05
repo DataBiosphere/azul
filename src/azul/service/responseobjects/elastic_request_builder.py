@@ -45,14 +45,14 @@ class ElasticTransformDump(object):
         to ElasticSearch
     """
 
-    def __init__(self):
+    def __init__(self, storage_service: StorageService = None):
         """
         The constructor simply initializes the ElasticSearch client object
         to be used for making requests.
         """
         self.logger = logging.getLogger('dashboardService.elastic_request_builder.ElasticTransformDump')
         self.es_client = ESClientFactory.get()
-        self.storage_service = StorageService()
+        self.storage_service = storage_service or StorageService()
 
     @staticmethod
     def translate_filters(filters, field_mapping):

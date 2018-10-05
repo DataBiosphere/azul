@@ -12,6 +12,8 @@ from chalice.local import LocalDevServer
 # noinspection PyPackageRequirements
 from chalice.config import Config as ChaliceConfig
 from azul import config
+from azul.deployment import aws
+from s3_test_case_mixin import S3TestCaseMixin
 
 
 log = logging.getLogger(__name__)
@@ -34,7 +36,7 @@ class ChaliceServerThread(Thread):
         return self.server_wrapper.server.server_address
 
 
-class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
+class LocalAppTestCase(unittest.TestCase, S3TestCaseMixin, metaclass=ABCMeta):
     """
     A mixin for test cases against a locally running instance of a AWS Lambda Function aka Chalice application. By
     default, the local instance will use the remote AWS Elasticsearch domain configured via AZUL_ES_DOMAIN or
@@ -62,6 +64,7 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
         return f"http://{host}:{port}/"
 
     _path_to_app = None
+    _default_s3_client = None
 
     @classmethod
     def setUpClass(cls):
@@ -98,7 +101,20 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
             else:
                 break
 
+        if self.lambda_name() == 'service':
+            # noinspection PyUnresolvedReferences, PyPackageRequirements
+            from app import storage_service
+            self.start_s3_server()
+            self.s3_client.create_bucket(Bucket=config.s3_bucket)
+            storage_service.set_client(self.s3_client)
+
     def tearDown(self):
+        if self.lambda_name() == 'service':
+            # noinspection PyUnresolvedReferences, PyPackageRequirements
+            from app import storage_service
+            storage_service.set_client(aws.s3)
+            self.stop_s3_server()
+
         log.debug("Tearing Down Data")
         self.server_thread.kill_thread()
         self.server_thread.join(timeout=10)
