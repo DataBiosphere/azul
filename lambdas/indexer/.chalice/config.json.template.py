@@ -14,5 +14,14 @@ emit({
     "environment_variables": config.lambda_env,
     "lambda_timeout": config.lambda_timeout,
     "lambda_memory_size": 256,
-    "reserved_concurrency": config.indexer_concurrency
+    "reserved_concurrency": config.indexer_concurrency,
+    "stages": {
+        config.deployment_stage: {
+            "lambda_functions": {
+                "write": {
+                    "lambda_memory_size": 512  # Needed for preview freak bundles
+                }
+            }
+        }
+    }
 })
