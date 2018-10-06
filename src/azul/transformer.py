@@ -132,7 +132,8 @@ class ElasticSearchDocument:
         assert all(self._is_compatible_with(other) for other in others)
         bundles = {}
         for bundle in itertools.chain(self.bundles, *(other.bundles for other in others)):
-            assert bundles.setdefault(bundle.uuid, bundle) is bundle, f"Duplicate bundle UUID: {bundle.uuid}"
+            assert bundles.setdefault((bundle.uuid, bundle.version), bundle) == bundle, \
+                f"Conflicting contributions for bundle {bundle.uuid}, version {bundle.version}"
         self.bundles = list(bundles.values())
 
     def to_json(self):
