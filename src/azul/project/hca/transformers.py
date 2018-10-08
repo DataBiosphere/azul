@@ -146,7 +146,6 @@ class BiomaterialVisitor(api.EntityVisitor):
 
     def visit(self, entity: api.Entity) -> None:
         if isinstance(entity, api.Biomaterial):
-            # As more facets are required by the browser, handle each biomaterial as appropriate
             self.biomaterial_lineage.append(
                 {
                     'document_id': entity.document_id,
@@ -197,10 +196,8 @@ class FileTransformer(Transformer):
                             metadata_files=metadata_files)
         for file in bundle.files.values():
             visitor = TransformerVisitor()
-            # Visit the relatives of file
             file.accept(visitor)
             file.ancestors(visitor)
-            # Assign the contents to the ES doc
             contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
                             files=[_file_dict(file)],
                             processes=list(visitor.processes.values()),
@@ -226,10 +223,8 @@ class SpecimenTransformer(Transformer):
                             metadata_files=metadata_files)
         for specimen in bundle.specimens:
             visitor = TransformerVisitor()
-            # Visit the relatives of file
             specimen.accept(visitor)
             specimen.ancestors(visitor)
-            # Assign the contents to the ES doc
             contents = dict(specimens=[_specimen_dict(specimen)],
                             files=list(visitor.files.values()),
                             processes=list(visitor.processes.values()),
@@ -249,24 +244,19 @@ class ProjectTransformer(Transformer):
                          manifest: List[JSON],
                          metadata_files: Mapping[str, JSON]
                          ) -> Sequence[ElasticSearchDocument]:
-        # Create a bundle object.
         bundle = api.Bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files)
         bundle_uuid = str(bundle.uuid)
         simplified_project = _project_dict(bundle)
-        # Gather information on specimens and files in the bundle with a separate visitor
         data_visitor = TransformerVisitor()
         for specimen in bundle.specimens:
-            # Visit the relatives
-            specimen.accept(data_visitor)  # Visit descendants
+            specimen.accept(data_visitor)
             specimen.ancestors(data_visitor)
         for file in bundle.files.values():
-            # Visit the relatives
-            file.accept(data_visitor)  # Visit descendants
+            file.accept(data_visitor)
             file.ancestors(data_visitor)
-        # Create ElasticSearch documents
         for project in bundle.projects.values():
             contents = dict(specimens=[_specimen_dict(s) for s in data_visitor.specimens.values()],
                             files=list(data_visitor.files.values()),
