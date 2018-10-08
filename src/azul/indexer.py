@@ -82,9 +82,9 @@ class BaseIndexer(ABC):
         es_client = ESClientFactory.get()
 
         while documents_by_id:
-            log.info("Indexing %i document(s).", len(documents_by_id))
-
+            num_documents = len(documents_by_id)
             documents_by_id = self._merge_existing_docs(documents_by_id)
+            log.info("Writing %i modified document(s) out of a total of %i.", len(documents_by_id), num_documents)
 
             retry_ids = set()
 
@@ -184,8 +184,12 @@ class BaseIndexer(ABC):
             for cur_doc in cur_docs:
                 cur_doc = ElasticSearchDocument.from_index(cur_doc)
                 new_doc = merged_documents_by_id[cur_doc.document_id]
-                cur_doc.update_with(new_doc)
-                merged_documents_by_id[cur_doc.document_id] = cur_doc
+                if cur_doc.update_with(new_doc):
+                    merged_documents_by_id[cur_doc.document_id] = cur_doc
+                else:
+                    log.debug('Successfully verified document %s/%s with contributions from %i bundle(s).',
+                              cur_doc.entity_type, cur_doc.document_id, len(cur_doc.bundles))
+                    merged_documents_by_id.pop(cur_doc.document_id)
             return merged_documents_by_id
         else:
             log.info("No existing documents to merge with.")
