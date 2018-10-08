@@ -185,10 +185,6 @@ class BiomaterialVisitor(api.EntityVisitor):
 
 
 class FileTransformer(Transformer):
-    @property
-    def entity_name(self):
-        return 'files'
-
     def create_documents(self,
                          uuid: str,
                          version: str,
@@ -209,7 +205,7 @@ class FileTransformer(Transformer):
                             files=[_file_dict(file)],
                             processes=list(visitor.processes.values()),
                             project=_project_dict(bundle))
-            es_document = ElasticSearchDocument(entity_type=self.entity_name,
+            es_document = ElasticSearchDocument(entity_type='files',
                                                 entity_id=str(file.document_id),
                                                 bundles=[Bundle(uuid=str(bundle.uuid),
                                                                 version=bundle.version,
@@ -218,10 +214,6 @@ class FileTransformer(Transformer):
 
 
 class SpecimenTransformer(Transformer):
-    @property
-    def entity_name(self):
-        return 'specimens'
-
     def create_documents(self,
                          uuid: str,
                          version: str,
@@ -242,7 +234,7 @@ class SpecimenTransformer(Transformer):
                             files=list(visitor.files.values()),
                             processes=list(visitor.processes.values()),
                             project=_project_dict(bundle))
-            es_document = ElasticSearchDocument(entity_type=self.entity_name,
+            es_document = ElasticSearchDocument(entity_type='specimens',
                                                 entity_id=str(specimen.document_id),
                                                 bundles=[Bundle(uuid=str(bundle.uuid),
                                                                 version=bundle.version,
@@ -251,10 +243,6 @@ class SpecimenTransformer(Transformer):
 
 
 class ProjectTransformer(Transformer):
-    @property
-    def entity_name(self):
-        return 'projects'
-
     def create_documents(self,
                          uuid: str,
                          version: str,
@@ -284,7 +272,7 @@ class ProjectTransformer(Transformer):
                             files=list(data_visitor.files.values()),
                             processes=list(data_visitor.processes.values()),
                             project=simplified_project)
-            yield ElasticSearchDocument(entity_type=self.entity_name,
+            yield ElasticSearchDocument(entity_type='projects',
                                         entity_id=str(project.document_id),
                                         bundles=[Bundle(uuid=bundle_uuid,
                                                         version=bundle.version,
