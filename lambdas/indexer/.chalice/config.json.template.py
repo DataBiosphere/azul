@@ -20,6 +20,9 @@ emit({
             "lambda_functions": {
                 "write": {
                     "lambda_memory_size": 512  # Needed for preview freak bundles
+                },
+                "nudge": {
+                    "lambda_memory_size": 128  # Doesn't do much so it can be small
                 }
             }
         }
