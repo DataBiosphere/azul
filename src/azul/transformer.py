@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 import itertools
-from itertools import filterfalse, tee
 import logging
-import re
 from typing import List, Mapping, Sequence, Iterable, Tuple
 
 from dataclasses import dataclass, field, asdict
@@ -193,31 +191,6 @@ class ElasticSearchDocument:
 
 
 class Transformer(ABC):
-
-    def __init__(self):
-        super().__init__()
-
-    @property
-    def entity_name(self) -> str:
-        return ""
-
-    @staticmethod
-    def partition(predicate, iterable):
-        """
-        Use a predicate to partition entries into false entries and
-        true entries
-        """
-        t1, t2 = tee(iterable)
-        return filterfalse(predicate, t1), filter(predicate, t2)
-
-    @classmethod
-    def get_version(cls, metadata_json: dict) -> str:
-        schema_url = metadata_json["describedBy"]
-        version_match = re.search(r'\d\.\d\.\d', schema_url)
-        version = version_match.group()
-        simple_version = version.rsplit(".", 1)
-        simple_version = simple_version[0].replace('.', '_')
-        return simple_version
 
     @abstractmethod
     def create_documents(self,
