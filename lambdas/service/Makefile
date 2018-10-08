@@ -1,14 +1,10 @@
 include ../../common.mk
 
-templates = .chalice/config.json .chalice/deployed/$(AZUL_DEPLOYMENT_STAGE).json lambda-policy.json
-
-.chalice/deployed/$(AZUL_DEPLOYMENT_STAGE).json: .chalice/deployed.json.template.py .FORCE
-	python $< $@
+templates = .chalice/config.json lambda-policy.json
 
 all: deploy
 
 state: $(templates)
-	test -e .chalice/deployed.json && rm .chalice/deployed.json || true
 	python $(AZUL_HOME)/scripts/manage_chalice_deployed.py service download
 
 deploy: state
