@@ -227,7 +227,7 @@ class ManifestResponse(AbstractResponse):
 
     def return_response(self):
         object_content = self._construct_tsv_content().encode()
-        object_key = self.storage_service.put(f'downloadable/{uuid4()}.tsv', object_content, content_type='text/tab-separated-values')
+        object_key = self.storage_service.put(f'manifests/{uuid4()}.tsv', object_content, content_type='text/tab-separated-values')
         presigned_url = self.storage_service.get_presigned_url(object_key)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
@@ -240,7 +240,7 @@ class ManifestResponse(AbstractResponse):
         :param raw_response: The raw response from ElasticSearch
         :param mapping: The mapping between the columns to values within ES
         :param manifest_entries: The columns that will be present in the tsv
-        :param storage_service: The storage service used to store intermediate downloadable content
+        :param storage_service: The storage service used to store temporary downloadable content
         """
         self.es_search = es_search
         self.manifest_entries = OrderedDict(manifest_entries)

@@ -12,9 +12,9 @@ emit({
                     "bucket": config.s3_bucket,
                     "acl": "private",
                     "lifecycle_rule": {
-                        "id": "downloadable",
+                        "id": "manifests",
                         "enabled": True,
-                        "prefix": "downloadable/",
+                        "prefix": "manifests/",
                         "expiration": {
                             "days": 1
                         }
