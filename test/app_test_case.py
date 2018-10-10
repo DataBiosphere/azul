@@ -12,9 +12,6 @@ from chalice.local import LocalDevServer
 # noinspection PyPackageRequirements
 from chalice.config import Config as ChaliceConfig
 from azul import config
-from azul.deployment import aws
-from s3_test_case_mixin import S3TestCaseMixin
-
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +61,6 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
         return f"http://{host}:{port}/"
 
     _path_to_app = None
-    _default_s3_client = None
 
     @classmethod
     def setUpClass(cls):
@@ -75,20 +71,8 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
         from app import app
         cls.app = app
 
-        # noinspection PyUnresolvedReferences, PyPackageRequirements
-        from app import storage_service
-        S3TestCaseMixin.start_s3_server()
-        S3TestCaseMixin.s3_client().create_bucket(Bucket=config.s3_bucket)
-        cls._default_s3_client = storage_service.client
-        storage_service.set_client(S3TestCaseMixin.s3_client())
-
     @classmethod
     def tearDownClass(cls):
-        # noinspection PyUnresolvedReferences, PyPackageRequirements
-        from app import storage_service
-        storage_service.set_client(cls._default_s3_client)
-        S3TestCaseMixin.stop_s3_server()
-
         sys.path.remove(cls._path_to_app)
         super().tearDownClass()
 

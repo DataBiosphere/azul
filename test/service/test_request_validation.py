@@ -8,7 +8,7 @@ import json
 from azul import config as config
 from azul.service import service_config
 from service import WebServiceTestCase
-from s3_test_case_mixin import S3TestCaseMixin
+from s3_test_case_mixin import S3TestCaseHelper
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def setUpModule():
     log.addHandler(stream_handler)
 
 
-class FacetNameValidationTest(WebServiceTestCase, S3TestCaseMixin):
+class FacetNameValidationTest(WebServiceTestCase, S3TestCaseHelper):
     filter_facet_message = {"Code": "BadRequestError",
                             "Message": "BadRequestError: Unable to filter by undefined facet bad-facet."}
     sort_facet_message = {"Code": "BadRequestError",

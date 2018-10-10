@@ -4,10 +4,9 @@ from unittest.mock import patch
 
 import requests
 
-from azul.deployment import aws
 from azul.service.responseobjects.storage_service import StorageService, GetObjectError
 
-from s3_test_case_mixin import S3TestCaseMixin
+from s3_test_case_mixin import S3TestCaseHelper
 
 
 class StorageServiceTest(TestCase):
@@ -16,21 +15,21 @@ class StorageServiceTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        S3TestCaseMixin.start_s3_server()
+        S3TestCaseHelper.start_s3_server()
 
     @classmethod
     def tearDownClass(cls):
-        S3TestCaseMixin.stop_s3_server()
+        S3TestCaseHelper.stop_s3_server()
 
     def setUp(self):
-        S3TestCaseMixin.s3_create_bucket('samples')
+        S3TestCaseHelper.s3_create_bucket('samples')
 
     def tearDown(self):
-        S3TestCaseMixin.s3_remove_bucket('samples')
+        S3TestCaseHelper.s3_remove_bucket('samples')
 
     @patch('boto3.client')
     def test_simple_get_put_and_delete_with_client_override(self, client):
-        client.return_value = S3TestCaseMixin.s3_client()
+        client.return_value = S3TestCaseHelper.s3_client()
 
         sample_key = 'foo-simple'
         sample_content = 'bar'
@@ -53,7 +52,7 @@ class StorageServiceTest(TestCase):
 
     @patch('boto3.client')
     def test_delete_with_non_existing_key_raises_no_error(self, client):
-        client.return_value = S3TestCaseMixin.s3_client()
+        client.return_value = S3TestCaseHelper.s3_client()
 
         sample_key = 'foo-nothing'
 
@@ -64,7 +63,7 @@ class StorageServiceTest(TestCase):
 
     @patch('boto3.client')
     def test_presigned_url(self, client):
-        client.return_value = S3TestCaseMixin.s3_client()
+        client.return_value = S3TestCaseHelper.s3_client()
 
         sample_key = 'foo-presigned-url'
         sample_content = json.dumps({"a": 1})

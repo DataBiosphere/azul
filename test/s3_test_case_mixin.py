@@ -9,7 +9,7 @@ import docker
 logger = logging.getLogger('S3TestCaseMixin')
 
 
-class S3TestCaseMixin:
+class S3TestCaseHelper:
     _s3_container = None
     _s3_container_fake_access_key = 'happyWhale'
     _s3_container_fake_access_secret = 'happyMoose'
@@ -71,7 +71,6 @@ class S3TestCaseMixin:
     def s3_client(cls):
         if not cls._s3_client and cls._s3_container:
             cls._s3_client = boto3.client('s3', **cls._s3_client_config)
-        # print(cls.__name__, '→', cls._s3_client._endpoint)
         return cls._s3_client
 
     @classmethod
