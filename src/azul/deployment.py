@@ -6,38 +6,38 @@ import boto3
 import botocore.session
 
 
-def memoized_property(f):
+def memorized_property(f):
     return property(lru_cache(maxsize=1)(f))
 
 
 class AWS:
-    @memoized_property
+    @memorized_property
     def profile(self):
         session = botocore.session.Session()
         profile_name = session.get_config_variable('profile')
         return session.full_config['profiles'][profile_name]
 
-    @memoized_property
+    @memorized_property
     def region_name(self):
         return self.sts.meta.region_name
 
-    @memoized_property
+    @memorized_property
     def sts(self):
         return boto3.client('sts')
 
-    @memoized_property
+    @memorized_property
     def lambda_(self):
         return boto3.client('lambda')
 
-    @memoized_property
+    @memorized_property
     def apigateway(self):
         return boto3.client('apigateway')
 
-    @memoized_property
+    @memorized_property
     def account(self):
         return self.sts.get_caller_identity()['Account']
 
-    @memoized_property
+    @memorized_property
     def es(self):
         return boto3.client('es')
 
@@ -69,7 +69,7 @@ class AWS:
         return es_domain_status['DomainStatus']['Endpoint'], 443
 
 
-del memoized_property
+del memorized_property
 
 aws = AWS()
 
