@@ -39,10 +39,39 @@
           "project": {
             "_type": "maroon",
             "hca_id": "37a92077-530f-fdbb-df14-2926665cc697",
+            "project_title": "purple",
+            "project_description": "navy",
             "laboratory": [
               "silver"
             ],
-            "project_shortname": "blue"
+            "project_shortname": "blue",
+            "contributors": [
+              {
+                "contact_name": "yellow",
+                "corresponding_contributor": false,
+                "email": "gray"
+              },
+              {
+                "contact_name": "teal",
+                "corresponding_contributor": true,
+                "email": "purple",
+                "institution": "yellow",
+                "laboratory": "silver"
+              }
+            ],
+            "publications": [
+              {
+                "authors": [
+                  "green",
+                  "maroon",
+                  "gray"
+                ],
+                "publication_title": "gray",
+                "doi": "green",
+                "pmid": 5331933,
+                "publication_url": "black"
+              }
+            ]
           },
           "specimens": [
             {

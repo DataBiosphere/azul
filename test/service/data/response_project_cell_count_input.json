@@ -1,0 +1,153 @@
+{
+  "_id": "a",
+  "_source": {
+    "entity_id": "a",
+    "bundles": [
+      {
+        "contents": {
+          "specimens": [
+            {
+              "biomaterial_id": "specimen1",
+              "disease": [
+                "disease1"
+              ],
+              "organ": [
+                "organ1"
+              ],
+              "total_estimated_cells": [
+                2
+              ],
+              "donor_biomaterial_id": [
+                "donor1"
+              ],
+              "genus_species": [
+                "species1"
+              ]
+            }
+          ],
+          "files": [],
+          "processes": [],
+          "project": {
+            "document_id": "a"
+          }
+        }
+      },
+      {
+        "contents": {
+          "specimens": [
+            {
+              "biomaterial_id": "specimen1",
+              "disease": [
+                "disease1"
+              ],
+              "organ": [
+                "organ1"
+              ],
+              "total_estimated_cells": [
+                2
+              ],
+              "donor_biomaterial_id": [
+                "donor1"
+              ],
+              "genus_species": [
+                "species1"
+              ]
+            }
+          ],
+          "files": [],
+          "processes": [],
+          "project": {
+            "document_id": "a"
+          }
+        }
+      },
+      {
+        "contents": {
+          "specimens": [
+            {
+              "biomaterial_id": "specimen2",
+              "disease": [
+                "disease1"
+              ],
+              "organ": [
+                "organ2"
+              ],
+              "total_estimated_cells": [
+                3
+              ],
+              "donor_biomaterial_id": [
+                "donor1"
+              ],
+              "genus_species": [
+                "species1"
+              ]
+            }
+          ],
+          "files": [],
+          "processes": [],
+          "project": {
+            "document_id": "a"
+          }
+        }
+      },
+      {
+        "contents": {
+          "specimens": [
+            {
+              "biomaterial_id": "specimen3",
+              "disease": [
+                "disease1"
+              ],
+              "organ": [
+                "organ1"
+              ],
+              "total_estimated_cells": [
+                4
+              ],
+              "donor_biomaterial_id": [
+                "donor1"
+              ],
+              "genus_species": [
+                "species1"
+              ]
+            }
+          ],
+          "files": [],
+          "processes": [],
+          "project": {
+            "document_id": "a"
+          }
+        }
+      },
+      {
+        "contents": {
+          "specimens": [
+            {
+              "biomaterial_id": "specimen2",
+              "disease": [
+                "disease1"
+              ],
+              "organ": [
+                "organ2"
+              ],
+              "total_estimated_cells": [
+                3
+              ],
+              "donor_biomaterial_id": [
+                "donor1"
+              ],
+              "genus_species": [
+                "species1"
+              ]
+            }
+          ],
+          "files": [],
+          "processes": [],
+          "project": {
+            "document_id": "a"
+          }
+        }
+      }
+    ]
+  }
+}
