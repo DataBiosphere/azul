@@ -122,7 +122,22 @@
                 "project_description": "The cancer microenvironment is a complex ecosystem characterized by dynamic interactions between diverse cell types, including malignant, immune and stromal cells. Here, we performed single-cell RNA sequencing on CD45+ and CD45- cells isolated from tumour and lymph nodes during a mouse model of melanoma. The transcriptional profiles of these individual cells taken at different time points coupled with assembled T cell receptor sequences, allowed us to identify distinct immune subpopulations and delineate their developmental trajectory. Our study provides insights into the complex interplay among cells within the tumour microenvironment and presents a valuable resource for future translational applications.",
                 "project_title": "Melanoma infiltration of stromal and immune cells"
             },
-            "publications": [],
+            "publications": [
+                {
+                    "describedBy": "http://schema.humancellatlas.org/module/project/5.2.2/publication",
+                    "authors": [
+                        "Katrina Meeth",
+                        "Jake Wang",
+                        "Goran Micevic",
+                        "William Damsky",
+                        "Marcus W. Bosenberg"
+                    ],
+                    "publication_title": "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations",
+                    "doi": "10.1111/pcmr.12498",
+                    "pmid": 5331933,
+                    "publication_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5331933/"
+                }
+            ],
             "contributors": [
                 {
                     "country": "UK",
@@ -130,7 +145,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Sarah,A,Teichmann",
-                    "email": "st9@sanger.ac.uk"
+                    "email": "st9@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -138,7 +154,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Mirjana,,Efremova",
-                    "email": "me5@sanger.ac.uk"
+                    "email": "me5@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -146,7 +163,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Bidesh,,Mahata",
-                    "email": "bm11@sanger.ac.uk"
+                    "email": "bm11@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -154,7 +172,8 @@
                     "address": "Box 197, Cambridge Biomedical Campus, Cambridge, CB2 0XZ",
                     "laboratory": "MRC Cancer Unit",
                     "contact_name": "Jacqueline,D,Shields",
-                    "email": "JS970@MRCCU.cam.ac.uk"
+                    "email": "JS970@MRCCU.cam.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -162,13 +181,15 @@
                     "address": "Box 197, Cambridge Biomedical Campus, Cambridge, CB2 0XZ",
                     "laboratory": "MRC Cancer Unit",
                     "contact_name": "Sarah,,Davidson",
-                    "email": "SED49@MRCCU.cam.ac.uk"
+                    "email": "SED49@MRCCU.cam.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "Germany",
                     "contact_name": "Angela,,Riedel",
                     "email": "a.riedel@dkfz-heidelberg.de",
-                    "institution": "DKFZ German Cancer Research Center"
+                    "institution": "DKFZ German Cancer Research Center",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -176,7 +197,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Roser,,Veno-Tormo",
-                    "email": "rv4@sanger.ac.uk"
+                    "email": "rv4@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -184,7 +206,8 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Jhuma,,Pramanik",
-                    "email": "jp19@sanger.ac.uk"
+                    "email": "jp19@sanger.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "UK",
@@ -192,13 +215,15 @@
                     "address": "Wellcome Trust Genome Campus, Cambridge UK",
                     "laboratory": "Sarah Teichmann",
                     "contact_name": "Gozde,,Kar",
-                    "email": "gkar@ebi.ac.uk"
+                    "email": "gkar@ebi.ac.uk",
+                    "corresponding_contributor": false
                 },
                 {
                     "country": "Finland",
                     "contact_name": "Jani,,Huuhtanen",
                     "email": "jani.huuhtanen@helsinki.fi",
-                    "institution": "University of Helsinki"
+                    "institution": "University of Helsinki",
+                    "corresponding_contributor": true
                 }
             ],
             "schema_type": "project"
