@@ -1,21 +1,28 @@
+from logging import getLogger
 from typing import Optional
 import boto3
 from azul import config
 
 
 class StorageService:
-    def __init__(self, bucket_name: str=None, s3=None):
+    def __init__(self, bucket_name: str=None, client=None):
+        self.__logger = getLogger(type(self).__name__)
         self.__bucket_name = bucket_name or config.s3_bucket
-        self.__s3 = s3 or boto3.client('s3')
+        self.__client = client  # the default client will be assigned later to allow patching.
 
     @property
     def client(self):
-        # print(self.__class__.__name__, '→', self.__s3._endpoint)
+        if not self.__client:
+            self.__client = boto3.client('s3')
 
-        return self.__s3
+        self.__logger.warning(f'{type(self).__name__}: Connected to {self.__client._endpoint}')
+
+        return self.__client
 
     def set_client(self, client):
-        self.__s3 = client
+        self.__client = client
+
+        self.__logger.warning(f'{type(self).__name__}: Re-connected to {self.__client._endpoint}')
 
     def get(self, object_key: str):
         try:
@@ -38,7 +45,10 @@ class StorageService:
 
     def get_presigned_url(self, key: str) -> str:
         return self.client.generate_presigned_url(ClientMethod='get_object',
-                                                Params=dict(Bucket=self.__bucket_name, Key=key))
+                                                  Params=dict(Bucket=self.__bucket_name, Key=key))
+
+    def create_bucket(self, bucket_name: str):
+        self.client.create_bucket(Bucket=bucket_name)
 
 
 class GetObjectError(RuntimeError):

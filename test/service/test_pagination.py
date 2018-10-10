@@ -6,7 +6,6 @@ import unittest
 import os
 from service import WebServiceTestCase
 
-
 # Assumes a database initialized with >SEARCH_AFTER_THRESHOLD records, where
 # SEARCH_AFTER_THRESHOLD is defined in responseobjects/elastic_request_builder.py
 class PaginationTestCase(WebServiceTestCase):
