@@ -36,7 +36,7 @@ class ChaliceServerThread(Thread):
         return self.server_wrapper.server.server_address
 
 
-class LocalAppTestCase(unittest.TestCase, S3TestCaseMixin, metaclass=ABCMeta):
+class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
     """
     A mixin for test cases against a locally running instance of a AWS Lambda Function aka Chalice application. By
     default, the local instance will use the remote AWS Elasticsearch domain configured via AZUL_ES_DOMAIN or
@@ -75,8 +75,20 @@ class LocalAppTestCase(unittest.TestCase, S3TestCaseMixin, metaclass=ABCMeta):
         from app import app
         cls.app = app
 
+        # noinspection PyUnresolvedReferences, PyPackageRequirements
+        from app import storage_service
+        S3TestCaseMixin.start_s3_server()
+        S3TestCaseMixin.s3_client().create_bucket(Bucket=config.s3_bucket)
+        cls._default_s3_client = storage_service.client
+        storage_service.set_client(S3TestCaseMixin.s3_client())
+
     @classmethod
     def tearDownClass(cls):
+        # noinspection PyUnresolvedReferences, PyPackageRequirements
+        from app import storage_service
+        storage_service.set_client(cls._default_s3_client)
+        S3TestCaseMixin.stop_s3_server()
+
         sys.path.remove(cls._path_to_app)
         super().tearDownClass()
 
@@ -101,20 +113,7 @@ class LocalAppTestCase(unittest.TestCase, S3TestCaseMixin, metaclass=ABCMeta):
             else:
                 break
 
-        if self.lambda_name() == 'service':
-            # noinspection PyUnresolvedReferences, PyPackageRequirements
-            from app import storage_service
-            self.start_s3_server()
-            self.s3_client.create_bucket(Bucket=config.s3_bucket)
-            storage_service.set_client(self.s3_client)
-
     def tearDown(self):
-        if self.lambda_name() == 'service':
-            # noinspection PyUnresolvedReferences, PyPackageRequirements
-            from app import storage_service
-            storage_service.set_client(aws.s3)
-            self.stop_s3_server()
-
         log.debug("Tearing Down Data")
         self.server_thread.kill_thread()
         self.server_thread.join(timeout=10)
