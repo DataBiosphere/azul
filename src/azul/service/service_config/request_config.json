@@ -22,6 +22,8 @@
     "fileSize": "bundles.contents.files.size",
     "fileId": "bundles.contents.files.uuid",
     "donorId": "bundles.contents.specimens.donor_biomaterial_id",
+    "donorDocumentId":"bundles.contents.specimens.donor_document_id",
+    "specimenDocumentId":"bundles.contents.specimens.document_id",
     "lab": "bundles.contents.project.laboratory",
     "cellCount": "bundles.contents.specimens.total_estimated_cells",
     "projectTitle": "bundles.contents.project.project_title",

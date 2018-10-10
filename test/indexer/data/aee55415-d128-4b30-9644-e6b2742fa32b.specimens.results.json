@@ -10,7 +10,7 @@
         "total": 1,
         "max_score": 1.0,
         "hits": [
-            {
+             {
                 "_index": "azul_specimens_dev",
                 "_type": "doc",
                 "_id": "4e8744e9-a038-4c0c-80ef-3b235d0f5af7",
@@ -24,11 +24,7 @@
                             "contents": {
                                 "specimens": [
                                     {
-                                        "document_id": [
-                                            "4e8744e9-a038-4c0c-80ef-3b235d0f5af7",
-                                            "70b55c20-3574-41b6-9b01-800cc6b30edc",
-                                            "bac7fdae-cbf7-40d6-baa7-a14157307011"
-                                        ],
+                                        "document_id": "4e8744e9-a038-4c0c-80ef-3b235d0f5af7",
                                         "has_input_biomaterial": [
                                             null,
                                             "1113",
@@ -46,6 +42,7 @@
                                         "storage_method": [null],
                                         "_type": ["specimen"],
                                         "total_estimated_cells": [1],
+                                        "donor_document_id": ["70b55c20-3574-41b6-9b01-800cc6b30edc"],
                                         "donor_biomaterial_id": ["1113"],
                                         "genus_species": ["Mus musculus"],
                                         "organism_age": ["6-12"],
