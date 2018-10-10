@@ -370,12 +370,32 @@ class ElasticTransformDump(object):
         ).bucket(
             'cell_count', 'sum', field=request_config['translation']['cellCount']
         )
-
-        #Add a cell_count aggregate to the ElasticSearch request
+        # Only return aggregate results, speed up response
+        es_search.extra(size=0)
+        # Add a cell_count aggregate to the ElasticSearch request
         es_search.aggs.metric(
             'total_cell_count',
             'sum',
-            field=request_config['translation']['cellCount']
+            script={'inline': "int max_i = 0;"
+                              "String version, max_version = ''; "
+                              "for (int i = 0; i < params._source.bundles.length; i ++) {"
+                              "version = params._source.bundles[i].version; "
+                              "if (version.compareTo(max_version) > 0) {"
+                              "max_version = version; max_i = i; } }"
+                              "int total_sum = 0; "
+                              "def specimens = params._source.bundles[max_i].contents.specimens;"
+                              "if (specimens.length == null){ return 0;} "
+                              "else { for( int j = 0; j < specimens.length; j++){ "
+                              "if (specimens[j].total_estimated_cells == null){ "
+                              "total_sum += 0 } else { "
+                              "def cells = specimens[j].total_estimated_cells; "
+                              "for (int k = 0; k < cells.length; k++){"
+                              "if (cells[k] == null ){"
+                              "total_sum += 0;"
+                              "}else{"
+                              "total_sum += cells[k]; } } } } } "
+                              "return total_sum; "
+                    }
         )
 
         # Add a summary object based on file type
@@ -387,12 +407,12 @@ class ElasticTransformDump(object):
         if entity_type == 'specimens':
             type_id, type_count = ['fileId', 'fileCount']
         elif entity_type == 'files':
-            type_id, type_count = ['specimenId', 'specimenCount']
+            type_id, type_count = ['specimenDocumentId', 'specimenCount']
 
         for field, agg_name in (
                 (type_id, type_count),
                 ('organ', 'organCount'),
-                ('donorId', 'donorCount'),
+                ('donorDocumentId', 'donorCount'),
                 ('lab', 'labCount'),
                 ('project', 'projectCode')):
             cardinality = request_config['translation'][field]

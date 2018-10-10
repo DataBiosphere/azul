@@ -69,6 +69,7 @@ def _specimen_dict(specimen: api.SpecimenFromOrganism) -> MutableMapping[str, An
                 merged_specimen[key].add(value)
     merged_specimen = {k: list(sorted(v, key=lambda x: (x is not None, x))) for k, v in merged_specimen.items()}
     merged_specimen['biomaterial_id'] = specimen.biomaterial_id
+    merged_specimen['document_id'] = specimen.document_id
     return merged_specimen
 
 
@@ -149,7 +150,6 @@ class BiomaterialVisitor(api.EntityVisitor):
             # As more facets are required by the browser, handle each biomaterial as appropriate
             self.biomaterial_lineage.append(
                 {
-                    'document_id': entity.document_id,
                     'has_input_biomaterial': entity.has_input_biomaterial,
                     '_source': api.schema_names[type(entity)],
                     **(
@@ -161,6 +161,7 @@ class BiomaterialVisitor(api.EntityVisitor):
                             'storage_method': entity.storage_method,
                             '_type': "specimen",
                         } if isinstance(entity, api.SpecimenFromOrganism) else {
+                            'donor_document_id': entity.document_id,
                             'donor_biomaterial_id': entity.biomaterial_id,
                             'genus_species': entity.genus_species,
                             'disease': list(entity.disease),
