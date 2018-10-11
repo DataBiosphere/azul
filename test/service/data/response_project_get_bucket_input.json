@@ -1,0 +1,32 @@
+{
+  "buckets": [
+    {
+      "key": "project1",
+      "term_bucket": {
+        "buckets": [
+          {
+            "key": "term1"
+          },
+          {
+            "key": "term2"
+          },
+          {
+            "key": "term3"
+          }
+        ]
+      },
+      "value_bucket": {
+        "value": 2
+      }
+    },
+    {
+      "key": "project2",
+      "term_bucket": {
+        "buckets": []
+      },
+      "value_bucket": {
+        "value": 4
+      }
+    }
+  ]
+}
