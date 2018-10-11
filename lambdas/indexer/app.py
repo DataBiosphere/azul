@@ -199,6 +199,11 @@ def write(event: chalice.app.SQSEvent):
             attempts = int(message.attributes['ApproximateReceiveCount'])
             assert len(document.bundles) == 1
             bundle = document.bundles[0]
+            if document.document_id == '2cd14cf5-f8e0-4c97-91a2-9e8957f41ea8':
+                log.info('Ignoring attempt %i of writing document %s/%s from bundle %s, version %s',
+                         attempts, document.entity_type, document.document_id, bundle.uuid, bundle.version)
+                continue
+
             log.info('Attempt %i of writing document %s/%s from bundle %s, version %s',
                      attempts, document.entity_type, document.document_id, bundle.uuid, bundle.version)
             documents.append(document)
