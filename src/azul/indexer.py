@@ -58,6 +58,10 @@ class BaseIndexer(ABC):
                                                         manifest=manifest,
                                                         metadata_files=metadata_files)
             for es_document in es_documents:
+                for bundles in es_document.bundles:
+                    for file in bundles.contents['files']:
+                        if file["file_format"] == "unknown" and "zarr!" in file['name']:
+                            bundles.contents['files'].remove(file)
                 indexable_documents[es_document.document_id] = es_document
 
         self.document_handler(indexable_documents)
