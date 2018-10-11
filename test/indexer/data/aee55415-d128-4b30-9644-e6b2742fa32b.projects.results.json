@@ -11,12 +11,12 @@
         "max_score": 1.0,
         "hits": [
             {
-                "_index": "azul_specimens_dev",
+                "_index": "azul_projects_dev",
                 "_type": "doc",
-                "_id": "4e8744e9-a038-4c0c-80ef-3b235d0f5af7",
+                "_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
                 "_score": 1.0,
                 "_source": {
-                    "entity_id": "4e8744e9-a038-4c0c-80ef-3b235d0f5af7",
+                    "entity_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
                     "bundles": [
                         {
                             "uuid": "aee55415-d128-4b30-9644-e6b2742fa32b",
@@ -166,7 +166,6 @@
                                         "Sarah,,Davidson",
                                         "Sarah,A,Teichmann"
                                     ],
-                                    "document_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
                                     "contributors": [
                                         {
                                             "contact_name": "Jacqueline,D,Shields",
@@ -239,6 +238,7 @@
                                             "laboratory": "Sarah Teichmann"
                                         }
                                     ],
+                                    "document_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
                                     "publication_titles": [
                                         "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations"
                                     ],

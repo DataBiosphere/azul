@@ -2,22 +2,27 @@
 Chalice application module to receive and process DSS event notifications.
 """
 from collections import Counter
+from datetime import datetime
 import http
 import json
 import logging
+import random
 import time
+from typing import List
 import uuid
 
 import boto3
 # noinspection PyPackageRequirements
 import chalice
+from dataclasses import asdict, dataclass
 from elasticsearch import JSONSerializer
-from more_itertools import chunked
+from more_itertools import chunked, partition
 
 from azul import config
 from azul.indexer import DocumentsById
 from azul.time import RemainingLambdaContextTime
 from azul.transformer import ElasticSearchDocument
+from azul.types import JSON
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
@@ -145,20 +150,13 @@ def handle_documents(documents_by_id: DocumentsById) -> None:
 
     for batch in chunked(documents_by_id.values(), document_batch_size):
         value = len(batch)
+        token_queue.send_message(MessageBody=json_serializer.dumps(Token.mint(value).to_json()))
         try:
             document_queue.send_messages(Entries=[dict(message(doc), Id=str(i)) for i, doc in enumerate(batch)])
         except sqs.exceptions.BatchRequestTooLong:
             log.info('Message batch was too big. Sending messages individually.', exc_info=True)
             for doc in batch:
                 document_queue.send_message(**message(doc))
-                token_queue.send_message(MessageBody=json_serializer.dumps(dict(token=uuid.uuid4(), value=1)))
-        else:
-            # One might think that we'd want to avoid token debt by queueing tokens *before* documents. However,
-            # this is not a good idea: the queueing of documents is more likely to fail due to batch size constraints
-            # etc. The resulting surplus in tokens would cause those excess tokens to circulate indefinitely,
-            # eating up SQS and Lambda fees. Tokens aren't returned via visibility timeout (or raising an exception)
-            # but rather by requeueing new tokens of equivalent value.
-            token_queue.send_message(MessageBody=json_serializer.dumps(dict(token=uuid.uuid4(), value=value)))
 
 
 # The number of documents to be queued in a single SQS `send_messages`. Theoretically, larger batches are better but
@@ -167,23 +165,24 @@ def handle_documents(documents_by_id: DocumentsById) -> None:
 document_batch_size = 10
 
 # The maximum number of tokens to be processed by a single Lambda invocation. This should be at least 2 to allow for
-# token reconciliation to occur (two smaller tokens being merged into one). It must be at most 10 because of a limit
-# imposed by SQS and Lambda. The higher this value, the more token reconcilation will occur at the expense of
-# increased token churn (unused token value being returned to the queue). One token can be at most
-# document_batch_size in value, and one Lambda invocation consumes at most document_batch_size in token value so
-# retrieving ten tokens may cause nine tokens to be returned.
+# token recombination to occur (two smaller tokens being merged into one) and to increase the chance that the
+# combined token value is 10. It must be at most 10 because of a limit imposed by SQS and Lambda. The higher this
+# value, the more token reconcilation will occur at the expense of increased token churn (unused token value being
+# returned to the queue). One token can be at most document_batch_size in value, and one Lambda invocation consumes
+# at most document_batch_size in token value so retrieving ten tokens may cause nine tokens to be returned.
 #
 token_batch_size = 2
+
+token_lifetime: float = 10 * 60 * 60
 
 
 @app.on_sqs_message(queue=config.token_queue_name, batch_size=token_batch_size)
 def write(event: chalice.app.SQSEvent):
     remaining_time = RemainingLambdaContextTime(app.lambda_context)
-    tokens = [json.loads(token.body) for token in event]
-    total = sum(token['value'] for token in tokens)
+    tokens = [Token.from_json(json.loads(token.body)) for token in event]
+    total = sum(token.value for token in tokens)
     assert 0 < total <= document_batch_size * token_batch_size
     document_queue = queue(config.document_queue_name)
-    token_queue = queue(config.token_queue_name)
     messages = document_queue.receive_messages(WaitTimeSeconds=20,
                                                AttributeNames=['ApproximateReceiveCount', 'MessageGroupId'],
                                                VisibilityTimeout=round(remaining_time.get()) + 10,
@@ -212,22 +211,83 @@ def write(event: chalice.app.SQSEvent):
         document_queue.delete_messages(Entries=[dict(Id=str(i), ReceiptHandle=message.receipt_handle)
                                                 for i, message in enumerate(messages)])
         total -= len(messages)
+    else:
+        tokens, expired_tokens = map(list, partition(Token.expired, tokens))
+        if expired_tokens:
+            expired_total = sum(token.value for token in expired_tokens)
+            log.info('Expiring %i token(s) with a total value of %i', len(expired_tokens), expired_total)
+            total -= expired_total
 
     assert total >= 0
 
     if total:
-        tokens = [dict(token=str(uuid.uuid4()), value=value)
-                  for value in _dispense_tokens(document_batch_size, total)]
-        log.info('Returning %i token(s) for a total value of %i', len(tokens), total)
-        token_queue.send_messages(Entries=[dict(Id=str(i), MessageBody=json.dumps(token))
-                                           for i, token in enumerate(tokens)])
+        expiration = max(token.expiration for token in tokens)
+        tokens = Token.mint_many(total, expiration=expiration)
+        delay = 0 if messages else round(random.uniform(30, 90))
+        log.info('Recirculating %i token(s), after a delay of %is, for a total value of %i, expiring at %s',
+                 len(tokens), delay, total, datetime.utcfromtimestamp(expiration).isoformat(timespec='seconds') + 'Z')
+        _send_tokens(tokens, delay=delay)
 
 
-def _log_document_grouping(messages):
-    message_group_sizes = Counter()
-    for message in messages:
-        message_group_sizes[message.attributes['MessageGroupId']] += 1
-    log.info('Document grouping for received messages: %r', dict(message_group_sizes))
+@dataclass(frozen=True)
+class Token:
+    """
+    >>> Token.mint(0)
+    Traceback (most recent call last):
+    ...
+    ValueError: 0
+
+    >>> Token.mint(11)
+    Traceback (most recent call last):
+    ...
+    ValueError: 11
+
+    >>> [t.value for t in Token.mint_many(0)]
+    []
+
+    >>> [t.value for t in Token.mint_many(10)]
+    [10]
+
+    >>> [t.value for t in Token.mint_many(11)]
+    [10, 1]
+
+    >>> Token.mint(10, expiration=time.time()).expired()
+    True
+
+    >>> Token.mint(10, expiration=time.time()+100).expired()
+    False
+
+    >>> t = Token.mint(5)
+    >>> c = Token.from_json(t.to_json())
+    >>> c == t, c is t
+    (True, False)
+    """
+    uuid: str
+    value: int
+    expiration: float
+
+    @classmethod
+    def mint(cls, value, expiration=None) -> 'Token':
+        if value < 1 or value > document_batch_size:
+            raise ValueError(value)
+        if expiration is None:
+            expiration = time.time() + token_lifetime
+        return cls(uuid=str(uuid.uuid4()), value=value, expiration=expiration)
+
+    @classmethod
+    def from_json(cls, json: JSON) -> 'Token':
+        return cls(**json)
+
+    def to_json(self) -> JSON:
+        return asdict(self)
+
+    @classmethod
+    def mint_many(cls, total, expiration=None) -> List['Token']:
+        return [cls.mint(value, expiration=expiration)
+                for value in _dispense_tokens(document_batch_size, total)]
+
+    def expired(self):
+        return self.expiration <= time.time()
 
 
 def _dispense_tokens(size, total):
@@ -242,3 +302,39 @@ def _dispense_tokens(size, total):
     [3, 1]
     """
     return [min(i, size) for i in range(total, 0, -size)]
+
+
+def _send_tokens(tokens, delay=0):
+    queue(config.token_queue_name).send_messages(Entries=[dict(Id=str(i),
+                                                               DelaySeconds=delay,
+                                                               MessageBody=json.dumps(token.to_json()))
+                                                          for i, token in enumerate(tokens)])
+
+
+def _log_document_grouping(messages):
+    message_group_sizes = Counter()
+    for message in messages:
+        message_group_sizes[message.attributes['MessageGroupId']] += 1
+    log.info('Document grouping for received messages: %r', dict(message_group_sizes))
+
+
+@app.schedule('rate(10 minutes)')
+def nudge(event: chalice.app.CloudWatchEvent):
+    """
+    Work around token deficit (https://github.com/DataBiosphere/azul/issues/390). Current hypothesis is that SQS
+    trigger is dropping messages because I cannot see how the current code could result in a token deficit. There are
+    two places where tokens are sent: handle_documents() and write(). In handle_documents() they are sent before the
+    documents, so a crash or exception would result in a token surplus. In write(), they are sent after the document
+    messages have been deleted, to return unused tokens. But if an exception or crash prevents the tokens to be
+    returned, SQS trigger should return all tokens (used and unused) which should also result in a token surplus.
+
+    So what we do here is periodically check if more tokens are needed and mint them if necessary.
+    """
+    num_tokens, num_documents = (sum(int(queue(queue_name).attributes['ApproximateNumberOfMessages' + k])
+                                     for k in ('', 'Delayed', 'NotVisible'))
+                                 for queue_name in (config.token_queue_name, config.document_queue_name))
+    if num_documents and not num_tokens:
+        tokens = Token.mint_many(num_documents)
+        log.info('Nudging queue with %i token(s) for a total value of %i', len(tokens), num_documents)
+        for batch in chunked(tokens, 10):
+            _send_tokens(batch)
