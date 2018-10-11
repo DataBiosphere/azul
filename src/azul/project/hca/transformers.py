@@ -279,6 +279,8 @@ class ProjectTransformer(Transformer):
             file.ancestors(data_visitor)
         # Create ElasticSearch documents
         for project in bundle.projects.values():
+            if project.document_id == '2cd14cf5-f8e0-4c97-91a2-9e8957f41ea8':
+                continue
             contents = dict(specimens=[_specimen_dict(s) for s in data_visitor.specimens.values()],
                             files=list(data_visitor.files.values()),
                             processes=list(data_visitor.processes.values()),
