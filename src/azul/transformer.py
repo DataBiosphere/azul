@@ -3,7 +3,7 @@ import itertools
 from itertools import filterfalse, tee
 import logging
 import re
-from typing import List, Mapping, Sequence, Iterable
+from typing import List, Mapping, Sequence, Iterable, Tuple
 
 from dataclasses import dataclass, field, asdict
 
@@ -63,14 +63,17 @@ class ElasticSearchDocument:
                    bundles=[Bundle(**b) for b in source['bundles']],
                    document_version=hit.get("_version", 0))
 
-    def update_with(self, other: 'ElasticSearchDocument'):
+    def update_with(self, other: 'ElasticSearchDocument') -> bool:
         """
         Merge updates from another instance into this one. Typically, `self` represents a persistent document loaded
-        from the index while `other` contains contributions from newly indexed bundles.
+        from an index while `other` contains contributions from incoming bundles.
+
+        :returns: True, if this document was modified and should be written back to the index
         """
         assert self._is_compatible_with(other)
-        self.bundles = self._merge_bundles(self.bundles, other.bundles)
+        modified, self.bundles = self._merge_bundles(self.bundles, other.bundles)
         self.document_version = self.document_version + 1
+        return modified
 
     def _is_compatible_with(self, other):
         return (self.document_id == other.document_id and
@@ -79,34 +82,69 @@ class ElasticSearchDocument:
                 self.entity_type == other.entity_type)
 
     @staticmethod
-    def _merge_bundles(current: List[Bundle], updates: List[Bundle]):
+    def _merge_bundles(current: List[Bundle], updates: List[Bundle]) -> Tuple[bool, List[Bundle]]:
         """
+        Merge two bundle contribution lists into one. Bundles from either list are matched based on their UUID,
+        version and content. Bundles absent from either argument will be placed in the result. Of two bundles with
+        the same UUID the one with the higher version will be placed into the result. If UUID and version are the
+        same but the contents differ (as defined by `__eq__`), the update (from the second argument) is selected. All
+        three being equal, the bundle from the first argument will selected.
+
+        :returns: the merged list of bundles and a boolean indicating whether at least one update was selected. Note
+        that bundles in the result may occur in a different order compared to the first argument, even if this
+        boolean is False.
+
         >>> merge = ElasticSearchDocument._merge_bundles
         >>> B = Bundle
 
         Bs without a match in the other list are chosen:
-        >>> merge([B(uuid='0', version='0'),                        ],
-        ...       [                               B(uuid='2', version='0')])
-        [Bundle(uuid='2', version='0', content={}), Bundle(uuid='0', version='0', content={})]
+
+            >>> merge([B(uuid='0', version='0'),                          ],
+            ...       [                          B(uuid='2', version='0') ])
+            (True, [Bundle(uuid='2', version='0', contents={}), Bundle(uuid='0', version='0', contents={})])
+
+        If the updates are a subset of the first argument, no changes are made, and the first argument is returned.
+
+            >>> merge([B(uuid='0', version='0'), B(uuid='2', version='0')],
+            ...       [                          B(uuid='2', version='0')])
+            (False, [Bundle(uuid='2', version='0', contents={}), Bundle(uuid='0', version='0', contents={})])
+
+        If the updates are a superset of the first argument, the updates are returned.
+
+            >>> merge([                          B(uuid='2', version='0')],
+            ...       [B(uuid='0', version='0'), B(uuid='2', version='0')])
+            (True, [Bundle(uuid='0', version='0', contents={}), Bundle(uuid='2', version='0', contents={})])
 
         If the UUID matches, the more recent bundle version is chosen:
-        >>> merge([B(uuid='0', version='0'), B(uuid='2', version='1')],
-        ...       [B(uuid='0', version='1'), B(uuid='2', version='0')])
-        [Bundle(uuid='0', version='1', content={}), Bundle(uuid='2', version='1', content={})]
 
-        Ties (identical UUID and version) are broken by favoring the bundle from the second argument:
-        >>> merge([B(uuid='1', version='0', content={'x':1})],
-        ...       [B(uuid='1', version='0', content={'x':2})])
-        [Bundle(uuid='1', version='0', content={'x': 2})]
+            >>> merge([B(uuid='0', version='0'), B(uuid='2', version='1')],
+            ...       [B(uuid='0', version='1'), B(uuid='2', version='0')])
+            (True, [Bundle(uuid='0', version='1', contents={}), Bundle(uuid='2', version='1', contents={})])
+
+        Ties (identical UUID and version) are broken by favoring the bundle from the second argument as long as it is
+        different:
+
+            >>> merge([B(uuid='1', version='0', contents={'x':1})],
+            ...       [B(uuid='1', version='0', contents={'x':2})])
+            (True, [Bundle(uuid='1', version='0', contents={'x': 2})])
+
+        Everything being equal, the first argument is favored and no changes are reported:
+
+            >>> merge([B(uuid='1', version='0', contents={'x':1})],
+            ...       [B(uuid='1', version='0', contents={'x':1})])
+            (False, [Bundle(uuid='1', version='0', contents={'x': 1})])
 
         A more complicated case:
-        >>> merge([B(uuid='0', version='0'), B(uuid='1', version='0', content={'x':1}), B(uuid='2', version='0')],
-        ...       [                          B(uuid='1', version='0', content={'x':2}), B(uuid='2', version='1')])
-        ... # doctest: +NORMALIZE_WHITESPACE
-        [Bundle(uuid='1', version='0', content={'x': 2}),
-        Bundle(uuid='2', version='1', content={}),
-        Bundle(uuid='0', version='0', content={})]
+
+            >>> merge([B(uuid='0', version='0'), B(uuid='1', version='0', contents={'x':1}), B(uuid='2', version='0')],
+            ...       [                          B(uuid='1', version='0', contents={'x':2}), B(uuid='2', version='1')])
+            ... # doctest: +NORMALIZE_WHITESPACE
+            (True,
+            [Bundle(uuid='1', version='0', contents={'x': 2}),
+            Bundle(uuid='2', version='1', contents={}),
+            Bundle(uuid='0', version='0', contents={})])
         """
+        modified = False
         current_by_id = {bundle.uuid: bundle for bundle in current}
         assert len(current_by_id) == len(current)
         bundles = {}
@@ -114,13 +152,21 @@ class ElasticSearchDocument:
             try:
                 cur_bundle = current_by_id.pop(update.uuid)
             except KeyError:
-                bundle = update
+                modified, bundle = True, update
             else:
-                bundle = update if update.version >= cur_bundle.version else cur_bundle
+                if cur_bundle.version < update.version:
+                    modified, bundle = True, update
+                elif cur_bundle.version > update.version:
+                    bundle = cur_bundle
+                else:
+                    if update == cur_bundle:
+                        bundle = cur_bundle
+                    else:
+                        modified, bundle = True, update
             assert bundles.setdefault(update.uuid, bundle) is bundle
         for bundle in current_by_id.values():
             assert bundles.setdefault(bundle.uuid, bundle) is bundle
-        return list(bundles.values())
+        return modified, list(bundles.values())
 
     def consolidate(self, others: Iterable['ElasticSearchDocument']):
         """
@@ -132,7 +178,8 @@ class ElasticSearchDocument:
         assert all(self._is_compatible_with(other) for other in others)
         bundles = {}
         for bundle in itertools.chain(self.bundles, *(other.bundles for other in others)):
-            assert bundles.setdefault(bundle.uuid, bundle) is bundle, f"Duplicate bundle UUID: {bundle.uuid}"
+            assert bundles.setdefault((bundle.uuid, bundle.version), bundle) == bundle, \
+                f"Conflicting contributions for bundle {bundle.uuid}, version {bundle.version}"
         self.bundles = list(bundles.values())
 
     def to_json(self):

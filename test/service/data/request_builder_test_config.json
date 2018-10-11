@@ -1,7 +1,12 @@
 {
   "translation": {
     "entity_id": "entity_id",
-    "entity_version":"entity_version"
+    "entity_version":"entity_version",
+    "projectId": "bundles.contents.project.document_id",
+    "libraryConstructionApproach": "bundles.contents.processes.library_construction_approach",
+    "disease": "bundles.contents.specimens.disease",
+    "donorId": "bundles.contents.specimens.donor_biomaterial_id",
+    "genusSpecies": "bundles.contents.specimens.genus_species"
   },
   "autocomplete-translation": {
     "files": {
