@@ -14,14 +14,11 @@ class StorageService:
     def client(self):
         if not self.__client:
             self.__client = boto3.client('s3')
-
-        self.__logger.warning(f'{type(self).__name__}: Connected to {self.__client._endpoint}')
-
+            self.__logger.warning(f'{type(self).__name__}: Connected to {self.__client._endpoint}')
         return self.__client
 
     def set_client(self, client):
         self.__client = client
-
         self.__logger.warning(f'{type(self).__name__}: Re-connected to {self.__client._endpoint}')
 
     def get(self, object_key: str):
@@ -47,8 +44,10 @@ class StorageService:
         return self.client.generate_presigned_url(ClientMethod='get_object',
                                                   Params=dict(Bucket=self.__bucket_name, Key=key))
 
-    def create_bucket(self, bucket_name: str):
-        self.client.create_bucket(Bucket=bucket_name)
+    def create_bucket(self, bucket_name: str = None):
+        self.__logger.warning(f'{type(self).__name__}: Creating a bucket called "{bucket_name or self.__bucket_name}"')
+        self.client.create_bucket(Bucket=(bucket_name or self.__bucket_name))
+        self.__logger.warning(f'{type(self).__name__}: Created a bucket called "{bucket_name or self.__bucket_name}"')
 
 
 class GetObjectError(RuntimeError):
