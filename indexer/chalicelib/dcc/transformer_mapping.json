@@ -1,9 +1,79 @@
 {
   "transformer_settings": [{
     "indexer_name": "fb_index",
-    "mappings": [{
+    "mappings": [
+      {
+        "source": "metadata.json",
+        "dss_field": "program",
+        "index_field": "program"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "project",
+        "index_field": "project"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "case.project_id",
+        "index_field": "study"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "case.submitter_id",
+        "index_field": "donor"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "case.submitter_id",
+        "index_field": "submittedDonorId"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "case.submitter_id",
+        "index_field": "submitter_donor_id"
+      },
+      {
+        "constant": "",
+        "index_field": "redwoodDonorUUID"
+      },
+      {
         "constant": "",
         "index_field": "access"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "demographic.age_range",
+        "index_field": "age_range"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "demographic.bmi",
+        "index_field": "bmi"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "demographic.gender",
+        "index_field": "gender"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "demographic.height",
+        "index_field": "height"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "demographic.race",
+        "index_field": "race"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "demographic.ethnicity",
+        "index_field": "ethnicity"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "demographic.weight",
+        "index_field": "weight"
       },
       {
         "constant": "",
@@ -16,27 +86,69 @@
       },
       {
         "source": "metadata.json",
-        "dss_field": "project",
-        "index_field": "project"
-      },
-      {
-        "from_file_data": true,
-        "dss_field": "version",
-        "index_field": "lastModified"
+        "dss_field": "read_group.library_strategy",
+        "index_field": "library_strategy"
       },
       {
         "source": "metadata.json",
-        "dss_field": "program",
-        "index_field": "program"
+        "dss_field": "sample.submitter_id",
+        "index_field": "submittedSpecimenId"
       },
       {
-        "constant": "",
-        "index_field": "redwoodDonorUUID"
+        "source": "metadata.json",
+        "dss_field": "sample.node_id",
+        "index_field": "specimenUUID"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "sample.biospecimen_type",
+        "index_field": "specimen_type"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "sample.composition",
+        "index_field": "submitterDonorPrimarySite"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "sample.biospecimen_anatomic_site",
+        "index_field": "biospecimen_anatomic_site"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "sample.biospecimen_anatomic_site_detail",
+        "index_field": "biospecimen_anatomic_site_detail"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "aliquot.submitter_id",
+        "index_field": "sampleId"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "aliquot.submitter_id",
+        "index_field": "submittedSampleId"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "aliquot.experimental_strategy",
+        "index_field": "experimentalStrategy"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "aliquot.analyte_isolation_method",
+        "index_field": "analyte_isolation_method"
       },
       {
         "from_file_data": true,
-        "dss_field": "size",
-        "index_field": "fileSize"
+        "dss_field": "name",
+        "index_field": "title"
+      },
+      {
+        "from_file_data": true,
+        "dss_field": "name",
+        "index_field": "file_type",
+        "formatters": ["extract_file_extension"]
       },
       {
         "from_file_data": true,
@@ -45,17 +157,24 @@
       },
       {
         "from_file_data": true,
+        "dss_field": "uuid",
+        "index_field": "download_id"
+      },
+      {
+        "from_file_data": true,
         "dss_field": "version",
         "index_field": "file_version"
       },
       {
-        "constant": "",
-        "index_field": "fileMd5sum"
+        "from_file_data": true,
+        "dss_field": "version",
+        "index_field": "lastModified"
       },
       {
         "from_file_data": true,
-        "dss_field": "uuid",
-        "index_field": "download_id"
+        "dss_field": "url",
+        "index_field": "urls",
+        "formatters": ["convert_to_list"]
       },
       {
         "from_file_data": true,
@@ -63,30 +182,13 @@
         "index_field": "aliases"
       },
       {
-        "source": "metadata.json",
-        "dss_field": "aliquot.experimental_strategy",
-        "index_field": "experimentalStrategy"
-      },
-      {
-        "constant": "",
-        "index_field": "donor"
-      },
-      {
-        "constant": "",
-        "index_field": "repoBaseUrl"
-      },
-      {
-        "constant": "DSS-AWS-Oregon",
-        "index_field": "repoCode"
-      },
-      {
-        "constant": "US",
-        "index_field": "repoCountry"
-      },
-      {
         "from_file_data": true,
-        "dss_field": "uuid",
-        "index_field": "repoDataBundleId"
+        "dss_field": "size",
+        "index_field": "fileSize"
+      },
+      {
+        "constant": "",
+        "index_field": "fileMd5sum"
       },
       {
         "constant": "DSS-AWS-Oregon",
@@ -101,73 +203,28 @@
         "index_field": "repoType"
       },
       {
-        "source": "metadata.json",
-        "dss_field": "sample.id",
-        "index_field": "sampleId"
+        "constant": "",
+        "index_field": "repoBaseUrl"
+      },
+      {
+        "constant": "DSS-AWS-Oregon",
+        "index_field": "repoCode"
+      },
+      {
+        "constant": "US",
+        "index_field": "repoCountry"
+      },
+      {
+        "constant": "",
+        "index_field": "repoDataBundleId"
       },
       {
         "constant": "",
         "index_field": "software"
       },
       {
-        "source": "metadata.json",
-        "dss_field": "sample.biospecimen_type",
-        "index_field": "specimen_type"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "case.project_id",
-        "index_field": "study"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "case.submitter_id",
-        "index_field": "submittedDonorId"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "aliquot.submitter_id",
-        "index_field": "submittedSampleId"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "sample.id",
-        "index_field": "specimenUUID"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "aliquot.submitter_id",
-        "index_field": "submittedSpecimenId"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "sample.composition",
-        "index_field": "submitterDonorPrimarySite"
-      },
-      {
-        "constant": "",
-        "index_field": "submitter_donor_id"
-      },
-      {
-        "from_file_data": true,
-        "dss_field": "name",
-        "index_field": "title"
-      },
-      {
-        "from_file_data": true,
-        "dss_field": "name",
-        "index_field": "file_type",
-        "formatters": ["extract_file_extension"]
-      },
-      {
         "constant": "",
         "index_field": "workflow"
-      },
-      {
-        "from_file_data": true,
-        "dss_field": "url",
-        "index_field": "urls",
-        "formatters": ["convert_to_list"]
       },
       {
         "constant": "",
@@ -176,21 +233,6 @@
       {
         "constant": "",
         "index_field": "metadataJson"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "case.node_id",
-        "index_field": "donor"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "sample.node_id",
-        "index_field": "specimenUUID"
-      },
-      {
-        "source": "metadata.json",
-        "dss_field": "aliquot.node_id",
-        "index_field": "sampleId"
       }]
-    }]
+  }]
 }

@@ -44,9 +44,9 @@ class TestDCCTransformer(TestCase):
         manifest_json = get_json_from_file(SIMPLE_MANIFEST_FILEPATH)
 
         transformer = DCCJSONTransformer(SIMPLE_MAPPING_FILEPATH)
-        test_index_entries_json = transformer.transform(manifest_json, metadata_json)
+        actual_index = transformer.transform(manifest_json, metadata_json)
 
-        given_index_name, given_index_entry = next(iter(test_index_entries_json.items()))
+        given_index_name, given_index_entry = next(iter(actual_index.items()))
 
         self.assertEqual(given_index_name, expected_index, "Incorrectly mapped source file.")
         self.assertIn(expected_field_name, given_index_entry.keys(), f"Incorrectly mapped dictionary keys.")
@@ -62,9 +62,9 @@ class TestDCCTransformer(TestCase):
         manifest_json = get_json_from_file(SIMPLE_MANIFEST_FILEPATH)
 
         transformer = DCCJSONTransformer(FORMATTER_FFE_MAPPING_FILEPATH)
-        test_index_entries_json = transformer.transform(manifest_json, metadata_json)
+        actual_index = transformer.transform(manifest_json, metadata_json)
 
-        given_index_name, given_index_entry = next(iter(test_index_entries_json.items()))
+        given_index_name, given_index_entry = next(iter(actual_index.items()))
 
         self.assertEqual(given_index_name, expected_index, "Incorrectly mapped source file.")
         self.assertIn(expected_field_name, given_index_entry.keys(), f"Incorrectly mapped dictionary keys.")
@@ -72,171 +72,85 @@ class TestDCCTransformer(TestCase):
                          f"Incorrectly mapped dictionary values.")
 
     def test_gen3_metadata(self):
-        expected_index = 'fb_index'
-        expected_results = [
-            {
-                "index_field": "access",
-                "value": ""
-            },
-            {
-                "index_field": "analysis_type",
-                "value": ""
-            },
-            {
-                "index_field": "center_name",
-                "value": "Baylor"
-            },
-            {
-                "index_field": "project",
-                "value": "topmed-public"
-            },
-            {
-                "index_field": "lastModified",
-                "value": "1822-07-20T000000.000000Z"
-            },
-            {
-                "index_field": "program",
-                "value": "TOPMed"
-            },
-            {
-                "index_field": "redwoodDonorUUID",
-                "value": ""
-            },
-            {
-                "index_field": "fileSize",
-                "value": 23438579833
-            },
-            {
-                "index_field": "file_id",
-                "value": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-            },
-            {
-                "index_field": "file_version",
-                "value": "1822-07-20T000000.000000Z"
-            },
-            {
-                "index_field": "fileMd5sum",
-                "value": ""
-            },
-            {
-                "index_field": "download_id",
-                "value": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-            },
-            {
-                "index_field": "donor",
-                "value": "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
-            },
-            {
-                "index_field": "repoBaseUrl",
-                "value": ""
-            },
-            {
-                "index_field": "repoCode",
-                "value": "DSS-AWS-Oregon"
-            },
-            {
-                "index_field": "repoCountry",
-                "value": "US"
-            },
-            {
-                "index_field": "repoDataBundleId",
-                "value": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-            },
-            {
-                "index_field": "repoName",
-                "value": "DSS-AWS-Oregon"
-            },
-            {
-                "index_field": "repoOrg",
-                "value": "UCSC"
-            },
-            {
-                "index_field": "repoType",
-                "value": "HCA DSS"
-            },
-            {
-                "index_field": "sampleId",
-                "value": "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
-            },
-            {
-                "index_field": "software",
-                "value": ""
-            },
-            {
-                "index_field": "specimen_type",
-                "value": "Normal - solid tissue"
-            },
-            {
-                "index_field": "study",
-                "value": "topmed-public"
-            },
-            {
-                "index_field": "submittedDonorId",
-                "value": "NA12878"
-            },
-            {
-                "index_field": "submittedSampleId",
-                "value": "NWD119844"
-            },
-            {
-                "index_field": "specimenUUID",
-                "value": "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
-            },
-            {
-                "index_field": "submittedSpecimenId",
-                "value": "NWD119844"
-            },
-            {
-                "index_field": "submitterDonorPrimarySite",
-                "value": "B-lymphocyte"
-            },
-            {
-                "index_field": "submitter_donor_id",
-                "value": ""
-            },
-            {
-                "index_field": "title",
-                "value": "FKE6564321.recab.cram"
-            },
-            {
-                "index_field": "file_type",
-                "value": "cram"
-            },
-            {
-                "index_field": "workflow",
-                "value": ""
-            },
-            {
-                "index_field": "urls",
-                "value": ["gs://cgp-commons-multi-region-public/topmed_open_access"
-                          "/99999999-8888-7777-6666-555555555555/NWD319341.recab.cram",
-                          "s3://cgp-commons-public/topmed_open_access"
-                          "/99999999-8888-7777-6666-555555555555/NWD319341.recab.cram"]
-            },
-            {
-                "index_field": "workflowVersion",
-                "value": ""
-            },
-            {
-                "index_field": "metadataJson",
-                "value": ""
+        expected_index_name = 'fb_index'
+        expected_index = {
+            "fb_index": {
+                "program": "topmed",
+                "project": "public",
+                "study": "topmed-public",
+                "donor": "NA12878",
+                "submittedDonorId": "NA12878",
+                "submitter_donor_id": "NA12878",
+                "redwoodDonorUUID": "",
+                "access": "",
+                "age_range": "",
+                "bmi": "",
+                "gender": "female",
+                "height": "",
+                "race": "white",
+                "ethnicity": "not hispanic or latino",
+                "weight": "",
+                "analysis_type": "",
+                "center_name": "Baylor",
+                "library_strategy": "WGS",
+                "submittedSpecimenId": "NA12878_sample",
+                "specimenUUID": "eadf3fbd-69dd-4adb-822b-382a9296860a",
+                "specimen_type": "Normal - solid tissue",
+                "submitterDonorPrimarySite": "B-lymphocyte",
+                "biospecimen_anatomic_site": "",
+                "biospecimen_anatomic_site_detail": "",
+                "sampleId": "NWD119844",
+                "submittedSampleId": "NWD119844",
+                "experimentalStrategy": "",
+                "analyte_isolation_method": "",
+                "title": "FKE6564321.recab.cram",
+                "file_type": "cram",
+                "file_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+                "download_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+                "file_version": "1822-07-20T000000.000000Z",
+                "lastModified": "1822-07-20T000000.000000Z",
+                "urls": [
+                    "gs://cgp-commons-multi-region-public/topmed_open_access/99999999-8888-7777-6666-555555555555/NWD319341.recab.cram",
+                    "s3://cgp-commons-public/topmed_open_access/99999999-8888-7777-6666-555555555555/NWD319341.recab.cram"
+                ],
+                "aliases": [],
+                "fileSize": 23438579833,
+                "fileMd5sum": "",
+                "repoName": "DSS-AWS-Oregon",
+                "repoOrg": "UCSC",
+                "repoType": "HCA DSS",
+                "repoBaseUrl": "",
+                "repoCode": "DSS-AWS-Oregon",
+                "repoCountry": "US",
+                "repoDataBundleId": "",
+                "software": "",
+                "workflow": "",
+                "workflowVersion": "",
+                "metadataJson": ""
             }
-        ]
+        }
 
         metadata_json = get_json_from_file(GEN3_METADATA_FILEPATH)
         manifest_json = get_json_from_file(GEN3_MANIFEST_FILEPATH)
 
         transformer = DCCJSONTransformer(PROD_MAPPING_FILEPATH)
-        test_index_entries_json = transformer.transform(manifest_json, metadata_json)
+        actual_result = transformer.transform(manifest_json, metadata_json)
 
-        given_index_name, given_index_entry = next(iter(test_index_entries_json.items()))
+        # with open("test_index_entries.json", "w") as fh:
+        #     fh.write(json.dumps(actual_result, indent=4))
 
-        self.assertEqual(given_index_name, expected_index, "Incorrectly mapped source file.")
-        for result in expected_results:
-            field = result['index_field']
-            self.assertIn(field, given_index_entry.keys(), f"Incorrectly mapped index_field value.")
-            self.assertEqual(given_index_entry[field], result['value'], f"Incorrectly mapped value for"
-                                                                        f" field: {field}.")
+        actual_index_name, actual_index_entries = next(iter(actual_result.items()))
+
+        self.assertEqual(expected_index_name, actual_index_name, "Incorrect index name.")
+        expected_index_entries = expected_index.pop(expected_index_name)
+        if expected_index_entries != actual_index_entries:
+            for expected_key, expected_value in expected_index_entries.items():
+                self.assertIn(expected_key, actual_index_entries.keys(),
+                              f"Incorrectly mapped index_field: {expected_key}.")
+                self.assertEqual(expected_value, actual_index_entries[expected_key],
+                                 f"Incorrectly mapped value for field: {expected_key}.")
+                # Ensure actual_index_entries does not contain any extra entries
+                self.assertEqual(expected_index_entries.keys(), actual_index_entries.keys())
 
 
 if __name__ == '__main__':
