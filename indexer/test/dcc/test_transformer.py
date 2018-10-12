@@ -75,9 +75,9 @@ class TestDCCTransformer(TestCase):
         expected_index_name = 'fb_index'
         expected_index = {
             "fb_index": {
-                "program": "topmed",
+                "program": "TOPMed_Public",
                 "project": "public",
-                "study": "topmed-public",
+                "study": "TOPMed_Public",
                 "donor": "NA12878",
                 "submittedDonorId": "NA12878",
                 "submitter_donor_id": "NA12878",
