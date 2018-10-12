@@ -1,15 +1,18 @@
-import os
-import sys
 import csv
-import logging
-from unittest import mock
-from unittest.mock import patch
-import requests
 import json
+import logging
+import os
+import requests
+import responses
+import sys
+from unittest import mock
+
+from moto import mock_s3, mock_sts
+
 from azul import config
 from azul.service import service_config
+from azul.service.responseobjects.storage_service import StorageService
 from service import WebServiceTestCase
-from s3_test_case_mixin import S3TestCaseHelper
 
 log = logging.getLogger(__name__)
 
@@ -21,31 +24,12 @@ def setUpModule():
     log.addHandler(stream_handler)
 
 
-class FacetNameValidationTest(WebServiceTestCase, S3TestCaseHelper):
+class FacetNameValidationTest(WebServiceTestCase):
     filter_facet_message = {"Code": "BadRequestError",
                             "Message": "BadRequestError: Unable to filter by undefined facet bad-facet."}
     sort_facet_message = {"Code": "BadRequestError",
                           "Message": "BadRequestError: Unable to sort by undefined facet bad-facet."}
     service_config_dir = os.path.dirname(service_config.__file__)
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-
-        S3TestCaseHelper.start_s3_server()
-
-    @classmethod
-    def tearDownClass(cls):
-        S3TestCaseHelper.stop_s3_server()
-        super().tearDownClass()
-
-    def setUp(self):
-        super().setUp()
-        S3TestCaseHelper.s3_create_bucket(config.s3_bucket)
-
-    def tearDown(self):
-        S3TestCaseHelper.s3_remove_bucket(config.s3_bucket)
-        super().tearDown()
 
     def test_health(self):
         url = self.base_url + "health"
@@ -204,10 +188,13 @@ class FacetNameValidationTest(WebServiceTestCase, S3TestCaseHelper):
             expected_field_order = [entity_field.strip() for entity_field in order_settings_file.readlines()]
             self.assertEqual(expected_field_order, actual_field_order, "Field order is not configured correctly")
 
-    @patch('boto3.client')
-    def test_manifest(self, boto3_client_mock):
+    @mock_s3
+    @mock_sts
+    def test_manifest(self):
         logging.getLogger('test_request_validation').warning('test_manifest is invoked')
-        boto3_client_mock.return_value = S3TestCaseHelper.s3_client()
+        responses.add_passthru('http://')
+        storage_service = StorageService()
+        storage_service.create_bucket()
 
         url = self.base_url + 'repository/files/export?filters={"file":{}}'
         response = requests.get(url)
