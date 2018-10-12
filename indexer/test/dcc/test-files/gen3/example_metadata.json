@@ -198,7 +198,22 @@
       "age_at_index": "",
       "year_of_death": ""
     },
-    "program": "topmed",
-    "project": "public"
+    "project": {
+      "availability_mechanism": null,
+      "availability_type": null,
+      "code": "public",
+      "date_collected": null,
+      "dbgap_accession_number": "public",
+      "id": "09c26ed7-ed2f-52b1-a366-d7dede15cc32",
+      "intended_release_date": null,
+      "investigator_affiliation": null,
+      "investigator_name": null,
+      "name": "Public Trans-Omics for Precision Medicine",
+      "releasable": null,
+      "released": null,
+      "state": "open",
+      "support_id": null,
+      "support_source": null
+    }
   }
 }

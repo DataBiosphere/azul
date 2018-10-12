@@ -4,17 +4,17 @@
     "mappings": [
       {
         "source": "metadata.json",
-        "dss_field": "program",
+        "dss_field": "study.submitter_id",
         "index_field": "program"
       },
       {
         "source": "metadata.json",
-        "dss_field": "project",
+        "dss_field": "project.code",
         "index_field": "project"
       },
       {
         "source": "metadata.json",
-        "dss_field": "case.project_id",
+        "dss_field": "study.submitter_id",
         "index_field": "study"
       },
       {
