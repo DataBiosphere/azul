@@ -3,7 +3,6 @@
 import json
 import difflib
 import logging.config
-import os
 import unittest
 from service import WebServiceTestCase
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
@@ -12,23 +11,41 @@ logger = logging.getLogger(__name__)
 
 
 class TestRequestBuilder(WebServiceTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.request_config_filepath = os.path.join(cls.data_directory, 'request_builder_test_config.json')
-
-    def _load_json(self, name):
-        return EsTd.open_and_return_json(os.path.join(os.path.dirname(__file__), name))
+    request_config = {
+        "translation": {
+            "entity_id": "entity_id",
+            "entity_version": "entity_version",
+            "projectId": "bundles.contents.projects.document_id",
+            "libraryConstructionApproach": "bundles.contents.processes.library_construction_approach",
+            "disease": "bundles.contents.specimens.disease",
+            "donorId": "bundles.contents.specimens.donor_biomaterial_id",
+            "genusSpecies": "bundles.contents.specimens.genus_species"
+        },
+        "autocomplete-translation": {
+            "files": {
+                "entity_id": "entity_id",
+                "entity_version": "entity_version"
+            },
+            "donor": {
+                "donor": "donor_uuid"
+            }
+        },
+        "manifest": [
+            "File ID:Version",
+            "Assay Id",
+            "Analysis Id",
+            "Project Id"
+        ],
+        "facets": [
+        ]
+    }
 
     @staticmethod
     def compare_dicts(actual_output, expected_output):
         """"Print the two outputs along with a diff of the two"""
         print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(
-            actual_output[:20],
-            expected_output[:20]))
-        for i, s in enumerate(
-                difflib.ndiff(actual_output, expected_output)):
+        print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
+        for i, s in enumerate(difflib.ndiff(actual_output, expected_output)):
             if s[0] == ' ':
                 continue
             elif s[0] == '-':
@@ -42,8 +59,35 @@ class TestRequestBuilder(WebServiceTestCase):
         :return: True or False depending on the assertion
         """
         # Load files required for this test
-        request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test_input1.json'))
+        expected_output = {
+            "post_filter": {
+                "bool": {
+                    "must": [
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "terms": {
+                                        "entity_id.keyword": [
+                                            "cbb998ce-ddaf-34fa-e163-d14b399c6b34"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "must_not": [
+                        {
+                            "term": {
+                                "bundles.contents.deleted": True
+                            }
+                        }
+                    ]
+                }
+            },
+            "query": {
+                "match_all": {}
+            }
+        }
         # Create a simple filter to test on
         sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
         # Need to work on a couple cases:
@@ -57,7 +101,7 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = EsTd.create_request(
             sample_filter,
             es_ts_instance.es_client,
-            request_config,
+            self.request_config,
             post_filter=True)
         # Convert objects to be compared to strings
         expected_output = json.dumps(
@@ -79,8 +123,20 @@ class TestRequestBuilder(WebServiceTestCase):
         """
         # Testing with default (that is, no) filter
         # Load files required for this test
-        request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test_input2.json'))
+        expected_output = {
+            "query": {
+                "bool": {
+                    "must_not": [
+                        {
+                            "term": {
+                                "bundles.contents.deleted": True
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+
         # Create empty filter
         # TODO: Need some form of handler for the query language
         sample_filter = {}
@@ -90,7 +146,7 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = EsTd.create_request(
             sample_filter,
             es_ts_instance.es_client,
-            request_config)
+            self.request_config)
         # Convert objects to be compared to strings
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
@@ -107,8 +163,47 @@ class TestRequestBuilder(WebServiceTestCase):
         """
         # Testing with default (that is, no) filter
         # Load files required for this test
-        request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test_input3.json'))
+        expected_output = {
+            "post_filter": {
+                "bool": {
+                    "must": [
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "terms": {
+                                        "entity_id.keyword": [
+                                            "cbb998ce-ddaf-34fa-e163-d14b399c6b34"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "terms": {
+                                        "entity_version.keyword": [
+                                            "1993-07-19T23:50:09"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "must_not": [
+                        {
+                            "term": {
+                                "bundles.contents.deleted": True
+                            }
+                        }
+                    ]
+                }
+            },
+            "query": {
+                "match_all": {}
+            }
+        }
+
         # Create sample filter
         sample_filter = {
             "entity_id":
@@ -127,7 +222,7 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = EsTd.create_request(
             sample_filter,
             es_ts_instance.es_client,
-            request_config,
+            self.request_config,
             post_filter=True)
         # Convert objects to be compared to strings
         expected_output = json.dumps(expected_output, sort_keys=True)
@@ -143,9 +238,41 @@ class TestRequestBuilder(WebServiceTestCase):
         Tests creation of a request for facets that do not have a value
         """
         # Load files required for this test
-        request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(
-            os.path.join(self.data_directory, 'request_builder_test_missing_values1.json'))
+        request_config = self.request_config
+        expected_output = {
+            "post_filter": {
+                "bool": {
+                    "must": [
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "bool": {
+                                        "must_not": [
+                                            {
+                                                "exists": {
+                                                    "field": "entity_id.keyword"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "must_not": [
+                        {
+                            "term": {
+                                "bundles.contents.deleted": True
+                            }
+                        }
+                    ]
+                }
+            },
+            "query": {
+                "match_all": {}
+            }
+        }
+
         # Create a filter for missing values
         sample_filter = {"entity_id": {"is": None}}
 
@@ -175,9 +302,66 @@ class TestRequestBuilder(WebServiceTestCase):
         Tests creation of a request for a combination of facets that do and do not have a value
         """
         # Load files required for this test
-        request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(
-            os.path.join(self.data_directory, 'request_builder_test_missing_values2.json'))
+        expected_output = {
+            "post_filter": {
+                "bool": {
+                    "must": [
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "bool": {
+                                        "must_not": [
+                                            {
+                                                "exists": {
+                                                    "field": "term1.keyword"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "terms": {
+                                        "term2.keyword": [
+                                            "test"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "bool": {
+                                        "must_not": [
+                                            {
+                                                "exists": {
+                                                    "field": "term3.keyword"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "must_not": [
+                        {
+                            "term": {
+                                "bundles.contents.deleted": True
+                            }
+                        }
+                    ]
+                }
+            },
+            "query": {
+                "match_all": {}
+            }
+        }
+
         # Create a filter for missing values
         sample_filter = {
             "term1": {"is": None},
@@ -191,7 +375,7 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = EsTd.create_request(
             sample_filter,
             es_ts_instance.es_client,
-            request_config,
+            self.request_config,
             post_filter=True)
         # Convert objects to be compared to strings
         expected_output = json.dumps(
@@ -210,9 +394,32 @@ class TestRequestBuilder(WebServiceTestCase):
         """
         Tests creation of an ES aggregate
         """
-        # Load files required for this test
-        expected_output = self._load_json(
-            os.path.join(self.data_directory, 'request_builder_test_aggregate.json'))
+        expected_output = {
+            "filter": {
+                "bool": {
+                    "must_not": [
+                        {
+                            "term": {
+                                "bundles.contents.deleted": True
+                            }
+                        }
+                    ]
+                }
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field": "facet1.translation.keyword",
+                        "size": 99999
+                    }
+                },
+                "untagged": {
+                    "missing": {
+                        "field": "facet1.translation.keyword"
+                    }
+                }
+            }
+        }
 
         sample_filter = {}
 
@@ -243,9 +450,65 @@ class TestRequestBuilder(WebServiceTestCase):
         and sub-aggregations within each project bucket
         """
         # Load files required for this test
-        request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(
-            os.path.join(self.data_directory, 'request_builder_test_input_projects.json'))
+        expected_output = {
+            "post_filter": {
+                "bool": {
+                    "must": [
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "terms": {
+                                        "entity_id.keyword": [
+                                            "cbb998ce-ddaf-34fa-e163-d14b399c6b34"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "must_not": [
+                        {
+                            "term": {
+                                "bundles.contents.deleted": True
+                            }
+                        }
+                    ]
+                }
+            },
+            "query": {
+                "match_all": {}
+            },
+            "aggs": {
+                "_project_agg": {
+                    "terms": {
+                        "field": "bundles.contents.projects.document_id.keyword"
+                    },
+                    "aggs": {
+                        "donor_count": {
+                            "cardinality": {
+                                "field": "bundles.contents.specimens.donor_biomaterial_id.keyword",
+                                "precision_threshold": "40000"
+                            }
+                        },
+                        "species": {
+                            "terms": {
+                                "field": "bundles.contents.specimens.genus_species.keyword"
+                            }
+                        },
+                        "libraryConstructionApproach": {
+                            "terms": {
+                                "field": "bundles.contents.processes.library_construction_approach.keyword"
+                            }
+                        },
+                        "disease": {
+                            "terms": {
+                                "field": "bundles.contents.specimens.disease.keyword"
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
 
@@ -255,7 +518,7 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = EsTd.create_request(
             sample_filter,
             es_ts_instance.es_client,
-            request_config,
+            self.request_config,
             post_filter=True,
             entity_type='projects')
         # Convert objects to be compared to strings
@@ -276,12 +539,151 @@ class TestRequestBuilder(WebServiceTestCase):
         Summary should be added to dict of corresponding project id in hits.
         """
         hits = [{'entryId': 'a'}, {'entryId': 'b'}]
-        es_response = self._load_json(
-            os.path.join(self.data_directory, 'request_builder_project_summaries_input.json'))
+        es_response = {
+            "hits": {
+                "hits": [
+                    {
+                        "_id": "a",
+                        "_source": {
+                            "entity_id": "a",
+                            "bundles": [
+                                {
+                                    "contents": {
+                                        "specimens": [],
+                                        "files": [],
+                                        "processes": [],
+                                        "project": {
+                                            "document_id": "a"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "_id": "b",
+                        "_source": {
+                            "entity_id": "b",
+                            "bundles": [
+                                {
+                                    "contents": {
+                                        "specimens": [
+                                            {
+                                                "biomaterial_id": "specimen1",
+                                                "disease": [
+                                                    "disease1"
+                                                ],
+                                                "organ": [
+                                                    "organ1"
+                                                ],
+                                                "total_estimated_cells": [
+                                                    2
+                                                ],
+                                                "donor_biomaterial_id": [
+                                                    "donor1"
+                                                ],
+                                                "genus_species": [
+                                                    "species1"
+                                                ]
+                                            }
+                                        ],
+                                        "files": [],
+                                        "processes": [],
+                                        "project": {
+                                            "document_id": "b"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "aggregations": {
+                "_project_agg": {
+                    "doc_count_error_upper_bound": 0,
+                    "sum_other_doc_count": 0,
+                    "buckets": [
+                        {
+                            "key": "a",
+                            "libraryConstructionApproach": {
+                                "buckets": []
+                            },
+                            "disease": {
+                                "buckets": []
+                            },
+                            "donor_count": {
+                                "value": 0
+                            },
+                            "species": {
+                                "buckets": []
+                            }
+                        },
+                        {
+                            "key": "b",
+                            "libraryConstructionApproach": {
+                                "buckets": []
+                            },
+                            "disease": {
+                                "buckets": [
+                                    {
+                                        "key": "disease1",
+                                        "doc_count": 1
+                                    }
+                                ]
+                            },
+                            "donor_count": {
+                                "value": 1
+                            },
+                            "species": {
+                                "buckets": [
+                                    {
+                                        "key": "species1",
+                                        "doc_count": 1
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
         EsTd().add_project_summaries(hits, es_response)
 
-        expected_output = self._load_json(
-            os.path.join(self.data_directory, 'request_builder_project_summaries_output.json'))
+        expected_output = [
+            {
+                "entryId": "a",
+                "projectSummary": {
+                    "donorCount": 0,
+                    "totalCellCount": 0.0,
+                    "organSummaries": [],
+                    "genusSpecies": [],
+                    "libraryConstructionApproach": [],
+                    "disease": []
+                }
+            },
+            {
+                "entryId": "b",
+                "projectSummary": {
+                    "donorCount": 1,
+                    "totalCellCount": 2.0,
+                    "organSummaries": [
+                        {
+                            "organType": "organ1",
+                            "countOfDocsWithOrganType": 1,
+                            "totalCellCountByOrgan": 2.0
+                        }
+                    ],
+                    "genusSpecies": [
+                        "species1"
+                    ],
+                    "libraryConstructionApproach": [],
+                    "disease": [
+                        "disease1"
+                    ]
+                }
+            }
+        ]
 
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(hits, sort_keys=True)
