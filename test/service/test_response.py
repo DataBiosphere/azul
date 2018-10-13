@@ -13,6 +13,133 @@ from service import WebServiceTestCase
 
 
 class TestResponse(WebServiceTestCase):
+    input = [
+        {
+            "bundles": [
+                {
+                    "contents": {
+                        "files": [
+                            {
+                                "_type": "fuchsia",
+                                "content-type": "green",
+                                "crc32c": "61bd62c582e698313bc2bd60fbfbfb55211a71d5",
+                                "file_format": "csv",
+                                "hca_id": "a350b29c-2609-7b92-0c49-23971a4f9371",
+                                "indexed": True,
+                                "lane": 5108,
+                                "name": "billion.key",
+                                "read": "blue",
+                                "s3_etag": "fef20a0bb461859c18a39aa3055fdf3ccb126a6b",
+                                "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+                                "sha256": "0166ec04250562942e3613be6c4b96ee2cea4967",
+                                "size": 6667,
+                                "uuid": "e9772583-4240-4757-6357-32bef0e51150",
+                                "version": "2001-03-16T05:26:40"
+                            }
+                        ],
+                        "processes": [
+                            {
+                                "_type": "navy",
+                                "hca_id": [
+                                    "4188ddbe-8865-a433-a1f6-213d49aa5719"
+                                ],
+                                "instrument_manufacturer_model": "green",
+                                "library_construction_approach": "fuchsia",
+                                "process_id": "maroon",
+                                "process_name": "olive",
+                                "protocol_name": "olive",
+                                "protocol_id": "green"
+                            }
+                        ],
+                        "project": {
+                            "_type": "maroon",
+                            "hca_id": "37a92077-530f-fdbb-df14-2926665cc697",
+                            "project_title": "purple",
+                            "project_description": "navy",
+                            "laboratory": [
+                                "silver"
+                            ],
+                            "project_shortname": "blue",
+                            "contributors": [
+                                {
+                                    "contact_name": "yellow",
+                                    "corresponding_contributor": False,
+                                    "email": "gray"
+                                },
+                                {
+                                    "contact_name": "teal",
+                                    "corresponding_contributor": True,
+                                    "email": "purple",
+                                    "institution": "yellow",
+                                    "laboratory": "silver"
+                                }
+                            ],
+                            "publications": [
+                                {
+                                    "authors": [
+                                        "green",
+                                        "maroon",
+                                        "gray"
+                                    ],
+                                    "publication_title": "gray",
+                                    "doi": "green",
+                                    "pmid": 5331933,
+                                    "publication_url": "black"
+                                }
+                            ]
+                        },
+                        "specimens": [
+                            {
+                                "_type": [
+                                    "teal"
+                                ],
+                                "organism_age": [
+                                    "purple"
+                                ],
+                                "organism_age_unit": [
+                                    "navy"
+                                ],
+                                "biomaterial_id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+                                "disease": [
+                                    "yellow"
+                                ],
+                                "id": [
+                                    "1cae440e-3be6-ce39-49e9-74721f0066e0"
+                                ],
+                                "organ": [
+                                    "purple"
+                                ],
+                                "organ_part": [
+                                    "black"
+                                ],
+                                "parent": [
+                                    "aqua"
+                                ],
+                                "biological_sex": [
+                                    "silver"
+                                ],
+                                "_source": [
+                                    "purple"
+                                ],
+                                "genus_species": [
+                                    "teal"
+                                ],
+                                "storage_method": [
+                                    "aqua"
+                                ],
+                                "total_estimated_cells": [
+                                    5306
+                                ]
+                            }
+                        ]
+                    },
+                    "uuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+                    "version": "2003-08-12T00:52:21"
+                }
+            ],
+            "entity_id": "08d3440a-7481-41c5-5140-e15ed269ea63"
+        }
+    ]
 
     def test_key_search_files_response(self):
         """
@@ -22,12 +149,88 @@ class TestResponse(WebServiceTestCase):
         """
         # Still need a way to test the response.
         keyword_response = KeywordSearchResponse(
-            hits=self._load("response_test_input.json"),
+            hits=self.input,
             entity_type='files'
         ).return_response().to_json()
 
+        expected_response = {
+            "hits": [
+                {
+                    "bundles": [
+                        {
+                            "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+                            "bundleVersion": "2003-08-12T00:52:21"
+                        }
+                    ],
+                    "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                    "files": [
+                        {
+                            "format": "csv",
+                            "name": "billion.key",
+                            "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+                            "size": 6667,
+                            "uuid": "e9772583-4240-4757-6357-32bef0e51150",
+                            "version": "2001-03-16T05:26:40"
+                        }
+                    ],
+                    "processes": [
+                        {
+                            "instrument": "green",
+                            "libraryConstructionApproach": "fuchsia",
+                            "processId": "maroon",
+                            "processName": "olive",
+                            "protocol": "olive",
+                            "protocolId": "green"
+                        }
+                    ],
+                    "projects": [
+                        {
+                            "projectTitle": "purple",
+                            "laboratory": [
+                                "silver"
+                            ],
+                            "projectShortname": "blue"
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "biologicalSex": [
+                                "silver"
+                            ],
+                            "disease": [
+                                "yellow"
+                            ],
+                            "genusSpecies": [
+                                "teal"
+                            ],
+                            "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+                            "organ": [
+                                "purple"
+                            ],
+                            "organPart": [
+                                "black"
+                            ],
+                            "organismAge": [
+                                "purple"
+                            ],
+                            "organismAgeUnit": [
+                                "navy"
+                            ],
+                            "source": [
+                                "purple"
+                            ],
+                            "storageMethod": [
+                                "aqua"
+                            ],
+                            "totalCells": 5306
+                        }
+                    ]
+                }
+            ]
+        }
+
         self.assertEqual(json.dumps(keyword_response, sort_keys=True),
-                         json.dumps(self._load("response_keysearch_files_output.json"), sort_keys=True))
+                         json.dumps(expected_response, sort_keys=True))
 
     def test_key_search_specimens_response(self):
         """
@@ -35,46 +238,359 @@ class TestResponse(WebServiceTestCase):
         """
         # Still need a way to test the response.
         keyword_response = KeywordSearchResponse(
-            hits=self._load("response_test_input.json"),
+            hits=self.input,
             entity_type='specimens'
         ).return_response().to_json()
 
+        expected_response = {
+            "hits": [
+                {
+                    "bundles": [
+                        {
+                            "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+                            "bundleVersion": "2003-08-12T00:52:21"
+                        }
+                    ],
+                    "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                    "fileTypeSummaries": [
+                        {
+                            "count": 1,
+                            "fileType": "csv",
+                            "totalSize": 6667
+                        }
+                    ],
+                    "processes": [
+                        {
+                            "instrument": "green",
+                            "libraryConstructionApproach": "fuchsia",
+                            "processId": "maroon",
+                            "processName": "olive",
+                            "protocol": "olive",
+                            "protocolId": "green"
+                        }
+                    ],
+                    "projects": [
+                        {
+                            "projectTitle": "purple",
+                            "laboratory": [
+                                "silver"
+                            ],
+                            "projectShortname": "blue"
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "biologicalSex": [
+                                "silver"
+                            ],
+                            "disease": [
+                                "yellow"
+                            ],
+                            "genusSpecies": [
+                                "teal"
+                            ],
+                            "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+                            "organ": [
+                                "purple"
+                            ],
+                            "organPart": [
+                                "black"
+                            ],
+                            "organismAge": [
+                                "purple"
+                            ],
+                            "organismAgeUnit": [
+                                "navy"
+                            ],
+                            "source": [
+                                "purple"
+                            ],
+                            "storageMethod": [
+                                "aqua"
+                            ],
+                            "totalCells": 5306
+                        }
+                    ]
+                }
+            ]
+        }
         self.assertEqual(json.dumps(keyword_response, sort_keys=True),
-                         json.dumps(self._load("response_keysearch_specimens_output.json"), sort_keys=True))
+                         json.dumps(expected_response, sort_keys=True))
+
+    paginations = [
+        {
+            "count": 2,
+            "order": "desc",
+            "pages": 1,
+            "size": 5,
+            "sort": "entryId",
+            "total": 2
+        }, {
+            "count": 2,
+            "order": "desc",
+            "pages": 1,
+            "search_after": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
+            "search_after_uid": "meta#32",
+            "size": 5,
+            "sort": "entryId",
+            "total": 2
+        }
+    ]
 
     def test_file_search_response(self):
         """
-        n=1: Test the FileSearchResponse object, making sure the functionality works as appropriate by asserting the
+        n=0: Test the FileSearchResponse object, making sure the functionality works as appropriate by asserting the
         apiResponse attribute is the same as expected.
 
-        n=2: Tests the FileSearchResponse object, using 'search_after' pagination.
+        n=1: Tests the FileSearchResponse object, using 'search_after' pagination.
         """
-        for n in 1, 2:
+        responses = [
+            {
+                "hits": [
+                    {
+                        "bundles": [
+                            {
+                                "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+                                "bundleVersion": "2003-08-12T00:52:21"
+                            }
+                        ],
+                        "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                        "files": [
+                            {
+                                "format": "csv",
+                                "name": "billion.key",
+                                "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+                                "size": 6667,
+                                "uuid": "e9772583-4240-4757-6357-32bef0e51150",
+                                "version": "2001-03-16T05:26:40"
+                            }
+                        ],
+                        "processes": [
+                            {
+                                "instrument": "green",
+                                "libraryConstructionApproach": "fuchsia",
+                                "processId": "maroon",
+                                "processName": "olive",
+                                "protocol": "olive",
+                                "protocolId": "green"
+                            }
+                        ],
+                        "projects": [
+                            {
+                                "projectTitle": "purple",
+                                "laboratory": [
+                                    "silver"
+                                ],
+                                "projectShortname": "blue"
+                            }
+                        ],
+                        "specimens": [
+                            {
+                                "biologicalSex": [
+                                    "silver"
+                                ],
+                                "disease": [
+                                    "yellow"
+                                ],
+                                "genusSpecies": [
+                                    "teal"
+                                ],
+                                "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+                                "organ": [
+                                    "purple"
+                                ],
+                                "organPart": [
+                                    "black"
+                                ],
+                                "organismAge": [
+                                    "purple"
+                                ],
+                                "organismAgeUnit": [
+                                    "navy"
+                                ],
+                                "source": [
+                                    "purple"
+                                ],
+                                "storageMethod": [
+                                    "aqua"
+                                ],
+                                "totalCells": 5306
+                            }
+                        ]
+                    }
+                ],
+                "pagination": {
+                    "count": 2,
+                    "order": "desc",
+                    "pages": 1,
+                    "search_after": None,
+                    "search_after_uid": None,
+                    "search_before": None,
+                    "search_before_uid": None,
+                    "size": 5,
+                    "sort": "entryId",
+                    "total": 2
+                },
+                "termFacets": {
+
+                }
+            }, {
+                "hits": [
+                    {
+                        "bundles": [
+                            {
+                                "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+                                "bundleVersion": "2003-08-12T00:52:21"
+                            }
+                        ],
+                        "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                        "files": [
+                            {
+                                "format": "csv",
+                                "name": "billion.key",
+                                "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+                                "size": 6667,
+                                "uuid": "e9772583-4240-4757-6357-32bef0e51150",
+                                "version": "2001-03-16T05:26:40"
+                            }
+                        ],
+                        "processes": [
+                            {
+                                "instrument": "green",
+                                "libraryConstructionApproach": "fuchsia",
+                                "processId": "maroon",
+                                "processName": "olive",
+                                "protocol": "olive",
+                                "protocolId": "green"
+                            }
+                        ],
+                        "projects": [
+                            {
+                                "projectTitle": "purple",
+                                "laboratory": [
+                                    "silver"
+                                ],
+                                "projectShortname": "blue"
+                            }
+                        ],
+                        "specimens": [
+                            {
+                                "biologicalSex": [
+                                    "silver"
+                                ],
+                                "disease": [
+                                    "yellow"
+                                ],
+                                "genusSpecies": [
+                                    "teal"
+                                ],
+                                "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+                                "organ": [
+                                    "purple"
+                                ],
+                                "organPart": [
+                                    "black"
+                                ],
+                                "organismAge": [
+                                    "purple"
+                                ],
+                                "organismAgeUnit": [
+                                    "navy"
+                                ],
+                                "source": [
+                                    "purple"
+                                ],
+                                "storageMethod": [
+                                    "aqua"
+                                ],
+                                "totalCells": 5306
+                            }
+                        ]
+                    }
+                ],
+                "pagination": {
+                    "count": 2,
+                    "order": "desc",
+                    "pages": 1,
+                    "search_after": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
+                    "search_after_uid": "meta#32",
+                    "search_before": None,
+                    "search_before_uid": None,
+                    "size": 5,
+                    "sort": "entryId",
+                    "total": 2
+                },
+                "termFacets": {
+
+                }
+            }
+
+        ]
+        for n in 0, 1:
             with self.subTest(n=n):
                 filesearch_response = FileSearchResponse(
-                    hits=self._load("response_test_input.json"),
-                    pagination=self._load(f"response_pagination_input{n}.json"),
-                    facets=self._load("response_facets_empty.json"),
+                    hits=self.input,
+                    pagination=self.paginations[n],
+                    facets={},
                     entity_type="files"
                 ).return_response().to_json()
 
                 self.assertEqual(json.dumps(filesearch_response, sort_keys=True),
-                                 json.dumps(self._load(f"response_filesearch_output{n}.json"), sort_keys=True))
+                                 json.dumps(responses[n], sort_keys=True))
 
     def test_file_search_response_file_summaries(self):
         """
         Test non-'files' entity type passed to FileSearchResponse will give file summaries
         """
         filesearch_response = FileSearchResponse(
-            hits=self._load("response_test_input.json"),
-            pagination=self._load(f"response_pagination_input1.json"),
-            facets=self._load("response_facets_empty.json"),
+            hits=self.input,
+            pagination=self.paginations[0],
+            facets={},
             entity_type="specimens"
         ).return_response().to_json()
 
         for hit in filesearch_response['hits']:
             self.assertTrue('fileTypeSummaries' in hit)
             self.assertFalse('files' in hit)
+
+    facets_populated = {
+        "organ": {
+            "doc_count": 21,
+            "untagged": {
+                "doc_count": 0
+            },
+            "myTerms": {
+                "doc_count_error_upper_bound": 0,
+                "sum_other_doc_count": 0,
+                "buckets": [
+                    {
+                        "key": "silver",
+                        "doc_count": 11
+                    },
+                    {
+                        "key": "teal",
+                        "doc_count": 10
+                    }
+                ]
+            }
+        },
+        "disease": {
+            "doc_count": 21,
+            "untagged": {
+                "doc_count": 12
+            },
+            "myTerms": {
+                "doc_count_error_upper_bound": 0,
+                "sum_other_doc_count": 0,
+                "buckets": [
+                    {
+                        "key": "silver",
+                        "doc_count": 9
+                    }
+                ]
+            }
+        }
+    }
 
     def test_file_search_response_add_facets(self):
         """
@@ -83,9 +599,39 @@ class TestResponse(WebServiceTestCase):
 
         null term should not appear if there are no missing values
         """
-        facets = FileSearchResponse.add_facets(self._load('response_facets_populated.json'))
+        facets = FileSearchResponse.add_facets(self.facets_populated)
+        expected_output = {
+            "organ": {
+                "terms": [
+                    {
+                        "term": "silver",
+                        "count": 11
+                    },
+                    {
+                        "term": "teal",
+                        "count": 10
+                    }
+                ],
+                "total": 21,
+                "type": "terms"
+            },
+            "disease": {
+                "terms": [
+                    {
+                        "term": "silver",
+                        "count": 9
+                    },
+                    {
+                        "term": None,
+                        "count": 12
+                    }
+                ],
+                "total": 21,
+                "type": "terms"
+            }
+        }
         self.assertEqual(json.dumps(facets, sort_keys=True),
-                         json.dumps(self._load('response_filesearch_add_facets_output.json'), sort_keys=True))
+                         json.dumps(expected_output, sort_keys=True))
 
     def test_summary_endpoint(self):
         for entity_type in 'specimens', 'files':
@@ -113,8 +659,170 @@ class TestResponse(WebServiceTestCase):
         Should not double count cell count from specimens with an already counted id
             (i.e. each unique specimen counted exactly once)
         """
-        es_hit = self._load('response_project_cell_count_input.json')
-        expected_output = self._load('response_project_cell_count_output.json')
+        es_hit = {
+            "_id": "a",
+            "_source": {
+                "entity_id": "a",
+                "bundles": [
+                    {
+                        "contents": {
+                            "specimens": [
+                                {
+                                    "biomaterial_id": "specimen1",
+                                    "disease": [
+                                        "disease1"
+                                    ],
+                                    "organ": [
+                                        "organ1"
+                                    ],
+                                    "total_estimated_cells": [
+                                        2
+                                    ],
+                                    "donor_biomaterial_id": [
+                                        "donor1"
+                                    ],
+                                    "genus_species": [
+                                        "species1"
+                                    ]
+                                }
+                            ],
+                            "files": [],
+                            "processes": [],
+                            "project": {
+                                "document_id": "a"
+                            }
+                        }
+                    },
+                    {
+                        "contents": {
+                            "specimens": [
+                                {
+                                    "biomaterial_id": "specimen1",
+                                    "disease": [
+                                        "disease1"
+                                    ],
+                                    "organ": [
+                                        "organ1"
+                                    ],
+                                    "total_estimated_cells": [
+                                        2
+                                    ],
+                                    "donor_biomaterial_id": [
+                                        "donor1"
+                                    ],
+                                    "genus_species": [
+                                        "species1"
+                                    ]
+                                }
+                            ],
+                            "files": [],
+                            "processes": [],
+                            "project": {
+                                "document_id": "a"
+                            }
+                        }
+                    },
+                    {
+                        "contents": {
+                            "specimens": [
+                                {
+                                    "biomaterial_id": "specimen2",
+                                    "disease": [
+                                        "disease1"
+                                    ],
+                                    "organ": [
+                                        "organ2"
+                                    ],
+                                    "total_estimated_cells": [
+                                        3
+                                    ],
+                                    "donor_biomaterial_id": [
+                                        "donor1"
+                                    ],
+                                    "genus_species": [
+                                        "species1"
+                                    ]
+                                }
+                            ],
+                            "files": [],
+                            "processes": [],
+                            "project": {
+                                "document_id": "a"
+                            }
+                        }
+                    },
+                    {
+                        "contents": {
+                            "specimens": [
+                                {
+                                    "biomaterial_id": "specimen3",
+                                    "disease": [
+                                        "disease1"
+                                    ],
+                                    "organ": [
+                                        "organ1"
+                                    ],
+                                    "total_estimated_cells": [
+                                        4
+                                    ],
+                                    "donor_biomaterial_id": [
+                                        "donor1"
+                                    ],
+                                    "genus_species": [
+                                        "species1"
+                                    ]
+                                }
+                            ],
+                            "files": [],
+                            "processes": [],
+                            "project": {
+                                "document_id": "a"
+                            }
+                        }
+                    },
+                    {
+                        "contents": {
+                            "specimens": [
+                                {
+                                    "biomaterial_id": "specimen2",
+                                    "disease": [
+                                        "disease1"
+                                    ],
+                                    "organ": [
+                                        "organ2"
+                                    ],
+                                    "total_estimated_cells": [
+                                        3
+                                    ],
+                                    "donor_biomaterial_id": [
+                                        "donor1"
+                                    ],
+                                    "genus_species": [
+                                        "species1"
+                                    ]
+                                }
+                            ],
+                            "files": [],
+                            "processes": [],
+                            "project": {
+                                "document_id": "a"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+
+        expected_output = [
+            {
+                "key": "organ1",
+                "value": 6
+            },
+            {
+                "key": "organ2",
+                "value": 3
+            }
+        ]
 
         total_cell_count, organ_cell_count = ProjectSummaryResponse.get_cell_count(es_hit)
 
@@ -123,21 +831,53 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(json.dumps(organ_cell_count, sort_keys=True),
                          json.dumps(expected_output, sort_keys=True))
 
+    project_buckets = {
+        "buckets": [
+            {
+                "key": "project1",
+                "term_bucket": {
+                    "buckets": [
+                        {
+                            "key": "term1"
+                        },
+                        {
+                            "key": "term2"
+                        },
+                        {
+                            "key": "term3"
+                        }
+                    ]
+                },
+                "value_bucket": {
+                    "value": 2
+                }
+            },
+            {
+                "key": "project2",
+                "term_bucket": {
+                    "buckets": []
+                },
+                "value_bucket": {
+                    "value": 4
+                }
+            }
+        ]
+    }
+
     def test_project_get_bucket_terms(self):
         """
         Test getting all unique terms of a given facet of a given project
         Should only return values of the given project
         Should return an empty list if project has no values in the term or if project does not exist
         """
-        project_buckets = self._load('response_project_get_bucket_input.json')
 
-        bucket_terms_1 = ProjectSummaryResponse.get_bucket_terms('project1', project_buckets, 'term_bucket')
+        bucket_terms_1 = ProjectSummaryResponse.get_bucket_terms('project1', self.project_buckets, 'term_bucket')
         self.assertEqual(bucket_terms_1, ['term1', 'term2', 'term3'])
 
-        bucket_terms_2 = ProjectSummaryResponse.get_bucket_terms('project2', project_buckets, 'term_bucket')
+        bucket_terms_2 = ProjectSummaryResponse.get_bucket_terms('project2', self.project_buckets, 'term_bucket')
         self.assertEqual(bucket_terms_2, [])
 
-        bucket_terms_3 = ProjectSummaryResponse.get_bucket_terms('project3', project_buckets, 'term_bucket')
+        bucket_terms_3 = ProjectSummaryResponse.get_bucket_terms('project3', self.project_buckets, 'term_bucket')
         self.assertEqual(bucket_terms_3, [])
 
     def test_project_get_bucket_values(self):
@@ -146,15 +886,13 @@ class TestResponse(WebServiceTestCase):
         Should only value of the given project
         Should return -1 if project is not found
         """
-        project_buckets = self._load('response_project_get_bucket_input.json')
-
-        bucket_terms_1 = ProjectSummaryResponse.get_bucket_value('project1', project_buckets, 'value_bucket')
+        bucket_terms_1 = ProjectSummaryResponse.get_bucket_value('project1', self.project_buckets, 'value_bucket')
         self.assertEqual(bucket_terms_1, 2)
 
-        bucket_terms_2 = ProjectSummaryResponse.get_bucket_value('project2', project_buckets, 'value_bucket')
+        bucket_terms_2 = ProjectSummaryResponse.get_bucket_value('project2', self.project_buckets, 'value_bucket')
         self.assertEqual(bucket_terms_2, 4)
 
-        bucket_terms_3 = ProjectSummaryResponse.get_bucket_value('project3', project_buckets, 'value_bucket')
+        bucket_terms_3 = ProjectSummaryResponse.get_bucket_value('project3', self.project_buckets, 'value_bucket')
         self.assertEqual(bucket_terms_3, -1)
 
     def test_projects_key_search_response(self):
@@ -163,12 +901,112 @@ class TestResponse(WebServiceTestCase):
         Response should include project detail fields that do not appear for other entity type repsponses
         """
         keyword_response = KeywordSearchResponse(
-            hits=self._load("response_test_input.json"),
+            hits=self.input,
             entity_type='projects'
         ).return_response().to_json()
 
+        expected_output = {
+            "hits": [
+                {
+                    "bundles": [
+                        {
+                            "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+                            "bundleVersion": "2003-08-12T00:52:21"
+                        }
+                    ],
+                    "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                    "fileTypeSummaries": [
+                        {
+                            "count": 1,
+                            "fileType": "csv",
+                            "totalSize": 6667
+                        }
+                    ],
+                    "processes": [
+                        {
+                            "instrument": "green",
+                            "libraryConstructionApproach": "fuchsia",
+                            "processId": "maroon",
+                            "processName": "olive",
+                            "protocol": "olive",
+                            "protocolId": "green"
+                        }
+                    ],
+                    "projects": [
+                        {
+                            "projectTitle": "purple",
+                            "projectDescription": "navy",
+                            "laboratory": [
+                                "silver"
+                            ],
+                            "projectShortname": "blue",
+                            "contributors": [
+                                {
+                                    "contactName": "yellow",
+                                    "correspondingContributor": False,
+                                    "email": "gray"
+                                },
+                                {
+                                    "contactName": "teal",
+                                    "correspondingContributor": True,
+                                    "email": "purple",
+                                    "institution": "yellow",
+                                    "laboratory": "silver"
+                                }
+                            ],
+                            "publications": [
+                                {
+                                    "authors": [
+                                        "green",
+                                        "maroon",
+                                        "gray"
+                                    ],
+                                    "publicationTitle": "gray",
+                                    "doi": "green",
+                                    "pmid": 5331933,
+                                    "publicationUrl": "black"
+                                }
+                            ]
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "biologicalSex": [
+                                "silver"
+                            ],
+                            "disease": [
+                                "yellow"
+                            ],
+                            "genusSpecies": [
+                                "teal"
+                            ],
+                            "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+                            "organ": [
+                                "purple"
+                            ],
+                            "organPart": [
+                                "black"
+                            ],
+                            "organismAge": [
+                                "purple"
+                            ],
+                            "organismAgeUnit": [
+                                "navy"
+                            ],
+                            "source": [
+                                "purple"
+                            ],
+                            "storageMethod": [
+                                "aqua"
+                            ],
+                            "totalCells": 5306
+                        }
+                    ]
+                }
+            ]
+        }
         self.assertEqual(json.dumps(keyword_response, sort_keys=True),
-                         json.dumps(self._load("response_projects_keysearch_output.json"), sort_keys=True))
+                         json.dumps(expected_output, sort_keys=True))
 
     def test_projects_file_search_response(self):
         """
@@ -176,14 +1014,157 @@ class TestResponse(WebServiceTestCase):
         Response should include project detail fields that do not appear for other entity type repsponses
         """
         keyword_response = FileSearchResponse(
-            hits=self._load("response_test_input.json"),
-            pagination=self._load(f"response_pagination_input1.json"),
-            facets=self._load("response_facets_populated.json"),
+            hits=self.input,
+            pagination=self.paginations[0],
+            facets=self.facets_populated,
             entity_type='projects'
         ).return_response().to_json()
 
+        expected_output = {
+            "hits": [
+                {
+                    "bundles": [
+                        {
+                            "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+                            "bundleVersion": "2003-08-12T00:52:21"
+                        }
+                    ],
+                    "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                    "fileTypeSummaries": [
+                        {
+                            "count": 1,
+                            "fileType": "csv",
+                            "totalSize": 6667
+                        }
+                    ],
+                    "processes": [
+                        {
+                            "instrument": "green",
+                            "libraryConstructionApproach": "fuchsia",
+                            "processId": "maroon",
+                            "processName": "olive",
+                            "protocol": "olive",
+                            "protocolId": "green"
+                        }
+                    ],
+                    "projects": [
+                        {
+                            "projectTitle": "purple",
+                            "projectDescription": "navy",
+                            "laboratory": [
+                                "silver"
+                            ],
+                            "projectShortname": "blue",
+                            "contributors": [
+                                {
+                                    "contactName": "yellow",
+                                    "correspondingContributor": False,
+                                    "email": "gray"
+                                },
+                                {
+                                    "contactName": "teal",
+                                    "correspondingContributor": True,
+                                    "email": "purple",
+                                    "institution": "yellow",
+                                    "laboratory": "silver"
+                                }
+                            ],
+                            "publications": [
+                                {
+                                    "authors": [
+                                        "green",
+                                        "maroon",
+                                        "gray"
+                                    ],
+                                    "publicationTitle": "gray",
+                                    "doi": "green",
+                                    "pmid": 5331933,
+                                    "publicationUrl": "black"
+                                }
+                            ]
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "biologicalSex": [
+                                "silver"
+                            ],
+                            "disease": [
+                                "yellow"
+                            ],
+                            "genusSpecies": [
+                                "teal"
+                            ],
+                            "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
+                            "organ": [
+                                "purple"
+                            ],
+                            "organPart": [
+                                "black"
+                            ],
+                            "organismAge": [
+                                "purple"
+                            ],
+                            "organismAgeUnit": [
+                                "navy"
+                            ],
+                            "source": [
+                                "purple"
+                            ],
+                            "storageMethod": [
+                                "aqua"
+                            ],
+                            "totalCells": 5306
+                        }
+                    ]
+                }
+            ],
+            "pagination": {
+                "count": 2,
+                "order": "desc",
+                "pages": 1,
+                "size": 5,
+                "sort": "entryId",
+                "total": 2,
+                "search_after": None,
+                "search_after_uid": None,
+                "search_before": None,
+                "search_before_uid": None
+            },
+            "termFacets": {
+                "organ": {
+                    "terms": [
+                        {
+                            "count": 11,
+                            "term": "silver"
+                        },
+                        {
+                            "count": 10,
+                            "term": "teal"
+                        }
+                    ],
+                    "total": 21,
+                    "type": "terms"
+                },
+                "disease": {
+                    "terms": [
+                        {
+                            "count": 9,
+                            "term": "silver"
+                        },
+                        {
+                            "count": 12,
+                            "term": None
+                        }
+                    ],
+                    "total": 21,
+                    "type": "terms"
+                }
+            }
+        }
+
         self.assertEqual(json.dumps(keyword_response, sort_keys=True),
-                         json.dumps(self._load("response_projects_filesearch_output.json"), sort_keys=True))
+                         json.dumps(expected_output, sort_keys=True))
 
     def _load(self, filename):
         data_folder_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
