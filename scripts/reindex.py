@@ -97,9 +97,10 @@ def main(argv: List[str]):
         properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
                                             es_endpoint=config.es_endpoint)
         for entity_type in properties.entities:
-            index_name = config.es_index_name(entity_type)
-            if es_client.indices.exists(index_name):
-                es_client.indices.delete(index=index_name)
+            for aggregate in False, True:
+                index_name = config.es_index_name(entity_type, aggregate=aggregate)
+                if es_client.indices.exists(index_name):
+                    es_client.indices.delete(index=index_name)
 
     dss_client = config.dss_client(dss_endpoint=args.dss_url)
     # noinspection PyUnresolvedReferences

@@ -53,7 +53,13 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         A single hit should be returned
         Certain fields should be in the project object
         """
-        url = self.base_url + 'repository/projects/ca4225f7-2051-e671-2465-95dfaac9912d'
+        # The uuid is dependent on the seed and the structure of the template. Any change to either of these and you
+        # have to set a break point at call to self.elasticsearch_client.bulk() in fake_data_utils.py and examine the
+        # body of the request for the actual document_id in a project entity of a project document.
+        #
+        # FIXME: fix this insanity by doing a list request first and pulling out one of the documents
+        # (https://github.com/DataBiosphere/azul/issues/426)
+        url = self.base_url + 'repository/projects/096802f6-d67c-8720-7823-908d43ec1f85'
         response = requests.get(url)
         response.raise_for_status()
         hit = response.json()
