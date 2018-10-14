@@ -691,7 +691,8 @@ class ElasticTransformDump(object):
         """
         es_search.aggs.bucket(
             '_project_agg', 'terms',
-            field=f'{request_config["translation"]["projectId"]}.keyword'
+            field=request_config["translation"]["projectId"] + '.keyword',
+            size=99999
         )
         project_bucket = es_search.aggs['_project_agg']
 
