@@ -95,9 +95,8 @@ class ElasticTransformDump(object):
 
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=f) for f in filter_list]
-        #        Return a Query object. Make it match_all
-        ignore_deleted = Q("bool", must_not=[{'term': {'bundles.contents.deleted': True}}])
-        return Q('bool', must=query_list) & ignore_deleted if query_list else ignore_deleted
+
+        return Q('bool', must=query_list)
 
     @staticmethod
     def create_aggregate(filters, facet_config, agg):
