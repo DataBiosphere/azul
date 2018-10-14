@@ -1,9 +1,12 @@
 #!/usr/bin/python
+from copy import deepcopy
 import json
 from faker import Faker
 from elasticsearch.exceptions import NotFoundError
 import logging
 import os
+
+from more_itertools import flatten
 
 from azul import config
 from azul.es import ESClientFactory
@@ -36,7 +39,7 @@ class FakerSchemaGenerator(object):
             if isinstance(v, dict):
                 data[k] = self._generate_one_fake(v)
             elif isinstance(v, list):
-                if (isinstance(v[0], dict)):
+                if isinstance(v[0], dict):
                     data[k] = [self._generate_one_fake(item) for item in v]
                 else:
                     data[k] = [getattr(self._faker, a)() for a in v]
@@ -46,11 +49,7 @@ class FakerSchemaGenerator(object):
 
 
 class ElasticsearchFakeDataLoader(object):
-    indices = [
-        config.es_index_name('files'),
-        config.es_index_name('specimens'),
-        config.es_index_name('projects')
-    ]
+    entity_types = ['files', 'specimens', 'projects']
 
     def __init__(self, number_of_documents=1000):
         service_tests_folder = os.path.dirname(os.path.realpath(__file__))
@@ -64,23 +63,52 @@ class ElasticsearchFakeDataLoader(object):
     def load_data(self, seed=None):
         self.clean_up()
         try:
-            for index in self.indices:
+            for entity_type in self.entity_types:
+                index = config.es_index_name(entity_type, aggregate=True)
+                template = self.fix_canned_document(entity_type, self.doc_template)
                 logger.log(logging.INFO, f"Creating new test index '{index}'.")
                 self.elasticsearch_client.indices.create(index)
                 logger.log(logging.INFO, f"Loading data into test index '{index}'.")
                 faker = FakerSchemaGenerator(seed=seed)
-                fake_data_body = ""
-                for i in range(self.number_of_documents):
-                    fake_data_body += json.dumps({"index": {"_type": "meta", "_id": i}}) + "\n"
-                    fake_data_body += json.dumps(faker.generate_fake(self.doc_template)) + "\n"
+                fake_data_body = '\n'.join(flatten(
+                    (json.dumps({"index": {"_type": "meta", "_id": i}}),
+                     json.dumps(faker.generate_fake(template)))
+                    for i in range(self.number_of_documents)))
                 self.elasticsearch_client.bulk(fake_data_body, index=index, doc_type='meta', refresh='wait_for')
         except NotFoundError:
             logger.log(logging.DEBUG, f"The index {index} doesn't exist yet.")
 
+    @classmethod
+    def fix_canned_document(cls, entity_type, doc):
+        """
+        This function fixes the canned document so that it satisfies the following invariant.
+
+        In a response where each hit represents a file, 'hits.content.specimens.some_field` is a list because
+        hits.content.specimens is the result of the indexer aggregating over more than one specimen. In a response
+        where each hit represents a specimen, that same field is a single value because hits.content.specimens is a
+        singleton. There are a two exceptions to that rule: if the metadata already specifies that field as a list,
+        the field will be a list in either case. If the field is a numeric aggregate, the aggregation is done via
+        sum() rather than set() and so the field remains an int, too.
+        """
+        doc = deepcopy(doc)
+        doc['contents'] = {
+            inner_entity_type: [
+                {
+                    field: value if (
+                        inner_entity_type == entity_type
+                        or field in ('total_estimated_cells', 'size')
+                        or isinstance(value, list)
+                    ) else [value]
+                    for field, value in inner_entity.items()
+                } for inner_entity in inner_entities
+            ] for inner_entity_type, inner_entities in doc['contents'].items()
+        }
+        return doc
+
     def clean_up(self):
         logger.log(logging.INFO, "Deleting leftover data in test indices")
         try:
-            for index in self.indices:
+            for index in self.entity_types:
                 self.elasticsearch_client.indices.delete(index=index)
         except NotFoundError:
             logger.log(logging.DEBUG, f"The index {index} doesn't exist yet.")

@@ -1,260 +1,249 @@
 {
-    "took": 1,
-    "timed_out": false,
-    "_shards": {
-        "total": 5,
-        "successful": 5,
-        "failed": 0
-    },
-    "hits": {
-        "total": 1,
-        "max_score": 1.0,
-        "hits": [
+  "took": 1,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 1,
+    "max_score": 1.0,
+    "hits": [
+      {
+        "_index": "azul_projects_dev",
+        "_type": "doc",
+        "_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
+        "_score": 1.0,
+        "_source": {
+          "entity_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
+          "bundles": [
             {
-                "_index": "azul_projects_dev",
-                "_type": "doc",
-                "_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
-                "_score": 1.0,
-                "_source": {
-                    "entity_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
-                    "bundles": [
-                        {
-                            "uuid": "aee55415-d128-4b30-9644-e6b2742fa32b",
-                            "version": "2018-03-29T152812.404846Z",
-                            "contents": {
-                                "specimens": [
-                                    {
-                                        "document_id": [
-                                            "4e8744e9-a038-4c0c-80ef-3b235d0f5af7",
-                                            "70b55c20-3574-41b6-9b01-800cc6b30edc",
-                                            "bac7fdae-cbf7-40d6-baa7-a14157307011"
-                                        ],
-                                        "has_input_biomaterial": [
-                                            null,
-                                            "1113",
-                                            "1113_T"
-                                        ],
-                                        "_source": [
-                                            "cell_suspension",
-                                            "donor_organism",
-                                            "specimen_from_organism"
-                                        ],
-                                        "biomaterial_id": "1113_T",
-                                        "disease": ["subcutaneous melanoma"],
-                                        "organ": ["tumor"],
-                                        "organ_part": [null],
-                                        "storage_method": [null],
-                                        "_type": ["specimen"],
-                                        "total_estimated_cells": [1],
-                                        "donor_biomaterial_id": ["1113"],
-                                        "genus_species": ["Mus musculus"],
-                                        "organism_age": ["6-12"],
-                                        "organism_age_unit": ["week"],
-                                        "max_organism_age_in_seconds": [7257600],
-                                        "min_organism_age_in_seconds": [3628800],
-                                        "biological_sex": ["female"]
-                                    }
-                                ],
-                                "files": [
-                                    {
-                                        "content-type": "application/gzip; dcp-type=data",
-                                        "crc32c": "49d22bda",
-                                        "indexed": false,
-                                        "name": "22421_8#139_1.fastq.gz",
-                                        "s3_etag": "bd55aed6465d1f9685a9f6f58368d38a",
-                                        "sha1": "30fd5e8a3074124085ebb4894c3e22ff3576c8a4",
-                                        "sha256": "9a0d5d39b095214e7857594ac2f2f0b26cd6ce90549e8f613f928762f335af75",
-                                        "size": 54404,
-                                        "uuid": "455aed8d-4d12-48d6-bf5d-803de295b08a",
-                                        "version": "2018-03-29T152807.172039Z",
-                                        "document_id": "455aed8d-4d12-48d6-bf5d-803de295b08a",
-                                        "file_format": "fastq.gz",
-                                        "_type": "file",
-                                        "read_index": "read1",
-                                        "lane_index": 8
-                                    },
-                                    {
-                                        "content-type": "application/gzip; dcp-type=data",
-                                        "crc32c": "fff8c9be",
-                                        "indexed": false,
-                                        "name": "22421_8#139_2.fastq.gz",
-                                        "s3_etag": "f2ef02290165b9d5c7965640a2cc2d24",
-                                        "sha1": "8f490fca4b6c3d60c06571b0cc1e12ece5781dd3",
-                                        "sha256": "46759bbf6b74b010c6d9cd8b70688cfa10eb28ae9eed13efe01da4d0872ad088",
-                                        "size": 60343,
-                                        "uuid": "ab110a95-2f7c-4180-bb13-e85dbabe903a",
-                                        "version": "2018-03-29T152808.364540Z",
-                                        "document_id": "ab110a95-2f7c-4180-bb13-e85dbabe903a",
-                                        "file_format": "fastq.gz",
-                                        "_type": "file",
-                                        "read_index": "read2",
-                                        "lane_index": 8
-                                    }
-                                ],
-                                "processes": [
-                                    {
-                                        "document_id": [
-                                            "b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902",
-                                            "c9a1e203-bddc-45d3-87c4-6010be8e0127"
-                                        ],
-                                        "process_id": "TissueDissociationProcess",
-                                        "process_name": "Extracting cells from lymph nodes",
-                                        "protocol_id": "tissue_dissociation_protocol",
-                                        "protocol_name": "Extracting cells from lymph nodes",
-                                        "_type": "process"
-                                    },
-                                    {
-                                        "document_id": [
-                                            "687065f3-c70f-46c3-8452-a5eead33a1bf",
-                                            "52d79a89-4b49-4c1b-b857-5cc5da07f643"
-                                        ],
-                                        "process_id": "lib_prep_1",
-                                        "process_name": "Library preparation process",
-                                        "protocol_id": "SmartSeq2_RTPCR_protocol",
-                                        "protocol_name": "Make/amplify cDNA for each cell",
-                                        "_type": "process",
-                                        "library_construction_approach": "Smart-seq2"
-                                    },
-                                    {
-                                        "document_id": [
-                                            "60b38cea-9769-42c9-bf2f-263430882939",
-                                            "ca6096cf-13c1-4930-8308-6ab05865e2c9"
-                                        ],
-                                        "process_id": "seq_5226",
-                                        "process_name": "Sequencing process",
-                                        "protocol_id": "SmartSeq2_sequencing_protocol",
-                                        "protocol_name": "Sequencing SmartSeq2 cells",
-                                        "_type": "process",
-                                        "instrument_manufacturer_model": "Illumina HiSeq 2500"
-                                    },
-                                    {
-                                        "document_id": [
-                                            "2b258172-eb5f-4a7a-96a5-f4c2cfdec7d8",
-                                            "a1c80daf-58b0-4b7a-8e29-d0130493c8e6"
-                                        ],
-                                        "process_id": "FACS4.2",
-                                        "process_name": null,
-                                        "protocol_id": "FACS_sorting_protocol",
-                                        "protocol_name": "FACS sorting cells by surface markers",
-                                        "_type": "process"
-                                    }
-                                ],
-                                "project": {
-                                    "project_title": "Melanoma infiltration of stromal and immune cells",
-                                    "project_description": "The cancer microenvironment is a complex ecosystem characterized by dynamic interactions between diverse cell types, including malignant, immune and stromal cells. Here, we performed single-cell RNA sequencing on CD45+ and CD45- cells isolated from tumour and lymph nodes during a mouse model of melanoma. The transcriptional profiles of these individual cells taken at different time points coupled with assembled T cell receptor sequences, allowed us to identify distinct immune subpopulations and delineate their developmental trajectory. Our study provides insights into the complex interplay among cells within the tumour microenvironment and presents a valuable resource for future translational applications.",
-                                    "project_shortname": "Mouse Melanoma",
-                                    "laboratory": [
-                                        "MRC Cancer Unit",
-                                        "Sarah Teichmann"
-                                    ],
-                                    "institutions": [
-                                        "DKFZ German Cancer Research Center",
-                                        "EMBL-EBI",
-                                        "University of Cambridge",
-                                        "University of Helsinki",
-                                        "Wellcome Trust Sanger Institute"
-                                    ],
-                                    "contact_names": [
-                                        "Angela,,Riedel",
-                                        "Bidesh,,Mahata",
-                                        "Gozde,,Kar",
-                                        "Jacqueline,D,Shields",
-                                        "Jani,,Huuhtanen",
-                                        "Jhuma,,Pramanik",
-                                        "Mirjana,,Efremova",
-                                        "Roser,,Veno-Tormo",
-                                        "Sarah,,Davidson",
-                                        "Sarah,A,Teichmann"
-                                    ],
-                                    "contributors": [
-                                        {
-                                            "contact_name": "Jacqueline,D,Shields",
-                                            "corresponding_contributor": false,
-                                            "email": "JS970@MRCCU.cam.ac.uk",
-                                            "institution": "University of Cambridge",
-                                            "laboratory": "MRC Cancer Unit"
-                                        },
-                                        {
-                                            "contact_name": "Sarah,,Davidson",
-                                            "corresponding_contributor": false,
-                                            "email": "SED49@MRCCU.cam.ac.uk",
-                                            "institution": "University of Cambridge",
-                                            "laboratory": "MRC Cancer Unit"
-                                        },
-                                        {
-                                            "contact_name": "Angela,,Riedel",
-                                            "corresponding_contributor": false,
-                                            "email": "a.riedel@dkfz-heidelberg.de",
-                                            "institution": "DKFZ German Cancer Research Center",
-                                            "laboratory": null
-                                        },
-                                        {
-                                            "contact_name": "Bidesh,,Mahata",
-                                            "corresponding_contributor": false,
-                                            "email": "bm11@sanger.ac.uk",
-                                            "institution": "Wellcome Trust Sanger Institute",
-                                            "laboratory": "Sarah Teichmann"
-                                        },
-                                        {
-                                            "contact_name": "Gozde,,Kar",
-                                            "corresponding_contributor": false,
-                                            "email": "gkar@ebi.ac.uk",
-                                            "institution": "EMBL-EBI",
-                                            "laboratory": "Sarah Teichmann"
-                                        },
-                                        {
-                                            "contact_name": "Jani,,Huuhtanen",
-                                            "corresponding_contributor": true,
-                                            "email": "jani.huuhtanen@helsinki.fi",
-                                            "institution": "University of Helsinki",
-                                            "laboratory": null
-                                        },
-                                        {
-                                            "contact_name": "Jhuma,,Pramanik",
-                                            "corresponding_contributor": false,
-                                            "email": "jp19@sanger.ac.uk",
-                                            "institution": "Wellcome Trust Sanger Institute",
-                                            "laboratory": "Sarah Teichmann"
-                                        },
-                                        {
-                                            "contact_name": "Mirjana,,Efremova",
-                                            "corresponding_contributor": false,
-                                            "email": "me5@sanger.ac.uk",
-                                            "institution": "Wellcome Trust Sanger Institute",
-                                            "laboratory": "Sarah Teichmann"
-                                        },
-                                        {
-                                            "contact_name": "Roser,,Veno-Tormo",
-                                            "corresponding_contributor": false,
-                                            "email": "rv4@sanger.ac.uk",
-                                            "institution": "Wellcome Trust Sanger Institute",
-                                            "laboratory": "Sarah Teichmann"
-                                        },
-                                        {
-                                            "contact_name": "Sarah,A,Teichmann",
-                                            "corresponding_contributor": false,
-                                            "email": "st9@sanger.ac.uk",
-                                            "institution": "Wellcome Trust Sanger Institute",
-                                            "laboratory": "Sarah Teichmann"
-                                        }
-                                    ],
-                                    "document_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
-                                    "publication_titles": [
-                                        "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations"
-                                    ],
-                                    "publications": [
-                                        {
-                                            "publication_title": "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations",
-                                            "publication_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5331933/"
-                                        }
-                                    ],
-                                    "_type": "project"
-                                }
-                            }
-                        }
-                    ]
-                }
+              "uuid": "aee55415-d128-4b30-9644-e6b2742fa32b",
+              "version": "2018-03-29T152812.404846Z",
+              "contents": {
+                "specimens": [
+                  {
+                    "document_id":
+                      "4e8744e9-a038-4c0c-80ef-3b235d0f5af7"
+                    ,
+                    "has_input_biomaterial": [
+                      null,
+                      "1113",
+                      "1113_T"
+                    ],
+                    "_source": [
+                      "cell_suspension",
+                      "donor_organism",
+                      "specimen_from_organism"
+                    ],
+                    "biomaterial_id": "1113_T",
+                    "disease": "subcutaneous melanoma",
+                    "organ": "tumor",
+                    "organ_part": null,
+                    "storage_method": null,
+                    "_type": "specimen",
+                    "total_estimated_cells": 1,
+                    "donor_biomaterial_id": "1113",
+                    "donor_document_id": "70b55c20-3574-41b6-9b01-800cc6b30edc",
+                    "genus_species": "Mus musculus",
+                    "organism_age": "6-12",
+                    "organism_age_unit": "week",
+                    "max_organism_age_in_seconds": 7257600,
+                    "min_organism_age_in_seconds": 3628800,
+                    "biological_sex": "female"
+                  }
+                ],
+                "files": [
+                  {
+                    "content-type": "application/gzip; dcp-type=data",
+                    "crc32c": "49d22bda",
+                    "indexed": false,
+                    "name": "22421_8#139_1.fastq.gz",
+                    "s3_etag": "bd55aed6465d1f9685a9f6f58368d38a",
+                    "sha1": "30fd5e8a3074124085ebb4894c3e22ff3576c8a4",
+                    "sha256": "9a0d5d39b095214e7857594ac2f2f0b26cd6ce90549e8f613f928762f335af75",
+                    "size": 54404,
+                    "uuid": "455aed8d-4d12-48d6-bf5d-803de295b08a",
+                    "version": "2018-03-29T152807.172039Z",
+                    "document_id": "455aed8d-4d12-48d6-bf5d-803de295b08a",
+                    "file_format": "fastq.gz",
+                    "_type": "file",
+                    "read_index": "read1",
+                    "lane_index": 8
+                  },
+                  {
+                    "content-type": "application/gzip; dcp-type=data",
+                    "crc32c": "fff8c9be",
+                    "indexed": false,
+                    "name": "22421_8#139_2.fastq.gz",
+                    "s3_etag": "f2ef02290165b9d5c7965640a2cc2d24",
+                    "sha1": "8f490fca4b6c3d60c06571b0cc1e12ece5781dd3",
+                    "sha256": "46759bbf6b74b010c6d9cd8b70688cfa10eb28ae9eed13efe01da4d0872ad088",
+                    "size": 60343,
+                    "uuid": "ab110a95-2f7c-4180-bb13-e85dbabe903a",
+                    "version": "2018-03-29T152808.364540Z",
+                    "document_id": "ab110a95-2f7c-4180-bb13-e85dbabe903a",
+                    "file_format": "fastq.gz",
+                    "_type": "file",
+                    "read_index": "read2",
+                    "lane_index": 8
+                  }
+                ],
+                "processes": [
+                  {
+                    "document_id": "b7bbb2dc-3131-47c3-bcb9-4b7e0eeed902.c9a1e203-bddc-45d3-87c4-6010be8e0127",
+                    "process_id": "TissueDissociationProcess",
+                    "process_name": "Extracting cells from lymph nodes",
+                    "protocol_id": "tissue_dissociation_protocol",
+                    "protocol_name": "Extracting cells from lymph nodes",
+                    "_type": "process"
+                  },
+                  {
+                    "document_id": "687065f3-c70f-46c3-8452-a5eead33a1bf.52d79a89-4b49-4c1b-b857-5cc5da07f643",
+                    "process_id": "lib_prep_1",
+                    "process_name": "Library preparation process",
+                    "protocol_id": "SmartSeq2_RTPCR_protocol",
+                    "protocol_name": "Make/amplify cDNA for each cell",
+                    "_type": "process",
+                    "library_construction_approach": "Smart-seq2"
+                  },
+                  {
+                    "document_id": "60b38cea-9769-42c9-bf2f-263430882939.ca6096cf-13c1-4930-8308-6ab05865e2c9",
+                    "process_id": "seq_5226",
+                    "process_name": "Sequencing process",
+                    "protocol_id": "SmartSeq2_sequencing_protocol",
+                    "protocol_name": "Sequencing SmartSeq2 cells",
+                    "_type": "process",
+                    "instrument_manufacturer_model": "Illumina HiSeq 2500"
+                  },
+                  {
+                    "document_id": "2b258172-eb5f-4a7a-96a5-f4c2cfdec7d8.a1c80daf-58b0-4b7a-8e29-d0130493c8e6",
+                    "process_id": "FACS4.2",
+                    "process_name": null,
+                    "protocol_id": "FACS_sorting_protocol",
+                    "protocol_name": "FACS sorting cells by surface markers",
+                    "_type": "process"
+                  }
+                ],
+                "projects": [
+                  {
+                    "project_title": "Melanoma infiltration of stromal and immune cells",
+                    "project_description": "The cancer microenvironment is a complex ecosystem characterized by dynamic interactions between diverse cell types, including malignant, immune and stromal cells. Here, we performed single-cell RNA sequencing on CD45+ and CD45- cells isolated from tumour and lymph nodes during a mouse model of melanoma. The transcriptional profiles of these individual cells taken at different time points coupled with assembled T cell receptor sequences, allowed us to identify distinct immune subpopulations and delineate their developmental trajectory. Our study provides insights into the complex interplay among cells within the tumour microenvironment and presents a valuable resource for future translational applications.",
+                    "project_shortname": "Mouse Melanoma",
+                    "laboratory": [
+                      "MRC Cancer Unit",
+                      "Sarah Teichmann"
+                    ],
+                    "institutions": [
+                      "DKFZ German Cancer Research Center",
+                      "EMBL-EBI",
+                      "University of Cambridge",
+                      "University of Helsinki",
+                      "Wellcome Trust Sanger Institute"
+                    ],
+                    "contact_names": [
+                      "Angela,,Riedel",
+                      "Bidesh,,Mahata",
+                      "Gozde,,Kar",
+                      "Jacqueline,D,Shields",
+                      "Jani,,Huuhtanen",
+                      "Jhuma,,Pramanik",
+                      "Mirjana,,Efremova",
+                      "Roser,,Veno-Tormo",
+                      "Sarah,,Davidson",
+                      "Sarah,A,Teichmann"
+                    ],
+                    "contributors": [
+                      {
+                        "contact_name": "Jacqueline,D,Shields",
+                        "corresponding_contributor": false,
+                        "email": "JS970@MRCCU.cam.ac.uk",
+                        "institution": "University of Cambridge",
+                        "laboratory": "MRC Cancer Unit"
+                      },
+                      {
+                        "contact_name": "Sarah,,Davidson",
+                        "corresponding_contributor": false,
+                        "email": "SED49@MRCCU.cam.ac.uk",
+                        "institution": "University of Cambridge",
+                        "laboratory": "MRC Cancer Unit"
+                      },
+                      {
+                        "contact_name": "Angela,,Riedel",
+                        "corresponding_contributor": false,
+                        "email": "a.riedel@dkfz-heidelberg.de",
+                        "institution": "DKFZ German Cancer Research Center",
+                        "laboratory": null
+                      },
+                      {
+                        "contact_name": "Bidesh,,Mahata",
+                        "corresponding_contributor": false,
+                        "email": "bm11@sanger.ac.uk",
+                        "institution": "Wellcome Trust Sanger Institute",
+                        "laboratory": "Sarah Teichmann"
+                      },
+                      {
+                        "contact_name": "Gozde,,Kar",
+                        "corresponding_contributor": false,
+                        "email": "gkar@ebi.ac.uk",
+                        "institution": "EMBL-EBI",
+                        "laboratory": "Sarah Teichmann"
+                      },
+                      {
+                        "contact_name": "Jani,,Huuhtanen",
+                        "corresponding_contributor": true,
+                        "email": "jani.huuhtanen@helsinki.fi",
+                        "institution": "University of Helsinki",
+                        "laboratory": null
+                      },
+                      {
+                        "contact_name": "Jhuma,,Pramanik",
+                        "corresponding_contributor": false,
+                        "email": "jp19@sanger.ac.uk",
+                        "institution": "Wellcome Trust Sanger Institute",
+                        "laboratory": "Sarah Teichmann"
+                      },
+                      {
+                        "contact_name": "Mirjana,,Efremova",
+                        "corresponding_contributor": false,
+                        "email": "me5@sanger.ac.uk",
+                        "institution": "Wellcome Trust Sanger Institute",
+                        "laboratory": "Sarah Teichmann"
+                      },
+                      {
+                        "contact_name": "Roser,,Veno-Tormo",
+                        "corresponding_contributor": false,
+                        "email": "rv4@sanger.ac.uk",
+                        "institution": "Wellcome Trust Sanger Institute",
+                        "laboratory": "Sarah Teichmann"
+                      },
+                      {
+                        "contact_name": "Sarah,A,Teichmann",
+                        "corresponding_contributor": false,
+                        "email": "st9@sanger.ac.uk",
+                        "institution": "Wellcome Trust Sanger Institute",
+                        "laboratory": "Sarah Teichmann"
+                      }
+                    ],
+                    "document_id": "93f6a42f-1790-4af4-b5d1-8c436cb6feae",
+                    "publication_titles": [
+                      "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations"
+                    ],
+                    "publications": [
+                      {
+                        "publication_title": "The YUMM lines: a series of congenic mouse melanoma cell lines with defined genetic alterations",
+                        "publication_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5331933/"
+                      }
+                    ],
+                    "_type": "project"
+                  }
+                ]
+              }
             }
-        ]
-    }
+          ]
+        }
+      }
+    ]
+  }
 }

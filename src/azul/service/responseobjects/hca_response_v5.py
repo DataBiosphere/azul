@@ -8,9 +8,7 @@ import logging
 import os
 
 from chalice import Response
-import jmespath
-from jsonobject import (DictProperty,
-                        FloatProperty,
+from jsonobject import (FloatProperty,
                         IntegerProperty,
                         JsonObject,
                         ListProperty,
@@ -21,19 +19,8 @@ from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
 
-module_logger = logging.getLogger("dashboardService.elastic_request_builder")
-
-
-class FileCopyObj(JsonObject):
-    """
-    Class defining a FileCopy Object in the HitEntry Object
-    """
-    fileName = StringProperty()
-    fileFormat = StringProperty()
-    fileSize = IntegerProperty()
-    fileSha1 = StringProperty()
-    fileVersion = StringProperty()
-    fileUuid = StringProperty()
+logger = logging.getLogger(__name__)
+module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
 
 
 class TermObj(JsonObject):
@@ -74,29 +61,21 @@ class FileTypeSummary(JsonObject):
     totalSize = IntegerProperty()
 
     @classmethod
-    def create_object(cls, **kwargs):
-        if "bucket" in kwargs:
-            return cls._create_object_with_bucket(kwargs["bucket"])
-        else:
-            return cls._create_object_with_args(
-                file_type=kwargs["file_type"], total_size=kwargs["total_size"], count=kwargs["count"]
-            )
+    def for_bucket(cls, bucket):
+        self = cls()
+        self.count = bucket['doc_count']
+        self.totalSize = int(bucket['size_by_type']['value'])  # Casting to integer since ES returns a double
+        self.fileType = bucket['key']
+        return self
 
     @classmethod
-    def _create_object_with_bucket(cls, bucket):
-        new_object = cls()
-        new_object.count = bucket['doc_count']
-        new_object.totalSize = int(bucket['size_by_type']['value'])  # Casting to integer since ES returns a double
-        new_object.fileType = bucket['key']
-        return new_object
-
-    @classmethod
-    def _create_object_with_args(cls, file_type, total_size, count):
-        new_object = cls()
-        new_object.count = count
-        new_object.totalSize = total_size
-        new_object.fileType = file_type
-        return new_object
+    def for_aggregate(cls, aggregate_file):
+        self = cls()
+        self.count = len(aggregate_file['uuid'])
+        self.totalSize = aggregate_file['size']
+        assert isinstance(aggregate_file['format'], list)
+        self.fileType = aggregate_file['format'][0]
+        return self
 
 
 class OrganCellCountSummary(JsonObject):
@@ -105,20 +84,20 @@ class OrganCellCountSummary(JsonObject):
     totalCellCountByOrgan = FloatProperty()
 
     @classmethod
-    def create_object(cls, bucket):
-        new_object = cls()
-        new_object.organType = bucket['key']
-        new_object.countOfDocsWithOrganType = bucket['doc_count']
-        new_object.totalCellCountByOrgan = bucket['cell_count']['value']
-        return new_object
+    def for_bucket(cls, bucket):
+        self = cls()
+        self.organType = bucket['key']
+        self.countOfDocsWithOrganType = bucket['doc_count']
+        self.totalCellCountByOrgan = bucket['cell_count']['value']
+        return self
 
     @classmethod
     def create_object_from_simple_count(cls, count):
-        new_object = cls()
-        new_object.organType = count['key']
-        new_object.countOfDocsWithOrganType = 1
-        new_object.totalCellCountByOrgan = count['value']
-        return new_object
+        self = cls()
+        self.organType = count['key']
+        self.countOfDocsWithOrganType = 1
+        self.totalCellCountByOrgan = count['value']
+        return self
 
 
 class HitEntry(JsonObject):
@@ -220,11 +199,14 @@ class ManifestResponse(AbstractResponse):
         writer.writerow(list(self.manifest_entries['bundles'].keys()) + list(self.manifest_entries['files'].keys()))
         for hit in es_search.scan():
             hit_dict = hit.to_dict()
+            assert len(hit_dict['contents']['files']) == 1
+            file = hit_dict['contents']['files'][0]
+            file_fields = self._translate(file, 'files')
             for bundle in hit_dict['bundles']:
+                # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
+                # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
                 bundle_fields = self._translate(bundle, 'bundles')
-                for file in bundle['contents']['files']:
-                    file_fields = self._translate(file, 'files')
-                    writer.writerow(bundle_fields + file_fields)
+                writer.writerow(bundle_fields + file_fields)
         return Response(body=output.getvalue(), headers=headers, status_code=200)
 
     def __init__(self, es_search, manifest_entries, mapping):
@@ -297,10 +279,9 @@ class BaseSummaryResponse(AbstractResponse):
             contents = aggs_dict[agg_name][agg_form]
             if agg_form == "buckets":
                 contents = len(contents)
-        except Exception as e:
-            print(e)
-            # If for whatever reason it can't do it, just return
-            # a negative number
+        except Exception:
+            # FIXME: Eliminate this except clause (https://github.com/DataBiosphere/azul/issues/421)
+            logger.warning('Exception occurred trying to extract aggregation bucket', exc_info=True)
             contents = -1
         return contents
 
@@ -329,8 +310,8 @@ class SummaryResponse(BaseSummaryResponse):
             donorCount=self.agg_contents(self.aggregates, 'donorCount', agg_form='value'),
             labCount=self.agg_contents(self.aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(self.aggregates, 'total_cell_count', agg_form='value'),
-            fileTypeSummaries=[FileTypeSummary.create_object(bucket=bucket) for bucket in _sum['buckets']],
-            organSummaries=[OrganCellCountSummary.create_object(bucket) for bucket in _organ_group['buckets']])
+            fileTypeSummaries=[FileTypeSummary.for_bucket(bucket) for bucket in _sum['buckets']],
+            organSummaries=[OrganCellCountSummary.for_bucket(bucket) for bucket in _organ_group['buckets']])
 
         if 'specimenCount' in self.aggregates:
             kwargs['fileCount'] = self.hits['total']
@@ -403,55 +384,41 @@ class ProjectSummaryResponse(BaseSummaryResponse):
         :return: value in given project
         """
         for project_bucket in project_buckets['buckets']:
-            if project_bucket['key'] != project_id:
-                continue
-            return project_bucket[agg_key]['value']
+            if project_bucket['key'] == project_id:
+                return project_bucket[agg_key]['value']
         return -1
 
     @classmethod
     def get_cell_count(cls, hit):
         """
-        Iterate through specimens to get per organ cell count
+        Iterate through specimens to get overall and per organ cell count. Expects specimens to already be grouped
+        and aggregated by organ.
         """
-        # FIXME: This should ideally be done through elasticsearch
-        specimen_ids = set()
-        organ_cell_count = dict()
-        total_cell_count = 0
-        for bundle in hit['_source']['bundles']:
-            specimens = bundle['contents']['specimens']
-            for specimen in specimens:
-                if specimen['biomaterial_id'] in specimen_ids:
-                    continue
-                specimen_ids.add(specimen['biomaterial_id'])
-                if len(list(filter(None, specimen['organ']))) == 0:  # check if specimen has no organ
-                    continue
-                if 'total_estimated_cells' not in specimen:
-                    estimated_cells = 0
-                else:
-                    estimated_cells = sum(list(filter(None, specimen['total_estimated_cells'])))
-                total_cell_count += estimated_cells
-                if specimen['organ'][0] in organ_cell_count:
-                    organ_cell_count[specimen['organ'][0]] += estimated_cells
-                else:
-                    organ_cell_count[specimen['organ'][0]] = estimated_cells
-
+        organ_cell_count = defaultdict(int)
+        for specimen in hit['_source']['contents']['specimens']:
+            assert len(specimen['organ']) == 1
+            organ_cell_count[specimen['organ'][0]] += specimen['total_estimated_cells']
+        total_cell_count = sum(organ_cell_count.values())
         organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
 
     def __init__(self, project_id, raw_response):
         super().__init__(raw_response)
 
-        total_cell_count = 0
-        organ_cell_count = []
         for hit in raw_response['hits']['hits']:
             if hit['_id'] == project_id:
-                total_cell_count, organ_cell_count = (self.get_cell_count(hit))
+                total_cell_count, organ_cell_count = self.get_cell_count(hit)
                 break
+        else:
+            # FIXME: this should be an `assert False` but the fake data loader used by test_repository_projects.py
+            # violates the invariant that hit._source.entity_id == hit._id == hits.contents.projects[0].document_id
+            # (https://github.com/DataBiosphere/azul/issues/422)
+            #
+            total_cell_count, organ_cell_count = 0, []
 
         project_aggregates = self.aggregates['_project_agg']
 
-        # Create a ProjectSummaryRepresentation object
-        kwargs = dict(
+        self.apiResponse = ProjectSummaryRepresentation(
             donorCount=self.get_bucket_value(project_id, project_aggregates, 'donor_count'),
             totalCellCount=total_cell_count,
             organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
@@ -461,8 +428,6 @@ class ProjectSummaryResponse(BaseSummaryResponse):
                                                               'libraryConstructionApproach'),
             disease=self.get_bucket_terms(project_id, project_aggregates, 'disease')
         )
-
-        self.apiResponse = ProjectSummaryRepresentation(**kwargs)
 
 
 class KeywordSearchResponse(AbstractResponse, EntryFetcher):
@@ -495,137 +460,76 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def return_response(self):
         return self.apiResponse
 
-    def make_file_copy(self, entry):
-        """
-        Returns a FileCopyObj based on the mapping entry params
-        :param entry: The entry in ElasticSearch containing the results.
-        :return: Returns a FileCopyObj
-        """
-        _entry = entry['files']
-        return FileCopyObj(
-            fileUuid=jmespath.search("uuid", _entry),
-            fileVersion=jmespath.search("version", _entry),
-            fileSha1=jmespath.search("sha1", _entry),
-            fileSize=jmespath.search("size", _entry),
-            fileFormat=jmespath.search("format", _entry),
-            fileName=jmespath.search("name", _entry)
-        )
-
     def make_bundles(self, entry):
         return [{"bundleUuid": b["uuid"], "bundleVersion": b["version"]} for b in entry["bundles"]]
 
     def make_processes(self, entry):
-        processes = {}
-        for bundle in entry["bundles"]:
-            for process in bundle["contents"]["processes"]:
-                # HACK: need to check on the indexer why raw protocols are being added
-                if "process_id" not in process:
-                    continue
-                process.pop("_type")
-                process_id = process["process_id"]
-                translated_process = {
-                    "processId": process_id,
-                    "processName": process.get("process_name", None),
-                    "libraryConstructionApproach": process.get("library_construction_approach", None),
-                    "instrument": process.get("instrument_manufacturer_model", None),
-                    "protocolId": process.get("protocol_id", None),
-                    "protocol": process.get("protocol_name", None),
-                }
-                if process_id not in processes:
-                    processes[process_id] = translated_process
-                else:
-                    merged_process = self._merge(processes[process_id], translated_process, "processId")
-                    processes[process_id] = merged_process
-        return list(processes.values())
+        processes = []
+        for process in entry["contents"]["processes"]:
+            translated_process = {
+                "processId": process["process_id"],
+                "processName": process.get("process_name", None),
+                "libraryConstructionApproach": process.get("library_construction_approach", None),
+                "instrument": process.get("instrument_manufacturer_model", None),
+                "protocolId": process.get("protocol_id", None),
+                "protocol": process.get("protocol_name", None),
+            }
+            processes.append(translated_process)
+        return processes
 
     def make_projects(self, entry):
-        projects = {}
-        for bundle in entry["bundles"]:
-            project = bundle["contents"]["project"]
-            project.pop("_type")
+        projects = []
+        for project in entry["contents"]["projects"]:
             translated_project = {
                 "projectTitle": project.get("project_title"),
                 "projectShortname": project["project_shortname"],
                 "laboratory": list(set(project.get("laboratory", [])))
             }
-
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
                 translated_project['contributors'] = project.get('contributors', [])
                 translated_project['publications'] = project.get('publications', [])
-
                 for contributor in translated_project['contributors']:
                     for key in list(contributor.keys()):
                         contributor[to_camel_case(key)] = contributor.pop(key)
-
                 for publication in translated_project['publications']:
                     for key in list(publication.keys()):
                         publication[to_camel_case(key)] = publication.pop(key)
-
-            project_shortname = project["project_shortname"]
-            if project_shortname not in projects:
-                projects[project_shortname] = translated_project
-            else:
-                merged_project = self._merge(projects[project_shortname], translated_project, "projectShortname")
-                projects[project_shortname] = merged_project
-        return list(projects.values())
+            projects.append(translated_project)
+        return projects
 
     def make_files(self, entry):
-        all_files = []
-        for bundle in entry["bundles"]:
-            for _file in bundle["contents"]["files"]:
-                new_file = {
-                    "format": _file.get("file_format"),
-                    "name": _file.get("name"),
-                    "sha1": _file.get("sha1"),
-                    "size": _file.get("size"),
-                    "uuid": _file.get("uuid"),
-                    "version": _file.get("version"),
-                }
-                all_files.append(new_file)
-        return all_files
-
-    def make_file_type_summaries(self, files):
-        file_type_summaries = {}
-        for file in files:
-            if not file['format'] in file_type_summaries:
-                file_type_summaries[file['format']] = {}
-            file_type_summaries[file['format']]['size'] = file_type_summaries[file['format']].get('size', 0) + file['size']
-            file_type_summaries[file['format']]['count'] = file_type_summaries[file['format']].get('count', 0) + 1
-        return file_type_summaries
+        files = []
+        for _file in entry["contents"]["files"]:
+            translated_file = {
+                "format": _file.get("file_format"),
+                "name": _file.get("name"),
+                "sha1": _file.get("sha1"),
+                "size": _file.get("size"),
+                "uuid": _file.get("uuid"),
+                "version": _file.get("version"),
+            }
+            files.append(translated_file)
+        return files
 
     def make_specimens(self, entry):
-        specimens = {}
-        for bundle in entry["bundles"]:
-            for specimen in bundle["contents"]["specimens"]:
-                specimen.pop("_type")
-                specimen_id = specimen["biomaterial_id"]
-                translated_specimen = {
-                    "id": specimen_id,
-                    "genusSpecies": specimen.get("genus_species", None),
-                    "organ": specimen.get("organ", None),
-                    "organPart": specimen.get("organ_part", None),
-                    "organismAge": specimen.get("organism_age", None),
-                    "organismAgeUnit": specimen.get("organism_age_unit", None),
-                    "biologicalSex": specimen.get("biological_sex", None),
-                    "disease": specimen.get("disease", None),
-                    "storageMethod": specimen.get("storage_method", None),
-                    "source": specimen.get("_source", None),
-                    "totalCells": specimen.get("total_estimated_cells", None)
-                }
-                if specimen_id not in specimens:
-                    for key, value in translated_specimen.items():
-                        if key == "id":
-                            continue
-                        else:
-                            translated_specimen[key] = [] if value is None else list(set(filter(None, value)))
-                    translated_specimen["totalCells"] = sum(translated_specimen["totalCells"])
-                    specimens[specimen_id] = translated_specimen
-                else:
-                    merged_specimen = self._merge(specimens[specimen_id], translated_specimen, "id")
-                    merged_specimen["totalCells"] = sum(merged_specimen["totalCells"])
-                    specimens[specimen_id] = merged_specimen
-        return list(specimens.values())
+        specimens = []
+        for specimen in entry["contents"]["specimens"]:
+            translated_specimen = {
+                "id": (specimen["biomaterial_id"]),
+                "genusSpecies": specimen.get("genus_species", None),
+                "organ": specimen.get("organ", None),
+                "organPart": specimen.get("organ_part", None),
+                "organismAge": specimen.get("organism_age", None),
+                "organismAgeUnit": specimen.get("organism_age_unit", None),
+                "biologicalSex": specimen.get("biological_sex", None),
+                "disease": specimen.get("disease", None),
+                "storageMethod": specimen.get("storage_method", None),
+                "source": specimen.get("_source", None),
+                "totalCells": specimen.get("total_estimated_cells", None)
+            }
+            specimens.append(translated_specimen)
+        return specimens
 
     def map_entries(self, entry):
         """
@@ -634,33 +538,24 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        if self.entity_type == 'files':
-            files = {
-                'files': self.make_files(entry)
-            }
-        else:
-            file_type_summaries = self.make_file_type_summaries(self.make_files(entry))
-            files = {
-                'fileTypeSummaries': [FileTypeSummary.create_object(file_type=file_type,
-                                                                    total_size=file_type_summary['size'],
-                                                                    count=file_type_summary['count']).to_json()
-                                      for file_type, file_type_summary in file_type_summaries.items()]
-            }
-
-        return HitEntry(
-            processes=self.make_processes(entry),
-            entryId=entry["entity_id"],
-            projects=self.make_projects(entry),
-            specimens=self.make_specimens(entry),
-            bundles=self.make_bundles(entry),
-            **files
-        )
+        files = self.make_files(entry)
+        kwargs = {
+            'files': files
+        } if self.entity_type == 'files' else {
+            'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json() for aggregate_file in files]
+        }
+        return HitEntry(processes=self.make_processes(entry),
+                        entryId=entry["entity_id"],
+                        projects=self.make_projects(entry),
+                        specimens=self.make_specimens(entry),
+                        bundles=self.make_bundles(entry),
+                        **kwargs)
 
     def __init__(self, hits, entity_type):
         """
         Constructs the object and initializes the apiResponse attribute
+
         :param hits: A list of hits from ElasticSearch
-        :param projects_response: True if creating response for projects endpoint
         """
         # Setup the logger
         self.logger = logging.getLogger(

@@ -16,11 +16,11 @@ ENTRIES_PER_PAGE = 10
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 for top_level_pkg in (__name__, 'azul'):
-    logging.getLogger(top_level_pkg).setLevel(logging.DEBUG)
+    logging.getLogger(top_level_pkg).setLevel(logging.INFO)
 
-app = Chalice(app_name=config.service_name)
-app.debug = True
-app.log.setLevel(logging.DEBUG)  # please use module logger instead
+app = Chalice(app_name=config.service_name, configure_logs=False)
+app.debug = True  # FIXME: this should be configurable via environment variable (https://github.com/DataBiosphere/azul/issues/419)
+app.log.setLevel(logging.DEBUG)  # FIXME: please use module logger instead (https://github.com/DataBiosphere/azul/issues/419)
 
 
 # TODO: Write the docstrings so they can support swagger.
