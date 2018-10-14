@@ -1,11 +1,13 @@
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
+from collections import defaultdict
 import itertools
 import logging
-from typing import List, Mapping, Sequence, Iterable, Tuple
+from typing import Iterable, List, Mapping, Optional, Sequence, Tuple, MutableMapping, Any
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 
 from azul import config
+from azul.json_freeze import freeze, thaw
 from azul.types import JSON
 
 logger = logging.getLogger(__name__)
@@ -15,11 +17,18 @@ logger = logging.getLogger(__name__)
 class Bundle:
     uuid: str
     version: str
-    contents: JSON = field(default_factory=dict)
+    contents: Optional[JSON] = field(default_factory=dict)
+
+    def to_json(self) -> JSON:
+        json = dict(uuid=self.uuid, version=self.version)
+        # To save space in the document source we suppress the `content` entry if it is None
+        if self.contents is not None:
+            json['contents'] = self.contents
+        return json
 
     @classmethod
-    def from_json(cls, json):
-        return cls(**json)
+    def from_json(cls, json) -> 'Bundle':
+        return cls(uuid=json['uuid'], version=json['version'], contents=json.get('contents'))
 
     @property
     def deleted(self) -> bool:
@@ -29,6 +38,9 @@ class Bundle:
         self.contents = {'deleted': True}
 
 
+DocumentCoordinates = Tuple[str, str]
+
+
 @dataclass
 class ElasticSearchDocument:
     entity_type: str
@@ -36,6 +48,28 @@ class ElasticSearchDocument:
     bundles: List[Bundle]
     document_type: str = "doc"
     document_version: int = 1
+    contents: Optional[JSON] = None
+
+    def to_json(self) -> JSON:
+        return dict(entity_type=self.entity_type,
+                    entity_id=self.entity_id,
+                    bundles=[b.to_json() for b in self.bundles],
+                    document_type=self.document_type,
+                    document_version=self.document_version,
+                    contents=self.contents)
+
+    @classmethod
+    def from_json(cls, json: JSON):
+        return cls(entity_type=json['entity_type'],
+                   entity_id=json['entity_id'],
+                   bundles=list(map(Bundle.from_json, json['bundles'])),
+                   document_type=json['document_type'],
+                   document_version=json['document_version'],
+                   contents=json['contents'])
+
+    @property
+    def aggregate(self) -> bool:
+        return self.contents is not None
 
     @property
     def document_id(self) -> str:
@@ -43,23 +77,36 @@ class ElasticSearchDocument:
 
     @property
     def document_index(self) -> str:
-        return config.es_index_name(self.entity_type)
+        return config.es_index_name(self.entity_type, aggregate=self.aggregate)
 
-    def to_source(self) -> dict:
-        return {
+    @property
+    def coordinates(self) -> DocumentCoordinates:
+        return self.document_index, self.document_id
+
+    @property
+    def original_coordinates(self) -> DocumentCoordinates:
+        return config.es_index_name(self.entity_type, aggregate=False), self.document_id
+
+    def to_source(self) -> JSON:
+        source = {
             "entity_id": self.entity_id,
-            "bundles": [asdict(b) for b in self.bundles]
+            "bundles": [b.to_json() for b in self.bundles]
         }
+        if self.aggregate:
+            source["contents"] = self.contents
+        return source
 
     @classmethod
     def from_index(cls, hit: JSON):
         source = hit["_source"]
-        # FIXME: move logic to Config
-        prefix, entity_type, _ = hit['_index'].split('_')
-        return cls(entity_type=entity_type,
+        entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+        self = cls(entity_type=entity_type,
                    entity_id=source['entity_id'],
-                   bundles=[Bundle(**b) for b in source['bundles']],
-                   document_version=hit.get("_version", 0))
+                   bundles=[Bundle.from_json(b) for b in source['bundles']],
+                   document_version=hit.get("_version", 0),
+                   contents=source.get("contents"))
+        assert self.aggregate == aggregate
+        return self
 
     def update_with(self, other: 'ElasticSearchDocument') -> bool:
         """
@@ -180,15 +227,6 @@ class ElasticSearchDocument:
                 f"Conflicting contributions for bundle {bundle.uuid}, version {bundle.version}"
         self.bundles = list(bundles.values())
 
-    def to_json(self):
-        return asdict(self)
-
-    @classmethod
-    def from_json(cls, json: JSON):
-        self = cls(**json)
-        self.bundles = list(map(Bundle.from_json, self.bundles))
-        return self
-
 
 class Transformer(ABC):
 
@@ -199,4 +237,182 @@ class Transformer(ABC):
                          manifest: List[JSON],
                          metadata_files: Mapping[str, JSON]
                          ) -> Sequence[ElasticSearchDocument]:
+        """
+        Given the metadata for a particular bundle, compute a list of contributions to Elasticsearch documents. The
+        contributions constitute partial documents, e.g. their `bundles` attribute is a singleton list, representing
+        only the contributions by the specified bundle. Before the contributions can be persisted, they need to be
+        merged with contributions by all other bundles.
+
+        :param uuid: The UUID of the bundle to create documents for
+        :param version: The version of the bundle to create documents for
+        :param manifest:  The bundle manifest entries for all data and metadata files in the bundle
+        :param metadata_files: The contents of all metadata files in the bundle
+        :return: The document contributions
+        """
         raise NotImplementedError()
+
+    @abstractmethod
+    def aggregate_document(self, document: ElasticSearchDocument) -> Optional[ElasticSearchDocument]:
+        """
+        Given a
+        """
+        return None
+
+
+Entities = List[JSON]
+
+EntityID = str
+
+BundleVersion = str
+
+
+class Accumulator(ABC):
+    @abstractmethod
+    def accumulate(self, value):
+        raise NotImplementedError
+
+    @abstractmethod
+    def close(self):
+        raise NotImplementedError
+
+
+class NumericAccumulator(Accumulator):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.value = 0
+
+    def accumulate(self, value):
+        self.value += value
+
+    def close(self):
+        return self.value
+
+
+class SetAccumulator(Accumulator):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.value = set()
+
+    def accumulate(self, value):
+        if isinstance(value, (tuple, list, set)):
+            self.value.update(value)
+        else:
+            self.value.add(value)
+
+    def close(self) -> List[Any]:
+        return list(self.value)
+
+
+class SetOfDictAccumulator(SetAccumulator):
+
+    def accumulate(self, value):
+        super().accumulate(freeze(value))
+
+    def close(self):
+        return thaw(super().close())
+
+
+class EntityAggregator(ABC):
+    def get_accumulator(self, key) -> Accumulator:
+        return SetAccumulator()
+
+    @abstractmethod
+    def aggregate(self, entities: Entities) -> Entities:
+        raise NotImplementedError
+
+
+class SimpleAggregator(EntityAggregator):
+    def aggregate(self, entities: Entities) -> Entities:
+        aggregate = {}
+        for entity in entities:
+            for field, value in entity.items():
+                try:
+                    accumulator = aggregate[field]
+                except:
+                    accumulator = self.get_accumulator(field)
+                    aggregate[field] = accumulator
+                accumulator.accumulate(value)
+        return [{k: accumulator.close() for k, accumulator in aggregate.items()}]
+
+
+class GroupingAggregator(EntityAggregator):
+
+    def aggregate(self, entities: Entities) -> Entities:
+        aggregates = defaultdict(dict)
+        for entity in entities:
+            aggregate = aggregates[self._group_key(entity)]
+            for field, value in entity.items():
+                try:
+                    accumulator = aggregate[field]
+                except:
+                    accumulator = self.get_accumulator(field)
+                    aggregate[field] = accumulator
+                accumulator.accumulate(value)
+        return [{field: accumulator.close() for field, accumulator in aggregate.items()}
+                for aggregate in aggregates.values()]
+
+    @abstractmethod
+    def _group_key(self, entity):
+        raise NotImplementedError
+
+
+class AggregatingTransformer(Transformer, metaclass=ABCMeta):
+
+    @abstractmethod
+    def entity_type(self) -> str:
+        """
+        The type of entity for which this transformer can aggregate documents.
+        """
+        raise NotImplementedError
+
+    def get_aggregator(self, entity_type):
+        """
+        Returns the aggregator to be used for entities of the given type that occur in the document to be aggregated.
+        A document for an entity of type X typically contains exactly one entity of type X and multiple entities of
+        types other than X.
+        """
+        return SimpleAggregator()
+
+    def aggregate_document(self, document: ElasticSearchDocument) -> ElasticSearchDocument:
+        if document.entity_type == self.entity_type():
+            contents = self._select_latest(document)
+            for entity_type in contents.keys():
+                if entity_type == self.entity_type():
+                    assert len(contents[entity_type]) == 1
+                else:
+                    aggregator = self.get_aggregator(entity_type)
+                    contents[entity_type] = aggregator.aggregate(contents[entity_type])
+            bundles = [Bundle(uuid=bundle.uuid, version=bundle.version, contents=None)
+                       for bundle in document.bundles if not bundle.deleted]
+            assert bool(contents) == bool(bundles)
+            return ElasticSearchDocument(entity_type=document.entity_type,
+                                         entity_id=document.entity_id,
+                                         bundles=bundles,
+                                         document_type=document.document_type,
+                                         document_version=document.document_version,
+                                         contents=contents)
+        else:
+            return super().aggregate_document(document)
+
+    def _select_latest(self, document) -> MutableMapping[str, Entities]:
+        """
+        Collect the latest version of each entity from the document. If more than one bundle contributes copies of
+        the same entity, potentially with different contents, the copy from the newest bundle will be chosen.
+        """
+        collated_contents: MutableMapping[str, MutableMapping[EntityID, Tuple[BundleVersion, JSON]]] = defaultdict(dict)
+        for bundle in document.bundles:
+            for entity_type, entities in bundle.contents.items():
+                if entity_type == 'deleted':
+                    assert entities is True
+                else:
+                    collated_entities = collated_contents[entity_type]
+                    for entity in entities:
+                        entity_id = entity['document_id']
+                        bundle_version, collated_entity = collated_entities.get(entity_id, ('', {}))
+                        if bundle_version < bundle.version:
+                            collated_entities[entity_id] = bundle.version, entity
+        contents = {entity_type: [entity for entity_id, (_, entity) in entities.items()]
+                    for entity_type, entities in collated_contents.items()}
+        return contents

@@ -15,11 +15,11 @@ class TestRequestBuilder(WebServiceTestCase):
         "translation": {
             "entity_id": "entity_id",
             "entity_version": "entity_version",
-            "projectId": "bundles.contents.projects.document_id",
-            "libraryConstructionApproach": "bundles.contents.processes.library_construction_approach",
-            "disease": "bundles.contents.specimens.disease",
-            "donorId": "bundles.contents.specimens.donor_biomaterial_id",
-            "genusSpecies": "bundles.contents.specimens.genus_species"
+            "projectId": "contents.projects.document_id",
+            "libraryConstructionApproach": "contents.processes.library_construction_approach",
+            "disease": "contents.specimens.disease",
+            "donorId": "contents.specimens.donor_biomaterial_id",
+            "genusSpecies": "contents.specimens.genus_species"
         },
         "autocomplete-translation": {
             "files": {
@@ -74,13 +74,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                 }
                             }
                         }
-                    ],
-                    "must_not": [
-                        {
-                            "term": {
-                                "bundles.contents.deleted": True
-                            }
-                        }
                     ]
                 }
             },
@@ -125,15 +118,7 @@ class TestRequestBuilder(WebServiceTestCase):
         # Load files required for this test
         expected_output = {
             "query": {
-                "bool": {
-                    "must_not": [
-                        {
-                            "term": {
-                                "bundles.contents.deleted": True
-                            }
-                        }
-                    ]
-                }
+                "bool": {}
             }
         }
 
@@ -187,13 +172,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                         ]
                                     }
                                 }
-                            }
-                        }
-                    ],
-                    "must_not": [
-                        {
-                            "term": {
-                                "bundles.contents.deleted": True
                             }
                         }
                     ]
@@ -256,13 +234,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                         ]
                                     }
                                 }
-                            }
-                        }
-                    ],
-                    "must_not": [
-                        {
-                            "term": {
-                                "bundles.contents.deleted": True
                             }
                         }
                     ]
@@ -347,13 +318,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                 }
                             }
                         }
-                    ],
-                    "must_not": [
-                        {
-                            "term": {
-                                "bundles.contents.deleted": True
-                            }
-                        }
                     ]
                 }
             },
@@ -396,15 +360,7 @@ class TestRequestBuilder(WebServiceTestCase):
         """
         expected_output = {
             "filter": {
-                "bool": {
-                    "must_not": [
-                        {
-                            "term": {
-                                "bundles.contents.deleted": True
-                            }
-                        }
-                    ]
-                }
+                "bool": {}
             },
             "aggs": {
                 "myTerms": {
@@ -465,13 +421,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                 }
                             }
                         }
-                    ],
-                    "must_not": [
-                        {
-                            "term": {
-                                "bundles.contents.deleted": True
-                            }
-                        }
                     ]
                 }
             },
@@ -481,28 +430,29 @@ class TestRequestBuilder(WebServiceTestCase):
             "aggs": {
                 "_project_agg": {
                     "terms": {
-                        "field": "bundles.contents.projects.document_id.keyword"
+                        "field": "contents.projects.document_id.keyword",
+                        "size": 99999
                     },
                     "aggs": {
                         "donor_count": {
                             "cardinality": {
-                                "field": "bundles.contents.specimens.donor_biomaterial_id.keyword",
+                                "field": "contents.specimens.donor_document_id.keyword",
                                 "precision_threshold": "40000"
                             }
                         },
                         "species": {
                             "terms": {
-                                "field": "bundles.contents.specimens.genus_species.keyword"
+                                "field": "contents.specimens.genus_species.keyword"
                             }
                         },
                         "libraryConstructionApproach": {
                             "terms": {
-                                "field": "bundles.contents.processes.library_construction_approach.keyword"
+                                "field": "contents.processes.library_construction_approach.keyword"
                             }
                         },
                         "disease": {
                             "terms": {
-                                "field": "bundles.contents.specimens.disease.keyword"
+                                "field": "contents.specimens.disease.keyword"
                             }
                         }
                     }
@@ -546,17 +496,16 @@ class TestRequestBuilder(WebServiceTestCase):
                         "_id": "a",
                         "_source": {
                             "entity_id": "a",
-                            "bundles": [
-                                {
-                                    "contents": {
-                                        "specimens": [],
-                                        "files": [],
-                                        "processes": [],
-                                        "project": {
-                                            "document_id": "a"
-                                        }
-                                    }
+                            "contents": {
+                                "specimens": [],
+                                "files": [],
+                                "processes": [],
+                                "project": {
+                                    "document_id": "a"
                                 }
+                            },
+                            "bundles": [
+                                {}
                             ]
                         }
                     },
@@ -564,36 +513,35 @@ class TestRequestBuilder(WebServiceTestCase):
                         "_id": "b",
                         "_source": {
                             "entity_id": "b",
-                            "bundles": [
-                                {
-                                    "contents": {
-                                        "specimens": [
-                                            {
-                                                "biomaterial_id": "specimen1",
-                                                "disease": [
-                                                    "disease1"
-                                                ],
-                                                "organ": [
-                                                    "organ1"
-                                                ],
-                                                "total_estimated_cells": [
-                                                    2
-                                                ],
-                                                "donor_biomaterial_id": [
-                                                    "donor1"
-                                                ],
-                                                "genus_species": [
-                                                    "species1"
-                                                ]
-                                            }
+                            "contents": {
+                                "specimens": [
+                                    {
+                                        "biomaterial_id": [
+                                            "specimen1"
                                         ],
-                                        "files": [],
-                                        "processes": [],
-                                        "project": {
-                                            "document_id": "b"
-                                        }
+                                        "disease": [
+                                            "disease1"
+                                        ],
+                                        "organ": [
+                                            "organ1"
+                                        ],
+                                        "total_estimated_cells": 2,
+                                        "donor_biomaterial_id": [
+                                            "donor1"
+                                        ],
+                                        "genus_species": [
+                                            "species1"
+                                        ]
                                     }
+                                ],
+                                "files": [],
+                                "processes": [],
+                                "project": {
+                                    "document_id": "b"
                                 }
+                            },
+                            "bundles": [
+                                {}
                             ]
                         }
                     }
