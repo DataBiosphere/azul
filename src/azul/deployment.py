@@ -41,6 +41,10 @@ class AWS:
     def es(self):
         return boto3.client('es')
 
+    @memoized_property
+    def dynamo(self):
+        return boto3.client('dynamodb')
+
     def api_gateway_id(self, function_name: str, validate=True) -> Optional[str]:
         try:
             response = self.lambda_.get_policy(FunctionName=function_name)
