@@ -14,11 +14,12 @@ class WebServiceTestCase(ElasticsearchTestCase, LocalAppTestCase):
 
     _data_loader = None
     seed = None  # seed is used to set a seed for the fake data loader so we can reproduce tests if needed
+    number_of_documents = 1000
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls._data_loader = ElasticsearchFakeDataLoader()
+        cls._data_loader = ElasticsearchFakeDataLoader(cls.number_of_documents)
         cls._data_loader.load_data(seed=cls.seed)
 
     @classmethod

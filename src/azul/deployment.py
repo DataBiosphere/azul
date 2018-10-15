@@ -46,6 +46,10 @@ class AWS:
     def stepfunctions(self):
         return boto3.client('stepfunctions')
 
+    @lru_cache(maxsize=1)
+    def dynamo(self, endpoint_url, region_name):
+        return boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
+
     def api_gateway_id(self, function_name: str, validate=True) -> Optional[str]:
         try:
             response = self.lambda_.get_policy(FunctionName=function_name)

@@ -32,6 +32,9 @@
     "preservationMethod": "contents.specimens.preservation_method",
     "cellCount": "contents.cell_suspensions.total_estimated_cells",
 
+    "bundleUuid": "bundles.uuid",
+    "bundleVersion": "bundles.version",
+
     "entryId": "entity_id"
 },
   "autocomplete-translation": {
@@ -57,6 +60,21 @@
       "bundle_uuid": "uuid",
       "bundle_version": "version"
     }
+  },
+  "cart-item": {
+    "files": [
+      "fileId"
+    ],
+    "specimens": [
+      "specimenId"
+    ],
+    "projects": [
+      "project"
+    ],
+    "bundles": [
+      "bundleUuid",
+      "bundleVersion"
+    ]
   },
   "facets": [
     "organ",
