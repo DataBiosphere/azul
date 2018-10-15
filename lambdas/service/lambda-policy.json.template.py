@@ -40,6 +40,26 @@ emit({
                 "s3:GetObject"
             ],
             "Resource": f"arn:aws:s3:::{config.s3_bucket}/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:DeleteItem"
+            ],
+            "Resource": f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/"
+                        f"{config.qualified_resource_name('carts')}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:DeleteItem"
+            ],
+            "Resource": f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/"
+                        f"{config.qualified_resource_name('cartitems')}"
         }
     ]
 })
