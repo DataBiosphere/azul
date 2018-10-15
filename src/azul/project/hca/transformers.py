@@ -53,14 +53,13 @@ def _project_dict(bundle: api.Bundle) -> dict:
         'project_title': project.project_title,
         'project_description': project.project_description,
         'project_shortname': project.project_short_name,
-        'laboratory': sorted(laboratories),
-        'institutions': sorted(institutions),
-        'contact_names': sorted(contact_names),
-        'contributors': as_json(sorted(project.contributors,
-                                       key=lambda contributor: contributor.email if contributor.email else None)),
+        'laboratory': list(laboratories),
+        'institutions': list(institutions),
+        'contact_names': list(contact_names),
+        'contributors': as_json(project.contributors),
         'document_id': str(project.document_id),
-        'publication_titles': sorted(publication_titles),
-        'publications': as_json(sorted(project.publications)),
+        'publication_titles': list(publication_titles),
+        'publications': as_json(project.publications),
         '_type': 'project'
     }
 
