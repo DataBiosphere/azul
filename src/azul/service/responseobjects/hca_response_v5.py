@@ -410,11 +410,7 @@ class ProjectSummaryResponse(BaseSummaryResponse):
                 total_cell_count, organ_cell_count = self.get_cell_count(hit)
                 break
         else:
-            # FIXME: this should be an `assert False` but the fake data loader used by test_repository_projects.py
-            # violates the invariant that hit._source.entity_id == hit._id == hits.contents.projects[0].document_id
-            # (https://github.com/DataBiosphere/azul/issues/422)
-            #
-            total_cell_count, organ_cell_count = 0, []
+            assert False
 
         project_aggregates = self.aggregates['_project_agg']
 
