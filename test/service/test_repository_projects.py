@@ -44,22 +44,17 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             for project in hit['projects']:
                 for prop in RepositoryProjectsEndpointTest.get_project_detail_properties():
                     self.assertFalse(prop in project)
+            self._test_detail_response(hit['entryId'])
         self.assertTrue('pagination' in response_json)
         self.assertTrue('termFacets' in response_json)
 
-    def test_detail_response(self):
+    def _test_detail_response(self, uuid):
         """
         Make call to endpoint that returns a single project
         A single hit should be returned
         Certain fields should be in the project object
         """
-        # The uuid is dependent on the seed and the structure of the template. Any change to either of these and you
-        # have to set a break point at call to self.elasticsearch_client.bulk() in fake_data_utils.py and examine the
-        # body of the request for the actual document_id in a project entity of a project document.
-        #
-        # FIXME: fix this insanity by doing a list request first and pulling out one of the documents
-        # (https://github.com/DataBiosphere/azul/issues/426)
-        url = self.base_url + 'repository/projects/096802f6-d67c-8720-7823-908d43ec1f85'
+        url = self.base_url + 'repository/projects/' + uuid
         response = requests.get(url)
         response.raise_for_status()
         hit = response.json()
