@@ -106,6 +106,12 @@ azul_vars=(
     # The name of the S3 bucket where the manifest API stores the downloadable
     # content requested by client.
     AZUL_S3_BUCKET
+
+    # Read capacity units to provision for each DynamoDB table
+    AZUL_DYNAMO_READ_CAPACITY
+
+    # Write capacity units to provision for each DynamoDB table
+    AZUL_DYNAMO_WRITE_CAPACITY
 )
 
 unset ${azul_vars[*]}
@@ -175,6 +181,8 @@ _set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front 
 _set AZUL_DSS_WORKERS 8
 _set AZUL_INDEXER_CONCURRENCY 64
 _set AZUL_SUBSCRIBE_TO_DSS 1
+_set AZUL_DYNAMO_READ_CAPACITY 1
+_set AZUL_DYNAMO_WRITE_CAPACITY 1
 
 # This is the same TF bucket as the one DSS uses
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"
