@@ -22,7 +22,6 @@ class TestResponse(WebServiceTestCase):
                 {
                     "_type": "fuchsia",
                     "content-type": "green",
-                    "crc32c": "61bd62c582e698313bc2bd60fbfbfb55211a71d5",
                     "file_format": "csv",
                     "document_id": "a350b29c-2609-7b92-0c49-23971a4f9371",
                     "indexed": True,
