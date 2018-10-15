@@ -29,7 +29,6 @@ class TestResponse(WebServiceTestCase):
                     "name": "billion.key",
                     "read_index": "blue",
                     "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
-                    "sha256": "0166ec04250562942e3613be6c4b96ee2cea4967",
                     "size": 6667,
                     "uuid": "e9772583-4240-4757-6357-32bef0e51150",
                     "version": "2001-03-16T05:26:40"

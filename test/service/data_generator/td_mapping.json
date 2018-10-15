@@ -89,17 +89,6 @@
                   "analyzer": "autocomplete",
                   "search_analyzer": "standard"
                 },
-                "sha256": {
-                  "type": "text",
-                  "fields": {
-                    "keyword": {
-                      "type": "keyword",
-                      "ignore_above": 256
-                    }
-                  },
-                  "analyzer": "autocomplete",
-                  "search_analyzer": "standard"
-                },
                 "size": {
                   "type": "long"
                 },
