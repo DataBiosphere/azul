@@ -18,7 +18,6 @@
         "lane_index": "pyint",
         "name": "file_name",
         "read_index": "safe_color_name",
-        "s3_etag": "sha1",
         "sha1": "sha1",
         "sha256": "sha1",
         "size": "pyint",

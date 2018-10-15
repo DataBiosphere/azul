@@ -29,7 +29,6 @@ class TestResponse(WebServiceTestCase):
                     "lane_index": 5108,
                     "name": "billion.key",
                     "read_index": "blue",
-                    "s3_etag": "fef20a0bb461859c18a39aa3055fdf3ccb126a6b",
                     "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
                     "sha256": "0166ec04250562942e3613be6c4b96ee2cea4967",
                     "size": 6667,
