@@ -28,17 +28,6 @@
                   "analyzer": "autocomplete",
                   "search_analyzer": "standard"
                 },
-                "crc32c": {
-                  "type": "text",
-                  "fields": {
-                    "keyword": {
-                      "type": "keyword",
-                      "ignore_above": 256
-                    }
-                  },
-                  "analyzer": "autocomplete",
-                  "search_analyzer": "standard"
-                },
                 "format": {
                   "type": "text",
                   "fields": {

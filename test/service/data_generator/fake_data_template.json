@@ -11,7 +11,6 @@
       {
         "_type": "safe_color_name",
         "content-type": "safe_color_name",
-        "crc32c": "sha1",
         "file_format": "file_extension",
         "document_id": "uuid4",
         "indexed": "pybool",

@@ -85,7 +85,6 @@ def _specimen_dict(specimen: api.SpecimenFromOrganism) -> MutableMapping[str, An
 def _file_dict(f: api.File) -> MutableMapping[str, Any]:
     return {
         'content-type': f.manifest_entry.content_type,
-        'crc32c': f.manifest_entry.crc32c,
         'indexed': f.manifest_entry.indexed,
         'name': f.manifest_entry.name,
         'sha1': f.manifest_entry.sha1,
