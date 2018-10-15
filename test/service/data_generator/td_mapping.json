@@ -89,17 +89,6 @@
                   "analyzer": "autocomplete",
                   "search_analyzer": "standard"
                 },
-                "s3_etag": {
-                  "type": "text",
-                  "fields": {
-                    "keyword": {
-                      "type": "keyword",
-                      "ignore_above": 256
-                    }
-                  },
-                  "analyzer": "autocomplete",
-                  "search_analyzer": "standard"
-                },
                 "sha1": {
                   "type": "text",
                   "fields": {
