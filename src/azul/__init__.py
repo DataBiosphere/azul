@@ -289,6 +289,22 @@ class Config:
         """
         return 1
 
+    @property
+    def dynamo_cart_table_name(self):
+        return self.qualified_resource_name('carts')
+
+    @property
+    def dynamo_cart_item_table_name(self):
+        return self.qualified_resource_name('cartitems')
+
+    @property
+    def cart_item_write_lambda_basename(self):
+        return 'cartitemwrite'
+
+    @property
+    def cart_item_state_machine_name(self):
+        return self.qualified_resource_name('cartitems')
+
 
 config = Config()
 
