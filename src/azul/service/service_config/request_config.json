@@ -43,7 +43,7 @@
     "files": {
       "file_content_type": "content-type",
       "file_name": "name",
-      "file_sha256": "sha256",
+      "file_sha1": "sha1",
       "file_size": "size",
       "file_uuid": "uuid",
       "file_version": "version",
