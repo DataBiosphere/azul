@@ -88,7 +88,6 @@ def _file_dict(f: api.File) -> MutableMapping[str, Any]:
         'crc32c': f.manifest_entry.crc32c,
         'indexed': f.manifest_entry.indexed,
         'name': f.manifest_entry.name,
-        's3_etag': f.manifest_entry.s3_etag,
         'sha1': f.manifest_entry.sha1,
         'sha256': f.manifest_entry.sha256,
         'size': f.manifest_entry.size,
