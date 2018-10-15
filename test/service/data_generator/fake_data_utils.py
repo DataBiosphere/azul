@@ -65,15 +65,16 @@ class ElasticsearchFakeDataLoader(object):
         try:
             for entity_type in self.entity_types:
                 index = config.es_index_name(entity_type, aggregate=True)
-                template = self.fix_canned_document(entity_type, self.doc_template)
                 logger.log(logging.INFO, f"Creating new test index '{index}'.")
                 self.elasticsearch_client.indices.create(index)
                 logger.log(logging.INFO, f"Loading data into test index '{index}'.")
                 faker = FakerSchemaGenerator(seed=seed)
+                documents = [self.fix_canned_document(entity_type, faker.generate_fake(self.doc_template))
+                             for _ in range(self.number_of_documents)]
                 fake_data_body = '\n'.join(flatten(
-                    (json.dumps({"index": {"_type": "meta", "_id": i}}),
-                     json.dumps(faker.generate_fake(template)))
-                    for i in range(self.number_of_documents)))
+                    (json.dumps({"index": {"_type": "doc", "_id": document['entity_id']}}),
+                     json.dumps(document))
+                    for document in documents))
                 self.elasticsearch_client.bulk(fake_data_body, index=index, doc_type='meta', refresh='wait_for')
         except NotFoundError:
             logger.log(logging.DEBUG, f"The index {index} doesn't exist yet.")
@@ -81,14 +82,16 @@ class ElasticsearchFakeDataLoader(object):
     @classmethod
     def fix_canned_document(cls, entity_type, doc):
         """
-        This function fixes the canned document so that it satisfies the following invariant.
+        This function fixes the canned document so that it satisfies the following invariants:
 
-        In a response where each hit represents a file, 'hits.content.specimens.some_field` is a list because
+        1) In a response where each hit represents a file, 'hits.content.specimens.some_field` is a list because
         hits.content.specimens is the result of the indexer aggregating over more than one specimen. In a response
         where each hit represents a specimen, that same field is a single value because hits.content.specimens is a
         singleton. There are a two exceptions to that rule: if the metadata already specifies that field as a list,
         the field will be a list in either case. If the field is a numeric aggregate, the aggregation is done via
         sum() rather than set() and so the field remains an int, too.
+
+        2) doc.entity_id == doc.contents.$entity_type[0].document_id in every document representing $entity_type
         """
         doc = deepcopy(doc)
         doc['contents'] = {
@@ -103,6 +106,11 @@ class ElasticsearchFakeDataLoader(object):
                 } for inner_entity in inner_entities
             ] for inner_entity_type, inner_entities in doc['contents'].items()
         }
+        for inner_entity_type, inner_entities in doc['contents'].items():
+            if inner_entity_type == entity_type:
+                assert len(inner_entities) == 1
+                inner_entity = inner_entities[0]
+                inner_entity['document_id'] = doc['entity_id']
         return doc
 
     def clean_up(self):
