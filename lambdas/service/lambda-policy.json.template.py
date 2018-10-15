@@ -32,6 +32,26 @@ emit({
                 "es:DescribeElasticsearchDomain"
             ],
             "Resource": f"arn:aws:es:{aws.region_name}:{aws.account}:domain/{config.es_domain}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:DeleteItem"
+            ],
+            "Resource": f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/"
+                        f"{config.qualified_resource_name('carts')}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:DeleteItem"
+            ],
+            "Resource": f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/"
+                        f"{config.qualified_resource_name('cartitems')}"
         }
     ]
 })

@@ -193,6 +193,22 @@ class Config:
     def document_queue_name(self):
         return config.qualified_resource_name('documents', suffix='.fifo')
 
+    @property
+    def dynamo_cart_table_name(self):
+        return self.qualified_resource_name('carts')
+
+    @property
+    def dynamo_cart_item_table_name(self):
+        return self.qualified_resource_name('cartitems')
+
+    @property
+    def dynamo_read_capacity(self):
+        return os.environ['AZUL_DYNAMO_READ_CAPACITY']
+
+    @property
+    def dynamo_write_capacity(self):
+        return os.environ['AZUL_DYNAMO_WRITE_CAPACITY']
+
 
 config = Config()
 
