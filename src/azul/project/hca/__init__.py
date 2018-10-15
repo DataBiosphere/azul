@@ -20,7 +20,14 @@ dss_subscription_query = {
                                   if config.dss_endpoint != "https://dss.data.humancellatlas.org/v1"
                                   else "files.biomaterial_json")
                     }
-                }
+                },
+                *([{
+                    "range": {
+                        "manifest.version": {
+                            "gte": "2018-10-10"
+                        }
+                    }
+                }] if config.dss_endpoint == "https://dss.integration.data.humancellatlas.org/v1" else [])
             ]
         }
     }
