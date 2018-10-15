@@ -55,7 +55,6 @@
                 "files": [
                   {
                     "content-type": "application/gzip; dcp-type=data",
-                    "crc32c": "49d22bda",
                     "indexed": false,
                     "name": "22421_8#139_1.fastq.gz",
                     "sha1": "30fd5e8a3074124085ebb4894c3e22ff3576c8a4",
@@ -269,7 +268,6 @@
                 "files": [
                   {
                     "content-type": "application/gzip; dcp-type=data",
-                    "crc32c": "fff8c9be",
                     "indexed": false,
                     "name": "22421_8#139_2.fastq.gz",
                     "sha1": "8f490fca4b6c3d60c06571b0cc1e12ece5781dd3",
