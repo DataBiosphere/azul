@@ -1,7 +1,7 @@
 from abc import ABCMeta
 from collections import defaultdict
 import logging
-from typing import Any, List, Mapping, MutableMapping, Sequence, Set
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set
 
 from humancellatlas.data.metadata import api
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -12,8 +12,9 @@ from azul.transformer import (Accumulator,
                               Bundle,
                               ElasticSearchDocument,
                               GroupingAggregator,
+                              ListAccumulator,
                               NumericAccumulator,
-                              SetOfDictAccumulator,
+                              SetAccumulator,
                               SimpleAggregator)
 from azul.types import JSON
 
@@ -195,31 +196,63 @@ class BiomaterialVisitor(api.EntityVisitor):
 
 
 class FileAggregator(GroupingAggregator):
+
     def _group_key(self, entity):
         return entity['file_format']
 
-    def get_accumulator(self, key) -> Accumulator:
-        if key == 'size':
+    def get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'size':
             return NumericAccumulator()
+        elif field in ('name',
+                       'uuid',
+                       'version',
+                       'document_id'):
+            return ListAccumulator(max_size=100)
+        elif field == 'sha1':
+            return None
         else:
-            return super().get_accumulator(key)
+            return SetAccumulator(max_size=100)
 
 
 class SpecimenAggregator(GroupingAggregator):
+
     def _group_key(self, entity):
         return entity['organ']
 
-    def get_accumulator(self, key) -> Accumulator:
-        if key == 'total_estimated_cells':
+    def get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'total_estimated_cells':
             return NumericAccumulator()
         else:
-            return super().get_accumulator(key)
+            return SetAccumulator(max_size=100)
 
 
 class ProjectAggregator(SimpleAggregator):
 
-    def get_accumulator(self, key):
-        return SetOfDictAccumulator() if key in ('contributors', 'publications') else super().get_accumulator(key)
+    def get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'document_id':
+            return ListAccumulator(max_size=100)
+        elif field in ('project_description',
+                       'contact_names',
+                       'contributors',
+                       'publication_titles',
+                       'publications'):
+            return None
+        else:
+            return SetAccumulator(max_size=100)
+
+
+class ProcessAggregator(GroupingAggregator):
+
+    def _group_key(self, entity) -> Any:
+        return entity.get('library_construction_approach')
+
+    def get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'document_id':
+            return None
+        elif field in ('document_id', 'process_id', 'protocol_id'):
+            return ListAccumulator(max_size=10)
+        else:
+            return SetAccumulator(max_size=10)
 
 
 class Transformer(AggregatingTransformer, metaclass=ABCMeta):
@@ -231,6 +264,8 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             return SpecimenAggregator()
         elif entity_type == 'projects':
             return ProjectAggregator()
+        elif entity_type == 'processes':
+            return ProcessAggregator()
         else:
             return super().get_aggregator(entity_type)
 
