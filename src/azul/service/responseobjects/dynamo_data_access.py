@@ -79,7 +79,7 @@ class DynamoDataAccessor:
             }
         )['TableDescription']
 
-    def query(self, table_name, key_conditions, filters=None):
+    def query(self, table_name, key_conditions, filters=None, index_name=None):
         """
         Make query and return a formatted list of items
 
@@ -89,6 +89,7 @@ class DynamoDataAccessor:
             'key1 = value1 AND key2 = value2'
         :param filters: Optional conditions on non-primary key attributes
             Follow the same format as key conditions
+        :param index_name: Name of secondary index to use; Use None to use primary index
         :return: List of the query results
         """
         expression_values = dict()
@@ -114,6 +115,7 @@ class DynamoDataAccessor:
 
         query_result = self.dynamo_client.query(
             TableName=table_name,
+            IndexName=index_name,
             **query_params
         ).get('Items')
 
@@ -126,7 +128,7 @@ class DynamoDataAccessor:
             This is a dict with format {key1: value1, key2: value2}
         :return: Item if found, otherwise None
         """
-        return self.dynamo_client.delete_item(
+        return self.dynamo_client.get_item(
             TableName=table_name,
             Key=self._add_type_to_item_values(keys),
             ReturnValues='ALL_OLD'
