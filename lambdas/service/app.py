@@ -531,9 +531,13 @@ def get_user_id():
 
 # TODO: Error and duplicates checking
 
-@app.route('/resources/carts/{cart_name}', methods=['POST'], cors=True)
-def create_cart(cart_name):
+@app.route('/resources/carts', methods=['POST'], cors=True)
+def create_cart():
     user_id = get_user_id()
+    try:
+        cart_name = app.current_request.json_body['cartName']
+    except KeyError:
+        raise BadRequestError('cartName parameter must be given')
     dda = DynamoDataAccessor()
     query_dict = {'UserId': user_id, 'CartName': cart_name}
     if len(dda.query(config.dynamo_cart_table_name, query_dict, index_name='UserCartNameIndex')) > 0:
@@ -558,24 +562,23 @@ def delete_cart(cart_id):
 @app.route('/resources/cart-items/{cart_id}', methods=['GET'], cors=True)
 def get_cart(cart_id):
     dda = DynamoDataAccessor()
-    return dda.get_item(config.dynamo_cart_item_table_name, {'CartId': cart_id})
+    return dda.query(config.dynamo_cart_item_table_name, {'CartId': cart_id}, index_name='CartIdIndex')
 
 
 # TODO: entity endpoints should take a request body with all the relevant information
 
-@app.route('/resources/cart-items/{cart_id}', methods=['POST'], cors=True)
-def add_entity_to_cart(cart_id):
+@app.route('/resources/cart-items', methods=['POST'], cors=True)
+def add_entity_to_cart():
     dda = DynamoDataAccessor()
-    entity_id = app.current_request.query_params.get('entity_id')
-    if entity_id is None:
-        raise BadRequestError('entity_id parameter must be given')
-    return dda.insert_item(config.dynamo_cart_item_table_name, {'CartId': cart_id})
+    try:
+        cart_id = app.current_request.json_body['cartId']
+        entity_id = app.current_request.json_body['entityId']
+    except KeyError:
+        raise BadRequestError('cartId and entityId parameters must be given')
+    return dda.insert_item(config.dynamo_cart_item_table_name, {'CartId': cart_id, 'EntityId': entity_id})
 
 
-@app.route('/resources/cart-items/{cart_id}', methods=['DELETE'], cors=True)
-def delete_entity(cart_id):
+@app.route('/resources/cart-items/{cart_item_id}', methods=['DELETE'], cors=True)
+def delete_entity(cart_item_id):
     dda = DynamoDataAccessor()
-    entity_id = app.current_request.query_params.get('entity_id')
-    if entity_id is None:
-        raise BadRequestError('entity_id parameter must be given')
-    return dda.delete_item(config.dynamo_cart_item_table_name, {'CartId': cart_id})
+    return dda.delete_item(config.dynamo_cart_item_table_name, {'CartItemId': cart_item_id})
