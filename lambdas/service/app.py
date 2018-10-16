@@ -543,7 +543,7 @@ def create_cart():
     if len(dda.query(config.dynamo_cart_table_name, query_dict, index_name='UserCartNameIndex')) > 0:
         raise BadRequestError(f'Cart `{cart_name}` already exists')
     return dda.insert_item(config.dynamo_cart_table_name,
-                           {'entity_type': 'files', 'CartId': str(uuid4()), **query_dict})
+                           {'EntityType': 'files', 'CartId': str(uuid4()), **query_dict})
 
 
 @app.route('/resources/carts', methods=['GET'], cors=True)
@@ -559,13 +559,12 @@ def delete_cart(cart_id):
     return dda.delete_item(config.dynamo_cart_table_name, {'CartId': cart_id})
 
 
-@app.route('/resources/cart-items/{cart_id}', methods=['GET'], cors=True)
-def get_cart(cart_id):
+@app.route('/resources/cart-items/{item_id}', methods=['GET'], cors=True)
+def get_cart(item_id):
+    cart_id = item_id  # all routes need to use the same argument name so the generic name is actually cart_id
     dda = DynamoDataAccessor()
     return dda.query(config.dynamo_cart_item_table_name, {'CartId': cart_id}, index_name='CartIdIndex')
 
-
-# TODO: entity endpoints should take a request body with all the relevant information
 
 @app.route('/resources/cart-items', methods=['POST'], cors=True)
 def add_entity_to_cart():
@@ -575,10 +574,12 @@ def add_entity_to_cart():
         entity_id = app.current_request.json_body['entityId']
     except KeyError:
         raise BadRequestError('cartId and entityId parameters must be given')
-    return dda.insert_item(config.dynamo_cart_item_table_name, {'CartId': cart_id, 'EntityId': entity_id})
+    return dda.insert_item(config.dynamo_cart_item_table_name,
+                           {'CartItemId': str(uuid4()), 'CartId': cart_id, 'EntityId': entity_id})
 
 
-@app.route('/resources/cart-items/{cart_item_id}', methods=['DELETE'], cors=True)
-def delete_entity(cart_item_id):
+@app.route('/resources/cart-items/{item_id}', methods=['DELETE'], cors=True)
+def delete_entity(item_id):
+    cart_item_id = item_id
     dda = DynamoDataAccessor()
     return dda.delete_item(config.dynamo_cart_item_table_name, {'CartItemId': cart_item_id})
