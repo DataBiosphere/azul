@@ -283,7 +283,8 @@ class NumericAccumulator(Accumulator):
         self.value = 0
 
     def accumulate(self, value):
-        self.value += value
+        if value is not None:
+            self.value += value
 
     def close(self):
         return self.value
