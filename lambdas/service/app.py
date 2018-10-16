@@ -2,11 +2,13 @@ import ast
 import logging.config
 import os
 from concurrent.futures import ThreadPoolExecutor
+from uuid import uuid4
 
-from chalice import Chalice, BadRequestError, NotFoundError
+from chalice import Chalice, BadRequestError, NotFoundError, UnauthorizedError
 
 from azul import config
 from azul.service import service_config
+from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   IndexNotFoundError,
                                                                   ElasticTransformDump as EsTd)
@@ -518,3 +520,62 @@ def get_manifest():
     response = es_td.transform_manifest(filters=filters)
     # Return the excel file
     return response
+
+
+def get_user_id():
+    user_id = app.current_request.headers.get('Authorization', '')
+    if user_id == '':
+        raise UnauthorizedError('Missing access key')
+    return user_id
+
+
+# TODO: Error and duplicates checking
+
+@app.route('/resources/carts/{cart_name}', methods=['POST'], cors=True)
+def create_cart(cart_name):
+    user_id = get_user_id()
+    dda = DynamoDataAccessor()
+    query_dict = {'UserId': user_id, 'CartName': cart_name}
+    if len(dda.query(config.dynamo_cart_table_name, query_dict, index_name='UserCartNameIndex')) > 0:
+        raise BadRequestError(f'Cart `{cart_name}` already exists')
+    return dda.insert_item(config.dynamo_cart_table_name,
+                           {'entity_type': 'files', 'CartId': str(uuid4()), **query_dict})
+
+
+@app.route('/resources/carts', methods=['GET'], cors=True)
+def get_all_carts():
+    user_id = get_user_id()
+    dda = DynamoDataAccessor()
+    return dda.query(config.dynamo_cart_table_name, {'UserId': user_id}, index_name='UserIndex')
+
+
+@app.route('/resources/carts/{cart_id}', methods=['DELETE'], cors=True)
+def delete_cart(cart_id):
+    dda = DynamoDataAccessor()
+    return dda.delete_item(config.dynamo_cart_table_name, {'CartId': cart_id})
+
+
+@app.route('/resources/cart-items/{cart_id}', methods=['GET'], cors=True)
+def get_cart(cart_id):
+    dda = DynamoDataAccessor()
+    return dda.get_item(config.dynamo_cart_item_table_name, {'CartId': cart_id})
+
+
+# TODO: entity endpoints should take a request body with all the relevant information
+
+@app.route('/resources/cart-items/{cart_id}', methods=['POST'], cors=True)
+def add_entity_to_cart(cart_id):
+    dda = DynamoDataAccessor()
+    entity_id = app.current_request.query_params.get('entity_id')
+    if entity_id is None:
+        raise BadRequestError('entity_id parameter must be given')
+    return dda.insert_item(config.dynamo_cart_item_table_name, {'CartId': cart_id})
+
+
+@app.route('/resources/cart-items/{cart_id}', methods=['DELETE'], cors=True)
+def delete_entity(cart_id):
+    dda = DynamoDataAccessor()
+    entity_id = app.current_request.query_params.get('entity_id')
+    if entity_id is None:
+        raise BadRequestError('entity_id parameter must be given')
+    return dda.delete_item(config.dynamo_cart_item_table_name, {'CartId': cart_id})
