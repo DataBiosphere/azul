@@ -118,6 +118,10 @@ class TransformerVisitor(api.EntityVisitor):
             '_type': "process",
             **(
                 {
+                    'library_construction_approach': pl.library_construction_approach
+                } if isinstance(pl, api.LibraryPreparationProtocol) else {
+                    'instrument_manufacturer_model': pl.instrument_manufacturer_model
+                } if isinstance(pl, api.SequencingProtocol) else {
                     'library_construction_approach': pc.library_construction_approach
                 } if isinstance(pc, api.LibraryPreparationProcess) else {
                     'instrument_manufacturer_model': pc.instrument_manufacturer_model
