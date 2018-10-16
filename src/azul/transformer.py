@@ -291,15 +291,35 @@ class NumericAccumulator(Accumulator):
 
 class SetAccumulator(Accumulator):
 
-    def __init__(self) -> None:
+    def __init__(self, max_size=None) -> None:
         super().__init__()
         self.value = set()
+        self.max_size = max_size
 
     def accumulate(self, value):
-        if isinstance(value, (tuple, list, set)):
-            self.value.update(value)
-        else:
-            self.value.add(value)
+        if self.max_size is None or len(self.value) < self.max_size:
+            if isinstance(value, (tuple, list, set)):
+                self.value.update(value)
+            else:
+                self.value.add(value)
+
+    def close(self) -> List[Any]:
+        return list(self.value)
+
+
+class ListAccumulator(Accumulator):
+
+    def __init__(self, max_size=None) -> None:
+        super().__init__()
+        self.value = list()
+        self.max_size = max_size
+
+    def accumulate(self, value):
+        if self.max_size is None or len(self.value) < self.max_size:
+            if isinstance(value, (tuple, list, set)):
+                self.value.extend(value)
+            else:
+                self.value.append(value)
 
     def close(self) -> List[Any]:
         return list(self.value)
@@ -315,7 +335,11 @@ class SetOfDictAccumulator(SetAccumulator):
 
 
 class EntityAggregator(ABC):
-    def get_accumulator(self, key) -> Accumulator:
+
+    def get_accumulator(self, field) -> Optional[Accumulator]:
+        """
+        Return the Accumulator instance to be used for the given field or None if the field should not be accumulated.
+        """
         return SetAccumulator()
 
     @abstractmethod
@@ -324,37 +348,48 @@ class EntityAggregator(ABC):
 
 
 class SimpleAggregator(EntityAggregator):
+
     def aggregate(self, entities: Entities) -> Entities:
         aggregate = {}
         for entity in entities:
-            for field, value in entity.items():
-                try:
-                    accumulator = aggregate[field]
-                except:
-                    accumulator = self.get_accumulator(field)
-                    aggregate[field] = accumulator
+            self._accumulate(aggregate, entity)
+        return [
+            {
+                k: accumulator.close()
+                for k, accumulator in aggregate.items()
+                if accumulator is not None
+            }
+        ]
+
+    def _accumulate(self, aggregate, entity):
+        for field, value in entity.items():
+            try:
+                accumulator = aggregate[field]
+            except:
+                accumulator = self.get_accumulator(field)
+                aggregate[field] = accumulator
+            if accumulator is not None:
                 accumulator.accumulate(value)
-        return [{k: accumulator.close() for k, accumulator in aggregate.items()}]
 
 
-class GroupingAggregator(EntityAggregator):
+class GroupingAggregator(SimpleAggregator):
 
     def aggregate(self, entities: Entities) -> Entities:
-        aggregates = defaultdict(dict)
+        aggregates: MutableMapping[Any, MutableMapping[str, Optional[Accumulator]]] = defaultdict(dict)
         for entity in entities:
             aggregate = aggregates[self._group_key(entity)]
-            for field, value in entity.items():
-                try:
-                    accumulator = aggregate[field]
-                except:
-                    accumulator = self.get_accumulator(field)
-                    aggregate[field] = accumulator
-                accumulator.accumulate(value)
-        return [{field: accumulator.close() for field, accumulator in aggregate.items()}
-                for aggregate in aggregates.values()]
+            self._accumulate(aggregate, entity)
+        return [
+            {
+                field: accumulator.close()
+                for field, accumulator in aggregate.items()
+                if accumulator is not None
+            }
+            for aggregate in aggregates.values()
+        ]
 
     @abstractmethod
-    def _group_key(self, entity):
+    def _group_key(self, entity) -> Any:
         raise NotImplementedError
 
 
@@ -367,7 +402,7 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    def get_aggregator(self, entity_type):
+    def get_aggregator(self, entity_type) -> EntityAggregator:
         """
         Returns the aggregator to be used for entities of the given type that occur in the document to be aggregated.
         A document for an entity of type X typically contains exactly one entity of type X and multiple entities of
