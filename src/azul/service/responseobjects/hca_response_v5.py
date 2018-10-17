@@ -397,7 +397,12 @@ class ProjectSummaryResponse(BaseSummaryResponse):
         organ_cell_count = defaultdict(int)
         for specimen in hit['_source']['contents']['specimens']:
             assert len(specimen['organ']) == 1
-            organ_cell_count[specimen['organ'][0]] += specimen['total_estimated_cells']
+            try:  # We should use .get() here but ElasticsearchDSL's AttrDict doesn't expose it
+                cellcount = specimen['total_estimated_cells']
+            except KeyError:
+                pass
+            else:
+                organ_cell_count[specimen['organ'][0]] += cellcount
         total_cell_count = sum(organ_cell_count.values())
         organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
