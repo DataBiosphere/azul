@@ -286,6 +286,10 @@ class FileTransformer(Transformer):
                             manifest=manifest,
                             metadata_files=metadata_files)
         for file in bundle.files.values():
+            if file.file_format == 'unknown' and '.zarr!' in file.manifest_entry.name:
+                # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+                #
+                continue
             visitor = TransformerVisitor()
             file.accept(visitor)
             file.ancestors(visitor)
