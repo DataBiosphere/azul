@@ -340,8 +340,6 @@ def get_summary():
     :return: Returns a jsonified Summary API response
     """
     logger = logging.getLogger("dashboardService.webservice.get_summary")
-    if entity_type not in ('specimens', 'files'):
-        raise BadRequestError("Bad arguments, entity_type must be 'files' or 'specimens'")
     if app.current_request.query_params is None:
         app.current_request.query_params = {}
     # Get the filters from the URL
@@ -359,9 +357,19 @@ def get_summary():
     es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_summary(filters=filters, entity_type=entity_type)
+    response_files = es_td.transform_summary(filters=filters, entity_type="files")
+    response_specimens = es_td.transform_summary(filters=filters, entity_type="specimens")
+
+    unified_response = {}
+    for field in ("totalFileSize", "fileTypeSummaries", "fileCount"):
+        unified_response[field] = response_files[field]
+    for field in ("projectCount", "organCount", "donorCount",
+                  "labCount", "totalCellCount", "organSummaries", "specimenCount"):
+        unified_response[field] = response_specimens[field]
+
+    assert len(unified_response) == len(response_files) == len(response_specimens.keys())
     # Returning a single response if <file_id> request form is used
-    return response
+    return unified_response
 
 
 @app.route('/keywords', methods=['GET'], cors=True)
