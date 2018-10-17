@@ -3,7 +3,9 @@ import doctest
 import json
 import logging
 import os
+import re
 from unittest import TestCase
+from unittest.mock import Mock
 import warnings
 
 from humancellatlas.data.metadata.api import (AgeRange,
@@ -14,7 +16,6 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               SequenceFile,
                                               SpecimenFromOrganism,
                                               SupplementaryFile)
-
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
 from humancellatlas.data.metadata.helpers.json import as_json
 from humancellatlas.data.metadata.helpers.schema_examples import download_example_bundle
@@ -51,6 +52,39 @@ class TestAccessorApi(TestCase):
                 self._assert_bundle(uuid=uuid, version=version,
                                     manifest=manifest, metadata_files=metadata_files,
                                     age_range=age_range, has_specimens=has_specimens)
+
+    def test_bad_content(self):
+        deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
+        client = dss_client(deployment)
+        with self.assertRaises(TypeError) as cm:
+            download_bundle_metadata(client, replica, uuid)
+        self.assertRegex(cm.exception.args[0],
+                         "Expecting file .* to contain a JSON object " +
+                         re.escape("(<class 'dict'>), not <class 'bytes'>"))
+
+    def test_bad_content_type(self):
+        deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
+        client = Mock()
+        file_uuid, file_version = 'b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-09-20T232924.687620Z'
+        client.get_bundle.return_value = {
+            'bundle': {
+                'files': [
+                    {
+                        'name': 'name.json',
+                        'uuid': file_uuid,
+                        'version': file_version,
+                        'indexed': True,
+                        'content-type': 'bad'
+                    }
+                ]
+            }
+        }
+        with self.assertRaises(NotImplementedError) as cm:
+            # noinspection PyTypeChecker
+            download_bundle_metadata(client, replica, uuid)
+        self.assertEquals(cm.exception.args[0],
+                          f"Expecting file {file_uuid}.{file_version} "
+                          "to have content type 'application/json', not 'bad'")
 
     def test_one_bundle(self):
         for deployment, replica, uuid, version, age_range in [

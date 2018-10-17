@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 from typing import List, Optional, Tuple
 
-from hca import HCAConfig
 from hca.dss import DSSClient
 from urllib3 import Timeout
 
@@ -63,6 +62,13 @@ def download_bundle_metadata(client: DSSClient,
     bundle = response['bundle']
     manifest = bundle['files']
     metadata_files = {f["name"]: f for f in manifest if f["indexed"]}
+    for f in metadata_files.values():
+        content_type, _, _ = f['content-type'].partition(';')
+        expected_content_type = 'application/json'
+        if not content_type.startswith(expected_content_type):
+            raise NotImplementedError(f"Expecting file {f['uuid']}.{f['version']} "
+                                      f"to have content type '{expected_content_type}', "
+                                      f"not '{content_type}'")
 
     def download_file(item):
         file_name, manifest_entry = item
@@ -70,7 +76,12 @@ def download_bundle_metadata(client: DSSClient,
         file_version = manifest_entry['version']
         logger.debug("Getting file '%s' (%s.%s) from DSS.", file_name, file_uuid, file_version)
         # noinspection PyUnresolvedReferences
-        return file_name, client.get_file(uuid=file_uuid, version=file_version, replica='aws')
+        file_contents = client.get_file(uuid=file_uuid, version=file_version, replica='aws')
+        if not isinstance(file_contents, dict):
+            raise TypeError(f'Expecting file {file_uuid}.{file_version} '
+                            f'to contain a JSON object ({dict}), '
+                            f'not {type(file_contents)}')
+        return file_name, file_contents
 
     if num_workers == 0:
         metadata_files = map(download_file, metadata_files.items())

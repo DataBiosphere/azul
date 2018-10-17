@@ -225,7 +225,7 @@ class DonorOrganism(Biomaterial):
 
 @dataclass(init=False)
 class SpecimenFromOrganism(Biomaterial):
-    storage_method: str
+    storage_method: Optional[str]
     disease: Set[str]
     organ: Optional[str]
     organ_part: Optional[str]
