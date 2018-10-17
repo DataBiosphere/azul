@@ -249,7 +249,7 @@ class ProcessAggregator(GroupingAggregator):
     def get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':
             return None
-        elif field in ('document_id', 'process_id', 'protocol_id'):
+        elif field in ('process_id', 'protocol_id'):
             return ListAccumulator(max_size=10)
         else:
             return SetAccumulator(max_size=10)
