@@ -42,6 +42,7 @@ class BaseIndexer(ABC):
                                                                uuid=bundle_uuid,
                                                                version=bundle_version,
                                                                num_workers=config.num_dss_workers)
+        assert _ == bundle_version
 
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
         # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)

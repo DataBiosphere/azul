@@ -307,6 +307,29 @@ class TestHCAIndexer(IndexerTestCase):
 
         self._get_es_results(check_specimen_merge)
 
+    def test_indexing_with_skipped_matrix_file(self):
+        # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+        self._mock_index(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        self.maxDiff = None
+
+        def check_bundle_correctness(es_results):
+            file_names = set()
+            for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
+                if entity_type == 'files':
+                    bundles = result_dict["_source"]['bundles']
+                    self.assertEqual(1, len(bundles))
+                    files = bundles[0]['contents']['files']
+                    self.assertEqual(1, len(files))
+                    file_name = files[0]['name']
+                    self.assertNotIn(file_name, file_names)
+                    file_names.add(file_name)
+            matrix_file_names = {file_name for file_name in file_names if '.zarr!' in file_name}
+            self.assertEqual({'377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr!.zattrs'}, matrix_file_names)
+
+        self._get_es_results(check_bundle_correctness)
+
 
 if __name__ == "__main__":
     unittest.main()
