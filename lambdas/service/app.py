@@ -327,8 +327,8 @@ def get_project_data(project_id=None):
         return response
 
 
-@app.route('/repository/summary/{entity_type}', methods=['GET'], cors=True)
-def get_summary(entity_type=None):
+@app.route('/repository/summary', methods=['GET'], cors=True)
+def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
     ICGC endpoint.
