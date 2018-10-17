@@ -52,6 +52,7 @@ class DynamoDataAccessor:
             with_types[k] = {value_type: v}
         return with_types
 
+    # TODO: Do we need this method? There are ,more complex args that need to be added like secondary indexes
     def create_table(self, table_name, keys, attributes, read_capacity=1, write_capacity=1):
         """
         Create table in DynamoDB
@@ -113,9 +114,11 @@ class DynamoDataAccessor:
 
         query_params['ExpressionAttributeValues'] = expression_values
 
+        if index_name is not None:
+            query_params['IndexName'] = index_name
+
         query_result = self.dynamo_client.query(
             TableName=table_name,
-            IndexName=index_name,
             **query_params
         ).get('Items')
 
@@ -128,11 +131,12 @@ class DynamoDataAccessor:
             This is a dict with format {key1: value1, key2: value2}
         :return: Item if found, otherwise None
         """
-        return self.dynamo_client.get_item(
-            TableName=table_name,
-            Key=self._add_type_to_item_values(keys),
-            ReturnValues='ALL_OLD'
-        ).get('Item')
+        item = self.dynamo_client.get_item(
+                TableName=table_name,
+                Key=self._add_type_to_item_values(keys)).get('Item')
+        if item is None:
+            return None
+        return self._flatten_item(item)
 
     def insert_item(self, table_name, item):
         """
