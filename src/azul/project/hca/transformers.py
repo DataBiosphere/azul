@@ -145,6 +145,10 @@ class TransformerVisitor(api.EntityVisitor):
                 process_protocol = self._merge_process_protocol(entity, pl)
                 self.processes[process_protocol['document_id']] = process_protocol
         elif isinstance(entity, api.File):
+            if entity.file_format == 'unknown' and '.zarr!' in entity.manifest_entry.name:
+                # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+                #
+                return
             self.files[entity.document_id] = _file_dict(entity)
 
 
