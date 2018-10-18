@@ -1,6 +1,5 @@
-awscli==1.14.9
 aws-requests-auth==0.3.3
-boto3==1.4.4
+boto3==1.4.5
 boto==2.48.0
 botocore==1.8.13
 chalice==1.1.0
