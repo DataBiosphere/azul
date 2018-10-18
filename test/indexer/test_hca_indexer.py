@@ -15,7 +15,7 @@ from unittest.mock import patch
 from elasticsearch import Elasticsearch
 
 from azul import config, eventually
-from azul.json_freeze import freeze
+from azul.json_freeze import freeze, sort_frozen
 from indexer import IndexerTestCase
 
 from azul.transformer import ElasticSearchDocument
@@ -62,15 +62,16 @@ class TestHCAIndexer(IndexerTestCase):
         Index a bundle and check that the index contains the correct attributes
         """
         self._mock_index(self.old_bundle)
+        self.maxDiff = None
 
         def check_bundle_correctness(es_results):
             self.assertGreater(len(es_results), 0)
             data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
             for result_dict in es_results:
-                index_name = result_dict["_index"]
+                entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
                 index_id = result_dict["_id"]
                 expected_ids = set()
-                entity_type = config.entity_type_for_es_index(index_name)
                 path = os.path.join(data_prefix, f'aee55415-d128-4b30-9644-e6b2742fa32b.{entity_type}.results.json')
                 with open(path, 'r') as fp:
                     expected_dict = json.load(fp)
@@ -78,7 +79,9 @@ class TestHCAIndexer(IndexerTestCase):
                     for expected_hit in expected_dict["hits"]["hits"]:
                         expected_ids.add(expected_hit["_id"])
                         if index_id == expected_hit["_id"]:
-                            self.assertEqual(freeze(expected_hit["_source"]), freeze(result_dict["_source"]))
+                            expected = sort_frozen(freeze(expected_hit["_source"]))
+                            actual = sort_frozen(freeze(result_dict["_source"]))
+                            self.assertEqual(expected, actual, entity_type)
                 self.assertIn(index_id, expected_ids)
 
         self._get_es_results(check_bundle_correctness)
@@ -91,9 +94,14 @@ class TestHCAIndexer(IndexerTestCase):
 
         self._mock_delete(self.new_bundle, data_pack)
 
+        # FIXME: there should be a test that removes a bundle contribution from an entity that has
+        # contributions from other bundles (https://github.com/DataBiosphere/azul/issues/424)
+
         def check_bundle_delete_correctness(es_results):
             self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
                 result_doc = ElasticSearchDocument.from_index(result_dict)
                 self.assertEqual(result_doc.bundles[0].uuid, self.new_bundle[0])
                 self.assertEqual(result_doc.bundles[0].version, self.new_bundle[1])
@@ -111,6 +119,8 @@ class TestHCAIndexer(IndexerTestCase):
         def ensure_singletons(es_results):
             self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
                 result_uuid = result_dict["_source"]["bundles"][0]["uuid"]
                 result_version = result_dict["_source"]["bundles"][0]["version"]
                 result_contents = result_dict["_source"]["bundles"][0]["contents"]
@@ -141,16 +151,19 @@ class TestHCAIndexer(IndexerTestCase):
         def check_old_submission(es_results):
             self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
                 old_result_version = result_dict["_source"]["bundles"][0]["version"]
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(self.old_bundle[1], old_result_version)
                 self.assertEqual("Melanoma infiltration of stromal and immune cells",
-                                 old_result_contents["project"]["project_title"])
-                self.assertEqual("Mouse Melanoma", old_result_contents["project"]["project_shortname"])
-                self.assertIn("Sarah Teichmann", old_result_contents["project"]["laboratory"])
+                                 old_result_contents["projects"][0]["project_title"])
+                old_project = old_result_contents["projects"][0]
+                self.assertEqual("Mouse Melanoma", old_project["project_shortname"])
+                self.assertIn("Sarah Teichmann", old_project["laboratory"])
                 self.assertIn("University of Helsinki",
-                              [c.get('institution') for c in old_result_contents["project"]["contributors"]])
+                              [c.get('institution') for c in old_project["contributors"]])
                 self.assertIn("Mus musculus", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_old_submission)
@@ -159,6 +172,8 @@ class TestHCAIndexer(IndexerTestCase):
 
         def check_updated_submission(old_results_list, new_results_list):
             for old_result_dict, new_result_dict in list(zip(old_results_list, new_results_list)):
+                entity_type, aggregate = config.parse_es_index_name(new_result_dict["_index"])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
                 old_result_version = old_result_dict["_source"]["bundles"][0]["version"]
                 old_result_contents = old_result_dict["_source"]["bundles"][0]["contents"]
 
@@ -166,24 +181,21 @@ class TestHCAIndexer(IndexerTestCase):
                 new_result_contents = new_result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertNotEqual(old_result_version, new_result_version)
-                self.assertNotEqual(old_result_contents["project"]["project_title"],
-                                    new_result_contents["project"]["project_title"])
+                old_project = old_result_contents["projects"][0]
+                new_project = new_result_contents["projects"][0]
+                self.assertNotEqual(old_project["project_title"], new_project["project_title"])
                 self.assertEqual("Melanoma infiltration of stromal and immune cells 2",
-                                 new_result_contents["project"]["project_title"])
+                                 new_project["project_title"])
 
-                self.assertNotEqual(old_result_contents["project"]["project_shortname"],
-                                    new_result_contents["project"]["project_shortname"])
-                self.assertEqual("Aardvark Ailment", new_result_contents["project"]["project_shortname"])
+                self.assertNotEqual(old_project["project_shortname"], new_project["project_shortname"])
+                self.assertEqual("Aardvark Ailment", new_project["project_shortname"])
 
-                self.assertNotEqual(old_result_contents["project"]["laboratory"],
-                                    new_result_contents["project"]["laboratory"])
-                self.assertNotIn("Sarah Teichmann", new_result_contents["project"]["laboratory"])
-                self.assertIn("John Denver", new_result_contents["project"]["laboratory"])
+                self.assertNotEqual(old_project["laboratory"], new_project["laboratory"])
+                self.assertNotIn("Sarah Teichmann", new_project["laboratory"])
+                self.assertIn("John Denver", new_project["laboratory"])
 
-                self.assertNotEqual(old_result_contents["project"]["contributors"],
-                                    new_result_contents["project"]["contributors"])
-                self.assertNotIn("University of Helsinki",
-                                 [c.get('institution') for c in new_result_contents["project"]["contributors"]])
+                self.assertNotEqual(old_project["contributors"], new_project["contributors"])
+                self.assertNotIn("University of Helsinki", [c.get('institution') for c in new_project["contributors"]])
 
                 self.assertNotEqual(old_result_contents["specimens"][0]["genus_species"],
                                     new_result_contents["specimens"][0]["genus_species"])
@@ -199,16 +211,19 @@ class TestHCAIndexer(IndexerTestCase):
         def check_new_submission(es_results):
             self.assertGreater(len(es_results), 0)
             for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict['_index'])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
                 old_result_version = result_dict["_source"]["bundles"][0]["version"]
                 old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(self.new_bundle[1], old_result_version)
                 self.assertEqual("Melanoma infiltration of stromal and immune cells 2",
-                                 old_result_contents["project"]["project_title"])
-                self.assertEqual("Aardvark Ailment", old_result_contents["project"]["project_shortname"])
-                self.assertIn("John Denver", old_result_contents["project"]["laboratory"])
+                                 old_result_contents["projects"][0]["project_title"])
+                old_project = old_result_contents["projects"][0]
+                self.assertEqual("Aardvark Ailment", old_project["project_shortname"])
+                self.assertIn("John Denver", old_project["laboratory"])
                 self.assertNotIn("University of Helsinki",
-                                 [c.get('institution') for c in old_result_contents["project"]["contributors"]])
+                                 [c.get('institution') for c in old_project["contributors"]])
                 self.assertIn("Lorem ipsum", old_result_contents["specimens"][0]["genus_species"])
 
         old_results = self._get_es_results(check_new_submission)
@@ -217,6 +232,8 @@ class TestHCAIndexer(IndexerTestCase):
 
         def check_for_overwrite(old_results_list, new_results_list):
             for old_result_dict, new_result_dict in list(zip(old_results_list, new_results_list)):
+                entity_type, aggregate = config.parse_es_index_name(new_result_dict['_index'])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
                 old_result_version = old_result_dict["_source"]["bundles"][0]["version"]
                 old_result_contents = old_result_dict["_source"]["bundles"][0]["contents"]
 
@@ -224,14 +241,12 @@ class TestHCAIndexer(IndexerTestCase):
                 new_result_contents = new_result_dict["_source"]["bundles"][0]["contents"]
 
                 self.assertEqual(old_result_version, new_result_version)
-                self.assertEqual(old_result_contents["project"]["project_title"],
-                                 new_result_contents["project"]["project_title"])
-                self.assertEqual(old_result_contents["project"]["project_shortname"],
-                                 new_result_contents["project"]["project_shortname"])
-                self.assertEqual(old_result_contents["project"]["laboratory"],
-                                 new_result_contents["project"]["laboratory"])
-                self.assertEqual(old_result_contents["project"]["contributors"],
-                                 new_result_contents["project"]["contributors"])
+                old_project = old_result_contents["projects"][0]
+                new_project = new_result_contents["projects"][0]
+                self.assertEqual(old_project["project_title"], new_project["project_title"])
+                self.assertEqual(old_project["project_shortname"], new_project["project_shortname"])
+                self.assertEqual(old_project["laboratory"], new_project["laboratory"])
+                self.assertEqual(old_project["contributors"], new_project["contributors"])
                 self.assertEqual(old_result_contents["specimens"][0]["genus_species"],
                                  new_result_contents["specimens"][0]["genus_species"])
 
@@ -255,30 +270,34 @@ class TestHCAIndexer(IndexerTestCase):
                     thread_results = executor.map(self._mock_index, self.specimens)
                     self.assertIsNotNone(thread_results)
                     self.assertTrue(all(r is None for r in thread_results))
+
                 self.assertIsNotNone(cm.records)
-
                 num_hits = sum(1 for log_msg in cm.output
-                               if "There was a conflict with document" in log_msg and "azul_specimens" in log_msg)
-
-                self.assertEqual(1, num_hits)
+                               if "There was a conflict with document" in log_msg
+                               and ("azul_specimens" in log_msg or "azul_projects" in log_msg))
+                # One conflict for the specimen and one for the project
+                self.assertEqual(num_hits, 2)
 
         def check_specimen_merge(es_results):
             file_doc_ids = set()
-            self.assertEqual(len(es_results), 6)
+            self.assertEqual(len(es_results), 12)
             for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict['_index'])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
                 self.assertEqual(result_dict["_id"], result_dict["_source"]["entity_id"])
-                if result_dict["_index"] == config.es_index_name("files"):
+                if entity_type == "files":
                     # files assumes one bundle per result
                     self.assertEqual(len(result_dict["_source"]["bundles"]), 1)
                     result_contents = result_dict["_source"]["bundles"][0]["contents"]
                     self.assertEqual(1, len(result_contents["files"]))
                     file_doc_ids.add(result_contents["files"][0]["uuid"])
-                elif (result_dict["_index"] == config.es_index_name("specimens") or
-                      result_dict["_index"] == config.es_index_name("projects")):
+                elif entity_type in ('specimens', 'projects'):
                     self.assertEqual(len(result_dict["_source"]["bundles"]), 2)
                     for bundle in result_dict["_source"]["bundles"]:
                         result_contents = bundle["contents"]
                         self.assertEqual(2, len(result_contents["files"]))
+                else:
+                    self.fail()
 
             self.assertEqual(len(file_doc_ids), 4)
             for spec_uuid, spec_version in self.specimens:
@@ -287,6 +306,27 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertIn(file_dict["hca_ingest"]["document_id"], file_doc_ids)
 
         self._get_es_results(check_specimen_merge)
+
+    def test_indexing_with_skipped_matrix_file(self):
+        # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+        self._mock_index(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        self.maxDiff = None
+
+        def check_bundle_correctness(es_results):
+            file_names = set()
+            for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
+                bundles = result_dict["_source"]['bundles']
+                self.assertEqual(1, len(bundles))
+                files = bundles[0]['contents']['files']
+                for file in files:
+                    file_name = file['name']
+                    file_names.add(file_name)
+            matrix_file_names = {file_name for file_name in file_names if '.zarr!' in file_name}
+            self.assertEqual({'377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr!.zattrs'}, matrix_file_names)
+
+        self._get_es_results(check_bundle_correctness)
 
 
 if __name__ == "__main__":

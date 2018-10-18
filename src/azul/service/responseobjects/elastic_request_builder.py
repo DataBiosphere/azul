@@ -15,7 +15,8 @@ from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse, 
                                                           ProjectSummaryResponse, SummaryResponse)
 from azul.service.responseobjects.utilities import json_pp
 
-module_logger = logging.getLogger("dashboardService.elastic_request_builder")
+logger = logging.getLogger(__name__)
+module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
 
 # The minimum total number of hits for which search_after pagination
 # will be used instead of standard from/to pagination.
@@ -49,7 +50,7 @@ class ElasticTransformDump(object):
         The constructor simply initializes the ElasticSearch client object
         to be used for making requests.
         """
-        self.logger = logging.getLogger('dashboardService.elastic_request_builder.ElasticTransformDump')
+        self.logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
         self.es_client = ESClientFactory.get()
 
     @staticmethod
@@ -95,9 +96,8 @@ class ElasticTransformDump(object):
 
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=f) for f in filter_list]
-        #        Return a Query object. Make it match_all
-        ignore_deleted = Q("bool", must_not=[{'term': {'bundles.contents.deleted': True}}])
-        return Q('bool', must=query_list) & ignore_deleted if query_list else ignore_deleted
+
+        return Q('bool', must=query_list)
 
     @staticmethod
     def create_aggregate(filters, facet_config, agg):
@@ -138,10 +138,10 @@ class ElasticTransformDump(object):
 
     @staticmethod
     def create_request(
-            filters, es_client,
-            req_config,
-            post_filter=False,
-            entity_type='files'):
+        filters, es_client,
+        req_config,
+        post_filter=False,
+        entity_type='files'):
         """
         This function will create an ElasticSearch request based on
         the filters and facet_config passed into the function
@@ -166,7 +166,7 @@ class ElasticTransformDump(object):
         # Create the Search Object
         es_search = Search(
             using=es_client,
-            index=config.es_index_name(entity_type))
+            index=config.es_index_name(entity_type, aggregate=True))
         # Translate the filters keys
         filters = ElasticTransformDump.translate_filters(
             filters, field_mapping)
@@ -191,12 +191,12 @@ class ElasticTransformDump(object):
 
     @staticmethod
     def create_autocomplete_request(
-            filters,
-            es_client,
-            req_config,
-            _query,
-            search_field,
-            entity_type='files'):
+        filters,
+        es_client,
+        req_config,
+        _query,
+        search_field,
+        entity_type='files'):
         """
         This function will create an ElasticSearch request based on
          the filters passed to the function
@@ -333,10 +333,10 @@ class ElasticTransformDump(object):
         return page_field
 
     def transform_summary(
-            self,
-            request_config_file='request_config.json',
-            filters=None,
-            entity_type=None):
+        self,
+        request_config_file='request_config.json',
+        filters=None,
+        entity_type=None):
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
@@ -371,7 +371,7 @@ class ElasticTransformDump(object):
             'cell_count', 'sum', field=request_config['translation']['cellCount']
         )
 
-        #Add a cell_count aggregate to the ElasticSearch request
+        # Add a cell_count aggregate to the ElasticSearch request
         es_search.aggs.metric(
             'total_cell_count',
             'sum',
@@ -388,13 +388,15 @@ class ElasticTransformDump(object):
             type_id, type_count = ['fileId', 'fileCount']
         elif entity_type == 'files':
             type_id, type_count = ['specimenId', 'specimenCount']
+        else:
+            assert False, entity_type
 
         for field, agg_name in (
-                (type_id, type_count),
-                ('organ', 'organCount'),
-                ('donorId', 'donorCount'),
-                ('lab', 'labCount'),
-                ('project', 'projectCode')):
+            (type_id, type_count),
+            ('organ', 'organCount'),
+            ('donorId', 'donorCount'),
+            ('lab', 'labCount'),
+            ('project', 'projectCode')):
             cardinality = request_config['translation'][field]
             es_search.aggs.metric(
                 agg_name, 'cardinality',
@@ -494,6 +496,7 @@ class ElasticTransformDump(object):
 
         if pagination is None:
             # It's a single file search
+            logger.info("Elasticsearch request: %r", es_search.to_dict())
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()
             hits = [x['_source']
@@ -511,13 +514,15 @@ class ElasticTransformDump(object):
             # Execute ElasticSearch request
 
             try:
+                if self.logger.isEnabledFor(logging.INFO):
+                    logger.info("Elasticsearch request: %s", json.dumps(es_search.to_dict(), indent=4))
                 es_response = es_search.execute(ignore_cache=True)
             except elasticsearch.NotFoundError as e:
                 raise IndexNotFoundError(e.info["error"]["index"])
 
             es_response_dict = es_response.to_dict()
-            self.logger.debug("Printing ES_SEARCH response dict:\n {}".format(
-                json.dumps(es_response_dict)))
+            if self.logger.isEnabledFor(logging.DEBUG):
+                self.logger.debug("Elasticsearch response: %s", json.dumps(es_response_dict, indent=4))
             # Extract hits and facets (aggregations)
             es_hits = es_response_dict['hits']['hits']
             self.logger.info("length of es_hits: " + str(len(es_response_dict['hits']['hits'])))
@@ -550,9 +555,9 @@ class ElasticTransformDump(object):
         return final_response
 
     def transform_manifest(
-            self,
-            request_config_file='request_config.json',
-            filters=None):
+        self,
+        request_config_file='request_config.json',
+        filters=None):
         """
         This function does the whole transformation process for a manifest
         request. It takes the path of the config file and the filters
@@ -591,14 +596,14 @@ class ElasticTransformDump(object):
         return manifest.return_response()
 
     def transform_autocomplete_request(
-            self,
-            pagination,
-            request_config_file='request_config.json',
-            mapping_config_file='autocomplete_mapping_config.json',
-            filters=None,
-            _query='',
-            search_field='fileId',
-            entry_format='file'):
+        self,
+        pagination,
+        request_config_file='request_config.json',
+        mapping_config_file='autocomplete_mapping_config.json',
+        filters=None,
+        _query='',
+        search_field='fileId',
+        entry_format='file'):
         """
         This function does the whole transformation process. It
         takes the path of the config file, the filters, and pagination,
@@ -691,29 +696,30 @@ class ElasticTransformDump(object):
         """
         es_search.aggs.bucket(
             '_project_agg', 'terms',
-            field=f'{request_config["translation"]["projectId"]}.keyword'
+            field=request_config["translation"]["projectId"] + '.keyword',
+            size=99999
         )
         project_bucket = es_search.aggs['_project_agg']
 
         # Get unique donor count for each project
         project_bucket.metric(
             'donor_count', 'cardinality',
-            field=f'{request_config["translation"]["donorId"]}.keyword',
+            field='contents.specimens.donor_document_id.keyword',
             precision_threshold="40000"
         )
 
         # Get each species, experimental approaches, and diseases in each project
         project_bucket.bucket(
             'species', 'terms',
-            field=f'{request_config["translation"]["genusSpecies"]}.keyword'
+            field=request_config["translation"]["genusSpecies"] + '.keyword'
         )
         project_bucket.bucket(
             'libraryConstructionApproach', 'terms',
-            field=f'{request_config["translation"]["libraryConstructionApproach"]}.keyword'
+            field=request_config["translation"]["libraryConstructionApproach"] + '.keyword'
         )
         project_bucket.bucket(
             'disease', 'terms',
-            field=f'{request_config["translation"]["disease"]}.keyword'
+            field=request_config["translation"]["disease"] + '.keyword'
         )
 
     def add_project_summaries(self, hits, es_response):
