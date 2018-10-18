@@ -1,3 +1,4 @@
+from itertools import chain
 import logging
 import unittest
 from datetime import datetime
@@ -53,14 +54,20 @@ class TestDataExtractorTestCase(IndexerTestCase):
 
     # When two processes point at a file (this is the case for most files in production)
     # there is a bug where the files index contains duplicate dictionaries for the file.
+    #
     def test_no_duplicate_files_in_specimen(self):
         self._mock_index(self.test_duplicate_bundle)
-        results = self.es_client.get(
-            index=config.es_index_name('specimens'),
-            id='b3623b88-c369-46c9-a2e9-a16042d2c589')
-        file_ids = [f["uuid"] for f in
-                    results["_source"]["bundles"][0]["contents"]["files"]]
-        self.assertEqual(len(file_ids), len(set(file_ids)))
+        for aggregate in True, False:
+            with self.subTest(aggregate=aggregate):
+                result = self.es_client.get(index=config.es_index_name('specimens', aggregate=aggregate),
+                                            id='b3623b88-c369-46c9-a2e9-a16042d2c589')
+                if aggregate:
+                    file_ids = [chain(f['uuid'] for f in result['_source']['contents']['files'])]
+                else:
+                    file_ids = [f['uuid']
+                                for bundle in result['_source']['bundles']
+                                for f in bundle['contents']['files']]
+                self.assertEqual(len(file_ids), len(set(file_ids)))
 
 
 if __name__ == "__main__":
