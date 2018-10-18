@@ -387,14 +387,14 @@ class ElasticTransformDump(object):
         if entity_type == 'specimens':
             type_id, type_count = ['fileId', 'fileCount']
         elif entity_type == 'files':
-            type_id, type_count = ['specimenId', 'specimenCount']
+            type_id, type_count = ['specimenDocumentId', 'specimenCount']
         else:
             assert False, entity_type
 
         for field, agg_name in (
             (type_id, type_count),
             ('organ', 'organCount'),
-            ('donorId', 'donorCount'),
+            ('donorDocumentId', 'donorCount'),
             ('lab', 'labCount'),
             ('project', 'projectCode')):
             cardinality = request_config['translation'][field]
