@@ -5,6 +5,9 @@ import difflib
 import logging.config
 import unittest
 from urllib.parse import urlparse, parse_qs
+
+from elasticsearch_dsl.utils import AttrDict
+
 from service import WebServiceTestCase
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 from azul import config
@@ -494,7 +497,7 @@ class TestRequestBuilder(WebServiceTestCase):
         Summary should be added to dict of corresponding project id in hits.
         """
         hits = [{'entryId': 'a'}, {'entryId': 'b'}]
-        es_response = {
+        es_response = AttrDict({
             "hits": {
                 "hits": [
                     {
@@ -537,6 +540,24 @@ class TestRequestBuilder(WebServiceTestCase):
                                         "genus_species": [
                                             "species1"
                                         ]
+                                    },
+                                    {
+                                        "biomaterial_id": [
+                                            "specimen2"
+                                        ],
+                                        "disease": [
+                                            "disease1"
+                                        ],
+                                        "organ": [
+                                            "organ2"
+                                        ],
+                                        "total_estimated_cells": 3,
+                                        "donor_biomaterial_id": [
+                                            "donor2"
+                                        ],
+                                        "genus_species": [
+                                            "species1"
+                                        ]
                                     }
                                 ],
                                 "cell_suspensions": [
@@ -558,55 +579,8 @@ class TestRequestBuilder(WebServiceTestCase):
                     }
                 ]
             },
-            "aggregations": {
-                "_project_agg": {
-                    "doc_count_error_upper_bound": 0,
-                    "sum_other_doc_count": 0,
-                    "buckets": [
-                        {
-                            "key": "a",
-                            "libraryConstructionApproach": {
-                                "buckets": []
-                            },
-                            "disease": {
-                                "buckets": []
-                            },
-                            "donor_count": {
-                                "value": 0
-                            },
-                            "species": {
-                                "buckets": []
-                            }
-                        },
-                        {
-                            "key": "b",
-                            "libraryConstructionApproach": {
-                                "buckets": []
-                            },
-                            "disease": {
-                                "buckets": [
-                                    {
-                                        "key": "disease1",
-                                        "doc_count": 1
-                                    }
-                                ]
-                            },
-                            "donor_count": {
-                                "value": 1
-                            },
-                            "species": {
-                                "buckets": [
-                                    {
-                                        "key": "species1",
-                                        "doc_count": 1
-                                    }
-                                ]
-                            }
-                        }
-                    ]
-                }
-            }
-        }
+            "aggregations": {}
+        })
         EsTd().add_project_summaries(hits, es_response)
 
         expected_output = [
@@ -624,13 +598,18 @@ class TestRequestBuilder(WebServiceTestCase):
             {
                 "entryId": "b",
                 "projectSummary": {
-                    "donorCount": 1,
-                    "totalCellCount": 2.0,
+                    "donorCount": 2,
+                    "totalCellCount": 5.0,
                     "organSummaries": [
                         {
                             "organType": "organ1",
                             "countOfDocsWithOrganType": 1,
                             "totalCellCountByOrgan": 2.0
+                        },
+                        {
+                            "organType": "organ2",
+                            "countOfDocsWithOrganType": 1,
+                            "totalCellCountByOrgan": 3.0
                         }
                     ],
                     "genusSpecies": [
@@ -647,9 +626,9 @@ class TestRequestBuilder(WebServiceTestCase):
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(hits, sort_keys=True)
 
-        self.compare_dicts(actual_output, expected_output)
+        self.compare_dicts(expected_output, actual_output)
 
-        self.assertEqual(actual_output, expected_output)
+        self.assertEqual(expected_output, actual_output)
 
     def test_transform_request_with_file_url(self):
         response_json = EsTd().transform_request(filters={"file": {}},

@@ -338,70 +338,34 @@ class ProjectSummaryResponse(BaseSummaryResponse):
     """
 
     @classmethod
-    def get_bucket_terms(cls, project_id, project_buckets, agg_key):
+    def get_distinct_terms(cls, items, property_name):
         """
-        Return a list of the keys of the buckets from an ElasticSearch aggregate
-        of a given project with the format:
-        {
-          "buckets": [
-            {
-              "key": $project_id,
-              $agg_key: {
-                "buckets": [
-                  {
-                    "key": "a",
-                    "doc_count": 2
-                  }
-                ]
-              }
-            },
-            ...
-          ]
-        }
+        Iterate through the list of items (dicts) and return a list of distinct values
+        in all the items with property_name as a key
 
-        :param project_id: string UUID of the project info to retrieve
-        :param project_buckets: A dictionary from an ElasticSearch aggregate
-        :param agg_key: Key of aggregation to use
-        :return: list of bucket keys
-        """
-        for project_bucket in project_buckets['buckets']:
-            if project_bucket['key'] != project_id:
-                continue
-            return [bucket['key'] for bucket in project_bucket[agg_key]['buckets']]
-        return []
+        The value at the given property name must be a list of hashable items
 
-    @classmethod
-    def get_bucket_value(cls, project_id, project_buckets, agg_key):
+        :param AttrList items: list of dicts to extract distinct values from
+        :param str property_name: key of each item to extract
+        :return: list of distinct values
         """
-        Return a value of the bucket of the given project from an
-        ElasticSearch aggregate with the format:
-        {
-          "buckets": [
-            {
-              "key": $project_id,
-              $agg_key: {
-                "value" : value
-              }
-            },
-            ...
-          ]
-        }
-
-        :param project_id: string UUID of the project info to retrieve
-        :param project_buckets: A dictionary from an ElasticSearch aggregate
-        :param agg_key: Key of aggregation to use
-        :return: value in given project
-        """
-        for project_bucket in project_buckets['buckets']:
-            if project_bucket['key'] == project_id:
-                return project_bucket[agg_key]['value']
-        return -1
+        terms = set()
+        for item in items:
+            try:
+                terms |= set(item[property_name])
+            except KeyError:
+                pass
+        return list(terms)
 
     @classmethod
     def get_cell_count(cls, hit):
         """
         Iterate through cell suspensions to get overall and per organ cell count. Expects cell suspensions to already
         be grouped and aggregated by organ.
+
+        :param hit: Project document hit from ES response
+        :return: tuple where total_cell_count is the number of cells in the project and organ_cell_count is a dict
+            where the key is an organ and the value is the number of cells for the organ in the project
         """
         organ_cell_count = defaultdict(int)
         for cell_suspension in hit['_source']['contents']['cell_suspensions']:
@@ -421,22 +385,25 @@ class ProjectSummaryResponse(BaseSummaryResponse):
 
         for hit in raw_response['hits']['hits']:
             if hit['_id'] == project_id:
+                hit_contents = hit['_source']['contents'].to_dict()
                 total_cell_count, organ_cell_count = self.get_cell_count(hit)
+                donor_count = len(self.get_distinct_terms(hit_contents['specimens'], 'donor_biomaterial_id'))
+                species_list = self.get_distinct_terms(hit_contents['specimens'], 'genus_species')
+                lib_construction_list = self.get_distinct_terms(hit_contents['processes'],
+                                                                'library_construction_approach')
+                disease_list = self.get_distinct_terms(hit_contents['specimens'], 'disease')
                 break
         else:
             assert False
 
-        project_aggregates = self.aggregates['_project_agg']
-
         self.apiResponse = ProjectSummaryRepresentation(
-            donorCount=self.get_bucket_value(project_id, project_aggregates, 'donor_count'),
+            donorCount=donor_count,
             totalCellCount=total_cell_count,
             organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
                             for count in organ_cell_count],
-            genusSpecies=self.get_bucket_terms(project_id, project_aggregates, 'species'),
-            libraryConstructionApproach=self.get_bucket_terms(project_id, project_aggregates,
-                                                              'libraryConstructionApproach'),
-            disease=self.get_bucket_terms(project_id, project_aggregates, 'disease')
+            genusSpecies=species_list,
+            libraryConstructionApproach=lib_construction_list,
+            disease=disease_list
         )
 
 
