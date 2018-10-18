@@ -13,6 +13,7 @@ from azul.deployment import aws
 
 
 # FIXME: This class collides conceptually with the plugin config classes derived from BaseIndexerConfig.
+# (https://github.com/DataBiosphere/azul/issues/420)
 
 class Config:
     """
@@ -99,15 +100,23 @@ class Config:
     def _index_prefix(self) -> str:
         return self._term_from_env('AZUL_INDEX_PREFIX')
 
-    def es_index_name(self, entity_type) -> str:
+    def es_index_name(self, entity_type, aggregate=False) -> str:
         self._validate_term(entity_type)
-        return f"{self._index_prefix}_{entity_type}_{self.deployment_stage}"
+        return f"{self._index_prefix}_{entity_type}{'_aggregate' if aggregate else ''}_{self.deployment_stage}"
 
-    def entity_type_for_es_index(self, index_name) -> str:
-        prefix, entity_type, deployment_stage = index_name.split('_')
+    def parse_es_index_name(self, index_name: str) -> Tuple[str, bool]:
+        index_name = index_name.split('_')
+        if len(index_name) == 3:
+            aggregate = False
+        elif len(index_name) == 4:
+            assert index_name.pop(2) == 'aggregate'
+            aggregate = True
+        else:
+            assert False
+        prefix, entity_type, deployment_stage = index_name
         assert prefix == self._index_prefix
         assert deployment_stage == self.deployment_stage
-        return entity_type
+        return entity_type, aggregate
 
     @property
     def domain_name(self) -> str:
@@ -155,8 +164,6 @@ class Config:
 
     def enable_gcp(self):
         return 'GOOGLE_PROJECT' in os.environ
-
-    # FIXME: type hint return value
 
     def plugin(self):
         from azul.base_config import BaseIndexProperties
