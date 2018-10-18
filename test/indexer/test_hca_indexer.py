@@ -317,13 +317,11 @@ class TestHCAIndexer(IndexerTestCase):
             for result_dict in es_results:
                 entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
                 if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
-                if entity_type == 'files':
-                    bundles = result_dict["_source"]['bundles']
-                    self.assertEqual(1, len(bundles))
-                    files = bundles[0]['contents']['files']
-                    self.assertEqual(1, len(files))
-                    file_name = files[0]['name']
-                    self.assertNotIn(file_name, file_names)
+                bundles = result_dict["_source"]['bundles']
+                self.assertEqual(1, len(bundles))
+                files = bundles[0]['contents']['files']
+                for file in files:
+                    file_name = file['name']
                     file_names.add(file_name)
             matrix_file_names = {file_name for file_name in file_names if '.zarr!' in file_name}
             self.assertEqual({'377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr!.zattrs'}, matrix_file_names)
