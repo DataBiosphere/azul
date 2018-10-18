@@ -357,19 +357,24 @@ def get_summary():
     es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
-    response_files = es_td.transform_summary(filters=filters, entity_type="files")
-    response_specimens = es_td.transform_summary(filters=filters, entity_type="specimens")
 
-    unified_response = {}
-    for field in ("totalFileSize", "fileTypeSummaries", "fileCount"):
-        unified_response[field] = response_files[field]
-    for field in ("projectCount", "organCount", "donorCount",
-                  "labCount", "totalCellCount", "organSummaries", "specimenCount"):
-        unified_response[field] = response_specimens[field]
+    # Request a summary for each entity type and cherry-pick summary fields from the summaries for the entity
+    # that is authoritative for those fields.
+    #
+    summary_fields_by_authority = {
+        'files': ['totalFileSize', 'fileTypeSummaries', 'fileCount'],
+        'specimens': ['organCount', 'donorCount', 'labCount', 'totalCellCount', 'organSummaries', 'specimenCount'],
+        'projects': ['projectCount']
+    }
+    summaries = {entity_type: es_td.transform_summary(filters=filters, entity_type=entity_type)
+                 for entity_type, summary_fields in summary_fields_by_authority.items()}
+    unified_summary = {field: summaries[entity_type][field]
+                        for entity_type, summary_fields in summary_fields_by_authority.items()
+                        for field in summary_fields}
+    assert all(len(unified_summary) == len(summary) for summary in summaries.values())
 
-    assert len(unified_response) == len(response_files) == len(response_specimens.keys())
     # Returning a single response if <file_id> request form is used
-    return unified_response
+    return unified_summary
 
 
 @app.route('/keywords', methods=['GET'], cors=True)
