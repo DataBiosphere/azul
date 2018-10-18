@@ -1,11 +1,21 @@
+from abc import ABCMeta
 from collections import defaultdict
 import logging
-from typing import Any, List, Mapping, MutableMapping, Sequence, Set
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set
 
 from humancellatlas.data.metadata import api
+from humancellatlas.data.metadata.helpers.json import as_json
 
 from azul import reject
-from azul.transformer import ElasticSearchDocument, Transformer, Bundle
+from azul.transformer import (Accumulator,
+                              AggregatingTransformer,
+                              Bundle,
+                              ElasticSearchDocument,
+                              GroupingAggregator,
+                              ListAccumulator,
+                              NumericAccumulator,
+                              SetAccumulator,
+                              SimpleAggregator)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -44,14 +54,13 @@ def _project_dict(bundle: api.Bundle) -> dict:
         'project_title': project.project_title,
         'project_description': project.project_description,
         'project_shortname': project.project_short_name,
-        'laboratory': sorted(laboratories),
-        'institutions': sorted(institutions),
-        'contact_names': sorted(contact_names),
-        'contributors': sorted(project.contributors,
-                               key=lambda contributor: contributor.email if contributor.email else None),
-        'document_id': project.document_id,
-        'publication_titles': sorted(publication_titles),
-        'publications': sorted(project.publications),
+        'laboratory': list(laboratories),
+        'institutions': list(institutions),
+        'contact_names': list(contact_names),
+        'contributors': as_json(project.contributors),
+        'document_id': str(project.document_id),
+        'publication_titles': list(publication_titles),
+        'publications': as_json(project.publications),
         '_type': 'project'
     }
 
@@ -67,7 +76,8 @@ def _specimen_dict(specimen: api.SpecimenFromOrganism) -> MutableMapping[str, An
                 merged_specimen[key].update(value)
             else:
                 merged_specimen[key].add(value)
-    merged_specimen = {k: list(sorted(v, key=lambda x: (x is not None, x))) for k, v in merged_specimen.items()}
+    merged_specimen = {k: next(iter(v)) if len(v) == 1 else list(sorted(v, key=lambda x: (x is not None, x))) for k, v
+                       in merged_specimen.items()}
     merged_specimen['biomaterial_id'] = specimen.biomaterial_id
     return merged_specimen
 
@@ -75,16 +85,13 @@ def _specimen_dict(specimen: api.SpecimenFromOrganism) -> MutableMapping[str, An
 def _file_dict(f: api.File) -> MutableMapping[str, Any]:
     return {
         'content-type': f.manifest_entry.content_type,
-        'crc32c': f.manifest_entry.crc32c,
         'indexed': f.manifest_entry.indexed,
         'name': f.manifest_entry.name,
-        's3_etag': f.manifest_entry.s3_etag,
         'sha1': f.manifest_entry.sha1,
-        'sha256': f.manifest_entry.sha256,
         'size': f.manifest_entry.size,
         'uuid': f.manifest_entry.uuid,
         'version': f.manifest_entry.version,
-        'document_id': f.document_id,
+        'document_id': str(f.document_id),
         'file_format': f.file_format,
         '_type': 'file',
         **(
@@ -104,7 +111,7 @@ class TransformerVisitor(api.EntityVisitor):
 
     def _merge_process_protocol(self, pc: api.Process, pl: api.Protocol) -> MutableMapping[str, Any]:
         return {
-            'document_id': (pc.document_id, pl.document_id),
+            'document_id': f"{pc.document_id}.{pl.document_id}",
             'process_id': pc.process_id,
             'process_name': pc.process_name,
             'protocol_id': pl.protocol_id,
@@ -112,6 +119,10 @@ class TransformerVisitor(api.EntityVisitor):
             '_type': "process",
             **(
                 {
+                    'library_construction_approach': pl.library_construction_approach
+                } if isinstance(pl, api.LibraryPreparationProtocol) else {
+                    'instrument_manufacturer_model': pl.instrument_manufacturer_model
+                } if isinstance(pl, api.SequencingProtocol) else {
                     'library_construction_approach': pc.library_construction_approach
                 } if isinstance(pc, api.LibraryPreparationProcess) else {
                     'instrument_manufacturer_model': pc.instrument_manufacturer_model
@@ -131,8 +142,8 @@ class TransformerVisitor(api.EntityVisitor):
             self.specimens[entity.document_id] = entity
         elif isinstance(entity, api.Process):
             for pl in entity.protocols.values():
-                pl_pr_id = f"{pl.document_id}-{entity.document_id}"
-                self.processes[pl_pr_id] = self._merge_process_protocol(entity, pl)
+                process_protocol = self._merge_process_protocol(entity, pl)
+                self.processes[process_protocol['document_id']] = process_protocol
         elif isinstance(entity, api.File):
             self.files[entity.document_id] = _file_dict(entity)
 
@@ -146,14 +157,13 @@ class BiomaterialVisitor(api.EntityVisitor):
 
     def visit(self, entity: api.Entity) -> None:
         if isinstance(entity, api.Biomaterial):
-            # As more facets are required by the browser, handle each biomaterial as appropriate
             self.biomaterial_lineage.append(
                 {
-                    'document_id': entity.document_id,
                     'has_input_biomaterial': entity.has_input_biomaterial,
                     '_source': api.schema_names[type(entity)],
                     **(
                         {
+                            'document_id': str(entity.document_id),
                             'biomaterial_id': entity.biomaterial_id,
                             'disease': list(entity.disease),
                             'organ': entity.organ,
@@ -161,6 +171,7 @@ class BiomaterialVisitor(api.EntityVisitor):
                             'storage_method': entity.storage_method,
                             '_type': "specimen",
                         } if isinstance(entity, api.SpecimenFromOrganism) else {
+                            'donor_document_id': str(entity.document_id),
                             'donor_biomaterial_id': entity.biomaterial_id,
                             'genus_species': entity.genus_species,
                             'disease': list(entity.disease),
@@ -184,9 +195,84 @@ class BiomaterialVisitor(api.EntityVisitor):
         }
 
 
+class FileAggregator(GroupingAggregator):
+
+    def _group_key(self, entity):
+        return entity['file_format']
+
+    def get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'size':
+            return NumericAccumulator()
+        elif field in ('name',
+                       'uuid',
+                       'version',
+                       'document_id'):
+            return ListAccumulator(max_size=100)
+        elif field == 'sha1':
+            return None
+        else:
+            return SetAccumulator(max_size=100)
+
+
+class SpecimenAggregator(GroupingAggregator):
+
+    def _group_key(self, entity):
+        return entity['organ']
+
+    def get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'total_estimated_cells':
+            return NumericAccumulator()
+        else:
+            return SetAccumulator(max_size=100)
+
+
+class ProjectAggregator(SimpleAggregator):
+
+    def get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'document_id':
+            return ListAccumulator(max_size=100)
+        elif field in ('project_description',
+                       'contact_names',
+                       'contributors',
+                       'publication_titles',
+                       'publications'):
+            return None
+        else:
+            return SetAccumulator(max_size=100)
+
+
+class ProcessAggregator(GroupingAggregator):
+
+    def _group_key(self, entity) -> Any:
+        return entity.get('library_construction_approach')
+
+    def get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'document_id':
+            return None
+        elif field in ('process_id', 'protocol_id'):
+            return ListAccumulator(max_size=10)
+        else:
+            return SetAccumulator(max_size=10)
+
+
+class Transformer(AggregatingTransformer, metaclass=ABCMeta):
+
+    def get_aggregator(self, entity_type):
+        if entity_type == 'files':
+            return FileAggregator()
+        elif entity_type == 'specimens':
+            return SpecimenAggregator()
+        elif entity_type == 'projects':
+            return ProjectAggregator()
+        elif entity_type == 'processes':
+            return ProcessAggregator()
+        else:
+            return super().get_aggregator(entity_type)
+
+
 class FileTransformer(Transformer):
-    @property
-    def entity_name(self):
+
+    def entity_type(self) -> str:
         return 'files'
 
     def create_documents(self,
@@ -200,16 +286,18 @@ class FileTransformer(Transformer):
                             manifest=manifest,
                             metadata_files=metadata_files)
         for file in bundle.files.values():
+            if file.file_format == 'unknown' and '.zarr!' in file.manifest_entry.name:
+                # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+                #
+                continue
             visitor = TransformerVisitor()
-            # Visit the relatives of file
             file.accept(visitor)
             file.ancestors(visitor)
-            # Assign the contents to the ES doc
             contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
                             files=[_file_dict(file)],
                             processes=list(visitor.processes.values()),
-                            project=_project_dict(bundle))
-            es_document = ElasticSearchDocument(entity_type=self.entity_name,
+                            projects=[_project_dict(bundle)])
+            es_document = ElasticSearchDocument(entity_type=self.entity_type(),
                                                 entity_id=str(file.document_id),
                                                 bundles=[Bundle(uuid=str(bundle.uuid),
                                                                 version=bundle.version,
@@ -218,8 +306,8 @@ class FileTransformer(Transformer):
 
 
 class SpecimenTransformer(Transformer):
-    @property
-    def entity_name(self):
+
+    def entity_type(self) -> str:
         return 'specimens'
 
     def create_documents(self,
@@ -234,15 +322,13 @@ class SpecimenTransformer(Transformer):
                             metadata_files=metadata_files)
         for specimen in bundle.specimens:
             visitor = TransformerVisitor()
-            # Visit the relatives of file
             specimen.accept(visitor)
             specimen.ancestors(visitor)
-            # Assign the contents to the ES doc
             contents = dict(specimens=[_specimen_dict(specimen)],
                             files=list(visitor.files.values()),
                             processes=list(visitor.processes.values()),
-                            project=_project_dict(bundle))
-            es_document = ElasticSearchDocument(entity_type=self.entity_name,
+                            projects=[_project_dict(bundle)])
+            es_document = ElasticSearchDocument(entity_type=self.entity_type(),
                                                 entity_id=str(specimen.document_id),
                                                 bundles=[Bundle(uuid=str(bundle.uuid),
                                                                 version=bundle.version,
@@ -251,8 +337,8 @@ class SpecimenTransformer(Transformer):
 
 
 class ProjectTransformer(Transformer):
-    @property
-    def entity_name(self):
+
+    def entity_type(self) -> str:
         return 'projects'
 
     def create_documents(self,
@@ -261,30 +347,25 @@ class ProjectTransformer(Transformer):
                          manifest: List[JSON],
                          metadata_files: Mapping[str, JSON]
                          ) -> Sequence[ElasticSearchDocument]:
-        # Create a bundle object.
         bundle = api.Bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files)
         bundle_uuid = str(bundle.uuid)
         simplified_project = _project_dict(bundle)
-        # Gather information on specimens and files in the bundle with a separate visitor
         data_visitor = TransformerVisitor()
         for specimen in bundle.specimens:
-            # Visit the relatives
-            specimen.accept(data_visitor)  # Visit descendants
+            specimen.accept(data_visitor)
             specimen.ancestors(data_visitor)
         for file in bundle.files.values():
-            # Visit the relatives
-            file.accept(data_visitor)  # Visit descendants
+            file.accept(data_visitor)
             file.ancestors(data_visitor)
-        # Create ElasticSearch documents
         for project in bundle.projects.values():
             contents = dict(specimens=[_specimen_dict(s) for s in data_visitor.specimens.values()],
                             files=list(data_visitor.files.values()),
                             processes=list(data_visitor.processes.values()),
-                            project=simplified_project)
-            yield ElasticSearchDocument(entity_type=self.entity_name,
+                            projects=[simplified_project])
+            yield ElasticSearchDocument(entity_type=self.entity_type(),
                                         entity_id=str(project.document_id),
                                         bundles=[Bundle(uuid=bundle_uuid,
                                                         version=bundle.version,
