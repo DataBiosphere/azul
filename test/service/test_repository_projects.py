@@ -44,16 +44,17 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             for project in hit['projects']:
                 for prop in RepositoryProjectsEndpointTest.get_project_detail_properties():
                     self.assertFalse(prop in project)
+            self._test_detail_response(hit['entryId'])
         self.assertTrue('pagination' in response_json)
         self.assertTrue('termFacets' in response_json)
 
-    def test_detail_response(self):
+    def _test_detail_response(self, uuid):
         """
         Make call to endpoint that returns a single project
         A single hit should be returned
         Certain fields should be in the project object
         """
-        url = self.base_url + 'repository/projects/ca4225f7-2051-e671-2465-95dfaac9912d'
+        url = self.base_url + 'repository/projects/' + uuid
         response = requests.get(url)
         response.raise_for_status()
         hit = response.json()
