@@ -33,11 +33,11 @@ Currently there are 6 parameters supported. They are as follows:<br>
 
 |Parameter|Description|Data Type|Example|
 |--- |--- |--- |--- |
-|filters|Specifies which filters to use to return only the files with the matching criteria. Supplied as a string with the format: {"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}|String|http://ucsc-cgp.org/api/v1/repository/files/?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return only those files who have a file format of type "bam"|
-|from|Specifies the start index. Defaults to 1 if not specified:|Integer|http://ucsc-cgp.org/api/v1/repository/files/?from=26  This will return the next 25 results starting at index 26|
-|size|Specifies how many hits to return. Defaults to 10|Integer|http://ucsc-cgp.org/api/v1/repository/files/?size=50  This will return 50 hits starting from 1|
-|sort|Specifies the field under which the list of hits should be sorted. Defaults to "center_name"|String|http://ucsc-cgp.org/api/v1/repository/files/?sort=donor  This will return the hits sorted by the "donor" field.|
-|order|Specifies the order in which the hits should be sorted; two options, "asc" and "desc". Defaults to "desc".|String|http://ucsc-cgp.org/api/v1/repository/files/?order=desc  This will return the hits in descending order.|
+|filters|Specifies which filters to use to return only the files with the matching criteria. Supplied as a string with the format: {"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}|String|https://commons.ucsc-cgp-dev.org/api/v1/repository/files/?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return only those files who have a file format of type "bam"|
+|from|Specifies the start index. Defaults to 1 if not specified:|Integer|https://commons.ucsc-cgp-dev.org/api/v1/repository/files/?from=26  This will return the next 25 results starting at index 26|
+|size|Specifies how many hits to return. Defaults to 10|Integer|https://commons.ucsc-cgp-dev.org/api/v1/repository/files/?size=50  This will return 50 hits starting from 1|
+|sort|Specifies the field under which the list of hits should be sorted. Defaults to "center_name"|String|https://commons.ucsc-cgp-dev.org/api/v1/repository/files/?sort=donor  This will return the hits sorted by the "donor" field.|
+|order|Specifies the order in which the hits should be sorted; two options, "asc" and "desc". Defaults to "desc".|String|https://commons.ucsc-cgp-dev.org/api/v1/repository/files/?order=desc  This will return the hits in descending order.|
 
 <br>
 
@@ -46,7 +46,8 @@ Currently there are 6 parameters supported. They are as follows:<br>
 
 |Parameter|Description|Data Type|Example|
 |--- |--- |--- |--- |
-|filters|Specifies which filters to use to return only the manifest with of the files that matching the criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgp.org/api/v1/repository/files/export?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
+|filters|Specifies which filters to use to return only the manifest with of the files that matching the criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|https://commons.ucsc-cgp-dev.org/api/v1/repository/files/export?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
+|format|Specifies the output format of the manifest and works in conjunction with filters. Possible values are `tsv` (default) and `bdbag`. If `bdbag` is chosen, the metadata manifest will be uploaded to an AWS S3 bucket as configured during deployment, and a presigned URL pointing to the metadata manifest will be returned in the response.|String|https://commons.ucsc-cgp-dev.org/api/v1/repository/files/export?filters=%7B%22file%22:%7B%22fileFormat%22:%7B%22is%22:%5B%22crai%22%5D%7D%7D%7D&format=bdbag This uploads a BDBag containing a manifest with all "CRAI" files to AWS S3, and returns a presigned URL pointing to the metadata manifest.|
 
 
 <br>
@@ -55,7 +56,7 @@ Currently there are 6 parameters supported. They are as follows:<br>
 
 |Parameter|Description|Data Type|Example|
 |--- |--- |--- |--- |
-|filters|Specifies which filters to use to return only the summary with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgp.org/api/v1/repository/files/summary?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
+|filters|Specifies which filters to use to return only the summary with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|https://commons.ucsc-cgp-dev.org/api/v1/repository/files/summary?filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return a manifest with only those files who have a file format of type "bam"|
 
 <br>
 
@@ -63,12 +64,12 @@ Currently there are 6 parameters supported. They are as follows:<br>
 
 |Parameter|Description|Data Type|Example|
 |--- |--- |--- |--- |
-|type|Specifies which type of format to return (file or file-donor). Supplied as a string. Defaults to 'file'.|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1 This will return files based on the search query 8f1.|
-|field|Specifies which field to perform the search on. Defaults to 'fileId'.|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=UCSC&field=centerName would search for files with center name `UCSC` |
-|filters|Specifies which filters to use to return only the search results with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return only those files who have a file format of type "bam" for the query 8f1 .|
-|from|Specifies the start index. Defaults to 1 if not specified:|Integer|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&from=26 This will return the search results from result 26 onwards|
-|size|Specifies how many hits to return. Defaults to 5|Integer|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&size=5 This will return at most 5 hits.|
-|q|Specifies the query for search|String|http://ucsc-cgp.org/api/v1/keywords?type=file&q=8f1&size=5 This will return at most 5 hits for the query 8f1.|
+|type|Specifies which type of format to return (file or file-donor). Supplied as a string. Defaults to 'file'.|String|https://commons.ucsc-cgp-dev.org/api/v1/keywords?type=file&q=8f1 This will return files based on the search query 8f1.|
+|field|Specifies which field to perform the search on. Defaults to 'fileId'.|String|https://commons.ucsc-cgp-dev.org/api/v1/keywords?type=file&q=UCSC&field=centerName would search for files with center name `UCSC` |
+|filters|Specifies which filters to use to return only the search results with the matching criteria. Supplied as a string with the format:`{"file":{"fieldA":{"is":["VALUE_A", "VALUE_B"]}, "fieldB":{"is":["VALUE_C", "VALUE_D"]}, ...}}`|String|https://commons.ucsc-cgp-dev.org/api/v1/keywords?type=file&q=8f1&filters=%7B%22file%22%3A%7B%22file_type%22%3A%7B%22is%22%3A%5B%22bam%22%5D%7D%7D%7D This will return only those files who have a file format of type "bam" for the query 8f1 .|
+|from|Specifies the start index. Defaults to 1 if not specified:|Integer|https://commons.ucsc-cgp-dev.org/api/v1/keywords?type=file&q=8f1&from=26 This will return the search results from result 26 onwards|
+|size|Specifies how many hits to return. Defaults to 5|Integer|https://commons.ucsc-cgp-dev.org/api/v1/keywords?type=file&q=8f1&size=5 This will return at most 5 hits.|
+|q|Specifies the query for search|String|https://commons.ucsc-cgp-dev.org/api/v1/keywords?type=file&q=8f1&size=5 This will return at most 5 hits for the query 8f1.|
 
 
 
