@@ -192,9 +192,6 @@ class ElasticTransformDump(object):
                     ElasticTransformDump.create_aggregate(
                         filters, facet_config, agg))
 
-        if entity_type == 'projects':  # Make project-specific aggregations
-            ElasticTransformDump.create_project_summary_aggregates(es_search, req_config)
-
         return es_search
 
     @staticmethod
@@ -677,39 +674,6 @@ class ElasticTransformDump(object):
         self.logger.info(
             "Returning the final response for transform_autocomplete_request")
         return final_response
-
-    @staticmethod
-    def create_project_summary_aggregates(es_search, request_config):
-        """
-        Add per-project aggregations to the request, specific to project response
-        """
-        es_search.aggs.bucket(
-            '_project_agg', 'terms',
-            field=request_config["translation"]["projectId"] + '.keyword',
-            size=99999
-        )
-        project_bucket = es_search.aggs['_project_agg']
-
-        # Get unique donor count for each project
-        project_bucket.metric(
-            'donor_count', 'cardinality',
-            field='contents.specimens.donor_document_id.keyword',
-            precision_threshold="40000"
-        )
-
-        # Get each species, experimental approaches, and diseases in each project
-        project_bucket.bucket(
-            'species', 'terms',
-            field=request_config["translation"]["genusSpecies"] + '.keyword'
-        )
-        project_bucket.bucket(
-            'libraryConstructionApproach', 'terms',
-            field=request_config["translation"]["libraryConstructionApproach"] + '.keyword'
-        )
-        project_bucket.bucket(
-            'disease', 'terms',
-            field=request_config["translation"]["disease"] + '.keyword'
-        )
 
     def add_project_summaries(self, hits, es_response):
         """
