@@ -65,6 +65,10 @@ parser.add_argument('--delete',
                     default=False,
                     action='store_true',
                     help='Delete all entity indices before reindexing.')
+parser.add_argument('--dryrun', '--dry-run',
+                    default=False,
+                    action='store_true',
+                    help='Just print what would be done, do not actually do it.')
 
 
 def post_bundle(bundle_fqid, es_query, indexer_url):
@@ -100,8 +104,12 @@ def main(argv: List[str]):
             for aggregate in False, True:
                 index_name = config.es_index_name(entity_type, aggregate=aggregate)
                 if es_client.indices.exists(index_name):
-                    es_client.indices.delete(index=index_name)
+                    if args.dryrun:
+                        logger.info("Would delete index '%s'", index_name)
+                    else:
+                        es_client.indices.delete(index=index_name)
 
+    logger.info('Querying DSS using %s', json.dumps(args.es_query, indent=4))
     dss_client = config.dss_client(dss_endpoint=args.dss_url)
     # noinspection PyUnresolvedReferences
     response = dss_client.post_search.iterate(es_query=args.es_query, replica="aws")
@@ -122,9 +130,10 @@ def main(argv: List[str]):
                 if args.sync is not None:
                     # noinspection PyProtectedMember
                     url = url._replace(query=urlencode({**parse_qs(url.query), 'sync': args.sync}, doseq=True))
-                post_bundle(bundle_fqid=bundle_fqid,
-                            es_query=args.es_query,
-                            indexer_url=url.geturl())
+                if not args.dryrun:
+                    post_bundle(bundle_fqid=bundle_fqid,
+                                es_query=args.es_query,
+                                indexer_url=url.geturl())
             except HTTPError as e:
                 if i < 3:
                     logger.warning("Bundle %s, attempt %i: scheduling retry after error %s", bundle_fqid, i, e)
