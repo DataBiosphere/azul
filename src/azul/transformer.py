@@ -284,7 +284,7 @@ class NumericAccumulator(Accumulator):
 
     def accumulate(self, value):
         if value is not None:
-            self.value += value
+            self.value += sum(filter(None, value)) if isinstance(value, list) else value
 
     def close(self):
         return self.value
