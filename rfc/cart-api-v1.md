@@ -6,6 +6,9 @@
 
 ## Data Models
 
+There are two data models required for Cart API: `Cart` and `CartItem`. They are
+designed in the way that allows multiple types of entity in a single `Cart`.
+
 ### `Cart`
 | Property | Type | Description | Note |
 | --- | --- | --- | --- |
@@ -22,7 +25,7 @@ For the details on the default cart, see `GET /resources/carts/{id}`.
 | `id` | `str` | Cart Item ID, hashed by the combination of `` |
 | `cart_id` | UUID | Associated `Cart.id` |
 | `entity_id` | UUID | Entity ID |
-| `entity_type` | `str` | Entity Type | **TODO:** Need to confirm which model should retain this information. |
+| `entity_type` | `str` | Entity Type |
 | `bundle_uuid` | UUID | Bundle ID |
 | `bundle_version` | `str` | Bundle Version |
 
