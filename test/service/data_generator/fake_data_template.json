@@ -81,17 +81,27 @@
     "specimens": [
       {
         "_type": "safe_color_name",
-        "organism_age": "safe_color_name",
-        "organism_age_unit": "safe_color_name",
+        "organism_age": [
+          "safe_color_name"
+        ],
+        "organism_age_unit": [
+          "safe_color_name"
+        ],
         "biomaterial_id": "uuid4",
-        "disease": "safe_color_name",
+        "disease": [
+          "safe_color_name"
+        ],
         "id": "uuid4",
         "organ": "safe_color_name",
         "organ_part": "safe_color_name",
         "parent": "safe_color_name",
-        "biological_sex": "safe_color_name",
+        "biological_sex": [
+          "safe_color_name"
+        ],
         "_source": "safe_color_name",
-        "genus_species": "safe_color_name",
+        "genus_species": [
+          "safe_color_name"
+        ],
         "storage_method": "safe_color_name",
         "total_estimated_cells": "pyint"
       }
