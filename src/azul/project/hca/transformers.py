@@ -22,21 +22,16 @@ log = logging.getLogger(__name__)
 
 
 def _project_dict(bundle: api.Bundle) -> dict:
-    project: api.Project
-    laboratories: Set[str]
-    institutions: Set[str]
-    contact_names: Set[str]
-    publication_titles: Set[str]
-
     project, *additional_projects = bundle.projects.values()
     reject(additional_projects, "Azul can currently only handle a single project per bundle")
+    assert isinstance(project, api.Project)
 
     # Store lists of all values of each of these facets to allow facet filtering
     # and term counting on the webservice
-    laboratories = set()
-    institutions = set()
-    contact_names = set()
-    publication_titles = set()
+    laboratories: Set[str] = set()
+    institutions: Set[str] = set()
+    contact_names: Set[str] = set()
+    publication_titles: Set[str] = set()
 
     for contributor in project.contributors:
         if contributor.laboratory:
