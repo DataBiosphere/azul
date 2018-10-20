@@ -86,17 +86,17 @@ class TestResponse(WebServiceTestCase):
             "specimens": [
                 {
                     "_type": "teal",
-                    "organism_age": "purple",
-                    "organism_age_unit": "navy",
+                    "organism_age": ["purple"],
+                    "organism_age_unit": ["navy"],
                     "biomaterial_id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
-                    "disease": "yellow",
+                    "disease": ["yellow"],
                     "id": "1cae440e-3be6-ce39-49e9-74721f0066e0",
                     "organ": "purple",
                     "organ_part": "black",
                     "parent": "aqua",
-                    "biological_sex": "silver",
-                    "_source": "purple",
-                    "genus_species": "teal",
+                    "biological_sex": ["silver"],
+                    "_source": ["purple"],
+                    "genus_species": ["teal"],
                     "storage_method": "aqua",
                     "total_estimated_cells": 5306
                 }
@@ -231,15 +231,15 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": "silver",
-                            "disease": "yellow",
-                            "genusSpecies": "teal",
+                            "biologicalSex": ["silver"],
+                            "disease": ["yellow"],
+                            "genusSpecies": ["teal"],
                             "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
                             "organ": "purple",
                             "organPart": "black",
-                            "organismAge": "purple",
-                            "organismAgeUnit": "navy",
-                            "source": "purple",
+                            "organismAge": ["purple"],
+                            "organismAgeUnit": ["navy"],
+                            "source": ["purple"],
                             "storageMethod": "aqua",
                             "totalCells": 5306
                         }
