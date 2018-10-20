@@ -3,12 +3,17 @@ from typing import TypeVar, Mapping
 K = TypeVar('K')
 V = TypeVar('V')
 
+RAISE = object()
 
-def lookup(d: Mapping[K, V], k: K, *ks: K) -> V:
+
+def lookup(d: Mapping[K, V], k: K, *ks: K, default=RAISE) -> V:
     """
     Look up a value in the specified dictionary given one or more candidate keys.
 
-    Raises a key error for the first (!) key if none of the keys are present.
+    This function raises a key error for the first (!) key if none of the keys are present and the `default` keyword
+    argument absent. If the `default` keyword argument is present (None is a valid default), this function returns
+    that argument instead of raising an KeyError in that case. This is notably different to dict.get() whose default
+    default is `None`. This function does not have a default default.
 
     If the first key is present, return its value ...
     >>> lookup({1:2}, 1)
@@ -33,6 +38,14 @@ def lookup(d: Mapping[K, V], k: K, *ks: K) -> V:
     Traceback (most recent call last):
     ...
     KeyError: 3
+
+    If the key isn't present but a default was passed, return the default.
+    >>> lookup({1:2}, 3, default=4)
+    4
+
+    None is a valid default.
+    >>> lookup({1:2}, 3, 4, default=None) is None
+    True
     """
     try:
         return d[k]
@@ -43,4 +56,7 @@ def lookup(d: Mapping[K, V], k: K, *ks: K) -> V:
             except KeyError:
                 pass
         else:
-            raise
+            if default is RAISE:
+                raise
+            else:
+                return default
