@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#! /usr/bin/env python3
 
 """
 Command line utility to trigger indexing of bundles from DSS into Azul
