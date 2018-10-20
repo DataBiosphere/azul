@@ -111,7 +111,9 @@ class TestAccessorApi(TestCase):
         self.assertEqual(1, len(bundle.projects))
         project = list(bundle.projects.values())[0]
         self.assertEqual(Project, type(project))
+        # noinspection PyDeprecation
         self.assertLessEqual(len(project.laboratory_names), len(project.contributors))
+        # noinspection PyDeprecation
         self.assertEqual(project.project_short_name, project.project_shortname)
         root_entities = bundle.root_entities().values()
         root_entity_types = {type(e) for e in root_entities}
