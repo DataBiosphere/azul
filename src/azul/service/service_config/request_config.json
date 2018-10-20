@@ -5,7 +5,7 @@
     "fileSize": "contents.files.size",
     "fileId": "contents.files.uuid",
 
-    "instrumentManufacturerModel": "contents.processes.instrument",
+    "instrumentManufacturerModel": "contents.processes.instrument_manufacturer_model",
     "libraryConstructionApproach": "contents.processes.library_construction_approach",
     "processId": "contents.processes.process_id",
     "protocol": "contents.processes.protocol_id",

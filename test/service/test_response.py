@@ -148,7 +148,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "processes": [
                         {
-                            "instrument": ["green"],
+                            "instrumentManufacturerModel": ["green"],
                             "libraryConstructionApproach": ["fuchsia"],
                             "processId": ["maroon"],
                             "processName": ["olive"],
@@ -214,7 +214,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "processes": [
                         {
-                            "instrument": ["green"],
+                            "instrumentManufacturerModel": ["green"],
                             "libraryConstructionApproach": ["fuchsia"],
                             "processId": ["maroon"],
                             "processName": ["olive"],
@@ -300,7 +300,7 @@ class TestResponse(WebServiceTestCase):
                         ],
                         "processes": [
                             {
-                                "instrument": ["green"],
+                                "instrumentManufacturerModel": ["green"],
                                 "libraryConstructionApproach": ["fuchsia"],
                                 "processId": ["maroon"],
                                 "processName": ["olive"],
@@ -369,7 +369,7 @@ class TestResponse(WebServiceTestCase):
                         ],
                         "processes": [
                             {
-                                "instrument": ["green"],
+                                "instrumentManufacturerModel": ["green"],
                                 "libraryConstructionApproach": ["fuchsia"],
                                 "processId": ["maroon"],
                                 "processName": ["olive"],
@@ -696,7 +696,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "processes": [
                         {
-                            "instrument": ["green"],
+                            "instrumentManufacturerModel": ["green"],
                             "libraryConstructionApproach": ["fuchsia"],
                             "processId": ["maroon"],
                             "processName": ["olive"],
@@ -791,7 +791,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "processes": [
                         {
-                            "instrument": ["green"],
+                            "instrumentManufacturerModel": ["green"],
                             "libraryConstructionApproach": ["fuchsia"],
                             "processId": ["maroon"],
                             "processName": ["olive"],

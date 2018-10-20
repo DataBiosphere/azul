@@ -466,7 +466,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "processId": process["process_id"],
                 "processName": process.get("process_name", None),
                 "libraryConstructionApproach": process.get("library_construction_approach", None),
-                "instrument": process.get("instrument_manufacturer_model", None),
+                "instrumentManufacturerModel": process.get("instrument_manufacturer_model", None),
                 "protocolId": process.get("protocol_id", None),
                 "protocol": process.get("protocol_name", None),
             }
