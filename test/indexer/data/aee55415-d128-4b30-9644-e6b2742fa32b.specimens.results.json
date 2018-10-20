@@ -36,20 +36,20 @@
                       "specimen_from_organism"
                     ],
                     "biomaterial_id": "1113_T",
-                    "disease": "subcutaneous melanoma",
+                    "disease": ["subcutaneous melanoma"],
                     "organ": "tumor",
                     "organ_part": null,
                     "storage_method": null,
                     "_type": "specimen",
                     "total_estimated_cells": 1,
-                    "donor_biomaterial_id": "1113",
-                    "donor_document_id": "70b55c20-3574-41b6-9b01-800cc6b30edc",
-                    "genus_species": "Mus musculus",
-                    "organism_age": "6-12",
-                    "organism_age_unit": "week",
+                    "donor_biomaterial_id": ["1113"],
+                    "donor_document_id": ["70b55c20-3574-41b6-9b01-800cc6b30edc"],
+                    "genus_species": ["Mus musculus"],
+                    "organism_age": ["6-12"],
+                    "organism_age_unit": ["week"],
                     "max_organism_age_in_seconds": 7257600,
                     "min_organism_age_in_seconds": 3628800,
-                    "biological_sex": "female"
+                    "biological_sex": ["female"]
                   }
                 ],
                 "files": [

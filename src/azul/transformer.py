@@ -335,6 +335,51 @@ class SetOfDictAccumulator(SetAccumulator):
         return thaw(super().close())
 
 
+class LastValueAccumulator(Accumulator):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.value = None
+
+    def accumulate(self, value):
+        self.value = value
+
+    def close(self):
+        return self.value
+
+
+class FirstValueAccumulator(LastValueAccumulator):
+
+    def accumulate(self, value):
+        if self.value is not None:
+            raise ValueError('Conflicting values:', self.value, value)
+        else:
+            super().accumulate(value)
+
+
+class OneValueAccumulator(FirstValueAccumulator):
+
+    def close(self):
+        if self.value is None:
+            raise ValueError('No value')
+        else:
+            return super().close()
+
+
+class MinAccumulator(LastValueAccumulator):
+
+    def accumulate(self, value):
+        if self.value is None or value is not None and value < self.value:
+            super().accumulate(value)
+
+
+class MaxAccumulator(LastValueAccumulator):
+
+    def accumulate(self, value):
+        if self.value is None or value is not None and value < self.value:
+            super().accumulate(value)
+
+
 class EntityAggregator(ABC):
 
     def get_accumulator(self, field) -> Optional[Accumulator]:
