@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Suite for unit testing indexer.py
 """
@@ -325,6 +324,33 @@ class TestHCAIndexer(IndexerTestCase):
                     file_names.add(file_name)
             matrix_file_names = {file_name for file_name in file_names if '.zarr!' in file_name}
             self.assertEqual({'377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr!.zattrs'}, matrix_file_names)
+
+        self._get_es_results(check_bundle_correctness)
+
+    def test_plate_bundle(self):
+        self._mock_index(('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'))
+        self.maxDiff = None
+
+        def check_bundle_correctness(es_results):
+            self.assertGreater(len(es_results), 0)
+            specimen_encounters = 0
+            for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
+                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
+                bundles = result_dict["_source"]['bundles']
+                self.assertEqual(1, len(bundles))
+                contents = bundles[0]['contents']
+                specimens = contents['specimens']
+                if entity_type == 'files' and contents['files'][0]['file_format'] == 'pdf':
+                    # The PDF files in that bundle aren't linked to a specimen
+                    self.assertEqual(0, len(specimens))
+                else:
+                    self.assertEqual(1, len(specimens))
+                    # 384 wells in total, four of them empty, the rest with a single cell
+                    self.assertEqual(380, specimens[0]['total_estimated_cells'])
+                    specimen_encounters += 1
+            # specimen should be mentioned in documents for one project, two files (one per fastq) and one specimen
+            self.assertEqual(4, specimen_encounters)
 
         self._get_es_results(check_bundle_correctness)
 
