@@ -382,21 +382,14 @@ class ElasticTransformDump(object):
         file_type_selector = request_config['translation']['fileFormat']
         es_search.aggs.bucket('by_type', 'terms', field='{}.keyword'.format(file_type_selector))
         es_search.aggs['by_type'].metric('size_by_type', 'sum', field=request_config['translation']['fileSize'])
-        # Override the aggregates for Samples,
-        # Primary site count, and project count
-        if entity_type == 'specimens':
-            type_id, type_count = ['fileId', 'fileCount']
-        elif entity_type == 'files':
-            type_id, type_count = ['specimenId', 'specimenCount']
-        else:
-            assert False, entity_type
 
         for field, agg_name in (
-            (type_id, type_count),
+            ('specimenDocumentId', 'specimenCount'),
+            ('fileId', 'fileCount'),
             ('organ', 'organCount'),
-            ('donorId', 'donorCount'),
+            ('donorDocumentId', 'donorCount'),
             ('lab', 'labCount'),
-            ('project', 'projectCode')):
+            ('projectId', 'projectCount')):
             cardinality = request_config['translation'][field]
             es_search.aggs.metric(
                 agg_name, 'cardinality',
