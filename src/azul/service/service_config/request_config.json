@@ -5,7 +5,7 @@
     "fileSize": "contents.files.size",
     "fileId": "contents.files.uuid",
 
-    "instrumentManufacturerModel": "contents.processes.instrument",
+    "instrumentManufacturerModel": "contents.processes.instrument_manufacturer_model",
     "libraryConstructionApproach": "contents.processes.library_construction_approach",
     "processId": "contents.processes.process_id",
     "protocol": "contents.processes.protocol_id",
@@ -22,8 +22,10 @@
 
     "biologicalSex": "contents.specimens.biological_sex",
     "specimenId": "contents.specimens.biomaterial_id",
+    "specimenDocumentId": "contents.specimens.document_id",
     "disease": "contents.specimens.disease",
     "donorId": "contents.specimens.donor_biomaterial_id",
+    "donorDocumentId": "contents.specimens.donor_document_id",
     "genusSpecies": "contents.specimens.genus_species",
     "organ": "contents.specimens.organ",
     "organPart": "contents.specimens.organ_part",
