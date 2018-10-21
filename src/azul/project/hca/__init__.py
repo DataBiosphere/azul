@@ -20,14 +20,59 @@ dss_subscription_query = {
                                   if config.dss_endpoint != "https://dss.data.humancellatlas.org/v1"
                                   else "files.biomaterial_json")
                     }
-                },
-                *([{
-                    "range": {
-                        "manifest.version": {
-                            "gte": "2018-10-10"
+                }, *(
+                    [
+                        {
+                            "range": {
+                                "manifest.version": {
+                                    "gte": "2018-10-10"
+                                }
+                            }
                         }
-                    }
-                }] if config.dss_endpoint == "https://dss.integration.data.humancellatlas.org/v1" else [])
+                    ] if config.dss_endpoint == "https://dss.integration.data.humancellatlas.org/v1" else [
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "terms": {
+                                            "files.project_json.provenance.document_id": [
+                                                # CBeta Release spreadsheet as of 10/18/2018
+                                                "2c4724a4-7252-409e-b008-ff5c127c7e89",
+                                                "ecd0c979-a6aa-458a-9dfc-d8cdb183caf7",
+                                                "019a935b-ea35-4d83-be75-e1a688179328",
+                                                "a5ae0428-476c-46d2-a9f2-aad955b149aa",
+                                                "adabd2bd-3968-4e77-b0df-f200f7351661",
+                                                "67bc798b-a34a-4104-8cab-cad648471f69",
+                                                "d5f56f41-7a54-40e6-baa2-15604649bd96",
+                                                "519b58ef-6462-4ed3-8c0d-375b54f53c31",
+                                                "1f9a699a-262c-40a0-8b2c-7ba960ca388c"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "bool": {
+                                            "must": [
+                                                {
+                                                    "prefix": {
+                                                        "files.project_json.project_core.project_short_name": "integration/"
+                                                    }
+                                                },
+                                                {
+                                                    "range": {
+                                                        "manifest.version": {
+                                                            "gte": "2018-10-18"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ] if config.dss_endpoint == "https://dss.staging.data.humancellatlas.org/v1" else [
+                    ]
+                )
             ]
         }
     }

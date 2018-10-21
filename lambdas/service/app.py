@@ -327,8 +327,8 @@ def get_project_data(project_id=None):
         return response
 
 
-@app.route('/repository/summary/{entity_type}', methods=['GET'], cors=True)
-def get_summary(entity_type=None):
+@app.route('/repository/summary', methods=['GET'], cors=True)
+def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
     ICGC endpoint.
@@ -340,8 +340,6 @@ def get_summary(entity_type=None):
     :return: Returns a jsonified Summary API response
     """
     logger = logging.getLogger("dashboardService.webservice.get_summary")
-    if entity_type not in ('specimens', 'files'):
-        raise BadRequestError("Bad arguments, entity_type must be 'files' or 'specimens'")
     if app.current_request.query_params is None:
         app.current_request.query_params = {}
     # Get the filters from the URL
@@ -359,9 +357,24 @@ def get_summary(entity_type=None):
     es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_summary(filters=filters, entity_type=entity_type)
+
+    # Request a summary for each entity type and cherry-pick summary fields from the summaries for the entity
+    # that is authoritative for those fields.
+    #
+    summary_fields_by_authority = {
+        'files': ['totalFileSize', 'fileTypeSummaries', 'fileCount'],
+        'specimens': ['organCount', 'donorCount', 'labCount', 'totalCellCount', 'organSummaries', 'specimenCount'],
+        'projects': ['projectCount']
+    }
+    summaries = {entity_type: es_td.transform_summary(filters=filters, entity_type=entity_type)
+                 for entity_type, summary_fields in summary_fields_by_authority.items()}
+    unified_summary = {field: summaries[entity_type][field]
+                        for entity_type, summary_fields in summary_fields_by_authority.items()
+                        for field in summary_fields}
+    assert all(len(unified_summary) == len(summary) for summary in summaries.values())
+
     # Returning a single response if <file_id> request form is used
-    return response
+    return unified_summary
 
 
 @app.route('/keywords', methods=['GET'], cors=True)
