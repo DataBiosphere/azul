@@ -1,7 +1,6 @@
 from abc import ABCMeta
-from collections import defaultdict
 import logging
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set, Type
 
 from humancellatlas.data.metadata import api
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -11,9 +10,13 @@ from azul.transformer import (Accumulator,
                               AggregatingTransformer,
                               Bundle,
                               ElasticSearchDocument,
+                              FirstValueAccumulator,
                               GroupingAggregator,
                               ListAccumulator,
+                              MaxAccumulator,
+                              MinAccumulator,
                               NumericAccumulator,
+                              OneValueAccumulator,
                               SetAccumulator,
                               SimpleAggregator)
 from azul.types import JSON
@@ -22,21 +25,16 @@ log = logging.getLogger(__name__)
 
 
 def _project_dict(bundle: api.Bundle) -> dict:
-    project: api.Project
-    laboratories: Set[str]
-    institutions: Set[str]
-    contact_names: Set[str]
-    publication_titles: Set[str]
-
     project, *additional_projects = bundle.projects.values()
     reject(additional_projects, "Azul can currently only handle a single project per bundle")
+    assert isinstance(project, api.Project)
 
     # Store lists of all values of each of these facets to allow facet filtering
     # and term counting on the webservice
-    laboratories = set()
-    institutions = set()
-    contact_names = set()
-    publication_titles = set()
+    laboratories: Set[str] = set()
+    institutions: Set[str] = set()
+    contact_names: Set[str] = set()
+    publication_titles: Set[str] = set()
 
     for contributor in project.contributors:
         if contributor.laboratory:
@@ -66,20 +64,10 @@ def _project_dict(bundle: api.Bundle) -> dict:
 
 
 def _specimen_dict(specimen: api.SpecimenFromOrganism) -> MutableMapping[str, Any]:
-    bio_visitor = BiomaterialVisitor()
-    specimen.accept(bio_visitor)
-    specimen.ancestors(bio_visitor)
-    merged_specimen = defaultdict(set)
-    for b in bio_visitor.biomaterial_lineage:
-        for key, value in b.items():
-            if isinstance(value, (list, set)):
-                merged_specimen[key].update(value)
-            else:
-                merged_specimen[key].add(value)
-    merged_specimen = {k: next(iter(v)) if len(v) == 1 else list(sorted(v, key=lambda x: (x is not None, x))) for k, v
-                       in merged_specimen.items()}
-    merged_specimen['biomaterial_id'] = specimen.biomaterial_id
-    return merged_specimen
+    visitor = BiomaterialVisitor()
+    specimen.accept(visitor)
+    specimen.ancestors(visitor)
+    return visitor.merged_specimen
 
 
 def _file_dict(f: api.File) -> MutableMapping[str, Any]:
@@ -153,50 +141,50 @@ class TransformerVisitor(api.EntityVisitor):
 
 
 class BiomaterialVisitor(api.EntityVisitor):
-    specimen: MutableMapping[str, Any]
-    biomaterial_lineage: List[MutableMapping[str, Any]]
 
     def __init__(self) -> None:
-        self.biomaterial_lineage = []
+        self._accumulators: MutableMapping[str, Accumulator] = {}
+        self._biomaterials: MutableMapping[api.UUID4, api.Biomaterial] = dict()
+
+    def _set(self, field: str, accumulator_type: Type[Accumulator], value: Any):
+        try:
+            accumulator = self._accumulators[field]
+        except KeyError:
+            self._accumulators[field] = accumulator = accumulator_type()
+        accumulator.accumulate(value)
 
     def visit(self, entity: api.Entity) -> None:
-        if isinstance(entity, api.Biomaterial):
-            self.biomaterial_lineage.append(
-                {
-                    'has_input_biomaterial': entity.has_input_biomaterial,
-                    '_source': api.schema_names[type(entity)],
-                    **(
-                        {
-                            'document_id': str(entity.document_id),
-                            'biomaterial_id': entity.biomaterial_id,
-                            'disease': list(entity.disease),
-                            'organ': entity.organ,
-                            'organ_part': entity.organ_part,
-                            'storage_method': entity.storage_method,
-                            '_type': "specimen",
-                        } if isinstance(entity, api.SpecimenFromOrganism) else {
-                            'donor_document_id': str(entity.document_id),
-                            'donor_biomaterial_id': entity.biomaterial_id,
-                            'genus_species': entity.genus_species,
-                            'disease': list(entity.disease),
-                            'organism_age': entity.organism_age,
-                            'organism_age_unit': entity.organism_age_unit,
-                            **self._age_range(entity),
-                            'biological_sex': entity.biological_sex
-                        } if isinstance(entity, api.DonorOrganism) else {
-                            'total_estimated_cells': entity.total_estimated_cells
-                        } if isinstance(entity, api.CellSuspension) else {
-                        }
-                    )
-                }
-            )
+        if isinstance(entity, api.Biomaterial) and entity.document_id not in self._biomaterials:
+            self._biomaterials[entity.document_id] = entity
+            self._set('has_input_biomaterial', SetAccumulator, entity.has_input_biomaterial)
+            self._set('_source', SetAccumulator, api.schema_names[type(entity)])
+            if isinstance(entity, api.CellSuspension):
+                self._set('total_estimated_cells', NumericAccumulator, entity.total_estimated_cells)
+            elif isinstance(entity, api.SpecimenFromOrganism):
+                self._set('document_id', OneValueAccumulator, str(entity.document_id))
+                self._set('biomaterial_id', OneValueAccumulator, entity.biomaterial_id)
+                self._set('disease', SetAccumulator, entity.disease)
+                self._set('organ', FirstValueAccumulator, entity.organ)
+                self._set('organ_part', FirstValueAccumulator, entity.organ_part)
+                self._set('storage_method', FirstValueAccumulator, entity.storage_method)
+                self._set('_type', OneValueAccumulator, 'specimen')
+            elif isinstance(entity, api.DonorOrganism):
+                self._set('donor_document_id', SetAccumulator, str(entity.document_id))
+                self._set('donor_biomaterial_id', SetAccumulator, entity.biomaterial_id)
+                self._set('genus_species', SetAccumulator, entity.genus_species)
+                self._set('disease', SetAccumulator, entity.disease)
+                self._set('organism_age', ListAccumulator, entity.organism_age)
+                self._set('organism_age_unit', ListAccumulator, entity.organism_age_unit)
+                if entity.organism_age_in_seconds:
+                    self._set('min_organism_age_in_seconds', MinAccumulator, entity.organism_age_in_seconds.min)
+                    self._set('max_organism_age_in_seconds', MaxAccumulator, entity.organism_age_in_seconds.max)
+                self._set('biological_sex', SetAccumulator, entity.biological_sex)
 
-    def _age_range(self, entity: api.DonorOrganism):
-        age = entity.organism_age_in_seconds or api.AgeRange.any
-        return {
-            'max_organism_age_in_seconds': age.max,
-            'min_organism_age_in_seconds': age.min,
-        }
+    @property
+    def merged_specimen(self) -> MutableMapping[str, Any]:
+        assert 'biomaterial_id' in self._accumulators
+        assert 'document_id' in self._accumulators
+        return {field: accumulator.close() for field, accumulator in self._accumulators.items()}
 
 
 class FileAggregator(GroupingAggregator):
