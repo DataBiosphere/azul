@@ -140,7 +140,7 @@
                   "analyzer": "autocomplete",
                   "search_analyzer": "standard"
                 },
-                "instrument": {
+                "instrument_manufacturer_model": {
                   "type": "text",
                   "fields": {
                     "keyword": {

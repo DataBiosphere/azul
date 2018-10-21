@@ -304,21 +304,16 @@ class SummaryResponse(BaseSummaryResponse):
 
         # Create a SummaryRepresentation object
         kwargs = dict(
-            projectCount=self.agg_contents(self.aggregates, 'projectCode', agg_form='value'),
+            projectCount=self.agg_contents(self.aggregates, 'projectCount', agg_form='value'),
             totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
+            specimenCount=self.agg_contents(self.aggregates, 'specimenCount', agg_form='value'),
+            fileCount=self.agg_contents(self.aggregates, 'fileCount', agg_form='value'),
             organCount=self.agg_contents(self.aggregates, 'organCount', agg_form='value'),
             donorCount=self.agg_contents(self.aggregates, 'donorCount', agg_form='value'),
             labCount=self.agg_contents(self.aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(self.aggregates, 'total_cell_count', agg_form='value'),
             fileTypeSummaries=[FileTypeSummary.for_bucket(bucket) for bucket in _sum['buckets']],
             organSummaries=[OrganCellCountSummary.for_bucket(bucket) for bucket in _organ_group['buckets']])
-
-        if 'specimenCount' in self.aggregates:
-            kwargs['fileCount'] = self.hits['total']
-            kwargs['specimenCount'] = self.agg_contents(self.aggregates, 'specimenCount', agg_form='value')
-        elif 'fileCount' in self.aggregates:
-            kwargs['fileCount'] = self.agg_contents(self.aggregates, 'fileCount', agg_form='value')
-            kwargs['specimenCount'] = self.hits['total']
 
         self.apiResponse = SummaryRepresentation(**kwargs)
 
@@ -471,7 +466,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "processId": process["process_id"],
                 "processName": process.get("process_name", None),
                 "libraryConstructionApproach": process.get("library_construction_approach", None),
-                "instrument": process.get("instrument_manufacturer_model", None),
+                "instrumentManufacturerModel": process.get("instrument_manufacturer_model", None),
                 "protocolId": process.get("protocol_id", None),
                 "protocol": process.get("protocol_name", None),
             }
