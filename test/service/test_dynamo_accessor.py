@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, main
 
 from moto import mock_dynamodb2, mock_sts
 
@@ -107,3 +107,7 @@ class TestDynamoAccessor(TestCase):
         self.assertEqual(2, len(valid_result))
 
     # TODO: Test failure paths
+
+
+if __name__ == '__main__':
+    main()
