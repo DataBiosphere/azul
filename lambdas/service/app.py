@@ -1,4 +1,5 @@
 import ast
+import hashlib
 import logging.config
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -543,7 +544,7 @@ def create_cart():
     if len(dda.query(config.dynamo_cart_table_name, query_dict, index_name='UserCartNameIndex')) > 0:
         raise BadRequestError(f'Cart `{cart_name}` already exists')
     return dda.insert_item(config.dynamo_cart_table_name,
-                           {'EntityType': 'files', 'CartId': str(uuid4()), **query_dict})
+                           {'CartId': str(uuid4()), **query_dict})
 
 
 @app.route('/resources/carts', methods=['GET'], cors=True)
@@ -559,9 +560,8 @@ def delete_cart(cart_id):
     return dda.delete_item(config.dynamo_cart_table_name, {'CartId': cart_id})
 
 
-@app.route('/resources/cart-items/{item_id}', methods=['GET'], cors=True)
-def get_cart(item_id):
-    cart_id = item_id  # all routes need to use the same argument name so the generic name is actually cart_id
+@app.route('/resources/carts/{cart_id}/items', methods=['GET'], cors=True)
+def get_items_in_cart(cart_id):
     dda = DynamoDataAccessor()
     return dda.query(config.dynamo_cart_item_table_name, {'CartId': cart_id}, index_name='CartIdIndex')
 
@@ -570,12 +570,19 @@ def get_cart(item_id):
 def add_entity_to_cart():
     dda = DynamoDataAccessor()
     try:
-        cart_id = app.current_request.json_body['cartId']
-        entity_id = app.current_request.json_body['entityId']
+        request_body = app.current_request.json_body
+        cart_id = request_body['cartId']
+        entity_id = request_body['entityId']
+        bundle_id = request_body['bundleId']
+        bundle_version = request_body['bundleVersion']
+        entity_type = request_body['entityType']
     except KeyError:
-        raise BadRequestError('cartId and entityId parameters must be given')
+        raise BadRequestError('cartId, entityId, bundleId, bundleVersion, and entityType must be given')
+    # TODO: How and what to hash?
+    item_id = hashlib.sha256(f'{cart_id}/{entity_id}/{bundle_id}/{bundle_version}'.encode('utf-8')).hexdigest()
     return dda.insert_item(config.dynamo_cart_item_table_name,
-                           {'CartItemId': str(uuid4()), 'CartId': cart_id, 'EntityId': entity_id})
+                           {'CartItemId': item_id, 'CartId': cart_id, 'EntityId': entity_id,
+                            'BundleId': bundle_id, 'BundleVersion': bundle_version, 'EntityType': entity_type})
 
 
 @app.route('/resources/cart-items/{item_id}', methods=['DELETE'], cors=True)

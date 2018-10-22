@@ -1,4 +1,4 @@
-from azul.dynamodb import DynamoClientFactory
+from azul.deployment import aws
 
 
 class DynamoDataAccessor:
@@ -7,7 +7,7 @@ class DynamoDataAccessor:
     """
 
     def __init__(self):
-        self.dynamo_client = DynamoClientFactory.get()
+        self.dynamo_client = aws.dynamo
 
     def _flatten_item(self, item):
         """
