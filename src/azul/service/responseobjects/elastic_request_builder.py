@@ -550,7 +550,7 @@ class ElasticTransformDump(object):
         final_response = final_response.apiResponse.to_json()
 
         if entity_type == 'projects':  # Add project summaries to each project hit
-            self.add_project_summaries(final_response['hits'], es_response)
+            self.add_project_summaries(final_response['hits'])
 
         if include_file_urls:
             for hit in final_response['hits']:
@@ -675,16 +675,10 @@ class ElasticTransformDump(object):
             "Returning the final response for transform_autocomplete_request")
         return final_response
 
-    def add_project_summaries(self, hits, es_response):
+    def add_project_summaries(self, hits):
         """
         Create a project summary response for each project in hits.
         The hits list is modified in place to add a summary to each element.
         """
-        project_ids = [hit['entryId'] for hit in hits]
-        summary_responses = dict()
-        for project_id in project_ids:
-            summary_responses[project_id] = (
-                ProjectSummaryResponse(project_id, es_response).apiResponse.to_json())
-
         for hit in hits:
-            hit['projectSummary'] = summary_responses[hit['entryId']]
+            hit['projectSummary'] = ProjectSummaryResponse(hit).return_response().to_json()
