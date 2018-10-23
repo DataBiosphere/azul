@@ -73,10 +73,12 @@ class FileTypeSummary(JsonObject):
     @classmethod
     def for_aggregate(cls, aggregate_file):
         self = cls()
-        self.count = len(aggregate_file['uuid'])
+        self.count = aggregate_file['count']
         self.totalSize = aggregate_file['size']
-        assert isinstance(aggregate_file['format'], list)
-        self.fileType = aggregate_file['format'][0]
+        format = aggregate_file['file_format']
+        assert isinstance(format, list)
+        assert len(format)
+        self.fileType = format[0]
         return self
 
 
@@ -545,11 +547,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        files = self.make_files(entry)
         kwargs = {
-            'files': files
+            'files': self.make_files(entry)
         } if self.entity_type == 'files' else {
-            'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json() for aggregate_file in files]
+            'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json()
+                                  for aggregate_file in entry["contents"]["files"]]
         }
         return HitEntry(processes=self.make_processes(entry),
                         entryId=entry["entity_id"],

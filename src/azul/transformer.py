@@ -276,7 +276,7 @@ class Accumulator(ABC):
         raise NotImplementedError
 
 
-class NumericAccumulator(Accumulator):
+class SumAccumulator(Accumulator):
 
     def __init__(self) -> None:
         super().__init__()
@@ -380,9 +380,18 @@ class MaxAccumulator(LastValueAccumulator):
             super().accumulate(value)
 
 
+class DistinctValueCountAccumulator(SetAccumulator):
+
+    def close(self) -> int:
+        return len(super().close())
+
+
 class EntityAggregator(ABC):
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
+    def _transform_entity(self, entity: JSON) -> JSON:
+        return entity
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
         """
         Return the Accumulator instance to be used for the given field or None if the field should not be accumulated.
         """
@@ -408,11 +417,12 @@ class SimpleAggregator(EntityAggregator):
         ]
 
     def _accumulate(self, aggregate, entity):
+        entity = self._transform_entity(entity)
         for field, value in entity.items():
             try:
                 accumulator = aggregate[field]
             except:
-                accumulator = self.get_accumulator(field)
+                accumulator = self._get_accumulator(field)
                 aggregate[field] = accumulator
             if accumulator is not None:
                 accumulator.accumulate(value)

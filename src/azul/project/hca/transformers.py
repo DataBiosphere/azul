@@ -15,10 +15,10 @@ from azul.transformer import (Accumulator,
                               ListAccumulator,
                               MaxAccumulator,
                               MinAccumulator,
-                              NumericAccumulator,
+                              SumAccumulator,
                               OneValueAccumulator,
                               SetAccumulator,
-                              SimpleAggregator)
+                              SimpleAggregator, DistinctValueCountAccumulator)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -159,7 +159,7 @@ class BiomaterialVisitor(api.EntityVisitor):
             self._set('has_input_biomaterial', SetAccumulator, entity.has_input_biomaterial)
             self._set('_source', SetAccumulator, api.schema_names[type(entity)])
             if isinstance(entity, api.CellSuspension):
-                self._set('total_estimated_cells', NumericAccumulator, entity.total_estimated_cells)
+                self._set('total_estimated_cells', SumAccumulator, entity.total_estimated_cells)
             elif isinstance(entity, api.SpecimenFromOrganism):
                 self._set('document_id', OneValueAccumulator, str(entity.document_id))
                 self._set('biomaterial_id', OneValueAccumulator, entity.biomaterial_id)
@@ -189,21 +189,21 @@ class BiomaterialVisitor(api.EntityVisitor):
 
 class FileAggregator(GroupingAggregator):
 
+    def _transform_entity(self, entity: JSON) -> JSON:
+        return dict(size=entity['size'],
+                    file_format=entity['file_format'],
+                    count=(entity['uuid'], entity['version']))
+
     def _group_key(self, entity):
         return entity['file_format']
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'size':
-            return NumericAccumulator()
-        elif field in ('name',
-                       'uuid',
-                       'version',
-                       'document_id'):
-            return ListAccumulator(max_size=100)
-        elif field == 'sha1':
-            return None
+            return SumAccumulator()
+        elif field == 'count':
+            return DistinctValueCountAccumulator()
         else:
-            return SetAccumulator(max_size=100)
+            return None
 
 
 class SpecimenAggregator(GroupingAggregator):
@@ -211,16 +211,16 @@ class SpecimenAggregator(GroupingAggregator):
     def _group_key(self, entity):
         return entity['organ']
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'total_estimated_cells':
-            return NumericAccumulator()
+            return SumAccumulator()
         else:
             return SetAccumulator(max_size=100)
 
 
 class ProjectAggregator(SimpleAggregator):
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':
             return ListAccumulator(max_size=100)
         elif field in ('project_description',
@@ -238,7 +238,7 @@ class ProcessAggregator(GroupingAggregator):
     def _group_key(self, entity) -> Any:
         return entity.get('library_construction_approach')
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':
             return None
         elif field in ('process_id', 'protocol_id'):

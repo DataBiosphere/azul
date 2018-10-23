@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+from functools import partial
 import json
 import unittest
 import os
@@ -16,103 +16,112 @@ from service.data_generator.fake_data_utils import ElasticsearchFakeDataLoader
 class TestResponse(WebServiceTestCase):
     maxDiff = None
 
-    template = {
-        "contents": {
-            "files": [
-                {
-                    "_type": "fuchsia",
-                    "content-type": "green",
-                    "file_format": "csv",
-                    "document_id": "a350b29c-2609-7b92-0c49-23971a4f9371",
-                    "indexed": True,
-                    "lane_index": 5108,
-                    "name": "billion.key",
-                    "read_index": "blue",
-                    "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
-                    "size": 6667,
-                    "uuid": "e9772583-4240-4757-6357-32bef0e51150",
-                    "version": "2001-03-16T05:26:40"
-                }
-            ],
-            "processes": [
-                {
-                    "_type": "navy",
-                    "document_id": "4188ddbe-8865-a433-a1f6-213d49aa5719",
-                    "instrument_manufacturer_model": "green",
-                    "library_construction_approach": "fuchsia",
-                    "process_id": "maroon",
-                    "process_name": "olive",
-                    "protocol_name": "olive",
-                    "protocol_id": "green"
-                }
-            ],
-            "projects": [
-                {
-                    "_type": "maroon",
-                    "document_id": "37a92077-530f-fdbb-df14-2926665cc697",
-                    "project_title": "purple",
-                    "project_description": "navy",
-                    "laboratory": ["silver"],
-                    "project_shortname": "blue",
-                    "contributors": [
-                        {
-                            "contact_name": "yellow",
-                            "corresponding_contributor": False,
-                            "email": "gray"
-                        },
-                        {
-                            "contact_name": "teal",
-                            "corresponding_contributor": True,
-                            "email": "purple",
-                            "institution": "yellow",
-                            "laboratory": "silver"
-                        }
-                    ],
-                    "publications": [
-                        {
-                            "authors": [
-                                "green",
-                                "maroon",
-                                "gray"
-                            ],
-                            "publication_title": "gray",
-                            "doi": "green",
-                            "pmid": 5331933,
-                            "publication_url": "black"
-                        }
-                    ]
-                }
-            ],
-            "specimens": [
-                {
-                    "_type": "teal",
-                    "organism_age": ["purple"],
-                    "organism_age_unit": ["navy"],
-                    "biomaterial_id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
-                    "disease": ["yellow"],
-                    "id": "1cae440e-3be6-ce39-49e9-74721f0066e0",
-                    "organ": "purple",
-                    "organ_part": "black",
-                    "parent": "aqua",
-                    "biological_sex": ["silver"],
-                    "_source": ["purple"],
-                    "genus_species": ["teal"],
-                    "storage_method": "aqua",
-                    "total_estimated_cells": 5306
-                }
-            ]
-        },
-        "bundles": [
-            {
-                "uuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
-                "version": "2003-08-12T00:52:21"
-            }
-        ],
-        "entity_id": "08d3440a-7481-41c5-5140-e15ed269ea63"
-    }
-
     def input(self, entity_type):
-        return [ElasticsearchFakeDataLoader.fix_canned_document(entity_type, self.template)]
+        def specimen_value(v):
+            return v if entity_type == 'specimens' else [v]
+
+        def project_value(v):
+            return v if entity_type == 'projects' else [v]
+
+        template = {
+            "contents": {
+                "files": [
+                    {
+                        "_type": "fuchsia",
+                        "content-type": "green",
+                        "file_format": "csv",
+                        "document_id": "a350b29c-2609-7b92-0c49-23971a4f9371",
+                        "indexed": True,
+                        "lane_index": 5108,
+                        "name": "billion.key",
+                        "read_index": "blue",
+                        "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+                        "size": 6667,
+                        "uuid": "e9772583-4240-4757-6357-32bef0e51150",
+                        "version": "2001-03-16T05:26:40"
+                    } if entity_type == 'files' else {
+                        "file_format": ["csv"],
+                        "size": 6667,
+                        "count": 1,
+                    }
+                ],
+                "processes": [
+                    {
+                        "_type": ["navy"],
+                        "document_id": ["4188ddbe-8865-a433-a1f6-213d49aa5719"],
+                        "instrument_manufacturer_model": ["green"],
+                        "library_construction_approach": ["fuchsia"],
+                        "process_id": ["maroon"],
+                        "process_name": ["olive"],
+                        "protocol_name": ["olive"],
+                        "protocol_id": ["green"]
+                    }
+                ],
+                "projects": [
+                    {
+                        "_type": project_value("maroon"),
+                        "document_id": project_value("37a92077-530f-fdbb-df14-2926665cc697"),
+                        "project_title": project_value("purple"),
+                        "project_description": project_value("navy"),
+                        "laboratory": ["silver"],
+                        "project_shortname": project_value("blue"),
+                        "contributors": [
+                            {
+                                "contact_name": "yellow",
+                                "corresponding_contributor": False,
+                                "email": "gray"
+                            },
+                            {
+                                "contact_name": "teal",
+                                "corresponding_contributor": True,
+                                "email": "purple",
+                                "institution": "yellow",
+                                "laboratory": "silver"
+                            }
+                        ],
+                        "publications": [
+                            {
+                                "authors": [
+                                    "green",
+                                    "maroon",
+                                    "gray"
+                                ],
+                                "publication_title": "gray",
+                                "doi": "green",
+                                "pmid": 5331933,
+                                "publication_url": "black"
+                            }
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "_type": specimen_value("teal"),
+                        "organism_age": ["purple"],
+                        "organism_age_unit": ["navy"],
+                        "biomaterial_id": specimen_value("6e7d782e-44a2-0d3f-2bf1-337468f62467"),
+                        "disease": ["yellow"],
+                        "id": specimen_value("1cae440e-3be6-ce39-49e9-74721f0066e0"),
+                        "organ": specimen_value("purple"),
+                        "organ_part": specimen_value("black"),
+                        "parent": specimen_value("aqua"),
+                        "biological_sex": ["silver"],
+                        "_source": ["purple"],
+                        "genus_species": ["teal"],
+                        "storage_method": specimen_value("aqua"),
+                        "total_estimated_cells": 5306
+                    }
+                ]
+            },
+            "bundles": [
+                {
+                    "uuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
+                    "version": "2003-08-12T00:52:21"
+                }
+            ],
+            "entity_id": "08d3440a-7481-41c5-5140-e15ed269ea63"
+        }
+        return [ElasticsearchFakeDataLoader.fix_canned_document(entity_type, template)]
 
     def test_key_search_files_response(self):
         """
