@@ -20,6 +20,7 @@ from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
+from azul.transformer import SetAccumulator
 
 logger = logging.getLogger(__name__)
 module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
@@ -332,10 +333,12 @@ class SummaryResponse(BaseSummaryResponse):
         self.apiResponse = SummaryRepresentation(**kwargs)
 
 
-class ProjectSummaryResponse(BaseSummaryResponse):
+class ProjectSummaryResponse(AbstractResponse):
     """
     Build summary field for each project in projects endpoint
     """
+    def return_response(self):
+        return self.apiResponse
 
     @classmethod
     def get_distinct_terms(cls, items, property_name):
@@ -368,42 +371,39 @@ class ProjectSummaryResponse(BaseSummaryResponse):
             where the key is an organ and the value is the number of cells for the organ in the project
         """
         organ_cell_count = defaultdict(int)
-        for cell_suspension in hit['_source']['contents']['cell_suspensions']:
-            assert len(cell_suspension['organ']) == 1
-            try:  # We should use .get() here but ElasticsearchDSL's AttrDict doesn't expose it
-                cellcount = cell_suspension['total_estimated_cells']
-            except KeyError:
-                pass
-            else:
-                organ_cell_count[cell_suspension['organ'][0]] += cellcount
+        for specimen in hit['specimens']:
+            assert len(specimen['organ']) == 1
+            organ_cell_count[specimen['organ'][0]] += specimen.get('totalCells') or 0
         total_cell_count = sum(organ_cell_count.values())
         organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
 
-    def __init__(self, project_id, raw_response):
-        super().__init__(raw_response)
+    def __init__(self, es_hit):
+        specimen_accumulators = {
+            'donorId': SetAccumulator(),
+            'genusSpecies': SetAccumulator(),
+            'disease': SetAccumulator()
+        }
+        for specimen in es_hit['specimens']:
+            for property_name, accumulator in specimen_accumulators.items():
+                if specimen[property_name] is not None:
+                    accumulator.accumulate(specimen[property_name])
 
-        for hit in raw_response['hits']['hits']:
-            if hit['_id'] == project_id:
-                hit_contents = hit['_source']['contents'].to_dict()
-                total_cell_count, organ_cell_count = self.get_cell_count(hit)
-                donor_count = len(self.get_distinct_terms(hit_contents['specimens'], 'donor_biomaterial_id'))
-                species_list = self.get_distinct_terms(hit_contents['specimens'], 'genus_species')
-                lib_construction_list = self.get_distinct_terms(hit_contents['processes'],
-                                                                'library_construction_approach')
-                disease_list = self.get_distinct_terms(hit_contents['specimens'], 'disease')
-                break
-        else:
-            assert False
+        library_accumulator = SetAccumulator()
+        for process in es_hit['processes']:
+            if process['libraryConstructionApproach'] is not None:
+                library_accumulator.accumulate(process['libraryConstructionApproach'])
+
+        total_cell_count, organ_cell_count = self.get_cell_count(es_hit)
 
         self.apiResponse = ProjectSummaryRepresentation(
-            donorCount=donor_count,
+            donorCount=len(specimen_accumulators['donorId'].close()),
             totalCellCount=total_cell_count,
             organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
                             for count in organ_cell_count],
-            genusSpecies=species_list,
-            libraryConstructionApproach=lib_construction_list,
-            disease=disease_list
+            genusSpecies=specimen_accumulators['genusSpecies'].close(),
+            libraryConstructionApproach=library_accumulator.close(),
+            disease=specimen_accumulators['disease'].close()
         )
 
 
@@ -502,7 +502,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "biologicalSex": specimen.get("biological_sex", None),
                 "disease": specimen.get("disease", None),
                 "storageMethod": specimen.get("storage_method", None),
-                "source": specimen.get("_source", None)
+                "source": specimen.get("_source", None),
+                "totalCells": specimen.get("total_estimated_cells", None),
+                "donorId": specimen.get("donor_biomaterial_id", None)
             }
             specimens.append(translated_specimen)
         return specimens
