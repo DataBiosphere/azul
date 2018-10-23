@@ -1,5 +1,4 @@
 import ast
-import json
 import logging.config
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -374,8 +373,8 @@ def get_summary():
                                       (entity_type, es_td.transform_summary(filters=filters, entity_type=entity_type)),
                                       summary_fields_by_authority))
     unified_summary = {field: summaries[entity_type][field]
-                        for entity_type, summary_fields in summary_fields_by_authority.items()
-                        for field in summary_fields}
+                       for entity_type, summary_fields in summary_fields_by_authority.items()
+                       for field in summary_fields}
     assert all(len(unified_summary) == len(summary) for summary in summaries.values())
 
     # Returning a single response if <file_id> request form is used
