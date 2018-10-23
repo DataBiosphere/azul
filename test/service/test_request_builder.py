@@ -6,7 +6,7 @@ import logging.config
 import unittest
 from urllib.parse import urlparse, parse_qs
 
-from elasticsearch_dsl.utils import AttrDict
+from elasticsearch_dsl.utils import AttrList
 
 from service import WebServiceTestCase
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
@@ -496,92 +496,87 @@ class TestRequestBuilder(WebServiceTestCase):
         Test creation of project summary
         Summary should be added to dict of corresponding project id in hits.
         """
-        hits = [{'entryId': 'a'}, {'entryId': 'b'}]
-        es_response = AttrDict({
-            "hits": {
-                "hits": [
-                    {
-                        "_id": "a",
-                        "_source": {
-                            "entity_id": "a",
-                            "contents": {
-                                "specimens": [],
-                                "cell_suspensions": [],
-                                "files": [],
-                                "processes": [],
-                                "project": {
-                                    "document_id": "a"
-                                }
-                            },
-                            "bundles": [
-                                {}
-                            ]
+        final_response_hits = [{'entryId': 'a'}, {'entryId': 'b'}]
+        es_response_hits = AttrList([
+            {
+                "_id": "a",
+                "_source": {
+                    "entity_id": "a",
+                    "contents": {
+                        "specimens": [],
+                        "cell_suspensions": [],
+                        "files": [],
+                        "processes": [],
+                        "project": {
+                            "document_id": "a"
                         }
                     },
-                    {
-                        "_id": "b",
-                        "_source": {
-                            "entity_id": "b",
-                            "contents": {
-                                "specimens": [
-                                    {
-                                        "biomaterial_id": [
-                                            "specimen1"
-                                        ],
-                                        "disease": [
-                                            "disease1"
-                                        ],
-                                        "organ": [
-                                            "organ1"
-                                        ],
-                                        "donor_biomaterial_id": [
-                                            "donor1"
-                                        ],
-                                        "genus_species": [
-                                            "species1"
-                                        ]
-                                    },
-                                    {
-                                        "biomaterial_id": [
-                                            "specimen2"
-                                        ],
-                                        "disease": [
-                                            "disease1"
-                                        ],
-                                        "organ": [
-                                            "organ2"
-                                        ],
-                                        "total_estimated_cells": 3,
-                                        "donor_biomaterial_id": [
-                                            "donor2"
-                                        ],
-                                        "genus_species": [
-                                            "species1"
-                                        ]
-                                    }
-                                ],
-                                "cell_suspensions": [
-                                    {
-                                        "organ": ["organ1"],
-                                        "total_estimated_cells": 2,
-                                    }
-                                ],
-                                "files": [],
-                                "processes": [],
-                                "project": {
-                                    "document_id": "b"
-                                }
-                            },
-                            "bundles": [
-                                {}
-                            ]
-                        }
-                    }
-                ]
+                    "bundles": [
+                        {}
+                    ]
+                }
             },
-            "aggregations": {}
-        })
-        EsTd().add_project_summaries(hits, es_response)
+            {
+                "_id": "b",
+                "_source": {
+                    "entity_id": "b",
+                    "contents": {
+                        "specimens": [
+                            {
+                                "biomaterial_id": [
+                                    "specimen1"
+                                ],
+                                "disease": [
+                                    "disease1"
+                                ],
+                                "organ": [
+                                    "organ1"
+                                ],
+                                "donor_biomaterial_id": [
+                                    "donor1"
+                                ],
+                                "genus_species": [
+                                    "species1"
+                                ]
+                            },
+                            {
+                                "biomaterial_id": [
+                                    "specimen2"
+                                ],
+                                "disease": [
+                                    "disease1"
+                                ],
+                                "organ": [
+                                    "organ2"
+                                ],
+                                "total_estimated_cells": 3,
+                                "donor_biomaterial_id": [
+                                    "donor2"
+                                ],
+                                "genus_species": [
+                                    "species1"
+                                ]
+                            }
+                        ],
+                        "cell_suspensions": [
+                            {
+                                "organ": ["organ1"],
+                                "total_estimated_cells": 2,
+                            }
+                        ],
+                        "files": [],
+                        "processes": [],
+                        "project": {
+                            "document_id": "b"
+                        }
+                    },
+                    "bundles": [
+                        {}
+                    ]
+                }
+            }
+        ])
+        EsTd().add_project_summaries(final_response_hits, es_response_hits)
 
         expected_output = [
             {
@@ -624,7 +619,7 @@ class TestRequestBuilder(WebServiceTestCase):
         ]
 
         expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(hits, sort_keys=True)
+        actual_output = json.dumps(final_response_hits, sort_keys=True)
 
         self.compare_dicts(expected_output, actual_output)
 

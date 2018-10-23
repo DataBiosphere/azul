@@ -586,27 +586,39 @@ class TestResponse(WebServiceTestCase):
         i.e. each unique cell suspension counted exactly once).
         """
         es_hit = {
-            "_id": "a",
-            "_source": {
-                "entity_id": "a",
-                "contents": {
-                    "cell_suspensions": [
-                        {
-                            "organ": ["organ1"],
-                            "total_estimated_cells": 6,
-                        },
-                        {
-                            "organ": ["organ2"],
-                            "total_estimated_cells": 3,
-                        }
-
-                    ],
-                    "files": [],
-                    "processes": [],
-                    "project": {
-                        "document_id": "a"
-                    }
+            "specimens": [
+                {
+                    "biomaterial_id": ["specimen1", "specimen3"],
+                    "disease": ["disease1"],
+                    "organ": ["organ1"],
+                    "total_estimated_cells": 6,
+                    "donor_biomaterial_id": ["donor1"],
+                    "genus_species": ["species1"]
+                },
+                {
+                    "biomaterial_id": ["specimen2"],
+                    "disease": ["disease1"],
+                    "organ": ["organ2"],
+                    "total_estimated_cells": 3,
+                    "donor_biomaterial_id": ["donor1"],
+                    "genus_species": ["species1"]
                 }
+            ],
+            "cell_suspensions": [
+                {
+                    "organ": ["organ1"],
+                    "total_estimated_cells": 6,
+                },
+                {
+                    "organ": ["organ2"],
+                    "total_estimated_cells": 3,
+                }
+
+            ],
+            "files": [],
+            "processes": [],
+            "project": {
+                "document_id": "a"
             }
         }
 
@@ -892,62 +904,6 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(json.dumps(keyword_response, sort_keys=True, indent=4),
                          json.dumps(expected_output, sort_keys=True, indent=4))
 
-    def test_project_summary_get_distinct_terms(self):
-        """
-        Test the method to get distinct values from a list of items
-
-        Should return a list of every item corresponding to the given key; Every item should appear exactly once
-        Should not fail if an item is missing a key
-        Should accept any hashable type as a value
-        """
-        items = AttrList([
-            {
-                'value1': [1, 4],
-                'value2': ['2'],
-            },
-            {
-                'value1': [2],
-                'value2': ['3'],
-            },
-            {
-                'value1': [1],
-                'value2': ['3'],
-            },
-            {
-                'value1': [3],
-                'value2': [],
-            },
-        ])
-        distinct_value1 = ProjectSummaryResponse.get_distinct_terms(items, 'value1')
-        self.assertEqual([1, 2, 3, 4], sorted(distinct_value1))
-
-        distinct_value2 = ProjectSummaryResponse.get_distinct_terms(items, 'value2')
-        self.assertEqual(['2', '3'], sorted(distinct_value2))
-
-        distinct_value3 = ProjectSummaryResponse.get_distinct_terms(items, 'value3')
-        self.assertEqual([], sorted(distinct_value3))
-
-    def test_project_summary_get_distinct_terms_empty(self):
-        """
-        Get distinct terms should handle an empty list of items by returning an empty list
-        """
-        items = AttrList([])
-        distinct_values = ProjectSummaryResponse.get_distinct_terms(items, 'value')
-        self.assertEqual([], distinct_values)
-
-    def test_project_summary_get_distinct_terms_non_list_values(self):
-        """
-        Get distinct terms should raise an exception if the values are not a list
-        A list is expected because ES response will return single values as a list
-        """
-        items = AttrList([
-            {
-                'value1': 1,
-                'value2': ['2'],
-            }
-        ])
-        self.assertRaises(TypeError, ProjectSummaryResponse.get_distinct_terms, items, 'value1')
-
     def test_project_summary_response(self):
         """
         Test that ProjectSummaryResponse will correctly do the per-project aggregations
@@ -958,205 +914,201 @@ class TestResponse(WebServiceTestCase):
         Should correctly count donor ids within a project
         """
         # Stripped down response from ES partially based on real data
-        es_response = AttrDict({
-            "hits": {
-                "total": 3,
-                "hits": [
-                    {
-                        "_id": "bae45747-546a-4aed-9377-08e9115a8fb8",
-                        "_source": {
-                            "entity_id": "bae45747-546a-4aed-9377-08e9115a8fb8",
-                            "contents": {
-                                "specimens": [
-                                    {
-                                        "disease": [
-                                            "glioblastoma"
-                                        ],
-                                        "organ": [
-                                            "brain"
-                                        ],
-                                        "organ_part": [
-                                            "astrocyte"
-                                        ],
-                                        "_type": [
-                                            "specimen"
-                                        ],
-                                        "total_estimated_cells": 0,
-                                        "donor_biomaterial_id": [
-                                            "Q4_DEMO-donor_MGH30"
-                                        ],
-                                        "genus_species": [
-                                            "Homo sapiens"
-                                        ]
-                                    }
+        hits = [
+            {
+                "_id": "bae45747-546a-4aed-9377-08e9115a8fb8",
+                "_source": {
+                    "entity_id": "bae45747-546a-4aed-9377-08e9115a8fb8",
+                    "contents": {
+                        "entryId": "bae45747-546a-4aed-9377-08e9115a8fb8",
+                        "specimens": [
+                            {
+                                "disease": [
+                                    "glioblastoma"
                                 ],
-                                "processes": [
-                                    {
-                                        "_type": [
-                                            "process"
-                                        ],
-                                        "library_construction_approach": [
-                                            "Smart-seq2"
-                                        ]
-                                    },
-                                    {
-                                        "_type": [
-                                            "process"
-                                        ],
-                                        "library_construction_approach": [
-                                            "Smart-seq2"
-                                        ]
-                                    }
+                                "organ": [
+                                    "brain"
+                                ],
+                                "organ_part": [
+                                    "astrocyte"
+                                ],
+                                "_type": [
+                                    "specimen"
+                                ],
+                                "total_estimated_cells": 0,
+                                "donor_biomaterial_id": [
+                                    "Q4_DEMO-donor_MGH30"
+                                ],
+                                "genus_species": [
+                                    "Homo sapiens"
                                 ]
                             }
-                        }
-                    },
-                    {
-                        "_id": "6ec8e247-2eb0-42d1-823f-75facd03988d",
-                        "_source": {
-                            "entity_id": "6ec8e247-2eb0-42d1-823f-75facd03988d",
-                            "contents": {
-                                "specimens": [
-                                    {
-                                        "disease": [
-                                            "normal"
-                                        ],
-                                        "organ": [
-                                            "spleen"
-                                        ],
-                                        "_type": [
-                                            "specimen"
-                                        ],
-                                        "total_estimated_cells": 39300000,
-                                        "donor_biomaterial_id": [
-                                            "284C-A1"
-                                        ],
-                                        "genus_species": [
-                                            "Homo sapiens"
-                                        ]
-                                    },
-                                    {
-                                        "disease": [
-                                            "normal"
-                                        ],
-                                        "organ": [
-                                            "spleen"
-                                        ],
-                                        "_type": [
-                                            "specimen"
-                                        ],
-                                        "total_estimated_cells": 1,
-                                        "donor_biomaterial_id": [
-                                            "284C-A1"
-                                        ],
-                                        "genus_species": [
-                                            "Homo sapiens"
-                                        ]
-                                    },
-                                    {
-                                        "disease": [
-                                            "not normal"
-                                        ],
-                                        "organ": [
-                                            "brain"
-                                        ],
-                                        "_type": [
-                                            "specimen"
-                                        ],
-                                        "total_estimated_cells": 10,
-                                        "donor_biomaterial_id": [
-                                            "284C-A2"
-                                        ],
-                                        "genus_species": [
-                                            "Homo sapiens"
-                                        ]
-                                    }
+                        ],
+                        "processes": [
+                            {
+                                "_type": [
+                                    "process"
                                 ],
-                                "processes": [
-                                    {
-                                        "_type": [
-                                            "process"
-                                        ],
-                                        "library_construction_approach": [
-                                            "10x_v2"
-                                        ]
-                                    },
-                                    {
-                                        "_type": [
-                                            "process"
-                                        ]
-                                    }
+                                "library_construction_approach": [
+                                    "Smart-seq2"
+                                ]
+                            },
+                            {
+                                "_type": [
+                                    "process"
+                                ],
+                                "library_construction_approach": [
+                                    "Smart-seq2"
                                 ]
                             }
-                        }
-                    },
-                    {
-                        "_id": "6504d48c-1610-43aa-8cf8-214a960e110c",
-                        "_source": {
-                            "entity_id": "6504d48c-1610-43aa-8cf8-214a960e110c",
-                            "contents": {
-                                "specimens": [
-                                    {
-                                        "disease": [],
-                                        "organ": [
-                                            "hematopoietic system"
-                                        ],
-                                        "organ_part": [
-                                            "umbilical cord blood",
-                                            "bone marrow"
-                                        ],
-                                        "_type": [
-                                            "specimen"
-                                        ],
-                                        "total_estimated_cells": 528092,
-                                        "donor_biomaterial_id": [
-                                            "CB8",
-                                            "CB6",
-                                            "CB2",
-                                            "BM8",
-                                            "BM6",
-                                            "BM5",
-                                            "BM4",
-                                            "CB1",
-                                            "CB5",
-                                            "CB7",
-                                            "BM2",
-                                            "BM3",
-                                            "BM7",
-                                            "CB4",
-                                            "CB3",
-                                            "BM1"
-                                        ],
-                                        "genus_species": [
-                                            "Homo sapiens"
-                                        ]
-                                    }
-                                ],
-                                "processes": [
-                                    {
-                                        "_type": [
-                                            "process"
-                                        ]
-                                    },
-                                    {
-                                        "_type": [
-                                            "process"
-                                        ],
-                                        "library_construction_approach": [
-                                            "10x_v2"
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
+                        ]
                     }
-                ]
+                }
             },
-            "aggregations": {}
-        })
+            {
+                "_id": "6ec8e247-2eb0-42d1-823f-75facd03988d",
+                "_source": {
+                    "entity_id": "6ec8e247-2eb0-42d1-823f-75facd03988d",
+                    "contents": {
+                        "entryId": "6ec8e247-2eb0-42d1-823f-75facd03988d",
+                        "specimens": [
+                            {
+                                "disease": [
+                                    "normal"
+                                ],
+                                "organ": [
+                                    "spleen"
+                                ],
+                                "_type": [
+                                    "specimen"
+                                ],
+                                "total_estimated_cells": 39300000,
+                                "donor_biomaterial_id": [
+                                    "284C-A1"
+                                ],
+                                "genus_species": [
+                                    "Homo sapiens"
+                                ]
+                            },
+                            {
+                                "disease": [
+                                    "normal"
+                                ],
+                                "organ": [
+                                    "spleen"
+                                ],
+                                "_type": [
+                                    "specimen"
+                                ],
+                                "total_estimated_cells": 1,
+                                "donor_biomaterial_id": [
+                                    "284C-A1"
+                                ],
+                                "genus_species": [
+                                    "Homo sapiens"
+                                ]
+                            },
+                            {
+                                "disease": [
+                                    "not normal"
+                                ],
+                                "organ": [
+                                    "brain"
+                                ],
+                                "_type": [
+                                    "specimen"
+                                ],
+                                "total_estimated_cells": 10,
+                                "donor_biomaterial_id": [
+                                    "284C-A2"
+                                ],
+                                "genus_species": [
+                                    "Homo sapiens"
+                                ]
+                            }
+                        ],
+                        "processes": [
+                            {
+                                "_type": [
+                                    "process"
+                                ],
+                                "library_construction_approach": [
+                                    "10x_v2"
+                                ]
+                            },
+                            {
+                                "_type": [
+                                    "process"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "_id": "6504d48c-1610-43aa-8cf8-214a960e110c",
+                "_source": {
+                    "entity_id": "6504d48c-1610-43aa-8cf8-214a960e110c",
+                    "contents": {
+                        "entryId": "6504d48c-1610-43aa-8cf8-214a960e110c",
+                        "specimens": [
+                            {
+                                "disease": [],
+                                "organ": [
+                                    "hematopoietic system"
+                                ],
+                                "organ_part": [
+                                    "umbilical cord blood",
+                                    "bone marrow"
+                                ],
+                                "_type": [
+                                    "specimen"
+                                ],
+                                "total_estimated_cells": 528092,
+                                "donor_biomaterial_id": [
+                                    "CB8",
+                                    "CB6",
+                                    "CB2",
+                                    "BM8",
+                                    "BM6",
+                                    "BM5",
+                                    "BM4",
+                                    "CB1",
+                                    "CB5",
+                                    "CB7",
+                                    "BM2",
+                                    "BM3",
+                                    "BM7",
+                                    "CB4",
+                                    "CB3",
+                                    "BM1"
+                                ],
+                                "genus_species": [
+                                    "Homo sapiens"
+                                ]
+                            }
+                        ],
+                        "processes": [
+                            {
+                                "_type": [
+                                    "process"
+                                ]
+                            },
+                            {
+                                "_type": [
+                                    "process"
+                                ],
+                                "library_construction_approach": [
+                                    "10x_v2"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
 
-        project_summary1 = ProjectSummaryResponse('bae45747-546a-4aed-9377-08e9115a8fb8',
-                                                  es_response).apiResponse.to_json()
+        project_summary1 = ProjectSummaryResponse(hits[0]['_source']['contents']).apiResponse.to_json()
         self.assertEqual(1, project_summary1['donorCount'])
         self.assertEqual(0, project_summary1['totalCellCount'])
         self.assertEqual(['Homo sapiens'], sorted(project_summary1['genusSpecies']))
@@ -1172,8 +1124,7 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(json.dumps(expected_organ_summary1, sort_keys=True),
                          json.dumps(project_summary1['organSummaries'], sort_keys=True))
 
-        project_summary2 = ProjectSummaryResponse('6ec8e247-2eb0-42d1-823f-75facd03988d',
-                                                  es_response).apiResponse.to_json()
+        project_summary2 = ProjectSummaryResponse(hits[1]['_source']['contents']).apiResponse.to_json()
         self.assertEqual(2, project_summary2['donorCount'])
         self.assertEqual(39300011, project_summary2['totalCellCount'])
         self.assertEqual(['Homo sapiens'], sorted(project_summary2['genusSpecies']))
@@ -1194,8 +1145,7 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(json.dumps(expected_organ_summary2, sort_keys=True),
                          json.dumps(project_summary2['organSummaries'], sort_keys=True))
 
-        project_summary3 = ProjectSummaryResponse('6504d48c-1610-43aa-8cf8-214a960e110c',
-                                                  es_response).apiResponse.to_json()
+        project_summary3 = ProjectSummaryResponse(hits[2]['_source']['contents']).apiResponse.to_json()
         self.assertEqual(16, project_summary3['donorCount'])
         self.assertEqual(528092, project_summary3['totalCellCount'])
         self.assertEqual(['Homo sapiens'], sorted(project_summary3['genusSpecies']))
