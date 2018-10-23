@@ -2,6 +2,7 @@ import ast
 import json
 import logging.config
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 from chalice import Chalice, BadRequestError, NotFoundError
 
@@ -368,8 +369,10 @@ def get_summary():
         'specimens': ['organCount', 'donorCount', 'labCount', 'totalCellCount', 'organSummaries', 'specimenCount'],
         'projects': ['projectCount']
     }
-    summaries = {entity_type: es_td.transform_summary(filters=filters, entity_type=entity_type)
-                 for entity_type, summary_fields in summary_fields_by_authority.items()}
+    with ThreadPoolExecutor(max_workers=len(summary_fields_by_authority)) as executor:
+        summaries = dict(executor.map(lambda entity_type:
+                                      (entity_type, es_td.transform_summary(filters=filters, entity_type=entity_type)),
+                                      summary_fields_by_authority))
     unified_summary = {field: summaries[entity_type][field]
                         for entity_type, summary_fields in summary_fields_by_authority.items()
                         for field in summary_fields}
