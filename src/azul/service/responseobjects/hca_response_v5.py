@@ -341,26 +341,6 @@ class ProjectSummaryResponse(AbstractResponse):
         return self.apiResponse
 
     @classmethod
-    def get_distinct_terms(cls, items, property_name):
-        """
-        Iterate through the list of items (dicts) and return a list of distinct values
-        in all the items with property_name as a key
-
-        The value at the given property name must be a list of hashable items
-
-        :param AttrList items: list of dicts to extract distinct values from
-        :param str property_name: key of each item to extract
-        :return: list of distinct values
-        """
-        terms = set()
-        for item in items:
-            try:
-                terms |= set(item[property_name])
-            except KeyError:
-                pass
-        return list(terms)
-
-    @classmethod
     def get_cell_count(cls, hit):
         """
         Iterate through cell suspensions to get overall and per organ cell count. Expects cell suspensions to already
@@ -373,35 +353,35 @@ class ProjectSummaryResponse(AbstractResponse):
         organ_cell_count = defaultdict(int)
         for specimen in hit['specimens']:
             assert len(specimen['organ']) == 1
-            organ_cell_count[specimen['organ'][0]] += specimen.get('totalCells') or 0
+            organ_cell_count[specimen['organ'][0]] += specimen.get('total_estimated_cells', 0)
         total_cell_count = sum(organ_cell_count.values())
         organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
 
-    def __init__(self, es_hit):
+    def __init__(self, es_hit_contents):
         specimen_accumulators = {
-            'donorId': SetAccumulator(),
-            'genusSpecies': SetAccumulator(),
+            'donor_biomaterial_id': SetAccumulator(),
+            'genus_species': SetAccumulator(),
             'disease': SetAccumulator()
         }
-        for specimen in es_hit['specimens']:
+        for specimen in es_hit_contents['specimens']:
             for property_name, accumulator in specimen_accumulators.items():
-                if specimen[property_name] is not None:
+                if property_name in specimen:
                     accumulator.accumulate(specimen[property_name])
 
         library_accumulator = SetAccumulator()
-        for process in es_hit['processes']:
-            if process['libraryConstructionApproach'] is not None:
-                library_accumulator.accumulate(process['libraryConstructionApproach'])
+        for process in es_hit_contents['processes']:
+            if 'library_construction_approach' in process:
+                library_accumulator.accumulate(process['library_construction_approach'])
 
-        total_cell_count, organ_cell_count = self.get_cell_count(es_hit)
+        total_cell_count, organ_cell_count = self.get_cell_count(es_hit_contents)
 
         self.apiResponse = ProjectSummaryRepresentation(
-            donorCount=len(specimen_accumulators['donorId'].close()),
+            donorCount=len(specimen_accumulators['donor_biomaterial_id'].close()),
             totalCellCount=total_cell_count,
             organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
                             for count in organ_cell_count],
-            genusSpecies=specimen_accumulators['genusSpecies'].close(),
+            genusSpecies=specimen_accumulators['genus_species'].close(),
             libraryConstructionApproach=library_accumulator.close(),
             disease=specimen_accumulators['disease'].close()
         )
@@ -503,8 +483,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "disease": specimen.get("disease", None),
                 "storageMethod": specimen.get("storage_method", None),
                 "source": specimen.get("_source", None),
-                "totalCells": specimen.get("total_estimated_cells", None),
-                "donorId": specimen.get("donor_biomaterial_id", None)
+                "totalCells": specimen.get("total_estimated_cells", None)
             }
             specimens.append(translated_specimen)
         return specimens
