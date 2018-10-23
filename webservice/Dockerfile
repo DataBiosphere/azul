@@ -34,7 +34,7 @@ ENV APACHE_PATH=""
 # Add app code
 COPY . /app
 #Make the runnable executable
-RUN chmod a+x /app/run.sh
+#RUN chmod a+x /app/run.sh
 #Remove the current uwsgi.ini
 RUN rm /app/uwsgi.ini
 #Add the in app uwsgi
