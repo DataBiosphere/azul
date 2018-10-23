@@ -145,6 +145,7 @@ def get_data(file_id=None):
         response = es_td.transform_request(filters=filters,
                                            pagination=pagination,
                                            post_filter=True,
+                                           include_file_urls=True,
                                            entity_type='files')
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
