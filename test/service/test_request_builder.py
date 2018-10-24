@@ -640,6 +640,16 @@ class TestRequestBuilder(WebServiceTestCase):
 
         self.assertEqual(actual_output, expected_output)
 
+    def test_transform_request_with_file_url(self):
+        response_json = EsTd().transform_request(filters={"file": {}},
+                                                 pagination={'order': 'desc',
+                                                             'size': 10,
+                                                             'sort': 'specimenId'},
+                                                 post_filter=True,
+                                                 include_file_urls=True,
+                                                 entity_type='files')
+        self.assertTrue(all(['url' in file_data.keys() for hit in response_json['hits'] for file_data in hit['files']]))
+
 
 if __name__ == '__main__':
     unittest.main()
