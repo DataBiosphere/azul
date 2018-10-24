@@ -536,7 +536,7 @@ def get_user_id():
 def create_cart():
     user_id = get_user_id()
     try:
-        cart_name = app.current_request.json_body['cartName']
+        cart_name = app.current_request.json_body['CartName']
     except KeyError:
         raise BadRequestError('cartName parameter must be given')
     dda = DynamoDataAccessor()
@@ -558,6 +558,19 @@ def get_all_carts():
 def delete_cart(cart_id):
     dda = DynamoDataAccessor()
     return dda.delete_item(config.dynamo_cart_table_name, {'CartId': cart_id})
+
+
+@app.route('/resources/carts/{cart_id}', methods=['PUT'], cors=True)
+def update_cart(cart_id):
+    dda = DynamoDataAccessor()
+    accepted_params = {'CartName'}
+    request_body = app.current_request.json_body
+    update_params = dict(request_body)
+    for key in request_body.keys():
+        if key not in accepted_params:
+            del(update_params[key])
+    return dda.update_item(config.dynamo_cart_table_name, {'CartId': cart_id},
+                           update_values=update_params)
 
 
 @app.route('/resources/carts/{cart_id}/items', methods=['GET'], cors=True)
