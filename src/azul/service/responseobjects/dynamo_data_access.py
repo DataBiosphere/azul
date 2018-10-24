@@ -52,6 +52,19 @@ class DynamoDataAccessor:
             with_types[k] = {value_type: v}
         return with_types
 
+    def _build_condition_expression(self, values, name_suffix):
+        expression_values = dict()
+        expression_terms = []
+
+        values = self._add_type_to_item_values(values)
+
+        for i, (attribute, value) in enumerate(values.items()):
+            expression_name = f':{name_suffix}{i}'
+            expression_values[expression_name] = value
+            expression_terms.append(f'{attribute} = {expression_name}')
+
+        return expression_values, expression_terms
+
     # TODO: Do we need this method? There are ,more complex args that need to be added like secondary indexes
     def create_table(self, table_name, keys, attributes, read_capacity=1, write_capacity=1):
         """
@@ -93,24 +106,15 @@ class DynamoDataAccessor:
         :param index_name: Name of secondary index to use; Use None to use primary index
         :return: List of the query results
         """
-        expression_values = dict()
         query_params = dict()
 
-        key_condition_expression = []
-
-        for i, (attribute, value) in enumerate(key_conditions.items()):
-            expression_name = f':k{i}'
-            expression_values[expression_name] = {'S': value}
-            key_condition_expression.append(f'{attribute} = {expression_name}')
-        query_params['KeyConditionExpression'] = ' AND '.join(key_condition_expression)
+        expression_values, key_expression_terms = self._build_condition_expression(key_conditions, 'k')
+        query_params['KeyConditionExpression'] = ' AND '.join(key_expression_terms)
 
         if filters:
-            filter_expression = []
-            for i, (attribute, value) in enumerate(filters.items()):
-                expression_name = f':v{i}'
-                expression_values[expression_name] = {'S': value}
-                filter_expression.append(f'{attribute} = {expression_name}')
-            query_params['FilterExpression'] = ' AND '.join(filter_expression)
+            filter_expression_values, filter_expression_terms = self._build_condition_expression(filters, 'f')
+            query_params['FilterExpression'] = ' AND '.join(filter_expression_terms)
+            expression_values.update(filter_expression_values)
 
         query_params['ExpressionAttributeValues'] = expression_values
 
@@ -145,12 +149,12 @@ class DynamoDataAccessor:
 
         :param table_name: DynamoDB table to put item
         :param item: Dict where a key is an attribute and a value is the attribute value
-        :return: Previous item with the given primary key if it exists, otherwise None
+        :return: Inserted item
         """
         return self.dynamo_client.put_item(
             TableName=table_name,
             Item=self._add_type_to_item_values(item),
-            ReturnValues='ALL_OLD')
+            ReturnValues='ALL_NEW')
 
     def delete_item(self, table_name, keys):
         """
@@ -163,3 +167,16 @@ class DynamoDataAccessor:
             TableName=table_name,
             Key=self._add_type_to_item_values(keys),
             ReturnValues='ALL_OLD')
+
+    def update_item(self, table_name, keys, update_values):
+        expression_params = dict()
+        if len(update_values) > 0:  # allow update even if no values are given
+            expression_values, expression_terms = self._build_condition_expression(update_values, 'v')
+            expression_params['ExpressionAttributeValues'] = expression_values
+            expression_params['UpdateExpression'] = 'SET ' + ', '.join(expression_terms)
+        return self.dynamo_client.update_item(
+            TableName=table_name,
+            Key=self._add_type_to_item_values(keys),
+            ReturnValues='ALL_NEW',
+            **expression_params
+        )
