@@ -51,12 +51,118 @@ class FakerSchemaGenerator(object):
 class ElasticsearchFakeDataLoader(object):
     entity_types = ['files', 'specimens', 'projects']
 
-    def __init__(self, number_of_documents=1000):
-        service_tests_folder = os.path.dirname(os.path.realpath(__file__))
-        fake_data_template_file = open(os.path.join(service_tests_folder, 'fake_data_template.json'), 'r')
-        with fake_data_template_file as template_file:
-            self.doc_template = json.load(template_file)
+    doc_template = {
+        "entity_id": "uuid4",
+        "bundles": [
+            {
+                "uuid": "uuid4",
+                "version": "iso8601"
+            }
+        ],
+        "contents": {
+            "files": [
+                {
+                    "_type": "safe_color_name",
+                    "content-type": "safe_color_name",
+                    "file_format": "file_extension",
+                    "document_id": "uuid4",
+                    "indexed": "pybool",
+                    "lane_index": "pyint",
+                    "name": "file_name",
+                    "read_index": "safe_color_name",
+                    "sha1": "sha1",
+                    "size": "pyint",
+                    "uuid": "uuid4",
+                    "version": "iso8601"
+                }
+            ],
+            "processes": [
+                {
+                    "_type": "safe_color_name",
+                    "document_id": "uuid4",
+                    "instrument_manufacturer_model": "safe_color_name",
+                    "library_construction_approach": "safe_color_name",
+                    "process_id": "safe_color_name",
+                    "process_name": "safe_color_name",
+                    "protocol_name": "safe_color_name",
+                    "protocol_id": "safe_color_name"
+                }
+            ],
+            "projects": [
+                {
+                    "_type": "safe_color_name",
+                    "document_id": "uuid4",
+                    "project_title": "safe_color_name",
+                    "project_description": "safe_color_name",
+                    "laboratory": [
+                        "safe_color_name"
+                    ],
+                    "institutions": [
+                        "safe_color_name"
+                    ],
+                    "contact_names": [
+                        "safe_color_name"
+                    ],
+                    "project_shortname": "safe_color_name",
+                    "contributors": [
+                        {
+                            "contact_name": "safe_color_name",
+                            "corresponding_contributor": "pybool",
+                            "email": "safe_color_name",
+                            "institution": "safe_color_name",
+                            "laboratory": "safe_color_name",
+                            "orcid_id": "safe_color_name",
+                            "phone": "safe_color_name"
+                        }
+                    ],
+                    "publication_titles": [
+                        "safe_color_name"
+                    ],
+                    "publications": [
+                        {
+                            "authors": [
+                                "safe_color_name"
+                            ],
+                            "publication_title": "safe_color_name",
+                            "doi": "safe_color_name",
+                            "pmid": "pyint",
+                            "publication_url": "safe_color_name"
+                        }
+                    ]
+                }
+            ],
+            "specimens": [
+                {
+                    "_type": "safe_color_name",
+                    "organism_age": [
+                        "safe_color_name"
+                    ],
+                    "organism_age_unit": [
+                        "safe_color_name"
+                    ],
+                    "biomaterial_id": "uuid4",
+                    "disease": [
+                        "safe_color_name"
+                    ],
+                    "id": "uuid4",
+                    "organ": "safe_color_name",
+                    "organ_part": "safe_color_name",
+                    "parent": "safe_color_name",
+                    "biological_sex": [
+                        "safe_color_name"
+                    ],
+                    "_source": "safe_color_name",
+                    "genus_species": [
+                        "safe_color_name"
+                    ],
+                    "storage_method": "safe_color_name",
+                    "total_estimated_cells": "pyint"
+                }
+            ]
+        }
+    }
 
+    def __init__(self, number_of_documents=1000):
         self.elasticsearch_client = ESClientFactory.get()
         self.number_of_documents = number_of_documents
 
