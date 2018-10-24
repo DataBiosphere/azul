@@ -43,6 +43,10 @@ class Config:
         return 0 != int(os.environ['AZUL_SHARE_ES_DOMAIN'])
 
     @property
+    def s3_bucket(self) -> str:
+        return os.environ['AZUL_S3_BUCKET']
+
+    @property
     def es_timeout(self) -> int:
         return int(os.environ['AZUL_ES_TIMEOUT'])
 
