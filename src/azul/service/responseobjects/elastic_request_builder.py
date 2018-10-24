@@ -429,7 +429,7 @@ class ElasticTransformDump(object):
         :param pagination: Pagination to be used for the API
         :param post_filter: Flag to indicate whether to do a post_filter
         call instead of the regular query.
-        :param include_file_urls: Show file url field in request
+        :param include_file_urls: Show file URL field in request
         :param entity_type: the string referring to the entity type used to get
         the ElasticSearch index to search
         :return: Returns the transformed request
@@ -548,14 +548,9 @@ class ElasticTransformDump(object):
             self.add_project_summaries(final_response['hits'], es_response)
 
         if include_file_urls:
-            try:
-                for h in final_response['hits']:
-                    for data_file in h['files']:
-                        data_file['url'] = f"{config.dss_endpoint}/files/{data_file['uuid']}" \
-                                           f"?replica=aws&version={data_file['version']}"
-            except KeyError as e:
-                logging.error('Unable to add file url. Due to the following exception:')
-                logging.error(str(e))
+            for h in final_response['hits']:
+                for data_file in h['files']:
+                    data_file['url'] = f"{config.dss_endpoint}/files/{data_file['uuid']}?replica=aws&version={data_file['version']}"
         return final_response
 
     def transform_manifest(
