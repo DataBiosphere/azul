@@ -198,7 +198,9 @@ class FileAggregator(GroupingAggregator):
         return entity['file_format']
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'size':
+        if field == 'file_format':
+            return ListAccumulator()
+        elif field == 'size':
             return SumAccumulator()
         elif field == 'count':
             return DistinctValueCountAccumulator()
