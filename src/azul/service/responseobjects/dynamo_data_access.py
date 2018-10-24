@@ -149,12 +149,12 @@ class DynamoDataAccessor:
 
         :param table_name: DynamoDB table to put item
         :param item: Dict where a key is an attribute and a value is the attribute value
-        :return: Inserted item
+        :return: Previous item with the given key; if no previous item, return none
         """
         return self.dynamo_client.put_item(
             TableName=table_name,
             Item=self._add_type_to_item_values(item),
-            ReturnValues='ALL_NEW')
+            ReturnValues='ALL_OLD')
 
     def delete_item(self, table_name, keys):
         """

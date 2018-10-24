@@ -536,7 +536,7 @@ def get_user_id():
 def create_cart():
     user_id = get_user_id()
     try:
-        cart_name = app.current_request.json_body['CartName']
+        cart_name = app.current_request.json_body['cartName']
     except KeyError:
         raise BadRequestError('cartName parameter must be given')
     dda = DynamoDataAccessor()
@@ -576,21 +576,20 @@ def update_cart(cart_id):
 @app.route('/resources/carts/{cart_id}/items', methods=['GET'], cors=True)
 def get_items_in_cart(cart_id):
     dda = DynamoDataAccessor()
-    return dda.query(config.dynamo_cart_item_table_name, {'CartId': cart_id}, index_name='CartIdIndex')
+    return dda.query(config.dynamo_cart_item_table_name, {'CartId': cart_id})
 
 
-@app.route('/resources/cart-items', methods=['POST'], cors=True)
-def add_entity_to_cart():
+@app.route('/resources/carts/{cart_id}/items', methods=['POST'], cors=True)
+def add_entity_to_cart(cart_id):
     dda = DynamoDataAccessor()
     try:
         request_body = app.current_request.json_body
-        cart_id = request_body['cartId']
         entity_id = request_body['entityId']
         bundle_id = request_body['bundleId']
         bundle_version = request_body['bundleVersion']
         entity_type = request_body['entityType']
     except KeyError:
-        raise BadRequestError('cartId, entityId, bundleId, bundleVersion, and entityType must be given')
+        raise BadRequestError('entityId, bundleId, bundleVersion, and entityType must be given')
     # TODO: How and what to hash?
     item_id = hashlib.sha256(f'{cart_id}/{entity_id}/{bundle_id}/{bundle_version}'.encode('utf-8')).hexdigest()
     return dda.insert_item(config.dynamo_cart_item_table_name,
@@ -598,8 +597,8 @@ def add_entity_to_cart():
                             'BundleId': bundle_id, 'BundleVersion': bundle_version, 'EntityType': entity_type})
 
 
-@app.route('/resources/cart-items/{item_id}', methods=['DELETE'], cors=True)
-def delete_entity(item_id):
-    cart_item_id = item_id
+@app.route('/resources/carts/{cart_id}/items/{item_id}', methods=['DELETE'], cors=True)
+def delete_entity(cart_id, item_id):
     dda = DynamoDataAccessor()
-    return dda.delete_item(config.dynamo_cart_item_table_name, {'CartItemId': cart_item_id})
+    return dda.delete_item(config.dynamo_cart_item_table_name,
+                           keys={'CartId': cart_id, 'CartItemId': item_id})
