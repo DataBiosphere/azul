@@ -79,7 +79,6 @@ class DynamoDataAccessor:
             e.g. {'user_id': 'S', 'name': 'S'}
         :param read_capacity: DynamoDB read capacity units to allocate
         :param write_capacity: DynamoDB write capacity units to allocate
-        :return:
         """
         return self.dynamo_client.create_table(
             TableName=table_name,
@@ -151,32 +150,47 @@ class DynamoDataAccessor:
         :param item: Dict where a key is an attribute and a value is the attribute value
         :return: Previous item with the given key; if no previous item, return none
         """
-        return self.dynamo_client.put_item(
+        previous_item = self.dynamo_client.put_item(
             TableName=table_name,
-            Item=self._add_type_to_item_values(item),
-            ReturnValues='ALL_OLD')
+            Item=self._add_type_to_item_values(item)).get('Attributes')
+        if previous_item is None:
+            return None
+        return self._flatten_item(previous_item)
 
     def delete_item(self, table_name, keys):
         """
         :param table_name: Table to delete from
         :param keys: Primary key conditions to find and delete
             This is a dict with format {key1: value1, key2: value2}
-        :return: Deleted item
+        :return: Deleted item, or None if the item was not found
         """
-        return self.dynamo_client.delete_item(
+        deleted = self.dynamo_client.delete_item(
             TableName=table_name,
             Key=self._add_type_to_item_values(keys),
-            ReturnValues='ALL_OLD')
+            ReturnValues='ALL_OLD')['Attributes']
+        if len(deleted) == 0:
+            return None
+        return self._flatten_item(deleted)
 
     def update_item(self, table_name, keys, update_values):
+        """
+        :param table_name: Table to update
+        :param keys: Primary key of the item to update
+            This is a dict with format {key1: value1, key2: value2}
+        :param update_values: Attributes in the item to update.  Attributes can be existing or new.
+            This is a dict where key is an attribute name and value is the value to assign
+        :return: Updated item, or None if item was not found
+        """
         expression_params = dict()
         if len(update_values) > 0:  # allow update even if no values are given
             expression_values, expression_terms = self._build_condition_expression(update_values, 'v')
             expression_params['ExpressionAttributeValues'] = expression_values
             expression_params['UpdateExpression'] = 'SET ' + ', '.join(expression_terms)
-        return self.dynamo_client.update_item(
+        updated = self.dynamo_client.update_item(
             TableName=table_name,
             Key=self._add_type_to_item_values(keys),
             ReturnValues='ALL_NEW',
-            **expression_params
-        )
+            **expression_params)['Attributes']
+        if len(updated) == 0:
+            return None
+        return self._flatten_item(updated)
