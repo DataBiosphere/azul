@@ -548,9 +548,10 @@ class ElasticTransformDump(object):
             self.add_project_summaries(final_response['hits'], es_response)
 
         if include_file_urls:
-            for h in final_response['hits']:
-                for data_file in h['files']:
-                    data_file['url'] = f"{config.dss_endpoint}/files/{data_file['uuid']}?replica=aws&version={data_file['version']}"
+            for hit in final_response['hits']:
+                for data_file in hit['files']:
+                    query_params = f"?replica=aws&version={data_file['version']}"
+                    data_file['url'] = f"{config.dss_endpoint}/files/{data_file['uuid']}{query_params}"
         return final_response
 
     def transform_manifest(
