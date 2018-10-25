@@ -101,7 +101,7 @@ class ElasticTransformDump(object):
         return Q('bool', must=query_list)
 
     @staticmethod
-    def create_aggregate(filters, facet_config, agg):
+    def create_aggregate(filters, facet_config, agg, aggregation_included=True):
         """
         Creates the aggregation to be used in ElasticSearch
         :param filters: Translated filters from 'files/' endpoint call
@@ -493,12 +493,15 @@ class ElasticTransformDump(object):
                 request_config,
                 post_filter=post_filter,
                 entity_type=entity_type)
+
+        logger.info("Elasticsearch request: %r", es_search.to_dict())
+
         # Handle pagination
         self.logger.debug('Handling pagination')
 
         if pagination is None:
             # It's a single file search
-            logger.info("Elasticsearch request: %r", es_search.to_dict())
+            # logger.info("Elasticsearch request: %r", es_search.to_dict())
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()
             hits = [x['_source']
