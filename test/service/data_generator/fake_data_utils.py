@@ -72,6 +72,7 @@ class ElasticsearchFakeDataLoader(object):
                         "name": "file_name",
                         "read_index": "safe_color_name",
                         "sha1": "sha1",
+                        "sha256": "sha1",
                         "size": "pyint",
                         "uuid": "uuid4",
                         "version": "iso8601"
