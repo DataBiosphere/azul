@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 import logging
 import os
+from typing import List
 
 import elasticsearch
 from elasticsearch_dsl import A, Q, Search
@@ -134,6 +135,8 @@ class ElasticTransformDump(object):
         # value back in
         if excluded_filter is not None:
             filters[facet_config[agg]] = excluded_filter
+        if aggregation_included:
+            return None
         return aggregate
 
     @staticmethod
@@ -141,7 +144,9 @@ class ElasticTransformDump(object):
         filters, es_client,
         req_config,
         post_filter=False,
-        entity_type='files'):
+        entity_type='files',
+        aggregation_included: bool=True,
+        source_filters: List[str]=None):
         """
         This function will create an ElasticSearch request based on
         the filters and facet_config passed into the function
@@ -175,14 +180,18 @@ class ElasticTransformDump(object):
         # Do a post_filter using the returned query
         es_search = es_search.query(
             es_query) if not post_filter else es_search.post_filter(es_query)
+
+        if source_filters:
+            es_search.source(include=source_filters)
+
         # Iterate over the aggregates in the facet_config
         for agg, translation in facet_config.items():
             # Create a bucket aggregate for the 'agg'.
             # Call create_aggregate() to return the appropriate aggregate query
-            es_search.aggs.bucket(
-                agg,
-                ElasticTransformDump.create_aggregate(
-                    filters, facet_config, agg))
+            agg_query = ElasticTransformDump.create_aggregate(filters, facet_config, agg, aggregation_included)
+            if not agg_query:
+                continue
+            es_search.aggs.bucket(agg, agg_query)
 
         if entity_type == 'projects':  # Make project-specific aggregations
             ElasticTransformDump.create_project_summary_aggregates(es_search, req_config)
@@ -561,6 +570,8 @@ class ElasticTransformDump(object):
         to be used for aggregates. Relative to the'config' folder.
         :return: Returns the transformed manifest request
         """
+        from azul.profilier import profiler
+        profiler.record('transform_manifest.begin')
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
@@ -573,14 +584,23 @@ class ElasticTransformDump(object):
         self.logger.debug(
             'Getting the request_config file: {}'.format(request_config_path))
         request_config = self.open_and_return_json(request_config_path)
+        profiler.record('transform_manifest.init.ready')
         if not filters:
             filters = {"file": {}}
         # Create an ElasticSearch request
         filters = filters['file']
-        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
+        source_filters = ['bundle_uuid', 'bundle_version', 'file_content_type', 'file_name', 'file_sha1', 'file_size',
+                         'file_uuid', 'file_version', 'file_indexed']
+        extras = dict(aggregation_included=True, source_filters=[])
+        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False, **extras)
+        profiler.record(f'transform_manifest.es_search.ready ({"agg" if extras.get("aggregation_included") else "no_agg"}, {len(extras.get("source_filters"))} fields)')
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
+        profiler.record('transform_manifest.manifest.instantiated')
+        response = manifest.return_response()
+        profiler.record('transform_manifest.manifest.ready')
+        profiler.record('transform_manifest.exit')
 
-        return manifest.return_response()
+        return response
 
     def transform_autocomplete_request(
         self,

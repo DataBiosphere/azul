@@ -1,5 +1,4 @@
 import ast
-import json
 import logging.config
 import os
 
@@ -495,6 +494,7 @@ def get_manifest():
     :return: A manifest that the user can use to download the files in there
     """
     # Setup logging
+    from azul.profilier import profiler
     logger = logging.getLogger("dashboardService.webservice.get_manifest")
     if app.current_request.query_params is None:
         app.current_request.query_params = {}
@@ -507,11 +507,19 @@ def get_manifest():
     except Exception as e:
         logger.error("Malformed filters parameter: {}".format(e))
         return "Malformed filters parameter"
+    profiler.record('web_handler.input_normalization')
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
     es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
     response = es_td.transform_manifest(filters=filters)
+    profiler.record('web_handler.response_ready')
+    profiler.stop()
     # Return the excel file
+    import json
+    exported_profiling_data = profiler.export()
+    for event in exported_profiling_data['s']:
+        response.headers[f'X-Profiler-E-{event["i"]}'] = json.dumps(event)
+        logger.info(f'{event.get("i")}: {event.get("e")}: {event.get("t"):3f}s')
     return response

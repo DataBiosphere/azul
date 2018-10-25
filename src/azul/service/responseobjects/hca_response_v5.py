@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import abc
+import time
 from collections import OrderedDict, defaultdict
 import csv
 from io import StringIO
@@ -191,14 +192,20 @@ class ManifestResponse(AbstractResponse):
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
     def _construct_tsv_content(self):
+        from azul.profilier import profiler
+        profiler.record('return_response/_construct_tsv_content.begin')
         es_search = self.es_search
 
         output = StringIO()
         writer = csv.writer(output, dialect='excel-tab')
 
         writer.writerow(list(self.manifest_entries['bundles'].keys()) + list(self.manifest_entries['files'].keys()))
+        scanning_0_ts = time.time()
+        scanning_round = 0
         for hit in es_search.scan():
             hit_dict = hit.to_dict()
+            scanning_round += 1
+            if scanning_round % 100 == 0: logger.info(f'***** SCANNING: Dehydrated result (Elapsed Time: {time.time() - scanning_0_ts:.3f}s)')
             assert len(hit_dict['contents']['files']) == 1
             file = hit_dict['contents']['files'][0]
             file_fields = self._translate(file, 'files')
@@ -207,16 +214,25 @@ class ManifestResponse(AbstractResponse):
                 # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
                 bundle_fields = self._translate(bundle, 'bundles')
                 writer.writerow(bundle_fields + file_fields)
+                if scanning_round % 100 == 0: logger.info(f'***** SCANNING: End of iteration (Elapsed Time: {time.time() - scanning_0_ts:.3f}s)')
+
+        profiler.record('return_response/_construct_tsv_content.end')
 
         return output.getvalue()
 
     def return_response(self):
+        from azul.profilier import profiler
+        profiler.record('return_response.begin')
         parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
                           data=self._construct_tsv_content().encode(),
                           content_type='text/tab-separated-values')
+        profiler.record('return_response.tsv.ready')
         object_key = self.storage_service.put(**parameters)
+        profiler.record('return_response.s3_object.stored')
         presigned_url = self.storage_service.get_presigned_url(object_key)
+        profiler.record('return_response.s3_presigned_url.ready')
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
+        profiler.record('return_response.exit')
 
         return Response(body='', headers=headers, status_code=302)
 
