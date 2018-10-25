@@ -591,7 +591,9 @@ class ElasticTransformDump(object):
         filters = filters['file']
         source_filters = ['bundle_uuid', 'bundle_version', 'file_content_type', 'file_name', 'file_sha1', 'file_size',
                          'file_uuid', 'file_version', 'file_indexed']
-        extras = dict(aggregation_included=True, source_filters=[])
+        extras = dict(aggregation_included=True,
+                      source_filters=[]  # NOTE: empty list for disable source filters
+                      )
         es_search = self.create_request(filters, self.es_client, request_config, post_filter=False, **extras)
         profiler.record(f'transform_manifest.es_search.ready ({"agg" if extras.get("aggregation_included") else "no_agg"}, {len(extras.get("source_filters"))} fields)')
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
