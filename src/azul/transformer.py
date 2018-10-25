@@ -68,8 +68,12 @@ class ElasticSearchDocument:
                    contents=json['contents'])
 
     @property
+    def original(self) -> bool:
+        return self.contents is None
+
+    @property
     def aggregate(self) -> bool:
-        return self.contents is not None
+        return not self.original
 
     @property
     def document_id(self) -> str:
@@ -86,6 +90,10 @@ class ElasticSearchDocument:
     @property
     def original_coordinates(self) -> DocumentCoordinates:
         return config.es_index_name(self.entity_type, aggregate=False), self.document_id
+
+    @property
+    def aggregate_coordinates(self) -> DocumentCoordinates:
+        return config.es_index_name(self.entity_type, aggregate=True), self.document_id
 
     def to_source(self) -> JSON:
         source = {

@@ -1,18 +1,16 @@
 from abc import ABC
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from itertools import chain
 import logging
-from operator import attrgetter
 from typing import Callable, List, Mapping, MutableMapping, Sequence, Union
 
 from elasticsearch import ConflictError, ElasticsearchException
-from elasticsearch.helpers import parallel_bulk, streaming_bulk
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 
 from azul import config
 from azul.base_config import BaseIndexProperties
 from azul.es import ESClientFactory
-from azul.transformer import ElasticSearchDocument, DocumentCoordinates
+from azul.transformer import DocumentCoordinates, ElasticSearchDocument
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -79,7 +77,20 @@ class BaseIndexer(ABC):
             documents_by_id[first.coordinates] = first
         return documents_by_id
 
-    def write(self, documents: DocumentsById, conflict_retry_limit=None, error_retry_limit=3) -> None:
+    def write(self, documents: DocumentsById, conflict_retry_limit=None, error_retry_limit=2) -> None:
+        """
+        For each of the given document contributions, this method loads the existing document using the coordinates
+        of the contribution, merges the contribution into that document, derives an aggregate from the merged
+        document and lastly writes both the merged document and the aggregate.
+        
+        :param documents: the document contributions to be written by their coordinates
+
+        :param conflict_retry_limit: The maximum number of retries (the second attempt is the first retry) on version
+                                     conflicts. Specify 0 for no retries or None for unlimited retries.
+
+        :param error_retry_limit: The maximum number of retries (the second attempt is the first retry) on other
+                                  errors. Specify 0 for no retries or None for unlimited retries.
+        """
         errored_documents = defaultdict(int)
         conflict_documents = defaultdict(int)
         es_client = ESClientFactory.get()
@@ -90,98 +101,68 @@ class BaseIndexer(ABC):
             log.info("Writing %i modified and %i aggregate document(s) for of a total of %i contribution(s).",
                      len(modified_docs), len(aggregate_docs), len(documents))
             # Since we are piggy-backing the versioning of the aggregate documents onto the versioning of the
-            # origignal documents, we need to ensure that all processes update the documents in the same order or
-            # else we risk dead-lock.
+            # original documents, we need to ensure that all concurrent writers update the documents in the same
+            # order or else we risk dead-lock. It is also important that we write the aggregate before the original,
+            # to ensure that success in writing the original implies success in writing the aggregate. Without this
+            # invariant we could not safely skip writing both original and aggregate was found to be original already
+            # up-to-date in the index.
+            #
             write_documents = sorted(chain(modified_docs.values(), aggregate_docs.values()),
-                                     key=attrgetter('entity_type', 'document_id', 'aggregate'))
+                                     key=lambda doc: (doc.entity_type, doc.document_id, not doc.aggregate))
             write_documents = OrderedDict((doc.coordinates, doc) for doc in write_documents)
             assert len(write_documents) == len(modified_docs) + len(aggregate_docs)
 
             retry_ids = set()
 
-            def on_success(coordinates):
-                doc = write_documents[coordinates]
-                assert doc.coordinates == coordinates
-                log.debug('Successfully wrote document %s%s/%s with contributions from %i bundle(s).',
-                          doc.entity_type, '_aggregate' if doc.aggregate else '', doc.document_id, len(doc.bundles))
-                conflict_documents.pop(coordinates, None)
-                errored_documents.pop(coordinates, None)
-
-            def on_conflict(coordinates, error):
-                doc = write_documents[coordinates]
-                assert doc.coordinates == coordinates
-                errored_documents.pop(coordinates, None)  # a conflict resets the error count
-                if conflict_retry_limit is None or conflict_documents[coordinates] < conflict_retry_limit:
-                    conflict_documents[coordinates] += 1
-                    action = 'retrying'
-                    retry_ids.add(doc.original_coordinates if doc.aggregate else doc.coordinates)
-                else:
-                    action = 'giving up'
-                log.warning('There was a conflict with document %r: %r. Total # of errors: %i, %s.',
-                            coordinates, error, conflict_documents[coordinates], action)
-
-            def on_error(coordinates, error):
-                doc = write_documents[coordinates]
-                assert doc.coordinates == coordinates
-                if error_retry_limit is None or errored_documents[coordinates] < error_retry_limit:
-                    errored_documents[coordinates] += 1
-                    action = 'retrying'
-                    retry_ids.add(doc.original_coordinates if doc.aggregate else doc.coordinates)
-                else:
-                    action = 'giving up'
-                log.warning('There was a general error with document %r: %r. Total # of errors: %i, %s.',
-                            coordinates, error, errored_documents[coordinates], action)
-
-            if len(write_documents) < 128:
-                for doc in write_documents.values():
-                    if doc.aggregate and doc.original_coordinates in retry_ids:
-                        # If writing the orginal document failed, don't even attempt to write the aggregate. This is
-                        # not just an optimization: If a loser to the orginal race continued on to write the
-                        # aggregate won that race, it would spoil the original winner's victory. This could lead to
-                        # deadlock
-                        continue
-                    try:
-                        es_client.index(index=doc.document_index,
-                                        doc_type=doc.document_type,
-                                        body=doc.to_source(),
-                                        id=doc.document_id,
-                                        refresh=self.refresh,
-                                        version=doc.document_version,
-                                        version_type='external')
-                    except ConflictError as e:
-                        on_conflict(doc.coordinates, e)
-                    except ElasticsearchException as e:
-                        on_error(doc.coordinates, e)
+            for doc in write_documents.values():
+                if doc.original and (doc.aggregate_coordinates in errored_documents or
+                                     doc.aggregate_coordinates in conflict_documents):
+                    # If writing the aggregate document fails, don't even attempt to write the original. This is not
+                    # just an optimization: If a loser to the aggregate race continued on to write the original and
+                    # won that race, it would spoil the aggregate winner's victory and could lead to deadlock.
+                    # Deadlocks manifest itself in two or more processes processes spoiling each others victory
+                    # perpetually.
+                    continue
+                try:
+                    es_client.index(index=doc.document_index,
+                                    doc_type=doc.document_type,
+                                    body=doc.to_source(),
+                                    id=doc.document_id,
+                                    refresh=self.refresh,
+                                    version=doc.document_version,
+                                    # If writing the aggregate succeeds and writing the orginal fails (either due to
+                                    # a conflict or a general error), the aggregate will be one version ahead of the
+                                    # original. In fact, the version difference will invariantly be either 0 or 1.
+                                    # This is acceptable and the inconsistency will be fixed eventually by a retry.
+                                    # We could actually disable versioning on aggregates without detriment but in
+                                    # order to assert the invariant here we use `external_gte` for aggregates.
+                                    version_type='external' if doc.original else 'external_gte')
+                except ConflictError as e:
+                    conflict_documents[doc.coordinates] += 1
+                    errored_documents.pop(doc.coordinates, None)  # a conflict resets the error count
+                    if conflict_retry_limit is None or conflict_documents[doc.coordinates] <= conflict_retry_limit:
+                        action = 'retrying'
+                        # Always retry the original. This will regenerate and retry the aggregate.
+                        retry_ids.add(doc.original_coordinates)
                     else:
-                        on_success(doc.coordinates)
-            else:
-                actions = [dict(_op_type="index",
-                                _index=doc.document_index,
-                                _type=doc.document_type,
-                                _source=doc.to_source(),
-                                _id=doc.document_id,
-                                version=doc.document_version,
-                                version_type="external") for doc in write_documents.values()]
-                if len(actions) < 1024:
-                    log.info("Using streaming_bulk().")
-                    helper = streaming_bulk
-                else:
-                    log.info("Using parallel_bulk().")
-                    helper = parallel_bulk
-                response = helper(client=es_client,
-                                  actions=actions,
-                                  refresh=self.refresh,
-                                  raise_on_error=False,
-                                  max_chunk_bytes=10485760)
-                for success, info in response:
-                    coordinates = info['index']['_index'], info['index']['_id']
-                    if success:
-                        on_success(coordinates)
+                        action = 'giving up'
+                    log.warning('There was a conflict with document %r: %r. Total # of errors: %i, %s.',
+                                doc.coordinates, e, conflict_documents[doc.coordinates], action)
+                except ElasticsearchException as e:
+                    errored_documents[doc.coordinates] += 1
+                    if error_retry_limit is None or errored_documents[doc.coordinates] <= error_retry_limit:
+                        action = 'retrying'
+                        # Always retry the original. This will regenerate and retry the aggregate.
+                        retry_ids.add(doc.original_coordinates)
                     else:
-                        if info['index']['status'] == 409:
-                            on_conflict(coordinates, info)
-                        else:
-                            on_error(coordinates, info)
+                        action = 'giving up'
+                    log.warning('There was a general error with document %r: %r. Total # of errors: %i, %s.',
+                                doc.coordinates, e, errored_documents[doc.coordinates], action)
+                else:
+                    conflict_documents.pop(doc.coordinates, None)
+                    errored_documents.pop(doc.coordinates, None)
+                    log.debug('Successfully wrote document %s%s/%s with contributions from %i bundle(s).',
+                              doc.entity_type, '_aggregate' if doc.aggregate else '', doc.document_id, len(doc.bundles))
 
             # Collect the set of documents to be retried
             documents = {k: v for k, v in documents.items() if k in retry_ids}
