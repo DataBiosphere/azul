@@ -19,13 +19,18 @@ class DynamoDataAccessor:
         :param item: DynamoDB Item
         """
         flattened = dict()
-        for k, v in item.items():
-            value = list(v.items())[0]
-            if value[0] == 'NULL':
+        for property_name, value_with_type in item.items():
+            value_type, value = list(value_with_type.items())[0]
+            if value_type == 'NULL':
                 result = None
+            elif value_type == 'N':
+                if value.isnumeric():
+                    result = int(value)
+                else:
+                    result = float(value)
             else:
-                result = value[1]
-            flattened[k] = result
+                result = value
+            flattened[property_name] = result
         return flattened
 
     def _add_type_to_item_values(self, item):
@@ -36,20 +41,22 @@ class DynamoDataAccessor:
         TODO: Add support for sets, maps, and lists
         """
         with_types = dict()
-        for k, v in item.items():
-            if isinstance(v, str):
+        for property_name, value in item.items():
+            if isinstance(value, str):
                 value_type = 'S'
-            elif isinstance(v, int) or isinstance(v, float):
-                value_type = 'N'
-            elif isinstance(v, bytes):
-                value_type = 'B'
-            elif isinstance(v, bool):
+            elif isinstance(value, bool):
                 value_type = 'BOOL'
-            elif v is None:
+            elif isinstance(value, int) or isinstance(value, float):
+                value_type = 'N'
+                value = str(value)
+            elif isinstance(value, bytes):
+                value_type = 'B'
+            elif value is None:
                 value_type = 'NULL'
+                value = True
             else:
                 raise ValueError('Type must be one of str, byte, number, None, or bool')
-            with_types[k] = {value_type: v}
+            with_types[property_name] = {value_type: value}
         return with_types
 
     def _build_condition_expression(self, values, name_suffix):
