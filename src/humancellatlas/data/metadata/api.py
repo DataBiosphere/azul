@@ -195,7 +195,7 @@ class Biomaterial(LinkedEntity):
 @dataclass(init=False)
 class DonorOrganism(Biomaterial):
     genus_species: Set[str]
-    disease: Set[str]
+    diseases: Set[str]
     organism_age: str
     organism_age_unit: str
     sex: str
@@ -204,7 +204,7 @@ class DonorOrganism(Biomaterial):
         super().__init__(json)
         content = json.get('content', json)
         self.genus_species = {gs['text'] for gs in content['genus_species']}
-        self.disease = {d['text'] for d in content.get('disease', []) if d}
+        self.diseases = {d['text'] for d in lookup(content, 'diseases', 'disease', default=[]) if d}
         self.organism_age = content.get('organism_age')
         self.organism_age_unit = content.get('organism_age_unit', {}).get('text')
         self.sex = lookup(content, 'sex', 'biological_sex')
@@ -222,11 +222,17 @@ class DonorOrganism(Biomaterial):
                       f"Use DonorOrganism.sex instead.", DeprecationWarning)
         return self.sex
 
+    @property
+    def disease(self):
+        warnings.warn(f"DonorOrganism.disease is deprecated. "
+                      f"Use DonorOrganism.diseases instead.", DeprecationWarning)
+        return self.diseases
+
 
 @dataclass(init=False)
 class SpecimenFromOrganism(Biomaterial):
     storage_method: Optional[str]
-    disease: Set[str]
+    diseases: Set[str]
     organ: Optional[str]
     organ_part: Optional[str]
 
@@ -234,9 +240,15 @@ class SpecimenFromOrganism(Biomaterial):
         super().__init__(json)
         content = json.get('content', json)
         self.storage_method = content.get('preservation_storage', {}).get('storage_method')
-        self.disease = {d['text'] for d in content.get('disease', []) if d}
+        self.diseases = {d['text'] for d in lookup(content, 'diseases', 'disease', default=[]) if d}
         self.organ = content.get('organ', {}).get('text')
         self.organ_part = content.get('organ_part', {}).get('text')
+
+    @property
+    def disease(self):
+        warnings.warn(f"SpecimenFromOrganism.disease is deprecated. "
+                      f"Use SpecimenFromOrganism.diseases instead.", DeprecationWarning)
+        return self.diseases
 
 
 @dataclass(init=False)

@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, wait
 import doctest
+from itertools import chain
 import json
 import logging
 import os
@@ -33,15 +34,16 @@ class TestAccessorApi(TestCase):
         warnings.simplefilter("ignore", ResourceWarning)
 
     def test_example_bundles(self):
-        for directory, age_range, has_specimens in [
-            ('CD4+ cytotoxic T lymphocytes', AgeRange(min=567648000, max=1892160000), True),
-            ('Healthy and type 2 diabetes pancreas', AgeRange(min=1356048000, max=1356048000), True),
-            ('HPSI_human_cerebral_organoids', AgeRange(min=1419120000, max=1545264000), True),
-            ('Mouse Melanoma', AgeRange(min=3628800, max=7257600), True),
-            ('Single cell transcriptome analysis of human pancreas', AgeRange(min=662256000, max=662256000), True),
-            ('Tissue stability', AgeRange(min=1734480000, max=1892160000), False),
-            ('HPSI_human_cerebral_organoids', AgeRange(min=1419120000, max=1545264000), True),
-            ('1M Immune Cells', AgeRange(min=1639872000, max=1639872000), True)
+        for directory, age_range, diseases, has_specimens in [
+            ('CD4+ cytotoxic T lymphocytes', AgeRange(min=567648000, max=1892160000), {'normal'}, True),
+            ('Healthy and type 2 diabetes pancreas', AgeRange(min=1356048000, max=1356048000), {'normal'}, True),
+            ('HPSI_human_cerebral_organoids', AgeRange(min=1419120000, max=1545264000), {'normal'}, True),
+            ('Mouse Melanoma', AgeRange(min=3628800, max=7257600), {'subcutaneous melanoma'}, True),
+            ('Single cell transcriptome analysis of human pancreas', AgeRange(min=662256000, max=662256000), {'normal'},
+             True),
+            ('Tissue stability', AgeRange(min=1734480000, max=1892160000), {'normal'}, False),
+            ('HPSI_human_cerebral_organoids', AgeRange(min=1419120000, max=1545264000), {'normal'}, True),
+            ('1M Immune Cells', AgeRange(min=1639872000, max=1639872000), None, True)
         ]:
             with self.subTest(dir=directory):
                 manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
@@ -51,7 +53,7 @@ class TestAccessorApi(TestCase):
                 version = '2018-08-03T082009.272868Z'
                 self._assert_bundle(uuid=uuid, version=version,
                                     manifest=manifest, metadata_files=metadata_files,
-                                    age_range=age_range, has_specimens=has_specimens)
+                                    age_range=age_range, diseases=diseases, has_specimens=has_specimens)
 
     def test_bad_content(self):
         deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
@@ -87,25 +89,37 @@ class TestAccessorApi(TestCase):
                           "to have content type 'application/json', not 'bad'")
 
     def test_one_bundle(self):
-        for deployment, replica, uuid, version, age_range in [
+        for deployment, replica, uuid, version, age_range, diseases in [
             # A v5 bundle
-            (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None, AgeRange(min=3628800, max=7257600)),
+            (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None, AgeRange(min=3628800, max=7257600),
+             {'subcutaneous melanoma'}),
             # A vx primary bundle with a cell_suspension as sequencing input
-            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', None, None),
+            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', None, None, {'glioblastoma'}),
             # A vx analysis bundle for the primary bundle with a cell_suspension as sequencing input
-            ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z', None),
+            ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z', None,
+             {'glioblastoma'}),
             # A vx primary bundle with a specimen_from_organism as sequencing input
-            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', '2018-09-20T230221.622042Z', None),
-            # A vx analysis bundle for the primary with a specimen_from_organism as sequencing input
-            ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z', None),
+            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', '2018-09-20T230221.622042Z', None,
+             {'glioblastoma'}),
+            # A bundle containing a specimen_from_organism.json with a schema version of 2.7.1
+            ('staging', 'aws', '70184761-70fc-4b80-8c48-f406a478d5ab', '2018-09-05T182535.846470Z', None,
+             {'glioblastoma'}),
         ]:
             with self.subTest(uuid=uuid):
                 client = dss_client(deployment)
                 version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
-                self._assert_bundle(uuid, version, manifest, metadata_files, age_range)
+                self._assert_bundle(uuid, version, manifest, metadata_files, age_range, diseases)
 
-    def _assert_bundle(self, uuid, version, manifest, metadata_files, age_range, has_specimens=True):
+    def _assert_bundle(self, uuid, version, manifest, metadata_files, age_range, diseases, has_specimens=True):
         bundle = Bundle(uuid, version, manifest, metadata_files)
+        diseases = diseases or set()
+        biomaterials = bundle.biomaterials.values()
+        actual_diseases = set(chain(*[bm.diseases for bm in biomaterials
+                                      if isinstance(bm, (DonorOrganism, SpecimenFromOrganism))]))
+        diseases_from_old_field = set(chain(*[bm.disease for bm in biomaterials
+                                              if isinstance(bm, (DonorOrganism, SpecimenFromOrganism))]))
+        self.assertEquals(actual_diseases, diseases)
+        self.assertEquals(actual_diseases, diseases_from_old_field)
         self.assertEqual(str(bundle.uuid), uuid)
         self.assertEqual(bundle.version, version)
         self.assertEqual(1, len(bundle.projects))
