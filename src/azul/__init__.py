@@ -106,7 +106,8 @@ class Config:
 
     def es_index_name(self, entity_type, aggregate=False) -> str:
         self._validate_term(entity_type)
-        return f"{self._index_prefix}_{entity_type}{'_aggregate' if aggregate else ''}_{self.deployment_stage}"
+        return f"{self._index_prefix}_{entity_type}{'_aggregate' if aggregate else ''}_dev"
+        # return f"{self._index_prefix}_{entity_type}{'_aggregate' if aggregate else ''}_{self.deployment_stage}"
 
     def parse_es_index_name(self, index_name: str) -> Tuple[str, bool]:
         index_name = index_name.split('_')
