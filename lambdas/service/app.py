@@ -525,33 +525,61 @@ def get_manifest():
 
 def get_user_id():
     user_id = app.current_request.headers.get('Authorization', '')
+    print(user_id)
     if user_id == '':
         raise UnauthorizedError('Missing access key')
     return user_id
 
 
 # TODO: Error and duplicates checking
+# TODO: User id checking (Unauthorized)
+# TODO: Try moving logic to repository class
 
 @app.route('/resources/carts', methods=['POST'], cors=True)
-def create_cart():
+def create_cart(default=False):
     user_id = get_user_id()
-    try:
-        cart_name = app.current_request.json_body['cartName']
-    except KeyError:
-        raise BadRequestError('cartName parameter must be given')
+    if default:
+        cart_name = 'Default Cart'
+    else:
+        try:
+            cart_name = app.current_request.json_body['cartName']
+        except KeyError:
+            raise BadRequestError('cartName parameter must be given')
     dda = DynamoDataAccessor()
     query_dict = {'UserId': user_id, 'CartName': cart_name}
     if len(dda.query(config.dynamo_cart_table_name, query_dict, index_name='UserCartNameIndex')) > 0:
         raise BadRequestError(f'Cart `{cart_name}` already exists')
-    return dda.insert_item(config.dynamo_cart_table_name,
-                           {'CartId': str(uuid4()), **query_dict})
+    cart_id = str(uuid4())
+    dda.insert_item(config.dynamo_cart_table_name,
+                    item={'CartId': cart_id, 'DefaultCart': default, **query_dict})
+    return dda.get_item(config.dynamo_cart_table_name, keys={'CartId': cart_id})
 
 
 @app.route('/resources/carts', methods=['GET'], cors=True)
 def get_all_carts():
     user_id = get_user_id()
     dda = DynamoDataAccessor()
-    return dda.query(config.dynamo_cart_table_name, {'UserId': user_id}, index_name='UserIndex')
+    return dda.query(config.dynamo_cart_table_name,
+                     key_conditions={'UserId': user_id},
+                     index_name='UserIndex')
+
+
+@app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True)
+def get_cart(cart_id):
+    user_id = get_user_id()
+    dda = DynamoDataAccessor()
+    if cart_id == 'default':
+        defaults = dda.query(config.dynamo_cart_table_name,
+                             key_conditions={'UserId': user_id},
+                             filters={'DefaultCart': True},
+                             index_name='UserIndex')
+        if len(defaults) == 0:
+            cart = create_cart(default=True)
+            return cart
+        return defaults[0]  # There shouldn't be more than one default but always take the first one
+
+    return dda.get_item(config.dynamo_cart_table_name,
+                        keys={'CartId': cart_id})
 
 
 @app.route('/resources/carts/{cart_id}', methods=['DELETE'], cors=True)
