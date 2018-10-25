@@ -12,51 +12,52 @@ class TestDynamoAccessor(TestCase):
         cls.dynamo_accessor = DynamoDataAccessor()
 
     def create_tables(self):
-        self.dynamo_accessor.dynamo_client.create_table(TableName='Carts',
-                                                        KeySchema=[
-                                                            {
-                                                                'AttributeName': 'UserId',
-                                                                'KeyType': 'HASH'
-                                                            },
-                                                            {
-                                                                'AttributeName': 'Name',
-                                                                'KeyType': 'Range'
-                                                            }
-                                                        ],
-                                                        AttributeDefinitions=[
-                                                            {
-                                                                'AttributeName': 'UserId',
-                                                                'AttributeType': 'S'
-                                                            },
-                                                            {
-                                                                'AttributeName': 'Name',
-                                                                'AttributeType': 'S'
-                                                            },
-                                                            {
-                                                                'AttributeName': 'EntityType',
-                                                                'AttributeType': 'S'
-                                                            }
-                                                        ],
-                                                        ProvisionedThroughput={
-                                                            'ReadCapacityUnits': 1,
-                                                            'WriteCapacityUnits': 1
-                                                        },
-                                                        GlobalSecondaryIndexes=[
-                                                            {
-                                                                'IndexName': 'EntityTypeIndex',
-                                                                'KeySchema': [{
-                                                                    'AttributeName': 'EntityType',
-                                                                    'KeyType': 'HASH'
-                                                                }],
-                                                                'Projection': {
-                                                                    'ProjectionType': 'ALL'
-                                                                },
-                                                                'ProvisionedThroughput': {
-                                                                    'ReadCapacityUnits': 1,
-                                                                    'WriteCapacityUnits': 1
-                                                                }
-                                                            }
-                                                        ])
+        self.dynamo_accessor.dynamo_client.create_table(
+            TableName='Carts',
+            KeySchema=[
+                {
+                    'AttributeName': 'UserId',
+                    'KeyType': 'HASH'
+                },
+                {
+                    'AttributeName': 'Name',
+                    'KeyType': 'Range'
+                }
+            ],
+            AttributeDefinitions=[
+                {
+                    'AttributeName': 'UserId',
+                    'AttributeType': 'S'
+                },
+                {
+                    'AttributeName': 'Name',
+                    'AttributeType': 'S'
+                },
+                {
+                    'AttributeName': 'EntityType',
+                    'AttributeType': 'S'
+                }
+            ],
+            ProvisionedThroughput={
+                'ReadCapacityUnits': 1,
+                'WriteCapacityUnits': 1
+            },
+            GlobalSecondaryIndexes=[
+                {
+                    'IndexName': 'EntityTypeIndex',
+                    'KeySchema': [{
+                        'AttributeName': 'EntityType',
+                        'KeyType': 'HASH'
+                    }],
+                    'Projection': {
+                        'ProjectionType': 'ALL'
+                    },
+                    'ProvisionedThroughput': {
+                        'ReadCapacityUnits': 1,
+                        'WriteCapacityUnits': 1
+                    }
+                }
+            ])
 
     @mock_dynamodb2
     @mock_sts

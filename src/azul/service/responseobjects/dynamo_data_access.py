@@ -65,33 +65,6 @@ class DynamoDataAccessor:
 
         return expression_values, expression_terms
 
-    # TODO: Do we need this method? There are ,more complex args that need to be added like secondary indexes
-    def create_table(self, table_name, keys, attributes, read_capacity=1, write_capacity=1):
-        """
-        Create table in DynamoDB
-
-        :param table_name: Name of table to create
-        :param keys: Attributes that make up the primary key;
-            Is a dict where key is attribute name and value is key type (HASH or RANGE)
-            e.g. {'user_id': 'HASH', 'name': 'RANGE'}
-        :param attributes: Attributes of the table (must include attributes in the primary key)
-            Is a dict where the key is the attribute name and value is the attribute type
-            e.g. {'user_id': 'S', 'name': 'S'}
-        :param read_capacity: DynamoDB read capacity units to allocate
-        :param write_capacity: DynamoDB write capacity units to allocate
-        """
-        return self.dynamo_client.create_table(
-            TableName=table_name,
-            KeySchema=[{'AttributeName': attribute_name, 'KeyType': key_type}
-                       for attribute_name, key_type in keys.items()],
-            AttributeDefinitions=[{'AttributeName': attribute_name, 'AttributeType': attribute_type}
-                                  for attribute_name, attribute_type in attributes.items()],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': read_capacity,
-                'WriteCapacityUnits': write_capacity
-            }
-        )['TableDescription']
-
     def query(self, table_name, key_conditions, filters=None, index_name=None):
         """
         Make query and return a formatted list of items
@@ -136,7 +109,8 @@ class DynamoDataAccessor:
         """
         item = self.dynamo_client.get_item(
                 TableName=table_name,
-                Key=self._add_type_to_item_values(keys)).get('Item')
+                Key=self._add_type_to_item_values(keys)
+        ).get('Item')
         if item is None:
             return None
         return self._flatten_item(item)
@@ -152,10 +126,12 @@ class DynamoDataAccessor:
         """
         previous_item = self.dynamo_client.put_item(
             TableName=table_name,
-            Item=self._add_type_to_item_values(item)).get('Attributes')
+            Item=self._add_type_to_item_values(item),
+            ReturnValues='ALL_OLD'
+        ).get('Attributes')
         if previous_item is None:
             return None
-        return self._flatten_item(previous_item)
+        return previous_item or self._flatten_item(previous_item)
 
     def delete_item(self, table_name, keys):
         """
@@ -167,8 +143,9 @@ class DynamoDataAccessor:
         deleted = self.dynamo_client.delete_item(
             TableName=table_name,
             Key=self._add_type_to_item_values(keys),
-            ReturnValues='ALL_OLD')['Attributes']
-        if len(deleted) == 0:
+            ReturnValues='ALL_OLD'
+        ).get('Attributes')
+        if deleted is None:
             return None
         return self._flatten_item(deleted)
 
@@ -190,7 +167,7 @@ class DynamoDataAccessor:
             TableName=table_name,
             Key=self._add_type_to_item_values(keys),
             ReturnValues='ALL_NEW',
-            **expression_params)['Attributes']
-        if len(updated) == 0:
+            **expression_params).get('Attributes')
+        if updated is None:
             return None
         return self._flatten_item(updated)
