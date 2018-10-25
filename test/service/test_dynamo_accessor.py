@@ -94,6 +94,21 @@ class TestDynamoAccessor(TestCase):
 
     @mock_dynamodb2
     @mock_sts
+    def test_get_item_with_nonstring_types(self):
+        self.create_tables()
+        self.dynamo_accessor.insert_item(
+            'Carts',
+            item={'UserId': '1', 'Name': 'test1', 'Int': 10, 'Float': 1.23, 'Bool': False, 'Bytes': b'abc'}
+        )
+        result = self.dynamo_accessor.get_item('Carts',
+                                               keys={'UserId': '1', 'Name': 'test1'})
+        self.assertEqual(10, result['Int'])
+        self.assertEqual(1.23, result['Float'])
+        self.assertEqual(False, result['Bool'])
+        self.assertEqual(b'abc', result['Bytes'])
+
+    @mock_dynamodb2
+    @mock_sts
     def test_insert_and_delete_single(self):
         self.create_tables()
         self.dynamo_accessor.insert_item('Carts',
