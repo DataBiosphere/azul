@@ -36,21 +36,21 @@ class TestAccessorApi(TestCase):
     def test_example_bundles(self):
         for directory, age_range, diseases, has_specimens in [
             ('CD4+ cytotoxic T lymphocytes',
-             AgeRange(min=567648000, max=1892160000), {'normal'}, True),
+             AgeRange(min=567648000.0, max=1892160000.0), {'normal'}, True),
             ('Healthy and type 2 diabetes pancreas',
-             AgeRange(min=1356048000, max=1356048000), {'normal'}, True),
+             AgeRange(min=1356048000.0, max=1356048000.0), {'normal'}, True),
             ('HPSI_human_cerebral_organoids',
-             AgeRange(min=1419120000, max=1545264000), {'normal'}, True),
+             AgeRange(min=1419120000.0, max=1545264000.0), {'normal'}, True),
             ('Mouse Melanoma',
-             AgeRange(min=3628800, max=7257600), {'subcutaneous melanoma'}, True),
+             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}, True),
             ('Single cell transcriptome analysis of human pancreas',
-             AgeRange(min=662256000, max=662256000), {'normal'},True),
+             AgeRange(662256000.0, 662256000.0), {'normal'},True),
             ('Tissue stability',
-             AgeRange(min=1734480000, max=1892160000), {'normal'}, False),
+             AgeRange(1734480000.0, 1892160000.0), {'normal'}, False),
             ('HPSI_human_cerebral_organoids',
-             AgeRange(min=1419120000, max=1545264000), {'normal'}, True),
+             AgeRange(1419120000.0, 1545264000.0), {'normal'}, True),
             ('1M Immune Cells',
-             AgeRange(min=1639872000, max=1639872000), None, True)
+             AgeRange(1639872000.0, 1639872000.0), None, True)
         ]:
             with self.subTest(dir=directory):
                 manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
@@ -99,7 +99,7 @@ class TestAccessorApi(TestCase):
         for deployment, replica, uuid, version, age_range, diseases in [
             # A v5 bundle
             (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None,
-             AgeRange(min=3628800, max=7257600), {'subcutaneous melanoma'}),
+             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}),
             # A vx primary bundle with a cell_suspension as sequencing input
             ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', None,
              None, {'glioblastoma'}),

@@ -3,28 +3,28 @@ from typing import Optional
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(frozen=True)
 class AgeRange:
     """
     >>> AgeRange.parse(' 1 - 2 ', 'second')
-    AgeRange(min=1, max=2)
+    AgeRange(min=1.0, max=2.0)
 
     >>> AgeRange.parse(' - ', 'second')
-    AgeRange(min=0, max=315360000000)
+    AgeRange(min=0.0, max=inf)
 
     >>> AgeRange.parse('', 'years')
-    AgeRange(min=0, max=315360000000)
+    AgeRange(min=0.0, max=inf)
 
     >>> r = AgeRange.parse('0-1', 'year'); r
-    AgeRange(min=0, max=31536000)
+    AgeRange(min=0.0, max=31536000.0)
     >>> 365 * 24 * 60 * 60 == r.max
     True
 
     >>> AgeRange.parse('1-', 'seconds')
-    AgeRange(min=1, max=315360000000)
+    AgeRange(min=1.0, max=inf)
 
     >>> AgeRange.parse('-2', 'seconds')
-    AgeRange(min=0, max=2)
+    AgeRange(min=0.0, max=2.0)
 
     >>> AgeRange.parse('', 'blink')
     Traceback (most recent call last):
@@ -45,19 +45,27 @@ class AgeRange:
     Traceback (most recent call last):
     ...
     ValueError: Cannot convert age 'one-2' with unit 'days' to an AgeRange object
+
+    >>> AgeRange(0, 1.0)
+    Traceback (most recent call last):
+    ...
+    TypeError: ('Constructor arguments must be float values', 0)
+
+    >>> AgeRange(0.0, 1)
+    Traceback (most recent call last):
+    ...
+    TypeError: ('Constructor arguments must be float values', 1)
     """
-    min: int
-    max: int
+    min: float
+    max: float
 
-    FACTORS = dict(year=365 * 24 * 3600,
-                   month=365 * 24 * 3600 / 12,
-                   week=7 * 24 * 3600,
-                   day=24 * 3600,
-                   hour=3600,
-                   minute=60,
-                   second=1)
-
-    MAX_AGE = 10000 * FACTORS['year']
+    FACTORS = dict(year=365.0 * 24 * 3600,
+                   month=365.0 * 24 * 3600 / 12,
+                   week=7.0 * 24 * 3600,
+                   day=24.0 * 3600,
+                   hour=3600.0,
+                   minute=60.0,
+                   second=1.0)
 
     @classmethod
     def parse(cls, age: str, unit: str) -> 'AgeRange':
@@ -78,18 +86,25 @@ class AgeRange:
             else:
                 raise fail() from e1
 
-        def cvt(value: str, default: int) -> Optional[int]:
+        def cvt(value: str, default: float) -> Optional[float]:
+            assert isinstance(default, float)
             try:
-                return factor * int(value) if value else default
+                return factor * float(value) if value else default
             except ValueError as e:
                 raise fail() from e
 
         if len(age_) in (1, 2):
-            return cls(min=cvt(age_[0], 0), max=cvt(age_[-1], cls.MAX_AGE))
+            self = cls(min=cvt(age_[0], 0.0), max=cvt(age_[-1], float('inf')))
+            return self
         else:
             raise fail()
+
+    def __post_init__(self):
+        for v in self.min, self.max:
+            if not isinstance(v, float):
+                raise TypeError("Constructor arguments must be float values", v)
 
     any = None
 
 
-AgeRange.any = AgeRange(min=0, max=AgeRange.MAX_AGE)
+AgeRange.any = AgeRange(min=0.0, max=float('inf'))
