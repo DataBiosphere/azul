@@ -202,10 +202,11 @@ class ManifestResponse(AbstractResponse):
         writer.writerow(list(self.manifest_entries['bundles'].keys()) + list(self.manifest_entries['files'].keys()))
         scanning_0_ts = time.time()
         scanning_round = 0
+        logger.info("Elasticsearch request: %r", es_search.to_dict())
         for hit in es_search.scan():
             hit_dict = hit.to_dict()
             scanning_round += 1
-            if scanning_round % 100 == 0: logger.info(f'***** SCANNING: Dehydrated result (Elapsed Time: {time.time() - scanning_0_ts:.3f}s)')
+            if scanning_round % 200 == 0: logger.info(f'***** SCANNING: Dehydrated result (Elapsed Time: {time.time() - scanning_0_ts:.3f}s)')
             assert len(hit_dict['contents']['files']) == 1
             file = hit_dict['contents']['files'][0]
             file_fields = self._translate(file, 'files')
@@ -214,7 +215,7 @@ class ManifestResponse(AbstractResponse):
                 # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
                 bundle_fields = self._translate(bundle, 'bundles')
                 writer.writerow(bundle_fields + file_fields)
-                if scanning_round % 100 == 0: logger.info(f'***** SCANNING: End of iteration (Elapsed Time: {time.time() - scanning_0_ts:.3f}s)')
+                if scanning_round % 200 == 0: logger.info(f'***** SCANNING: End of iteration (Elapsed Time: {time.time() - scanning_0_ts:.3f}s)')
 
         profiler.record('return_response/_construct_tsv_content.end')
 
