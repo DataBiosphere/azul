@@ -192,8 +192,7 @@ class ManifestResponse(AbstractResponse):
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
     def _construct_tsv_content(self):
-        from azul.profilier import profiler
-        profiler.record('return_response/_construct_tsv_content.begin')
+        logger.info('return_response/_construct_tsv_content.begin')
         es_search = self.es_search
 
         output = StringIO()
@@ -203,10 +202,81 @@ class ManifestResponse(AbstractResponse):
         scanning_0_ts = time.time()
         scanning_round = 0
         logger.info("Elasticsearch request: %r", es_search.to_dict())
-        for hit in es_search.scan():
+
+        # Override es_search.scan
+        from elasticsearch.helpers import scan
+        from elasticsearch_dsl.connections import connections
+        from elasticsearch_dsl.response import Hit
+        from elasticsearch_dsl.response import Response as ESResponse
+
+        def override_es_search__resolve_nested(s, hit, parent_class=None):
+            doc_class = Hit
+            nested_field = None
+
+            nested_path = []
+            nesting = hit['_nested']
+            while nesting and 'field' in nesting:
+                nested_path.append(nesting['field'])
+                nesting = nesting.get('_nested')
+            nested_path = '.'.join(nested_path)
+
+            if hasattr(parent_class, '_index'):
+                nested_field = parent_class._index.resolve_field(nested_path)
+            else:
+                nested_field = s._resolve_field(nested_path)
+
+            if nested_field is not None:
+                return nested_field._doc_class
+
+            return doc_class
+
+        def override_es_search__get_result(s, hit, parent_class=None):
+            doc_class = Hit
+            dt = hit.get('_type')
+
+            if '_nested' in hit:
+                doc_class = override_es_search__resolve_nested(s, hit, parent_class)
+
+            elif dt in s._doc_type_map:
+                doc_class = s._doc_type_map[dt]
+
+            else:
+                for doc_type in s._doc_type:
+                    if hasattr(doc_type, '_matches') and doc_type._matches(hit):
+                        doc_class = doc_type
+                        break
+
+            for t in hit.get('inner_hits', ()):
+                hit['inner_hits'][t] = ESResponse(s, hit['inner_hits'][t], doc_class=doc_class)
+
+            callback = getattr(doc_class, 'from_es', doc_class)
+            return callback(hit)
+
+        def override_es_search_scan(s):
+            """
+            Turn the search into a scan search and return a generator that will
+            iterate over all the documents matching the query.
+            Use ``params`` method to specify any additional arguments you with to
+            pass to the underlying ``scan`` helper from ``elasticsearch-py`` -
+            https://elasticsearch-py.readthedocs.io/en/master/helpers.html#elasticsearch.helpers.scan
+            """
+            logger.info(f'{s.__module__}.{s.__class__.__name__}: {sorted(dir(s))}')
+            es = connections.get_connection(s._using)
+
+            for hit in scan(
+                    es,
+                    query=s.to_dict(),
+                    index=s._index,
+                    doc_type=s._doc_type,
+                    size=10000,
+                    **s._params
+            ):
+                yield override_es_search__get_result(s, hit)
+
+        for hit in override_es_search_scan(es_search):
             hit_dict = hit.to_dict()
             scanning_round += 1
-            if scanning_round % 200 == 0: logger.info(f'***** SCANNING: Dehydrated result (Elapsed Time: {time.time() - scanning_0_ts:.3f}s)')
+            if scanning_round == 1: logger.info(f'***** SCANNING: Max size: {len(hit_dict["bundles"])}')
             assert len(hit_dict['contents']['files']) == 1
             file = hit_dict['contents']['files'][0]
             file_fields = self._translate(file, 'files')
@@ -215,9 +285,10 @@ class ManifestResponse(AbstractResponse):
                 # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
                 bundle_fields = self._translate(bundle, 'bundles')
                 writer.writerow(bundle_fields + file_fields)
-                if scanning_round % 200 == 0: logger.info(f'***** SCANNING: End of iteration (Elapsed Time: {time.time() - scanning_0_ts:.3f}s)')
+                if scanning_round % 10000 == 0: logger.info(f'***** SCANNING: End of iteration (Elapsed Time: {time.time() - scanning_0_ts:.3f}s)')
 
-        profiler.record('return_response/_construct_tsv_content.end')
+        logger.info(f'return_response/scanning_round ({scanning_round})')
+        logger.info('return_response/_construct_tsv_content.end')
 
         return output.getvalue()
 

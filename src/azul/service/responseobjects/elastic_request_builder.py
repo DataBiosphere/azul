@@ -135,8 +135,6 @@ class ElasticTransformDump(object):
         # value back in
         if excluded_filter is not None:
             filters[facet_config[agg]] = excluded_filter
-        if aggregation_included:
-            return None
         return aggregate
 
     @staticmethod
@@ -165,6 +163,7 @@ class ElasticTransformDump(object):
         the request
         """
         # Get the field mapping and facet configuration from the config
+        # ['bundle_uuid', 'bundle_version', 'file_content_type', 'file_name', 'file_sha1', 'file_size', 'file_uuid', 'file_version', 'file_indexed']
         field_mapping = req_config['translation']
         facet_config = {key: field_mapping[key]
                         for key in req_config['facets']}
@@ -592,12 +591,16 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         # Create an ElasticSearch request
         filters = filters['file']
-        source_filters = ['bundle_uuid', 'bundle_version', 'file_content_type', 'file_name', 'file_sha1', 'file_size',
-                         'file_uuid', 'file_version', 'file_indexed']
-        extras = dict(aggregation_included=True,
-                      source_filters=[]  # NOTE: empty list for disable source filters
-                      )
-        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False, **extras)
+        needed_translations = sorted(set(request_config.get('translation').keys()).intersection(request_config.get('facets'))) \
+            + ['fileName', 'fileSize', 'fileId']
+
+        logger.info(f'***** REQ_CONF: {request_config}')
+        request_config['translation'] = {
+            k: v
+            for k, v in dict(request_config['translation']).items()
+            if k in needed_translations
+        }
+        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
         # logger.info("Elasticsearch request: %r", es_search.to_dict())
         profiler.record(f'transform_manifest.es_search.ready ({"agg" if extras.get("aggregation_included") else "no_agg"}, {len(extras.get("source_filters"))} fields)')
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
