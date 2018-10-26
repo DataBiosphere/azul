@@ -1,9 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor, wait
 import doctest
+from itertools import chain
 import json
 import logging
 import os
+import re
 from unittest import TestCase
+from unittest.mock import Mock
 import warnings
 
 from humancellatlas.data.metadata.api import (AgeRange,
@@ -14,7 +17,6 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               SequenceFile,
                                               SpecimenFromOrganism,
                                               SupplementaryFile)
-
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
 from humancellatlas.data.metadata.helpers.json import as_json
 from humancellatlas.data.metadata.helpers.schema_examples import download_example_bundle
@@ -32,15 +34,23 @@ class TestAccessorApi(TestCase):
         warnings.simplefilter("ignore", ResourceWarning)
 
     def test_example_bundles(self):
-        for directory, age_range, has_specimens in [
-            ('CD4+ cytotoxic T lymphocytes', AgeRange(min=567648000, max=1892160000), True),
-            ('Healthy and type 2 diabetes pancreas', AgeRange(min=1356048000, max=1356048000), True),
-            ('HPSI_human_cerebral_organoids', AgeRange(min=1419120000, max=1545264000), True),
-            ('Mouse Melanoma', AgeRange(min=3628800, max=7257600), True),
-            ('Single cell transcriptome analysis of human pancreas', AgeRange(min=662256000, max=662256000), True),
-            ('Tissue stability', AgeRange(min=1734480000, max=1892160000), False),
-            ('HPSI_human_cerebral_organoids', AgeRange(min=1419120000, max=1545264000), True),
-            ('1M Immune Cells', AgeRange(min=1639872000, max=1639872000), True)
+        for directory, age_range, diseases, has_specimens in [
+            ('CD4+ cytotoxic T lymphocytes',
+             AgeRange(min=567648000.0, max=1892160000.0), {'normal'}, True),
+            ('Healthy and type 2 diabetes pancreas',
+             AgeRange(min=1356048000.0, max=1356048000.0), {'normal'}, True),
+            ('HPSI_human_cerebral_organoids',
+             AgeRange(min=1419120000.0, max=1545264000.0), {'normal'}, True),
+            ('Mouse Melanoma',
+             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}, True),
+            ('Single cell transcriptome analysis of human pancreas',
+             AgeRange(662256000.0, 662256000.0), {'normal'},True),
+            ('Tissue stability',
+             AgeRange(1734480000.0, 1892160000.0), {'normal'}, False),
+            ('HPSI_human_cerebral_organoids',
+             AgeRange(1419120000.0, 1545264000.0), {'normal'}, True),
+            ('1M Immune Cells',
+             AgeRange(1639872000.0, 1639872000.0), None, True)
         ]:
             with self.subTest(dir=directory):
                 manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
@@ -50,34 +60,82 @@ class TestAccessorApi(TestCase):
                 version = '2018-08-03T082009.272868Z'
                 self._assert_bundle(uuid=uuid, version=version,
                                     manifest=manifest, metadata_files=metadata_files,
-                                    age_range=age_range, has_specimens=has_specimens)
+                                    age_range=age_range, diseases=diseases, has_specimens=has_specimens)
+
+    def test_bad_content(self):
+        deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
+        client = dss_client(deployment)
+        with self.assertRaises(TypeError) as cm:
+            download_bundle_metadata(client, replica, uuid)
+        self.assertRegex(cm.exception.args[0],
+                         "Expecting file .* to contain a JSON object " +
+                         re.escape("(<class 'dict'>), not <class 'bytes'>"))
+
+    def test_bad_content_type(self):
+        deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
+        client = Mock()
+        file_uuid, file_version = 'b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-09-20T232924.687620Z'
+        client.get_bundle.return_value = {
+            'bundle': {
+                'files': [
+                    {
+                        'name': 'name.json',
+                        'uuid': file_uuid,
+                        'version': file_version,
+                        'indexed': True,
+                        'content-type': 'bad'
+                    }
+                ]
+            }
+        }
+        with self.assertRaises(NotImplementedError) as cm:
+            # noinspection PyTypeChecker
+            download_bundle_metadata(client, replica, uuid)
+        self.assertEquals(cm.exception.args[0],
+                          f"Expecting file {file_uuid}.{file_version} "
+                          "to have content type 'application/json', not 'bad'")
 
     def test_one_bundle(self):
-        for deployment, replica, uuid, version, age_range in [
+        for deployment, replica, uuid, version, age_range, diseases in [
             # A v5 bundle
-            (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None, AgeRange(min=3628800, max=7257600)),
+            (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None,
+             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}),
             # A vx primary bundle with a cell_suspension as sequencing input
-            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', None, None),
+            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', None,
+             None, {'glioblastoma'}),
             # A vx analysis bundle for the primary bundle with a cell_suspension as sequencing input
-            ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z', None),
+            ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z',
+             None, {'glioblastoma'}),
             # A vx primary bundle with a specimen_from_organism as sequencing input
-            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', '2018-09-20T230221.622042Z', None),
-            # A vx analysis bundle for the primary with a specimen_from_organism as sequencing input
-            ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z', None),
+            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', '2018-09-20T230221.622042Z',
+             None, {'glioblastoma'}),
+            # A bundle containing a specimen_from_organism.json with a schema version of 2.7.1
+            ('staging', 'aws', '70184761-70fc-4b80-8c48-f406a478d5ab', '2018-09-05T182535.846470Z',
+             None, {'glioblastoma'}),
         ]:
             with self.subTest(uuid=uuid):
                 client = dss_client(deployment)
                 version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
-                self._assert_bundle(uuid, version, manifest, metadata_files, age_range)
+                self._assert_bundle(uuid, version, manifest, metadata_files, age_range, diseases)
 
-    def _assert_bundle(self, uuid, version, manifest, metadata_files, age_range, has_specimens=True):
+    def _assert_bundle(self, uuid, version, manifest, metadata_files, age_range, diseases, has_specimens=True):
         bundle = Bundle(uuid, version, manifest, metadata_files)
+        diseases = diseases or set()
+        biomaterials = bundle.biomaterials.values()
+        actual_diseases = set(chain(*[bm.diseases for bm in biomaterials
+                                      if isinstance(bm, (DonorOrganism, SpecimenFromOrganism))]))
+        diseases_from_old_field = set(chain(*[bm.disease for bm in biomaterials
+                                              if isinstance(bm, (DonorOrganism, SpecimenFromOrganism))]))
+        self.assertEquals(actual_diseases, diseases)
+        self.assertEquals(actual_diseases, diseases_from_old_field)
         self.assertEqual(str(bundle.uuid), uuid)
         self.assertEqual(bundle.version, version)
         self.assertEqual(1, len(bundle.projects))
         project = list(bundle.projects.values())[0]
         self.assertEqual(Project, type(project))
+        # noinspection PyDeprecation
         self.assertLessEqual(len(project.laboratory_names), len(project.contributors))
+        # noinspection PyDeprecation
         self.assertEqual(project.project_short_name, project.project_shortname)
         root_entities = bundle.root_entities().values()
         root_entity_types = {type(e) for e in root_entities}
