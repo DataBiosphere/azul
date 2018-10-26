@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 import logging
 import os
+from typing import List
 
 import elasticsearch
 from elasticsearch_dsl import A, Q, Search
@@ -137,11 +138,12 @@ class ElasticTransformDump(object):
         return aggregate
 
     @staticmethod
-    def create_request(
-        filters, es_client,
-        req_config,
-        post_filter=False,
-        entity_type='files'):
+    def create_request(filters,
+                       es_client,
+                       req_config,
+                       post_filter: bool=False,
+                       source_filter: List=None,
+                       entity_type='files'):
         """
         This function will create an ElasticSearch request based on
         the filters and facet_config passed into the function
@@ -154,6 +156,7 @@ class ElasticTransformDump(object):
         config
         :param post_filter: Flag for doing either post_filter or regular
         querying (i.e. faceting or not)
+        :param List source_filter: Source Filter (``_source``)
         :param entity_type: the string referring to the entity type used to get
         the ElasticSearch index to search
         :return: Returns the Search object that can be used for executing
@@ -173,8 +176,11 @@ class ElasticTransformDump(object):
         # Get the query from 'create_query'
         es_query = ElasticTransformDump.create_query(filters)
         # Do a post_filter using the returned query
-        es_search = es_search.query(
-            es_query) if not post_filter else es_search.post_filter(es_query)
+        es_search = es_search.query(es_query) if not post_filter else es_search.post_filter(es_query)
+
+        if source_filter:
+            es_search = es_search.source(include=source_filter)
+
         # Iterate over the aggregates in the facet_config
         for agg, translation in facet_config.items():
             # Create a bucket aggregate for the 'agg'.
@@ -584,7 +590,11 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         # Create an ElasticSearch request
         filters = filters['file']
-        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
+        es_search = self.create_request(filters,
+                                        self.es_client,
+                                        request_config,
+                                        post_filter=False,
+                                        source_filter=['bundles.*', 'contents.files.*'])
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
 
         return manifest.return_response()
