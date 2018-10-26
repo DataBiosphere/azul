@@ -602,7 +602,6 @@ class ElasticTransformDump(object):
         }
         es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
         # logger.info("Elasticsearch request: %r", es_search.to_dict())
-        profiler.record(f'transform_manifest.es_search.ready ({"agg" if extras.get("aggregation_included") else "no_agg"}, {len(extras.get("source_filters"))} fields)')
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
         profiler.record('transform_manifest.manifest.instantiated')
         response = manifest.return_response()
