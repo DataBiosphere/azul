@@ -8,5 +8,6 @@ fileId
 workFlow
 donorId
 gender
+biospecimenAnatomicSite
 specimenType
 sampleId
