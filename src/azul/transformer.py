@@ -381,14 +381,14 @@ class OneValueAccumulator(FirstValueAccumulator):
 class MinAccumulator(LastValueAccumulator):
 
     def accumulate(self, value):
-        if self.value is None or value is not None and value < self.value:
+        if value is not None and (self.value is None or value < self.value):
             super().accumulate(value)
 
 
 class MaxAccumulator(LastValueAccumulator):
 
     def accumulate(self, value):
-        if self.value is None or value is not None and value < self.value:
+        if value is not None and (self.value is None or value > self.value):
             super().accumulate(value)
 
 
