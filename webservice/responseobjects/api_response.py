@@ -95,6 +95,7 @@ class DonorObj(JsonObject):
     """
     donorId = StringProperty()
     gender = StringProperty()
+    biospecimenAnatomicSite = StringProperty()
     primarySite = StringProperty()
     projectCode = StringProperty()
     study = StringProperty()
@@ -472,6 +473,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             donorId=self.fetch_entry_value(mapping, entry, 'donorId'),
             gender=self.fetch_entry_value(
                 mapping, entry, 'gender'),
+            biospecimenAnatomicSite=self.fetch_entry_value(
+                mapping, entry, 'biospecimenAnatomicSite'),
             primarySite=self.fetch_entry_value(
                 mapping, entry, 'primarySite'),
             projectCode=self.fetch_entry_value(
