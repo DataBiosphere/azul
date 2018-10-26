@@ -1,6 +1,7 @@
 from abc import ABCMeta
+from functools import partial
 import logging
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set, Type
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set, Callable
 
 from humancellatlas.data.metadata import api
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -146,12 +147,14 @@ class BiomaterialVisitor(api.EntityVisitor):
         self._accumulators: MutableMapping[str, Accumulator] = {}
         self._biomaterials: MutableMapping[api.UUID4, api.Biomaterial] = dict()
 
-    def _set(self, field: str, accumulator_type: Type[Accumulator], value: Any):
+    def _set(self, field: str, accumulator_factory: Callable[[], Accumulator], value: Any):
         try:
             accumulator = self._accumulators[field]
         except KeyError:
-            self._accumulators[field] = accumulator = accumulator_type()
+            self._accumulators[field] = accumulator = accumulator_factory()
         accumulator.accumulate(value)
+
+    CellCountAccumulator = partial(SumAccumulator, 0)
 
     def visit(self, entity: api.Entity) -> None:
         if isinstance(entity, api.Biomaterial) and entity.document_id not in self._biomaterials:
@@ -159,7 +162,7 @@ class BiomaterialVisitor(api.EntityVisitor):
             self._set('has_input_biomaterial', SetAccumulator, entity.has_input_biomaterial)
             self._set('_source', SetAccumulator, api.schema_names[type(entity)])
             if isinstance(entity, api.CellSuspension):
-                self._set('total_estimated_cells', SumAccumulator, entity.total_estimated_cells)
+                self._set('total_estimated_cells', self.CellCountAccumulator, entity.total_estimated_cells)
             elif isinstance(entity, api.SpecimenFromOrganism):
                 self._set('document_id', OneValueAccumulator, str(entity.document_id))
                 self._set('biomaterial_id', OneValueAccumulator, entity.biomaterial_id)
@@ -201,7 +204,7 @@ class FileAggregator(GroupingAggregator):
         if field == 'file_format':
             return ListAccumulator()
         elif field == 'size':
-            return SumAccumulator()
+            return SumAccumulator(0)
         elif field == 'count':
             return DistinctValueCountAccumulator()
         else:
@@ -215,7 +218,7 @@ class SpecimenAggregator(GroupingAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'total_estimated_cells':
-            return SumAccumulator()
+            return SumAccumulator(0)
         else:
             return SetAccumulator(max_size=100)
 

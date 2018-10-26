@@ -286,13 +286,21 @@ class Accumulator(ABC):
 
 class SumAccumulator(Accumulator):
 
-    def __init__(self) -> None:
+    def __init__(self, initially=None) -> None:
+        """
+        :param initially: the initial value for the sum. If None, the first accumulated value that is not None will
+                          be used to initialize the sum. Note that if this parameter is None, the return value of
+                          close() could be None, too.
+        """
         super().__init__()
-        self.value = 0
+        self.value = initially
 
-    def accumulate(self, value):
+    def accumulate(self, value) -> None:
         if value is not None:
-            self.value += value
+            if self.value is None:
+                self.value = value
+            else:
+                self.value += value
 
     def close(self):
         return self.value
