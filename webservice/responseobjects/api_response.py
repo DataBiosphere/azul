@@ -94,6 +94,7 @@ class DonorObj(JsonObject):
     Class defining a Donor Object in the HitEntry Object
     """
     donorId = StringProperty()
+    gender = StringProperty()
     primarySite = StringProperty()
     projectCode = StringProperty()
     study = StringProperty()
@@ -469,6 +470,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         """
         return DonorObj(
             donorId=self.fetch_entry_value(mapping, entry, 'donorId'),
+            gender=self.fetch_entry_value(
+                mapping, entry, 'gender'),
             primarySite=self.fetch_entry_value(
                 mapping, entry, 'primarySite'),
             projectCode=self.fetch_entry_value(
