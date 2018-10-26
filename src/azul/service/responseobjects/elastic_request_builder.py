@@ -101,7 +101,7 @@ class ElasticTransformDump(object):
         return Q('bool', must=query_list)
 
     @staticmethod
-    def create_aggregate(filters, facet_config, agg, aggregation_included=True):
+    def create_aggregate(filters, facet_config, agg):
         """
         Creates the aggregation to be used in ElasticSearch
         :param filters: Translated filters from 'files/' endpoint call
@@ -143,7 +143,6 @@ class ElasticTransformDump(object):
         req_config,
         post_filter=False,
         entity_type='files',
-        aggregation_included: bool=True,
         source_filters: List[str]=None):
         """
         This function will create an ElasticSearch request based on
@@ -163,7 +162,6 @@ class ElasticTransformDump(object):
         the request
         """
         # Get the field mapping and facet configuration from the config
-        # ['bundle_uuid', 'bundle_version', 'file_content_type', 'file_name', 'file_sha1', 'file_size', 'file_uuid', 'file_version', 'file_indexed']
         field_mapping = req_config['translation']
         facet_config = {key: field_mapping[key]
                         for key in req_config['facets']}
@@ -177,17 +175,17 @@ class ElasticTransformDump(object):
         # Get the query from 'create_query'
         es_query = ElasticTransformDump.create_query(filters)
         # Do a post_filter using the returned query
-        es_search = es_search.query(
-            es_query) if not post_filter else es_search.post_filter(es_query)
+        es_search = es_search.query(es_query) if not post_filter else es_search.post_filter(es_query)
 
         if source_filters:
-            es_search.source(include=source_filters)
+            logger.info(f'***** Excluding: {source_filters}')
+            es_search = es_search.source(include=source_filters)
 
         # Iterate over the aggregates in the facet_config
         for agg, translation in facet_config.items():
             # Create a bucket aggregate for the 'agg'.
             # Call create_aggregate() to return the appropriate aggregate query
-            agg_query = ElasticTransformDump.create_aggregate(filters, facet_config, agg, aggregation_included)
+            agg_query = ElasticTransformDump.create_aggregate(filters, facet_config, agg)
             if not agg_query:
                 continue
             es_search.aggs.bucket(agg, agg_query)
@@ -591,16 +589,21 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         # Create an ElasticSearch request
         filters = filters['file']
-        needed_translations = sorted(set(request_config.get('translation').keys()).intersection(request_config.get('facets'))) \
-            + ['fileName', 'fileSize', 'fileId']
+        needed_translations = sorted(
+            set(request_config.get('translation').keys())\
+                .intersection(request_config.get('facets'))\
+                .union({'fileName', 'fileSize', 'fileId'})
+        )
 
-        logger.info(f'***** REQ_CONF: {request_config}')
+        import json
+        logger.info(f'***** REQ_CONF: {json.dumps(request_config, indent=4, sort_keys=True)}')
         request_config['translation'] = {
             k: v
             for k, v in dict(request_config['translation']).items()
             if k in needed_translations
         }
-        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
+        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False, source_filters=['bundles.*', 'contents.files.*'])
+        # es_search.source(['bundles.*', 'contents.files.*'])
         # logger.info("Elasticsearch request: %r", es_search.to_dict())
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
         profiler.record('transform_manifest.manifest.instantiated')
