@@ -288,11 +288,15 @@ class SumAccumulator(Accumulator):
 
     def __init__(self) -> None:
         super().__init__()
-        self.value = 0
+        # avoid picking an initial value of a particular type
+        self.value = None
 
     def accumulate(self, value):
         if value is not None:
-            self.value += value
+            if self.value is None:
+                self.value = value
+            else:
+                self.value += value
 
     def close(self):
         return self.value
