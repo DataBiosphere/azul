@@ -36,7 +36,8 @@
     "Data Bundle UUID": "repoDataBundleId",
     "Metadata.json": "metadataJson",
     "File URLs": "urls",
-    "File Aliases": "aliases"
+    "File Aliases": "aliases",
+    "gender": "gender"
   },
   "autocomplete-translation": {
     "ES_FILE_INDEX": {
@@ -53,6 +54,7 @@
       "id": "file_id",
       "donorId": "donor",
       "donor": "donor",
+      "gender": "gender",
       "primarySite": "submitterDonorPrimarySite",
       "Program": "program",
       "Project": "project",
@@ -110,6 +112,7 @@
     "projectCode",
     "analysisType",
     "fileFormat",
+    "gender",
     "specimenType"
   ]
 }
