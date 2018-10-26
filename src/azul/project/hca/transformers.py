@@ -163,7 +163,7 @@ class BiomaterialVisitor(api.EntityVisitor):
             elif isinstance(entity, api.SpecimenFromOrganism):
                 self._set('document_id', OneValueAccumulator, str(entity.document_id))
                 self._set('biomaterial_id', OneValueAccumulator, entity.biomaterial_id)
-                self._set('disease', SetAccumulator, entity.disease)
+                self._set('disease', SetAccumulator, entity.diseases)
                 self._set('organ', FirstValueAccumulator, entity.organ)
                 self._set('organ_part', FirstValueAccumulator, entity.organ_part)
                 self._set('storage_method', FirstValueAccumulator, entity.storage_method)
@@ -172,7 +172,7 @@ class BiomaterialVisitor(api.EntityVisitor):
                 self._set('donor_document_id', SetAccumulator, str(entity.document_id))
                 self._set('donor_biomaterial_id', SetAccumulator, entity.biomaterial_id)
                 self._set('genus_species', SetAccumulator, entity.genus_species)
-                self._set('disease', SetAccumulator, entity.disease)
+                self._set('disease', SetAccumulator, entity.diseases)
                 self._set('organism_age', ListAccumulator, entity.organism_age)
                 self._set('organism_age_unit', ListAccumulator, entity.organism_age_unit)
                 if entity.organism_age_in_seconds:
