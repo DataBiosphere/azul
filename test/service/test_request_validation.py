@@ -204,4 +204,5 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(len(list(tsv_file)), 1000, 'Wrong number of files were found.')
         manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
         expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['files'].keys())
+        self.assertIn('file_sha256', expected_fieldnames, 'file_sha256 column not in manifest')
         self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
