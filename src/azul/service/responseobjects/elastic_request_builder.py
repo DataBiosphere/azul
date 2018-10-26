@@ -141,7 +141,7 @@ class ElasticTransformDump(object):
     def create_request(
         filters, es_client,
         req_config,
-        post_filter=False,
+        post_filter: bool=False,
         entity_type='files',
         source_filters: List[str]=None):
         """
@@ -589,22 +589,26 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         # Create an ElasticSearch request
         filters = filters['file']
-        needed_translations = sorted(
-            set(request_config.get('translation').keys())\
-                .intersection(request_config.get('facets'))\
-                .union({'fileName', 'fileSize', 'fileId'})
-        )
-
-        import json
-        logger.info(f'***** REQ_CONF: {json.dumps(request_config, indent=4, sort_keys=True)}')
-        request_config['translation'] = {
-            k: v
-            for k, v in dict(request_config['translation']).items()
-            if k in needed_translations
-        }
-        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False, source_filters=['bundles.*', 'contents.files.*'])
-        # es_search.source(['bundles.*', 'contents.files.*'])
-        # logger.info("Elasticsearch request: %r", es_search.to_dict())
+        # import json
+        # logger.info(f'***** REQ_CONF: {json.dumps(request_config, indent=4, sort_keys=True)}')
+        # # Limited aggregation to only what are needed for generating TSV content
+        # needed_translations = sorted(
+        #     set(request_config.get('translation').keys()) \
+        #         .intersection(request_config.get('facets')) \
+        #         .union({'fileName', 'fileSize', 'fileId'})
+        # )
+        # request_config['translation'] = {
+        #     k: v
+        #     for k, v in dict(request_config['translation']).items()
+        #     if k in needed_translations
+        # }
+        # post filter only
+        # extra_options = dict(post_filter=True, source_filters=[])
+        # source filter only
+        # extra_options = dict(post_filter=False, source_filters=['bundles.*', 'contents.files.*'])
+        # post filter + source filter
+        extra_options = dict(post_filter=True, source_filters=['bundles.*', 'contents.files.*'])
+        es_search = self.create_request(filters, self.es_client, request_config, **extra_options)
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
         profiler.record('transform_manifest.manifest.instantiated')
         response = manifest.return_response()
