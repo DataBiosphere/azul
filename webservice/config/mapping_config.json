@@ -12,6 +12,7 @@
   "donors": [
     {
       "donorId": "donor",
+      "gender": "gender",
       "otherIdentifiers": {
         "RedwoodDonorUUID": [
           "redwoodDonorUUID"
