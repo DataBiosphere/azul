@@ -37,7 +37,8 @@
     "Metadata.json": "metadataJson",
     "File URLs": "urls",
     "File Aliases": "aliases",
-    "gender": "gender"
+    "gender": "gender",
+    "biospecimenAnatomicSite": "biospecimen_anatomic_site"
   },
   "autocomplete-translation": {
     "ES_FILE_INDEX": {
@@ -55,6 +56,7 @@
       "donorId": "donor",
       "donor": "donor",
       "gender": "gender",
+      "biospecimenAnatomicSite": "biospecimenAnatomicSite",
       "primarySite": "submitterDonorPrimarySite",
       "Program": "program",
       "Project": "project",
@@ -113,6 +115,7 @@
     "analysisType",
     "fileFormat",
     "gender",
+    "biospecimenAnatomicSite",
     "specimenType"
   ]
 }
