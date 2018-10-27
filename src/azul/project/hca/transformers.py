@@ -19,7 +19,8 @@ from azul.transformer import (Accumulator,
                               SumAccumulator,
                               OneValueAccumulator,
                               SetAccumulator,
-                              SimpleAggregator, DistinctValueCountAccumulator)
+                              SimpleAggregator,
+                              DistinctAccumulator)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -193,9 +194,9 @@ class BiomaterialVisitor(api.EntityVisitor):
 class FileAggregator(GroupingAggregator):
 
     def _transform_entity(self, entity: JSON) -> JSON:
-        return dict(size=entity['size'],
+        return dict(size=((entity['uuid'], entity['version']), entity['size']),
                     file_format=entity['file_format'],
-                    count=(entity['uuid'], entity['version']))
+                    count=((entity['uuid'], entity['version']), 1))
 
     def _group_key(self, entity):
         return entity['file_format']
@@ -203,10 +204,8 @@ class FileAggregator(GroupingAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'file_format':
             return SetAccumulator()
-        elif field == 'size':
-            return SumAccumulator(0)
-        elif field == 'count':
-            return DistinctValueCountAccumulator()
+        elif field in ('size', 'count'):
+            return DistinctAccumulator(SumAccumulator(0))
         else:
             return None
 
