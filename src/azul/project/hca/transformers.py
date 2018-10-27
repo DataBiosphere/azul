@@ -1,7 +1,7 @@
 from abc import ABCMeta
 from functools import partial
 import logging
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set, Callable
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set, Callable, Tuple
 
 from humancellatlas.data.metadata import api
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -90,32 +90,34 @@ def _file_dict(f: api.File) -> JSON:
     }
 
 
-class TransformerVisitor(api.EntityVisitor):
-    specimens: MutableMapping[api.UUID4, api.SpecimenFromOrganism]
-    processes: MutableMapping[str, JSON]
-    files: MutableMapping[api.UUID4, JSON]
+def _process_dict(pc: api.Process, pl: api.Protocol) -> JSON:
+    return {
+        'document_id': f"{pc.document_id}.{pl.document_id}",
+        'process_id': pc.process_id,
+        'process_name': pc.process_name,
+        'protocol_id': pl.protocol_id,
+        'protocol_name': pl.protocol_name,
+        '_type': "process",
+        **(
+            {
+                'library_construction_approach': pl.library_construction_approach
+            } if isinstance(pl, api.LibraryPreparationProtocol) else {
+                'instrument_manufacturer_model': pl.instrument_manufacturer_model
+            } if isinstance(pl, api.SequencingProtocol) else {
+                'library_construction_approach': pc.library_construction_approach
+            } if isinstance(pc, api.LibraryPreparationProcess) else {
+                'instrument_manufacturer_model': pc.instrument_manufacturer_model
+            } if isinstance(pc, api.SequencingProcess) else {
+            }
+        )
+    }
 
-    def _merge_process_protocol(self, pc: api.Process, pl: api.Protocol) -> JSON:
-        return {
-            'document_id': f"{pc.document_id}.{pl.document_id}",
-            'process_id': pc.process_id,
-            'process_name': pc.process_name,
-            'protocol_id': pl.protocol_id,
-            'protocol_name': pl.protocol_name,
-            '_type': "process",
-            **(
-                {
-                    'library_construction_approach': pl.library_construction_approach
-                } if isinstance(pl, api.LibraryPreparationProtocol) else {
-                    'instrument_manufacturer_model': pl.instrument_manufacturer_model
-                } if isinstance(pl, api.SequencingProtocol) else {
-                    'library_construction_approach': pc.library_construction_approach
-                } if isinstance(pc, api.LibraryPreparationProcess) else {
-                    'instrument_manufacturer_model': pc.instrument_manufacturer_model
-                } if isinstance(pc, api.SequencingProcess) else {
-                }
-            )
-        }
+
+class TransformerVisitor(api.EntityVisitor):
+    # Entities are tracked by ID to ensure uniqueness if an entity is visited twice while descending the entity DAG
+    specimens: MutableMapping[api.UUID4, api.SpecimenFromOrganism]
+    processes: MutableMapping[Tuple[api.UUID4, api.UUID4], Tuple[api.Process, api.Protocol]]
+    files: MutableMapping[api.UUID4, api.File]
 
     def __init__(self) -> None:
         self.specimens = {}
@@ -123,19 +125,17 @@ class TransformerVisitor(api.EntityVisitor):
         self.files = {}
 
     def visit(self, entity: api.Entity) -> None:
-        # Track entities by ID to ensure uniqueness if an entity is visited twice while descending the entity DAG
         if isinstance(entity, api.SpecimenFromOrganism):
             self.specimens[entity.document_id] = entity
         elif isinstance(entity, api.Process):
-            for pl in entity.protocols.values():
-                process_protocol = self._merge_process_protocol(entity, pl)
-                self.processes[process_protocol['document_id']] = process_protocol
+            for protocol in entity.protocols.values():
+                self.processes[entity.document_id, protocol.document_id] = entity, protocol
         elif isinstance(entity, api.File):
             if entity.file_format == 'unknown' and '.zarr!' in entity.manifest_entry.name:
                 # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
                 #
                 return
-            self.files[entity.document_id] = _file_dict(entity)
+            self.files[entity.document_id] = entity
 
 
 class BiomaterialVisitor(api.EntityVisitor):
@@ -294,7 +294,7 @@ class FileTransformer(Transformer):
             file.ancestors(visitor)
             contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
                             files=[_file_dict(file)],
-                            processes=list(visitor.processes.values()),
+                            processes=[_process_dict(pr, pl) for pr, pl in visitor.processes.values()],
                             projects=[_project_dict(project)])
             es_document = ElasticSearchDocument(entity_type=self.entity_type(),
                                                 entity_id=str(file.document_id),
@@ -325,8 +325,8 @@ class SpecimenTransformer(Transformer):
             specimen.accept(visitor)
             specimen.ancestors(visitor)
             contents = dict(specimens=[_specimen_dict(specimen)],
-                            files=list(visitor.files.values()),
-                            processes=list(visitor.processes.values()),
+                            files=[_file_dict(f) for f in visitor.files.values()],
+                            processes=[_process_dict(pr, pl) for pr, pl in visitor.processes.values()],
                             projects=[_project_dict(project)])
             es_document = ElasticSearchDocument(entity_type=self.entity_type(),
                                                 entity_id=str(specimen.document_id),
@@ -365,8 +365,8 @@ class ProjectTransformer(Transformer):
         project = self._get_project(bundle)
 
         contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
-                        files=list(visitor.files.values()),
-                        processes=list(visitor.processes.values()),
+                        files=[_file_dict(f) for f in visitor.files.values()],
+                        processes=[_process_dict(pr, pl) for pr, pl in visitor.processes.values()],
                         projects=[_project_dict(project)])
         yield ElasticSearchDocument(entity_type=self.entity_type(),
                                     entity_id=str(project.document_id),
