@@ -202,7 +202,7 @@ class FileAggregator(GroupingAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'file_format':
-            return ListAccumulator()
+            return SetAccumulator()
         elif field == 'size':
             return SumAccumulator(0)
         elif field == 'count':
