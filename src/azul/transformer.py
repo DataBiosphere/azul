@@ -315,7 +315,7 @@ class SetAccumulator(Accumulator):
 
     def accumulate(self, value):
         if self.max_size is None or len(self.value) < self.max_size:
-            if isinstance(value, (tuple, list, set)):
+            if isinstance(value, (list, set)):
                 self.value.update(value)
             else:
                 self.value.add(value)
@@ -333,7 +333,7 @@ class ListAccumulator(Accumulator):
 
     def accumulate(self, value):
         if self.max_size is None or len(self.value) < self.max_size:
-            if isinstance(value, (tuple, list, set)):
+            if isinstance(value, (list, set)):
                 self.value.extend(value)
             else:
                 self.value.append(value)
