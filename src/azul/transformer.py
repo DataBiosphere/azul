@@ -283,7 +283,7 @@ class Accumulator(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def close(self):
+    def get(self):
         """
         Return the accumulated value.
         """
@@ -308,7 +308,7 @@ class SumAccumulator(Accumulator):
             else:
                 self.value += value
 
-    def close(self):
+    def get(self):
         return self.value
 
 
@@ -339,7 +339,7 @@ class SetAccumulator(Accumulator):
         else:
             return False
 
-    def close(self) -> List[Any]:
+    def get(self) -> List[Any]:
         return list(self.value)
 
 
@@ -357,7 +357,7 @@ class ListAccumulator(Accumulator):
             else:
                 self.value.append(value)
 
-    def close(self) -> List[Any]:
+    def get(self) -> List[Any]:
         return list(self.value)
 
 
@@ -366,8 +366,8 @@ class SetOfDictAccumulator(SetAccumulator):
     def accumulate(self, value) -> bool:
         return super().accumulate(freeze(value))
 
-    def close(self):
-        return thaw(super().close())
+    def get(self):
+        return thaw(super().get())
 
 
 class LastValueAccumulator(Accumulator):
@@ -379,7 +379,7 @@ class LastValueAccumulator(Accumulator):
     def accumulate(self, value):
         self.value = value
 
-    def close(self):
+    def get(self):
         return self.value
 
 
@@ -394,11 +394,11 @@ class FirstValueAccumulator(LastValueAccumulator):
 
 class OneValueAccumulator(FirstValueAccumulator):
 
-    def close(self):
+    def get(self):
         if self.value is None:
             raise ValueError('No value')
         else:
-            return super().close()
+            return super().get()
 
 
 class MinAccumulator(LastValueAccumulator):
@@ -435,7 +435,7 @@ class DistinctAccumulator(Accumulator):
     Accumulation stops at max_size distinct keys.
 
         >>> a.accumulate(('c', 1000))
-        >>> a.close()
+        >>> a.get()
         123
     """
 
@@ -448,8 +448,8 @@ class DistinctAccumulator(Accumulator):
         if self.keys.accumulate(key):
             self.value.accumulate(value)
 
-    def close(self):
-        return self.value.close()
+    def get(self):
+        return self.value.get()
 
 
 class EntityAggregator(ABC):
@@ -476,7 +476,7 @@ class SimpleAggregator(EntityAggregator):
             self._accumulate(aggregate, entity)
         return [
             {
-                k: accumulator.close()
+                k: accumulator.get()
                 for k, accumulator in aggregate.items()
                 if accumulator is not None
             }
@@ -503,7 +503,7 @@ class GroupingAggregator(SimpleAggregator):
             self._accumulate(aggregate, entity)
         return [
             {
-                field: accumulator.close()
+                field: accumulator.get()
                 for field, accumulator in aggregate.items()
                 if accumulator is not None
             }

@@ -188,7 +188,7 @@ class BiomaterialVisitor(api.EntityVisitor):
     def merged_specimen(self) -> MutableMapping[str, Any]:
         assert 'biomaterial_id' in self._accumulators
         assert 'document_id' in self._accumulators
-        return {field: accumulator.close() for field, accumulator in self._accumulators.items()}
+        return {field: accumulator.get() for field, accumulator in self._accumulators.items()}
 
 
 class FileAggregator(GroupingAggregator):
