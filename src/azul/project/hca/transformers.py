@@ -178,7 +178,7 @@ class BiomaterialVisitor(api.EntityVisitor):
                 if entity.organism_age_in_seconds:
                     self._set('min_organism_age_in_seconds', MinAccumulator, entity.organism_age_in_seconds.min)
                     self._set('max_organism_age_in_seconds', MaxAccumulator, entity.organism_age_in_seconds.max)
-                self._set('biological_sex', SetAccumulator, entity.biological_sex)
+                self._set('biological_sex', SetAccumulator, entity.sex)
 
     @property
     def merged_specimen(self) -> JSON:
