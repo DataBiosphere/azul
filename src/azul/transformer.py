@@ -68,8 +68,12 @@ class ElasticSearchDocument:
                    contents=json['contents'])
 
     @property
+    def original(self) -> bool:
+        return self.contents is None
+
+    @property
     def aggregate(self) -> bool:
-        return self.contents is not None
+        return not self.original
 
     @property
     def document_id(self) -> str:
@@ -86,6 +90,10 @@ class ElasticSearchDocument:
     @property
     def original_coordinates(self) -> DocumentCoordinates:
         return config.es_index_name(self.entity_type, aggregate=False), self.document_id
+
+    @property
+    def aggregate_coordinates(self) -> DocumentCoordinates:
+        return config.es_index_name(self.entity_type, aggregate=True), self.document_id
 
     def to_source(self) -> JSON:
         source = {
@@ -269,24 +277,38 @@ BundleVersion = str
 class Accumulator(ABC):
     @abstractmethod
     def accumulate(self, value):
+        """
+        Incorporate the given value into this accumulator.
+        """
         raise NotImplementedError
 
     @abstractmethod
-    def close(self):
+    def get(self):
+        """
+        Return the accumulated value.
+        """
         raise NotImplementedError
 
 
-class NumericAccumulator(Accumulator):
+class SumAccumulator(Accumulator):
 
-    def __init__(self) -> None:
+    def __init__(self, initially=None) -> None:
+        """
+        :param initially: the initial value for the sum. If None, the first accumulated value that is not None will
+                          be used to initialize the sum. Note that if this parameter is None, the return value of
+                          close() could be None, too.
+        """
         super().__init__()
-        self.value = 0
+        self.value = initially
 
-    def accumulate(self, value):
+    def accumulate(self, value) -> None:
         if value is not None:
-            self.value += value
+            if self.value is None:
+                self.value = value
+            else:
+                self.value += value
 
-    def close(self):
+    def get(self):
         return self.value
 
 
@@ -297,14 +319,27 @@ class SetAccumulator(Accumulator):
         self.value = set()
         self.max_size = max_size
 
-    def accumulate(self, value):
+    def accumulate(self, value) -> bool:
+        """
+        :return: True, if the given value was incorporated into the set
+        """
         if self.max_size is None or len(self.value) < self.max_size:
-            if isinstance(value, (tuple, list, set)):
+            before = len(self.value)
+            if isinstance(value, (list, set)):
                 self.value.update(value)
             else:
                 self.value.add(value)
+            after = len(self.value)
+            if before < after:
+                return True
+            elif before == after:
+                return False
+            else:
+                assert False
+        else:
+            return False
 
-    def close(self) -> List[Any]:
+    def get(self) -> List[Any]:
         return list(self.value)
 
 
@@ -317,22 +352,22 @@ class ListAccumulator(Accumulator):
 
     def accumulate(self, value):
         if self.max_size is None or len(self.value) < self.max_size:
-            if isinstance(value, (tuple, list, set)):
+            if isinstance(value, (list, set)):
                 self.value.extend(value)
             else:
                 self.value.append(value)
 
-    def close(self) -> List[Any]:
+    def get(self) -> List[Any]:
         return list(self.value)
 
 
 class SetOfDictAccumulator(SetAccumulator):
 
-    def accumulate(self, value):
-        super().accumulate(freeze(value))
+    def accumulate(self, value) -> bool:
+        return super().accumulate(freeze(value))
 
-    def close(self):
-        return thaw(super().close())
+    def get(self):
+        return thaw(super().get())
 
 
 class LastValueAccumulator(Accumulator):
@@ -344,7 +379,7 @@ class LastValueAccumulator(Accumulator):
     def accumulate(self, value):
         self.value = value
 
-    def close(self):
+    def get(self):
         return self.value
 
 
@@ -359,30 +394,70 @@ class FirstValueAccumulator(LastValueAccumulator):
 
 class OneValueAccumulator(FirstValueAccumulator):
 
-    def close(self):
+    def get(self):
         if self.value is None:
             raise ValueError('No value')
         else:
-            return super().close()
+            return super().get()
 
 
 class MinAccumulator(LastValueAccumulator):
 
     def accumulate(self, value):
-        if self.value is None or value is not None and value < self.value:
+        if value is not None and (self.value is None or value < self.value):
             super().accumulate(value)
 
 
 class MaxAccumulator(LastValueAccumulator):
 
     def accumulate(self, value):
-        if self.value is None or value is not None and value < self.value:
+        if value is not None and (self.value is None or value > self.value):
             super().accumulate(value)
+
+
+class DistinctAccumulator(Accumulator):
+    """
+    An accumulator for (key, value) tuples. Of two pairs with the same key, only the value from the first pair will
+    be accumulated. The actual values will be accumulated in another accumulator instance specified at construction.
+
+        >>> a = DistinctAccumulator(SumAccumulator(0), max_size=3)
+
+    Keys can be tuples, too.
+
+        >>> a.accumulate((('x', 'y'), 3))
+
+    Values associated with a recurring key will not be accumulated.
+
+        >>> a.accumulate((('x', 'y'), 4))
+        >>> a.accumulate(('a', 20))
+        >>> a.accumulate(('b', 100))
+
+    Accumulation stops at max_size distinct keys.
+
+        >>> a.accumulate(('c', 1000))
+        >>> a.get()
+        123
+    """
+
+    def __init__(self, inner: Accumulator, max_size: int = None) -> None:
+        self.value = inner
+        self.keys = SetAccumulator(max_size=max_size)
+
+    def accumulate(self, value):
+        key, value = value
+        if self.keys.accumulate(key):
+            self.value.accumulate(value)
+
+    def get(self):
+        return self.value.get()
 
 
 class EntityAggregator(ABC):
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
+    def _transform_entity(self, entity: JSON) -> JSON:
+        return entity
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
         """
         Return the Accumulator instance to be used for the given field or None if the field should not be accumulated.
         """
@@ -401,18 +476,19 @@ class SimpleAggregator(EntityAggregator):
             self._accumulate(aggregate, entity)
         return [
             {
-                k: accumulator.close()
+                k: accumulator.get()
                 for k, accumulator in aggregate.items()
                 if accumulator is not None
             }
         ]
 
     def _accumulate(self, aggregate, entity):
+        entity = self._transform_entity(entity)
         for field, value in entity.items():
             try:
                 accumulator = aggregate[field]
             except:
-                accumulator = self.get_accumulator(field)
+                accumulator = self._get_accumulator(field)
                 aggregate[field] = accumulator
             if accumulator is not None:
                 accumulator.accumulate(value)
@@ -427,7 +503,7 @@ class GroupingAggregator(SimpleAggregator):
             self._accumulate(aggregate, entity)
         return [
             {
-                field: accumulator.close()
+                field: accumulator.get()
                 for field, accumulator in aggregate.items()
                 if accumulator is not None
             }
