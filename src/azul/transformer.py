@@ -555,8 +555,8 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
 
     def _select_latest(self, document) -> MutableMapping[str, Entities]:
         """
-        Collect the latest version of each entity from the document. If more than one bundle contributes copies of
-        the same entity, potentially with different contents, the copy from the newest bundle will be chosen.
+        Collect the latest version of each entity from the document. If two or more bundles contribute copies of the
+        same entity, potentially with different contents, the copy from the newest bundle will be chosen.
         """
         collated_contents: MutableMapping[str, MutableMapping[EntityID, Tuple[BundleVersion, JSON]]] = defaultdict(dict)
         for bundle in document.bundles:
