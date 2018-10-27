@@ -61,14 +61,14 @@ def _project_dict(project: api.Project) -> dict:
     }
 
 
-def _specimen_dict(specimen: api.SpecimenFromOrganism) -> MutableMapping[str, Any]:
+def _specimen_dict(specimen: api.SpecimenFromOrganism) -> JSON:
     visitor = BiomaterialVisitor()
     specimen.accept(visitor)
     specimen.ancestors(visitor)
     return visitor.merged_specimen
 
 
-def _file_dict(f: api.File) -> MutableMapping[str, Any]:
+def _file_dict(f: api.File) -> JSON:
     return {
         'content-type': f.manifest_entry.content_type,
         'indexed': f.manifest_entry.indexed,
@@ -92,10 +92,10 @@ def _file_dict(f: api.File) -> MutableMapping[str, Any]:
 
 class TransformerVisitor(api.EntityVisitor):
     specimens: MutableMapping[api.UUID4, api.SpecimenFromOrganism]
-    processes: MutableMapping[str, Any]  # Merges process with protocol
-    files: MutableMapping[api.UUID4, Any]  # Merges manifest + file metadata
+    processes: MutableMapping[str, JSON]
+    files: MutableMapping[api.UUID4, JSON]
 
-    def _merge_process_protocol(self, pc: api.Process, pl: api.Protocol) -> MutableMapping[str, Any]:
+    def _merge_process_protocol(self, pc: api.Process, pl: api.Protocol) -> JSON:
         return {
             'document_id': f"{pc.document_id}.{pl.document_id}",
             'process_id': pc.process_id,
@@ -181,7 +181,7 @@ class BiomaterialVisitor(api.EntityVisitor):
                 self._set('biological_sex', SetAccumulator, entity.biological_sex)
 
     @property
-    def merged_specimen(self) -> MutableMapping[str, Any]:
+    def merged_specimen(self) -> JSON:
         assert 'biomaterial_id' in self._accumulators
         assert 'document_id' in self._accumulators
         return {field: accumulator.get() for field, accumulator in self._accumulators.items()}
