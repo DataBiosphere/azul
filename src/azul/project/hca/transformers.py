@@ -1,6 +1,7 @@
 from abc import ABCMeta
+from functools import partial
 import logging
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set, Type
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set, Callable
 
 from humancellatlas.data.metadata import api
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -15,10 +16,11 @@ from azul.transformer import (Accumulator,
                               ListAccumulator,
                               MaxAccumulator,
                               MinAccumulator,
-                              NumericAccumulator,
+                              SumAccumulator,
                               OneValueAccumulator,
                               SetAccumulator,
-                              SimpleAggregator)
+                              SimpleAggregator,
+                              DistinctAccumulator)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -146,12 +148,14 @@ class BiomaterialVisitor(api.EntityVisitor):
         self._accumulators: MutableMapping[str, Accumulator] = {}
         self._biomaterials: MutableMapping[api.UUID4, api.Biomaterial] = dict()
 
-    def _set(self, field: str, accumulator_type: Type[Accumulator], value: Any):
+    def _set(self, field: str, accumulator_factory: Callable[[], Accumulator], value: Any):
         try:
             accumulator = self._accumulators[field]
         except KeyError:
-            self._accumulators[field] = accumulator = accumulator_type()
+            self._accumulators[field] = accumulator = accumulator_factory()
         accumulator.accumulate(value)
+
+    CellCountAccumulator = partial(SumAccumulator, 0)
 
     def visit(self, entity: api.Entity) -> None:
         if isinstance(entity, api.Biomaterial) and entity.document_id not in self._biomaterials:
@@ -159,11 +163,11 @@ class BiomaterialVisitor(api.EntityVisitor):
             self._set('has_input_biomaterial', SetAccumulator, entity.has_input_biomaterial)
             self._set('_source', SetAccumulator, api.schema_names[type(entity)])
             if isinstance(entity, api.CellSuspension):
-                self._set('total_estimated_cells', NumericAccumulator, entity.total_estimated_cells)
+                self._set('total_estimated_cells', self.CellCountAccumulator, entity.total_estimated_cells)
             elif isinstance(entity, api.SpecimenFromOrganism):
                 self._set('document_id', OneValueAccumulator, str(entity.document_id))
                 self._set('biomaterial_id', OneValueAccumulator, entity.biomaterial_id)
-                self._set('disease', SetAccumulator, entity.disease)
+                self._set('disease', SetAccumulator, entity.diseases)
                 self._set('organ', FirstValueAccumulator, entity.organ)
                 self._set('organ_part', FirstValueAccumulator, entity.organ_part)
                 self._set('storage_method', FirstValueAccumulator, entity.storage_method)
@@ -172,7 +176,7 @@ class BiomaterialVisitor(api.EntityVisitor):
                 self._set('donor_document_id', SetAccumulator, str(entity.document_id))
                 self._set('donor_biomaterial_id', SetAccumulator, entity.biomaterial_id)
                 self._set('genus_species', SetAccumulator, entity.genus_species)
-                self._set('disease', SetAccumulator, entity.disease)
+                self._set('disease', SetAccumulator, entity.diseases)
                 self._set('organism_age', ListAccumulator, entity.organism_age)
                 self._set('organism_age_unit', ListAccumulator, entity.organism_age_unit)
                 if entity.organism_age_in_seconds:
@@ -184,26 +188,26 @@ class BiomaterialVisitor(api.EntityVisitor):
     def merged_specimen(self) -> MutableMapping[str, Any]:
         assert 'biomaterial_id' in self._accumulators
         assert 'document_id' in self._accumulators
-        return {field: accumulator.close() for field, accumulator in self._accumulators.items()}
+        return {field: accumulator.get() for field, accumulator in self._accumulators.items()}
 
 
 class FileAggregator(GroupingAggregator):
 
+    def _transform_entity(self, entity: JSON) -> JSON:
+        return dict(size=((entity['uuid'], entity['version']), entity['size']),
+                    file_format=entity['file_format'],
+                    count=((entity['uuid'], entity['version']), 1))
+
     def _group_key(self, entity):
         return entity['file_format']
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'size':
-            return NumericAccumulator()
-        elif field in ('name',
-                       'uuid',
-                       'version',
-                       'document_id'):
-            return ListAccumulator(max_size=100)
-        elif field == 'sha1':
-            return None
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'file_format':
+            return SetAccumulator()
+        elif field in ('size', 'count'):
+            return DistinctAccumulator(SumAccumulator(0))
         else:
-            return SetAccumulator(max_size=100)
+            return None
 
 
 class SpecimenAggregator(GroupingAggregator):
@@ -211,16 +215,16 @@ class SpecimenAggregator(GroupingAggregator):
     def _group_key(self, entity):
         return entity['organ']
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'total_estimated_cells':
-            return NumericAccumulator()
+            return SumAccumulator(0)
         else:
             return SetAccumulator(max_size=100)
 
 
 class ProjectAggregator(SimpleAggregator):
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':
             return ListAccumulator(max_size=100)
         elif field in ('project_description',
@@ -238,7 +242,7 @@ class ProcessAggregator(GroupingAggregator):
     def _group_key(self, entity) -> Any:
         return entity.get('library_construction_approach')
 
-    def get_accumulator(self, field) -> Optional[Accumulator]:
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':
             return None
         elif field in ('process_id', 'protocol_id'):
