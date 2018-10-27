@@ -38,7 +38,7 @@ dss_subscription_query = {
                                             "files.project_json.provenance.document_id": [
                                                 # CBeta Release spreadsheet as of 10/18/2018
                                                 "2c4724a4-7252-409e-b008-ff5c127c7e89",
-                                                "ecd0c979-a6aa-458a-9dfc-d8cdb183caf7",
+                                                "08e7b6ba-5825-47e9-be2d-7978533c5f8c",
                                                 "019a935b-ea35-4d83-be75-e1a688179328",
                                                 "a5ae0428-476c-46d2-a9f2-aad955b149aa",
                                                 "adabd2bd-3968-4e77-b0df-f200f7351661",
