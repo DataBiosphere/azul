@@ -6,8 +6,6 @@ AnyJSON = Union[str, int, float, bool, None, Mapping[str, AnyJSON1], List[AnyJSO
 JSON = Mapping[str, AnyJSON]
 
 
-#
-
 class LambdaContext(object):
     """
     A stub for the AWS Lambda context
