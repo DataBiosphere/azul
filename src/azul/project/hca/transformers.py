@@ -26,11 +26,7 @@ from azul.types import JSON
 log = logging.getLogger(__name__)
 
 
-def _project_dict(bundle: api.Bundle) -> dict:
-    project, *additional_projects = bundle.projects.values()
-    reject(additional_projects, "Azul can currently only handle a single project per bundle")
-    assert isinstance(project, api.Project)
-
+def _project_dict(project: api.Project) -> dict:
     # Store lists of all values of each of these facets to allow facet filtering
     # and term counting on the webservice
     laboratories: Set[str] = set()
@@ -265,6 +261,12 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         else:
             return super().get_aggregator(entity_type)
 
+    def _get_project(self, bundle) -> api.Project:
+        project, *additional_projects = bundle.projects.values()
+        reject(additional_projects, "Azul can currently only handle a single project per bundle")
+        assert isinstance(project, api.Project)
+        return project
+
 
 class FileTransformer(Transformer):
 
@@ -281,6 +283,7 @@ class FileTransformer(Transformer):
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files)
+        project = self._get_project(bundle)
         for file in bundle.files.values():
             if file.file_format == 'unknown' and '.zarr!' in file.manifest_entry.name:
                 # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
@@ -292,7 +295,7 @@ class FileTransformer(Transformer):
             contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
                             files=[_file_dict(file)],
                             processes=list(visitor.processes.values()),
-                            projects=[_project_dict(bundle)])
+                            projects=[_project_dict(project)])
             es_document = ElasticSearchDocument(entity_type=self.entity_type(),
                                                 entity_id=str(file.document_id),
                                                 bundles=[Bundle(uuid=str(bundle.uuid),
@@ -316,6 +319,7 @@ class SpecimenTransformer(Transformer):
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files)
+        project = self._get_project(bundle)
         for specimen in bundle.specimens:
             visitor = TransformerVisitor()
             specimen.accept(visitor)
@@ -323,7 +327,7 @@ class SpecimenTransformer(Transformer):
             contents = dict(specimens=[_specimen_dict(specimen)],
                             files=list(visitor.files.values()),
                             processes=list(visitor.processes.values()),
-                            projects=[_project_dict(bundle)])
+                            projects=[_project_dict(project)])
             es_document = ElasticSearchDocument(entity_type=self.entity_type(),
                                                 entity_id=str(specimen.document_id),
                                                 bundles=[Bundle(uuid=str(bundle.uuid),
@@ -347,22 +351,25 @@ class ProjectTransformer(Transformer):
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files)
-        bundle_uuid = str(bundle.uuid)
-        simplified_project = _project_dict(bundle)
-        data_visitor = TransformerVisitor()
+        # Project entities are not explicitly linked in the graph. The mere presence of project metadata in a bundle
+        # indicates that all other entities in that bundle belong to that project. Because of that we can't rely on a
+        # visitor to collect the related entities but have to enumerate the explicitly:
+        #
+        visitor = TransformerVisitor()
         for specimen in bundle.specimens:
-            specimen.accept(data_visitor)
-            specimen.ancestors(data_visitor)
+            specimen.accept(visitor)
+            specimen.ancestors(visitor)
         for file in bundle.files.values():
-            file.accept(data_visitor)
-            file.ancestors(data_visitor)
-        for project in bundle.projects.values():
-            contents = dict(specimens=[_specimen_dict(s) for s in data_visitor.specimens.values()],
-                            files=list(data_visitor.files.values()),
-                            processes=list(data_visitor.processes.values()),
-                            projects=[simplified_project])
-            yield ElasticSearchDocument(entity_type=self.entity_type(),
-                                        entity_id=str(project.document_id),
-                                        bundles=[Bundle(uuid=bundle_uuid,
-                                                        version=bundle.version,
-                                                        contents=contents)])
+            file.accept(visitor)
+            file.ancestors(visitor)
+        project = self._get_project(bundle)
+
+        contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
+                        files=list(visitor.files.values()),
+                        processes=list(visitor.processes.values()),
+                        projects=[_project_dict(project)])
+        yield ElasticSearchDocument(entity_type=self.entity_type(),
+                                    entity_id=str(project.document_id),
+                                    bundles=[Bundle(uuid=str(bundle.uuid),
+                                                    version=bundle.version,
+                                                    contents=contents)])
