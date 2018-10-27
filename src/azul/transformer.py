@@ -277,10 +277,16 @@ BundleVersion = str
 class Accumulator(ABC):
     @abstractmethod
     def accumulate(self, value):
+        """
+        Incorporate the given value into this accumulator.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def close(self):
+        """
+        Return the accumulated value.
+        """
         raise NotImplementedError
 
 
@@ -313,12 +319,25 @@ class SetAccumulator(Accumulator):
         self.value = set()
         self.max_size = max_size
 
-    def accumulate(self, value):
+    def accumulate(self, value) -> bool:
+        """
+        :return: True, if the given value was incorporated into the set
+        """
         if self.max_size is None or len(self.value) < self.max_size:
+            before = len(self.value)
             if isinstance(value, (list, set)):
                 self.value.update(value)
             else:
                 self.value.add(value)
+            after = len(self.value)
+            if before < after:
+                return True
+            elif before == after:
+                return False
+            else:
+                assert False
+        else:
+            return False
 
     def close(self) -> List[Any]:
         return list(self.value)
@@ -344,8 +363,8 @@ class ListAccumulator(Accumulator):
 
 class SetOfDictAccumulator(SetAccumulator):
 
-    def accumulate(self, value):
-        super().accumulate(freeze(value))
+    def accumulate(self, value) -> bool:
+        return super().accumulate(freeze(value))
 
     def close(self):
         return thaw(super().close())
@@ -396,10 +415,41 @@ class MaxAccumulator(LastValueAccumulator):
             super().accumulate(value)
 
 
-class DistinctValueCountAccumulator(SetAccumulator):
+class DistinctAccumulator(Accumulator):
+    """
+    An accumulator for (key, value) tuples. Of two pairs with the same key, only the value from the first pair will
+    be accumulated. The actual values will be accumulated in another accumulator instance specified at construction.
 
-    def close(self) -> int:
-        return len(super().close())
+        >>> a = DistinctAccumulator(SumAccumulator(0), max_size=3)
+
+    Keys can be tuples, too.
+
+        >>> a.accumulate((('x', 'y'), 3))
+
+    Values associated with a recurring key will not be accumulated.
+
+        >>> a.accumulate((('x', 'y'), 4))
+        >>> a.accumulate(('a', 20))
+        >>> a.accumulate(('b', 100))
+
+    Accumulation stops at max_size distinct keys.
+
+        >>> a.accumulate(('c', 1000))
+        >>> a.close()
+        123
+    """
+
+    def __init__(self, inner: Accumulator, max_size: int = None) -> None:
+        self.value = inner
+        self.keys = SetAccumulator(max_size=max_size)
+
+    def accumulate(self, value):
+        key, value = value
+        if self.keys.accumulate(key):
+            self.value.accumulate(value)
+
+    def close(self):
+        return self.value.close()
 
 
 class EntityAggregator(ABC):
