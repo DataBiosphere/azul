@@ -6,6 +6,7 @@ from io import StringIO
 from itertools import chain
 import logging
 import os
+from uuid import uuid4
 
 from chalice import Response
 from jsonobject import (FloatProperty,
@@ -15,6 +16,7 @@ from jsonobject import (FloatProperty,
                         ObjectProperty,
                         StringProperty)
 
+from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
@@ -71,10 +73,12 @@ class FileTypeSummary(JsonObject):
     @classmethod
     def for_aggregate(cls, aggregate_file):
         self = cls()
-        self.count = len(aggregate_file['uuid'])
+        self.count = aggregate_file['count']
         self.totalSize = aggregate_file['size']
-        assert isinstance(aggregate_file['format'], list)
-        self.fileType = aggregate_file['format'][0]
+        format = aggregate_file['file_format']
+        assert isinstance(format, list)
+        assert len(format)
+        self.fileType = format[0]
         return self
 
 
@@ -186,14 +190,10 @@ class ManifestResponse(AbstractResponse):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
-    def return_response(self):
+    def _construct_tsv_content(self):
         es_search = self.es_search
 
-        headers = {'Content-Disposition': 'attachment; filename="export.tsv"',
-                   'Content-Type': 'text/tab-separated-values'}
-
         output = StringIO()
-
         writer = csv.writer(output, dialect='excel-tab')
 
         writer.writerow(list(self.manifest_entries['bundles'].keys()) + list(self.manifest_entries['files'].keys()))
@@ -207,7 +207,18 @@ class ManifestResponse(AbstractResponse):
                 # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
                 bundle_fields = self._translate(bundle, 'bundles')
                 writer.writerow(bundle_fields + file_fields)
-        return Response(body=output.getvalue(), headers=headers, status_code=200)
+
+        return output.getvalue()
+
+    def return_response(self):
+        parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
+                          data=self._construct_tsv_content().encode(),
+                          content_type='text/tab-separated-values')
+        object_key = self.storage_service.put(**parameters)
+        presigned_url = self.storage_service.get_presigned_url(object_key)
+        headers = {'Content-Type': 'application/json', 'Location': presigned_url}
+
+        return Response(body='', headers=headers, status_code=302)
 
     def __init__(self, es_search, manifest_entries, mapping):
         """
@@ -216,10 +227,12 @@ class ManifestResponse(AbstractResponse):
         :param raw_response: The raw response from ElasticSearch
         :param mapping: The mapping between the columns to values within ES
         :param manifest_entries: The columns that will be present in the tsv
+        :param storage_service: The storage service used to store temporary downloadable content
         """
         self.es_search = es_search
         self.manifest_entries = OrderedDict(manifest_entries)
         self.mapping = mapping
+        self.storage_service = StorageService()
 
 
 class EntryFetcher:
@@ -534,11 +547,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         ElasticSearch
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        files = self.make_files(entry)
         kwargs = {
-            'files': files
+            'files': self.make_files(entry)
         } if self.entity_type == 'files' else {
-            'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json() for aggregate_file in files]
+            'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json()
+                                  for aggregate_file in entry["contents"]["files"]]
         }
         return HitEntry(processes=self.make_processes(entry),
                         entryId=entry["entity_id"],
