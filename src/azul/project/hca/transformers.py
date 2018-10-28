@@ -26,7 +26,7 @@ from azul.types import JSON
 log = logging.getLogger(__name__)
 
 
-def _project_dict(project: api.Project) -> dict:
+def _project_dict(project: api.Project) -> JSON:
     # Store lists of all values of each of these facets to allow facet filtering
     # and term counting on the webservice
     laboratories: Set[str] = set()
@@ -68,17 +68,25 @@ def _specimen_dict(specimen: api.SpecimenFromOrganism) -> JSON:
     return visitor.merged_specimen
 
 
-def _file_dict(f: api.File) -> JSON:
+def _cell_suspension_dict(cell_suspension: api.CellSuspension) -> JSON:
+    visitor = CellSuspensionVisitor()
+    # Visit the cell suspension but don't descend. We're only interested in the parent specimen.
+    visitor.visit(cell_suspension)
+    cell_suspension.ancestors(visitor)
+    return visitor.merged_cell_suspension
+
+
+def _file_dict(file: api.File) -> JSON:
     return {
-        'content-type': f.manifest_entry.content_type,
-        'indexed': f.manifest_entry.indexed,
-        'name': f.manifest_entry.name,
-        'sha1': f.manifest_entry.sha1,
-        'size': f.manifest_entry.size,
-        'uuid': f.manifest_entry.uuid,
-        'version': f.manifest_entry.version,
-        'document_id': str(f.document_id),
-        'file_format': f.file_format,
+        'content-type': file.manifest_entry.content_type,
+        'indexed': file.manifest_entry.indexed,
+        'name': file.manifest_entry.name,
+        'sha1': file.manifest_entry.sha1,
+        'size': file.manifest_entry.size,
+        'uuid': file.manifest_entry.uuid,
+        'version': file.manifest_entry.version,
+        'document_id': str(file.document_id),
+        'file_format': file.file_format,
         '_type': 'file',
         **(
             {
@@ -90,24 +98,24 @@ def _file_dict(f: api.File) -> JSON:
     }
 
 
-def _process_dict(pc: api.Process, pl: api.Protocol) -> JSON:
+def _process_dict(process: api.Process, protocol: api.Protocol) -> JSON:
     return {
-        'document_id': f"{pc.document_id}.{pl.document_id}",
-        'process_id': pc.process_id,
-        'process_name': pc.process_name,
-        'protocol_id': pl.protocol_id,
-        'protocol_name': pl.protocol_name,
+        'document_id': f"{process.document_id}.{protocol.document_id}",
+        'process_id': process.process_id,
+        'process_name': process.process_name,
+        'protocol_id': protocol.protocol_id,
+        'protocol_name': protocol.protocol_name,
         '_type': "process",
         **(
             {
-                'library_construction_approach': pl.library_construction_approach
-            } if isinstance(pl, api.LibraryPreparationProtocol) else {
-                'instrument_manufacturer_model': pl.instrument_manufacturer_model
-            } if isinstance(pl, api.SequencingProtocol) else {
-                'library_construction_approach': pc.library_construction_approach
-            } if isinstance(pc, api.LibraryPreparationProcess) else {
-                'instrument_manufacturer_model': pc.instrument_manufacturer_model
-            } if isinstance(pc, api.SequencingProcess) else {
+                'library_construction_approach': protocol.library_construction_approach
+            } if isinstance(protocol, api.LibraryPreparationProtocol) else {
+                'instrument_manufacturer_model': protocol.instrument_manufacturer_model
+            } if isinstance(protocol, api.SequencingProtocol) else {
+                'library_construction_approach': process.library_construction_approach
+            } if isinstance(process, api.LibraryPreparationProcess) else {
+                'instrument_manufacturer_model': process.instrument_manufacturer_model
+            } if isinstance(process, api.SequencingProcess) else {
             }
         )
     }
