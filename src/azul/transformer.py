@@ -480,7 +480,7 @@ class SimpleAggregator(EntityAggregator):
                 for k, accumulator in aggregate.items()
                 if accumulator is not None
             }
-        ]
+        ] if aggregate else []
 
     def _accumulate(self, aggregate, entity):
         entity = self._transform_entity(entity)
