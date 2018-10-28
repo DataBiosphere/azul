@@ -371,6 +371,9 @@ class SetOfDictAccumulator(SetAccumulator):
 
 
 class LastValueAccumulator(Accumulator):
+    """
+    An accumulator that accepts any number of values and returns the value most recently seen.
+    """
 
     def __init__(self) -> None:
         super().__init__()
@@ -383,16 +386,22 @@ class LastValueAccumulator(Accumulator):
         return self.value
 
 
-class FirstValueAccumulator(LastValueAccumulator):
+class OptionalValueAccumulator(LastValueAccumulator):
+    """
+    An accumulator that accepts at most one value and returns it. Recurrence of the same value is rejected.
+    """
 
     def accumulate(self, value):
-        if self.value is not None:
-            raise ValueError('Conflicting values:', self.value, value)
-        else:
+        if self.value is None:
             super().accumulate(value)
+        else:
+            raise ValueError('Conflicting values:', self.value, value)
 
 
-class OneValueAccumulator(FirstValueAccumulator):
+class MandatoryValueAccumulator(OptionalValueAccumulator):
+    """
+    An accumulator that requires exactly one value and returns it.
+    """
 
     def get(self):
         if self.value is None:
@@ -499,8 +508,10 @@ class GroupingAggregator(SimpleAggregator):
     def aggregate(self, entities: Entities) -> Entities:
         aggregates: MutableMapping[Any, MutableMapping[str, Optional[Accumulator]]] = defaultdict(dict)
         for entity in entities:
-            aggregate = aggregates[self._group_key(entity)]
-            self._accumulate(aggregate, entity)
+            group_keys = self._group_keys(entity)
+            for group_key in group_keys:
+                aggregate = aggregates[group_key]
+                self._accumulate(aggregate, entity)
         return [
             {
                 field: accumulator.get()
@@ -511,7 +522,7 @@ class GroupingAggregator(SimpleAggregator):
         ]
 
     @abstractmethod
-    def _group_key(self, entity) -> Any:
+    def _group_keys(self, entity) -> Iterable[Any]:
         raise NotImplementedError
 
 

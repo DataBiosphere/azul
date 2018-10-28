@@ -32,7 +32,7 @@
     "organismAge": "contents.specimens.organism_age",
     "organismAgeUnit": "contents.specimens.organism_age_unit",
     "preservationMethod": "contents.specimens.storage_method",
-    "cellCount": "contents.specimens.total_estimated_cells",
+    "cellCount": "contents.cell_suspensions.total_estimated_cells",
 
     "entryId": "entity_id"
 },
