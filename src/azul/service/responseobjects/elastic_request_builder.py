@@ -412,6 +412,7 @@ class ElasticTransformDump(object):
                           filters=None,
                           pagination=None,
                           post_filter=False,
+                          include_file_urls=False,
                           entity_type='files'):
         """
         This function does the whole transformation process. It takes
@@ -428,6 +429,7 @@ class ElasticTransformDump(object):
         :param pagination: Pagination to be used for the API
         :param post_filter: Flag to indicate whether to do a post_filter
         call instead of the regular query.
+        :param include_file_urls: Show file URL field in request
         :param entity_type: the string referring to the entity type used to get
         the ElasticSearch index to search
         :return: Returns the transformed request
@@ -545,6 +547,11 @@ class ElasticTransformDump(object):
         if entity_type == 'projects':  # Add project summaries to each project hit
             self.add_project_summaries(final_response['hits'], es_response)
 
+        if include_file_urls:
+            for hit in final_response['hits']:
+                for data_file in hit['files']:
+                    query_params = f"?replica=aws&version={data_file['version']}"
+                    data_file['url'] = f"{config.dss_endpoint}/files/{data_file['uuid']}{query_params}"
         return final_response
 
     def transform_manifest(
@@ -577,13 +584,7 @@ class ElasticTransformDump(object):
             filters = {"file": {}}
         # Create an ElasticSearch request
         filters = filters['file']
-
-        es_search = self.create_request(
-            filters,
-            self.es_client,
-            request_config,
-            post_filter=False)
-
+        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
 
         return manifest.return_response()

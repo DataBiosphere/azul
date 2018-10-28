@@ -1,6 +1,7 @@
 import ast
 import logging.config
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 from chalice import Chalice, BadRequestError, NotFoundError
 
@@ -144,6 +145,7 @@ def get_data(file_id=None):
         response = es_td.transform_request(filters=filters,
                                            pagination=pagination,
                                            post_filter=True,
+                                           include_file_urls=True,
                                            entity_type='files')
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
@@ -366,11 +368,13 @@ def get_summary():
         'specimens': ['organCount', 'donorCount', 'labCount', 'totalCellCount', 'organSummaries', 'specimenCount'],
         'projects': ['projectCount']
     }
-    summaries = {entity_type: es_td.transform_summary(filters=filters, entity_type=entity_type)
-                 for entity_type, summary_fields in summary_fields_by_authority.items()}
+    with ThreadPoolExecutor(max_workers=len(summary_fields_by_authority)) as executor:
+        summaries = dict(executor.map(lambda entity_type:
+                                      (entity_type, es_td.transform_summary(filters=filters, entity_type=entity_type)),
+                                      summary_fields_by_authority))
     unified_summary = {field: summaries[entity_type][field]
-                        for entity_type, summary_fields in summary_fields_by_authority.items()
-                        for field in summary_fields}
+                       for entity_type, summary_fields in summary_fields_by_authority.items()
+                       for field in summary_fields}
     assert all(len(unified_summary) == len(summary) for summary in summaries.values())
 
     # Returning a single response if <file_id> request form is used
