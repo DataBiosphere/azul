@@ -500,6 +500,7 @@ class TestRequestBuilder(WebServiceTestCase):
                             "entity_id": "a",
                             "contents": {
                                 "specimens": [],
+                                "cell_suspensions": [],
                                 "files": [],
                                 "processes": [],
                                 "project": {
@@ -527,13 +528,18 @@ class TestRequestBuilder(WebServiceTestCase):
                                         "organ": [
                                             "organ1"
                                         ],
-                                        "total_estimated_cells": 2,
                                         "donor_biomaterial_id": [
                                             "donor1"
                                         ],
                                         "genus_species": [
                                             "species1"
                                         ]
+                                    }
+                                ],
+                                "cell_suspensions": [
+                                    {
+                                        "organ": ["organ1"],
+                                        "total_estimated_cells": 2,
                                     }
                                 ],
                                 "files": [],
