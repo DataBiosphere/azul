@@ -27,11 +27,9 @@
                                         "document_id": "4e8744e9-a038-4c0c-80ef-3b235d0f5af7",
                                         "has_input_biomaterial": [
                                             null,
-                                            "1113",
-                                            "1113_T"
+                                            "1113"
                                         ],
                                         "_source": [
-                                            "cell_suspension",
                                             "donor_organism",
                                             "specimen_from_organism"
                                         ],
@@ -43,7 +41,6 @@
                                         "organ_part": null,
                                         "storage_method": null,
                                         "_type": "specimen",
-                                        "total_estimated_cells": 1,
                                         "donor_biomaterial_id": [
                                             "1113"
                                         ],
@@ -59,11 +56,19 @@
                                         "organism_age_unit": [
                                             "week"
                                         ],
-                                        "max_organism_age_in_seconds": 7257600,
-                                        "min_organism_age_in_seconds": 3628800,
+                                        "max_organism_age_in_seconds": 7257600.0,
+                                        "min_organism_age_in_seconds": 3628800.0,
                                         "biological_sex": [
                                             "female"
                                         ]
+                                    }
+                                ],
+                                "cell_suspensions": [
+                                    {
+                                        "document_id": "bac7fdae-cbf7-40d6-baa7-a14157307011",
+                                        "organ": ["tumor"],
+                                        "organ_part": [null],
+                                        "total_estimated_cells": 1
                                     }
                                 ],
                                 "files": [
@@ -253,11 +258,9 @@
                                         "document_id": "4e8744e9-a038-4c0c-80ef-3b235d0f5af7",
                                         "has_input_biomaterial": [
                                             null,
-                                            "1113",
-                                            "1113_T"
+                                            "1113"
                                         ],
                                         "_source": [
-                                            "cell_suspension",
                                             "donor_organism",
                                             "specimen_from_organism"
                                         ],
@@ -269,7 +272,6 @@
                                         "organ_part": null,
                                         "storage_method": null,
                                         "_type": "specimen",
-                                        "total_estimated_cells": 1,
                                         "donor_biomaterial_id": [
                                             "1113"
                                         ],
@@ -285,11 +287,19 @@
                                         "organism_age_unit": [
                                             "week"
                                         ],
-                                        "max_organism_age_in_seconds": 7257600,
-                                        "min_organism_age_in_seconds": 3628800,
+                                        "max_organism_age_in_seconds": 7257600.0,
+                                        "min_organism_age_in_seconds": 3628800.0,
                                         "biological_sex": [
                                             "female"
                                         ]
+                                    }
+                                ],
+                                "cell_suspensions": [
+                                    {
+                                        "document_id": "bac7fdae-cbf7-40d6-baa7-a14157307011",
+                                        "organ": ["tumor"],
+                                        "organ_part": [null],
+                                        "total_estimated_cells": 1
                                     }
                                 ],
                                 "files": [

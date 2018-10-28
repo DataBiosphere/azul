@@ -333,24 +333,48 @@ class TestHCAIndexer(IndexerTestCase):
 
         def check_bundle_correctness(es_results):
             self.assertGreater(len(es_results), 0)
-            specimen_encounters = 0
+            documents_with_cell_suspension = 0
             for result_dict in es_results:
                 entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
-                if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
-                bundles = result_dict["_source"]['bundles']
-                self.assertEqual(1, len(bundles))
-                contents = bundles[0]['contents']
-                specimens = contents['specimens']
+                if aggregate:
+                    contents = result_dict["_source"]['contents']
+                else:
+                    bundles = result_dict["_source"]['bundles']
+                    self.assertEqual(1, len(bundles))
+                    contents = bundles[0]['contents']
+                cell_suspensions = contents['cell_suspensions']
                 if entity_type == 'files' and contents['files'][0]['file_format'] == 'pdf':
                     # The PDF files in that bundle aren't linked to a specimen
-                    self.assertEqual(0, len(specimens))
+                    self.assertEqual(0, len(cell_suspensions))
                 else:
-                    self.assertEqual(1, len(specimens))
+                    self.assertEqual(1 if aggregate else 384, len(cell_suspensions))
                     # 384 wells in total, four of them empty, the rest with a single cell
-                    self.assertEqual(380, specimens[0]['total_estimated_cells'])
-                    specimen_encounters += 1
-            # specimen should be mentioned in documents for one project, two files (one per fastq) and one specimen
-            self.assertEqual(4, specimen_encounters)
+                    self.assertEqual(380, sum(cs['total_estimated_cells'] for cs in cell_suspensions))
+                    documents_with_cell_suspension += 1
+            # Cell suspensions should be mentioned in one project, two files (one per fastq) and one
+            # specimen. There should be one original one aggregate document for each of those.
+            self.assertEqual(8, documents_with_cell_suspension)
+
+        self._get_es_results(check_bundle_correctness)
+
+    def test_well_bundles(self):
+        self._mock_index(('3f8176ff-61a7-4504-a57c-fc70f38d5b13', '2018-10-24T234431.820615Z'))
+        self._mock_index(('e2c3054e-9fba-4d7a-b85b-a2220d16da73', '2018-10-24T234303.157920Z'))
+        self.maxDiff = None
+
+        def check_bundle_correctness(es_results):
+            self.assertGreater(len(es_results), 0)
+            for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
+                if aggregate:
+                    contents = result_dict["_source"]['contents']
+                    cell_suspensions = contents['cell_suspensions']
+                    self.assertEqual(1, len(cell_suspensions))
+                    # Each bundle contributes a well with one cell. The data files in each bundle are derived from
+                    # the cell in that well. This is why each data file should only have a cell count of 1. Both
+                    # bundles refer to the same specimen and project, so the cell count for those should be 2.
+                    expected_cells = 1 if entity_type == 'files' else 2
+                    self.assertEqual(expected_cells, cell_suspensions[0]['total_estimated_cells'])
 
         self._get_es_results(check_bundle_correctness)
 
