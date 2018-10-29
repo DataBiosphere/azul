@@ -142,7 +142,6 @@ class ElasticTransformDump(object):
                        es_client,
                        req_config,
                        post_filter: bool=False,
-                       source_filter: List=None,
                        entity_type='files'):
         """
         This function will create an ElasticSearch request based on
@@ -156,7 +155,6 @@ class ElasticTransformDump(object):
         config
         :param post_filter: Flag for doing either post_filter or regular
         querying (i.e. faceting or not)
-        :param List source_filter: Source Filter (``_source``)
         :param entity_type: the string referring to the entity type used to get
         the ElasticSearch index to search
         :return: Returns the Search object that can be used for executing
@@ -167,18 +165,20 @@ class ElasticTransformDump(object):
         facet_config = {key: field_mapping[key]
                         for key in req_config['facets']}
         # Create the Search Object
-        es_search = Search(
-            using=es_client,
-            index=config.es_index_name(entity_type, aggregate=True))
+        es_search = Search(using=es_client, index=config.es_index_name(entity_type, aggregate=True))
         # Translate the filters keys
         filters = ElasticTransformDump.translate_filters(
             filters, field_mapping)
         # Get the query from 'create_query'
         es_query = ElasticTransformDump.create_query(filters)
         # Do a post_filter using the returned query
-        es_search = es_search.query(es_query) if not post_filter else es_search.post_filter(es_query)
+        if post_filter:
+            es_search = es_search.post_filter(es_query)
+        else:
+            es_search = es_search.query(es_query)
 
-        if source_filter:
+        source_filter = ElasticTransformDump.create_source_filter(req_config)
+        if source_filter is not None:
             es_search = es_search.source(include=source_filter)
 
         # Iterate over the aggregates in the facet_config
@@ -194,6 +194,23 @@ class ElasticTransformDump(object):
             ElasticTransformDump.create_project_summary_aggregates(es_search, req_config)
 
         return es_search
+
+    @staticmethod
+    def create_source_filter(request_config):
+        try:
+            source_filter_config = request_config['source_filter']['manifest']
+        except KeyError:
+            # The request configuration does not specify whether the source filtering is needed for this request.
+            return None
+
+        manifest_config = request_config['manifest']
+        source_filter = []
+
+        for entity_type, entity_config in source_filter_config.items():
+            for field in manifest_config[entity_type].values():
+                source_filter.append(f'{entity_config["prefix"]}{field}')
+
+        return source_filter
 
     @staticmethod
     def create_autocomplete_request(
@@ -562,7 +579,7 @@ class ElasticTransformDump(object):
 
     def transform_manifest(
         self,
-        request_config_file='request_config.json',
+        request_config_file='manifest_request_config.json',
         filters=None):
         """
         This function does the whole transformation process for a manifest
@@ -593,8 +610,7 @@ class ElasticTransformDump(object):
         es_search = self.create_request(filters,
                                         self.es_client,
                                         request_config,
-                                        post_filter=False,
-                                        source_filter=['bundles.*', 'contents.files.*'])
+                                        post_filter=False)
         manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
 
         return manifest.return_response()
