@@ -35,7 +35,7 @@ class TestResponse(WebServiceTestCase):
                         "lane_index": 5108,
                         "name": "billion.key",
                         "read_index": "blue",
-                        "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+                        "sha256": "fc5923256fb9dd349698d29228246a5c94653e80",
                         "size": 6667,
                         "uuid": "e9772583-4240-4757-6357-32bef0e51150",
                         "version": "2001-03-16T05:26:40"
@@ -155,7 +155,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "format": "csv",
                             "name": "billion.key",
-                            "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+                            "sha256": "fc5923256fb9dd349698d29228246a5c94653e80",
                             "size": 6667,
                             "uuid": "e9772583-4240-4757-6357-32bef0e51150",
                             "version": "2001-03-16T05:26:40"
@@ -319,7 +319,7 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "format": "csv",
                                 "name": "billion.key",
-                                "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+                                "sha256": "fc5923256fb9dd349698d29228246a5c94653e80",
                                 "size": 6667,
                                 "uuid": "e9772583-4240-4757-6357-32bef0e51150",
                                 "version": "2001-03-16T05:26:40"
@@ -394,7 +394,7 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "format": "csv",
                                 "name": "billion.key",
-                                "sha1": "fc5923256fb9dd349698d29228246a5c94653e80",
+                                "sha256": "fc5923256fb9dd349698d29228246a5c94653e80",
                                 "size": 6667,
                                 "uuid": "e9772583-4240-4757-6357-32bef0e51150",
                                 "version": "2001-03-16T05:26:40"
