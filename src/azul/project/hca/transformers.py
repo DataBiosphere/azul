@@ -81,7 +81,7 @@ def _file_dict(file: api.File) -> JSON:
         'content-type': file.manifest_entry.content_type,
         'indexed': file.manifest_entry.indexed,
         'name': file.manifest_entry.name,
-        'sha1': file.manifest_entry.sha1,
+        'sha256': file.manifest_entry.sha256,
         'size': file.manifest_entry.size,
         'uuid': file.manifest_entry.uuid,
         'version': file.manifest_entry.version,
