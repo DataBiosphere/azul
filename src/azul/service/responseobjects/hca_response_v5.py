@@ -514,7 +514,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             translated_file = {
                 "format": _file.get("file_format"),
                 "name": _file.get("name"),
-                "sha1": _file.get("sha1"),
+                "sha256": _file.get("sha256"),
                 "size": _file.get("size"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
