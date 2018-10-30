@@ -143,7 +143,7 @@ class ElasticTransformDump(object):
                        req_config,
                        post_filter: bool = False,
                        source_filter: List[str] = None,
-                       aggregation_enabled: bool = True,
+                       enable_aggregation: bool = True,
                        entity_type='files'):
         """
         This function will create an ElasticSearch request based on
@@ -159,7 +159,8 @@ class ElasticTransformDump(object):
         querying (i.e. faceting or not)
         :param List source_filter: A list of "foo.bar" field paths (see
                https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html)
-        :param aggregation_enabled: Flag for enable aggregation
+        :param enable_aggregation: Flag for enabling query aggregation (and
+               effectively ignoring facet configuration)
         :param entity_type: the string referring to the entity type used to get
         the ElasticSearch index to search
         :return: Returns the Search object that can be used for executing
@@ -180,7 +181,7 @@ class ElasticTransformDump(object):
         if source_filter:
             es_search = es_search.source(include=source_filter)
 
-        if aggregation_enabled:
+        if enable_aggregation:
             for agg, translation in facet_config.items():
                 # Create a bucket aggregate for the 'agg'.
                 # Call create_aggregate() to return the appropriate aggregate query
@@ -575,7 +576,7 @@ class ElasticTransformDump(object):
                                         request_config,
                                         post_filter=False,
                                         source_filter=source_filter,
-                                        aggregation_enabled=False)
+                                        enable_aggregation=False)
 
         manifest = ManifestResponse(es_search, manifest_config, request_config['translation'])
 
