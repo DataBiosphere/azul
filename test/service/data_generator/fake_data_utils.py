@@ -114,12 +114,11 @@ class ElasticsearchFakeDataLoader(object):
                         "contributors": [
                             {
                                 "contact_name": "safe_color_name",
-                                "corresponding_contributor": "pybool",
                                 "email": "safe_color_name",
                                 "institution": "safe_color_name",
                                 "laboratory": "safe_color_name",
-                                "orcid_id": "safe_color_name",
-                                "phone": "safe_color_name"
+                                "corresponding_contributor": "pybool",
+                                "project_role": "safe_color_name"
                             }
                         ],
                         "publication_titles": [
@@ -127,12 +126,7 @@ class ElasticsearchFakeDataLoader(object):
                         ],
                         "publications": [
                             {
-                                "authors": [
-                                    "safe_color_name"
-                                ],
                                 "publication_title": "safe_color_name",
-                                "doi": "safe_color_name",
-                                "pmid": "pyint",
                                 "publication_url": "safe_color_name"
                             }
                         ]

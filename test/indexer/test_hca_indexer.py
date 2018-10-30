@@ -2,6 +2,7 @@
 Suite for unit testing indexer.py
 """
 
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 import json
@@ -377,6 +378,37 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertEqual(expected_cells, cell_suspensions[0]['total_estimated_cells'])
 
         self._get_es_results(check_bundle_correctness)
+
+    def test_project_contact_extraction(self):
+        """
+        Ensure all fields related to project contacts are properly extracted
+        """
+        self._mock_index(('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'))
+
+        def check_project_contacts(es_results):
+            for index_results in es_results:
+                entity_type, aggregate = config.parse_es_index_name(index_results['_index'])
+                if not aggregate or entity_type != 'projects':
+                    continue
+                contributor_values = defaultdict(set)
+                contributors = index_results['_source']['contents']['projects'][0]['contributors']
+                for contributor in contributors:
+                    for k, v in contributor.items():
+                        contributor_values[k].add(v)
+                self.assertEqual({'Matthew,,Green', 'Ido Amit', 'Assaf Weiner', 'Guy Ledergor', 'Eyal David'},
+                                 contributor_values['contact_name'])
+                self.assertEqual({'assaf.weiner@weizmann.ac.il', 'guy.ledergor@weizmann.ac.il', 'hewgreen@ebi.ac.uk',
+                                  'eyald.david@weizmann.ac.il', 'ido.amit@weizmann.ac.il'},
+                                 contributor_values['email'])
+                self.assertEqual({'EMBL-EBI European Bioinformatics Institute', 'The Weizmann Institute of Science'},
+                                 contributor_values['institution'])
+                self.assertEqual({'Prof. Ido Amit', 'Human Cell Atlas Data Coordination Platform'},
+                                 contributor_values['laboratory'])
+                self.assertEqual({False, True}, contributor_values['corresponding_contributor'])
+                self.assertEqual({'Human Cell Atlas wrangler', None},
+                                 contributor_values['project_role'])
+
+        self._get_es_results(check_project_contacts)
 
 
 if __name__ == "__main__":
