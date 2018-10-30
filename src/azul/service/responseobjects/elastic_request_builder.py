@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 import logging
 import os
+from typing import List
 
 import elasticsearch
 from elasticsearch_dsl import A, Q, Search
@@ -137,11 +138,12 @@ class ElasticTransformDump(object):
         return aggregate
 
     @staticmethod
-    def create_request(
-        filters, es_client,
-        req_config,
-        post_filter=False,
-        entity_type='files'):
+    def create_request(filters,
+                       es_client,
+                       req_config,
+                       post_filter: bool = False,
+                       source_filter: List[str] = None,
+                       entity_type='files'):
         """
         This function will create an ElasticSearch request based on
         the filters and facet_config passed into the function
@@ -154,28 +156,28 @@ class ElasticTransformDump(object):
         config
         :param post_filter: Flag for doing either post_filter or regular
         querying (i.e. faceting or not)
+        :param List source_filter: A list of "foo.bar" field paths (see
+               https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html)
         :param entity_type: the string referring to the entity type used to get
         the ElasticSearch index to search
         :return: Returns the Search object that can be used for executing
         the request
         """
-        # Get the field mapping and facet configuration from the config
         field_mapping = req_config['translation']
-        facet_config = {key: field_mapping[key]
-                        for key in req_config['facets']}
-        # Create the Search Object
-        es_search = Search(
-            using=es_client,
-            index=config.es_index_name(entity_type, aggregate=True))
-        # Translate the filters keys
-        filters = ElasticTransformDump.translate_filters(
-            filters, field_mapping)
-        # Get the query from 'create_query'
+        facet_config = {key: field_mapping[key] for key in req_config['facets']}
+        es_search = Search(using=es_client, index=config.es_index_name(entity_type, aggregate=True))
+        filters = ElasticTransformDump.translate_filters(filters, field_mapping)
+
         es_query = ElasticTransformDump.create_query(filters)
-        # Do a post_filter using the returned query
-        es_search = es_search.query(
-            es_query) if not post_filter else es_search.post_filter(es_query)
-        # Iterate over the aggregates in the facet_config
+
+        if post_filter:
+            es_search = es_search.post_filter(es_query)
+        else:
+            es_search = es_search.query(es_query)
+
+        if source_filter:
+            es_search = es_search.source(include=source_filter)
+
         for agg, translation in facet_config.items():
             # Create a bucket aggregate for the 'agg'.
             # Call create_aggregate() to return the appropriate aggregate query
@@ -554,38 +556,24 @@ class ElasticTransformDump(object):
                     data_file['url'] = f"{config.dss_endpoint}/files/{data_file['uuid']}{query_params}"
         return final_response
 
-    def transform_manifest(
-        self,
-        request_config_file='request_config.json',
-        filters=None):
-        """
-        This function does the whole transformation process for a manifest
-        request. It takes the path of the config file and the filters
-        Excluding filters will do a match_all request.
-        :param filters: Filter parameter from the API to be used in
-        the query. Defaults to None
-        :param request_config_file: Path containing the requests config
-        to be used for aggregates. Relative to the'config' folder.
-        :return: Returns the transformed manifest request
-        """
-        # Use this as the base to construct the paths
-        # stackoverflow.com/questions/247770/retrieving-python-module-path
-        # Use that to get the path of the config module
+    def transform_manifest(self, request_config_file='request_config.json', filters=None):
         config_folder = os.path.dirname(service_config.__file__)
-        self.logger.info('Transforming /export request')
-        # Create the path for the config_path
-        request_config_path = "{}/{}".format(
-            config_folder, request_config_file)
-        # Get the Json Objects from the request_config
-        self.logger.debug(
-            'Getting the request_config file: {}'.format(request_config_path))
+        request_config_path = "{}/{}".format(config_folder, request_config_file)
         request_config = self.open_and_return_json(request_config_path)
         if not filters:
             filters = {"file": {}}
-        # Create an ElasticSearch request
         filters = filters['file']
-        es_search = self.create_request(filters, self.es_client, request_config, post_filter=False)
-        manifest = ManifestResponse(es_search, request_config['manifest'], request_config['translation'])
+        manifest_config = request_config['manifest']
+        source_filter = [field_path_prefix + '.' + field_name
+                         for field_path_prefix, field_mapping in manifest_config.items()
+                         for field_name in field_mapping.values()]
+        es_search = self.create_request(filters,
+                                        self.es_client,
+                                        request_config,
+                                        post_filter=False,
+                                        source_filter=source_filter)
+
+        manifest = ManifestResponse(es_search, manifest_config, request_config['translation'])
 
         return manifest.return_response()
 
