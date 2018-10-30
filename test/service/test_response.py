@@ -108,7 +108,13 @@ class TestResponse(WebServiceTestCase):
                         "biological_sex": ["silver"],
                         "_source": ["purple"],
                         "genus_species": ["teal"],
-                        "storage_method": specimen_value("aqua"),
+                        "storage_method": specimen_value("aqua")
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "organ": ["purple"],
+                        "organ_part": ["black"],
                         "total_estimated_cells": 5306
                     }
                 ]
@@ -184,6 +190,12 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeUnit": ["navy"],
                             "source": ["purple"],
                             "storageMethod": ["aqua"],
+                        }
+                    ],
+                    "cellSuspensions": [
+                        {
+                            "organ": ["purple"],
+                            "organPart": ["black"],
                             "totalCells": 5306
                         }
                     ]
@@ -249,7 +261,13 @@ class TestResponse(WebServiceTestCase):
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
                             "source": ["purple"],
-                            "storageMethod": "aqua",
+                            "storageMethod": "aqua"
+                        }
+                    ],
+                    "cellSuspensions": [
+                        {
+                            "organ": ["purple"],
+                            "organPart": ["black"],
                             "totalCells": 5306
                         }
                     ]
@@ -335,7 +353,13 @@ class TestResponse(WebServiceTestCase):
                                 "organismAge": ["purple"],
                                 "organismAgeUnit": ["navy"],
                                 "source": ["purple"],
-                                "storageMethod": ["aqua"],
+                                "storageMethod": ["aqua"]
+                            }
+                        ],
+                        "cellSuspensions": [
+                            {
+                                "organ": ["purple"],
+                                "organPart": ["black"],
                                 "totalCells": 5306
                             }
                         ]
@@ -404,7 +428,13 @@ class TestResponse(WebServiceTestCase):
                                 "organismAge": ["purple"],
                                 "organismAgeUnit": ["navy"],
                                 "source": ["purple"],
-                                "storageMethod": ["aqua"],
+                                "storageMethod": ["aqua"]
+                            }
+                        ],
+                        "cellSuspensions": [
+                            {
+                                "organ": ["purple"],
+                                "organPart": ["black"],
                                 "totalCells": 5306
                             }
                         ]
@@ -556,32 +586,23 @@ class TestResponse(WebServiceTestCase):
 
     def test_project_summary_cell_count(self):
         """
-        Test per organ and total cell counter in ProjectSummaryResponse
-        Should return a correct total cell count and per organ cell count
-        Should not double count cell count from specimens with an already counted id
-            (i.e. each unique specimen counted exactly once)
+        Test per organ and total cell counter in ProjectSummaryResponse. Should return a correct total cell count and
+        per organ cell count. Should not double count cell count from cell suspensions with an already counted id (
+        i.e. each unique cell suspension counted exactly once).
         """
         es_hit = {
             "_id": "a",
             "_source": {
                 "entity_id": "a",
                 "contents": {
-                    "specimens": [
+                    "cell_suspensions": [
                         {
-                            "biomaterial_id": ["specimen1", "specimen3"],
-                            "disease": ["disease1"],
                             "organ": ["organ1"],
                             "total_estimated_cells": 6,
-                            "donor_biomaterial_id": ["donor1"],
-                            "genus_species": ["species1"]
                         },
                         {
-                            "biomaterial_id": ["specimen2"],
-                            "disease": ["disease1"],
                             "organ": ["organ2"],
                             "total_estimated_cells": 3,
-                            "donor_biomaterial_id": ["donor1"],
-                            "genus_species": ["species1"]
                         }
 
                     ],
@@ -759,7 +780,13 @@ class TestResponse(WebServiceTestCase):
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
                             "source": ["purple"],
-                            "storageMethod": ["aqua"],
+                            "storageMethod": ["aqua"]
+                        }
+                    ],
+                    "cellSuspensions": [
+                        {
+                            "organ": ["purple"],
+                            "organPart": ["black"],
                             "totalCells": 5306
                         }
                     ]
@@ -854,7 +881,13 @@ class TestResponse(WebServiceTestCase):
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
                             "source": ["purple"],
-                            "storageMethod": ["aqua"],
+                            "storageMethod": ["aqua"]
+                        }
+                    ],
+                    "cellSuspensions": [
+                        {
+                            "organ": ["purple"],
+                            "organPart": ["black"],
                             "totalCells": 5306
                         }
                     ]
