@@ -379,6 +379,25 @@ class TestHCAIndexer(IndexerTestCase):
 
         self._get_es_results(check_bundle_correctness)
 
+    def test_pooled_specimens(self):
+        self._mock_index(('b7fc737e-9b7b-4800-8977-fe7c94e131df', '2018-09-12T121155.846604Z'))
+        self.maxDiff = None
+
+        def check_bundle_correctness(es_results):
+            self.assertGreater(len(es_results), 0)
+            for result_dict in es_results:
+                entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
+                if aggregate:
+                    contents = result_dict["_source"]['contents']
+                    cell_suspensions = contents['cell_suspensions']
+                    self.assertEqual(1, len(cell_suspensions))
+                    # This bundle contains three specimens which are pooled into the a single cell suspension with
+                    # 10000 cells. Until we introduced cell suspensions as an inner entity we used to associate cell
+                    # counts with specimen which would have inflated the total cell count to 30000 in this case.
+                    self.assertEqual(10000, cell_suspensions[0]['total_estimated_cells'])
+
+        self._get_es_results(check_bundle_correctness)
+
     def test_project_contact_extraction(self):
         """
         Ensure all fields related to project contacts are properly extracted
