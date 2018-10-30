@@ -158,70 +158,80 @@
                                                 "corresponding_contributor": false,
                                                 "email": "JS970@MRCCU.cam.ac.uk",
                                                 "institution": "University of Cambridge",
-                                                "laboratory": "MRC Cancer Unit"
+                                                "laboratory": "MRC Cancer Unit",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Sarah,,Davidson",
                                                 "corresponding_contributor": false,
                                                 "email": "SED49@MRCCU.cam.ac.uk",
                                                 "institution": "University of Cambridge",
-                                                "laboratory": "MRC Cancer Unit"
+                                                "laboratory": "MRC Cancer Unit",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Angela,,Riedel",
                                                 "corresponding_contributor": false,
                                                 "email": "a.riedel@dkfz-heidelberg.de",
                                                 "institution": "DKFZ German Cancer Research Center",
-                                                "laboratory": null
+                                                "laboratory": null,
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Bidesh,,Mahata",
                                                 "corresponding_contributor": false,
                                                 "email": "bm11@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Gozde,,Kar",
                                                 "corresponding_contributor": false,
                                                 "email": "gkar@ebi.ac.uk",
                                                 "institution": "EMBL-EBI",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Jani,,Huuhtanen",
                                                 "corresponding_contributor": true,
                                                 "email": "jani.huuhtanen@helsinki.fi",
                                                 "institution": "University of Helsinki",
-                                                "laboratory": null
+                                                "laboratory": null,
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Jhuma,,Pramanik",
                                                 "corresponding_contributor": false,
                                                 "email": "jp19@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Mirjana,,Efremova",
                                                 "corresponding_contributor": false,
                                                 "email": "me5@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Roser,,Veno-Tormo",
                                                 "corresponding_contributor": false,
                                                 "email": "rv4@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Sarah,A,Teichmann",
                                                 "corresponding_contributor": false,
                                                 "email": "st9@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             }
                                         ],
                                         "publication_titles": [
@@ -389,70 +399,80 @@
                                                 "corresponding_contributor": false,
                                                 "email": "JS970@MRCCU.cam.ac.uk",
                                                 "institution": "University of Cambridge",
-                                                "laboratory": "MRC Cancer Unit"
+                                                "laboratory": "MRC Cancer Unit",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Sarah,,Davidson",
                                                 "corresponding_contributor": false,
                                                 "email": "SED49@MRCCU.cam.ac.uk",
                                                 "institution": "University of Cambridge",
-                                                "laboratory": "MRC Cancer Unit"
+                                                "laboratory": "MRC Cancer Unit",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Angela,,Riedel",
                                                 "corresponding_contributor": false,
                                                 "email": "a.riedel@dkfz-heidelberg.de",
                                                 "institution": "DKFZ German Cancer Research Center",
-                                                "laboratory": null
+                                                "laboratory": null,
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Bidesh,,Mahata",
                                                 "corresponding_contributor": false,
                                                 "email": "bm11@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Gozde,,Kar",
                                                 "corresponding_contributor": false,
                                                 "email": "gkar@ebi.ac.uk",
                                                 "institution": "EMBL-EBI",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Jani,,Huuhtanen",
                                                 "corresponding_contributor": true,
                                                 "email": "jani.huuhtanen@helsinki.fi",
                                                 "institution": "University of Helsinki",
-                                                "laboratory": null
+                                                "laboratory": null,
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Jhuma,,Pramanik",
                                                 "corresponding_contributor": false,
                                                 "email": "jp19@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Mirjana,,Efremova",
                                                 "corresponding_contributor": false,
                                                 "email": "me5@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Roser,,Veno-Tormo",
                                                 "corresponding_contributor": false,
                                                 "email": "rv4@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Sarah,A,Teichmann",
                                                 "corresponding_contributor": false,
                                                 "email": "st9@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             }
                                         ],
                                         "publication_titles": [
