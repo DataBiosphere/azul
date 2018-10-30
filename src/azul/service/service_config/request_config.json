@@ -46,7 +46,7 @@
     }
   },
   "manifest": {
-    "files": {
+    "contents.files": {
       "file_content_type": "content-type",
       "file_name": "name",
       "file_sha1": "sha1",
@@ -55,7 +55,7 @@
       "file_version": "version",
       "file_indexed": "indexed"
     },
-    "bundles":{
+    "bundles": {
       "bundle_uuid": "uuid",
       "bundle_version": "version"
     }
