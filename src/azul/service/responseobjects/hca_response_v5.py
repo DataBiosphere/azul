@@ -190,6 +190,50 @@ class ManifestResponse(AbstractResponse):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
+    def _push_content(self):
+        object_key = f'manifests/{uuid4()}.tsv'
+        content_type = 'text/tab-separated-values'
+
+        with self.storage_service.multipart_upload(object_key, content_type) as multipart_upload:
+            multipart_upload.push(self._create_tsv_content(list(self.manifest_entries['bundles'].keys()) +
+                                                           list(self.manifest_entries['contents.files'].keys())))
+            scanning_count = 0
+            unsaved_rows = []
+            for hit in self.es_search.scan():
+                scanning_count += 1
+                hit_dict = hit.to_dict()
+                assert len(hit_dict['contents']['files']) == 1
+                file = hit_dict['contents']['files'][0]
+                file_fields = self._translate(file, 'contents.files')
+                # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
+                #        would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
+                unsaved_rows.extend(self._translate(bundle, 'bundles') + file_fields for bundle in hit_dict['bundles'])
+                if scanning_count % 20000 == 0:
+                    multipart_upload.push(self._create_tsv_content(unsaved_rows))
+                    unsaved_rows = []
+
+            if unsaved_rows:
+                multipart_upload.push(self._create_tsv_content(unsaved_rows))
+
+        return object_key
+
+    def _create_tsv_content(self, rows):
+        output = StringIO()
+        writer = csv.writer(output, dialect='excel-tab')
+
+        for row in rows:
+            writer.writerow(row)
+
+        return output.getvalue().encode()
+
+    # deprecated: use _push_content instead
+    def _push_content_legacy(self):
+        parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
+                          data=self._construct_tsv_content().encode(),
+                          content_type='text/tab-separated-values')
+        return self.storage_service.put(**parameters)
+
+    # deprecated
     def _construct_tsv_content(self):
         es_search = self.es_search
 
@@ -198,7 +242,14 @@ class ManifestResponse(AbstractResponse):
 
         writer.writerow(list(self.manifest_entries['bundles'].keys()) +
                         list(self.manifest_entries['contents.files'].keys()))
+        rounds = 0
+        import time
+        t1 = time.time()
+        t2 = None
         for hit in es_search.scan():
+            rounds += 1
+            if t2 is None:
+                t2 = time.time()
             hit_dict = hit.to_dict()
             assert len(hit_dict['contents']['files']) == 1
             file = hit_dict['contents']['files'][0]
@@ -208,14 +259,17 @@ class ManifestResponse(AbstractResponse):
                 # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
                 bundle_fields = self._translate(bundle, 'bundles')
                 writer.writerow(bundle_fields + file_fields)
+        t3 = time.time()
+
+        logger.info(f'***** Scanning Rounds: {rounds}')
+        logger.info(f'***** First request + first scan: {t2 - t1:.3f}s')
+        logger.info(f'***** The rest of the scans: {t3 - t2:.3f}s')
 
         return output.getvalue()
 
     def return_response(self):
-        parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
-                          data=self._construct_tsv_content().encode(),
-                          content_type='text/tab-separated-values')
-        object_key = self.storage_service.put(**parameters)
+        # object_key = self._push_content()
+        object_key = self._push_content_legacy()
         presigned_url = self.storage_service.get_presigned_url(object_key)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
@@ -225,10 +279,9 @@ class ManifestResponse(AbstractResponse):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
-        :param raw_response: The raw response from ElasticSearch
+        :param es_search: ElasticSearch DSL Search object
         :param mapping: The mapping between the columns to values within ES
         :param manifest_entries: The columns that will be present in the tsv
-        :param storage_service: The storage service used to store temporary downloadable content
         """
         self.es_search = es_search
         self.manifest_entries = OrderedDict(manifest_entries)
