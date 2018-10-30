@@ -125,6 +125,7 @@ class ProjectContact:
     institution: Optional[str]  # optional up to project/5.3.0/contact
     laboratory: Optional[str]
     corresponding_contributor: Optional[bool]
+    project_role: Optional[str]
 
     @classmethod
     def from_json(cls, json: JSON) -> 'ProjectContact':
@@ -132,7 +133,8 @@ class ProjectContact:
                    email=json.get('email'),
                    institution=json.get('institution'),
                    laboratory=json.get('laboratory'),
-                   corresponding_contributor=json.get('corresponding_contributor'))
+                   corresponding_contributor=json.get('corresponding_contributor'),
+                   project_role=json.get('project_role'))
 
 
 @dataclass(init=False)

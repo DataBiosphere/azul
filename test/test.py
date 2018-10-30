@@ -34,23 +34,31 @@ class TestAccessorApi(TestCase):
         warnings.simplefilter("ignore", ResourceWarning)
 
     def test_example_bundles(self):
-        for directory, age_range, diseases, has_specimens in [
+        for directory, age_range, diseases, has_specimens, project_roles in [
             ('CD4+ cytotoxic T lymphocytes',
-             AgeRange(min=567648000.0, max=1892160000.0), {'normal'}, True),
+             AgeRange(min=567648000.0, max=1892160000.0), {'normal'}, True,
+             {None, 'Human Cell Atlas wrangler', 'external curator'}),
             ('Healthy and type 2 diabetes pancreas',
-             AgeRange(min=1356048000.0, max=1356048000.0), {'normal'}, True),
+             AgeRange(min=1356048000.0, max=1356048000.0), {'normal'}, True,
+             {None, 'Human Cell Atlas wrangler', 'external curator'}),
             ('HPSI_human_cerebral_organoids',
-             AgeRange(min=1419120000.0, max=1545264000.0), {'normal'}, True),
+             AgeRange(min=1419120000.0, max=1545264000.0), {'normal'}, True,
+             {None, 'principal investigator', 'Human Cell Atlas wrangler'}),
             ('Mouse Melanoma',
-             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}, True),
+             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}, True,
+             {None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'}),
             ('Single cell transcriptome analysis of human pancreas',
-             AgeRange(662256000.0, 662256000.0), {'normal'},True),
+             AgeRange(662256000.0, 662256000.0), {'normal'}, True,
+             {None, 'external curator', 'Human Cell Atlas wrangler'}),
             ('Tissue stability',
-             AgeRange(1734480000.0, 1892160000.0), {'normal'}, False),
+             AgeRange(1734480000.0, 1892160000.0), {'normal'}, False,
+             {None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'}),
             ('HPSI_human_cerebral_organoids',
-             AgeRange(1419120000.0, 1545264000.0), {'normal'}, True),
+             AgeRange(1419120000.0, 1545264000.0), {'normal'}, True,
+             {None, 'principal investigator', 'Human Cell Atlas wrangler'}),
             ('1M Immune Cells',
-             AgeRange(1639872000.0, 1639872000.0), None, True)
+             AgeRange(1639872000.0, 1639872000.0), None, True,
+             {None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
         ]:
             with self.subTest(dir=directory):
                 manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
@@ -59,8 +67,8 @@ class TestAccessorApi(TestCase):
                 uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
                 version = '2018-08-03T082009.272868Z'
                 self._assert_bundle(uuid=uuid, version=version,
-                                    manifest=manifest, metadata_files=metadata_files,
-                                    age_range=age_range, diseases=diseases, has_specimens=has_specimens)
+                                    manifest=manifest, metadata_files=metadata_files, age_range=age_range,
+                                    diseases=diseases, has_specimens=has_specimens, project_roles=project_roles)
 
     def test_bad_content(self):
         deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
@@ -96,29 +104,30 @@ class TestAccessorApi(TestCase):
                           "to have content type 'application/json', not 'bad'")
 
     def test_one_bundle(self):
-        for deployment, replica, uuid, version, age_range, diseases in [
+        for deployment, replica, uuid, version, age_range, diseases, project_roles in [
             # A v5 bundle
             (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None,
-             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}),
+             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}, {None}),
             # A vx primary bundle with a cell_suspension as sequencing input
             ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', None,
-             None, {'glioblastoma'}),
+             None, {'glioblastoma'}, {None}),
             # A vx analysis bundle for the primary bundle with a cell_suspension as sequencing input
             ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z',
-             None, {'glioblastoma'}),
+             None, {'glioblastoma'}, {None}),
             # A vx primary bundle with a specimen_from_organism as sequencing input
             ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', '2018-09-20T230221.622042Z',
-             None, {'glioblastoma'}),
+             None, {'glioblastoma'}, {None}),
             # A bundle containing a specimen_from_organism.json with a schema version of 2.7.1
             ('staging', 'aws', '70184761-70fc-4b80-8c48-f406a478d5ab', '2018-09-05T182535.846470Z',
-             None, {'glioblastoma'}),
+             None, {'glioblastoma'}, {None}),
         ]:
             with self.subTest(uuid=uuid):
                 client = dss_client(deployment)
                 version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
-                self._assert_bundle(uuid, version, manifest, metadata_files, age_range, diseases)
+                self._assert_bundle(uuid, version, manifest, metadata_files, age_range, diseases, project_roles)
 
-    def _assert_bundle(self, uuid, version, manifest, metadata_files, age_range, diseases, has_specimens=True):
+    def _assert_bundle(self, uuid, version, manifest, metadata_files, age_range, diseases, project_roles,
+                       has_specimens=True):
         bundle = Bundle(uuid, version, manifest, metadata_files)
         diseases = diseases or set()
         biomaterials = bundle.biomaterials.values()
@@ -133,6 +142,7 @@ class TestAccessorApi(TestCase):
         self.assertEqual(1, len(bundle.projects))
         project = list(bundle.projects.values())[0]
         self.assertEqual(Project, type(project))
+        self.assertEqual(project_roles, {c.project_role for c in project.contributors})
         # noinspection PyDeprecation
         self.assertLessEqual(len(project.laboratory_names), len(project.contributors))
         # noinspection PyDeprecation
