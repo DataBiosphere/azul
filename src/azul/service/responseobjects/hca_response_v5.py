@@ -400,18 +400,18 @@ class ProjectSummaryResponse(BaseSummaryResponse):
     @classmethod
     def get_cell_count(cls, hit):
         """
-        Iterate through specimens to get overall and per organ cell count. Expects specimens to already be grouped
-        and aggregated by organ.
+        Iterate through cell suspensions to get overall and per organ cell count. Expects cell suspensions to already
+        be grouped and aggregated by organ.
         """
         organ_cell_count = defaultdict(int)
-        for specimen in hit['_source']['contents']['specimens']:
-            assert len(specimen['organ']) == 1
+        for cell_suspension in hit['_source']['contents']['cell_suspensions']:
+            assert len(cell_suspension['organ']) == 1
             try:  # We should use .get() here but ElasticsearchDSL's AttrDict doesn't expose it
-                cellcount = specimen['total_estimated_cells']
+                cellcount = cell_suspension['total_estimated_cells']
             except KeyError:
                 pass
             else:
-                organ_cell_count[specimen['organ'][0]] += cellcount
+                organ_cell_count[cell_suspension['organ'][0]] += cellcount
         total_cell_count = sum(organ_cell_count.values())
         organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
@@ -535,8 +535,18 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "biologicalSex": specimen.get("biological_sex", None),
                 "disease": specimen.get("disease", None),
                 "storageMethod": specimen.get("storage_method", None),
-                "source": specimen.get("_source", None),
-                "totalCells": specimen.get("total_estimated_cells", None)
+                "source": specimen.get("_source", None)
+            }
+            specimens.append(translated_specimen)
+        return specimens
+
+    def make_cell_suspensions(self, entry):
+        specimens = []
+        for cell_suspension in entry["contents"]["cell_suspensions"]:
+            translated_specimen = {
+                "organ": cell_suspension.get("organ", None),
+                "organPart": cell_suspension.get("organ_part", None),
+                "totalCells": cell_suspension.get("total_estimated_cells", None)
             }
             specimens.append(translated_specimen)
         return specimens
@@ -558,6 +568,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         entryId=entry["entity_id"],
                         projects=self.make_projects(entry),
                         specimens=self.make_specimens(entry),
+                        cellSuspensions=self.make_cell_suspensions(entry),
                         bundles=self.make_bundles(entry),
                         **kwargs)
 
