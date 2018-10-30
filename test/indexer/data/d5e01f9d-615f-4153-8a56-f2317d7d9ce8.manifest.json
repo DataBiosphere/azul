@@ -1,5 +1,5 @@
 [
-      {
+    {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "crc32c": "83068841",
         "indexed": true,
@@ -10,8 +10,8 @@
         "size": 918,
         "uuid": "13b00a71-4916-441c-a863-0204b40ba127",
         "version": "2018-09-06T185719.864777Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "crc32c": "2f01c82e",
         "indexed": true,
@@ -22,8 +22,8 @@
         "size": 825,
         "uuid": "131f2ca9-0a3e-4794-a6f6-0170884de3bf",
         "version": "2018-09-06T185720.268820Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
         "crc32c": "f34ac08a",
         "indexed": true,
@@ -34,8 +34,8 @@
         "size": 637,
         "uuid": "651a2e3a-80a6-4e3a-99d0-63224ee2ef02",
         "version": "2018-09-06T185720.435057Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "67ad5eeb",
         "indexed": true,
@@ -46,8 +46,8 @@
         "size": 467,
         "uuid": "84d27b0a-348e-4af2-82cb-c37973a9fe17",
         "version": "2018-09-06T185720.658394Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "bc04e203",
         "indexed": true,
@@ -58,8 +58,8 @@
         "size": 475,
         "uuid": "36671cf7-ab85-409f-a28b-27c489e2ab51",
         "version": "2018-09-06T185720.986853Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "7e9e2d7f",
         "indexed": true,
@@ -70,8 +70,8 @@
         "size": 474,
         "uuid": "4ba5d8f9-2d1c-432d-9fa5-7e22eff732f1",
         "version": "2018-09-06T185721.230091Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "6a555d0b",
         "indexed": true,
@@ -82,8 +82,8 @@
         "size": 475,
         "uuid": "f71ca185-a4d4-42ec-b6f0-dbb140cb2f23",
         "version": "2018-09-06T185721.625379Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "4fb12adf",
         "indexed": true,
@@ -94,8 +94,8 @@
         "size": 476,
         "uuid": "a0521704-08fa-4594-90da-0b29ee40dc0a",
         "version": "2018-09-06T185721.958345Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "3abcc78f",
         "indexed": true,
@@ -106,8 +106,8 @@
         "size": 484,
         "uuid": "8dfb781a-9fa1-488d-9ddc-e8272bef5fe0",
         "version": "2018-09-06T185722.904511Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "5cd278a9",
         "indexed": true,
@@ -118,8 +118,8 @@
         "size": 471,
         "uuid": "e80fdd63-3c87-45f9-b1f7-9d7b7122dfdf",
         "version": "2018-09-06T185723.335931Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "a832e4b8",
         "indexed": true,
@@ -130,8 +130,8 @@
         "size": 472,
         "uuid": "29164286-43cf-43ca-b3b9-ad61f2e7a1c8",
         "version": "2018-09-06T185723.739232Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "0b8d264a",
         "indexed": true,
@@ -142,8 +142,8 @@
         "size": 457,
         "uuid": "46dc4f0d-11c0-4000-b6e9-710553a2a9cc",
         "version": "2018-09-06T185724.028070Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "ad7f6477",
         "indexed": true,
@@ -154,8 +154,8 @@
         "size": 473,
         "uuid": "b78926da-4a2c-4af9-8cd8-4ae337336ccc",
         "version": "2018-09-06T185724.977559Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "d6867776",
         "indexed": true,
@@ -166,8 +166,8 @@
         "size": 471,
         "uuid": "a002691d-8568-40a3-9fd2-bae403916e08",
         "version": "2018-09-06T185725.358168Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "6b906cbd",
         "indexed": true,
@@ -178,8 +178,8 @@
         "size": 469,
         "uuid": "0963c920-cd31-45bd-8844-ff0200ff1667",
         "version": "2018-09-06T185725.791109Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "c2a244de",
         "indexed": true,
@@ -190,8 +190,8 @@
         "size": 476,
         "uuid": "fff7c188-ff07-4014-83a5-3f90dfafc09a",
         "version": "2018-09-06T185726.020492Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "29ad0393",
         "indexed": true,
@@ -202,8 +202,8 @@
         "size": 466,
         "uuid": "cf4782d0-79e1-43dc-8313-93447a35620b",
         "version": "2018-09-06T185726.250231Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "4c32477a",
         "indexed": true,
@@ -214,8 +214,8 @@
         "size": 474,
         "uuid": "63cb3d77-fded-4235-87a2-50e5f756826b",
         "version": "2018-09-06T185726.547655Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "0baad1ba",
         "indexed": true,
@@ -226,8 +226,8 @@
         "size": 470,
         "uuid": "140c27ca-12de-4425-953b-b1d4c2c918fc",
         "version": "2018-09-06T185727.261304Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "2a96317f",
         "indexed": true,
@@ -238,8 +238,8 @@
         "size": 478,
         "uuid": "38c67a5f-db0c-4d5f-839b-b061709d8be9",
         "version": "2018-09-06T185727.574875Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "e5185037",
         "indexed": true,
@@ -250,8 +250,8 @@
         "size": 462,
         "uuid": "9efb3c26-4fd8-4986-8a72-1507880e6ab7",
         "version": "2018-09-06T185728.805601Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "7524917c",
         "indexed": true,
@@ -262,8 +262,8 @@
         "size": 461,
         "uuid": "fff934f7-4a3e-442b-99b2-3479762db53c",
         "version": "2018-09-06T185729.172066Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "25a9863f",
         "indexed": true,
@@ -274,8 +274,8 @@
         "size": 449,
         "uuid": "3268e4bf-591a-4ca3-b7ad-440f61460610",
         "version": "2018-09-06T185729.513180Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "c42923cc",
         "indexed": true,
@@ -286,8 +286,8 @@
         "size": 460,
         "uuid": "68b243fc-c128-40ac-8e51-0383b4860c29",
         "version": "2018-09-06T185729.860881Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "fadd3f97",
         "indexed": true,
@@ -298,8 +298,8 @@
         "size": 449,
         "uuid": "4448df34-27c1-413d-bfc1-a508f238e2ed",
         "version": "2018-09-06T185730.141297Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "387ab618",
         "indexed": true,
@@ -310,8 +310,8 @@
         "size": 451,
         "uuid": "c2c8aec7-489b-4c2b-9b79-dc9f9a6d2d1d",
         "version": "2018-09-06T185730.372057Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "8a96bb42",
         "indexed": true,
@@ -322,8 +322,8 @@
         "size": 462,
         "uuid": "b4b3e436-19f2-4b56-b30c-dd22682e94fe",
         "version": "2018-09-06T185730.735503Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "e71be041",
         "indexed": true,
@@ -334,8 +334,8 @@
         "size": 451,
         "uuid": "477b3e82-552d-47dc-a27b-22d242298362",
         "version": "2018-09-06T185731.232124Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "2bc045f6",
         "indexed": true,
@@ -346,8 +346,8 @@
         "size": 465,
         "uuid": "e274e132-3fe1-44e9-879b-d6bc22cba2ab",
         "version": "2018-09-06T185731.501295Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "6a32264c",
         "indexed": true,
@@ -358,8 +358,8 @@
         "size": 468,
         "uuid": "2c11a11d-840c-4a3d-b811-e0e03c2e0976",
         "version": "2018-09-06T185732.040750Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "1485d99b",
         "indexed": true,
@@ -370,8 +370,8 @@
         "size": 451,
         "uuid": "f3ca70e5-f530-4890-be95-e3635dcf164a",
         "version": "2018-09-06T185732.310810Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "8b18b0b6",
         "indexed": true,
@@ -382,8 +382,8 @@
         "size": 455,
         "uuid": "12bcb6de-0f5b-4581-8d02-4ed3c59c13ab",
         "version": "2018-09-06T185732.727293Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "93fc172d",
         "indexed": true,
@@ -394,8 +394,8 @@
         "size": 455,
         "uuid": "e3a50ba8-8e82-4b7f-89de-b6f512037e3d",
         "version": "2018-09-06T185733.302775Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "7a328fac",
         "indexed": true,
@@ -406,8 +406,8 @@
         "size": 453,
         "uuid": "cf3a255f-e731-4912-a7b1-cbec1b0d5239",
         "version": "2018-09-06T185733.570238Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "4aca1117",
         "indexed": true,
@@ -418,8 +418,8 @@
         "size": 459,
         "uuid": "c5d76832-f738-43a0-afe7-f62aa53a7824",
         "version": "2018-09-06T185733.940734Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/file\"",
         "crc32c": "5d69bd83",
         "indexed": true,
@@ -430,8 +430,8 @@
         "size": 459,
         "uuid": "be1f1c69-5ad5-4d2c-a86f-c43f1f003210",
         "version": "2018-09-06T185736.022316Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/project\"",
         "crc32c": "b75282d3",
         "indexed": true,
@@ -442,8 +442,8 @@
         "size": 1277,
         "uuid": "26f1d58f-b247-4e0b-a4a9-402e029e5ac8",
         "version": "2018-09-06T185737.015401Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "crc32c": "5191954d",
         "indexed": true,
@@ -454,8 +454,8 @@
         "size": 890,
         "uuid": "237048e6-dbd9-4a0b-b0cc-8085513c2944",
         "version": "2018-09-06T185737.641588Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "crc32c": "b1f0c27f",
         "indexed": true,
@@ -466,8 +466,8 @@
         "size": 693,
         "uuid": "f6527c69-b8bb-467a-af22-32a1b7863c65",
         "version": "2018-09-06T185738.218098Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/protocol\"",
         "crc32c": "780caf6f",
         "indexed": true,
@@ -478,8 +478,8 @@
         "size": 556,
         "uuid": "babc8692-6932-4c29-b33d-4d7b4deebe54",
         "version": "2018-09-06T185738.471615Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "crc32c": "85e98717",
         "indexed": true,
@@ -490,8 +490,8 @@
         "size": 21697,
         "uuid": "2a4e1440-dab6-4b0b-8204-ebb270613cc1",
         "version": "2018-09-06T185738.912971Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "crc32c": "b8f7dae9",
         "indexed": true,
@@ -502,8 +502,8 @@
         "size": 392,
         "uuid": "c8ac10c7-fa3a-4fbc-a9bd-55e767444773",
         "version": "2018-09-06T185739.722112Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "crc32c": "52b5470a",
         "indexed": true,
@@ -514,8 +514,8 @@
         "size": 394,
         "uuid": "94510a2b-edc8-4f14-ab1e-494732ccf80a",
         "version": "2018-09-06T185740.281627Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/process\"",
         "crc32c": "b86058e3",
         "indexed": true,
@@ -526,8 +526,8 @@
         "size": 392,
         "uuid": "44edcce5-152d-401c-ba29-ed73cd9ec57f",
         "version": "2018-09-06T185740.546407Z"
-      },
-      {
+    },
+    {
         "content-type": "application/json; dcp-type=\"metadata/links\"",
         "crc32c": "9f74bbaf",
         "indexed": true,
@@ -538,8 +538,8 @@
         "size": 5783,
         "uuid": "77a7b5fd-01e1-40a9-a87a-d7c146c35c75",
         "version": "2018-09-06T185741.197346Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "7171048d",
         "indexed": false,
@@ -550,8 +550,8 @@
         "size": 3123,
         "uuid": "8206df81-4e3a-4db9-b3b5-5aa4b6dfc3a4",
         "version": "2018-09-06T185741.428997Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "02a4d655",
         "indexed": false,
@@ -562,8 +562,8 @@
         "size": 2232,
         "uuid": "460eba58-b2c3-472d-876b-d9834ec539a5",
         "version": "2018-09-06T185742.154511Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "618ae98a",
         "indexed": false,
@@ -574,8 +574,8 @@
         "size": 26490,
         "uuid": "362696a2-ecd4-4cca-9150-e3201392108b",
         "version": "2018-09-06T185742.621655Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "75c571b6",
         "indexed": false,
@@ -586,8 +586,8 @@
         "size": 2708,
         "uuid": "d998bfa6-ac23-4211-885f-91e72a2d2f89",
         "version": "2018-09-06T185742.939509Z"
-      },
-      {
+    },
+    {
         "content-type": "application/pdf; dcp-type=data",
         "crc32c": "4bdf84c1",
         "indexed": false,
@@ -598,8 +598,8 @@
         "size": 8306,
         "uuid": "15bf35b5-4d06-4443-89c0-2a2d17aac62a",
         "version": "2018-09-06T185743.285121Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "49b17cd3",
         "indexed": false,
@@ -610,8 +610,8 @@
         "size": 8220,
         "uuid": "373337f2-54eb-41ab-97ec-94801cfd26c4",
         "version": "2018-09-06T185743.796420Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "faf51a99",
         "indexed": false,
@@ -622,8 +622,8 @@
         "size": 1501,
         "uuid": "c4a34f85-2d7d-4a54-b519-88bfcc9d17ed",
         "version": "2018-09-06T185744.147629Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "7dd5fc10",
         "indexed": false,
@@ -634,8 +634,8 @@
         "size": 6581,
         "uuid": "4df968bf-3688-457e-a7f6-4e153ec1e489",
         "version": "2018-09-06T185744.575566Z"
-      },
-      {
+    },
+    {
         "content-type": "application/pdf; dcp-type=data",
         "crc32c": "bd717f27",
         "indexed": false,
@@ -646,8 +646,8 @@
         "size": 6824,
         "uuid": "43aef3ac-aec7-4b84-afcc-cb2a0d82cee3",
         "version": "2018-09-06T185744.951809Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "32754f99",
         "indexed": false,
@@ -658,8 +658,8 @@
         "size": 1512,
         "uuid": "5ec31a75-91c7-4241-8d5c-8682f02c0059",
         "version": "2018-09-06T185745.320623Z"
-      },
-      {
+    },
+    {
         "content-type": "application/pdf; dcp-type=data",
         "crc32c": "35f41e6e",
         "indexed": false,
@@ -670,8 +670,8 @@
         "size": 18247,
         "uuid": "9185340d-dcae-40e2-b76b-4f45eda95486",
         "version": "2018-09-06T185745.653327Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "50412a1a",
         "indexed": false,
@@ -682,8 +682,8 @@
         "size": 9429,
         "uuid": "cbef3cec-75ab-4cd5-90f0-1d32602d9176",
         "version": "2018-09-06T185746.559751Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "f559ea99",
         "indexed": false,
@@ -694,8 +694,8 @@
         "size": 23054,
         "uuid": "16dcefba-f947-41dd-bb14-b6fc77dfb1a8",
         "version": "2018-09-06T185747.181102Z"
-      },
-      {
+    },
+    {
         "content-type": "application/pdf; dcp-type=data",
         "crc32c": "ee63fc32",
         "indexed": false,
@@ -706,8 +706,8 @@
         "size": 6127,
         "uuid": "420fa634-b60b-4b13-8e20-91cdffb1779a",
         "version": "2018-09-06T185749.831713Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "1deb97f8",
         "indexed": false,
@@ -718,8 +718,8 @@
         "size": 2930,
         "uuid": "1a2f8bc9-0314-4b11-9667-d98dd25f6356",
         "version": "2018-09-06T185751.209724Z"
-      },
-      {
+    },
+    {
         "content-type": "application/pdf; dcp-type=data",
         "crc32c": "9ab095d7",
         "indexed": false,
@@ -730,8 +730,8 @@
         "size": 4826,
         "uuid": "87a2d38c-5b38-4322-bbba-cbe668385b78",
         "version": "2018-09-06T185752.560692Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "11777958",
         "indexed": false,
@@ -742,8 +742,8 @@
         "size": 1285,
         "uuid": "df9b02ce-8f7f-4bdb-9e04-8ea0763734f8",
         "version": "2018-09-06T185752.970974Z"
-      },
-      {
+    },
+    {
         "content-type": "application/pdf; dcp-type=data",
         "crc32c": "24adcee3",
         "indexed": false,
@@ -754,8 +754,8 @@
         "size": 6420,
         "uuid": "b1d24d26-fcf8-4c16-a509-bc6bb59b1eb7",
         "version": "2018-09-06T185753.355719Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "f5cd552d",
         "indexed": false,
@@ -766,8 +766,8 @@
         "size": 3235,
         "uuid": "a80975e3-1463-4135-bc4a-9c5763f6bdd6",
         "version": "2018-09-06T185753.670823Z"
-      },
-      {
+    },
+    {
         "content-type": "application/gzip; dcp-type=data",
         "crc32c": "8c9b2f5f",
         "indexed": false,
@@ -778,8 +778,8 @@
         "size": 254154825,
         "uuid": "6752851d-b55d-4387-82f7-e34ffd7ff05c",
         "version": "2018-09-06T185754.127138Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "d8032370",
         "indexed": false,
@@ -790,8 +790,8 @@
         "size": 2009,
         "uuid": "d9f81d5a-cf86-454a-b708-2522183521b3",
         "version": "2018-09-06T185754.366094Z"
-      },
-      {
+    },
+    {
         "content-type": "application/octet-stream; dcp-type=data",
         "crc32c": "612947c2",
         "indexed": false,
@@ -802,8 +802,8 @@
         "size": 409,
         "uuid": "3659a48e-fbcb-4639-bfc8-16da76f0300d",
         "version": "2018-09-06T185754.707345Z"
-      },
-      {
+    },
+    {
         "content-type": "application/gzip; dcp-type=data",
         "crc32c": "a2359780",
         "indexed": false,
@@ -814,8 +814,8 @@
         "size": 134491426,
         "uuid": "a824e6d7-e28e-4bd0-a1ca-e96382d16cb4",
         "version": "2018-09-06T185755.004613Z"
-      },
-      {
+    },
+    {
         "content-type": "text/plain; dcp-type=data",
         "crc32c": "25033e43",
         "indexed": false,
@@ -826,8 +826,8 @@
         "size": 2001,
         "uuid": "6b199c79-18e7-453a-bf34-7453aa8d4058",
         "version": "2018-09-06T185755.244962Z"
-      },
-      {
+    },
+    {
         "content-type": "application/octet-stream; dcp-type=data",
         "crc32c": "a47b964a",
         "indexed": false,
@@ -838,8 +838,8 @@
         "size": 399,
         "uuid": "783bfe7a-dc47-44ac-b19e-4e3dd3f09129",
         "version": "2018-09-06T185755.773304Z"
-      },
-      {
+    },
+    {
         "content-type": "application/octet-stream; dcp-type=data",
         "crc32c": "7062f2c5",
         "indexed": false,
@@ -850,8 +850,8 @@
         "size": 7577121,
         "uuid": "5931e486-e7f5-494d-b8b5-f4efab05c956",
         "version": "2018-09-06T185756.210397Z"
-      },
-      {
+    },
+    {
         "content-type": "application/octet-stream; dcp-type=data",
         "crc32c": "de975d78",
         "indexed": false,
@@ -862,8 +862,8 @@
         "size": 18847923,
         "uuid": "05f1fe7b-4e71-4ca6-81e2-f2ccd8e89b89",
         "version": "2018-09-06T185756.812784Z"
-      },
-      {
+    },
+    {
         "content-type": "application/octet-stream; dcp-type=data",
         "crc32c": "0f2e6a1c",
         "indexed": false,
@@ -874,8 +874,8 @@
         "size": 147,
         "uuid": "124ad630-ac99-4447-9114-8a383bcff077",
         "version": "2018-09-06T185757.676451Z"
-      },
-      {
+    },
+    {
         "content-type": "application/octet-stream; dcp-type=data",
         "crc32c": "9a8ecacb",
         "indexed": false,
@@ -886,8 +886,8 @@
         "size": 436223,
         "uuid": "cd228ff5-d05e-49af-91ab-57f6b8cea769",
         "version": "2018-09-06T185757.964761Z"
-      },
-      {
+    },
+    {
         "content-type": "application/octet-stream; dcp-type=data",
         "crc32c": "0d0c6dfb",
         "indexed": false,
@@ -898,8 +898,8 @@
         "size": 985970,
         "uuid": "bb109a5e-525a-47ef-b20f-2bf4f37b3de3",
         "version": "2018-09-06T185758.163443Z"
-      },
-      {
+    },
+    {
         "content-type": "application/octet-stream; dcp-type=data",
         "crc32c": "115ea372",
         "indexed": false,
@@ -910,8 +910,8 @@
         "size": 98,
         "uuid": "7a1cf419-f901-487f-994e-ff98ec7015da",
         "version": "2018-09-06T185758.621633Z"
-      },
-      {
+    },
+    {
         "content-type": "application/gzip; dcp-type=data",
         "crc32c": "cfa3d5df",
         "indexed": false,
@@ -922,8 +922,8 @@
         "size": 37220698,
         "uuid": "4cb61abf-25eb-4779-a9fd-16ce3371d83f",
         "version": "2018-09-06T180320.549271Z"
-      },
-      {
+    },
+    {
         "content-type": "application/gzip; dcp-type=data",
         "crc32c": "d1c4cd35",
         "indexed": false,
@@ -934,5 +934,5 @@
         "size": 39765351,
         "uuid": "abced4f5-1949-4d83-8b28-254753582378",
         "version": "2018-09-06T180320.906445Z"
-      }
+    }
 ]
