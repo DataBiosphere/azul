@@ -152,8 +152,7 @@ class ElasticsearchFakeDataLoader(object):
                         "biological_sex": ["safe_color_name"],
                         "_source": "safe_color_name",
                         "genus_species": ["safe_color_name"],
-                        "storage_method": "safe_color_name",
-                        "total_estimated_cells": "pyint"
+                        "storage_method": "safe_color_name"
                     }
                     if entity_type == 'specimens' else
                     {
@@ -169,8 +168,15 @@ class ElasticsearchFakeDataLoader(object):
                         "biological_sex": ["safe_color_name"],
                         "_source": ["safe_color_name"],
                         "genus_species": ["safe_color_name"],
-                        "storage_method": ["safe_color_name"],
-                        "total_estimated_cells": "pyint"
+                        "storage_method": ["safe_color_name"]
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "uuid4",
+                        "total_estimated_cells": "pyint",
+                        "organ": ["safe_color_name"],
+                        "organ_part": ["safe_color_name"],
                     }
                 ]
             }
