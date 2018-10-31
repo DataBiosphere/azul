@@ -1,0 +1,17 @@
+meta:
+  changes: a stack of externally observable changes. Newer changes appear at the top
+  title: a short description of the change
+  issues: a list of ticket URLs (GitHub, JIRA, ...) related to the change
+  upgrade: a list of actions required to upgrade to a version that includes this change
+  It may be any combination of the following values:
+    - deploy: (requires `make deploy`)
+    - reindex: (requires `make reindex`)
+    - terraform: (requires `make terraform`)
+    - requirements: (requires `pip -Ur requirements.dev.txt`)
+    - clients: the service API changed in a way that requires clients to be updated
+
+changes:
+  - title: Add CHANGELOG.yaml and expose the top ten entries via /version endpoint
+    upgrade:
+      - deploy
+      - requirements
