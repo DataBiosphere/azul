@@ -187,36 +187,49 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
+    UNSAVED_THRESHOLD = 40000  # rows
+
+
     def _translate(self, untranslated, keyname):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
-    def _construct_tsv_content(self):
-        es_search = self.es_search
+    def _push_content(self):
+        object_key = f'manifests/{uuid4()}.tsv'
+        content_type = 'text/tab-separated-values'
 
+        with self.storage_service.multipart_upload(object_key, content_type) as multipart_upload:
+            # Started with the headers
+            unsaved_rows = [list(self.manifest_entries['bundles'].keys()) +
+                            list(self.manifest_entries['contents.files'].keys())]
+            for hit in self.es_search.scan():
+                hit_dict = hit.to_dict()
+                assert len(hit_dict['contents']['files']) == 1
+                file = hit_dict['contents']['files'][0]
+                file_fields = self._translate(file, 'contents.files')
+                # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
+                #        would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
+                unsaved_rows.extend(self._translate(bundle, 'bundles') + file_fields for bundle in hit_dict['bundles'])
+                while len(unsaved_rows) >= self.UNSAVED_THRESHOLD:
+                    multipart_upload.push(self._create_tsv_content(unsaved_rows[:self.UNSAVED_THRESHOLD]))
+                    unsaved_rows = unsaved_rows[self.UNSAVED_THRESHOLD:]
+
+            if unsaved_rows:
+                multipart_upload.push(self._create_tsv_content(unsaved_rows))
+
+        return object_key
+
+    def _create_tsv_content(self, rows):
         output = StringIO()
         writer = csv.writer(output, dialect='excel-tab')
 
-        writer.writerow(list(self.manifest_entries['bundles'].keys()) +
-                        list(self.manifest_entries['contents.files'].keys()))
-        for hit in es_search.scan():
-            hit_dict = hit.to_dict()
-            assert len(hit_dict['contents']['files']) == 1
-            file = hit_dict['contents']['files'][0]
-            file_fields = self._translate(file, 'contents.files')
-            for bundle in hit_dict['bundles']:
-                # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
-                # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-                bundle_fields = self._translate(bundle, 'bundles')
-                writer.writerow(bundle_fields + file_fields)
+        for row in rows:
+            writer.writerow(row)
 
-        return output.getvalue()
+        return output.getvalue().encode()
 
     def return_response(self):
-        parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
-                          data=self._construct_tsv_content().encode(),
-                          content_type='text/tab-separated-values')
-        object_key = self.storage_service.put(**parameters)
+        object_key = self._push_content()
         presigned_url = self.storage_service.get_presigned_url(object_key)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
