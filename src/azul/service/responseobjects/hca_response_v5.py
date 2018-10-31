@@ -224,7 +224,7 @@ class ManifestResponse(AbstractResponse):
         for row in rows:
             writer.writerow(row)
 
-        return output.getvalue().encode()
+        return (output.getvalue() + '\n').encode()
 
     # deprecated: use _push_content instead
     def _push_content_legacy(self):
@@ -261,15 +261,15 @@ class ManifestResponse(AbstractResponse):
                 writer.writerow(bundle_fields + file_fields)
         t3 = time.time()
 
-        logger.info(f'***** Scanning Rounds: {rounds}')
-        logger.info(f'***** First request + first scan: {t2 - t1:.3f}s')
-        logger.info(f'***** The rest of the scans: {t3 - t2:.3f}s')
+        # logger.info(f'***** Scanning Rounds: {rounds}')
+        # logger.info(f'***** First request + first scan: {t2 - t1:.3f}s')
+        # logger.info(f'***** The rest of the scans: {t3 - t2:.3f}s')
 
         return output.getvalue()
 
     def return_response(self):
-        # object_key = self._push_content()
-        object_key = self._push_content_legacy()
+        object_key = self._push_content()
+        # object_key = self._push_content_legacy()
         presigned_url = self.storage_service.get_presigned_url(object_key)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
