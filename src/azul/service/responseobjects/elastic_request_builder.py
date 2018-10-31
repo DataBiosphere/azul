@@ -177,6 +177,8 @@ class ElasticTransformDump(object):
 
         if source_filter:
             es_search = es_search.source(include=source_filter)
+        elif entity_type != "files":
+            es_search = es_search.source(exclude="bundles")
 
         for agg, translation in facet_config.items():
             # Create a bucket aggregate for the 'agg'.

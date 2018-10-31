@@ -38,7 +38,6 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             assert_file_type_summaries(hit)
             self.assertTrue('projects' in hit)
             self.assertTrue('specimens' in hit)
-            self.assertTrue('bundles' in hit)
             self.assertTrue('projectSummary' in hit)
             self.assertFalse('files' in hit)
             for project in hit['projects']:
@@ -68,7 +67,6 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         self.assertTrue('entryId' in hit)
         self.assertTrue('projects' in hit)
         self.assertTrue('specimens' in hit)
-        self.assertTrue('bundles' in hit)
         self.assertTrue('projectSummary' in hit)
         self.assertFalse('files' in hit)
 
