@@ -33,42 +33,65 @@ class TestAccessorApi(TestCase):
         # Suppress `sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=6, family=AddressFamily.AF_INET, ...`
         warnings.simplefilter("ignore", ResourceWarning)
 
-    def test_example_bundles(self):
-        for directory, age_range, diseases, has_specimens, project_roles in [
-            ('CD4+ cytotoxic T lymphocytes',
-             AgeRange(min=567648000.0, max=1892160000.0), {'normal'}, True,
-             {None, 'Human Cell Atlas wrangler', 'external curator'}),
-            ('Healthy and type 2 diabetes pancreas',
-             AgeRange(min=1356048000.0, max=1356048000.0), {'normal'}, True,
-             {None, 'Human Cell Atlas wrangler', 'external curator'}),
-            ('HPSI_human_cerebral_organoids',
-             AgeRange(min=1419120000.0, max=1545264000.0), {'normal'}, True,
-             {None, 'principal investigator', 'Human Cell Atlas wrangler'}),
-            ('Mouse Melanoma',
-             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}, True,
-             {None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'}),
-            ('Single cell transcriptome analysis of human pancreas',
-             AgeRange(662256000.0, 662256000.0), {'normal'}, True,
-             {None, 'external curator', 'Human Cell Atlas wrangler'}),
-            ('Tissue stability',
-             AgeRange(1734480000.0, 1892160000.0), {'normal'}, False,
-             {None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'}),
-            ('HPSI_human_cerebral_organoids',
-             AgeRange(1419120000.0, 1545264000.0), {'normal'}, True,
-             {None, 'principal investigator', 'Human Cell Atlas wrangler'}),
-            ('1M Immune Cells',
-             AgeRange(1639872000.0, 1639872000.0), None, True,
-             {None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
-        ]:
-            with self.subTest(dir=directory):
-                manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
-                                                                   branch='develop',
-                                                                   path=f'examples/bundles/public-beta/{directory}/')
-                uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
-                version = '2018-08-03T082009.272868Z'
-                self._assert_bundle(uuid=uuid, version=version,
-                                    manifest=manifest, metadata_files=metadata_files, age_range=age_range,
-                                    diseases=diseases, has_specimens=has_specimens, project_roles=project_roles)
+    def test_lymphocytes(self):
+        self._test_example_bundle(directory='CD4+ cytotoxic T lymphocytes',
+                                  age_range=AgeRange(min=567648000.0, max=1892160000.0),
+                                  diseases={'normal'},
+                                  has_specimens=True,
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'external curator'})
+
+    def test_diabetes_pancreas(self):
+        self._test_example_bundle(directory='Healthy and type 2 diabetes pancreas',
+                                  age_range=AgeRange(min=1356048000.0, max=1356048000.0),
+                                  diseases={'normal'},
+                                  has_specimens=True,
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'external curator'})
+
+    def test_hpsi(self):
+        self._test_example_bundle(directory='HPSI_human_cerebral_organoids',
+                                  age_range=AgeRange(min=1419120000.0, max=1545264000.0),
+                                  diseases={'normal'},
+                                  has_specimens=True,
+                                  project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'})
+
+    def test_mouse(self):
+        self._test_example_bundle(directory='Mouse Melanoma',
+                                  age_range=AgeRange(3628800.0, 7257600.0),
+                                  diseases={'subcutaneous melanoma'},
+                                  has_specimens=True,
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
+
+    def test_pancreas(self):
+        self._test_example_bundle(directory='Single cell transcriptome analysis of human pancreas',
+                                  age_range=AgeRange(662256000.0, 662256000.0),
+                                  diseases={'normal'},
+                                  has_specimens=True,
+                                  project_roles={None, 'external curator', 'Human Cell Atlas wrangler'})
+
+    def test_tissue_stability(self):
+        self._test_example_bundle(directory='Tissue stability',
+                                  age_range=AgeRange(1734480000.0, 1892160000.0),
+                                  diseases={'normal'},
+                                  has_specimens=False,
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
+
+    def test_immune_cells(self):
+        self._test_example_bundle(directory='1M Immune Cells',
+                                  age_range=AgeRange(1639872000.0, 1639872000.0),
+                                  diseases=set(),
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
+
+    def _test_example_bundle(self, directory, **kwargs):
+        manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
+                                                           branch='develop',
+                                                           path=f'examples/bundles/public-beta/{directory}/')
+        uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
+        version = '2018-08-03T082009.272868Z'
+        self._assert_bundle(uuid=uuid,
+                            version=version,
+                            manifest=manifest,
+                            metadata_files=metadata_files,
+                            **kwargs)
 
     def test_bad_content(self):
         deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
@@ -103,43 +126,76 @@ class TestAccessorApi(TestCase):
                           f"Expecting file {file_uuid}.{file_version} "
                           "to have content type 'application/json', not 'bad'")
 
-    def test_one_bundle(self):
-        for deployment, replica, uuid, version, age_range, diseases, project_roles in [
-            # A v5 bundle
-            (None, 'aws', 'b2216048-7eaa-45f4-8077-5a3fb4204953', None,
-             AgeRange(3628800.0, 7257600.0), {'subcutaneous melanoma'}, {None}),
-            # A vx primary bundle with a cell_suspension as sequencing input
-            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', None,
-             None, {'glioblastoma'}, {None}),
-            # A vx analysis bundle for the primary bundle with a cell_suspension as sequencing input
-            ('staging', 'aws', '859a8bd2-de3c-4c78-91dd-9e35a3418972', '2018-09-20T232924.687620Z',
-             None, {'glioblastoma'}, {None}),
-            # A vx primary bundle with a specimen_from_organism as sequencing input
-            ('staging', 'aws', '3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2', '2018-09-20T230221.622042Z',
-             None, {'glioblastoma'}, {None}),
-            # A bundle containing a specimen_from_organism.json with a schema version of 2.7.1
-            ('staging', 'aws', '70184761-70fc-4b80-8c48-f406a478d5ab', '2018-09-05T182535.846470Z',
-             None, {'glioblastoma'}, {None}),
-        ]:
-            with self.subTest(uuid=uuid):
-                client = dss_client(deployment)
-                version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
-                self._assert_bundle(uuid, version, manifest, metadata_files, age_range, diseases, project_roles)
+    def test_v5_bundle(self):
+        """
+        A v5 bundle in production
+        """
+        self._test_bundle(uuid='b2216048-7eaa-45f4-8077-5a3fb4204953',
+                          age_range=AgeRange(3628800.0, 7257600.0),
+                          diseases={'subcutaneous melanoma'}),
 
-    def _assert_bundle(self, uuid, version, manifest, metadata_files, age_range, diseases, project_roles,
+    def test_vx_primary_cs_bundle(self):
+        """
+        A vx primary bundle with a cell_suspension as sequencing input
+        """
+        self._test_bundle(uuid='3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2',
+                          deployment='staging',
+                          diseases={'glioblastoma'}),
+
+    def test_vx_analysis_cs_bundle(self):
+        """
+        A vx analysis bundle for the primary bundle with a cell_suspension as sequencing input
+        """
+        self._test_bundle(uuid='859a8bd2-de3c-4c78-91dd-9e35a3418972',
+                          version='2018-09-20T232924.687620Z',
+                          deployment='staging',
+                          diseases={'glioblastoma'}),
+
+    def test_vx_analysis_specimen_bundle(self):
+        """
+        A vx primary bundle with a specimen_from_organism as sequencing input
+        """
+        self._test_bundle(uuid='3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2',
+                          version='2018-09-20T230221.622042Z',
+                          deployment='staging',
+                          diseases={'glioblastoma'}),
+
+    def test_vx_specimen_v271_bundle(self):
+        """
+        A bundle containing a specimen_from_organism.json with a schema version of 2.7.1
+        """
+        self._test_bundle(uuid='70184761-70fc-4b80-8c48-f406a478d5ab',
+                          version='2018-09-05T182535.846470Z',
+                          deployment='staging',
+                          diseases={'glioblastoma'}),
+
+    def _test_bundle(self, uuid, deployment=None, replica='aws', version=None, **assertion_kwargs):
+        client = dss_client(deployment)
+        version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
+        self._assert_bundle(uuid=uuid,
+                            version=version,
+                            manifest=manifest,
+                            metadata_files=metadata_files,
+                            **assertion_kwargs)
+
+    def _assert_bundle(self, uuid, version, manifest, metadata_files,
+                       age_range=None,
+                       diseases=frozenset({None}),
+                       project_roles=frozenset({None}),
                        has_specimens=True):
         bundle = Bundle(uuid, version, manifest, metadata_files)
-        diseases = diseases or set()
         biomaterials = bundle.biomaterials.values()
-        actual_diseases = set(chain(*[bm.diseases for bm in biomaterials
-                                      if isinstance(bm, (DonorOrganism, SpecimenFromOrganism))]))
-        diseases_from_old_field = set(chain(*[bm.disease for bm in biomaterials
-                                              if isinstance(bm, (DonorOrganism, SpecimenFromOrganism))]))
-        self.assertEquals(actual_diseases, diseases)
-        self.assertEquals(actual_diseases, diseases_from_old_field)
+        actual_diseases = set(chain(*(bm.diseases for bm in biomaterials
+                                      if isinstance(bm, (DonorOrganism, SpecimenFromOrganism)))))
+        # noinspection PyDeprecation
+        actual_disease = set(chain(*(bm.disease for bm in biomaterials
+                                     if isinstance(bm, (DonorOrganism, SpecimenFromOrganism)))))
+        self.assertEqual(actual_diseases, diseases)
+        self.assertEqual(actual_diseases, actual_disease)
         self.assertEqual(str(bundle.uuid), uuid)
         self.assertEqual(bundle.version, version)
         self.assertEqual(1, len(bundle.projects))
+
         project = list(bundle.projects.values())[0]
         self.assertEqual(Project, type(project))
         self.assertEqual(project_roles, {c.project_role for c in project.contributors})
@@ -147,6 +203,7 @@ class TestAccessorApi(TestCase):
         self.assertLessEqual(len(project.laboratory_names), len(project.contributors))
         # noinspection PyDeprecation
         self.assertEqual(project.project_short_name, project.project_shortname)
+
         root_entities = bundle.root_entities().values()
         root_entity_types = {type(e) for e in root_entities}
         self.assertIn(DonorOrganism, root_entity_types)
@@ -156,6 +213,7 @@ class TestAccessorApi(TestCase):
         self.assertIsInstance(root_entity, DonorOrganism)
         self.assertEqual(root_entity.organism_age_in_seconds, age_range)
         self.assertTrue(root_entity.sex in ('female', 'male', 'unknown'))
+
         sequencing_input = bundle.sequencing_input
         self.assertGreater(len(sequencing_input), 0,
                            "There should be at least one sequencing input")
@@ -168,6 +226,7 @@ class TestAccessorApi(TestCase):
         sequencing_input_schema_names = set(si.schema_name for si in sequencing_input)
         self.assertTrue({'cell_suspension', 'specimen_from_organism'}.issuperset(sequencing_input_schema_names),
                         "The sequencing inputs in the test bundle are of specific schemas")
+
         sequencing_output = bundle.sequencing_output
         self.assertGreater(len(sequencing_output), 0,
                            "There should be at least one sequencing output")
@@ -177,8 +236,10 @@ class TestAccessorApi(TestCase):
                         "All sequencing outputs should be instances of SequenceFile")
         self.assertTrue(all(so.manifest_entry.name.endswith('.fastq.gz') for so in sequencing_output),
                         "All sequencing outputs in the test bundle are fastq files.")
+
         specimen_types = {type(s) for s in bundle.specimens}
         self.assertEqual({SpecimenFromOrganism} if has_specimens else set(), specimen_types)
+
         print(json.dumps(as_json(bundle), indent=4))
 
     dss_subscription_query = {
