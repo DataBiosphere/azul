@@ -219,12 +219,6 @@ class TestResponse(WebServiceTestCase):
         expected_response = {
             "hits": [
                 {
-                    "bundles": [
-                        {
-                            "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
-                            "bundleVersion": "2003-08-12T00:52:21"
-                        }
-                    ],
                     "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
                     "fileTypeSummaries": [
                         {
@@ -710,12 +704,6 @@ class TestResponse(WebServiceTestCase):
         expected_output = {
             "hits": [
                 {
-                    "bundles": [
-                        {
-                            "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
-                            "bundleVersion": "2003-08-12T00:52:21"
-                        }
-                    ],
                     "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
                     "fileTypeSummaries": [
                         {
@@ -811,12 +799,6 @@ class TestResponse(WebServiceTestCase):
         expected_output = {
             "hits": [
                 {
-                    "bundles": [
-                        {
-                            "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
-                            "bundleVersion": "2003-08-12T00:52:21"
-                        }
-                    ],
                     "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
                     "fileTypeSummaries": [
                         {
