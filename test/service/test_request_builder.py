@@ -429,6 +429,9 @@ class TestRequestBuilder(WebServiceTestCase):
             "query": {
                 "match_all": {}
             },
+            "_source": {
+                "exclude": "bundles"
+            },
             "aggs": {
                 "_project_agg": {
                     "terms": {
