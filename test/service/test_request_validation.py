@@ -72,12 +72,10 @@ class FacetNameValidationTest(WebServiceTestCase):
                     response = requests.get(url)
                     response.raise_for_status()
                     expected_json = {
-                        'git': {
-                            'commit': commit,
-                            'dirty': dirty
-                        }
+                        'commit': commit,
+                        'dirty': dirty
                     }
-                    self.assertEqual(response.json(), expected_json)
+                    self.assertEqual(response.json()['git'], expected_json)
 
     def test_bad_single_filter_facet_of_specimen(self):
         url = self.base_url + "repository/specimens?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
