@@ -559,6 +559,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         :return: A HitEntry Object with the appropriate fields mapped
         """
         kwargs = {
+            'bundles': self.make_bundles(entry),
             'files': self.make_files(entry)
         } if self.entity_type == 'files' else {
             'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json()
@@ -569,7 +570,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         projects=self.make_projects(entry),
                         specimens=self.make_specimens(entry),
                         cellSuspensions=self.make_cell_suspensions(entry),
-                        bundles=self.make_bundles(entry),
                         **kwargs)
 
     def __init__(self, hits, entity_type):
