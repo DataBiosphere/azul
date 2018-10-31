@@ -157,7 +157,7 @@ class MultipartUploadHandler:
         upload_part = self.__handler.Part(part.part_number)
         result = upload_part.upload(Body=b''.join(part.content))
         part.etag = result['ETag']
-        logger.info(f'multipart_upload/_upload_part: Part {part.part_number}: end (uploaded)')
+        # logger.info(f'multipart_upload/_upload_part: Part {part.part_number}: end (uploaded)')
 
     def _has_active_uploads(self) -> bool:
         """
