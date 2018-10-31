@@ -37,42 +37,40 @@ class TestAccessorApi(TestCase):
         self._test_example_bundle(directory='CD4+ cytotoxic T lymphocytes',
                                   age_range=AgeRange(min=567648000.0, max=1892160000.0),
                                   diseases={'normal'},
-                                  has_specimens=True,
-                                  project_roles={None, 'Human Cell Atlas wrangler', 'external curator'})
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'external curator'},
+                                  storage_methods={'frozen, liquid nitrogen'},
+                                  preservation_methods={'cryopreservation, other'})
 
     def test_diabetes_pancreas(self):
         self._test_example_bundle(directory='Healthy and type 2 diabetes pancreas',
                                   age_range=AgeRange(min=1356048000.0, max=1356048000.0),
                                   diseases={'normal'},
-                                  has_specimens=True,
                                   project_roles={None, 'Human Cell Atlas wrangler', 'external curator'})
 
     def test_hpsi(self):
         self._test_example_bundle(directory='HPSI_human_cerebral_organoids',
                                   age_range=AgeRange(min=1419120000.0, max=1545264000.0),
                                   diseases={'normal'},
-                                  has_specimens=True,
                                   project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'})
 
     def test_mouse(self):
         self._test_example_bundle(directory='Mouse Melanoma',
                                   age_range=AgeRange(3628800.0, 7257600.0),
                                   diseases={'subcutaneous melanoma'},
-                                  has_specimens=True,
                                   project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
 
     def test_pancreas(self):
         self._test_example_bundle(directory='Single cell transcriptome analysis of human pancreas',
                                   age_range=AgeRange(662256000.0, 662256000.0),
                                   diseases={'normal'},
-                                  has_specimens=True,
                                   project_roles={None, 'external curator', 'Human Cell Atlas wrangler'})
 
     def test_tissue_stability(self):
         self._test_example_bundle(directory='Tissue stability',
                                   age_range=AgeRange(1734480000.0, 1892160000.0),
                                   diseases={'normal'},
-                                  has_specimens=False,
+                                  storage_methods=set(),
+                                  preservation_methods=set(),
                                   project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
 
     def test_immune_cells(self):
@@ -169,6 +167,19 @@ class TestAccessorApi(TestCase):
                           deployment='staging',
                           diseases={'glioblastoma'}),
 
+    def test_preservation_storage_bundle(self):
+        """
+        A bundle with preservation and storage methods provided
+        """
+        self._test_bundle(uuid='68bdc676-c442-4581-923e-319c1c2d9018',
+                          version='2018-10-07T130111.835234Z',
+                          deployment='staging',
+                          age_range=AgeRange(min=567648000.0, max=1892160000.0),
+                          diseases={'normal'},
+                          project_roles={'Human Cell Atlas wrangler', None, 'external curator'},
+                          storage_methods={'frozen, liquid nitrogen'},
+                          preservation_methods={'cryopreservation, other'})
+
     def _test_bundle(self, uuid, deployment=None, replica='aws', version=None, **assertion_kwargs):
         client = dss_client(deployment)
         version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
@@ -182,7 +193,8 @@ class TestAccessorApi(TestCase):
                        age_range=None,
                        diseases=frozenset({None}),
                        project_roles=frozenset({None}),
-                       has_specimens=True):
+                       storage_methods=frozenset({None}),
+                       preservation_methods=frozenset({None})):
         bundle = Bundle(uuid, version, manifest, metadata_files)
         biomaterials = bundle.biomaterials.values()
         actual_diseases = set(chain(*(bm.diseases for bm in biomaterials
@@ -237,8 +249,12 @@ class TestAccessorApi(TestCase):
         self.assertTrue(all(so.manifest_entry.name.endswith('.fastq.gz') for so in sequencing_output),
                         "All sequencing outputs in the test bundle are fastq files.")
 
+        has_specimens = storage_methods or preservation_methods
         specimen_types = {type(s) for s in bundle.specimens}
         self.assertEqual({SpecimenFromOrganism} if has_specimens else set(), specimen_types)
+
+        self.assertEqual(storage_methods, {s.storage_method for s in bundle.specimens})
+        self.assertEqual(preservation_methods, {s.preservation_method for s in bundle.specimens})
 
         print(json.dumps(as_json(bundle), indent=4))
 
