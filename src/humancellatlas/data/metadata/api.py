@@ -234,6 +234,7 @@ class DonorOrganism(Biomaterial):
 @dataclass(init=False)
 class SpecimenFromOrganism(Biomaterial):
     storage_method: Optional[str]
+    preservation_method: Optional[str]
     diseases: Set[str]
     organ: Optional[str]
     organ_part: Optional[str]
@@ -241,7 +242,9 @@ class SpecimenFromOrganism(Biomaterial):
     def __init__(self, json: JSON):
         super().__init__(json)
         content = json.get('content', json)
-        self.storage_method = content.get('preservation_storage', {}).get('storage_method')
+        preservation_storage = content.get('preservation_storage')
+        self.storage_method = preservation_storage.get('storage_method') if preservation_storage else None
+        self.preservation_method = preservation_storage.get('preservation_method') if preservation_storage else None
         self.diseases = {d['text'] for d in lookup(content, 'diseases', 'disease', default=[]) if d}
         self.organ = content.get('organ', {}).get('text')
         self.organ_part = content.get('organ_part', {}).get('text')
