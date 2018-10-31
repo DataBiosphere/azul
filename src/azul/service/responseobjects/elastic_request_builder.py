@@ -143,6 +143,7 @@ class ElasticTransformDump(object):
                        req_config,
                        post_filter: bool = False,
                        source_filter: List[str] = None,
+                       enable_aggregation: bool = True,
                        entity_type='files'):
         """
         This function will create an ElasticSearch request based on
@@ -158,6 +159,8 @@ class ElasticTransformDump(object):
         querying (i.e. faceting or not)
         :param List source_filter: A list of "foo.bar" field paths (see
                https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html)
+        :param enable_aggregation: Flag for enabling query aggregation (and
+               effectively ignoring facet configuration)
         :param entity_type: the string referring to the entity type used to get
         the ElasticSearch index to search
         :return: Returns the Search object that can be used for executing
@@ -180,13 +183,14 @@ class ElasticTransformDump(object):
         elif entity_type != "files":
             es_search = es_search.source(exclude="bundles")
 
-        for agg, translation in facet_config.items():
-            # Create a bucket aggregate for the 'agg'.
-            # Call create_aggregate() to return the appropriate aggregate query
-            es_search.aggs.bucket(
-                agg,
-                ElasticTransformDump.create_aggregate(
-                    filters, facet_config, agg))
+        if enable_aggregation:
+            for agg, translation in facet_config.items():
+                # Create a bucket aggregate for the 'agg'.
+                # Call create_aggregate() to return the appropriate aggregate query
+                es_search.aggs.bucket(
+                    agg,
+                    ElasticTransformDump.create_aggregate(
+                        filters, facet_config, agg))
 
         if entity_type == 'projects':  # Make project-specific aggregations
             ElasticTransformDump.create_project_summary_aggregates(es_search, req_config)
@@ -573,7 +577,8 @@ class ElasticTransformDump(object):
                                         self.es_client,
                                         request_config,
                                         post_filter=False,
-                                        source_filter=source_filter)
+                                        source_filter=source_filter,
+                                        enable_aggregation=False)
 
         manifest = ManifestResponse(es_search, manifest_config, request_config['translation'])
 
