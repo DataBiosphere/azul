@@ -31,7 +31,7 @@
     "organPart": "contents.specimens.organ_part",
     "organismAge": "contents.specimens.organism_age",
     "organismAgeUnit": "contents.specimens.organism_age_unit",
-    "preservationMethod": "contents.specimens.storage_method",
+    "preservationMethod": "contents.specimens.preservation_method",
     "cellCount": "contents.cell_suspensions.total_estimated_cells",
 
     "entryId": "entity_id"

@@ -146,7 +146,7 @@ class ElasticsearchFakeDataLoader(object):
                         "biological_sex": ["safe_color_name"],
                         "_source": "safe_color_name",
                         "genus_species": ["safe_color_name"],
-                        "storage_method": "safe_color_name"
+                        "preservation_method": "safe_color_name"
                     }
                     if entity_type == 'specimens' else
                     {
@@ -162,7 +162,7 @@ class ElasticsearchFakeDataLoader(object):
                         "biological_sex": ["safe_color_name"],
                         "_source": ["safe_color_name"],
                         "genus_species": ["safe_color_name"],
-                        "storage_method": ["safe_color_name"]
+                        "preservation_method": ["safe_color_name"]
                     }
                 ],
                 "cell_suspensions": [

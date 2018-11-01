@@ -481,7 +481,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "organismAgeUnit": specimen.get("organism_age_unit", None),
                 "biologicalSex": specimen.get("biological_sex", None),
                 "disease": specimen.get("disease", None),
-                "storageMethod": specimen.get("storage_method", None),
+                "preservationMethod": specimen.get("preservation_method", None),
                 "source": specimen.get("_source", None)
             }
             specimens.append(translated_specimen)
