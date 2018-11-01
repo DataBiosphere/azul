@@ -192,9 +192,6 @@ class ElasticTransformDump(object):
                     ElasticTransformDump.create_aggregate(
                         filters, facet_config, agg))
 
-        if entity_type == 'projects':  # Make project-specific aggregations
-            ElasticTransformDump.create_project_summary_aggregates(es_search, req_config)
-
         return es_search
 
     @staticmethod
@@ -553,7 +550,7 @@ class ElasticTransformDump(object):
         final_response = final_response.apiResponse.to_json()
 
         if entity_type == 'projects':  # Add project summaries to each project hit
-            self.add_project_summaries(final_response['hits'], es_response)
+            self.add_project_summaries(final_response['hits'], es_response['hits']['hits'])
 
         if include_file_urls:
             for hit in final_response['hits']:
@@ -678,49 +675,19 @@ class ElasticTransformDump(object):
             "Returning the final response for transform_autocomplete_request")
         return final_response
 
-    @staticmethod
-    def create_project_summary_aggregates(es_search, request_config):
-        """
-        Add per-project aggregations to the request, specific to project response
-        """
-        es_search.aggs.bucket(
-            '_project_agg', 'terms',
-            field=request_config["translation"]["projectId"] + '.keyword',
-            size=99999
-        )
-        project_bucket = es_search.aggs['_project_agg']
-
-        # Get unique donor count for each project
-        project_bucket.metric(
-            'donor_count', 'cardinality',
-            field='contents.specimens.donor_document_id.keyword',
-            precision_threshold="40000"
-        )
-
-        # Get each species, experimental approaches, and diseases in each project
-        project_bucket.bucket(
-            'species', 'terms',
-            field=request_config["translation"]["genusSpecies"] + '.keyword'
-        )
-        project_bucket.bucket(
-            'libraryConstructionApproach', 'terms',
-            field=request_config["translation"]["libraryConstructionApproach"] + '.keyword'
-        )
-        project_bucket.bucket(
-            'disease', 'terms',
-            field=request_config["translation"]["disease"] + '.keyword'
-        )
-
-    def add_project_summaries(self, hits, es_response):
+    def add_project_summaries(self, final_response_hits, es_hits):
         """
         Create a project summary response for each project in hits.
-        The hits list is modified in place to add a summary to each element.
-        """
-        project_ids = [hit['entryId'] for hit in hits]
-        summary_responses = dict()
-        for project_id in project_ids:
-            summary_responses[project_id] = (
-                ProjectSummaryResponse(project_id, es_response).apiResponse.to_json())
 
-        for hit in hits:
-            hit['projectSummary'] = summary_responses[hit['entryId']]
+        :param final_response_hits: the hits in the response that will be sent to the client
+            final_response is modified in place to add the project summary to each hit
+        :param es_hits: the hits in the response of the ES request
+        """
+        project_summaries = dict()
+        for hit in es_hits:
+            project_summaries[hit['_id']] = ProjectSummaryResponse(
+                hit['_source']['contents'].to_dict()
+            ).return_response().to_json()
+
+        for hit in final_response_hits:
+            hit['projectSummary'] = project_summaries[hit['entryId']]

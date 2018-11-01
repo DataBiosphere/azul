@@ -5,6 +5,9 @@ import difflib
 import logging.config
 import unittest
 from urllib.parse import urlparse, parse_qs
+
+from elasticsearch_dsl.utils import AttrList
+
 from service import WebServiceTestCase
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 from azul import config
@@ -401,213 +404,89 @@ class TestRequestBuilder(WebServiceTestCase):
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
-    def test_create_request_projects(self):
-        """
-        Test creation of a projects index request
-        Request should have _project aggregations containing project_id buckets at the top level
-        and sub-aggregations within each project bucket
-        """
-        # Load files required for this test
-        expected_output = {
-            "post_filter": {
-                "bool": {
-                    "must": [
-                        {
-                            "constant_score": {
-                                "filter": {
-                                    "terms": {
-                                        "entity_id.keyword": [
-                                            "cbb998ce-ddaf-34fa-e163-d14b399c6b34"
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    ]
-                }
-            },
-            "query": {
-                "match_all": {}
-            },
-            "_source": {
-                "exclude": "bundles"
-            },
-            "aggs": {
-                "_project_agg": {
-                    "terms": {
-                        "field": "contents.projects.document_id.keyword",
-                        "size": 99999
-                    },
-                    "aggs": {
-                        "donor_count": {
-                            "cardinality": {
-                                "field": "contents.specimens.donor_document_id.keyword",
-                                "precision_threshold": "40000"
-                            }
-                        },
-                        "species": {
-                            "terms": {
-                                "field": "contents.specimens.genus_species.keyword"
-                            }
-                        },
-                        "libraryConstructionApproach": {
-                            "terms": {
-                                "field": "contents.processes.library_construction_approach.keyword"
-                            }
-                        },
-                        "disease": {
-                            "terms": {
-                                "field": "contents.specimens.disease.keyword"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
-
-        # Create ElasticTransformDump instance
-        es_ts_instance = EsTd()
-        # Create a request object
-        es_search = EsTd.create_request(
-            sample_filter,
-            es_ts_instance.es_client,
-            self.request_config,
-            post_filter=True,
-            entity_type='projects')
-        # Convert objects to be compared to strings
-        expected_output = json.dumps(
-            expected_output,
-            sort_keys=True)
-        actual_output = json.dumps(
-            es_search.to_dict(),
-            sort_keys=True)
-
-        self.compare_dicts(actual_output, expected_output)
-
-        self.assertEqual(actual_output, expected_output)
-
     def test_project_summaries(self):
         """
         Test creation of project summary
         Summary should be added to dict of corresponding project id in hits.
         """
-        hits = [{'entryId': 'a'}, {'entryId': 'b'}]
-        es_response = {
-            "hits": {
-                "hits": [
-                    {
-                        "_id": "a",
-                        "_source": {
-                            "entity_id": "a",
-                            "contents": {
-                                "specimens": [],
-                                "cell_suspensions": [],
-                                "files": [],
-                                "processes": [],
-                                "project": {
-                                    "document_id": "a"
-                                }
-                            },
-                            "bundles": [
-                                {}
-                            ]
+        final_response_hits = [{'entryId': 'a'}, {'entryId': 'b'}]
+        es_response_hits = AttrList([
+            {
+                "_id": "a",
+                "_source": {
+                    "entity_id": "a",
+                    "contents": {
+                        "specimens": [],
+                        "cell_suspensions": [],
+                        "files": [],
+                        "processes": [],
+                        "project": {
+                            "document_id": "a"
                         }
                     },
-                    {
-                        "_id": "b",
-                        "_source": {
-                            "entity_id": "b",
-                            "contents": {
-                                "specimens": [
-                                    {
-                                        "biomaterial_id": [
-                                            "specimen1"
-                                        ],
-                                        "disease": [
-                                            "disease1"
-                                        ],
-                                        "organ": [
-                                            "organ1"
-                                        ],
-                                        "donor_biomaterial_id": [
-                                            "donor1"
-                                        ],
-                                        "genus_species": [
-                                            "species1"
-                                        ]
-                                    }
-                                ],
-                                "cell_suspensions": [
-                                    {
-                                        "organ": ["organ1"],
-                                        "total_estimated_cells": 2,
-                                    }
-                                ],
-                                "files": [],
-                                "processes": [],
-                                "project": {
-                                    "document_id": "b"
-                                }
-                            },
-                            "bundles": [
-                                {}
-                            ]
-                        }
-                    }
-                ]
+                    "bundles": [
+                        {}
+                    ]
+                }
             },
-            "aggregations": {
-                "_project_agg": {
-                    "doc_count_error_upper_bound": 0,
-                    "sum_other_doc_count": 0,
-                    "buckets": [
-                        {
-                            "key": "a",
-                            "libraryConstructionApproach": {
-                                "buckets": []
-                            },
-                            "disease": {
-                                "buckets": []
-                            },
-                            "donor_count": {
-                                "value": 0
-                            },
-                            "species": {
-                                "buckets": []
-                            }
-                        },
-                        {
-                            "key": "b",
-                            "libraryConstructionApproach": {
-                                "buckets": []
-                            },
-                            "disease": {
-                                "buckets": [
-                                    {
-                                        "key": "disease1",
-                                        "doc_count": 1
-                                    }
+            {
+                "_id": "b",
+                "_source": {
+                    "entity_id": "b",
+                    "contents": {
+                        "specimens": [
+                            {
+                                "biomaterial_id": [
+                                    "specimen1"
+                                ],
+                                "disease": [
+                                    "disease1"
+                                ],
+                                "donor_biomaterial_id": [
+                                    "donor1"
+                                ],
+                                "genus_species": [
+                                    "species1"
                                 ]
                             },
-                            "donor_count": {
-                                "value": 1
-                            },
-                            "species": {
-                                "buckets": [
-                                    {
-                                        "key": "species1",
-                                        "doc_count": 1
-                                    }
+                            {
+                                "biomaterial_id": [
+                                    "specimen2"
+                                ],
+                                "disease": [
+                                    "disease1"
+                                ],
+                                "donor_biomaterial_id": [
+                                    "donor2"
+                                ],
+                                "genus_species": [
+                                    "species1"
                                 ]
                             }
+                        ],
+                        "cell_suspensions": [
+                            {
+                                "organ": ["organ1"],
+                                "total_estimated_cells": 2
+                            },
+                            {
+                                "organ": ["organ2"],
+                                "total_estimated_cells": 3
+                            }
+                        ],
+                        "files": [],
+                        "processes": [],
+                        "project": {
+                            "document_id": "b"
                         }
+                    },
+                    "bundles": [
+                        {}
                     ]
                 }
             }
-        }
-        EsTd().add_project_summaries(hits, es_response)
+        ])
+        EsTd().add_project_summaries(final_response_hits, es_response_hits)
 
         expected_output = [
             {
@@ -624,13 +503,18 @@ class TestRequestBuilder(WebServiceTestCase):
             {
                 "entryId": "b",
                 "projectSummary": {
-                    "donorCount": 1,
-                    "totalCellCount": 2.0,
+                    "donorCount": 2,
+                    "totalCellCount": 5.0,
                     "organSummaries": [
                         {
                             "organType": "organ1",
                             "countOfDocsWithOrganType": 1,
                             "totalCellCountByOrgan": 2.0
+                        },
+                        {
+                            "organType": "organ2",
+                            "countOfDocsWithOrganType": 1,
+                            "totalCellCountByOrgan": 3.0
                         }
                     ],
                     "genusSpecies": [
@@ -645,11 +529,11 @@ class TestRequestBuilder(WebServiceTestCase):
         ]
 
         expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(hits, sort_keys=True)
+        actual_output = json.dumps(final_response_hits, sort_keys=True)
 
-        self.compare_dicts(actual_output, expected_output)
+        self.compare_dicts(expected_output, actual_output)
 
-        self.assertEqual(actual_output, expected_output)
+        self.assertEqual(expected_output, actual_output)
 
     def test_transform_request_with_file_url(self):
         response_json = EsTd().transform_request(filters={"file": {}},
