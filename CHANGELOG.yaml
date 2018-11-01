@@ -11,6 +11,19 @@ meta:
     - clients: the service API changed in a way that requires clients to be updated
 
 changes:
+
+  - title: Extract preservation_method instead of storage_method
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/503
+      - https://github.com/HumanCellAtlas/data-browser/issues/308
+    upgrade:
+      - requirements
+      - deploy
+      - reindex
+      - clients
+    notes: The `hits[*].specimens.storageMethod` response field was renamed to `preservationMethod`, the corresponding
+           facet was already called `preservationMethod` so no change was required there.
+
   - title: Add CHANGELOG.yaml and expose the top ten entries via /version endpoint
     upgrade:
       - deploy

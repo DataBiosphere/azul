@@ -184,7 +184,7 @@ class SpecimenVisitor(BiomaterialVisitor):
             self._set('disease', SetAccumulator, entity.diseases)
             self._set('organ', OptionalValueAccumulator, entity.organ)
             self._set('organ_part', OptionalValueAccumulator, entity.organ_part)
-            self._set('storage_method', OptionalValueAccumulator, entity.storage_method)
+            self._set('preservation_method', OptionalValueAccumulator, entity.preservation_method)
             self._set('_type', MandatoryValueAccumulator, 'specimen')
         elif isinstance(entity, api.DonorOrganism):
             self._set('donor_document_id', SetAccumulator, str(entity.document_id))

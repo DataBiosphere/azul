@@ -8,10 +8,10 @@ import azul.changelog
 
 class TestChangeLog(TestCase):
     def test_changelog(self):
+        changelog = azul.changelog.changelog()
         with TemporaryDirectory() as tmpdir:
-            changelog = azul.changelog.changelog()
+            azul.changelog.write_changes(tmpdir)
             with mock.patch('sys.path', new=sys.path + [tmpdir]):
-                azul.changelog.write_changes(tmpdir)
                 changes = azul.changelog.changes()
                 all_compact_changes = azul.changelog.compact_changes()
                 one_compact_change = azul.changelog.compact_changes(limit=1)
