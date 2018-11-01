@@ -2,7 +2,7 @@ from abc import ABC
 from collections import OrderedDict, defaultdict
 from itertools import chain
 import logging
-from typing import Callable, List, Mapping, MutableMapping, Sequence, Union
+from typing import Callable, List, Mapping, MutableMapping, Sequence, Union, MutableSet, Optional
 
 from elasticsearch import ConflictError, ElasticsearchException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
@@ -91,86 +91,20 @@ class BaseIndexer(ABC):
         :param error_retry_limit: The maximum number of retries (the second attempt is the first retry) on other
                                   errors. Specify 0 for no retries or None for unlimited retries.
         """
-        errored_documents = defaultdict(int)
-        conflict_documents = defaultdict(int)
-        es_client = ESClientFactory.get()
+        writer = IndexWriter(refresh=self.refresh,
+                             conflict_retry_limit=conflict_retry_limit,
+                             error_retry_limit=error_retry_limit)
 
         while documents:
             modified_docs = self._merge_existing_docs(documents)
             aggregate_docs = self._aggregate_docs(modified_docs)
             log.info("Writing %i modified and %i aggregate document(s) for of a total of %i contribution(s).",
                      len(modified_docs), len(aggregate_docs), len(documents))
-            # Since we are piggy-backing the versioning of the aggregate documents onto the versioning of the
-            # original documents, we need to ensure that all concurrent writers update the documents in the same
-            # order or else we risk dead-lock. It is also important that we write the aggregate before the original,
-            # to ensure that success in writing the original implies success in writing the aggregate. Without this
-            # invariant we could not safely skip writing both original and aggregate was found to be original already
-            # up-to-date in the index.
-            #
-            write_documents = sorted(chain(modified_docs.values(), aggregate_docs.values()),
-                                     key=lambda doc: (doc.entity_type, doc.document_id, not doc.aggregate))
-            write_documents = OrderedDict((doc.coordinates, doc) for doc in write_documents)
-            assert len(write_documents) == len(modified_docs) + len(aggregate_docs)
 
-            retry_ids = set()
+            writer.write(modified_docs, aggregate_docs)
+            documents = {k: v for k, v in documents.items() if k in writer.retries}
 
-            for doc in write_documents.values():
-                if doc.original and (doc.aggregate_coordinates in errored_documents or
-                                     doc.aggregate_coordinates in conflict_documents):
-                    # If writing the aggregate document fails, don't even attempt to write the original. This is not
-                    # just an optimization: If a loser to the aggregate race continued on to write the original and
-                    # won that race, it would spoil the aggregate winner's victory and could lead to deadlock.
-                    # Deadlocks manifest itself in two or more processes processes spoiling each others victory
-                    # perpetually.
-                    continue
-                try:
-                    es_client.index(index=doc.document_index,
-                                    doc_type=doc.document_type,
-                                    body=doc.to_source(),
-                                    id=doc.document_id,
-                                    refresh=self.refresh,
-                                    version=doc.document_version,
-                                    # If writing the aggregate succeeds and writing the orginal fails (either due to
-                                    # a conflict or a general error), the aggregate will be one version ahead of the
-                                    # original. In fact, the version difference will invariantly be either 0 or 1.
-                                    # This is acceptable and the inconsistency will be fixed eventually by a retry.
-                                    # We could actually disable versioning on aggregates without detriment but in
-                                    # order to assert the invariant here we use `external_gte` for aggregates.
-                                    version_type='external' if doc.original else 'external_gte')
-                except ConflictError as e:
-                    conflict_documents[doc.coordinates] += 1
-                    errored_documents.pop(doc.coordinates, None)  # a conflict resets the error count
-                    if conflict_retry_limit is None or conflict_documents[doc.coordinates] <= conflict_retry_limit:
-                        action = 'retrying'
-                        # Always retry the original. This will regenerate and retry the aggregate.
-                        retry_ids.add(doc.original_coordinates)
-                    else:
-                        action = 'giving up'
-                    log.warning('There was a conflict with document %r: %r. Total # of errors: %i, %s.',
-                                doc.coordinates, e, conflict_documents[doc.coordinates], action)
-                except ElasticsearchException as e:
-                    errored_documents[doc.coordinates] += 1
-                    if error_retry_limit is None or errored_documents[doc.coordinates] <= error_retry_limit:
-                        action = 'retrying'
-                        # Always retry the original. This will regenerate and retry the aggregate.
-                        retry_ids.add(doc.original_coordinates)
-                    else:
-                        action = 'giving up'
-                    log.warning('There was a general error with document %r: %r. Total # of errors: %i, %s.',
-                                doc.coordinates, e, errored_documents[doc.coordinates], action)
-                else:
-                    conflict_documents.pop(doc.coordinates, None)
-                    errored_documents.pop(doc.coordinates, None)
-                    log.debug('Successfully wrote document %s%s/%s with contributions from %i bundle(s).',
-                              doc.entity_type, '_aggregate' if doc.aggregate else '', doc.document_id, len(doc.bundles))
-
-            # Collect the set of documents to be retried
-            documents = {k: v for k, v in documents.items() if k in retry_ids}
-        if errored_documents or conflict_documents:
-            log.warning('Failures: %r', errored_documents)
-            log.warning('Conflicts: %r', conflict_documents)
-            raise RuntimeError('Failed to index documents. Failures: %i, conflicts: %i.' %
-                               (len(errored_documents), len(conflict_documents)))
+        writer.raise_on_errors()
 
     def _aggregate_docs(self, modified_docs):
         aggregate_docs = {}
@@ -249,3 +183,98 @@ class BaseIndexer(ABC):
         }
         es_client = ESClientFactory.get()
         return es_client.search(doc_type="doc", body=search_query)
+
+
+class IndexWriter:
+    def __init__(self, refresh: Union[bool, str],
+                 conflict_retry_limit: Optional[int],
+                 error_retry_limit: Optional[int]) -> None:
+        super().__init__()
+        self.refresh = refresh
+        self.conflict_retry_limit = conflict_retry_limit
+        self.error_retry_limit = error_retry_limit
+        self.es_client = ESClientFactory.get()
+        self.errors: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
+        self.conflicts: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
+        self.retries: MutableSet[DocumentCoordinates] = None
+
+    def write(self, originals: DocumentsById, aggregates: DocumentsById):
+        # Since we are piggy-backing the versioning of the aggregate documents onto the versioning of the
+        # original documents, we need to ensure that all concurrent writers update the documents in the same
+        # order or else we risk dead-lock. It is also important that we write the aggregate before the original,
+        # to ensure that success in writing the original implies success in writing the aggregate. Without this
+        # invariant we could not safely skip writing both original and aggregate was found to be original already
+        # up-to-date in the index.
+        #
+        write_documents = sorted(chain(originals.values(), aggregates.values()),
+                                 key=lambda doc: (doc.entity_type, doc.document_id, not doc.aggregate))
+        write_documents = OrderedDict((doc.coordinates, doc) for doc in write_documents)
+        assert len(write_documents) == len(originals) + len(aggregates)
+
+        self.retries = set()
+
+        for doc in write_documents.values():
+            if doc.original and (doc.aggregate_coordinates in self.errors or
+                                 doc.aggregate_coordinates in self.conflicts):
+                # If writing the aggregate document fails, don't even attempt to write the original. This is not
+                # just an optimization: If a loser to the aggregate race continued on to write the original and
+                # won that race, it would spoil the aggregate winner's victory and could lead to deadlock.
+                # Deadlocks manifest itself in two or more processes processes spoiling each others victory
+                # perpetually.
+                continue
+            try:
+                self.es_client.index(index=doc.document_index,
+                                     doc_type=doc.document_type,
+                                     body=doc.to_source(),
+                                     id=doc.document_id,
+                                     refresh=self.refresh,
+                                     version=doc.document_version,
+                                     # If writing the aggregate succeeds and writing the orginal fails (either due to
+                                     # a conflict or a general error), the aggregate will be one version ahead of the
+                                     # original. In fact, the version difference will invariantly be either 0 or 1.
+                                     # This is acceptable and the inconsistency will be fixed eventually by a retry.
+                                     # We could actually disable versioning on aggregates without detriment but in
+                                     # order to assert the invariant here we use `external_gte` for aggregates.
+                                     version_type='external' if doc.original else 'external_gte')
+            except ConflictError as e:
+                self._on_conflict(doc, e)
+            except ElasticsearchException as e:
+                self._on_error(doc, e)
+            else:
+                self._on_success(doc)
+
+    def _on_success(self, doc):
+        self.conflicts.pop(doc.coordinates, None)
+        self.errors.pop(doc.coordinates, None)
+        log.debug('Successfully wrote document %s%s/%s with contributions from %i bundle(s).',
+                  doc.entity_type, '_aggregate' if doc.aggregate else '', doc.document_id, len(doc.bundles))
+
+    def _on_error(self, doc, e):
+        self.errors[doc.coordinates] += 1
+        if self.error_retry_limit is None or self.errors[doc.coordinates] <= self.error_retry_limit:
+            action = 'retrying'
+            # Always retry the original. This will regenerate and retry the aggregate.
+            self.retries.add(doc.original_coordinates)
+        else:
+            action = 'giving up'
+        log.warning('There was a general error with document %r: %r. Total # of errors: %i, %s.',
+                    doc.coordinates, e, self.errors[doc.coordinates], action)
+
+    def _on_conflict(self, doc, e):
+        self.conflicts[doc.coordinates] += 1
+        self.errors.pop(doc.coordinates, None)  # a conflict resets the error count
+        if self.conflict_retry_limit is None or self.conflicts[doc.coordinates] <= self.conflict_retry_limit:
+            action = 'retrying'
+            # Always retry the original. This will regenerate and retry the aggregate.
+            self.retries.add(doc.original_coordinates)
+        else:
+            action = 'giving up'
+        log.warning('There was a conflict with document %r: %r. Total # of errors: %i, %s.',
+                    doc.coordinates, e, self.conflicts[doc.coordinates], action)
+
+    def raise_on_errors(self):
+        if self.errors or self.conflicts:
+            log.warning('Failures: %r', self.errors)
+            log.warning('Conflicts: %r', self.conflicts)
+            raise RuntimeError('Failed to index documents. Failures: %i, conflicts: %i.' %
+                               (len(self.errors), len(self.conflicts)))
