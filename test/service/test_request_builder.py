@@ -404,93 +404,6 @@ class TestRequestBuilder(WebServiceTestCase):
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
-    def test_create_request_projects(self):
-        """
-        Test creation of a projects index request
-        Request should have _project aggregations containing project_id buckets at the top level
-        and sub-aggregations within each project bucket
-        """
-        # Load files required for this test
-        expected_output = {
-            "post_filter": {
-                "bool": {
-                    "must": [
-                        {
-                            "constant_score": {
-                                "filter": {
-                                    "terms": {
-                                        "entity_id.keyword": [
-                                            "cbb998ce-ddaf-34fa-e163-d14b399c6b34"
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    ]
-                }
-            },
-            "query": {
-                "match_all": {}
-            },
-            "_source": {
-                "exclude": "bundles"
-            },
-            "aggs": {
-                "_project_agg": {
-                    "terms": {
-                        "field": "contents.projects.document_id.keyword",
-                        "size": 99999
-                    },
-                    "aggs": {
-                        "donor_count": {
-                            "cardinality": {
-                                "field": "contents.specimens.donor_document_id.keyword",
-                                "precision_threshold": "40000"
-                            }
-                        },
-                        "species": {
-                            "terms": {
-                                "field": "contents.specimens.genus_species.keyword"
-                            }
-                        },
-                        "libraryConstructionApproach": {
-                            "terms": {
-                                "field": "contents.processes.library_construction_approach.keyword"
-                            }
-                        },
-                        "disease": {
-                            "terms": {
-                                "field": "contents.specimens.disease.keyword"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
-
-        # Create ElasticTransformDump instance
-        es_ts_instance = EsTd()
-        # Create a request object
-        es_search = EsTd.create_request(
-            sample_filter,
-            es_ts_instance.es_client,
-            self.request_config,
-            post_filter=True,
-            entity_type='projects')
-        # Convert objects to be compared to strings
-        expected_output = json.dumps(
-            expected_output,
-            sort_keys=True)
-        actual_output = json.dumps(
-            es_search.to_dict(),
-            sort_keys=True)
-
-        self.compare_dicts(actual_output, expected_output)
-
-        self.assertEqual(actual_output, expected_output)
-
     def test_project_summaries(self):
         """
         Test creation of project summary
@@ -529,9 +442,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                 "disease": [
                                     "disease1"
                                 ],
-                                "organ": [
-                                    "organ1"
-                                ],
                                 "donor_biomaterial_id": [
                                     "donor1"
                                 ],
@@ -546,10 +456,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                 "disease": [
                                     "disease1"
                                 ],
-                                "organ": [
-                                    "organ2"
-                                ],
-                                "total_estimated_cells": 3,
                                 "donor_biomaterial_id": [
                                     "donor2"
                                 ],
@@ -561,7 +467,11 @@ class TestRequestBuilder(WebServiceTestCase):
                         "cell_suspensions": [
                             {
                                 "organ": ["organ1"],
-                                "total_estimated_cells": 2,
+                                "total_estimated_cells": 2
+                            },
+                            {
+                                "organ": ["organ2"],
+                                "total_estimated_cells": 3
                             }
                         ],
                         "files": [],
