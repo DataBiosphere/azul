@@ -351,9 +351,9 @@ class ProjectSummaryResponse(AbstractResponse):
             where the key is an organ and the value is the number of cells for the organ in the project
         """
         organ_cell_count = defaultdict(int)
-        for specimen in hit['specimens']:
-            assert len(specimen['organ']) == 1
-            organ_cell_count[specimen['organ'][0]] += specimen.get('total_estimated_cells', 0)
+        for cell_suspension in hit['cell_suspensions']:
+            assert len(cell_suspension['organ']) == 1
+            organ_cell_count[cell_suspension['organ'][0]] += cell_suspension.get('total_estimated_cells', 0)
         total_cell_count = sum(organ_cell_count.values())
         organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
@@ -377,13 +377,13 @@ class ProjectSummaryResponse(AbstractResponse):
         total_cell_count, organ_cell_count = self.get_cell_count(es_hit_contents)
 
         self.apiResponse = ProjectSummaryRepresentation(
-            donorCount=len(specimen_accumulators['donor_biomaterial_id'].close()),
+            donorCount=len(specimen_accumulators['donor_biomaterial_id'].get()),
             totalCellCount=total_cell_count,
             organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
                             for count in organ_cell_count],
-            genusSpecies=specimen_accumulators['genus_species'].close(),
-            libraryConstructionApproach=library_accumulator.close(),
-            disease=specimen_accumulators['disease'].close()
+            genusSpecies=specimen_accumulators['genus_species'].get(),
+            libraryConstructionApproach=library_accumulator.get(),
+            disease=specimen_accumulators['disease'].get()
         )
 
 
@@ -482,8 +482,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "biologicalSex": specimen.get("biological_sex", None),
                 "disease": specimen.get("disease", None),
                 "storageMethod": specimen.get("storage_method", None),
-                "source": specimen.get("_source", None),
-                "totalCells": specimen.get("total_estimated_cells", None)
+                "source": specimen.get("_source", None)
             }
             specimens.append(translated_specimen)
         return specimens

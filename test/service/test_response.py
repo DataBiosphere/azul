@@ -1,11 +1,9 @@
 #!/usr/bin/python
-from functools import partial
 import json
 import unittest
 import os
 
 import requests
-from elasticsearch_dsl.utils import AttrDict, AttrList
 
 from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
                                                           KeywordSearchResponse,
@@ -590,16 +588,12 @@ class TestResponse(WebServiceTestCase):
                 {
                     "biomaterial_id": ["specimen1", "specimen3"],
                     "disease": ["disease1"],
-                    "organ": ["organ1"],
-                    "total_estimated_cells": 6,
                     "donor_biomaterial_id": ["donor1"],
                     "genus_species": ["species1"]
                 },
                 {
                     "biomaterial_id": ["specimen2"],
                     "disease": ["disease1"],
-                    "organ": ["organ2"],
-                    "total_estimated_cells": 3,
                     "donor_biomaterial_id": ["donor1"],
                     "genus_species": ["species1"]
                 }
@@ -923,43 +917,26 @@ class TestResponse(WebServiceTestCase):
                         "entryId": "bae45747-546a-4aed-9377-08e9115a8fb8",
                         "specimens": [
                             {
-                                "disease": [
-                                    "glioblastoma"
-                                ],
-                                "organ": [
-                                    "brain"
-                                ],
-                                "organ_part": [
-                                    "astrocyte"
-                                ],
-                                "_type": [
-                                    "specimen"
-                                ],
-                                "total_estimated_cells": 0,
-                                "donor_biomaterial_id": [
-                                    "Q4_DEMO-donor_MGH30"
-                                ],
-                                "genus_species": [
-                                    "Homo sapiens"
-                                ]
+                                "disease": ["glioblastoma"],
+                                "_type": ["specimen"],
+                                "donor_biomaterial_id": ["Q4_DEMO-donor_MGH30"],
+                                "genus_species": ["Homo sapiens"]
+                            }
+                        ],
+                        "cell_suspensions": [
+                            {
+                                "organ": ["brain"],
+                                "total_estimated_cells": 0
                             }
                         ],
                         "processes": [
                             {
-                                "_type": [
-                                    "process"
-                                ],
-                                "library_construction_approach": [
-                                    "Smart-seq2"
-                                ]
+                                "_type": ["process"],
+                                "library_construction_approach": ["Smart-seq2"]
                             },
                             {
-                                "_type": [
-                                    "process"
-                                ],
-                                "library_construction_approach": [
-                                    "Smart-seq2"
-                                ]
+                                "_type": ["process"],
+                                "library_construction_approach": ["Smart-seq2"]
                             }
                         ]
                     }
@@ -973,73 +950,47 @@ class TestResponse(WebServiceTestCase):
                         "entryId": "6ec8e247-2eb0-42d1-823f-75facd03988d",
                         "specimens": [
                             {
-                                "disease": [
-                                    "normal"
-                                ],
-                                "organ": [
-                                    "spleen"
-                                ],
-                                "_type": [
-                                    "specimen"
-                                ],
-                                "total_estimated_cells": 39300000,
-                                "donor_biomaterial_id": [
-                                    "284C-A1"
-                                ],
-                                "genus_species": [
-                                    "Homo sapiens"
-                                ]
+                                "disease": ["normal"],
+                                "_type": ["specimen"],
+                                "donor_biomaterial_id": ["284C-A1"],
+                                "genus_species": ["Homo sapiens"]
                             },
                             {
-                                "disease": [
-                                    "normal"
-                                ],
-                                "organ": [
-                                    "spleen"
-                                ],
-                                "_type": [
-                                    "specimen"
-                                ],
-                                "total_estimated_cells": 1,
-                                "donor_biomaterial_id": [
-                                    "284C-A1"
-                                ],
-                                "genus_species": [
-                                    "Homo sapiens"
-                                ]
+                                "disease": ["normal"],
+                                "_type": ["specimen"],
+                                "donor_biomaterial_id": ["284C-A1"],
+                                "genus_species": ["Homo sapiens"]
                             },
                             {
-                                "disease": [
-                                    "not normal"
-                                ],
-                                "organ": [
-                                    "brain"
-                                ],
-                                "_type": [
-                                    "specimen"
-                                ],
+                                "disease": ["not normal"],
+                                "organ": ["brain"],
+                                "_type": ["specimen"],
                                 "total_estimated_cells": 10,
-                                "donor_biomaterial_id": [
-                                    "284C-A2"
-                                ],
-                                "genus_species": [
-                                    "Homo sapiens"
-                                ]
+                                "donor_biomaterial_id": ["284C-A2"],
+                                "genus_species": ["Homo sapiens"]
+                            }
+                        ],
+                        "cell_suspensions": [
+                            {
+                                "organ": ["spleen"],
+                                "total_estimated_cells": 39300000
+                            },
+                            {
+                                "organ": ["spleen"],
+                                "total_estimated_cells": 1
+                            },
+                            {
+                                "organ": ["brain"],
+                                "total_estimated_cells": 10
                             }
                         ],
                         "processes": [
                             {
-                                "_type": [
-                                    "process"
-                                ],
-                                "library_construction_approach": [
-                                    "10x_v2"
-                                ]
+                                "_type": ["process"],
+                                "library_construction_approach": ["10x_v2"]
                             },
                             {
-                                "_type": [
-                                    "process"
-                                ]
+                                "_type": ["process"]
                             }
                         ]
                     }
@@ -1054,17 +1005,7 @@ class TestResponse(WebServiceTestCase):
                         "specimens": [
                             {
                                 "disease": [],
-                                "organ": [
-                                    "hematopoietic system"
-                                ],
-                                "organ_part": [
-                                    "umbilical cord blood",
-                                    "bone marrow"
-                                ],
-                                "_type": [
-                                    "specimen"
-                                ],
-                                "total_estimated_cells": 528092,
+                                "_type": ["specimen"],
                                 "donor_biomaterial_id": [
                                     "CB8",
                                     "CB6",
@@ -1083,24 +1024,22 @@ class TestResponse(WebServiceTestCase):
                                     "CB3",
                                     "BM1"
                                 ],
-                                "genus_species": [
-                                    "Homo sapiens"
-                                ]
+                                "genus_species": ["Homo sapiens"]
+                            }
+                        ],
+                        "cell_suspensions": [
+                            {
+                                "organ": ["hematopoietic system"],
+                                "total_estimated_cells": 528092
                             }
                         ],
                         "processes": [
                             {
-                                "_type": [
-                                    "process"
-                                ]
+                                "_type": ["process"]
                             },
                             {
-                                "_type": [
-                                    "process"
-                                ],
-                                "library_construction_approach": [
-                                    "10x_v2"
-                                ]
+                                "_type": ["process"],
+                                "library_construction_approach": ["10x_v2"]
                             }
                         ]
                     }
