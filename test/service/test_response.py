@@ -107,7 +107,7 @@ class TestResponse(WebServiceTestCase):
                         "biological_sex": ["silver"],
                         "_source": ["purple"],
                         "genus_species": ["teal"],
-                        "storage_method": specimen_value("aqua")
+                        "preservation_method": specimen_value("aqua")
                     }
                 ],
                 "cell_suspensions": [
@@ -188,7 +188,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
                             "source": ["purple"],
-                            "storageMethod": ["aqua"],
+                            "preservationMethod": ["aqua"],
                         }
                     ],
                     "cellSuspensions": [
@@ -254,7 +254,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
                             "source": ["purple"],
-                            "storageMethod": "aqua"
+                            "preservationMethod": "aqua"
                         }
                     ],
                     "cellSuspensions": [
@@ -346,7 +346,7 @@ class TestResponse(WebServiceTestCase):
                                 "organismAge": ["purple"],
                                 "organismAgeUnit": ["navy"],
                                 "source": ["purple"],
-                                "storageMethod": ["aqua"]
+                                "preservationMethod": ["aqua"]
                             }
                         ],
                         "cellSuspensions": [
@@ -421,7 +421,7 @@ class TestResponse(WebServiceTestCase):
                                 "organismAge": ["purple"],
                                 "organismAgeUnit": ["navy"],
                                 "source": ["purple"],
-                                "storageMethod": ["aqua"]
+                                "preservationMethod": ["aqua"]
                             }
                         ],
                         "cellSuspensions": [
@@ -744,7 +744,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
                             "source": ["purple"],
-                            "storageMethod": ["aqua"]
+                            "preservationMethod": ["aqua"]
                         }
                     ],
                     "cellSuspensions": [
@@ -839,7 +839,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
                             "source": ["purple"],
-                            "storageMethod": ["aqua"]
+                            "preservationMethod": ["aqua"]
                         }
                     ],
                     "cellSuspensions": [

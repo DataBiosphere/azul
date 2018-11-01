@@ -39,7 +39,7 @@
                                         ],
                                         "organ": "tumor",
                                         "organ_part": null,
-                                        "storage_method": null,
+                                        "preservation_method": null,
                                         "_type": "specimen",
                                         "donor_biomaterial_id": [
                                             "1113"
