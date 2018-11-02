@@ -336,6 +336,10 @@ class Config:
         return config.qualified_resource_name('manifest')
 
     @property
+    def test_mode(self) -> bool:
+        return self._boolean(os.environ.get('TEST_MODE', '0'))
+
+    @property
     def url_shortener_whitelist(self):
         return [r'.*humancellatlas\.org']
 

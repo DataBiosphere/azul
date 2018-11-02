@@ -30,6 +30,7 @@ class Reindexer(object):
                  query: Optional[JSON] = None,
                  prefix: str = config.dss_query_prefix,
                  num_workers: int = 16,
+                 test_name: str = None,
                  dryrun: bool = False):
         assert query is None or not prefix, "Cannot mix `prefix` and `query`"
         self.num_workers = num_workers
@@ -37,6 +38,7 @@ class Reindexer(object):
         self.prefix = prefix
         self.dss_url = dss_url
         self.indexer_url = indexer_url
+        self.test_name = test_name
         self.dryrun = dryrun
 
     def query(self, prefix=None):
@@ -69,7 +71,8 @@ class Reindexer(object):
             "match": {
                 "bundle_uuid": bundle_uuid,
                 "bundle_version": bundle_version
-            }
+            },
+            "test_name": self.test_name
         }
 
     def reindex(self, sync: bool = False):
