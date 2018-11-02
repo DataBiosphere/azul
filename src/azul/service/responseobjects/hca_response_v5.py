@@ -189,7 +189,6 @@ class ManifestResponse(AbstractResponse):
 
     UNSAVED_THRESHOLD = 40000  # rows
 
-
     def _translate(self, untranslated, keyname):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
