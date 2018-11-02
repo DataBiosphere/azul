@@ -130,6 +130,9 @@ class ElasticTransformDump(object):
             field=_field,
             size=99999)
         aggregate.bucket('untagged', 'missing', field=_field)
+        if agg == "fileFormat":
+            aggregate.aggs['myTerms'].metric('size_by_type', 'sum', field="contents.files.size")
+            aggregate.aggs['untagged'].metric('size_by_type', 'sum', field="contents.files.size")
         # If the aggregate in question didn't have any filter on the API
         #  call, skip it. Otherwise insert the popped
         # value back in
@@ -386,11 +389,6 @@ class ElasticTransformDump(object):
             field=request_config['translation']['cellCount']
         )
 
-        # Add a summary object based on file type
-        file_type_selector = request_config['translation']['fileFormat']
-        es_search.aggs.bucket('by_type', 'terms', field='{}.keyword'.format(file_type_selector))
-        es_search.aggs['by_type'].metric('size_by_type', 'sum', field=request_config['translation']['fileSize'])
-
         for field, agg_name in (
             ('specimenDocumentId', 'specimenCount'),
             ('fileId', 'fileCount'),
@@ -410,6 +408,7 @@ class ElasticTransformDump(object):
         #  which has the format for the summary request
         self.logger.info('Creating a SummaryResponse object')
         final_response = SummaryResponse(es_response.to_dict())
+        logger.info("Elasticsearch request: %s", json.dumps(es_search.to_dict(), indent=4))
         self.logger.info(
             'Returning the final response for transform_summary()')
         return final_response.apiResponse.to_json()
