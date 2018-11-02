@@ -101,9 +101,10 @@ class ElasticTransformDump(object):
         return Q('bool', must=query_list)
 
     @staticmethod
-    def create_aggregate(filters, facet_config, agg):
+    def create_aggregate(filters, facet_config, agg, request_config):
         """
         Creates the aggregation to be used in ElasticSearch
+        :param request_config: A dictionary describing facets and field name mappings
         :param filters: Translated filters from 'files/' endpoint call
         :param facet_config: Configuration for the facets (i.e. facets
         on which to construct the aggregate) in '{browser:es_key}' form
@@ -130,6 +131,10 @@ class ElasticTransformDump(object):
             field=_field,
             size=99999)
         aggregate.bucket('untagged', 'missing', field=_field)
+        if agg == "fileFormat":
+            fileSizeField = request_config['translation']['fileSize']
+            aggregate.aggs['myTerms'].metric('size_by_type', 'sum', field=fileSizeField)
+            aggregate.aggs['untagged'].metric('size_by_type', 'sum', field=fileSizeField)
         # If the aggregate in question didn't have any filter on the API
         #  call, skip it. Otherwise insert the popped
         # value back in
@@ -190,7 +195,7 @@ class ElasticTransformDump(object):
                 es_search.aggs.bucket(
                     agg,
                     ElasticTransformDump.create_aggregate(
-                        filters, facet_config, agg))
+                        filters, facet_config, agg, req_config))
 
         return es_search
 
@@ -382,11 +387,6 @@ class ElasticTransformDump(object):
             'sum',
             field=request_config['translation']['cellCount']
         )
-
-        # Add a summary object based on file type
-        file_type_selector = request_config['translation']['fileFormat']
-        es_search.aggs.bucket('by_type', 'terms', field='{}.keyword'.format(file_type_selector))
-        es_search.aggs['by_type'].metric('size_by_type', 'sum', field=request_config['translation']['fileSize'])
 
         for field, agg_name in (
             ('specimenDocumentId', 'specimenCount'),
