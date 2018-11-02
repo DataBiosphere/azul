@@ -31,16 +31,17 @@ def main(argv):
             f.write(creds['SecretString'])
             f.flush()
             with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
-                subscribe(options, dss_client)
+                will_subscribe = options.subscribe
+                subscribe(will_subscribe, dss_client)
     else:
         raise NotImplementedError("https://github.com/DataBiosphere/azul/issues/110")
 
 
-def subscribe(options, dss_client):
+def subscribe(will_subscribe, dss_client):
     response = dss_client.get_subscriptions(replica='aws')
     current_subscriptions = freeze(response['subscriptions'])
 
-    if options.subscribe:
+    if will_subscribe:
         plugin = Plugin.load()
         base_url = config.indexer_endpoint()
         prefix = config.dss_query_prefix
