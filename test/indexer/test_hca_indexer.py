@@ -40,7 +40,6 @@ class TestHCAIndexer(IndexerTestCase):
         cls.analysis_bundle = ("d5e01f9d-615f-4153-8a56-f2317d7d9ce8",
                                "2018-09-06T185759.326912Z")
 
-    @eventually(5.0, 0.5)
     def _get_es_results(self, assert_func):
         es_results = []
         for entity_index in self.index_properties.index_names:
