@@ -314,7 +314,7 @@ class SummaryResponse(BaseSummaryResponse):
     def __init__(self, raw_response):
         super().__init__(raw_response)
 
-        _sum = raw_response['aggregations']['by_type']
+        _sum = raw_response['aggregations']['fileFormat']["myTerms"]
         _organ_group = raw_response['aggregations']['group_by_organ']
 
         # Create a SummaryRepresentation object
