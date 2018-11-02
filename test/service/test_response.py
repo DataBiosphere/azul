@@ -563,15 +563,15 @@ class TestResponse(WebServiceTestCase):
                          json.dumps(expected_output, sort_keys=True, indent=4))
 
     def test_summary_endpoint(self):
-        for entity_type in 'specimens', 'files':
-            with self.subTest(entity_type=entity_type):
-                url = self.base_url + "/repository/summary"
-                response = requests.get(url)
-                response.raise_for_status()
-                summary_object = response.json()
-                self.assertGreater(summary_object['fileCount'], 0)
-                self.assertGreater(summary_object['organCount'], 0)
-                self.assertIsNotNone(summary_object['organSummaries'])
+        url = self.base_url + "/repository/summary"
+        response = requests.get(url)
+        response.raise_for_status()
+        summary_object = response.json()
+        self.assertGreaterEqual(summary_object['fileCount'], 1)
+        self.assertGreaterEqual(summary_object['organCount'], 1)
+        self.assertGreaterEqual(len(summary_object['fileTypeSummaries']), 1)
+        self.assertGreaterEqual(summary_object['fileTypeSummaries'][0]['totalSize'], 1)
+        self.assertIsNotNone(summary_object['organSummaries'])
 
     def test_default_sorting_parameter(self):
         base_url = self.base_url
