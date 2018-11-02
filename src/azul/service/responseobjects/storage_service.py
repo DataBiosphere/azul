@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass
 from logging import getLogger
-from threading import Lock
 from typing import Optional, List
 import boto3
 from azul import config
@@ -45,7 +44,6 @@ class StorageService:
 
     @contextmanager
     def multipart_upload(self, object_key: str, content_type: str):
-        # logger.info(f'multipart_upload: begin')
         api_response = self.client.create_multipart_upload(Bucket=self.__bucket_name,
                                                            Key=object_key,
                                                            ContentType=content_type)
@@ -145,11 +143,9 @@ class MultipartUploadHandler:
         return part
 
     def _upload_part(self, part):
-        # logger.info(f'multipart_upload/_upload_part: Part {part.part_number}: begin')
         upload_part = self.__handler.Part(part.part_number)
         result = upload_part.upload(Body=b''.join(part.content))
         part.etag = result['ETag']
-        # logger.info(f'multipart_upload/_upload_part: Part {part.part_number}: end (uploaded)')
 
 
 @dataclass
