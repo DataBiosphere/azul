@@ -45,7 +45,13 @@ dss_subscription_query = {
                                                 "67bc798b-a34a-4104-8cab-cad648471f69",
                                                 "81b5f43d-3c20-4575-9efa-bfb0b070a6e3",
                                                 "519b58ef-6462-4ed3-8c0d-375b54f53c31",
-                                                "1f9a699a-262c-40a0-8b2c-7ba960ca388c"
+                                                "1f9a699a-262c-40a0-8b2c-7ba960ca388c",
+                                                "1f9a699a-262c-40a0-8b2c-7ba960ca388c",
+                                                "62aa3211-bf52-4873-9029-0bcc1d09e553",
+                                                "a71dee10-9a4d-4ea2-a6f3-ae7314112cf1",
+                                                "adb384b2-cd5e-4cf5-9205-5f066474005f",
+                                                "46c58e08-4518-4e45-acfe-bdab2434975d",
+                                                "3eaad325-3666-4b65-a4ed-e23ff71222c1",
                                             ]
                                         }
                                     },
