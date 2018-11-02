@@ -38,7 +38,6 @@ class TestDataExtractorTestCase(IndexerTestCase):
         for bundle_pack in self.production_test_bundles:
             self._mock_index(bundle_pack)
 
-        @eventually(5.0, 0.5)
         def _assert_number_of_files():
             total_files = self.es_client.count(
                 index=config.es_index_name('files'), doc_type='doc')
