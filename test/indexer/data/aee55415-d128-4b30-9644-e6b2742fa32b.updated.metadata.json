@@ -290,10 +290,6 @@
                         }
                     ],
                     "disease": [
-                        {
-                            "text": "subcutaneous melanoma",
-                            "ontology": "EFO:0000756"
-                        }
                     ],
                     "organism_age": "6-12",
                     "schema_type": "biomaterial",
