@@ -43,7 +43,7 @@ dss_subscription_query = {
                                                 "a5ae0428-476c-46d2-a9f2-aad955b149aa",
                                                 "adabd2bd-3968-4e77-b0df-f200f7351661",
                                                 "67bc798b-a34a-4104-8cab-cad648471f69",
-                                                "d5f56f41-7a54-40e6-baa2-15604649bd96",
+                                                "81b5f43d-3c20-4575-9efa-bfb0b070a6e3",
                                                 "519b58ef-6462-4ed3-8c0d-375b54f53c31",
                                                 "1f9a699a-262c-40a0-8b2c-7ba960ca388c"
                                             ]
