@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass
 from logging import getLogger
+from threading import Lock
 from typing import Optional, List
 import boto3
 from azul import config
@@ -84,6 +85,8 @@ class MultipartUploadHandler:
         self.__parts = []
         self.__futures = []
         self.__thread_pool = thread_pool
+        self.__new_part_lock = Lock()
+        self.__sync_lock = Lock()
 
     @property
     def is_active(self):
@@ -101,7 +104,6 @@ class MultipartUploadHandler:
 
         if not last_part.already_uploaded:
             # Per documentation, the last part can be at any size. Hence, the uploadable condition is ignored.
-            # self._upload_part(last_part)
             self.__futures.append(self.__thread_pool.submit(self._upload_part, last_part))
 
         for _ in as_completed(self.__futures):
@@ -120,26 +122,31 @@ class MultipartUploadHandler:
         self.__closed = True
 
     def push(self, data: bytes):
-        # If the last part is under the minimum limit, the data will be appended.
-        if not self.__parts:
-            part = self._create_new_part(data)
-        else:
-            last_part = self.__parts[-1]
-            if last_part.already_uploaded:
+        with self.__sync_lock:
+            # If the last part is under the minimum limit, the data will be appended.
+            if not self.__parts:
                 part = self._create_new_part(data)
             else:
-                part = last_part
-                part.content.append(data)
+                last_part = self.__parts[-1]
+                if last_part.already_uploaded:
+                    part = self._create_new_part(data)
+                else:
+                    part = last_part
+                    part.content.append(data)
 
-        if not part.is_uploadable:
-            return
+            if not part.is_uploadable:
+                return
+
+            part.uploaded = True
 
         self.__futures.append(self.__thread_pool.submit(self._upload_part, part))
 
     def _create_new_part(self, data: bytes):
-        part = Part(part_number=self.__next_part_number, etag=None, content=[data])
-        self.__parts.append(part)
-        self.__next_part_number += 1
+        with self.__new_part_lock:
+            part = Part(part_number=self.__next_part_number, etag=None, content=[data], uploaded=False)
+            self.__parts.append(part)
+            self.__next_part_number += 1
+
         return part
 
     def _upload_part(self, part):
@@ -153,14 +160,15 @@ class Part:
     etag: str  # If ETag is defined, the content is already pushed to S3.
     part_number: int
     content: List[bytes]
+    uploaded: bool
 
     @property
     def already_uploaded(self):
-        return self.etag is not None
+        return self.uploaded or self.etag is not None
 
     @property
     def is_uploadable(self):
-        return len(self.content) >= AWS_S3_DEFAULT_MINIMUM_PART_SIZE
+        return len(b''.join(self.content)) >= AWS_S3_DEFAULT_MINIMUM_PART_SIZE
 
     def to_dict(self):
         return dict(PartNumber=self.part_number, ETag=self.etag)

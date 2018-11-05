@@ -2,7 +2,6 @@
 import abc
 from collections import OrderedDict, defaultdict
 import csv
-from io import StringIO
 from itertools import chain
 import logging
 import os
@@ -16,7 +15,8 @@ from jsonobject import (FloatProperty,
                         ObjectProperty,
                         StringProperty)
 
-from azul.service.responseobjects.storage_service import StorageService
+from azul.service.responseobjects.storage_service import StorageService, AWS_S3_DEFAULT_MINIMUM_PART_SIZE
+from azul.service.responseobjects.buffer import Buffer
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
@@ -198,34 +198,31 @@ class ManifestResponse(AbstractResponse):
         content_type = 'text/tab-separated-values'
 
         with self.storage_service.multipart_upload(object_key, content_type) as multipart_upload:
+            buffer = Buffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push)
+            writer = csv.writer(buffer, dialect='excel-tab')
+
             # Started with the headers
-            unsaved_rows = [list(self.manifest_entries['bundles'].keys()) +
-                            list(self.manifest_entries['contents.files'].keys())]
+            writer.writerow(*[list(self.manifest_entries['bundles'].keys()) +
+                              list(self.manifest_entries['contents.files'].keys())])
             for hit in self.es_search.scan():
                 hit_dict = hit.to_dict()
                 assert len(hit_dict['contents']['files']) == 1
                 file = hit_dict['contents']['files'][0]
                 file_fields = self._translate(file, 'contents.files')
-                # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
-                #        would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-                unsaved_rows.extend(self._translate(bundle, 'bundles') + file_fields for bundle in hit_dict['bundles'])
-                while len(unsaved_rows) >= self.UNSAVED_THRESHOLD:
-                    multipart_upload.push(self._create_tsv_content(unsaved_rows[:self.UNSAVED_THRESHOLD]))
-                    unsaved_rows = unsaved_rows[self.UNSAVED_THRESHOLD:]
 
-            if unsaved_rows:
-                multipart_upload.push(self._create_tsv_content(unsaved_rows))
+                for bundle in hit_dict['bundles']:
+                    # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
+                    # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
+                    bundle_fields = self._translate(bundle, 'bundles')
+                    writer.writerow(bundle_fields + file_fields)
+
+                buffer.flush()
+
+            if buffer.remaining_size > 0:
+                logger.warning(f'ManifestResponse: Clearing the remaining buffer (approx. {buffer.remaining_size} B)')
+                buffer.flush(check_limit=False)
 
         return object_key
-
-    def _create_tsv_content(self, rows):
-        output = StringIO()
-        writer = csv.writer(output, dialect='excel-tab')
-
-        for row in rows:
-            writer.writerow(row)
-
-        return output.getvalue().encode()
 
     def return_response(self):
         object_key = self._push_content()
