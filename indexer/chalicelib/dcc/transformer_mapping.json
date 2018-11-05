@@ -4,6 +4,11 @@
     "mappings": [
       {
         "source": "metadata.json",
+        "dss_field": "demographic.year_of_birth",
+        "index_field": "year_of_birth"
+      },
+      {
+        "source": "metadata.json",
         "dss_field": "study.submitter_id",
         "index_field": "program"
       },
@@ -16,6 +21,16 @@
         "source": "metadata.json",
         "dss_field": "study.submitter_id",
         "index_field": "study"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "case.node_id",
+        "index_field": "case_node_id"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "case.project_id",
+        "index_field": "case_project_id"
       },
       {
         "source": "metadata.json",
@@ -42,12 +57,17 @@
       },
       {
         "source": "metadata.json",
+        "dss_field": "demographic.age_at_index",
+        "index_field": "age_at_index"
+      },
+      {
+        "source": "metadata.json",
         "dss_field": "demographic.age_range",
         "index_field": "age_range"
       },
       {
         "source": "metadata.json",
-        "dss_field": "demographic.bmi",
+        "dss_field": "exposure.bmi",
         "index_field": "bmi"
       },
       {
@@ -72,7 +92,7 @@
       },
       {
         "source": "metadata.json",
-        "dss_field": "demographic.weight",
+        "dss_field": "exposure.weight",
         "index_field": "weight"
       },
       {
@@ -88,6 +108,21 @@
         "source": "metadata.json",
         "dss_field": "read_group.library_strategy",
         "index_field": "library_strategy"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "read_group.RIN",
+        "index_field": "RIN"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "sample.sample_type",
+        "index_field": "sample_type"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "sample.tissue_type",
+        "index_field": "tissue_type"
       },
       {
         "source": "metadata.json",
@@ -111,6 +146,11 @@
       },
       {
         "source": "metadata.json",
+        "dss_field": "sample.collection_site",
+        "index_field": "collection_site"
+      },
+      {
+        "source": "metadata.json",
         "dss_field": "sample.biospecimen_anatomic_site",
         "index_field": "biospecimen_anatomic_site"
       },
@@ -118,6 +158,21 @@
         "source": "metadata.json",
         "dss_field": "sample.biospecimen_anatomic_site_detail",
         "index_field": "biospecimen_anatomic_site_detail"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "sample.biospecimen_anatomic_site_uberon_id",
+        "index_field": "biospecimen_anatomic_site_uberon_id"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "sample.hours_to_collection",
+        "index_field": "hours_to_collection"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "sample.hours_to_sample_procurement",
+        "index_field": "hours_to_sample_procurement"
       },
       {
         "source": "metadata.json",
@@ -131,13 +186,43 @@
       },
       {
         "source": "metadata.json",
+        "dss_field": "aliquot.node_id",
+        "index_field": "aliquot_node_id"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "aliquot.experiment_batch_id",
+        "index_field": "experiment_batch_id"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "aliquot.experiment_date",
+        "index_field": "experiment_date"
+      },
+      {
+        "source": "metadata.json",
         "dss_field": "aliquot.experimental_strategy",
         "index_field": "experimentalStrategy"
       },
       {
         "source": "metadata.json",
+        "dss_field": "aliquot.analyte_type",
+        "index_field": "analyte_type"
+      },
+      {
+        "source": "metadata.json",
         "dss_field": "aliquot.analyte_isolation_method",
         "index_field": "analyte_isolation_method"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "aliquot.analyte_isolation_batch_id",
+        "index_field": "analyte_isolation_batch_id"
+      },
+      {
+        "source": "metadata.json",
+        "dss_field": "aliquot.analyte_isolation_date",
+        "index_field": "analyte_isolation_date"
       },
       {
         "from_file_data": true,
