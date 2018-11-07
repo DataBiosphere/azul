@@ -66,7 +66,7 @@ dss_subscription_query = {
                                                 {
                                                     "range": {
                                                         "manifest.version": {
-                                                            "gte": "2018-10-18"
+                                                            "gte": "2018-11-07"
                                                         }
                                                     }
                                                 }
