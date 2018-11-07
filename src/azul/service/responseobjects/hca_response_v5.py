@@ -20,6 +20,7 @@ from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
+from azul.transformer import SetAccumulator
 
 logger = logging.getLogger(__name__)
 module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
@@ -332,111 +333,57 @@ class SummaryResponse(BaseSummaryResponse):
         self.apiResponse = SummaryRepresentation(**kwargs)
 
 
-class ProjectSummaryResponse(BaseSummaryResponse):
+class ProjectSummaryResponse(AbstractResponse):
     """
     Build summary field for each project in projects endpoint
     """
-
-    @classmethod
-    def get_bucket_terms(cls, project_id, project_buckets, agg_key):
-        """
-        Return a list of the keys of the buckets from an ElasticSearch aggregate
-        of a given project with the format:
-        {
-          "buckets": [
-            {
-              "key": $project_id,
-              $agg_key: {
-                "buckets": [
-                  {
-                    "key": "a",
-                    "doc_count": 2
-                  }
-                ]
-              }
-            },
-            ...
-          ]
-        }
-
-        :param project_id: string UUID of the project info to retrieve
-        :param project_buckets: A dictionary from an ElasticSearch aggregate
-        :param agg_key: Key of aggregation to use
-        :return: list of bucket keys
-        """
-        for project_bucket in project_buckets['buckets']:
-            if project_bucket['key'] != project_id:
-                continue
-            return [bucket['key'] for bucket in project_bucket[agg_key]['buckets']]
-        return []
-
-    @classmethod
-    def get_bucket_value(cls, project_id, project_buckets, agg_key):
-        """
-        Return a value of the bucket of the given project from an
-        ElasticSearch aggregate with the format:
-        {
-          "buckets": [
-            {
-              "key": $project_id,
-              $agg_key: {
-                "value" : value
-              }
-            },
-            ...
-          ]
-        }
-
-        :param project_id: string UUID of the project info to retrieve
-        :param project_buckets: A dictionary from an ElasticSearch aggregate
-        :param agg_key: Key of aggregation to use
-        :return: value in given project
-        """
-        for project_bucket in project_buckets['buckets']:
-            if project_bucket['key'] == project_id:
-                return project_bucket[agg_key]['value']
-        return -1
+    def return_response(self):
+        return self.apiResponse
 
     @classmethod
     def get_cell_count(cls, hit):
         """
         Iterate through cell suspensions to get overall and per organ cell count. Expects cell suspensions to already
         be grouped and aggregated by organ.
+
+        :param hit: Project document hit from ES response
+        :return: tuple where total_cell_count is the number of cells in the project and organ_cell_count is a dict
+            where the key is an organ and the value is the number of cells for the organ in the project
         """
         organ_cell_count = defaultdict(int)
-        for cell_suspension in hit['_source']['contents']['cell_suspensions']:
+        for cell_suspension in hit['cell_suspensions']:
             assert len(cell_suspension['organ']) == 1
-            try:  # We should use .get() here but ElasticsearchDSL's AttrDict doesn't expose it
-                cellcount = cell_suspension['total_estimated_cells']
-            except KeyError:
-                pass
-            else:
-                organ_cell_count[cell_suspension['organ'][0]] += cellcount
+            organ_cell_count[cell_suspension['organ'][0]] += cell_suspension.get('total_estimated_cells', 0)
         total_cell_count = sum(organ_cell_count.values())
         organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
 
-    def __init__(self, project_id, raw_response):
-        super().__init__(raw_response)
+    def __init__(self, es_hit_contents):
+        specimen_accumulators = {
+            'donor_biomaterial_id': SetAccumulator(),
+            'genus_species': SetAccumulator(),
+            'disease': SetAccumulator()
+        }
+        for specimen in es_hit_contents['specimens']:
+            for property_name, accumulator in specimen_accumulators.items():
+                if property_name in specimen:
+                    accumulator.accumulate(specimen[property_name])
 
-        for hit in raw_response['hits']['hits']:
-            if hit['_id'] == project_id:
-                total_cell_count, organ_cell_count = self.get_cell_count(hit)
-                break
-        else:
-            assert False
+        library_accumulator = SetAccumulator()
+        for process in es_hit_contents['processes']:
+            if 'library_construction_approach' in process:
+                library_accumulator.accumulate(process['library_construction_approach'])
 
-        project_aggregates = self.aggregates['_project_agg']
+        total_cell_count, organ_cell_count = self.get_cell_count(es_hit_contents)
 
         self.apiResponse = ProjectSummaryRepresentation(
-            donorCount=self.get_bucket_value(project_id, project_aggregates, 'donor_count'),
+            donorCount=len(specimen_accumulators['donor_biomaterial_id'].get()),
             totalCellCount=total_cell_count,
             organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
                             for count in organ_cell_count],
-            genusSpecies=self.get_bucket_terms(project_id, project_aggregates, 'species'),
-            libraryConstructionApproach=self.get_bucket_terms(project_id, project_aggregates,
-                                                              'libraryConstructionApproach'),
-            disease=self.get_bucket_terms(project_id, project_aggregates, 'disease')
+            genusSpecies=specimen_accumulators['genus_species'].get(),
+            libraryConstructionApproach=library_accumulator.get(),
+            disease=specimen_accumulators['disease'].get()
         )
 
 
@@ -514,7 +461,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             translated_file = {
                 "format": _file.get("file_format"),
                 "name": _file.get("name"),
-                "sha1": _file.get("sha1"),
+                "sha256": _file.get("sha256"),
                 "size": _file.get("size"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
@@ -534,7 +481,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "organismAgeUnit": specimen.get("organism_age_unit", None),
                 "biologicalSex": specimen.get("biological_sex", None),
                 "disease": specimen.get("disease", None),
-                "storageMethod": specimen.get("storage_method", None),
+                "preservationMethod": specimen.get("preservation_method", None),
                 "source": specimen.get("_source", None)
             }
             specimens.append(translated_specimen)
@@ -559,6 +506,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         :return: A HitEntry Object with the appropriate fields mapped
         """
         kwargs = {
+            'bundles': self.make_bundles(entry),
             'files': self.make_files(entry)
         } if self.entity_type == 'files' else {
             'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json()
@@ -569,7 +517,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         projects=self.make_projects(entry),
                         specimens=self.make_specimens(entry),
                         cellSuspensions=self.make_cell_suspensions(entry),
-                        bundles=self.make_bundles(entry),
                         **kwargs)
 
     def __init__(self, hits, entity_type):

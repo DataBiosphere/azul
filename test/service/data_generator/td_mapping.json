@@ -78,7 +78,7 @@
                   "analyzer": "autocomplete",
                   "search_analyzer": "standard"
                 },
-                "sha1": {
+                "sha256": {
                   "type": "text",
                   "fields": {
                     "keyword": {

@@ -42,8 +42,10 @@ properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
 
 @app.route('/version', methods=['GET'], cors=True)
 def version():
+    from azul.changelog import compact_changes
     return {
-        'git': config.git_status
+        'git': config.git_status,
+        'changes': compact_changes(limit=10)
     }
 
 

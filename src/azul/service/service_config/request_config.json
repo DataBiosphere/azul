@@ -31,7 +31,7 @@
     "organPart": "contents.specimens.organ_part",
     "organismAge": "contents.specimens.organism_age",
     "organismAgeUnit": "contents.specimens.organism_age_unit",
-    "preservationMethod": "contents.specimens.storage_method",
+    "preservationMethod": "contents.specimens.preservation_method",
     "cellCount": "contents.cell_suspensions.total_estimated_cells",
 
     "entryId": "entity_id"
@@ -49,7 +49,7 @@
     "contents.files": {
       "file_content_type": "content-type",
       "file_name": "name",
-      "file_sha1": "sha1",
+      "file_sha256": "sha256",
       "file_size": "size",
       "file_uuid": "uuid",
       "file_version": "version",

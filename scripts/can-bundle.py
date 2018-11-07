@@ -18,7 +18,7 @@ from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from humancellatlas.data.metadata.helpers.json import as_json
 
 from azul import config
-from azul.types import JSON
+from azul.files import write_file_atomically
 
 logger = logging.getLogger(__name__)
 
@@ -58,20 +58,10 @@ def main(argv):
     for obj, suffix in [(manifest, ".manifest.json"),
                         (metadata_files, '.metadata.json'),
                         *([(api_json, ".api.json")] if api_json else [])]:
-        json_dump_atomically(os.path.join(args.output_dir, args.uuid + suffix), obj)
-
-
-def json_dump_atomically(path, obj: JSON):
-    dir_path, file_name = os.path.split(path)
-    fd, temp_path = tempfile.mkstemp(dir=dir_path)
-    try:
-        with os.fdopen(fd, 'w') as f:
+        path = os.path.join(args.output_dir, args.uuid + suffix)
+        with write_file_atomically(path) as f:
             json.dump(obj, f, indent=4)
-        os.rename(temp_path, path)
         logger.info("Successfully wrote %s", path)
-    except:
-        os.unlink(temp_path)
-        raise
 
 
 if __name__ == '__main__':

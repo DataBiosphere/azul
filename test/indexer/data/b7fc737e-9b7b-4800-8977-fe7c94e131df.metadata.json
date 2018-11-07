@@ -1,0 +1,498 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "E18_20160930_Neurons_Sample_07",
+            "biomaterial_name": "E18 Mouse Combined Cortex, Hippocampus and Ventricular zone",
+            "biomaterial_description": "E18 Mouse Combined Cortex, Hippocampus and Ventricular zone",
+            "ncbi_taxon_id": [
+                10090
+            ],
+            "biosd_biomaterial": "SAMN06216799",
+            "insdc_biomaterial": "SRS1915130"
+        },
+        "cell_morphology": {
+            "percent_cell_viability": 85,
+            "cell_viability_method": " Thermo Fisher Live/Dead\u00ae Viability/Cytotoxicity Kit"
+        },
+        "growth_conditions": {
+            "growth_medium": "NbActiv1"
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus"
+            }
+        ],
+        "selected_cell_type": [
+            {
+                "text": "neuron"
+            }
+        ],
+        "total_estimated_cells": 10000,
+        "provenance": {
+            "document_id": "1e07c7cf-66c3-4cd5-a061-71f3e89489ff",
+            "submission_date": "2018-09-11T16:35:36.452Z",
+            "update_date": "2018-09-11T16:53:41.273Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "E18_20160930_Cortex",
+            "biomaterial_name": "E18 Mouse Cortex",
+            "biomaterial_description": "Sample prepared 2 days after dissection, from the first E18 mouse",
+            "ncbi_taxon_id": [
+                10090
+            ],
+            "biosd_biomaterial": "SAMN06216805",
+            "insdc_biomaterial": "SRS1915124"
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090"
+            }
+        ],
+        "organ": {
+            "text": "Brain",
+            "ontology": "UBERON:0000955"
+        },
+        "organ_part": {
+            "text": "cortex",
+            "ontology": "UBERON:0001851"
+        },
+        "preservation_storage": {
+            "storage_time": 2,
+            "storage_time_unit": {
+                "text": "day",
+                "ontology": "UO:0000033"
+            },
+            "preservation_method": "fresh"
+        },
+        "collection_time": "2016-09-30T12:00:00Z",
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "state_of_specimen": {
+            "autolysis_score": "none"
+        },
+        "provenance": {
+            "document_id": "39a16395-6e12-4ec1-8cff-b77dd23f7024",
+            "submission_date": "2018-09-11T16:35:36.287Z",
+            "update_date": "2018-09-11T16:53:07.436Z"
+        }
+    },
+    "specimen_from_organism_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "E18_20160930_Hippocampus",
+            "biomaterial_name": "E18 Mouse Hippocampus",
+            "biomaterial_description": "Sample prepared 2 days after dissection, from the first E18 mouse",
+            "ncbi_taxon_id": [
+                10090
+            ],
+            "biosd_biomaterial": "SAMN06216805",
+            "insdc_biomaterial": "SRS1915124"
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090"
+            }
+        ],
+        "organ": {
+            "text": "Brain",
+            "ontology": "UBERON:0000955"
+        },
+        "organ_part": {
+            "text": "hippocampus",
+            "ontology": "UBERON:0002421"
+        },
+        "preservation_storage": {
+            "storage_time": 2,
+            "storage_time_unit": {
+                "text": "day",
+                "ontology": "UO:0000033"
+            },
+            "preservation_method": "fresh"
+        },
+        "collection_time": "2016-09-30T12:00:00Z",
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "state_of_specimen": {
+            "autolysis_score": "none"
+        },
+        "provenance": {
+            "document_id": "1fe5d2c3-cf34-45ce-b1e4-dc8568ca5ab2",
+            "submission_date": "2018-09-11T16:35:36.296Z",
+            "update_date": "2018-09-11T16:53:10.431Z"
+        }
+    },
+    "specimen_from_organism_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "E18_20160930_Ventricular_Zone",
+            "biomaterial_name": "E18 Mouse Ventricular zone",
+            "biomaterial_description": "Sample prepared 2 days after dissection, from the first E18 mouse",
+            "ncbi_taxon_id": [
+                10090
+            ],
+            "biosd_biomaterial": "SAMN06216805",
+            "insdc_biomaterial": "SRS1915124"
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090"
+            }
+        ],
+        "organ": {
+            "text": "Brain",
+            "ontology": "UBERON:0000955"
+        },
+        "organ_part": {
+            "text": "ventricular zone",
+            "ontology": "UBERON:0004040"
+        },
+        "preservation_storage": {
+            "storage_time": 2,
+            "storage_time_unit": {
+                "text": "day",
+                "ontology": "UO:0000033"
+            },
+            "preservation_method": "fresh"
+        },
+        "collection_time": "2016-09-30T12:00:00Z",
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "state_of_specimen": {
+            "autolysis_score": "none"
+        },
+        "provenance": {
+            "document_id": "02f67508-6e87-42cf-9588-df49a4250a95",
+            "submission_date": "2018-09-11T16:35:36.306Z",
+            "update_date": "2018-09-11T16:53:12.111Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.1/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "E18_20160930",
+            "biomaterial_name": "E18 Mouse",
+            "biomaterial_description": "A healthy E18 mouse",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "mouse_specific": {
+            "strain": [
+                {
+                    "text": "C57BL/6",
+                    "ontology": "EFO:0004472"
+                }
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090"
+            }
+        ],
+        "organism_age": "18",
+        "organism_age_unit": {
+            "text": "day",
+            "ontology": "UO:0000033"
+        },
+        "development_stage": {
+            "text": "Embryo stage",
+            "ontology": "EFO:0007725"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "is_living": "no",
+        "sex": "unknown",
+        "provenance": {
+            "document_id": "ff15c305-fc63-419f-a0fd-84d123f9b975",
+            "submission_date": "2018-09-11T16:35:36.254Z",
+            "update_date": "2018-09-11T16:53:04.090Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "E18_20160930_Neurons_Sample_07_S007_L005_I1_007.fastq.gz",
+            "file_format": "fastq",
+            "checksum": "0dce7ce1f540a122454c6ebfaff2549d"
+        },
+        "read_index": "index1",
+        "lane_index": 5,
+        "read_length": 8,
+        "insdc_run": [
+            "SRR5259341"
+        ],
+        "provenance": {
+            "document_id": "211d3f25-1253-4a01-aadf-08b6452de585",
+            "submission_date": "2018-09-11T16:38:23.240Z",
+            "update_date": "2018-09-11T17:04:35.520Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/project/9.0.2/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "1M Neurons",
+            "project_title": "1.3 Million Brain Cells from E18 Mice",
+            "project_description": "Cortex, hippocampus, and subventricular zone were purchased from BrainBits (C57EHCV). They were from 2 E18 C57BL/6 mice dissected on the same day, shipped overnight on ice, and stored at 4C until being prepared for scRNA-Seq. Brain tissues were dissociated following the Demonstrated Protocol for Mouse Embryonic Neural Tissue (https://support.10xgenomics.com/single-cell/sample-prep/doc/demonstrated-protocol-dissociation-of-mouse-embryonic-neural-tissue-for-single-cell-rna-sequencing). 69 scRNA-Seq libraries were made from first mouse brain 2 days after the dissection. Another 64 scRNA-Seq libraries were made from second mouse brain 6 days after the dissection."
+        },
+        "insdc_project": "SRP096558",
+        "geo_series": "GSE93421",
+        "insdc_study": "PRJNA360949",
+        "supplementary_links": [
+            "https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.3.0/1M_neurons"
+        ],
+        "contributors": [],
+        "publications": [],
+        "provenance": {
+            "document_id": "587fe7e4-0e41-42d6-976f-585345a51ba2",
+            "submission_date": "2018-09-11T16:35:36.242Z",
+            "update_date": "2018-09-11T16:53:03.974Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/4.3.2/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "library_preparation_protocol_1",
+            "protocol_name": "Chromium\u2122 Single Cell 3\u2019 Reagent Kits v2 User Guide"
+        },
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16,
+            "white_list_file": "737k-bc.txt"
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA"
+        },
+        "library_construction_approach": {
+            "text": "10x_v2"
+        },
+        "end_bias": "3 prime tag",
+        "primer": "poly-dT",
+        "strand": "unstranded",
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 16,
+            "barcode_length": 10
+        },
+        "provenance": {
+            "document_id": "3720c08b-f4b6-4bc7-a889-d4d3db602e7d",
+            "submission_date": "2018-09-11T16:40:39.797Z",
+            "update_date": "2018-09-11T16:40:47.185Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_protocol_1",
+            "protocol_name": "Sequencing the single cell RNA v2 libraries",
+            "protocol_description": "Single cell sequencing of cDNAs by 10x"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 4000"
+        },
+        "local_machine_name": "K00126",
+        "paired_end": true,
+        "sequencing_approach": {
+            "text": "10x_v2"
+        },
+        "provenance": {
+            "document_id": "3e11dd06-396b-4aaa-a6ae-3b6a26a1d9f0",
+            "submission_date": "2018-09-11T16:40:39.783Z",
+            "update_date": "2018-09-11T16:40:45.581Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_process_1",
+            "protocol_name": "Dissociation of Mouse Embryonic Neural Tissue for Single Cell RNA Sequencing",
+            "protocol_description": "The Demonstrated Protocol showing how to obtain a single cell suspension from embryonic mouse brain tissue in preparation for use in 10x Genomics\u00ae Single Cell Protocols which can be downloaded from https://assets.ctfassets.net/an68im79xiti/3clmEF115Ku420KaAuYUOe/ba22dcdfd8150f5f77ded1f500af01b4/CG00055_SamplePrepDemonstratedProtocol_-_MouseNeuralTissue_RevB.pdf",
+            "document": "CG00055_SamplePrepDemonstratedProtocol_-_MouseNeuralTissue_RevB.pdf"
+        },
+        "dissociation_method": {
+            "text": "10x_v2"
+        },
+        "provenance": {
+            "document_id": "f90527fc-d710-414b-b185-0e9c5b4138af",
+            "submission_date": "2018-09-11T16:40:39.768Z",
+            "update_date": "2018-09-11T16:40:46.268Z"
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "process_id_9101"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "78e53890-4a5c-423b-a7b9-aa3247ecf98b",
+            "submission_date": "2018-09-11T16:47:21.608Z",
+            "update_date": "2018-09-11T17:11:53.151Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_13"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "427f77a0-9fc5-4fea-a9bb-d05841fad71c",
+            "submission_date": "2018-09-11T16:40:40.029Z",
+            "update_date": "2018-09-11T17:05:50.325Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_1"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "677e65b8-5a0d-4f5a-af89-7cca51bcd6c3",
+            "submission_date": "2018-09-11T16:40:39.813Z",
+            "update_date": "2018-09-11T17:05:50.149Z"
+        }
+    },
+    "process_3.json": {
+        "process_core": {
+            "process_id": "process_id_2"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "ac321e06-ec12-423a-bf12-5e0ec97f0fb1",
+            "submission_date": "2018-09-11T16:40:39.833Z",
+            "update_date": "2018-09-11T17:05:50.159Z"
+        }
+    },
+    "process_4.json": {
+        "process_core": {
+            "process_id": "process_id_3"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "34aa8a89-27d0-4a03-8196-72da4d701efb",
+            "submission_date": "2018-09-11T16:40:39.858Z",
+            "update_date": "2018-09-11T17:05:50.168Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/system/1.1.1/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.1",
+        "links": [
+            {
+                "process": "78e53890-4a5c-423b-a7b9-aa3247ecf98b",
+                "inputs": [
+                    "1e07c7cf-66c3-4cd5-a061-71f3e89489ff"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "211d3f25-1253-4a01-aadf-08b6452de585"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "3720c08b-f4b6-4bc7-a889-d4d3db602e7d"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "3e11dd06-396b-4aaa-a6ae-3b6a26a1d9f0"
+                    }
+                ]
+            },
+            {
+                "process": "427f77a0-9fc5-4fea-a9bb-d05841fad71c",
+                "inputs": [
+                    "39a16395-6e12-4ec1-8cff-b77dd23f7024",
+                    "1fe5d2c3-cf34-45ce-b1e4-dc8568ca5ab2",
+                    "02f67508-6e87-42cf-9588-df49a4250a95"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "1e07c7cf-66c3-4cd5-a061-71f3e89489ff"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "f90527fc-d710-414b-b185-0e9c5b4138af"
+                    }
+                ]
+            },
+            {
+                "process": "677e65b8-5a0d-4f5a-af89-7cca51bcd6c3",
+                "inputs": [
+                    "ff15c305-fc63-419f-a0fd-84d123f9b975"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "39a16395-6e12-4ec1-8cff-b77dd23f7024"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "ac321e06-ec12-423a-bf12-5e0ec97f0fb1",
+                "inputs": [
+                    "ff15c305-fc63-419f-a0fd-84d123f9b975"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "1fe5d2c3-cf34-45ce-b1e4-dc8568ca5ab2"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "34aa8a89-27d0-4a03-8196-72da4d701efb",
+                "inputs": [
+                    "ff15c305-fc63-419f-a0fd-84d123f9b975"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "02f67508-6e87-42cf-9588-df49a4250a95"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            }
+        ]
+    }
+}

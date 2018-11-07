@@ -25,7 +25,6 @@ class RepositorySpecimenEndpointTest(WebServiceTestCase):
             assert_file_type_summaries(hit)
             self.assertTrue('projects' in hit)
             self.assertTrue('specimens' in hit)
-            self.assertTrue('bundles' in hit)
             self.assertFalse('projectSummary' in hit)
             self.assertFalse('files' in hit)
         self.assertTrue('pagination' in response_json)
