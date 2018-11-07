@@ -71,7 +71,7 @@ class ElasticsearchFakeDataLoader(object):
                         "lane_index": "pyint",
                         "name": "file_name",
                         "read_index": "safe_color_name",
-                        "sha1": "sha1",
+                        "sha256": "sha256",
                         "size": "pyint",
                         "uuid": "uuid4",
                         "version": "iso8601"
@@ -114,12 +114,11 @@ class ElasticsearchFakeDataLoader(object):
                         "contributors": [
                             {
                                 "contact_name": "safe_color_name",
-                                "corresponding_contributor": "pybool",
                                 "email": "safe_color_name",
                                 "institution": "safe_color_name",
                                 "laboratory": "safe_color_name",
-                                "orcid_id": "safe_color_name",
-                                "phone": "safe_color_name"
+                                "corresponding_contributor": "pybool",
+                                "project_role": "safe_color_name"
                             }
                         ],
                         "publication_titles": [
@@ -127,12 +126,7 @@ class ElasticsearchFakeDataLoader(object):
                         ],
                         "publications": [
                             {
-                                "authors": [
-                                    "safe_color_name"
-                                ],
                                 "publication_title": "safe_color_name",
-                                "doi": "safe_color_name",
-                                "pmid": "pyint",
                                 "publication_url": "safe_color_name"
                             }
                         ]
@@ -152,7 +146,7 @@ class ElasticsearchFakeDataLoader(object):
                         "biological_sex": ["safe_color_name"],
                         "_source": "safe_color_name",
                         "genus_species": ["safe_color_name"],
-                        "storage_method": "safe_color_name"
+                        "preservation_method": "safe_color_name"
                     }
                     if entity_type == 'specimens' else
                     {
@@ -168,7 +162,7 @@ class ElasticsearchFakeDataLoader(object):
                         "biological_sex": ["safe_color_name"],
                         "_source": ["safe_color_name"],
                         "genus_species": ["safe_color_name"],
-                        "storage_method": ["safe_color_name"]
+                        "preservation_method": ["safe_color_name"]
                     }
                 ],
                 "cell_suspensions": [

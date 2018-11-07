@@ -23,7 +23,7 @@
       "fileName": "name",
       "fileFormat": "format",
       "fileSize": "size",
-      "fileSha1": "sha1",
+      "fileSha256": "sha256",
       "fileVersion": "version",
       "fileUuid": "uuid"
     }

@@ -143,6 +143,7 @@ class ElasticTransformDump(object):
                        req_config,
                        post_filter: bool = False,
                        source_filter: List[str] = None,
+                       enable_aggregation: bool = True,
                        entity_type='files'):
         """
         This function will create an ElasticSearch request based on
@@ -158,6 +159,8 @@ class ElasticTransformDump(object):
         querying (i.e. faceting or not)
         :param List source_filter: A list of "foo.bar" field paths (see
                https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html)
+        :param enable_aggregation: Flag for enabling query aggregation (and
+               effectively ignoring facet configuration)
         :param entity_type: the string referring to the entity type used to get
         the ElasticSearch index to search
         :return: Returns the Search object that can be used for executing
@@ -177,17 +180,17 @@ class ElasticTransformDump(object):
 
         if source_filter:
             es_search = es_search.source(include=source_filter)
+        elif entity_type != "files":
+            es_search = es_search.source(exclude="bundles")
 
-        for agg, translation in facet_config.items():
-            # Create a bucket aggregate for the 'agg'.
-            # Call create_aggregate() to return the appropriate aggregate query
-            es_search.aggs.bucket(
-                agg,
-                ElasticTransformDump.create_aggregate(
-                    filters, facet_config, agg))
-
-        if entity_type == 'projects':  # Make project-specific aggregations
-            ElasticTransformDump.create_project_summary_aggregates(es_search, req_config)
+        if enable_aggregation:
+            for agg, translation in facet_config.items():
+                # Create a bucket aggregate for the 'agg'.
+                # Call create_aggregate() to return the appropriate aggregate query
+                es_search.aggs.bucket(
+                    agg,
+                    ElasticTransformDump.create_aggregate(
+                        filters, facet_config, agg))
 
         return es_search
 
@@ -547,7 +550,7 @@ class ElasticTransformDump(object):
         final_response = final_response.apiResponse.to_json()
 
         if entity_type == 'projects':  # Add project summaries to each project hit
-            self.add_project_summaries(final_response['hits'], es_response)
+            self.add_project_summaries(final_response['hits'], es_response['hits']['hits'])
 
         if include_file_urls:
             for hit in final_response['hits']:
@@ -571,7 +574,8 @@ class ElasticTransformDump(object):
                                         self.es_client,
                                         request_config,
                                         post_filter=False,
-                                        source_filter=source_filter)
+                                        source_filter=source_filter,
+                                        enable_aggregation=False)
 
         manifest = ManifestResponse(es_search, manifest_config, request_config['translation'])
 
@@ -671,49 +675,19 @@ class ElasticTransformDump(object):
             "Returning the final response for transform_autocomplete_request")
         return final_response
 
-    @staticmethod
-    def create_project_summary_aggregates(es_search, request_config):
-        """
-        Add per-project aggregations to the request, specific to project response
-        """
-        es_search.aggs.bucket(
-            '_project_agg', 'terms',
-            field=request_config["translation"]["projectId"] + '.keyword',
-            size=99999
-        )
-        project_bucket = es_search.aggs['_project_agg']
-
-        # Get unique donor count for each project
-        project_bucket.metric(
-            'donor_count', 'cardinality',
-            field='contents.specimens.donor_document_id.keyword',
-            precision_threshold="40000"
-        )
-
-        # Get each species, experimental approaches, and diseases in each project
-        project_bucket.bucket(
-            'species', 'terms',
-            field=request_config["translation"]["genusSpecies"] + '.keyword'
-        )
-        project_bucket.bucket(
-            'libraryConstructionApproach', 'terms',
-            field=request_config["translation"]["libraryConstructionApproach"] + '.keyword'
-        )
-        project_bucket.bucket(
-            'disease', 'terms',
-            field=request_config["translation"]["disease"] + '.keyword'
-        )
-
-    def add_project_summaries(self, hits, es_response):
+    def add_project_summaries(self, final_response_hits, es_hits):
         """
         Create a project summary response for each project in hits.
-        The hits list is modified in place to add a summary to each element.
-        """
-        project_ids = [hit['entryId'] for hit in hits]
-        summary_responses = dict()
-        for project_id in project_ids:
-            summary_responses[project_id] = (
-                ProjectSummaryResponse(project_id, es_response).apiResponse.to_json())
 
-        for hit in hits:
-            hit['projectSummary'] = summary_responses[hit['entryId']]
+        :param final_response_hits: the hits in the response that will be sent to the client
+            final_response is modified in place to add the project summary to each hit
+        :param es_hits: the hits in the response of the ES request
+        """
+        project_summaries = dict()
+        for hit in es_hits:
+            project_summaries[hit['_id']] = ProjectSummaryResponse(
+                hit['_source']['contents'].to_dict()
+            ).return_response().to_json()
+
+        for hit in final_response_hits:
+            hit['projectSummary'] = project_summaries[hit['entryId']]
