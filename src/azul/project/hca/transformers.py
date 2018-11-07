@@ -81,7 +81,7 @@ def _file_dict(file: api.File) -> JSON:
         'content-type': file.manifest_entry.content_type,
         'indexed': file.manifest_entry.indexed,
         'name': file.manifest_entry.name,
-        'sha1': file.manifest_entry.sha1,
+        'sha256': file.manifest_entry.sha256,
         'size': file.manifest_entry.size,
         'uuid': file.manifest_entry.uuid,
         'version': file.manifest_entry.version,
@@ -184,7 +184,7 @@ class SpecimenVisitor(BiomaterialVisitor):
             self._set('disease', SetAccumulator, entity.diseases)
             self._set('organ', OptionalValueAccumulator, entity.organ)
             self._set('organ_part', OptionalValueAccumulator, entity.organ_part)
-            self._set('storage_method', OptionalValueAccumulator, entity.storage_method)
+            self._set('preservation_method', OptionalValueAccumulator, entity.preservation_method)
             self._set('_type', MandatoryValueAccumulator, 'specimen')
         elif isinstance(entity, api.DonorOrganism):
             self._set('donor_document_id', SetAccumulator, str(entity.document_id))
