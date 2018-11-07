@@ -39,7 +39,7 @@
                                         ],
                                         "organ": "tumor",
                                         "organ_part": null,
-                                        "storage_method": null,
+                                        "preservation_method": null,
                                         "_type": "specimen",
                                         "donor_biomaterial_id": [
                                             "1113"
@@ -76,7 +76,7 @@
                                         "content-type": "application/gzip; dcp-type=data",
                                         "indexed": false,
                                         "name": "22421_8#139_1.fastq.gz",
-                                        "sha1": "30fd5e8a3074124085ebb4894c3e22ff3576c8a4",
+                                        "sha256": "9a0d5d39b095214e7857594ac2f2f0b26cd6ce90549e8f613f928762f335af75",
                                         "size": 54404,
                                         "uuid": "455aed8d-4d12-48d6-bf5d-803de295b08a",
                                         "version": "2018-03-29T152807.172039Z",
@@ -90,7 +90,7 @@
                                         "content-type": "application/gzip; dcp-type=data",
                                         "indexed": false,
                                         "name": "22421_8#139_2.fastq.gz",
-                                        "sha1": "8f490fca4b6c3d60c06571b0cc1e12ece5781dd3",
+                                        "sha256": "46759bbf6b74b010c6d9cd8b70688cfa10eb28ae9eed13efe01da4d0872ad088",
                                         "size": 60343,
                                         "uuid": "ab110a95-2f7c-4180-bb13-e85dbabe903a",
                                         "version": "2018-03-29T152808.364540Z",
@@ -172,70 +172,80 @@
                                                 "corresponding_contributor": false,
                                                 "email": "JS970@MRCCU.cam.ac.uk",
                                                 "institution": "University of Cambridge",
-                                                "laboratory": "MRC Cancer Unit"
+                                                "laboratory": "MRC Cancer Unit",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Sarah,,Davidson",
                                                 "corresponding_contributor": false,
                                                 "email": "SED49@MRCCU.cam.ac.uk",
                                                 "institution": "University of Cambridge",
-                                                "laboratory": "MRC Cancer Unit"
+                                                "laboratory": "MRC Cancer Unit",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Angela,,Riedel",
                                                 "corresponding_contributor": false,
                                                 "email": "a.riedel@dkfz-heidelberg.de",
                                                 "institution": "DKFZ German Cancer Research Center",
-                                                "laboratory": null
+                                                "laboratory": null,
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Bidesh,,Mahata",
                                                 "corresponding_contributor": false,
                                                 "email": "bm11@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Gozde,,Kar",
                                                 "corresponding_contributor": false,
                                                 "email": "gkar@ebi.ac.uk",
                                                 "institution": "EMBL-EBI",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Jani,,Huuhtanen",
                                                 "corresponding_contributor": true,
                                                 "email": "jani.huuhtanen@helsinki.fi",
                                                 "institution": "University of Helsinki",
-                                                "laboratory": null
+                                                "laboratory": null,
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Jhuma,,Pramanik",
                                                 "corresponding_contributor": false,
                                                 "email": "jp19@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Mirjana,,Efremova",
                                                 "corresponding_contributor": false,
                                                 "email": "me5@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Roser,,Veno-Tormo",
                                                 "corresponding_contributor": false,
                                                 "email": "rv4@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             },
                                             {
                                                 "contact_name": "Sarah,A,Teichmann",
                                                 "corresponding_contributor": false,
                                                 "email": "st9@sanger.ac.uk",
                                                 "institution": "Wellcome Trust Sanger Institute",
-                                                "laboratory": "Sarah Teichmann"
+                                                "laboratory": "Sarah Teichmann",
+                                                "project_role": null
                                             }
                                         ],
                                         "publication_titles": [
