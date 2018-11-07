@@ -2,14 +2,17 @@ import csv
 import json
 import logging
 import os
-import requests
-import responses
 import sys
+from tempfile import TemporaryDirectory
 from unittest import mock
 
 from moto import mock_s3, mock_sts
+import requests
+import responses
 
+import azul
 from azul import config
+import azul.changelog
 from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService
 from service import WebServiceTestCase
@@ -65,19 +68,20 @@ class FacetNameValidationTest(WebServiceTestCase):
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
-        for dirty in True, False:
-            with self.subTest(is_repo_dirty=dirty):
-                with mock.patch.dict(os.environ, azul_git_commit=commit, azul_git_dirty=str(dirty)):
-                    url = self.base_url + "version"
-                    response = requests.get(url)
-                    response.raise_for_status()
-                    expected_json = {
-                        'git': {
-                            'commit': commit,
-                            'dirty': dirty
-                        }
-                    }
-                    self.assertEqual(response.json(), expected_json)
+        with TemporaryDirectory() as tmpdir:
+            azul.changelog.write_changes(tmpdir)
+            with mock.patch('sys.path', new=sys.path + [tmpdir]):
+                for dirty in True, False:
+                    with self.subTest(is_repo_dirty=dirty):
+                        with mock.patch.dict(os.environ, azul_git_commit=commit, azul_git_dirty=str(dirty)):
+                            url = self.base_url + "version"
+                            response = requests.get(url)
+                            response.raise_for_status()
+                            expected_json = {
+                                'commit': commit,
+                                'dirty': dirty
+                            }
+                            self.assertEqual(response.json()['git'], expected_json)
 
     def test_bad_single_filter_facet_of_specimen(self):
         url = self.base_url + "repository/specimens?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
