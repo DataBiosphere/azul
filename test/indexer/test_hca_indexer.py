@@ -399,6 +399,23 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertEqual({'Human Cell Atlas wrangler', None},
                              contributor_values['project_role'])
 
+    def test_diseases_field(self):
+        """
+        Index a bundle with a specimen diseases value that is differs from its donor diseases value
+        and check if only the specimen's diseases value is in the indexed doc.
+        """
+        self._mock_index(self.disease_bundle)
+
+        def assert_correct_disease_field(es_results):
+            for index_results in es_results:
+                bundle = index_results['_source']['bundles'][0]
+                if 'contents' in bundle:
+                    self.assertEqual(1, len(bundle['contents']['specimens'][0]['disease']))
+                    specimen_disease = bundle['contents']['specimens'][0]['disease'][0]
+                    self.assertEqual("atrophic vulva (specimen_from_organism)", specimen_disease)
+
+        self._get_es_results(assert_correct_disease_field)
+
 
 if __name__ == "__main__":
     unittest.main()
