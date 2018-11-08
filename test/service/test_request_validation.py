@@ -39,7 +39,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     service_config_dir = os.path.dirname(service_config.__file__)
 
     def test_health(self):
-        url = self.base_url + "health"
+        url = self.base_url + "/health"
         response = requests.get(url)
         response.raise_for_status()
         expected_json = {
@@ -53,7 +53,7 @@ class FacetNameValidationTest(WebServiceTestCase):
 
     def test_health_es_unreachable(self):
         with mock.patch.dict(os.environ, AZUL_ES_ENDPOINT='nonexisting-index.com:80'):
-            url = self.base_url + "health"
+            url = self.base_url + "/health"
             response = requests.get(url)
             response.raise_for_status()
             expected_json = {
@@ -74,7 +74,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                 for dirty in True, False:
                     with self.subTest(is_repo_dirty=dirty):
                         with mock.patch.dict(os.environ, azul_git_commit=commit, azul_git_dirty=str(dirty)):
-                            url = self.base_url + "version"
+                            url = self.base_url + "/version"
                             response = requests.get(url)
                             response.raise_for_status()
                             expected_json = {
@@ -84,33 +84,33 @@ class FacetNameValidationTest(WebServiceTestCase):
                             self.assertEqual(response.json()['git'], expected_json)
 
     def test_bad_single_filter_facet_of_specimen(self):
-        url = self.base_url + "repository/specimens?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
+        url = self.base_url + "/repository/specimens?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_multiple_filter_facet_of_specimen(self):
-        url = self.base_url + "repository/specimens?from=1&size=1" \
+        url = self.base_url + "/repository/specimens?from=1&size=1" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val']},'bad-facet2':{'is':['fake-val2']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_mixed_multiple_filter_facet_of_specimen(self):
-        url = self.base_url + "repository/specimens?from=1&size=1" \
+        url = self.base_url + "/repository/specimens?from=1&size=1" \
                               "&filters={'file':{'organPart':{'is':['fake-val']},'bad-facet':{'is':['fake-val']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_sort_facet_of_specimen(self):
-        url = self.base_url + "repository/specimens?size=15&filters={}&sort=bad-facet&order=asc"
+        url = self.base_url + "/repository/specimens?size=15&filters={}&sort=bad-facet&order=asc"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
 
     def test_bad_sort_facet_and_filter_facet_of_specimen(self):
-        url = self.base_url + "repository/specimens?size=15" \
+        url = self.base_url + "/repository/specimens?size=15" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val']}}}&sort=bad-facet&order=asc"
 
         response = requests.get(url)
@@ -118,70 +118,70 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertTrue(response.json() in [self.sort_facet_message, self.filter_facet_message])
 
     def test_valid_sort_facet_but_bad_filter_facet_of_specimen(self):
-        url = self.base_url + "repository/specimens?size=15" \
+        url = self.base_url + "/repository/specimens?size=15" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val']}}}&sort=organPart&order=asc"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_sort_facet_but_valid_filter_facet_of_specimen(self):
-        url = self.base_url + "repository/specimens?size=15" \
+        url = self.base_url + "/repository/specimens?size=15" \
                               "&filters={'file':{'organPart':{'is':['fake-val2']}}}&sort=bad-facet&order=asc"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
 
     def test_bad_single_filter_facet_of_file(self):
-        url = self.base_url + "repository/files?from=1&size=1" \
+        url = self.base_url + "/repository/files?from=1&size=1" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val2']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_multiple_filter_facet_of_file(self):
-        url = self.base_url + "repository/files?from=1&size=1" \
+        url = self.base_url + "/repository/files?from=1&size=1" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val']},'bad-facet2':{'is':['fake-val2']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_mixed_multiple_filter_facet_of_file(self):
-        url = self.base_url + "repository/files?from=1&size=1" \
+        url = self.base_url + "/repository/files?from=1&size=1" \
                               "&filters={'file':{'organPart':{'is':['fake-val']},'bad-facet':{'is':['fake-val']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_sort_facet_of_file(self):
-        url = self.base_url + "repository/files?size=15&sort=bad-facet&order=asc" \
+        url = self.base_url + "/repository/files?size=15&sort=bad-facet&order=asc" \
                               "&filters={}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
 
     def test_bad_sort_facet_and_filter_facet_of_file(self):
-        url = self.base_url + "repository/files?size=15" \
+        url = self.base_url + "/repository/files?size=15" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val2']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertTrue(response.json() in [self.sort_facet_message, self.filter_facet_message])
 
     def test_bad_sort_facet_but_valid_filter_facet_of_file(self):
-        url = self.base_url + "repository/files?size=15&sort=bad-facet&order=asc" \
+        url = self.base_url + "/repository/files?size=15&sort=bad-facet&order=asc" \
                               "&filters={'file':{'organ':{'is':['fake-val2']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
 
     def test_valid_sort_facet_but_bad_filter_facet_of_file(self):
-        url = self.base_url + "repository/files?size=15&sort=organPart&order=asc" \
+        url = self.base_url + "/repository/files?size=15&sort=organPart&order=asc" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val2']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_file_order(self):
-        url = self.base_url + 'repository/files/order'
+        url = self.base_url + '/repository/files/order'
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.json())
 
@@ -197,11 +197,11 @@ class FacetNameValidationTest(WebServiceTestCase):
         logging.getLogger('test_request_validation').warning('test_manifest is invoked')
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-        responses.add_passthru('http://')
+        responses.add_passthru(self.base_url)
         storage_service = StorageService()
         storage_service.create_bucket()
 
-        url = self.base_url + 'repository/files/export?filters={"file":{}}'
+        url = self.base_url + '/repository/files/export?filters={"file":{}}'
         response = requests.get(url)
         self.assertEqual(200, response.status_code, 'Unable to download manifest')
         tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
