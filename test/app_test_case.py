@@ -59,7 +59,7 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
         for the test requests that they issue.
         """
         host, port = self.server_thread.address
-        return f"http://{host}:{port}/"
+        return f"http://{host}:{port}"
 
     _path_to_app = None
 
