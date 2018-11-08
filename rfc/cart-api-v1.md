@@ -31,6 +31,15 @@ For the details on the default cart, see `GET /resources/carts/{id}`.
 
 > Cart Item ID is a hash string of the combination of `cart_id`, `entity_id`, `bundle_uuid`, `bundle_version`. The hash algorithm is probably `sha256` but it is not finalized.
 
+### `CartItemBatchJob`
+| Property | Type | Description |
+| --- | --- | --- |
+| `id` | UUID | Cart Item Batch Job ID |
+| `remaining_parts` | `int` | Total remaining parts for this job |
+| `total_parts` | `int` | Total parts in this job |
+| `created_at` | UTC timestamp | When the job is created |
+| `updated_at` | UTC timestamp | When the job is updated |
+
 ## Web API Specification
 
 Please note that:
@@ -57,7 +66,7 @@ Please note that:
 | 410 | Resource no longer existed | Used on `DELETE` only |
 | 412 | Invalid input / precondition failed | Requires input validation |
 
-#### CRUD APIs for `Cart`
+### CRUD APIs for `Cart`
 
 | Method | Path | Description |
 | --- | --- | --- |
@@ -177,3 +186,36 @@ and the response is basically the JSON representation of `Cart`.
 | URL Path | `item_id` | `CartItem.id` |
 
 * The endpoint will also respond **HTTP 404** if the corresponding cart is not found.
+
+### Other APIs
+
+#### `POST /resources/carts/{cart_id}/items/query`
+
+Save the cart items in batch by query.
+
+| Param Type | Param Name | Association |
+| --- | --- | --- |
+| URL Path | `cart_id` | `Cart.id` |
+
+TL;DR:
+* Respond **HTTP 202** on successfully accepting a request.
+* Use `POST /resources/cart-item-batch-jobs/{job_id}` to check the async job status.
+
+The response body for HTTP 202 will be `CartItemBatchJob`.
+
+##### Technical Considerations
+
+As this operation may require more than 30 seconds to run, the process... (to be continued)
+
+![](DNAstack - General - Batch Cart Item Creation API Diagram.png)
+
+
+#### `POST /resources/cart-item-batch-jobs/{job_id}`
+
+Get the status of the job
+
+| Param Type | Param Name | Association |
+| --- | --- | --- |
+| URL Path | `job_id` | `CartItemBatchJob.id` |
+
+The response body for HTTP 200 will be `CartItemBatchJob`.
