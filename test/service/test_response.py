@@ -1,10 +1,14 @@
 #!/usr/bin/python
-import json
-import unittest
-import os
 
+import json
+import os
+import unittest
+import urllib.parse
+
+from more_itertools import one
 import requests
 
+from azul import config
 from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
                                                           KeywordSearchResponse,
                                                           ProjectSummaryResponse)
@@ -570,11 +574,30 @@ class TestResponse(WebServiceTestCase):
                 self.assertIsNotNone(summary_object['organSummaries'])
 
     def test_default_sorting_parameter(self):
-        url = self.base_url + "/repository/files"
+        base_url = self.base_url
+        url = base_url + "/repository/files"
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
         self.assertEqual(summary_object['pagination']["sort"], "specimenId")
+
+    def test_transform_request_with_file_url(self):
+        base_url = self.base_url
+        url = base_url + "/repository/files"
+        response = requests.get(url)
+        response.raise_for_status()
+        response_json = response.json()
+        bundle_files = [file_data for hit in response_json['hits'] for file_data in hit['files']]
+        for file_data in bundle_files:
+            self.assertIn('url', file_data.keys())
+            actual_url = urllib.parse.urlparse(file_data['url'])
+            actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
+            expected_base_url = urllib.parse.urlparse(config.service_endpoint())
+            self.assertEquals(expected_base_url.netloc, actual_url.netloc)
+            self.assertEquals(expected_base_url.scheme, actual_url.scheme)
+            self.assertIsNotNone(actual_url.path)
+            self.assertEquals('aws', actual_query_vars['replica'])
+            self.assertIsNotNone(actual_query_vars['version'])
 
     def test_project_summary_cell_count(self):
         """
