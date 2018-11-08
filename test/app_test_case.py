@@ -81,7 +81,7 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
         super().setUp()
         log.debug("Setting up tests")
         log.debug("Created Thread")
-        self.server_thread = ChaliceServerThread(self.app, ChaliceConfig(), 'localhost', 0)
+        self.server_thread = ChaliceServerThread(self.app, self.chalice_config(), 'localhost', 0)
         log.debug("Started Thread")
         self.server_thread.start()
         deadline = time.time() + 10
@@ -97,6 +97,9 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
                 time.sleep(1)
             else:
                 break
+
+    def chalice_config(self):
+        return ChaliceConfig()
 
     def tearDown(self):
         log.debug("Tearing Down Data")

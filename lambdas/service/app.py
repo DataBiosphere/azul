@@ -1,15 +1,20 @@
 import ast
+from concurrent.futures import ThreadPoolExecutor
 import logging.config
 import os
-from concurrent.futures import ThreadPoolExecutor
+import time
+import urllib.parse
 
-from chalice import Chalice, BadRequestError, NotFoundError
+# noinspection PyPackageRequirements
+from chalice import BadRequestError, Chalice, NotFoundError, Response
+from more_itertools import one
+import requests
 
-from azul import config
+from azul import config, parse_http_date
 from azul.service import service_config
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
-                                                                  IndexNotFoundError,
-                                                                  ElasticTransformDump as EsTd)
+                                                                  ElasticTransformDump as EsTd,
+                                                                  IndexNotFoundError)
 from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
@@ -149,8 +154,12 @@ def get_data(file_id=None):
         response = es_td.transform_request(filters=filters,
                                            pagination=pagination,
                                            post_filter=True,
-                                           include_file_urls=True,
                                            entity_type='files')
+
+        for hit in response['hits']:
+            for file in hit['files']:
+                file['url'] = file_url(file['uuid'], file['version'])
+
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
     except IndexNotFoundError as infe:
@@ -522,3 +531,48 @@ def get_manifest():
     response = es_td.transform_manifest(filters=filters)
     # Return the excel file
     return response
+
+
+@app.route('/dss/files/{uuid}', methods=['GET'], cors=True)
+def files_proxy(uuid):
+    """
+    Proxies requests to DSS' /files endpoint, with the intend of implementing Retry-After on the client's behalf. The
+    file URL that this service returns on the /repository/files endpoint points at this endpoint. This proxy endpoint
+    was added to prevent browsers that don't implement Retry-After from quickly exhausting their limit on the number
+    of retries.
+
+    This is only a best effort since we can only wait at most 30s before API Gateway times out.
+    """
+    params = app.current_request.query_params
+    url = config.dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
+    dss_response = requests.get(url, params=params, allow_redirects=False)
+    if dss_response.status_code == 301:
+        retry_after = dss_response.headers.get('Retry-After')
+        location = dss_response.headers['Location']
+        query = urllib.parse.urlparse(location).query
+        params = {k: one(v) for k, v in urllib.parse.parse_qs(query, strict_parsing=True).items()}
+        if retry_after is not None:
+            now = time.time()
+            retry_after = parse_http_date(retry_after, base_time=now)
+            sleep_time = retry_after - now
+            if sleep_time > 0:
+                remaining_time = app.lambda_context.get_remaining_time_in_millis() / 1000
+                sleep_time = min(sleep_time, remaining_time - 2)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+        return Response(body='', status_code=301, headers={'Location': _file_url(uuid, **params)})
+    elif dss_response.status_code == 302:
+        location = dss_response.headers['Location']
+        return Response(body='', status_code=302, headers={'Location': location})
+    else:
+        dss_response.raise_for_status()
+
+
+def file_url(uuid, version):
+    return _file_url(uuid, version=version, replica='aws')
+
+
+def _file_url(uuid, **kwargs):
+    return (config.service_endpoint() + '/dss/files' +
+            '/' + urllib.parse.quote(uuid, safe='') +
+            '?' + urllib.parse.urlencode(kwargs))
