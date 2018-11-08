@@ -6,7 +6,7 @@ from service import WebServiceTestCase
 class RepositorySpecimenEndpointTest(WebServiceTestCase):
 
     def test_basic_response(self):
-        url = self.base_url + "repository/specimens"
+        url = self.base_url + "/repository/specimens"
         response = requests.get(url)
         response.raise_for_status()
         response_json = response.json()

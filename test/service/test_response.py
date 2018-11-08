@@ -561,7 +561,7 @@ class TestResponse(WebServiceTestCase):
     def test_summary_endpoint(self):
         for entity_type in 'specimens', 'files':
             with self.subTest(entity_type=entity_type):
-                url = self.base_url + "repository/summary"
+                url = self.base_url + "/repository/summary"
                 response = requests.get(url)
                 response.raise_for_status()
                 summary_object = response.json()
@@ -570,8 +570,7 @@ class TestResponse(WebServiceTestCase):
                 self.assertIsNotNone(summary_object['organSummaries'])
 
     def test_default_sorting_parameter(self):
-        base_url = self.base_url
-        url = base_url + "repository/files"
+        url = self.base_url + "/repository/files"
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
