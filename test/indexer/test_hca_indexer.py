@@ -406,15 +406,13 @@ class TestHCAIndexer(IndexerTestCase):
         """
         self._mock_index(self.disease_bundle)
 
-        def assert_correct_disease_field(es_results):
-            for index_results in es_results:
-                bundle = index_results['_source']['bundles'][0]
-                if 'contents' in bundle:
-                    self.assertEqual(1, len(bundle['contents']['specimens'][0]['disease']))
-                    specimen_disease = bundle['contents']['specimens'][0]['disease'][0]
-                    self.assertEqual("atrophic vulva (specimen_from_organism)", specimen_disease)
-
-        self._get_es_results(assert_correct_disease_field)
+        es_results = self._get_es_results()
+        for index_results in es_results:
+            bundle = index_results['_source']['bundles'][0]
+            if 'contents' in bundle:
+                self.assertEqual(1, len(bundle['contents']['specimens'][0]['disease']))
+                specimen_disease = bundle['contents']['specimens'][0]['disease'][0]
+                self.assertEqual("atrophic vulva (specimen_from_organism)", specimen_disease)
 
 
 if __name__ == "__main__":
