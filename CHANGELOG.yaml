@@ -12,6 +12,20 @@ meta:
 
 changes:
 
+  - title: Proxy requests to DSS /files, enforcing Retry-After on browser's behalf
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/531
+      - https://github.com/humancellatlas/data-browser/issues/331
+      - https://github.com/humancellatlas/data-browser/issues/342
+    upgrade:
+      - requirements
+      - deploy
+    notes: This adds a `/dss/files/{uuid}` endpoint and changes `/repository/files` so that its `hits[].files[].url`
+           response field points to that new endpoint (it pointed directly to the DSS before this change). The new
+           endpoint forwards the request to the DSS. When the DSS responds with a 30x status code and a `Retry-After`
+           header, the service sleeps for a certain amount of time before forwarding the DSS response back to the
+           client. Clients don't need to be updated as long as they use `hits[].files[].url` for direct downloads.
+
   - title: Extract preservation_method instead of storage_method
     issues:
       - https://github.com/DataBiosphere/azul/issues/503
