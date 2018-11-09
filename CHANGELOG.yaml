@@ -11,6 +11,13 @@ meta:
     - clients: the service API changed in a way that requires clients to be updated
 
 changes:
+  - title: Remove protocol facet from service response
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/516
+      - https://github.com/databiosphere/azul/issues/540
+      - https://github.com/HumanCellAtlas/data-browser/issues/320
+    upgrade:
+      - deploy
 
   - title:  Removed `disease` extraction from `donor_organism`
     issues:
