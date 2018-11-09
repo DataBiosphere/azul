@@ -19,7 +19,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         A list of hits should be returned
         Certain fields should not be in the project object
         """
-        url = self.base_url + 'repository/projects'
+        url = self.base_url + '/repository/projects'
         response = requests.get(url)
         response.raise_for_status()
         response_json = response.json()
@@ -53,7 +53,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         A single hit should be returned
         Certain fields should be in the project object
         """
-        url = self.base_url + 'repository/projects/' + uuid
+        url = self.base_url + '/repository/projects/' + uuid
         response = requests.get(url)
         response.raise_for_status()
         hit = response.json()

@@ -1,16 +1,14 @@
 #!/usr/bin/python
 
-import json
 import difflib
+import json
 import logging.config
 import unittest
-from urllib.parse import urlparse, parse_qs
 
 from elasticsearch_dsl.utils import AttrList
 
-from service import WebServiceTestCase
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
-from azul import config
+from service import WebServiceTestCase
 
 logger = logging.getLogger(__name__)
 
@@ -534,26 +532,6 @@ class TestRequestBuilder(WebServiceTestCase):
         self.compare_dicts(expected_output, actual_output)
 
         self.assertEqual(expected_output, actual_output)
-
-    def test_transform_request_with_file_url(self):
-        response_json = EsTd().transform_request(filters={"file": {}},
-                                                 pagination={'order': 'desc',
-                                                             'size': 10,
-                                                             'sort': 'specimenId'},
-                                                 post_filter=True,
-                                                 include_file_urls=True,
-                                                 entity_type='files')
-        bundle_files = [file_data for hit in response_json['hits'] for file_data in hit['files']]
-        for file_data in bundle_files:
-            self.assertIn('url', file_data.keys())
-            actual_url = urlparse(file_data['url'])
-            actual_query_vars = parse_qs(actual_url.query)
-            expected_base_url = urlparse(config.dss_endpoint)
-            self.assertEquals(expected_base_url.netloc, actual_url.netloc)
-            self.assertEquals(expected_base_url.scheme, actual_url.scheme)
-            self.assertIsNotNone(actual_url.path)
-            self.assertEquals('aws', actual_query_vars['replica'][0])
-            self.assertIsNotNone(actual_query_vars['version'][0])
 
 
 if __name__ == '__main__':
