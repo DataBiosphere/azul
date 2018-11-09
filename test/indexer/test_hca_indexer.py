@@ -401,8 +401,8 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_diseases_field(self):
         """
-        Index a bundle with a specimen diseases value that is differs from its donor diseases value
-        and check if only the specimen's diseases value is in the indexed doc.
+        Index a bundle with a specimen `diseases` value that is differs from its donor `diseases` value
+        and assert that only the specimen's `diseases` value is in the indexed document.
         """
         self._mock_index(self.disease_bundle)
 
