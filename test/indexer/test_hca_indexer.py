@@ -38,6 +38,8 @@ class TestHCAIndexer(IndexerTestCase):
                          ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
         cls.analysis_bundle = ("d5e01f9d-615f-4153-8a56-f2317d7d9ce8",
                                "2018-09-06T185759.326912Z")
+        cls.disease_bundle = ("3db604da-940e-49b1-9bcc-25699a55b295",
+                              "2018-11-02T184048.983513Z")
 
     def _get_es_results(self):
         es_results = []
