@@ -10,11 +10,9 @@ from service import WebServiceTestCase
 # Assumes a database initialized with >SEARCH_AFTER_THRESHOLD records, where
 # SEARCH_AFTER_THRESHOLD is defined in responseobjects/elastic_request_builder.py
 class PaginationTestCase(WebServiceTestCase):
+
     def get_base_url(self):
-        """
-        :return: The base URL to test.
-        """
-        return os.path.join(self.base_url, "repository", "files")
+        return self.base_url + '/repository/files'
 
     def assert_page1_correct(self, json_response):
         """

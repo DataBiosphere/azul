@@ -1,10 +1,11 @@
+from email.utils import parsedate_to_datetime
 import functools
 import importlib
 import os
 import re
 import time
 
-from typing import Tuple, Mapping
+from typing import Tuple, Mapping, Optional
 
 from hca.dss import DSSClient
 from urllib3 import Timeout
@@ -71,6 +72,9 @@ class Config:
 
     def api_lambda_domain(self, lambda_name):
         return config.subdomain(lambda_name) + "." + config.domain_name
+
+    def service_endpoint(self):
+        return "https://" + config.api_lambda_domain('service')
 
     @property
     def indexer_name(self) -> str:
@@ -290,3 +294,30 @@ def str_to_bool(string: str):
         return False
     else:
         raise ValueError(string)
+
+
+def parse_http_date(http_date, base_time:Optional[float]=None):
+    """
+    Convert an HTTP date string as defined in https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1 to a
+    Python timestamp (UNIX time).
+
+    :param base_time: the timestamp for converting a relative HTTP date into Python timestamp, if None, the current
+                      time will be used.
+
+    >>> parse_http_date('123', 0.4)
+    123.4
+    >>> t = 1541313273.0
+    >>> parse_http_date('Sun, 04 Nov 2018 06:34:33 GMT') == t
+    True
+    >>> parse_http_date('Sun, 04 Nov 2018 06:34:33 PST') == t + 8 * 60 * 60
+    True
+    """
+    if base_time is None:
+        base_time=time.time()
+    try:
+        http_date = int(http_date)
+    except ValueError:
+        http_date = parsedate_to_datetime(http_date)
+        return http_date.timestamp()
+    else:
+        return base_time + float(http_date)
