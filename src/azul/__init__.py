@@ -308,10 +308,11 @@ def str_to_bool(string: str):
         raise ValueError(string)
 
 
-def parse_http_date(http_date, base_time:Optional[float]=None):
+def parse_http_date(http_date: str, base_time: Optional[float] = None) -> float:
     """
-    Convert an HTTP date string as defined in https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1 to a
-    Python timestamp (UNIX time).
+    Convert an HTTP date string to a Python timestamp (UNIX time).
+
+    :param http_date: a string matching https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1
 
     :param base_time: the timestamp for converting a relative HTTP date into Python timestamp, if None, the current
                       time will be used.
@@ -325,7 +326,7 @@ def parse_http_date(http_date, base_time:Optional[float]=None):
     True
     """
     if base_time is None:
-        base_time=time.time()
+        base_time = time.time()
     try:
         http_date = int(http_date)
     except ValueError:
