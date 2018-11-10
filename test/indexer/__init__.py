@@ -4,24 +4,17 @@ from typing import Any, Mapping
 from unittest.mock import patch
 from uuid import uuid4
 
-from azul import config
-from azul.project.hca.config import IndexProperties
-from azul.project.hca.indexer import Indexer
+from azul.plugin import Plugin
 from es_test_case import ElasticsearchTestCase
 
 
 class IndexerTestCase(ElasticsearchTestCase):
-    index_properties = None
-    hca_indexer = None
 
-    _old_dss_endpoint = None
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.index_properties = IndexProperties(dss_url=config.dss_endpoint,
-                                               es_endpoint=config.es_endpoint)
-        cls.hca_indexer = Indexer(cls.index_properties, refresh='wait_for')
+    def setUp(self):
+        super().setUp()
+        plugin = Plugin.load()
+        indexer_cls = plugin.indexer_class()
+        self.hca_indexer = indexer_cls(refresh='wait_for')
 
     def _make_fake_notification(self, uuid: str, version: str) -> Mapping[str, Any]:
         return {

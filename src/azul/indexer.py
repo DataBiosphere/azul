@@ -1,16 +1,15 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
 import logging
-from typing import Callable, List, Mapping, MutableMapping, MutableSet, Optional, Sequence, Union
+from typing import Callable, List, Mapping, MutableMapping, MutableSet, Optional, Sequence, Union, Iterable
 
 from elasticsearch import ConflictError, ElasticsearchException
 from elasticsearch.helpers import parallel_bulk, streaming_bulk
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 
 from azul import config
-from azul.base_config import BaseIndexProperties
 from azul.es import ESClientFactory
-from azul.transformer import DocumentCoordinates, ElasticSearchDocument
+from azul.transformer import DocumentCoordinates, ElasticSearchDocument, Transformer
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -25,17 +24,35 @@ class BaseIndexer(ABC):
     The base indexer class provides the framework to do indexing.
     """
 
-    def __init__(self, properties: BaseIndexProperties,
-                 document_handler: DocumentHandler = None,
-                 refresh: Union[bool, str] = False) -> None:
-        self.properties = properties
+    def __init__(self, document_handler: DocumentHandler = None, refresh: Union[bool, str] = False) -> None:
         self.document_handler = document_handler or self.write
         self.refresh = refresh
+
+    @abstractmethod
+    def mapping(self) -> JSON:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def settings(self) -> JSON:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def transformers(self) -> Iterable[Transformer]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def entities(self) -> Iterable[str]:
+        raise NotImplementedError()
+
+    def index_names(self) -> Iterable[str]:
+        return [config.es_index_name(entity, aggregate=aggregate)
+                for entity in self.entities()
+                for aggregate in (False, True)]
 
     def index(self, dss_notification: JSON) -> None:
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
-        _, manifest, metadata_files = download_bundle_metadata(client=config.dss_client(self.properties.dss_url),
+        _, manifest, metadata_files = download_bundle_metadata(client=config.dss_client(),
                                                                replica='aws',
                                                                uuid=bundle_uuid,
                                                                version=bundle_version,
@@ -45,15 +62,15 @@ class BaseIndexer(ABC):
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
         # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
         es_client = ESClientFactory.get()
-        for index_name in self.properties.index_names:
+        for index_name in self.index_names():
             es_client.indices.create(index=index_name,
                                      ignore=[400],
-                                     body=dict(settings=self.properties.settings,
-                                               mappings=dict(doc=self.properties.mapping)))
+                                     body=dict(settings=self.settings(),
+                                               mappings=dict(doc=self.mapping())))
 
         # Collect the documents to be indexed
         indexable_documents = {}
-        for transformer in self.properties.transformers:
+        for transformer in self.transformers():
             documents = transformer.create_documents(uuid=bundle_uuid,
                                                      version=bundle_version,
                                                      manifest=manifest,
@@ -106,7 +123,7 @@ class BaseIndexer(ABC):
     def _aggregate_docs(self, modified_docs):
         aggregate_docs = {}
         for doc in modified_docs.values():
-            for transformer in self.properties.transformers:
+            for transformer in self.transformers():
                 aggregate_doc = transformer.aggregate_document(doc)
                 if aggregate_doc is not None:
                     assert aggregate_doc.aggregate
