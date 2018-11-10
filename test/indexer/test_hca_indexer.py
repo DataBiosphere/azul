@@ -38,8 +38,6 @@ class TestHCAIndexer(IndexerTestCase):
                          ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
         cls.analysis_bundle = ("d5e01f9d-615f-4153-8a56-f2317d7d9ce8",
                                "2018-09-06T185759.326912Z")
-        cls.disease_bundle = ("3db604da-940e-49b1-9bcc-25699a55b295",
-                              "2018-11-02T184048.983513Z")
 
     def _get_es_results(self):
         es_results = []
@@ -404,15 +402,16 @@ class TestHCAIndexer(IndexerTestCase):
         Index a bundle with a specimen `diseases` value that is differs from its donor `diseases` value
         and assert that only the specimen's `diseases` value is in the indexed document.
         """
-        self._mock_index(self.disease_bundle)
+        self._mock_index(("3db604da-940e-49b1-9bcc-25699a55b295", "2018-11-02T184048.983513Z"))
 
         es_results = self._get_es_results()
         for index_results in es_results:
-            bundle = index_results['_source']['bundles'][0]
-            if 'contents' in bundle:
-                self.assertEqual(1, len(bundle['contents']['specimens'][0]['disease']))
-                specimen_disease = bundle['contents']['specimens'][0]['disease'][0]
-                self.assertEqual("atrophic vulva (specimen_from_organism)", specimen_disease)
+            entity_type, aggregate = config.parse_es_index_name(index_results["_index"])
+            source = index_results['_source']
+            contents = source['contents'] if aggregate else source['bundles'][0]['contents']
+            diseases = contents['specimens'][0]['disease']
+            self.assertEqual(1, len(diseases))
+            self.assertEqual("atrophic vulva (specimen_from_organism)", diseases[0])
 
 
 if __name__ == "__main__":
