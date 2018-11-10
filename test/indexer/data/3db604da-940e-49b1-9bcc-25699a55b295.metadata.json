@@ -1,0 +1,1031 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Q4_DEMO-cellsus_SAMN02797092",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "genotype": "DRB1 0401 protective allele",
+            "biosd_biomaterial": "SAMN00000000",
+            "insdc_biomaterial": "SRS0000000"
+        },
+        "cell_morphology": {
+            "cell_morphology": "adherent cells, form single layer colonies",
+            "cell_size": "20-30",
+            "cell_size_unit": {
+                "text": "nm",
+                "ontology": "UO:0000018",
+                "ontology_label": "nanometer"
+            },
+            "percent_cell_viability": 85.3,
+            "cell_viability_method": "Fluorescein diacetate hydrolysis assay",
+            "cell_viability_result": "pass",
+            "percent_necrosis": 10
+        },
+        "growth_conditions": {
+            "passage_number": 22,
+            "growth_medium": "lysogeny broth (LB) medium",
+            "mycoplasma_testing_results": "pass",
+            "drug_treatment": "100 ug/mL ampicillin",
+            "feeder_layer_type": "feeder-dependent, mouse embryonic fibroblast cells"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "total_estimated_cells": 10000,
+        "provenance": {
+            "document_id": "74bc8f6d-ce89-4128-bb4e-f0d527e84e83",
+            "submission_date": "2018-11-02T17:38:40.233Z",
+            "update_date": "2018-11-02T17:38:46.014Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Q4_DEMO-sample_SAMN02797092",
+            "biomaterial_name": "Q4_DEMO-Single cell mRNA-seq_MGH30_A01",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "genotype": "DRB1 0401 protective allele",
+            "biosd_biomaterial": "SAMN00000000",
+            "insdc_biomaterial": "SRS0000000"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "brain",
+            "ontology": "UBERON:0000955",
+            "ontology_label": "brain"
+        },
+        "organ_part": {
+            "text": "amygdala",
+            "ontology": "UBERON:0001876",
+            "ontology_label": "amygdala"
+        },
+        "diseases": [
+            {
+                "text": "atrophic vulva (specimen_from_organism)",
+                "ontology": "MONDO:0001932  (specimen_from_organism)",
+                "ontology_label": "atrophic vulva (specimen_from_organism)"
+            }
+        ],
+        "state_of_specimen": {
+            "autolysis_score": "none",
+            "gross_description": "normal color and size"
+        },
+        "provenance": {
+            "document_id": "20356094-b09a-4ed9-bc29-7629ab2c716c",
+            "submission_date": "2018-11-02T17:38:40.226Z",
+            "update_date": "2018-11-02T17:38:45.852Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Q4_DEMO-donor_MGH30",
+            "biomaterial_name": "Q4 DEMO donor MGH30",
+            "biomaterial_description": "A general description of a biomaterial",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "genotype": "DRB1 0401 protective allele",
+            "biosd_biomaterial": "SAMN00000000",
+            "insdc_biomaterial": "SRS0000000"
+        },
+        "human_specific": {
+            "body_mass_index": 36.4,
+            "ethnicity": [
+                {
+                    "text": "European",
+                    "ontology": "HANCESTRO:0005",
+                    "ontology_label": "European"
+                }
+            ]
+        },
+        "death": {
+            "cause_of_death": "motor vehicle accident",
+            "cold_perfused": false,
+            "days_on_ventilator": 4,
+            "hardy_scale": 0,
+            "time_of_death": "2016-01-21T00:00:00Z",
+            "organ_donation_death_type": "Donation after circulatory death (DCD)"
+        },
+        "medical_history": {
+            "alcohol_history": "3-6 units/day",
+            "medication": "Naproxen 500mg/day, ",
+            "nutritional_state": "normal",
+            "smoking_history": "Smoker, 20/day for 25 years, stopped 2000"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organism_age": "20",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036",
+            "ontology_label": "year"
+        },
+        "diseases": [
+            {
+                "text": "atrophic vulva (donor_organism)",
+                "ontology": "MONDO:0001932 (donor_organism)",
+                "ontology_label": "atrophic vulva (donor_organism)"
+            }
+        ],
+        "gestational_age": "5-7",
+        "height": "160",
+        "height_unit": {
+            "text": "cm",
+            "ontology": "UO:0000015",
+            "ontology_label": "centimeter"
+        },
+        "is_living": "no",
+        "weight": "60",
+        "weight_unit": {
+            "text": "kg",
+            "ontology": "UO:0000009",
+            "ontology_label": "kilogram"
+        },
+        "normothermic_regional_perfusion": "yes",
+        "sex": "male",
+        "provenance": {
+            "document_id": "560dcb19-ddbb-4c8b-b2d9-fece4d167d7b",
+            "submission_date": "2018-11-02T17:38:40.219Z",
+            "update_date": "2018-11-02T17:38:45.792Z"
+        }
+    },
+    "analysis_file_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "barcodes.tsv",
+            "file_format": "tsv"
+        },
+        "provenance": {
+            "document_id": "2e072336-b906-4c9b-a475-ca03f51c8452",
+            "submission_date": "2018-11-02T18:31:37.394Z",
+            "update_date": "2018-11-02T18:37:30.666Z"
+        }
+    },
+    "analysis_file_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "genes.tsv",
+            "file_format": "tsv"
+        },
+        "provenance": {
+            "document_id": "2f7c43a5-30e5-443b-951b-b2b5d32bea06",
+            "submission_date": "2018-11-02T18:31:37.473Z",
+            "update_date": "2018-11-02T18:37:30.669Z"
+        }
+    },
+    "analysis_file_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "matrix.mtx",
+            "file_format": "mtx"
+        },
+        "provenance": {
+            "document_id": "052ee573-ff99-41b8-ad19-eea77a9cce7f",
+            "submission_date": "2018-11-02T18:31:37.552Z",
+            "update_date": "2018-11-02T18:37:30.669Z"
+        }
+    },
+    "analysis_file_3.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "filtered_gene_bc_matrices_h5.h5",
+            "file_format": "h5"
+        },
+        "provenance": {
+            "document_id": "d2cc22c0-6281-4f31-9ca1-b6ab6f27d2b1",
+            "submission_date": "2018-11-02T18:31:37.628Z",
+            "update_date": "2018-11-02T18:37:33.661Z"
+        }
+    },
+    "analysis_file_4.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "metrics_summary.csv",
+            "file_format": "csv"
+        },
+        "provenance": {
+            "document_id": "69559434-0da7-4bdd-a8f4-8be55cdcf45e",
+            "submission_date": "2018-11-02T18:31:37.705Z",
+            "update_date": "2018-11-02T18:37:21.650Z"
+        }
+    },
+    "analysis_file_5.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "molecule_info.h5",
+            "file_format": "h5"
+        },
+        "provenance": {
+            "document_id": "a1007d9b-6636-4909-9918-4aa85f99e9e7",
+            "submission_date": "2018-11-02T18:31:37.779Z",
+            "update_date": "2018-11-02T18:37:33.662Z"
+        }
+    },
+    "analysis_file_6.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "possorted_genome_bam.bam",
+            "file_format": "bam"
+        },
+        "provenance": {
+            "document_id": "265c105c-803e-4468-a67d-8ba10011fcf1",
+            "submission_date": "2018-11-02T18:31:37.859Z",
+            "update_date": "2018-11-02T18:37:27.648Z"
+        }
+    },
+    "analysis_file_7.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "possorted_genome_bam.bam.bai",
+            "file_format": "bai"
+        },
+        "provenance": {
+            "document_id": "eb4073be-f278-47f3-9f41-8a6e7284b49d",
+            "submission_date": "2018-11-02T18:31:37.939Z",
+            "update_date": "2018-11-02T18:37:30.669Z"
+        }
+    },
+    "analysis_file_8.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "raw_gene_bc_matrices_h5.h5",
+            "file_format": "h5"
+        },
+        "provenance": {
+            "document_id": "487ccf21-6270-4880-b93d-6c80a7e03ca3",
+            "submission_date": "2018-11-02T18:31:38.017Z",
+            "update_date": "2018-11-02T18:37:33.662Z"
+        }
+    },
+    "analysis_file_9.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "web_summary.html",
+            "file_format": "unknown"
+        },
+        "provenance": {
+            "document_id": "2046e0bc-be29-4933-8f1a-094aa2bf3172",
+            "submission_date": "2018-11-02T18:31:38.100Z",
+            "update_date": "2018-11-02T18:37:36.659Z"
+        }
+    },
+    "analysis_file_10.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "raw_barcodes.tsv",
+            "file_format": "tsv"
+        },
+        "provenance": {
+            "document_id": "f3049150-14c7-4dae-a76c-3a1af9e951a1",
+            "submission_date": "2018-11-02T18:31:38.175Z",
+            "update_date": "2018-11-02T18:37:36.660Z"
+        }
+    },
+    "analysis_file_11.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "raw_genes.tsv",
+            "file_format": "tsv"
+        },
+        "provenance": {
+            "document_id": "79dc63a1-8114-495f-80cb-b0c0003d1f5b",
+            "submission_date": "2018-11-02T18:31:38.249Z",
+            "update_date": "2018-11-02T18:37:39.656Z"
+        }
+    },
+    "analysis_file_12.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "raw_matrix.mtx",
+            "file_format": "mtx"
+        },
+        "provenance": {
+            "document_id": "2097f789-3a94-44f0-adc0-b3e76233b5dc",
+            "submission_date": "2018-11-02T18:31:38.328Z",
+            "update_date": "2018-11-02T18:37:39.656Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "pbmc4k_S1_L001_R1_001.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "read1",
+        "lane_index": 1,
+        "read_length": 51,
+        "insdc_run": [
+            "SRR0000000"
+        ],
+        "provenance": {
+            "document_id": "6f725a94-5c81-45e5-8d16-96520aa99703",
+            "submission_date": "2018-11-02T17:38:40.242Z",
+            "update_date": "2018-11-02T17:40:58.933Z"
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "pbmc4k_S1_L001_R2_001.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "read2",
+        "lane_index": 1,
+        "read_length": 51,
+        "insdc_run": [
+            "SRR0000000"
+        ],
+        "provenance": {
+            "document_id": "2db43e94-5208-405e-bc2a-ffade59b94c0",
+            "submission_date": "2018-11-02T17:38:40.250Z",
+            "update_date": "2018-11-02T17:40:59.927Z"
+        }
+    },
+    "sequence_file_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "pbmc4k_S1_L001_I1_001.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "index1",
+        "lane_index": 1,
+        "read_length": 51,
+        "insdc_run": [
+            "SRR0000000"
+        ],
+        "provenance": {
+            "document_id": "62d33b9a-d413-45d0-b8c7-c3135922b4b1",
+            "submission_date": "2018-11-02T17:38:40.258Z",
+            "update_date": "2018-11-02T17:40:58.349Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/project/9.0.3/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "integration/10x/2018-11-02T17:38:38Z",
+            "project_title": "Q4_DEMO-Single cell RNA-seq of primary human glioblastomas",
+            "project_description": "Q4_DEMO-We report transcriptomes from 430 single glioblastoma cells isolated from 5 individual tumors and 102 single cells from gliomasphere cells lines generated using SMART-seq. In addition, we report population RNA-seq from the five tumors as well as RNA-seq from cell lines derived from 3 tumors (MGH26, MGH28, MGH31) cultured under serum free (GSC) and differentiated (DGC) conditions. This dataset highlights intratumoral heterogeneity with regards to the expression of de novo derived transcriptional modules and established subtype classifiers. Overall design: Operative specimens from five glioblastoma patients (MGH26, MGH28, MGH29, MGH30, MGH31) were acutely dissociated, depleted for CD45+ inflammatory cells and then sorted as single cells (576 samples). Population controls for each tumor were isolated by sorting 2000-10000 cells and processed in parallel (5 population control samples). Single cells from two established cell lines, GBM6 and GBM8, were also sorted as single cells (192 samples). SMART-seq protocol was implemented to generate single cell full length transcriptomes (modified from Shalek, et al Nature 2013) and sequenced using 25 bp paired end reads. Single cell cDNA libraries for MGH30 were resequenced using 100 bp paired end reads to allow for isoform and splice junction reconstruction (96 samples, annotated MGH30L). Cells were also cultured in serum free conditions to generate gliomasphere cell lines for MGH26, MGH28, and MGH31 (GSC) which were then differentiated using 10% serum (DGC). Population RNA-seq was performed on these samples (3 GSC, 3 DGC, 6 total). The initial dataset included 875 RNA-seq libraries (576 single glioblastoma cells, 96 resequenced MGH30L, 192 single gliomasphere cells, 5 tumor population controls, 6 population libraries from GSC and DGC samples). Data was processed as described below using RSEM for quantification of gene expression. 5,948 genes with the highest composite expression either across all single cells combined (average log2(TPM)>4.5) or within a single tumor (average log2(TPM)>6 in at least one tumor) were included. Cells expressing less than 2,000 of these 5,948 genes were excluded. The final processed dataset then included 430 primary single cell glioblastoma transcriptomes, 102 single cell transcriptomes from cell lines(GBM6,GBM8), 5 population controls (1 for each tumor), and 6 population libraries from cell lines derived from the tumors (GSC and DGC for MGH26, MGH28 and MGH31). The final matrix (GBM_data_matrix.txt) therefore contains 5948 rows (genes) quantified in 543 samples (columns). Please note that the samples which are not included in the data processing are indicated in the sample description field."
+        },
+        "publications": [
+            {
+                "authors": [
+                    "Doe JD, Doe JJ"
+                ],
+                "publication_title": "A title of a publication goes here.",
+                "doi": "10.1016/j.cell.2016.07.054",
+                "pmid": 27565351,
+                "publication_url": "https://europepmc.org"
+            }
+        ],
+        "insdc_project": "SRP000000",
+        "geo_series": "GSE00000",
+        "array_express_investigation": "E-AAAA-00",
+        "insdc_study": "PRJNA000000",
+        "funders": [
+            {
+                "grant_title": "A title of a grant proposal.",
+                "grant_id": "BB/P0000001/1",
+                "funder_name": "Biotechnology and Biological Sciences Research Council (BBSRC)"
+            }
+        ],
+        "contributors": [
+            {
+                "contact_name": "John,D,Doe. ",
+                "email": "dummy@email.com",
+                "phone": "(+1) 234-555-6789",
+                "institution": "EMBL-EBI",
+                "laboratory": "Department of Biology",
+                "address": "0000 Main Street, Nowheretown, MA, 12091",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": "principal investigator",
+                "orcid_id": "0000-1111-2222-3333"
+            }
+        ],
+        "provenance": {
+            "document_id": "ed79221b-9713-44cd-94af-183f88c348cd",
+            "submission_date": "2018-11-02T17:38:40.211Z",
+            "update_date": "2018-11-02T17:38:45.615Z"
+        }
+    },
+    "analysis_protocol_0.json": {
+        "computational_method": "10x",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/analysis/8.0.3/analysis_protocol",
+        "protocol_core": {
+            "protocol_id": "cellranger_v1.0.2"
+        },
+        "protocol_type": {
+            "text": "analysis"
+        },
+        "schema_type": "protocol",
+        "provenance": {
+            "document_id": "4d6f7580-ce81-4a81-9c2c-872fcb23b7cd",
+            "submission_date": "2018-11-02T18:31:36.930Z",
+            "update_date": "2018-11-02T18:31:42.607Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "preparation1",
+            "protocol_name": "Preparing RNA for sequencing by 10x",
+            "publication_doi": "10.1101/193219",
+            "protocols_io_doi": "10.17504/protocols.io.mgjc3un",
+            "document": "my_cool_protocol.pdf"
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869",
+            "ontology_label": "polyA RNA"
+        },
+        "library_construction_approach": {
+            "text": "10x v2",
+            "ontology": "EFO:0009310",
+            "ontology_label": "10X v2 sequencing"
+        },
+        "end_bias": "full length",
+        "primer": "poly-dT",
+        "strand": "unstranded",
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16
+        },
+        "library_preamplification_method": {
+            "text": "Rapid Amplification of cDNA Ends",
+            "ontology": "EFO:0004182",
+            "ontology_label": "Rapid Amplification of cDNA Ends"
+        },
+        "provenance": {
+            "document_id": "7d50cf99-37b1-413d-ab4f-37428f9ce723",
+            "submission_date": "2018-11-02T17:38:40.278Z",
+            "update_date": "2018-11-02T17:38:45.659Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/9.0.3/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "assay_1",
+            "protocol_name": "a sequencing protocol"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2500",
+            "ontology": "EFO:0008565"
+        },
+        "local_machine_name": "Machine1",
+        "paired_end": false,
+        "sequencing_approach": {
+            "text": "full length single cell RNA sequencing",
+            "ontology": "EFO:0008441",
+            "ontology_label": "full length single cell RNA sequencing"
+        },
+        "10x": {
+            "fastq_method": "Cellranger mkfastq",
+            "fastq_method_version": "Cellranger 2.1.1",
+            "pooled_channels": 4,
+            "drop_uniformity": false
+        },
+        "provenance": {
+            "document_id": "94ca10f5-6937-4b13-b7ce-2935cad90f94",
+            "submission_date": "2018-11-02T17:38:40.272Z",
+            "update_date": "2018-11-02T17:38:45.681Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_1",
+            "protocol_name": "a FACS method to separate cells",
+            "protocol_description": "single cell"
+        },
+        "dissociation_method": {
+            "text": "fluorescence-activated cell sorting",
+            "ontology": "EFO:0009108",
+            "ontology_label": "fluorescence-activated cell sorting"
+        },
+        "provenance": {
+            "document_id": "b0dac4c3-a81c-4241-ba52-3e468746618b",
+            "submission_date": "2018-11-02T17:38:40.285Z",
+            "update_date": "2018-11-02T17:38:45.674Z"
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.2.5/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "enrichment1",
+            "protocol_name": "an enrichment method to enrich for cells",
+            "publication_doi": "10.1101/193219",
+            "protocols_io_doi": "10.17504/protocols.io.mgjc3un"
+        },
+        "enrichment_method": {
+            "text": "fluorescence-activated cell sorting",
+            "ontology": "EFO:0009108",
+            "ontology_label": "fluorescence-activated cell sorting"
+        },
+        "markers": "CD4+ CD8-",
+        "min_size_selected": 70,
+        "max_size_selected": 90,
+        "provenance": {
+            "document_id": "5077e4f3-3be8-463a-8cc9-024d7905c65e",
+            "submission_date": "2018-11-02T17:38:40.292Z",
+            "update_date": "2018-11-02T17:38:45.601Z"
+        }
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/8.2.6/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "collection_protocol1",
+            "protocol_name": "A short, descriptive name for the protocol that need not be unique.",
+            "protocol_description": "A general description of the protocol.",
+            "publication_doi": "10.1101/193219",
+            "protocols_io_doi": "10.17504/protocols.io.mgjc3un",
+            "document": "my_cool_protocol.pdf"
+        },
+        "collection_method": {
+            "text": "organ extraction",
+            "ontology": "EFO:0009124",
+            "ontology_label": "organ extraction"
+        },
+        "protocol_reagents": [
+            {
+                "retail_name": "SureCell WTA 3' Library Prep Kit",
+                "catalog_number": "20014279",
+                "manufacturer": "Illumina",
+                "lot_number": "10001A",
+                "expiry_date": "2018-01-31",
+                "kit_titer": "Titer: Specification is 3.0x10^7"
+            }
+        ],
+        "provenance": {
+            "document_id": "139304c2-732a-4603-97e5-2db92ab6ec9f",
+            "submission_date": "2018-11-02T17:38:40.265Z",
+            "update_date": "2018-11-02T17:38:45.683Z"
+        }
+    },
+    "analysis_process_0.json": {
+        "analysis_run_type": "run",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/analysis/8.0.3/analysis_process",
+        "input_bundles": [
+            "a7208eba-72a8-4c29-98fc-95cb09afdb4b"
+        ],
+        "inputs": [
+            {
+                "parameter_name": "fastqs",
+                "parameter_value": "gs://org-humancellatlas-dss-checkout-staging/bundles/a7208eba-72a8-4c29-98fc-95cb09afdb4b.2018-11-02T174218.243583Z/pbmc4k_S1_L001_R1_001.fastq.gz, gs://org-humancellatlas-dss-checkout-staging/bundles/a7208eba-72a8-4c29-98fc-95cb09afdb4b.2018-11-02T174218.243583Z/pbmc4k_S1_L001_R2_001.fastq.gz, gs://org-humancellatlas-dss-checkout-staging/bundles/a7208eba-72a8-4c29-98fc-95cb09afdb4b.2018-11-02T174218.243583Z/pbmc4k_S1_L001_I1_001.fastq.gz"
+            },
+            {
+                "parameter_name": "sample_id",
+                "parameter_value": "74bc8f6d-ce89-4128-bb4e-f0d527e84e83"
+            },
+            {
+                "parameter_name": "reference_name",
+                "parameter_value": "GRCh38"
+            },
+            {
+                "parameter_name": "transcriptome_tar_gz",
+                "parameter_value": "gs://hca-dcp-mint-test-data/reference/GRCh38_Gencode/GRCh38_GencodeV27_Primary_CellRanger.tar"
+            },
+            {
+                "parameter_name": "expect_cells",
+                "parameter_value": "5000"
+            }
+        ],
+        "outputs": [
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "tsv",
+                    "file_name": "barcodes.tsv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "tsv",
+                    "file_name": "genes.tsv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "mtx",
+                    "file_name": "matrix.mtx"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "h5",
+                    "file_name": "filtered_gene_bc_matrices_h5.h5"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "csv",
+                    "file_name": "metrics_summary.csv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "h5",
+                    "file_name": "molecule_info.h5"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "bam",
+                    "file_name": "possorted_genome_bam.bam"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "bai",
+                    "file_name": "possorted_genome_bam.bam.bai"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "h5",
+                    "file_name": "raw_gene_bc_matrices_h5.h5"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "unknown",
+                    "file_name": "web_summary.html"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "tsv",
+                    "file_name": "raw_barcodes.tsv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "tsv",
+                    "file_name": "raw_genes.tsv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "mtx",
+                    "file_name": "raw_matrix.mtx"
+                },
+                "schema_type": "file"
+            }
+        ],
+        "process_core": {
+            "process_id": "1e413775-6d12-4851-ad68-2c46cf3c5e3f"
+        },
+        "process_type": {
+            "text": "analysis"
+        },
+        "reference_bundle": "bf51d668-3e14-4843-9bc7-5d676fdf0e01",
+        "schema_type": "process",
+        "tasks": [
+            {
+                "cpus": 64,
+                "disk_size": "local-disk 400 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-cellranger:v1.0.0",
+                "log_err": "gs://broad-dsde-mint-staging-cromwell-execution/caas-cromwell-executions/Adapter10xCount/2042de8d-10b1-477b-a061-fee36a409fc2/call-analysis/CellRanger.CellRanger/1e413775-6d12-4851-ad68-2c46cf3c5e3f/call-cellranger_count/stderr",
+                "log_out": "gs://broad-dsde-mint-staging-cromwell-execution/caas-cromwell-executions/Adapter10xCount/2042de8d-10b1-477b-a061-fee36a409fc2/call-analysis/CellRanger.CellRanger/1e413775-6d12-4851-ad68-2c46cf3c5e3f/call-cellranger_count/stdout",
+                "memory": "416 GB",
+                "start_time": "2018-11-02T17:51:06.524Z",
+                "stop_time": "2018-11-02T18:23:48.376Z",
+                "task_name": "cellranger_count",
+                "zone": "us-central1-b"
+            }
+        ],
+        "timestamp_start_utc": "2018-11-02T17:51:04.485Z",
+        "timestamp_stop_utc": "2018-11-02T18:23:49.706Z",
+        "provenance": {
+            "document_id": "b7a172d6-dbb1-41f3-8ae4-7807e1eca803",
+            "submission_date": "2018-11-02T18:31:37.078Z",
+            "update_date": "2018-11-02T18:31:42.681Z"
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "bundle1"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "8818b2e9-1c7d-4dd3-9acc-64de03c6f304",
+            "submission_date": "2018-11-02T17:38:40.314Z",
+            "update_date": "2018-11-02T17:38:46.112Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_2"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "3809cc86-0ccb-4d2e-8520-24dcd9eda874",
+            "submission_date": "2018-11-02T17:38:40.306Z",
+            "update_date": "2018-11-02T17:38:45.753Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_1"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "8fa0c554-2503-408b-9f3b-6145463db850",
+            "submission_date": "2018-11-02T17:38:40.299Z",
+            "update_date": "2018-11-02T17:38:45.850Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/system/1.1.3/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.3",
+        "links": [
+            {
+                "process": "b7a172d6-dbb1-41f3-8ae4-7807e1eca803",
+                "inputs": [
+                    "6f725a94-5c81-45e5-8d16-96520aa99703",
+                    "2db43e94-5208-405e-bc2a-ffade59b94c0",
+                    "62d33b9a-d413-45d0-b8c7-c3135922b4b1"
+                ],
+                "input_type": "file",
+                "outputs": [
+                    "2e072336-b906-4c9b-a475-ca03f51c8452",
+                    "2f7c43a5-30e5-443b-951b-b2b5d32bea06",
+                    "052ee573-ff99-41b8-ad19-eea77a9cce7f",
+                    "d2cc22c0-6281-4f31-9ca1-b6ab6f27d2b1",
+                    "69559434-0da7-4bdd-a8f4-8be55cdcf45e",
+                    "a1007d9b-6636-4909-9918-4aa85f99e9e7",
+                    "265c105c-803e-4468-a67d-8ba10011fcf1",
+                    "eb4073be-f278-47f3-9f41-8a6e7284b49d",
+                    "487ccf21-6270-4880-b93d-6c80a7e03ca3",
+                    "2046e0bc-be29-4933-8f1a-094aa2bf3172",
+                    "f3049150-14c7-4dae-a76c-3a1af9e951a1",
+                    "79dc63a1-8114-495f-80cb-b0c0003d1f5b",
+                    "2097f789-3a94-44f0-adc0-b3e76233b5dc"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "analysis_protocol",
+                        "protocol_id": "4d6f7580-ce81-4a81-9c2c-872fcb23b7cd"
+                    }
+                ]
+            },
+            {
+                "process": "8818b2e9-1c7d-4dd3-9acc-64de03c6f304",
+                "inputs": [
+                    "74bc8f6d-ce89-4128-bb4e-f0d527e84e83"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "6f725a94-5c81-45e5-8d16-96520aa99703",
+                    "2db43e94-5208-405e-bc2a-ffade59b94c0",
+                    "62d33b9a-d413-45d0-b8c7-c3135922b4b1"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "7d50cf99-37b1-413d-ab4f-37428f9ce723"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "94ca10f5-6937-4b13-b7ce-2935cad90f94"
+                    }
+                ]
+            },
+            {
+                "process": "3809cc86-0ccb-4d2e-8520-24dcd9eda874",
+                "inputs": [
+                    "20356094-b09a-4ed9-bc29-7629ab2c716c"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "74bc8f6d-ce89-4128-bb4e-f0d527e84e83"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "b0dac4c3-a81c-4241-ba52-3e468746618b"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "5077e4f3-3be8-463a-8cc9-024d7905c65e"
+                    }
+                ]
+            },
+            {
+                "process": "8fa0c554-2503-408b-9f3b-6145463db850",
+                "inputs": [
+                    "560dcb19-ddbb-4c8b-b2d9-fece4d167d7b"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "20356094-b09a-4ed9-bc29-7629ab2c716c"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "139304c2-732a-4603-97e5-2db92ab6ec9f"
+                    }
+                ]
+            },
+            {
+                "process": "8818b2e9-1c7d-4dd3-9acc-64de03c6f304",
+                "inputs": [
+                    "74bc8f6d-ce89-4128-bb4e-f0d527e84e83"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "6f725a94-5c81-45e5-8d16-96520aa99703",
+                    "2db43e94-5208-405e-bc2a-ffade59b94c0",
+                    "62d33b9a-d413-45d0-b8c7-c3135922b4b1"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "7d50cf99-37b1-413d-ab4f-37428f9ce723"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "94ca10f5-6937-4b13-b7ce-2935cad90f94"
+                    }
+                ]
+            },
+            {
+                "process": "3809cc86-0ccb-4d2e-8520-24dcd9eda874",
+                "inputs": [
+                    "20356094-b09a-4ed9-bc29-7629ab2c716c"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "74bc8f6d-ce89-4128-bb4e-f0d527e84e83"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "b0dac4c3-a81c-4241-ba52-3e468746618b"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "5077e4f3-3be8-463a-8cc9-024d7905c65e"
+                    }
+                ]
+            },
+            {
+                "process": "8fa0c554-2503-408b-9f3b-6145463db850",
+                "inputs": [
+                    "560dcb19-ddbb-4c8b-b2d9-fece4d167d7b"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "20356094-b09a-4ed9-bc29-7629ab2c716c"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "139304c2-732a-4603-97e5-2db92ab6ec9f"
+                    }
+                ]
+            },
+            {
+                "process": "8818b2e9-1c7d-4dd3-9acc-64de03c6f304",
+                "inputs": [
+                    "74bc8f6d-ce89-4128-bb4e-f0d527e84e83"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "6f725a94-5c81-45e5-8d16-96520aa99703",
+                    "2db43e94-5208-405e-bc2a-ffade59b94c0",
+                    "62d33b9a-d413-45d0-b8c7-c3135922b4b1"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "7d50cf99-37b1-413d-ab4f-37428f9ce723"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "94ca10f5-6937-4b13-b7ce-2935cad90f94"
+                    }
+                ]
+            },
+            {
+                "process": "3809cc86-0ccb-4d2e-8520-24dcd9eda874",
+                "inputs": [
+                    "20356094-b09a-4ed9-bc29-7629ab2c716c"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "74bc8f6d-ce89-4128-bb4e-f0d527e84e83"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "b0dac4c3-a81c-4241-ba52-3e468746618b"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "5077e4f3-3be8-463a-8cc9-024d7905c65e"
+                    }
+                ]
+            },
+            {
+                "process": "8fa0c554-2503-408b-9f3b-6145463db850",
+                "inputs": [
+                    "560dcb19-ddbb-4c8b-b2d9-fece4d167d7b"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "20356094-b09a-4ed9-bc29-7629ab2c716c"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "139304c2-732a-4603-97e5-2db92ab6ec9f"
+                    }
+                ]
+            }
+        ]
+    }
+}
