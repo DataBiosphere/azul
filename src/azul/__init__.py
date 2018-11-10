@@ -1,20 +1,15 @@
 from email.utils import parsedate_to_datetime
 import functools
-import importlib
 import os
 import re
 import time
-
-from typing import Tuple, Mapping, Optional
+from typing import Mapping, Optional, Tuple
 
 from hca.dss import DSSClient
 from urllib3 import Timeout
 
 from azul.deployment import aws
 
-
-# FIXME: This class collides conceptually with the plugin config classes derived from BaseIndexerConfig.
-# (https://github.com/DataBiosphere/azul/issues/420)
 
 class Config:
     """
@@ -185,14 +180,9 @@ class Config:
     def enable_gcp(self):
         return 'GOOGLE_PROJECT' in os.environ
 
-    def plugin(self):
-        from azul.base_config import BaseIndexProperties
-        from azul.indexer import BaseIndexer
-        plugin_name = 'azul.project.' + os.environ.get('AZUL_PROJECT', 'hca')
-        plugin = importlib.import_module(plugin_name)
-        assert issubclass(plugin.Indexer, BaseIndexer)
-        assert issubclass(plugin.IndexProperties, BaseIndexProperties)
-        return plugin
+    @property
+    def plugin_name(self) -> str:
+        return 'azul.project.' + os.environ.get('AZUL_PROJECT', 'hca')
 
     @property
     def subscribe_to_dss(self):
