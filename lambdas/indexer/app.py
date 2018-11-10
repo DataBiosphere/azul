@@ -20,6 +20,7 @@ from more_itertools import chunked, partition
 
 from azul import config
 from azul.indexer import DocumentsById
+from azul.plugin import Plugin
 from azul.time import RemainingLambdaContextTime
 from azul.transformer import ElasticSearchDocument
 from azul.types import JSON
@@ -33,11 +34,7 @@ app = chalice.Chalice(app_name=config.indexer_name)
 app.debug = True
 app.log.setLevel(logging.DEBUG)  # please use module logger instead
 
-# Initialize the project-specific plugin
-#
-plugin = config.plugin()
-properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
-                                    es_endpoint=config.es_endpoint)
+plugin = Plugin.load()
 
 
 @app.route('/version', methods=['GET'], cors=True)
@@ -69,7 +66,8 @@ def post_notification():
     log.info("Received notification %r", notification)
     params = app.current_request.query_params
     if params and params.get('sync', 'False').lower() == 'true':
-        indexer = plugin.Indexer(properties)
+        indexer_cls = plugin.indexer_class()
+        indexer = indexer_cls()
         indexer.index(notification)
     else:
         message = _make_message(action='add', notification=notification)
@@ -123,7 +121,8 @@ def index(event: chalice.app.SQSEvent):
         log.info(f'Worker handling message {message}, attempt #{attempts} (approx).')
         start = time.time()
         try:
-            indexer = plugin.Indexer(properties, handle_documents)
+            indexer_cls = plugin.indexer_class()
+            indexer = indexer_cls(handle_documents)
             action = message['action']
             notification = message['notification']
             if action == 'add':
@@ -205,7 +204,8 @@ def write(event: chalice.app.SQSEvent):
                      attempts, document.entity_type, document.document_id, bundle.uuid, bundle.version)
             documents.append(document)
 
-        indexer = plugin.Indexer(properties)
+        indexer_cls = plugin.indexer_class()
+        indexer = indexer_cls()
         documents_by_id = indexer.collate(documents)
         # Merge documents into index, without retries (let SQS take care of that)
         indexer.write(documents_by_id, conflict_retry_limit=0, error_retry_limit=0)
