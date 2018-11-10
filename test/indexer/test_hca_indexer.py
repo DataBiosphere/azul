@@ -1,7 +1,3 @@
-"""
-Suite for unit testing indexer.py
-"""
-
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import json
@@ -15,9 +11,8 @@ from elasticsearch import Elasticsearch
 
 from azul import config
 from azul.json_freeze import freeze, sort_frozen
-from indexer import IndexerTestCase
-
 from azul.transformer import ElasticSearchDocument
+from indexer import IndexerTestCase
 
 logger = logging.getLogger(__name__)
 
@@ -27,21 +22,10 @@ def setUpModule():
 
 
 class TestHCAIndexer(IndexerTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.old_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b",
-                          "2018-03-29T152812.404846Z")
-        cls.new_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b",
-                          "2018-03-30T152812.404846Z")
-        cls.specimens = [("9dec1bd6-ced8-448a-8e45-1fc7846d8995", "2018-03-29T154319.834528Z"),
-                         ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
-        cls.analysis_bundle = ("d5e01f9d-615f-4153-8a56-f2317d7d9ce8",
-                               "2018-09-06T185759.326912Z")
 
     def _get_es_results(self):
         es_results = []
-        for entity_index in self.index_properties.index_names:
+        for entity_index in self.hca_indexer.index_names():
             results = self.es_client.search(index=entity_index,
                                             doc_type="doc",
                                             size=100)
@@ -50,8 +34,12 @@ class TestHCAIndexer(IndexerTestCase):
         return es_results
 
     def tearDown(self):
-        for index_name in self.index_properties.index_names:
+        for index_name in self.hca_indexer.index_names():
             self.es_client.indices.delete(index=index_name, ignore=[400, 404])
+        super().tearDown()
+
+    old_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b", "2018-03-29T152812.404846Z")
+    new_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b", "2018-03-30T152812.404846Z")
 
     def test_index_correctness(self):
         """
@@ -106,7 +94,9 @@ class TestHCAIndexer(IndexerTestCase):
         Index an analysis bundle, which, unlike a primary bundle, has data files derived from other data
         files, and assert that the resulting `files` index document contains exactly one file entry.
         """
-        self._mock_index(self.analysis_bundle)
+        analysis_bundle = ("d5e01f9d-615f-4153-8a56-f2317d7d9ce8", "2018-09-06T185759.326912Z")
+
+        self._mock_index(analysis_bundle)
 
         es_results = self._get_es_results()
         self.assertGreater(len(es_results), 0)
@@ -117,8 +107,8 @@ class TestHCAIndexer(IndexerTestCase):
             result_version = result_dict["_source"]["bundles"][0]["version"]
             result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
-            self.assertEqual(self.analysis_bundle[0], result_uuid)
-            self.assertEqual(self.analysis_bundle[1], result_version)
+            self.assertEqual(analysis_bundle[0], result_uuid)
+            self.assertEqual(analysis_bundle[1], result_version)
             index_name = result_dict['_index']
             if index_name == config.es_index_name("files"):
                 self.assertEqual(1, len(result_contents["files"]))
@@ -237,6 +227,9 @@ class TestHCAIndexer(IndexerTestCase):
         """
         We submit two different bundles for the same specimen. What happens?
         """
+        specimens = [("9dec1bd6-ced8-448a-8e45-1fc7846d8995", "2018-03-29T154319.834528Z"),
+                     ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
+
         unmocked_mget = Elasticsearch.mget
 
         def mocked_mget(self, body):
@@ -247,8 +240,8 @@ class TestHCAIndexer(IndexerTestCase):
 
         with patch.object(Elasticsearch, 'mget', new=mocked_mget):
             with self.assertLogs(level='WARNING') as cm:
-                with ThreadPoolExecutor(max_workers=len(self.specimens)) as executor:
-                    thread_results = executor.map(self._mock_index, self.specimens)
+                with ThreadPoolExecutor(max_workers=len(specimens)) as executor:
+                    thread_results = executor.map(self._mock_index, specimens)
                     self.assertIsNotNone(thread_results)
                     self.assertTrue(all(r is None for r in thread_results))
 
@@ -281,7 +274,7 @@ class TestHCAIndexer(IndexerTestCase):
                 self.fail()
 
         self.assertEqual(len(file_doc_ids), 4)
-        for spec_uuid, spec_version in self.specimens:
+        for spec_uuid, spec_version in specimens:
             _, _, spec_metadata = self._get_data_files(spec_uuid, spec_version)
             for file_dict in spec_metadata["file.json"]["files"]:
                 self.assertIn(file_dict["hca_ingest"]["document_id"], file_doc_ids)

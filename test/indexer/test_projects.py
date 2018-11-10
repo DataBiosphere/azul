@@ -1,9 +1,8 @@
 from itertools import chain
 import logging
 import unittest
-from datetime import datetime
 
-from azul import config, eventually
+from azul import config
 from azul.es import ESClientFactory
 from indexer.test_hca_indexer import IndexerTestCase
 
