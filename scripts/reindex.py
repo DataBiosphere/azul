@@ -12,17 +12,18 @@ from typing import List
 
 from azul import config
 from azul.es import ESClientFactory
+from azul.plugin import Plugin
 from azul.reindexer import Reindexer
 
 logger = logging.getLogger(__name__)
 
-plugin = config.plugin()
+plugin = Plugin.load()
 
 
 class Defaults:
     dss_url = config.dss_endpoint
     indexer_url = "https://" + config.api_lambda_domain('indexer') + "/"
-    es_query = plugin.dss_subscription_query
+    es_query = plugin.dss_subscription_query()
     num_workers = 16
 
 
@@ -68,11 +69,10 @@ def main(argv: List[str]):
     args = parser.parse_args(argv)
 
     if args.delete:
-        plugin = config.plugin()
         es_client = ESClientFactory.get()
-        properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
-                                            es_endpoint=config.es_endpoint)
-        for entity_type in properties.entities:
+        indexer_cls = plugin.indexer_class()
+        indexer = indexer_cls()
+        for entity_type in indexer.entities():
             for aggregate in False, True:
                 index_name = config.es_index_name(entity_type, aggregate=aggregate)
                 if es_client.indices.exists(index_name):
