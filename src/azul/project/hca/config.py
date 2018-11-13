@@ -1,8 +1,9 @@
 from typing import Any, Iterable, Mapping, Tuple
 
+from azul import config
 from azul.base_config import BaseIndexProperties
 from azul.transformer import Transformer
-from .transformers import FileTransformer, SpecimenTransformer
+from .transformers import FileTransformer, SpecimenTransformer, ProjectTransformer
 
 
 class IndexProperties(BaseIndexProperties):
@@ -15,12 +16,24 @@ class IndexProperties(BaseIndexProperties):
         self._es_mapping = {
             "dynamic_templates": [
                 {
+                    "project_nested_contributors": {
+                        "match_pattern": "regex",
+                        "path_match": ".*projects?\.contributors",
+                        "mapping": {}
+                    }
+                },
+                {
+                    "project_nested_publications": {
+                        "match_pattern": "regex",
+                        "path_match": ".*projects?\.publications",
+                        "mapping": {}
+                    }
+                },
+                {
                     "strings_as_text": {
                         "match_mapping_type": "string",
                         "mapping": {
                             "type": "text",
-                            "analyzer": "autocomplete",
-                            "search_analyzer": "standard",
                             "fields": {
                                 "keyword": {
                                     "type": "keyword",
@@ -47,24 +60,11 @@ class IndexProperties(BaseIndexProperties):
             ]
         }
         self._es_settings = {
-            "analysis": {
-                "filter": {
-                    "autocomplete_filter": {
-                        "type": "ngram",
-                        "min_gram": 1,
-                        "max_gram": 36
-                    }
-                },
-                "analyzer": {
-                    "autocomplete": {
-                        "type": "custom",
-                        "tokenizer": "keyword",
-                        "filter": [
-                            "lowercase",
-                            "autocomplete_filter"
-                        ]
-                    }
-                }
+            "index": {
+                # This is important. It may slow down searches but it does increase concurrency during indexing,
+                # currently our biggest performance bottleneck.
+                "number_of_shards": config.indexer_concurrency,
+                "number_of_replicas": 1
             }
         }
 
@@ -82,8 +82,7 @@ class IndexProperties(BaseIndexProperties):
 
     @property
     def transformers(self) -> Iterable[Transformer]:
-        transformers = [FileTransformer(), SpecimenTransformer()]
-        return transformers
+        return FileTransformer(), SpecimenTransformer(), ProjectTransformer()
 
     @property
     def entities(self) -> Iterable[str]:

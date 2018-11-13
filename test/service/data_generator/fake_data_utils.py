@@ -1,18 +1,24 @@
 #!/usr/bin/python
+from copy import deepcopy
 import json
 from faker import Faker
-import elasticsearch5
+from elasticsearch.exceptions import NotFoundError
 import logging
 import os
 
+from more_itertools import flatten
+
 from azul import config
+from azul.es import ESClientFactory
 
 logger = logging.getLogger(__name__)
 
 
 class FakerSchemaGenerator(object):
-    def __init__(self, faker=None, locale=None, providers=None, includes=None):
+    def __init__(self, faker=None, locale=None, providers=None, includes=None, seed=None):
         self._faker = faker or Faker(locale=locale, providers=providers, includes=includes)
+        if seed:
+            self._faker.seed(seed)
 
     def generate_fake(self, schema, iterations=1):
         result = [self._generate_one_fake(schema) for _ in range(iterations)]
@@ -33,7 +39,7 @@ class FakerSchemaGenerator(object):
             if isinstance(v, dict):
                 data[k] = self._generate_one_fake(v)
             elif isinstance(v, list):
-                if (isinstance(v[0], dict)):
+                if isinstance(v[0], dict):
                     data[k] = [self._generate_one_fake(item) for item in v]
                 else:
                     data[k] = [getattr(self._faker, a)() for a in v]
@@ -43,44 +49,176 @@ class FakerSchemaGenerator(object):
 
 
 class ElasticsearchFakeDataLoader(object):
-    test_index_name = config.es_index_name('files')
+    entity_types = ['files', 'specimens', 'projects']
 
-    def __init__(self, number_of_documents=1000, azul_es_endpoint=None):
+    def doc_template(self, entity_type):
+        return {
+            "entity_id": "uuid4",
+            "bundles": [
+                {
+                    "uuid": "uuid4",
+                    "version": "iso8601"
+                }
+            ],
+            "contents": {
+                "files": [
+                    {
+                        "_type": "safe_color_name",
+                        "content-type": "safe_color_name",
+                        "file_format": "file_extension",
+                        "document_id": "uuid4",
+                        "indexed": "pybool",
+                        "lane_index": "pyint",
+                        "name": "file_name",
+                        "read_index": "safe_color_name",
+                        "sha256": "sha256",
+                        "size": "pyint",
+                        "uuid": "uuid4",
+                        "version": "iso8601"
+                    }
+                    if entity_type == 'files' else
+                    {
+                        "count": "pyint",
+                        "size": "pyint",
+                        "file_format": ["file_extension"]
+                    }
+                ],
+                "processes": [
+                    {
+                        "_type": "safe_color_name",
+                        "document_id": "uuid4",
+                        "instrument_manufacturer_model": "safe_color_name",
+                        "library_construction_approach": "safe_color_name",
+                        "process_id": "safe_color_name",
+                        "process_name": "safe_color_name",
+                        "protocol_name": "safe_color_name",
+                        "protocol_id": "safe_color_name"
+                    }
+                ],
+                "projects": [
+                    {
+                        "_type": "safe_color_name",
+                        "document_id": "uuid4",
+                        "project_title": "safe_color_name",
+                        "project_description": "safe_color_name",
+                        "laboratory": [
+                            "safe_color_name"
+                        ],
+                        "institutions": [
+                            "safe_color_name"
+                        ],
+                        "contact_names": [
+                            "safe_color_name"
+                        ],
+                        "project_shortname": "safe_color_name",
+                        "contributors": [
+                            {
+                                "contact_name": "safe_color_name",
+                                "email": "safe_color_name",
+                                "institution": "safe_color_name",
+                                "laboratory": "safe_color_name",
+                                "corresponding_contributor": "pybool",
+                                "project_role": "safe_color_name"
+                            }
+                        ],
+                        "publication_titles": [
+                            "safe_color_name"
+                        ],
+                        "publications": [
+                            {
+                                "publication_title": "safe_color_name",
+                                "publication_url": "safe_color_name"
+                            }
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "_type": "safe_color_name",
+                        "organism_age": ["safe_color_name"],
+                        "organism_age_unit": ["safe_color_name"],
+                        "biomaterial_id": "uuid4",
+                        "disease": ["safe_color_name"],
+                        "id": "uuid4",
+                        "organ": "safe_color_name",
+                        "organ_part": "safe_color_name",
+                        "parent": "safe_color_name",
+                        "biological_sex": ["safe_color_name"],
+                        "_source": "safe_color_name",
+                        "genus_species": ["safe_color_name"],
+                        "preservation_method": "safe_color_name"
+                    }
+                    if entity_type == 'specimens' else
+                    {
+                        "_type": ["safe_color_name"],
+                        "organism_age": ["safe_color_name"],
+                        "organism_age_unit": ["safe_color_name"],
+                        "biomaterial_id": ["uuid4"],
+                        "disease": ["safe_color_name"],
+                        "id": ["uuid4"],
+                        "organ": ["safe_color_name"],
+                        "organ_part": ["safe_color_name"],
+                        "parent": ["safe_color_name"],
+                        "biological_sex": ["safe_color_name"],
+                        "_source": ["safe_color_name"],
+                        "genus_species": ["safe_color_name"],
+                        "preservation_method": ["safe_color_name"]
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "uuid4",
+                        "total_estimated_cells": "pyint",
+                        "organ": ["safe_color_name"],
+                        "organ_part": ["safe_color_name"],
+                    }
+                ]
+            }
+        }
 
-        service_tests_folder = os.path.dirname(os.path.realpath(__file__))
-        fake_data_template_file = open(os.path.join(service_tests_folder, 'fake_data_template.json'), 'r')
-        with fake_data_template_file as template_file:
-            self.doc_template = json.load(template_file)
-
-        self.azul_es_url = azul_es_endpoint or os.environ['AZUL_ES_ENDPOINT']
-        self.elasticsearch_client = elasticsearch5.Elasticsearch(hosts=[self.azul_es_url], port=9200)
+    def __init__(self, number_of_documents=1000):
+        self.elasticsearch_client = ESClientFactory.get()
         self.number_of_documents = number_of_documents
 
-    def load_data(self, will_clean_up=True):
-        logger.log(logging.INFO, f"Deleting leftover data in test index "
-                                 f"'{self.test_index_name}' at\n{self.azul_es_url}.")
-
-        if will_clean_up:
-            self.clean_up()
-
+    def load_data(self, seed=None):
+        self.clean_up()
         try:
-            self.elasticsearch_client.indices.delete(index=self.test_index_name)
-        except elasticsearch5.exceptions.NotFoundError:
-            logger.log(logging.DEBUG, f"The index {self.test_index_name} doesn't exist yet. Skipping clean up.")
+            for entity_type in self.entity_types:
+                index = config.es_index_name(entity_type, aggregate=True)
+                logger.log(logging.INFO, f"Creating new test index '{index}'.")
+                self.elasticsearch_client.indices.create(index)
+                logger.log(logging.INFO, f"Loading data into test index '{index}'.")
+                faker = FakerSchemaGenerator(seed=seed)
+                documents = [self.fix_canned_document(entity_type,
+                                                      faker.generate_fake(self.doc_template(entity_type)))
+                             for _ in range(self.number_of_documents)]
+                fake_data_body = '\n'.join(flatten(
+                    (json.dumps({"index": {"_type": "doc", "_id": document['entity_id']}}),
+                     json.dumps(document))
+                    for document in documents))
+                self.elasticsearch_client.bulk(fake_data_body, index=index, doc_type='meta', refresh='wait_for')
+        except NotFoundError:
+            logger.log(logging.DEBUG, f"The index {index} doesn't exist yet.")
 
-        logger.log(logging.INFO, f"Creating new test index '{self.test_index_name}' at\n{self.azul_es_url}.")
-        self.elasticsearch_client.indices.create(self.test_index_name)
+    @classmethod
+    def fix_canned_document(cls, entity_type, doc):
+        """
+        This function fixes the canned document so that it satisfies the following invariant:
 
-        logger.log(logging.INFO, f"Loading data into test index '{self.test_index_name}' at\n{self.azul_es_url}.")
-        faker = FakerSchemaGenerator()
-        fake_data_body = ""
-        for i in range(self.number_of_documents):
-            fake_data_body += json.dumps({"index": {"_type": "meta", "_id": i}}) + "\n"
-            fake_data_body += json.dumps(faker.generate_fake(self.doc_template)) + "\n"
-        self.elasticsearch_client.bulk(fake_data_body, index=self.test_index_name, doc_type='meta', refresh='wait_for')
+        doc.entity_id == doc.contents.$entity_type[0].document_id in every document representing $entity_type
+        """
+        doc = deepcopy(doc)
+        for inner_entity_type, inner_entities in doc['contents'].items():
+            if inner_entity_type == entity_type:
+                assert len(inner_entities) == 1
+                inner_entity = inner_entities[0]
+                inner_entity['document_id'] = doc['entity_id']
+        return doc
 
     def clean_up(self):
+        logger.log(logging.INFO, "Deleting leftover data in test indices")
         try:
-            self.elasticsearch_client.indices.delete(index=self.test_index_name)
-        except elasticsearch5.exceptions.NotFoundError:
-            logger.log(logging.DEBUG, f"The index {self.test_index_name} doesn't exist yet. Skipping clean up.")
+            for index in self.entity_types:
+                self.elasticsearch_client.indices.delete(index=index)
+        except NotFoundError:
+            logger.log(logging.DEBUG, f"The index {index} doesn't exist yet.")

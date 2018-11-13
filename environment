@@ -35,6 +35,12 @@ azul_vars=(
     # use. The given ES domain's endpoint will be looked up dynamically.
     AZUL_ES_DOMAIN
 
+    # Boolean value, 1 to share `dev` ES domain, 0 (default) to create your own
+    AZUL_SHARE_ES_DOMAIN
+
+    # Prefix to describe ES indices
+    AZUL_INDEX_PREFIX
+
     # The number of nodes in the AWS-hosted Elasticsearch cluster
     AZUL_ES_INSTANCE_COUNT
 
@@ -44,16 +50,8 @@ azul_vars=(
     # The size of the EBS volume backing each cluster node
     AZUL_ES_VOLUME_SIZE
 
-    # FIXME: not actually used outside of tests
-    
-    # The name of the ES index to be populated in response to events from DSS
-    AZUL_ES_INDEX
-
     # Elasticsearch operation timeout in seconds
     AZUL_ES_TIMEOUT
-
-    # The template for the name of the ES index to use
-    AZUL_ES_INDEX_NAME_TEMPLATE
 
     # The name of the bucket where TerraForm maintains its state, allowing
     # multiple developers to collaboratively use TerraForm in a single AWS
@@ -62,9 +60,6 @@ azul_vars=(
     # projects. The special string {account_id} is replaced with the ID of the
     # AWS account the currently configured AWS credentials belong to.
     AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE
-
-    # The number of workers polling queues for each Lambda invocation
-    AZUL_INDEX_WORKERS
 
     # The number of workers pulling files from DSS. There is one such set of DSS
     # workers per index worker!
@@ -97,6 +92,20 @@ azul_vars=(
     # resources are physically deleted. After that you may also unset the
     # GOOGLE_.. variables in your environment.
     AZUL_SUBSCRIBE_TO_DSS
+
+    # The number of concurrently running indexer lambda executions. Chalice
+    # creates one Lambda function for handling HTTP requests from API Gateway
+    # and one additional Lambda function per event handler. The concurrency
+    # limit applies to each such function independently. See
+    # https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
+    # for details. This setting may also be used to drive other scaling choices,
+    # like the number of shards in Elasticsearch.
+    #
+    AZUL_INDEXER_CONCURRENCY
+
+    # The name of the S3 bucket where the manifest API stores the downloadable
+    # content requested by client.
+    AZUL_S3_BUCKET
 )
 
 unset ${azul_vars[*]}
@@ -150,16 +159,21 @@ fi
 
 _set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.explore.data.humancellatlas.org"  # FIXME: project-specific, is this the right place for this?
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
-_set AZUL_RESOURCE_PREFIX "azul-"
-_set AZUL_ES_INDEX "azul-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_RESOURCE_PREFIX "azul"
+_set AZUL_INDEX_PREFIX "azul"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
-_set AZUL_ES_INDEX_NAME_TEMPLATE "azul_{entity_type}_$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_SHARE_ES_DOMAIN 0
+_set AZUL_S3_BUCKET "azul-storage-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_ES_INSTANCE_COUNT 2
-_set AZUL_ES_INSTANCE_TYPE "m4.xlarge.elasticsearch"
-_set AZUL_ES_VOLUME_SIZE 35
-_set AZUL_ES_TIMEOUT 60
-_set AZUL_INDEX_WORKERS 16
+_set AZUL_ES_INSTANCE_TYPE "r4.2xlarge.elasticsearch"  # Indexing performance benefits from the increased memory offered
+                                                       # by the `r` family, especially now that the number of shards is
+                                                       # tied to the indexer Lambda concurrency. 2xlarge was chosen
+                                                       # heuristically to accomodate scale tests.
+_set AZUL_ES_VOLUME_SIZE 70
+_set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front of ES:
+                         # https://forums.aws.amazon.com/thread.jspa?threadID=233378
 _set AZUL_DSS_WORKERS 8
+_set AZUL_INDEXER_CONCURRENCY 64
 _set AZUL_SUBSCRIBE_TO_DSS 1
 
 # This is the same TF bucket as the one DSS uses

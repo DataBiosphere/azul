@@ -1,0 +1,52 @@
+meta:
+  changes: a stack of externally observable changes. Newer changes appear at the top
+  title: a short description of the change
+  issues: a list of ticket URLs (GitHub, JIRA, ...) related to the change
+  upgrade: a list of actions required to upgrade to a version that includes this change
+  It may be any combination of the following values:
+    - deploy: (requires `make deploy`)
+    - reindex: (requires `make reindex`)
+    - terraform: (requires `make terraform`)
+    - requirements: (requires `pip -Ur requirements.dev.txt`)
+    - clients: the service API changed in a way that requires clients to be updated
+
+changes:
+
+  - title:  Removed `disease` extraction from `donor_organism`
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/527
+      - https://github.com/HumanCellAtlas/data-browser/issues/335
+    upgrade:
+      - deploy
+      - reindex
+
+  - title: Proxy requests to DSS /files, enforcing Retry-After on browser's behalf
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/531
+      - https://github.com/humancellatlas/data-browser/issues/331
+      - https://github.com/humancellatlas/data-browser/issues/342
+    upgrade:
+      - requirements
+      - deploy
+    notes: This adds a `/dss/files/{uuid}` endpoint and changes `/repository/files` so that its `hits[].files[].url`
+           response field points to that new endpoint (it pointed directly to the DSS before this change). The new
+           endpoint forwards the request to the DSS. When the DSS responds with a 30x status code and a `Retry-After`
+           header, the service sleeps for a certain amount of time before forwarding the DSS response back to the
+           client. Clients don't need to be updated as long as they use `hits[].files[].url` for direct downloads.
+
+  - title: Extract preservation_method instead of storage_method
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/503
+      - https://github.com/HumanCellAtlas/data-browser/issues/308
+    upgrade:
+      - requirements
+      - deploy
+      - reindex
+      - clients
+    notes: The `hits[*].specimens.storageMethod` response field was renamed to `preservationMethod`, the corresponding
+           facet was already called `preservationMethod` so no change was required there.
+
+  - title: Add CHANGELOG.yaml and expose the top ten entries via /version endpoint
+    upgrade:
+      - deploy
+      - requirements

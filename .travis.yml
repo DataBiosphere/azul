@@ -15,8 +15,15 @@ before_install:
   - source environment
 
 install:
+  - pip install -U setuptools>=40.1.0
   - pip install -r requirements.dev.txt
+  - pip install coveralls
 
 script:
+  # Travis VM images contain a /etc/boto.cfg which ultimately causes moto to look for the Python bindings for GCE.
+  # Setting BOTO_CONFIG seems to override that.
+  - export BOTO_CONFIG=/dev/null
   - make test
-  
+
+after_success:
+  - coveralls

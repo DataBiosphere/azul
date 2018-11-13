@@ -17,20 +17,17 @@ subscribe:
 reindex:
 	python scripts/reindex.py
 
-everything:
-	$(MAKE) terraform
-	$(MAKE) deploy
-	$(MAKE) terraform  # for custom domain names
-	$(MAKE) subscribe
-	$(MAKE) reindex
+delete_and_reindex:
+	python scripts/reindex.py --delete
 
 clean:
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
 
 test:
-	$(MAKE) -C test
+	PYTHONWARNINGS=ignore:ResourceWarning coverage run -m unittest discover test --verbose
 
-travis:
-	$(MAKE) -C test/service travistest
+tag:
+	@tag_name="$$(date '+deployed/$(AZUL_DEPLOYMENT_STAGE)/%Y-%m-%d__%H-%M')" ; \
+	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
 
 .PHONY: all terraform deploy subscribe everything reindex clean test travis

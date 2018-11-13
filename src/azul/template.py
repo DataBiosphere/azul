@@ -6,10 +6,7 @@ from typing import Any, Mapping, Optional
 
 
 def emit(json_doc: Optional[Mapping[str, Any]]):
-    path = sys.argv[0]
-    suffix = '.template.py'
-    assert path.endswith(suffix)
-    path = path[:-len(suffix)]
+    path = sys.argv[1]
     if json_doc is None:
         try:
             os.unlink(path)
