@@ -75,6 +75,24 @@ dss_subscription_query = {
                             }
                         }
                     ] if config.dss_endpoint == "https://dss.staging.data.humancellatlas.org/v1" else [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "terms": {
+                                            "files.project_json.provenance.document_id": [
+                                                # CBeta Release spreadsheet as of 11/13/2018
+                                                "2a0faf83-e342-4b1c-bb9b-cf1d1147f3bb",  # treutlein
+                                                "e8642221-4c2c-4fd7-b926-a68bce363c88",  # pancreas6decades
+                                                "cf8439db-fcc9-44a8-b66f-8ffbf729bffa",  # meyer
+                                                "f396fa53-2a2d-4b8a-ad18-03bf4bd46833",  # Teichmann-mouse-melanoma
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ] if config.dss_endpoint == "https://dss.data.humancellatlas.org/v1" else [
                     ]
                 )
             ]
