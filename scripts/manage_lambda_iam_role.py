@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import json
 import sys
 
@@ -6,7 +8,7 @@ import boto3
 from azul import config
 
 lambda_name, role_policy_json = sys.argv[1:]
-role_name = config.resource_name(lambda_name)
+role_name = config.qualified_resource_name(lambda_name)
 
 with open(role_policy_json) as f:
     role_policy = json.load(f)

@@ -1,0 +1,6 @@
+[run]
+source =
+    test
+    src
+    lambdas/indexer
+    lambdas/service

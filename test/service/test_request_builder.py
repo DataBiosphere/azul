@@ -1,25 +1,60 @@
 #!/usr/bin/python
 
-import json
 import difflib
+import json
 import logging.config
-import os
 import unittest
-from service import WebServiceTestCase
+
+from elasticsearch_dsl.utils import AttrList
+
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+from service import WebServiceTestCase
 
 logger = logging.getLogger(__name__)
 
 
 class TestRequestBuilder(WebServiceTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.data_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
-        cls.request_config_filepath = os.path.join(cls.data_directory, 'request_builder_test_config.json')
+    request_config = {
+        "translation": {
+            "entity_id": "entity_id",
+            "entity_version": "entity_version",
+            "projectId": "contents.projects.document_id",
+            "libraryConstructionApproach": "contents.processes.library_construction_approach",
+            "disease": "contents.specimens.disease",
+            "donorId": "contents.specimens.donor_biomaterial_id",
+            "genusSpecies": "contents.specimens.genus_species"
+        },
+        "autocomplete-translation": {
+            "files": {
+                "entity_id": "entity_id",
+                "entity_version": "entity_version"
+            },
+            "donor": {
+                "donor": "donor_uuid"
+            }
+        },
+        "manifest": [
+            "File ID:Version",
+            "Assay Id",
+            "Analysis Id",
+            "Project Id"
+        ],
+        "facets": [
+        ]
+    }
 
-    def _load_json(self, name):
-        return EsTd.open_and_return_json(os.path.join(os.path.dirname(__file__), name))
+    @staticmethod
+    def compare_dicts(actual_output, expected_output):
+        """"Print the two outputs along with a diff of the two"""
+        print("Comparing the two dictionaries built.")
+        print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
+        for i, s in enumerate(difflib.ndiff(actual_output, expected_output)):
+            if s[0] == ' ':
+                continue
+            elif s[0] == '-':
+                print(u'Delete "{}" from position {}'.format(s[-1], i))
+            elif s[0] == '+':
+                print(u'Add "{}" to position {}'.format(s[-1], i))
 
     def test_create_request(self):
         """
@@ -27,8 +62,28 @@ class TestRequestBuilder(WebServiceTestCase):
         :return: True or False depending on the assertion
         """
         # Load files required for this test
-        request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test_input1.json'))
+        expected_output = {
+            "post_filter": {
+                "bool": {
+                    "must": [
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "terms": {
+                                        "entity_id.keyword": [
+                                            "cbb998ce-ddaf-34fa-e163-d14b399c6b34"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "query": {
+                "match_all": {}
+            }
+        }
         # Create a simple filter to test on
         sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
         # Need to work on a couple cases:
@@ -42,7 +97,7 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = EsTd.create_request(
             sample_filter,
             es_ts_instance.es_client,
-            request_config,
+            self.request_config,
             post_filter=True)
         # Convert objects to be compared to strings
         expected_output = json.dumps(
@@ -51,23 +106,9 @@ class TestRequestBuilder(WebServiceTestCase):
         actual_output = json.dumps(
             es_search.to_dict(),
             sort_keys=True)
-        # Print the 2 strings for reference
-        # print "Printing expected output: \n %s" % expected_output
-        # print "Printing actual output: \n %s" % actual_output
-        # Now show differences so message is helpful
 
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(
-            actual_output[:20],
-            expected_output[:20]))
-        for i, s in enumerate(
-                difflib.ndiff(actual_output, expected_output)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
+        self.compare_dicts(actual_output, expected_output)
+
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
@@ -78,8 +119,12 @@ class TestRequestBuilder(WebServiceTestCase):
         """
         # Testing with default (that is, no) filter
         # Load files required for this test
-        request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test_input2.json'))
+        expected_output = {
+            "query": {
+                "bool": {}
+            }
+        }
+
         # Create empty filter
         # TODO: Need some form of handler for the query language
         sample_filter = {}
@@ -89,25 +134,13 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = EsTd.create_request(
             sample_filter,
             es_ts_instance.es_client,
-            request_config)
+            self.request_config)
         # Convert objects to be compared to strings
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
-        # Print the 2 strings for reference
-        # print "Printing expected output: \n %s" % expected_output
-        # print "Printing actual output: \n %s" % actual_output
-        # Now show differences so message is helpful
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(
-            actual_output[:20], expected_output[:20]))
-        for i, s in enumerate(
-                difflib.ndiff(actual_output, expected_output)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
+
+        self.compare_dicts(actual_output, expected_output)
+
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
@@ -118,8 +151,40 @@ class TestRequestBuilder(WebServiceTestCase):
         """
         # Testing with default (that is, no) filter
         # Load files required for this test
-        request_config = self._load_json(self.request_config_filepath)
-        expected_output = self._load_json(os.path.join(self.data_directory, 'request_builder_test_input3.json'))
+        expected_output = {
+            "post_filter": {
+                "bool": {
+                    "must": [
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "terms": {
+                                        "entity_id.keyword": [
+                                            "cbb998ce-ddaf-34fa-e163-d14b399c6b34"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "terms": {
+                                        "entity_version.keyword": [
+                                            "1993-07-19T23:50:09"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "query": {
+                "match_all": {}
+            }
+        }
+
         # Create sample filter
         sample_filter = {
             "entity_id":
@@ -138,27 +203,335 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = EsTd.create_request(
             sample_filter,
             es_ts_instance.es_client,
-            request_config,
+            self.request_config,
             post_filter=True)
         # Convert objects to be compared to strings
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
-        # Print the 2 strings for reference
-        print("Printing expected output: \n %s" % expected_output)
-        print("Printing actual output: \n %s" % actual_output)
-        # Now show differences so message is helpful
-        print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
-        for i, s in enumerate(
-                difflib.ndiff(actual_output, expected_output)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
-            elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
+
+        self.compare_dicts(actual_output, expected_output)
+
         # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
+
+    def test_create_request_missing_values(self):
+        """
+        Tests creation of a request for facets that do not have a value
+        """
+        # Load files required for this test
+        request_config = self.request_config
+        expected_output = {
+            "post_filter": {
+                "bool": {
+                    "must": [
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "bool": {
+                                        "must_not": [
+                                            {
+                                                "exists": {
+                                                    "field": "entity_id.keyword"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "query": {
+                "match_all": {}
+            }
+        }
+
+        # Create a filter for missing values
+        sample_filter = {"entity_id": {"is": None}}
+
+        # Create ElasticTransformDump instance
+        es_ts_instance = EsTd()
+        # Create a request object
+        es_search = EsTd.create_request(
+            sample_filter,
+            es_ts_instance.es_client,
+            request_config,
+            post_filter=True)
+        # Convert objects to be compared to strings
+        expected_output = json.dumps(
+            expected_output,
+            sort_keys=True)
+        actual_output = json.dumps(
+            es_search.to_dict(),
+            sort_keys=True)
+
+        self.compare_dicts(actual_output, expected_output)
+
+        # Testing first case with 1 filter
+        self.assertEqual(actual_output, expected_output)
+
+    def test_create_request_terms_and_missing_values(self):
+        """
+        Tests creation of a request for a combination of facets that do and do not have a value
+        """
+        # Load files required for this test
+        expected_output = {
+            "post_filter": {
+                "bool": {
+                    "must": [
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "bool": {
+                                        "must_not": [
+                                            {
+                                                "exists": {
+                                                    "field": "term1.keyword"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "terms": {
+                                        "term2.keyword": [
+                                            "test"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "constant_score": {
+                                "filter": {
+                                    "bool": {
+                                        "must_not": [
+                                            {
+                                                "exists": {
+                                                    "field": "term3.keyword"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "query": {
+                "match_all": {}
+            }
+        }
+
+        # Create a filter for missing values
+        sample_filter = {
+            "term1": {"is": None},
+            "term2": {"is": ["test"]},
+            "term3": {"is": None},
+        }
+
+        # Create ElasticTransformDump instance
+        es_ts_instance = EsTd()
+        # Create a request object
+        es_search = EsTd.create_request(
+            sample_filter,
+            es_ts_instance.es_client,
+            self.request_config,
+            post_filter=True)
+        # Convert objects to be compared to strings
+        expected_output = json.dumps(
+            expected_output,
+            sort_keys=True)
+        actual_output = json.dumps(
+            es_search.to_dict(),
+            sort_keys=True)
+
+        self.compare_dicts(actual_output, expected_output)
+
+        # Testing first case with 1 filter
+        self.assertEqual(actual_output, expected_output)
+
+    def test_create_request_aggregate(self):
+        """
+        Tests creation of an ES aggregate
+        """
+        expected_output = {
+            "filter": {
+                "bool": {}
+            },
+            "aggs": {
+                "myTerms": {
+                    "terms": {
+                        "field": "facet1.translation.keyword",
+                        "size": 99999
+                    }
+                },
+                "untagged": {
+                    "missing": {
+                        "field": "facet1.translation.keyword"
+                    }
+                }
+            }
+        }
+
+        sample_filter = {}
+
+        # Create a request object
+        agg_field = 'facet1'
+        aggregation = EsTd.create_aggregate(
+            sample_filter,
+            facet_config={agg_field: f'{agg_field}.translation'},
+            agg=agg_field
+        )
+        # Convert objects to be compared to strings
+        expected_output = json.dumps(
+            expected_output,
+            sort_keys=True)
+        actual_output = json.dumps(
+            aggregation.to_dict(),
+            sort_keys=True)
+
+        self.compare_dicts(actual_output, expected_output)
+
+        # Testing first case with 1 filter
+        self.assertEqual(actual_output, expected_output)
+
+    def test_project_summaries(self):
+        """
+        Test creation of project summary
+        Summary should be added to dict of corresponding project id in hits.
+        """
+        final_response_hits = [{'entryId': 'a'}, {'entryId': 'b'}]
+        es_response_hits = AttrList([
+            {
+                "_id": "a",
+                "_source": {
+                    "entity_id": "a",
+                    "contents": {
+                        "specimens": [],
+                        "cell_suspensions": [],
+                        "files": [],
+                        "processes": [],
+                        "project": {
+                            "document_id": "a"
+                        }
+                    },
+                    "bundles": [
+                        {}
+                    ]
+                }
+            },
+            {
+                "_id": "b",
+                "_source": {
+                    "entity_id": "b",
+                    "contents": {
+                        "specimens": [
+                            {
+                                "biomaterial_id": [
+                                    "specimen1"
+                                ],
+                                "disease": [
+                                    "disease1"
+                                ],
+                                "donor_biomaterial_id": [
+                                    "donor1"
+                                ],
+                                "genus_species": [
+                                    "species1"
+                                ]
+                            },
+                            {
+                                "biomaterial_id": [
+                                    "specimen2"
+                                ],
+                                "disease": [
+                                    "disease1"
+                                ],
+                                "donor_biomaterial_id": [
+                                    "donor2"
+                                ],
+                                "genus_species": [
+                                    "species1"
+                                ]
+                            }
+                        ],
+                        "cell_suspensions": [
+                            {
+                                "organ": ["organ1"],
+                                "total_estimated_cells": 2
+                            },
+                            {
+                                "organ": ["organ2"],
+                                "total_estimated_cells": 3
+                            }
+                        ],
+                        "files": [],
+                        "processes": [],
+                        "project": {
+                            "document_id": "b"
+                        }
+                    },
+                    "bundles": [
+                        {}
+                    ]
+                }
+            }
+        ])
+        EsTd().add_project_summaries(final_response_hits, es_response_hits)
+
+        expected_output = [
+            {
+                "entryId": "a",
+                "projectSummary": {
+                    "donorCount": 0,
+                    "totalCellCount": 0.0,
+                    "organSummaries": [],
+                    "genusSpecies": [],
+                    "libraryConstructionApproach": [],
+                    "disease": []
+                }
+            },
+            {
+                "entryId": "b",
+                "projectSummary": {
+                    "donorCount": 2,
+                    "totalCellCount": 5.0,
+                    "organSummaries": [
+                        {
+                            "organType": "organ1",
+                            "countOfDocsWithOrganType": 1,
+                            "totalCellCountByOrgan": 2.0
+                        },
+                        {
+                            "organType": "organ2",
+                            "countOfDocsWithOrganType": 1,
+                            "totalCellCountByOrgan": 3.0
+                        }
+                    ],
+                    "genusSpecies": [
+                        "species1"
+                    ],
+                    "libraryConstructionApproach": [],
+                    "disease": [
+                        "disease1"
+                    ]
+                }
+            }
+        ]
+
+        expected_output = json.dumps(expected_output, sort_keys=True)
+        actual_output = json.dumps(final_response_hits, sort_keys=True)
+
+        self.compare_dicts(expected_output, actual_output)
+
+        self.assertEqual(expected_output, actual_output)
 
 
 if __name__ == '__main__':

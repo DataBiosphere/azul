@@ -3,7 +3,7 @@ from azul.deployment import aws
 from azul.template import emit
 
 gateway_ids = {
-    lambda_name: aws.api_gateway_id(config.resource_name(lambda_name))
+    lambda_name: aws.api_gateway_id(config.qualified_resource_name(lambda_name))
     for lambda_name in ('service', 'indexer')
 }
 

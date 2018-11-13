@@ -12,6 +12,19 @@ emit({
     "manage_iam_role": False,
     "iam_role_arn": f"arn:aws:iam::{aws.account}:role/{config.indexer_name}",
     "environment_variables": config.lambda_env,
-    "lambda_timeout": 300,
-    "lambda_memory_size": 1024
+    "lambda_timeout": config.lambda_timeout,
+    "lambda_memory_size": 256,
+    "reserved_concurrency": config.indexer_concurrency,
+    "stages": {
+        config.deployment_stage: {
+            "lambda_functions": {
+                "write": {
+                    "lambda_memory_size": 512  # Needed for preview freak bundles
+                },
+                "nudge": {
+                    "lambda_memory_size": 128  # Doesn't do much so it can be small
+                }
+            }
+        }
+    }
 })

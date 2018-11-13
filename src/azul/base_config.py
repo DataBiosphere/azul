@@ -29,5 +29,6 @@ class BaseIndexProperties(ABC):
 
     @property
     def index_names(self) -> Iterable[str]:
-        entities = self.entities
-        return [config.es_index_name(entity) for entity in entities]
+        return [config.es_index_name(entity, aggregate=aggregate)
+                for entity in self.entities
+                for aggregate in (False, True)]
