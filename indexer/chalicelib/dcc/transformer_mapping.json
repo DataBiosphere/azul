@@ -67,7 +67,7 @@
       },
       {
         "source": "metadata.json",
-        "dss_field": "exposure.bmi",
+        "dss_field": "demographic.bmi",
         "index_field": "bmi"
       },
       {
@@ -92,7 +92,7 @@
       },
       {
         "source": "metadata.json",
-        "dss_field": "exposure.weight",
+        "dss_field": "demographic.weight",
         "index_field": "weight"
       },
       {
