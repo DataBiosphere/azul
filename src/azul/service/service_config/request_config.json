@@ -1,0 +1,84 @@
+{
+  "translation": {
+    "fileFormat": "contents.files.file_format",
+    "fileName": "contents.files.name",
+    "fileSize": "contents.files.size",
+    "fileId": "contents.files.uuid",
+
+    "instrumentManufacturerModel": "contents.processes.instrument_manufacturer_model",
+    "libraryConstructionApproach": "contents.processes.library_construction_approach",
+    "processId": "contents.processes.process_id",
+    "protocol": "contents.processes.protocol_id",
+
+    "contactName": "contents.projects.contact_names",
+    "projectId": "contents.projects.document_id",
+    "institution": "contents.projects.institutions",
+    "laboratory": "contents.projects.laboratory",
+    "lab": "contents.projects.laboratory",
+    "projectDescription": "contents.projects.project_description",
+    "project": "contents.projects.project_shortname",
+    "projectTitle": "contents.projects.project_title",
+    "publicationTitle": "contents.projects.publication_titles",
+
+    "biologicalSex": "contents.specimens.biological_sex",
+    "specimenId": "contents.specimens.biomaterial_id",
+    "specimenDocumentId": "contents.specimens.document_id",
+    "disease": "contents.specimens.disease",
+    "donorId": "contents.specimens.donor_biomaterial_id",
+    "donorDocumentId": "contents.specimens.donor_document_id",
+    "genusSpecies": "contents.specimens.genus_species",
+    "organ": "contents.specimens.organ",
+    "organPart": "contents.specimens.organ_part",
+    "organismAge": "contents.specimens.organism_age",
+    "organismAgeUnit": "contents.specimens.organism_age_unit",
+    "preservationMethod": "contents.specimens.preservation_method",
+    "cellCount": "contents.cell_suspensions.total_estimated_cells",
+
+    "entryId": "entity_id"
+},
+  "autocomplete-translation": {
+    "files": {
+      "entity_id": "entity_id",
+      "entity_version":"entity_version"
+    },
+    "donor": {
+      "donor": "donor_uuid"
+    }
+  },
+  "manifest": {
+    "contents.files": {
+      "file_content_type": "content-type",
+      "file_name": "name",
+      "file_sha256": "sha256",
+      "file_size": "size",
+      "file_uuid": "uuid",
+      "file_version": "version",
+      "file_indexed": "indexed"
+    },
+    "bundles": {
+      "bundle_uuid": "uuid",
+      "bundle_version": "version"
+    }
+  },
+  "facets": [
+    "organ",
+    "organPart",
+    "libraryConstructionApproach",
+    "genusSpecies",
+    "organismAge",
+    "organismAgeUnit",
+    "biologicalSex",
+    "disease",
+    "instrumentManufacturerModel",
+    "project",
+    "protocol",
+    "fileFormat",
+    "laboratory",
+    "preservationMethod",
+    "projectTitle",
+    "projectDescription",
+    "institution",
+    "contactName",
+    "publicationTitle"
+  ]
+}

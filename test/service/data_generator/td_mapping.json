@@ -28,17 +28,6 @@
                   "analyzer": "autocomplete",
                   "search_analyzer": "standard"
                 },
-                "crc32c": {
-                  "type": "text",
-                  "fields": {
-                    "keyword": {
-                      "type": "keyword",
-                      "ignore_above": 256
-                    }
-                  },
-                  "analyzer": "autocomplete",
-                  "search_analyzer": "standard"
-                },
                 "format": {
                   "type": "text",
                   "fields": {
@@ -79,28 +68,6 @@
                   "search_analyzer": "standard"
                 },
                 "read": {
-                  "type": "text",
-                  "fields": {
-                    "keyword": {
-                      "type": "keyword",
-                      "ignore_above": 256
-                    }
-                  },
-                  "analyzer": "autocomplete",
-                  "search_analyzer": "standard"
-                },
-                "s3_etag": {
-                  "type": "text",
-                  "fields": {
-                    "keyword": {
-                      "type": "keyword",
-                      "ignore_above": 256
-                    }
-                  },
-                  "analyzer": "autocomplete",
-                  "search_analyzer": "standard"
-                },
-                "sha1": {
                   "type": "text",
                   "fields": {
                     "keyword": {
@@ -173,7 +140,7 @@
                   "analyzer": "autocomplete",
                   "search_analyzer": "standard"
                 },
-                "instrument": {
+                "instrument_manufacturer_model": {
                   "type": "text",
                   "fields": {
                     "keyword": {
