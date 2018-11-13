@@ -12,6 +12,14 @@ meta:
 
 changes:
 
+  - title:  Removed `disease` extraction from `donor_organism`
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/527
+      - https://github.com/HumanCellAtlas/data-browser/issues/335
+    upgrade:
+      - deploy
+      - reindex
+
   - title: Proxy requests to DSS /files, enforcing Retry-After on browser's behalf
     issues:
       - https://github.com/DataBiosphere/azul/issues/531

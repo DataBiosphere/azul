@@ -11,7 +11,7 @@ future==0.16.0
 hca==4.4.1
 git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
 git+git://github.com/HumanCellAtlas/metadata-api@release/1.0b8#egg=hca-metadata-api
-requests==2.19.1
+requests==2.20.0
 requests-http-signature==0.0.3
 urllib3==1.23
 more-itertools==4.3.0
