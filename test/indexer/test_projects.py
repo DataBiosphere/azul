@@ -38,19 +38,15 @@ class TestDataExtractorTestCase(IndexerTestCase):
         for bundle_pack in self.production_test_bundles:
             self._mock_index(bundle_pack)
 
-        @eventually(5.0, 0.5)
-        def _assert_number_of_files():
-            total_files = self.es_client.count(
-                index=config.es_index_name('files'), doc_type='doc')
-            self.assertEqual(776, total_files["count"])
-            total_specimens = self.es_client.count(
-                index=config.es_index_name('specimens'), doc_type='doc')
-            self.assertEqual(129, total_specimens["count"])
-            total_projects = self.es_client.count(
-                index=config.es_index_name('projects'), doc_type='doc')
-            self.assertEqual(3, total_projects["count"])
-
-        _assert_number_of_files()
+        total_files = self.es_client.count(
+            index=config.es_index_name('files'), doc_type='doc')
+        self.assertEqual(776, total_files["count"])
+        total_specimens = self.es_client.count(
+            index=config.es_index_name('specimens'), doc_type='doc')
+        self.assertEqual(129, total_specimens["count"])
+        total_projects = self.es_client.count(
+            index=config.es_index_name('projects'), doc_type='doc')
+        self.assertEqual(3, total_projects["count"])
 
     # When two processes point at a file (this is the case for most files in production)
     # there is a bug where the files index contains duplicate dictionaries for the file.
