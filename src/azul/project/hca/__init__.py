@@ -16,9 +16,7 @@ dss_subscription_query = {
                 {
                     "exists": {
                         # Remove conditional when prod bundles are converted to vx structure
-                        "field": ("files.project_json"
-                                  if config.dss_endpoint != "https://dss.data.humancellatlas.org/v1"
-                                  else "files.biomaterial_json")
+                        "field": "files.project_json"
                     }
                 }, *(
                     [
