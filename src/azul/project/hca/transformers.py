@@ -190,7 +190,6 @@ class SpecimenVisitor(BiomaterialVisitor):
             self._set('donor_document_id', SetAccumulator, str(entity.document_id))
             self._set('donor_biomaterial_id', SetAccumulator, entity.biomaterial_id)
             self._set('genus_species', SetAccumulator, entity.genus_species)
-            self._set('disease', SetAccumulator, entity.diseases)
             self._set('organism_age', ListAccumulator, entity.organism_age)
             self._set('organism_age_unit', ListAccumulator, entity.organism_age_unit)
             if entity.organism_age_in_seconds:
