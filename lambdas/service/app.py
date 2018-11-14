@@ -6,7 +6,8 @@ import time
 import urllib.parse
 
 # noinspection PyPackageRequirements
-from chalice import BadRequestError, Chalice, NotFoundError, Response
+from botocore.exceptions import ClientError
+from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response
 from more_itertools import one
 import requests
 
@@ -15,6 +16,8 @@ from azul.service import service_config
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
+from azul.service.responseobjects.manifest_service import ManifestService
+from azul.service.responseobjects.step_function_client import StateMachineError
 from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
@@ -531,6 +534,90 @@ def get_manifest():
     response = es_td.transform_manifest(filters=filters)
     # Return the excel file
     return response
+
+
+@app.route(ManifestService.manifest_endpoint, methods=['GET'], cors=True)
+def start_manifest_generation():
+    """
+    When not given a token, start execution of a job generating the manifest.
+    Check the status of a manifest generation job.
+        - If in progress, return a url to recheck the status
+        - If successful, return a url to download the manifest
+        - If errored or aborted, raise a 500 error
+
+    parameters:
+        - name: filters
+          in: query
+          type: string
+          description: Filters to be applied when generating the manifest
+        - name: token
+          in: query
+          type: string
+          description: Encoded json string containing information about the manifest generation job
+        - name: wait
+          in: query
+          type: any
+          description: If present, wait a few seconds before checking the status of the manifest
+    :return: Response with location of the generated manifest
+    """
+    logger = logging.getLogger("dashboardService.webservice.get_manifest")
+    if app.current_request.query_params is None:
+        app.current_request.query_params = {}
+
+    if 'token' in app.current_request.query_params:
+        token = app.current_request.query_params['token']
+        try:
+            params = ManifestService.decode_params(token)
+            if 'execution_id' not in params:
+                raise KeyError
+        except Exception:
+            raise BadRequestError('Invalid token given')
+    else:
+        filters = app.current_request.query_params.get('filters', '{"file": {}}')
+        logger.debug('Filters string is: {}'.format(filters))
+        try:
+            logger.info("Extracting the filter parameter from the request")
+            filters = ast.literal_eval(filters)
+            filters = {"file": {}} if filters == {} else filters
+        except Exception as e:
+            logger.error("Malformed filters parameter: {}".format(e))
+            return "Malformed filters parameter"
+        execution_id = ManifestService().start_manifest_generation(filters)
+        logger.info(f'Started manifest generation execution: {execution_id}')
+        params = {'execution_id': execution_id}
+
+    wait_times = [1, 1, 2, 6, 10]
+    try:
+        wait = min(int(app.current_request.query_params.get('wait', 0)), len(wait_times) - 1)
+        time.sleep(wait_times[wait])
+    except (IndexError, ValueError):
+        raise BadRequestError('Invalid wait parameter')
+
+    try:
+        return ManifestService().get_manifest_status(params, wait + 1,
+                                                     local=app.lambda_context.invoked_function_arn == '')
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
+            raise BadRequestError('Invalid token given')
+        raise
+    except StateMachineError:
+        raise ChaliceViewError('Failed to generate manifest')
+
+
+@app.lambda_function(name=config.manifest_lambda_basename)
+def generate_manifest(event, context):
+    """
+    Create a manifest based on the given filters and store it in s3
+
+    :param: event: dict containing function input
+        Valid params:
+            - filters: dict containing filters to use in ES request
+    :return: The url to the generated manifest
+    """
+    filters = event.get('filters', {'file': {}})
+    log.info(f'Creating the manifest using filters: {filters}')
+    response = EsTd().transform_manifest(filters=filters)
+    return response.headers['Location']
 
 
 @app.route('/dss/files/{uuid}', methods=['GET'], cors=True)

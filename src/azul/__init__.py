@@ -210,6 +210,14 @@ class Config:
     def document_queue_name(self):
         return config.qualified_resource_name('documents', suffix='.fifo')
 
+    @property
+    def manifest_lambda_basename(self):
+        return 'manifest'
+
+    @property
+    def manifest_state_machine_name(self):
+        return config.qualified_resource_name('manifest')
+
 
 config = Config()
 
