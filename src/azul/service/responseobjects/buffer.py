@@ -14,28 +14,22 @@ class Buffer(StringIO):
         self.inbetween_callback = inbetween_callback
         self.__remaining_size = 0
         self.__total_size = 0
-        self.__pointer_lock = Lock()
 
     def write(self, s: str):
-        self.__pointer_lock.acquire()
         byte_count = len(s.encode())
         self.__remaining_size += byte_count
         self.__total_size += byte_count
 
         super().write(s)
-        self.__pointer_lock.release()
 
     def flush(self, check_limit: bool = True):
-        self.__pointer_lock.acquire()
         if check_limit and self.__remaining_size < self.limit_size:
-            self.__pointer_lock.release()
             return
 
         self.inbetween_callback(self.getvalue().encode())
         self.truncate(0)
         self.seek(0)
         self.__remaining_size = 0
-        self.__pointer_lock.release()
 
     @property
     def remaining_size(self):
