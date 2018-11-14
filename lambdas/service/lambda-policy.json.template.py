@@ -40,6 +40,24 @@ emit({
                 "s3:GetObject"
             ],
             "Resource": f"arn:aws:s3:::{config.s3_bucket}/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "states:StartExecution"
+            ],
+            "Resource": [
+                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.manifest_state_machine_name}"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "states:DescribeExecution"
+            ],
+            "Resource": [
+                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.manifest_state_machine_name}:*"
+            ]
         }
     ]
 })
