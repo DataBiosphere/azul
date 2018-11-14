@@ -149,7 +149,7 @@
       "index_date": "",
       "label": "case",
       "submitter_id": "NA12878",
-      "consent_codes": "",
+      "consent_codes": [""],
       "eligibility": "",
       "node_id": "a2630bd9-7849-45fa-b5a0-27aff866bef6",
       "transplanted_organ": "",
@@ -197,6 +197,11 @@
       "race": "white",
       "age_at_index": "",
       "year_of_death": ""
+    },
+    "program": {
+        "dbgap_accession_number": "topmed",
+        "id": "45b91a48-1961-5b9f-9b0f-766bd30665d8",
+        "name": "topmed"
     },
     "project": {
       "availability_mechanism": null,
