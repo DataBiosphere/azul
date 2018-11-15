@@ -4,7 +4,10 @@ from unittest import TestCase
 from moto import mock_s3, mock_sts
 import requests
 
-from azul.service.responseobjects.storage_service import StorageService, GetObjectError, EmptyMultipartUploadError
+from azul.service.responseobjects.storage_service import (StorageService,
+                                                          GetObjectError,
+                                                          EmptyMultipartUploadError,
+                                                          MultipartUploadHandler)
 
 
 class StorageServiceTest(TestCase):
@@ -69,7 +72,7 @@ class StorageServiceTest(TestCase):
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with storage_service.multipart_upload(sample_key, 'text/plain') as upload:
+        with MultipartUploadHandler(sample_key, 'text/plain') as upload:
             for part in sample_content_parts:
                 upload.push(part.encode())
 
@@ -88,7 +91,7 @@ class StorageServiceTest(TestCase):
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with storage_service.multipart_upload(sample_key, 'text/plain') as upload:
+        with MultipartUploadHandler(sample_key, 'text/plain') as upload:
             for part in sample_content_parts:
                 upload.push(part.encode())
 
@@ -108,7 +111,7 @@ class StorageServiceTest(TestCase):
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with storage_service.multipart_upload(sample_key, 'text/plain') as upload:
+        with MultipartUploadHandler(sample_key, 'text/plain') as upload:
             for part in sample_content_parts:
                 upload.push(part.encode())
 
@@ -121,5 +124,5 @@ class StorageServiceTest(TestCase):
         storage_service = StorageService()
         storage_service.create_bucket()
         with self.assertRaises(EmptyMultipartUploadError):
-            with storage_service.multipart_upload(sample_key, 'text/plain') as upload:
+            with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                 pass  # upload nothing... this should fail the "complete" process.
