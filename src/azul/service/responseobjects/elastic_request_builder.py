@@ -407,6 +407,7 @@ class ElasticTransformDump(object):
         #  which has the format for the summary request
         self.logger.info('Creating a SummaryResponse object')
         final_response = SummaryResponse(es_response.to_dict())
+        logger.info("Elasticsearch request: %s", json.dumps(es_search.to_dict(), indent=4))
         self.logger.info(
             'Returning the final response for transform_summary()')
         return final_response.apiResponse.to_json()
