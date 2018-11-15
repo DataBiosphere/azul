@@ -35,7 +35,7 @@ azul_vars=(
     # use. The given ES domain's endpoint will be looked up dynamically.
     AZUL_ES_DOMAIN
 
-    # Boolean value, 1 to share `dev` ES domain, 0 (default) to create your own
+    # Boolean value, 1 to share `dev` ES domain, 0 to create your own
     AZUL_SHARE_ES_DOMAIN
 
     # Prefix to describe ES indices
