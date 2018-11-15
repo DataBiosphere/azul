@@ -106,6 +106,10 @@ azul_vars=(
     # The name of the S3 bucket where the manifest API stores the downloadable
     # content requested by client.
     AZUL_S3_BUCKET
+
+    # Determine if CloudWatch alarms should be deployed (1 yes, 0 no)
+    # CloudWatch alarms should not be enabled for personal deployments
+    AZUL_ENABLE_CLOUDWATCH_ALARMS
 )
 
 unset ${azul_vars[*]}
@@ -178,6 +182,7 @@ _set AZUL_SUBSCRIBE_TO_DSS 1
 
 # This is the same TF bucket as the one DSS uses
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"
+_set AZUL_ENABLE_CLOUDWATCH_ALARMS 0
 
 unset -f _set
 
