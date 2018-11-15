@@ -82,8 +82,8 @@ def main(argv: List[str]):
                         es_client.indices.delete(index=index_name)
 
     Reindexer(indexer_url=args.indexer_url, dss_url=args.dss_url, es_query=args.es_query,
-              will_sync_notifications=args.sync, number_of_workers=args.num_workers,
-              is_dry_run=args.dryrun).reindex()
+              sync=args.sync, num_workers=args.num_workers,
+              dryrun=args.dryrun).reindex()
 
 
 if __name__ == "__main__":
