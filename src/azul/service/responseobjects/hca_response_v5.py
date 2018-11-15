@@ -260,7 +260,7 @@ class ManifestResponse(AbstractResponse):
         return output.getvalue()
 
     def return_response(self):
-        object_key = self._push_content()
+        object_key = self._push_content_single_part()
         presigned_url = self.storage_service.get_presigned_url(object_key)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
