@@ -2,6 +2,7 @@
 import abc
 from collections import OrderedDict, defaultdict
 import csv
+from io import TextIOWrapper
 from itertools import chain
 import logging
 import os
@@ -19,7 +20,7 @@ from jsonobject import (FloatProperty,
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
                                                           AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
-from azul.service.responseobjects.buffer import Buffer
+from azul.service.responseobjects.buffer import BytesBuffer
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
@@ -204,8 +205,9 @@ class ManifestResponse(AbstractResponse):
         content_type = 'text/tab-separated-values'
 
         with MultipartUploadHandler(object_key, content_type) as multipart_upload:
-            buffer = Buffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push)
-            writer = csv.writer(buffer, dialect='excel-tab')
+            buffer = BytesBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push)
+            buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
+            writer = csv.writer(buffer_wrapper, dialect='excel-tab')
 
             # Started with the headers
             writer.writerow(list(self.manifest_entries['bundles'].keys()) +
