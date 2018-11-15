@@ -1,9 +1,5 @@
 #! /usr/bin/env python3
 
-"""
-Command line utility to trigger indexing of bundles from DSS into Azul
-"""
-
 from collections import defaultdict
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
@@ -29,43 +25,42 @@ class Defaults:
     num_workers = 16
 
 
-def post_bundle(bundle_fqid, es_query, indexer_url):
-    """
-    Send a mock DSS notification to the indexer
-    """
-    bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
-    simulated_event = {
-        "query": es_query,
-        "subscription_id": str(uuid4()),
-        "transaction_id": str(uuid4()),
-        "match": {
-            "bundle_uuid": bundle_uuid,
-            "bundle_version": bundle_version
-        }
-    }
-    body = json.dumps(simulated_event).encode('utf-8')
-    request = Request(indexer_url, body)
-    request.add_header("content-type", "application/json")
-    with urlopen(request) as f:
-        return f.read()
-
-
 class Reindexer(object):
     def __init__(self, indexer_url: str = Defaults.indexer_url,
                  dss_url: str = Defaults.dss_url,
                  es_query: dict = Defaults.es_query,
-                 will_sync_notifications: bool = False,
-                 number_of_workers: int = Defaults.num_workers,
+                 sync: bool = False,
+                 num_workers: int = Defaults.num_workers,
                  test_name: str = None,
-                 is_dry_run: bool = None):
+                 dryrun: bool = None):
 
-        self.number_of_workers = number_of_workers
-        self.will_sync_notifications = will_sync_notifications
+        self.num_workers = num_workers
+        self.sync = sync
         self.es_query = es_query
         self.dss_url = dss_url
         self.indexer_url = indexer_url
         self.test_name = test_name
-        self.is_dry_run = is_dry_run
+        self.dryrun = dryrun
+
+    def post_bundle(self, bundle_fqid, es_query, indexer_url):
+        """
+        Send a mock DSS notification to the indexer
+        """
+        bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
+        simulated_event = {
+            "query": es_query,
+            "subscription_id": str(uuid4()),
+            "transaction_id": str(uuid4()),
+            "match": {
+                "bundle_uuid": bundle_uuid,
+                "bundle_version": bundle_version
+            }
+        }
+        body = json.dumps(simulated_event).encode('utf-8')
+        request = Request(indexer_url, body)
+        request.add_header("content-type", "application/json")
+        with urlopen(request) as f:
+            return f.read()
 
     def reindex(self):
         errors = defaultdict(int)
@@ -80,20 +75,20 @@ class Reindexer(object):
         bundle_fqids = [r['bundle_fqid'] for r in response]
         logger.info("Bundle FQIDs to index: %i", len(bundle_fqids))
 
-        with ThreadPoolExecutor(max_workers=self.number_of_workers, thread_name_prefix='pool') as tpe:
+        with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
 
             def attempt(bundle_fqid, i):
                 try:
                     logger.info("Bundle %s, attempt %i: Sending notification", bundle_fqid, i)
                     url = urlparse(self.indexer_url)
-                    if self.will_sync_notifications is not None:
+                    if self.sync is not None:
                         # noinspection PyProtectedMember
                         url = url._replace(query=urlencode({**parse_qs(url.query),
-                                                            'sync': self.will_sync_notifications}, doseq=True))
-                    if not self.is_dry_run:
-                        post_bundle(bundle_fqid=bundle_fqid,
-                                    es_query=self.es_query,
-                                    indexer_url=url.geturl())
+                                                            'sync': self.sync}, doseq=True))
+                    if not self.dryrun:
+                        self.post_bundle(bundle_fqid=bundle_fqid,
+                                         es_query=self.es_query,
+                                         indexer_url=url.geturl())
                 except HTTPError as e:
                     if i < 3:
                         logger.warning("Bundle %s, attempt %i: scheduling retry after error %s", bundle_fqid, i, e)
