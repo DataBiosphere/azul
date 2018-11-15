@@ -11,6 +11,13 @@ meta:
     - clients: the service API changed in a way that requires clients to be updated
 
 changes:
+  - title: Add CloudWatch alarms on certain ES metrics to main deployments
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/332
+    upgrade:
+      - terraform
+    notes: Alarms will only be created for the main deployments. Personal deployments are not affected.
+
   - title: >
         Fix: file type summary is truncated to ten entries
     issues:
