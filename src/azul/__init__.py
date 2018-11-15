@@ -21,6 +21,14 @@ class Config:
     See `environment` for documentation of these settings.
     """
 
+    def _boolean(self, value: str) -> bool:
+        if value == "0":
+            return False
+        elif value == "1":
+            return True
+        else:
+            raise ValueError('Expected "0" or "1"', value)
+
     @property
     def es_endpoint(self) -> Tuple[str, int]:
         try:
@@ -41,7 +49,7 @@ class Config:
 
     @property
     def share_es_domain(self) -> bool:
-        return 0 != int(os.environ['AZUL_SHARE_ES_DOMAIN'])
+        return self._boolean(os.environ['AZUL_SHARE_ES_DOMAIN'])
 
     @property
     def s3_bucket(self) -> str:
@@ -91,6 +99,10 @@ class Config:
     @property
     def terraform_backend_bucket_template(self) -> str:
         return os.environ['AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE']
+
+    @property
+    def enable_cloudwatch_alarms(self) -> bool:
+        return self._boolean(os.environ['AZUL_ENABLE_CLOUDWATCH_ALARMS'])
 
     @property
     def es_instance_type(self) -> str:
@@ -184,7 +196,7 @@ class Config:
 
     @property
     def subscribe_to_dss(self):
-        return 0 != int(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
+        return self._boolean(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
 
     def dss_client(self, dss_endpoint: str = None) -> DSSClient:
         swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
