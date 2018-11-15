@@ -15,26 +15,26 @@ MULTIPART_UPLOAD_MAX_WORKERS = 12
 class StorageService:
 
     def __init__(self):
-        self.__bucket_name = config.s3_bucket
-        self.__client = None  # the default client will be assigned later to allow patching.
+        self.bucket_name = config.s3_bucket
+        self._client = None  # the default client will be assigned later to allow patching.
 
     @property
     def client(self):
-        if not self.__client:
-            self.__client = boto3.client('s3')
-        return self.__client
+        if not self._client:
+            self._client = boto3.client('s3')
+        return self._client
 
     def set_client(self, client):
-        self.__client = client
+        self._client = client
 
     def get(self, object_key: str) -> str:
         try:
-            return self.client.get_object(Bucket=self.__bucket_name, Key=object_key)['Body'].read().decode()
+            return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read().decode()
         except self.client.exceptions.NoSuchKey:
             raise GetObjectError(object_key)
 
     def put(self, object_key: str, data: bytes, content_type: Optional[str] = None) -> str:
-        params = {'Bucket': self.__bucket_name, 'Key': object_key, 'Body': data}
+        params = {'Bucket': self.bucket_name, 'Key': object_key, 'Body': data}
 
         if content_type:
             params['ContentType'] = content_type
@@ -43,114 +43,164 @@ class StorageService:
 
         return object_key
 
-    @contextmanager
-    def multipart_upload(self, object_key: str, content_type: str):
-        api_response = self.client.create_multipart_upload(Bucket=self.__bucket_name,
-                                                           Key=object_key,
-                                                           ContentType=content_type)
-        upload_id = api_response['UploadId']
-
-        with ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS) as thread_pool:
-            handler = MultipartUploadHandler(self.__bucket_name, object_key, upload_id, thread_pool)
-
-            try:
-                yield handler
-            except Exception as e:
-                logger.error('Upload %s: Aborting due to unexpected error', upload_id)
-                handler.abort()
-                logger.warning('Upload %s: Aborted', upload_id)
-                raise UnexpectedMultipartUploadAbort(f'{type(e).__name__}: {e}')
-
-            if handler.is_active:
-                handler.complete()
-
     def get_presigned_url(self, key: str) -> str:
         return self.client.generate_presigned_url(ClientMethod='get_object',
-                                                  Params=dict(Bucket=self.__bucket_name, Key=key))
+                                                  Params=dict(Bucket=self.bucket_name, Key=key))
 
     def create_bucket(self, bucket_name: str = None):
-        self.client.create_bucket(Bucket=(bucket_name or self.__bucket_name))
+        self.client.create_bucket(Bucket=(bucket_name or self.bucket_name))
 
 
 class MultipartUploadHandler:
+    """
+    S3 Multipart Upload Handler
 
-    def __init__(self, bucket_name, object_key, upload_id, thread_pool):
-        self.__resource = boto3.resource('s3')
-        self.__bucket_name = bucket_name
-        self.__object_key = object_key
-        self.__upload_id = upload_id
-        self.__handler = self.__resource.MultipartUpload(self.__bucket_name, self.__object_key, self.__upload_id)
-        self.__next_part_number = 1
-        self.__closed = False
-        self.__parts = []
-        self.__futures = []
-        self.__thread_pool = thread_pool
-        self.__new_part_lock = Lock()
-        self.__sync_lock = Lock()
+    This class is to facilitate multipart upload to S3 storage. The class itself
+    is also a context manager.
+
+    Here is the sample usage.
+
+    .. code-block:: python
+
+       handler = MultipartUploadHandler('samples.txt', 'text/plain')
+       handler.start()
+       handler.push(b'abc')
+       handler.push(b'defg')
+       # ...
+       handler.shutdown()
+
+    or
+
+    .. code-block:: python
+
+       with MultipartUploadHandler('samples.txt', 'text/plain'):
+           handler.push(b'abc')
+           handler.push(b'defg')
+           # ...
+
+    where the context pattern will automatically shutdown upon exiting the context.
+    """
+
+    def __init__(self, object_key, content_type: str):
+        self.bucket_name = config.s3_bucket
+        self.object_key = object_key
+        self.upload_id = None
+        self.handler = None
+        self.next_part_number = 1
+        self.closed = False
+        self.content_type = content_type
+        self.parts = []
+        self.futures = []
+        self.thread_pool = None
+
+    def __enter__(self):
+        return self.start()
+
+    def __exit__(self, type, value, traceback):
+        self.shutdown()
 
     @property
     def is_active(self):
-        return not self.__closed
+        return not self.closed
+
+    def start(self):
+        api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,
+                                                                  Key=self.object_key,
+                                                                  ContentType=self.content_type)
+        self.upload_id = api_response['UploadId']
+        self.mp_upload = boto3.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
+        self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
+        return self
+
+    def shutdown(self):
+        self.complete()
+        self.thread_pool.shutdown()
 
     def complete(self):
+        """
+        Completes a multipart upload by assembling previously uploaded parts.
+
+        When this method is invoked, if the last part is not uploaded, the method
+        will upload that part before assembling the list of uploaded parts.
+
+        In addition, this method raises :class:`EmptyMultipartUploadError` if no
+        parts are uploaded.
+        """
         if not self.is_active:
             return
 
-        if not self.__parts:
-            self.abort()
-            raise EmptyMultipartUploadError(f'{self.__bucket_name}/{self.__object_key}')
+        if not self.parts:
+            self.abort(raise_exception=False)
+            raise EmptyMultipartUploadError(f'{self.bucket_name}/{self.object_key}')
 
-        last_part = self.__parts[-1]
+        last_part = self.parts[-1]
 
         if not last_part.already_uploaded:
             # Per documentation, the last part can be at any size. Hence, the uploadable condition is ignored.
-            self.__futures.append(self.__thread_pool.submit(self._upload_part, last_part))
+            self.futures.append(self.thread_pool.submit(self._upload_part, last_part))
 
-        for _ in as_completed(self.__futures):
+        for _ in as_completed(self.futures):
             pass  # Blocked until all uploads are done.
 
-        self.__handler.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.__parts]})
-        self.__handler = None
-        self.__closed = True
+        self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
+        self.mp_upload = None
+        self.closed = True
 
-    def abort(self):
+    def abort(self, raise_exception:bool=True):
+        """
+        Aborts a multipart upload.
+
+        :param raise_exception: Flag to raise exception on successful abort.
+        :raises UnexpectedMultipartUploadAbort: An abort due to unexpected
+                                                error occurred
+
+        If ``raise_exception`` is ``True``, :class:`UnexpectedMultipartUploadAbort`
+        will be raised.
+        """
         if not self.is_active:
             return
 
-        self.__handler.abort()
-        self.__handler = None
-        self.__closed = True
+        self.mp_upload.abort()
+        self.mp_upload = None
+        self.closed = True
+
+        logger.warning('Upload %s: Aborted', self.upload_id)
+        if raise_exception:
+            raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
 
     def push(self, data: bytes):
-        with self.__sync_lock:
-            # If the last part is under the minimum limit, the data will be appended.
-            if not self.__parts:
-                part = self._create_new_part(data)
-            else:
-                last_part = self.__parts[-1]
-                if last_part.already_uploaded:
-                    part = self._create_new_part(data)
-                else:
-                    part = last_part
-                    part.content.append(data)
+        part = self._get_next_part(data)
 
-            if not part.is_uploadable:
-                return
+        if not part.is_uploadable:
+            return
 
-            part.uploaded = True
+        part.uploaded = True
 
-        self.__futures.append(self.__thread_pool.submit(self._upload_part, part))
+        self.futures.append(self.thread_pool.submit(self._upload_part, part))
 
     def _create_new_part(self, data: bytes):
-        with self.__new_part_lock:
-            part = Part(part_number=self.__next_part_number, etag=None, content=[data], uploaded=False)
-            self.__parts.append(part)
-            self.__next_part_number += 1
+        part = Part(part_number=self.next_part_number, etag=None, content=[data], uploaded=False)
+        self.parts.append(part)
+        self.next_part_number += 1
+
+        return part
+
+    def _get_next_part(self, data):
+        if not self.parts:
+            part = self._create_new_part(data)
+        else:
+            # If the last part is under the minimum limit, the data will be appended.
+            last_part = self.parts[-1]
+            if last_part.already_uploaded:
+                part = self._create_new_part(data)
+            else:
+                part = last_part
+                part.content.append(data)
 
         return part
 
     def _upload_part(self, part):
-        upload_part = self.__handler.Part(part.part_number)
+        upload_part = self.mp_upload.Part(part.part_number)
         result = upload_part.upload(Body=b''.join(part.content))
         part.etag = result['ETag']
 
@@ -160,7 +210,7 @@ class Part:
     etag: str  # If ETag is defined, the content is already pushed to S3.
     part_number: int
     content: List[bytes]
-    uploaded: bool
+    uploaded: bool  # If true, the content is either being uploaded or already pushed to S3 (with etag defined).
 
     @property
     def already_uploaded(self):

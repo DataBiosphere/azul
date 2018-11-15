@@ -15,7 +15,10 @@ from jsonobject import (FloatProperty,
                         ObjectProperty,
                         StringProperty)
 
-from azul.service.responseobjects.storage_service import StorageService, AWS_S3_DEFAULT_MINIMUM_PART_SIZE
+from azul.service.responseobjects.storage_service import
+from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
+                                                          StorageService,
+                                                          AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
 from azul.service.responseobjects.buffer import Buffer
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
@@ -187,8 +190,6 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
-    UNSAVED_THRESHOLD = 40000  # rows
-
     def _translate(self, untranslated, keyname):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
@@ -197,7 +198,7 @@ class ManifestResponse(AbstractResponse):
         object_key = f'manifests/{uuid4()}.tsv'
         content_type = 'text/tab-separated-values'
 
-        with self.storage_service.multipart_upload(object_key, content_type) as multipart_upload:
+        with MultipartUploadHandler(object_key, content_type) as multipart_upload:
             buffer = Buffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push)
             writer = csv.writer(buffer, dialect='excel-tab')
 
