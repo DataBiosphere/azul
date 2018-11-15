@@ -1,6 +1,5 @@
 from logging import getLogger
 from io import BytesIO
-from threading import Lock
 from typing import Callable
 
 logger = getLogger(__name__)

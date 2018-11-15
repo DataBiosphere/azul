@@ -1,8 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from contextlib import contextmanager
 from dataclasses import dataclass
 from logging import getLogger
-from threading import Lock
 from typing import Optional, List
 import boto3
 from azul import config

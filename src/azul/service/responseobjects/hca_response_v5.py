@@ -6,7 +6,6 @@ from io import TextIOWrapper
 from itertools import chain
 import logging
 import os
-from typing import List
 from uuid import uuid4
 
 from chalice import Response
