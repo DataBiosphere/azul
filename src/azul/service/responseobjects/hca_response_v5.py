@@ -5,6 +5,7 @@ import csv
 from itertools import chain
 import logging
 import os
+from typing import List
 from uuid import uuid4
 
 from chalice import Response
@@ -15,7 +16,6 @@ from jsonobject import (FloatProperty,
                         ObjectProperty,
                         StringProperty)
 
-from azul.service.responseobjects.storage_service import
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
                                                           AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
@@ -194,7 +194,12 @@ class ManifestResponse(AbstractResponse):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
-    def _push_content(self):
+    def _push_content(self) -> str:
+        """
+        Push the content to S3 with multipart upload
+
+        :return: S3 object key
+        """
         object_key = f'manifests/{uuid4()}.tsv'
         content_type = 'text/tab-separated-values'
 
@@ -203,8 +208,8 @@ class ManifestResponse(AbstractResponse):
             writer = csv.writer(buffer, dialect='excel-tab')
 
             # Started with the headers
-            writer.writerow(*[list(self.manifest_entries['bundles'].keys()) +
-                              list(self.manifest_entries['contents.files'].keys())])
+            writer.writerow(list(self.manifest_entries['bundles'].keys()) +
+                            list(self.manifest_entries['contents.files'].keys()))
             for hit in self.es_search.scan():
                 hit_dict = hit.to_dict()
                 assert len(hit_dict['contents']['files']) == 1
@@ -214,8 +219,7 @@ class ManifestResponse(AbstractResponse):
                 for bundle in hit_dict['bundles']:
                     # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
                     # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-                    bundle_fields = self._translate(bundle, 'bundles')
-                    writer.writerow(bundle_fields + file_fields)
+                    writer.writerow(self._translate(bundle, 'bundles') + file_fields)
 
                 buffer.flush()
 
@@ -224,6 +228,36 @@ class ManifestResponse(AbstractResponse):
                 buffer.flush(check_limit=False)
 
         return object_key
+
+    def _push_content_single_part(self) -> str:
+        """
+        Push the content to S3 in a single object put
+
+        :return: S3 object key
+        """
+        parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
+                          data=self._construct_tsv_content().encode(),
+                          content_type='text/tab-separated-values')
+        return self.storage_service.put(**parameters)
+
+    def _construct_tsv_content(self):
+        es_search = self.es_search
+        output = StringIO()
+        writer = csv.writer(output, dialect='excel-tab')
+        # Started with the headers
+        writer.writerow(list(self.manifest_entries['bundles'].keys()) +
+                        list(self.manifest_entries['contents.files'].keys()))
+        for hit in es_search.scan():
+            hit_dict = hit.to_dict()
+            assert len(hit_dict['contents']['files']) == 1
+            file = hit_dict['contents']['files'][0]
+            file_fields = self._translate(file, 'contents.files')
+            for bundle in hit_dict['bundles']:
+                # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
+                # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
+                writer.writerow(self._translate(bundle, 'bundles') + file_fields)
+
+        return output.getvalue()
 
     def return_response(self):
         object_key = self._push_content()
