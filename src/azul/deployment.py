@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 
 import boto3
 import botocore.session
+from more_itertools import one
 
 
 def memoized_property(f):
@@ -48,7 +49,8 @@ class AWS:
             return None
         else:
             policy = json.loads(response['Policy'])
-            api_stage_arn = policy['Statement'][0]['Condition']['ArnLike']['AWS:SourceArn']
+            # For unknown reasons, Chalice may create more than one statement. We should fail if that's the case.
+            api_stage_arn = one(policy['Statement'])['Condition']['ArnLike']['AWS:SourceArn']
             api_gateway_id = api_stage_arn.split(':')[-1].split('/', 1)[0]
             if validate:
                 try:
