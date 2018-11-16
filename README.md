@@ -226,6 +226,14 @@ index them run:
 make reindex
 ```
 
+### 2.6 Clearing SQS queues
+
+1. Purge Notification Queue
+2. Disable event binding document queue and azul-indexer-write lambda
+3. Purge Remaining Queue
+4. Renable event binding
+5. Repeat until queue is empty
+
 ## 3. Running indexer or service locally
 
 1) As usual, activate the virtualenv and `source environment` if you haven't
