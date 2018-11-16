@@ -2,7 +2,7 @@
 import abc
 from collections import OrderedDict, defaultdict
 import csv
-from io import TextIOWrapper
+from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
 import os
