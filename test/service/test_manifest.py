@@ -1,18 +1,83 @@
 import datetime
-from unittest import mock, TestCase
+from unittest import mock
 
 import requests
+from botocore.exceptions import ClientError
+from chalice import BadRequestError, ChaliceViewError
 from moto import mock_s3, mock_sts
 
 from azul import config
 from azul.service.responseobjects.manifest_service import ManifestService
 from azul.service.responseobjects.step_function_client import StepFunctionClient, StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
-from lambdas.service.app import generate_manifest
+from lambdas.service.app import generate_manifest, start_manifest_generation
 from service import WebServiceTestCase
 
 
 class ManifestTest(WebServiceTestCase):
+
+    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService')
+    def test_manifest_endpoint_start_execution(self, MockManifestService):
+        """
+        Calling start manifest generation without a token should start an execution and check the status
+        """
+        MockManifestService.return_value.start_manifest_generation.return_value = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
+        filters = {'file': {'organ': {'is': ['lymph node']}}}
+        start_manifest_generation(filters=filters,
+                                  manifest_service_class=MockManifestService)
+        MockManifestService().start_manifest_generation.assert_called_once_with(filters)
+        MockManifestService().get_manifest_status.assert_called_once()
+
+    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService')
+    def test_manifest_endpoint_check_status(self, MockManifestService):
+        """
+        Calling start manifest generation with a token should check the status without starting an execution
+        """
+        start_manifest_generation(token='eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0=',
+                                  manifest_service_class=MockManifestService)
+        MockManifestService().start_manifest_generation.assert_not_called()
+        MockManifestService().get_manifest_status.assert_called_once()
+
+    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService')
+    def test_manifest_endpoint_execution_not_found(self, MockManifestService):
+        """
+        Manifest status check should raise a BadRequestError (400 status code) if execution cannot be found
+        """
+        MockManifestService.return_value.get_manifest_status.side_effect = ClientError({
+            'Error': {
+                'Code': 'ExecutionDoesNotExist'
+            }
+        }, '')
+        self.assertRaises(BadRequestError,
+                          start_manifest_generation,
+                          token='eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0=',
+                          manifest_service_class=MockManifestService)
+
+    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService')
+    def test_manifest_endpoint_boto_error(self, MockManifestService):
+        """
+        Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
+        """
+        MockManifestService.return_value.get_manifest_status.side_effect = ClientError({
+            'Error': {
+                'Code': 'OtherError'
+            }
+        }, '')
+        self.assertRaises(ClientError,
+                          start_manifest_generation,
+                          token='eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0=',
+                          manifest_service_class=MockManifestService)
+
+    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService')
+    def test_manifest_endpoint_execution_error(self, MockManifestService):
+        """
+        Manifest status check should return a generic error (500 status code) if the execution errored
+        """
+        MockManifestService.return_value.get_manifest_status.side_effect = StateMachineError
+        self.assertRaises(ChaliceViewError,
+                          start_manifest_generation,
+                          token='eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0=',
+                          manifest_service_class=MockManifestService)
 
     @mock_s3
     @mock_sts
