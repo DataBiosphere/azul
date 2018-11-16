@@ -537,13 +537,9 @@ def get_manifest():
 
 
 @app.route(ManifestService.manifest_endpoint, methods=['GET'], cors=True)
-def start_manifest_generation():
+def start_manifest_generation_view():
     """
-    When not given a token, start execution of a job generating the manifest.
-    Check the status of a manifest generation job.
-        - If in progress, return a url to recheck the status
-        - If successful, return a url to download the manifest
-        - If errored or aborted, raise a 500 error
+    Start and check status of manifest generation jobs
 
     parameters:
         - name: filters
@@ -557,15 +553,52 @@ def start_manifest_generation():
         - name: wait
           in: query
           type: any
-          description: If present, wait a few seconds before checking the status of the manifest
+          description: Integer indicating amount of time to wait before checking status
     :return: Response with location of the generated manifest
     """
     logger = logging.getLogger("dashboardService.webservice.get_manifest")
+
     if app.current_request.query_params is None:
         app.current_request.query_params = {}
 
-    if 'token' in app.current_request.query_params:
-        token = app.current_request.query_params['token']
+    query_params = app.current_request.query_params or {}
+
+    filters = query_params.get('filters', '{"file": {}}')
+    logger.debug('Filters string is: {}'.format(filters))
+    try:
+        logger.info('Extracting the filter parameter from the request')
+        filters = ast.literal_eval(filters)
+        filters = {'file': {}} if filters == {} else filters
+    except Exception as e:
+        logger.error('Malformed filters parameter: {}'.format(e))
+        raise BadRequestError('Malformed filters parameter')
+
+    return start_manifest_generation(filters=filters,
+                                     token=query_params.get('token'),
+                                     wait=int(query_params.get('wait', 0)),
+                                     local=app.lambda_context.invoked_function_arn == '')
+
+
+def start_manifest_generation(filters=None, token=None, wait=0, local=False,
+                              manifest_service_class=ManifestService):
+    """
+    When not given a token, start execution of a job generating the manifest.
+    Check the status of a manifest generation job.
+        - If in progress, return a url to recheck the status
+        - If successful, return a url to download the manifest
+        - If errored or aborted, raise a 500 error
+
+    :param filters: Filters to be applied when generating the manifest
+    :param token:  Encoded json string containing information about the manifest generation job
+    :param wait: Integer indicating amount of time to wait before checking status
+    :param local: Boolean indicating whether chalice is running locally
+    :param manifest_service_class: class to use as manifest service to allow mocking
+    :return: Response with location of the generated manifest
+    """
+    logger = logging.getLogger("dashboardService.webservice.get_manifest")
+
+    manifest_service = manifest_service_class()
+    if token is not None:
         try:
             params = ManifestService.decode_params(token)
             if 'execution_id' not in params:
@@ -573,29 +606,19 @@ def start_manifest_generation():
         except Exception:
             raise BadRequestError('Invalid token given')
     else:
-        filters = app.current_request.query_params.get('filters', '{"file": {}}')
-        logger.debug('Filters string is: {}'.format(filters))
-        try:
-            logger.info("Extracting the filter parameter from the request")
-            filters = ast.literal_eval(filters)
-            filters = {"file": {}} if filters == {} else filters
-        except Exception as e:
-            logger.error("Malformed filters parameter: {}".format(e))
-            return "Malformed filters parameter"
-        execution_id = ManifestService().start_manifest_generation(filters)
+        filters = filters or {"file": {}}
+        execution_id = manifest_service.start_manifest_generation(filters)
         logger.info(f'Started manifest generation execution: {execution_id}')
         params = {'execution_id': execution_id}
 
     wait_times = [1, 1, 2, 6, 10]
     try:
-        wait = min(int(app.current_request.query_params.get('wait', 0)), len(wait_times) - 1)
-        time.sleep(wait_times[wait])
+        time.sleep(wait_times[min(wait, len(wait_times) - 1)])
     except (IndexError, ValueError):
         raise BadRequestError('Invalid wait parameter')
 
     try:
-        return ManifestService().get_manifest_status(params, wait + 1,
-                                                     local=app.lambda_context.invoked_function_arn == '')
+        return manifest_service.get_manifest_status(params, wait + 1, local)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
             raise BadRequestError('Invalid token given')
