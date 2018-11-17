@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 from collections import defaultdict
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
@@ -7,39 +5,37 @@ import json
 import logging
 from pprint import PrettyPrinter
 from urllib.error import HTTPError
-from urllib.parse import urlparse, urlencode, parse_qs
+from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from azul import config
+from azul.es import ESClientFactory
+from azul.plugin import Plugin
+from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 
-plugin = config.plugin()
-
-
-class Defaults:
-    dss_url = config.dss_endpoint
-    indexer_url = "https://" + config.api_lambda_domain('indexer') + "/"
-    es_query = plugin.dss_subscription_query
-    num_workers = 16
-
 
 class Reindexer(object):
-    def __init__(self, indexer_url: str = Defaults.indexer_url,
-                 dss_url: str = Defaults.dss_url,
-                 es_query: dict = Defaults.es_query,
+
+    def __init__(self,
+                 indexer_url: str = "https://" + config.api_lambda_domain('indexer') + "/",
+                 dss_url: str = config.dss_endpoint,
+                 es_query: JSON = None,
                  sync: bool = False,
-                 num_workers: int = Defaults.num_workers,
-                 test_name: str = None,
-                 dryrun: bool = None):
+                 num_workers: int = 16,
+                 dryrun: bool = False):
+
+        if es_query is None:
+            plugin = Plugin.load()
+            es_query = plugin.dss_subscription_query()
 
         self.num_workers = num_workers
         self.sync = sync
         self.es_query = es_query
         self.dss_url = dss_url
         self.indexer_url = indexer_url
-        self.test_name = test_name
         self.dryrun = dryrun
 
     def post_bundle(self, bundle_fqid, es_query, indexer_url):
@@ -70,8 +66,7 @@ class Reindexer(object):
 
         logger.info('Querying DSS using %s', json.dumps(self.es_query, indent=4))
         dss_client = config.dss_client(dss_endpoint=self.dss_url)
-        # noinspection PyUnresolvedReferences
-        response = dss_client.post_search.iterate(es_query=self.es_query, replica="aws")
+        response = dss_client.post_search.iterate(es_query=self.es_query, replica='aws')
         bundle_fqids = [r['bundle_fqid'] for r in response]
         logger.info("Bundle FQIDs to index: %i", len(bundle_fqids))
 
@@ -81,7 +76,7 @@ class Reindexer(object):
                 try:
                     logger.info("Bundle %s, attempt %i: Sending notification", bundle_fqid, i)
                     url = urlparse(self.indexer_url)
-                    if self.sync is not None:
+                    if self.sync:
                         # noinspection PyProtectedMember
                         url = url._replace(query=urlencode({**parse_qs(url.query),
                                                             'sync': self.sync}, doseq=True))
@@ -125,8 +120,23 @@ class Reindexer(object):
                 futures.append(tpe.submit(partial(attempt, bundle_fqid, 0)))
             for future in futures:
                 handle_future(future)
+
         printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
         logger.info("Total of bundle FQIDs read: %i", total)
         logger.info("Total of bundle FQIDs indexed: %i", indexed)
         logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
         logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
+
+    def delete_all_indices(self):
+        es_client = ESClientFactory.get()
+        plugin = Plugin.load()
+        indexer_cls = plugin.indexer_class()
+        indexer = indexer_cls()
+        for entity_type in indexer.entities():
+            for aggregate in False, True:
+                index_name = config.es_index_name(entity_type, aggregate=aggregate)
+                if es_client.indices.exists(index_name):
+                    if self.dryrun:
+                        logger.info("Would delete index '%s'", index_name)
+                    else:
+                        es_client.indices.delete(index=index_name)
