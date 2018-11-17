@@ -573,9 +573,14 @@ def start_manifest_generation_view():
         logger.error('Malformed filters parameter: {}'.format(e))
         raise BadRequestError('Malformed filters parameter')
 
+    try:
+        wait = int(query_params.get('wait', 0))
+    except ValueError:
+        raise BadRequestError('Invalid wait parameter')
+
     return start_manifest_generation(filters=filters,
                                      token=query_params.get('token'),
-                                     wait=int(query_params.get('wait', 0)),
+                                     wait=wait,
                                      local=app.lambda_context.invoked_function_arn == '')
 
 
@@ -612,10 +617,7 @@ def start_manifest_generation(filters=None, token=None, wait=0, local=False,
         params = {'execution_id': execution_id}
 
     wait_times = [1, 1, 2, 6, 10]
-    try:
-        time.sleep(wait_times[min(wait, len(wait_times) - 1)])
-    except (IndexError, ValueError):
-        raise BadRequestError('Invalid wait parameter')
+    time.sleep(wait_times[max(min(int(wait), len(wait_times) - 1), 0)])
 
     try:
         return manifest_service.get_manifest_status(params, wait + 1, local)

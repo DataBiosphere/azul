@@ -79,6 +79,16 @@ class ManifestTest(WebServiceTestCase):
                           token='eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0=',
                           manifest_service_class=MockManifestService)
 
+    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService')
+    def test_manifest_endpoint_invalid_token(self, MockManifestService):
+        """
+        Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
+        """
+        self.assertRaises(BadRequestError,
+                          start_manifest_generation,
+                          token='Invalid base64',
+                          manifest_service_class=MockManifestService)
+
     @mock_s3
     @mock_sts
     def test_manifest_generation(self):
