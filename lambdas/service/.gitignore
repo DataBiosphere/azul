@@ -3,4 +3,5 @@
 /.chalice/config.json
 /.chalice/deployed/*.json
 /lambda-policy.json
-/vendor/azul_changes.py
+/vendor/*
+!/vendor/azul
