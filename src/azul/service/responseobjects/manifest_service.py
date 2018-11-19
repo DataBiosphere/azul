@@ -42,9 +42,10 @@ class ManifestService:
             config.manifest_state_machine_name, params['execution_id'])
 
         if execution['status'] == 'SUCCEEDED':
+            execution_output = json.loads(execution['output'])
             return {
                 'Status': 302,
-                'Location': json.loads(execution['output'])
+                'Location': execution_output['Location']
             }
         elif execution['status'] == 'RUNNING':
             wait_times = [1, 1, 2, 6, 10]
