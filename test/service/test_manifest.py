@@ -1,4 +1,5 @@
 import datetime
+import json
 from unittest import mock
 
 import requests
@@ -97,7 +98,7 @@ class ManifestTest(WebServiceTestCase):
         """
         storage_service = StorageService()
         storage_service.create_bucket()
-        manifest_url = generate_manifest(event={}, context=None)
+        manifest_url = generate_manifest(event={}, context=None)['Location']
         manifest_response = requests.get(manifest_url)
         self.assertEqual(200, manifest_response.status_code)
         self.assertTrue(len(manifest_response.text) > 0)
@@ -134,7 +135,7 @@ class ManifestTest(WebServiceTestCase):
         """
         A successful manifest job should return a 302 status and a url to the manifest
         """
-        manifest_url = '"https://url.to.manifest"'
+        manifest_url = 'https://url.to.manifest'
         execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2'
         execution_success_output = {
             'executionArn': StepFunctionHelper.execution_arn(config.manifest_state_machine_name, execution_id),
@@ -144,7 +145,7 @@ class ManifestTest(WebServiceTestCase):
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
             'stopDate': datetime.datetime(2018, 11, 15, 18, 30, 59, 295000),
             'input': '{"filters": {"file": {}}}',
-            'output': manifest_url
+            'output': json.dumps({'Location': manifest_url})
         }
         MockStepFunctions.return_value.describe_execution.return_value = execution_success_output
         params = {'execution_id': execution_id}
@@ -152,7 +153,7 @@ class ManifestTest(WebServiceTestCase):
         response = manifest_service.get_manifest_status(params, 0)
         expected_output = {
             'Status': 302,
-            'Location': manifest_url[1:-1]  # quotation marks should not be in the location string
+            'Location': manifest_url
         }
         self.assertEqual(expected_output, response)
 

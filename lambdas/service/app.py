@@ -635,7 +635,7 @@ def generate_manifest(event, context):
     """
     filters = event.get('filters', {'file': {}})
     response = EsTd().transform_manifest(filters=filters)
-    return response.headers['Location']
+    return {'Location': response.headers['Location']}
 
 
 @app.route('/dss/files/{uuid}', methods=['GET'], cors=True)
