@@ -43,7 +43,7 @@ class AWS:
         return boto3.client('es')
 
     @memoized_property
-    def step_functions(self):
+    def stepfunctions(self):
         return boto3.client('stepfunctions')
 
     def api_gateway_id(self, function_name: str, validate=True) -> Optional[str]:

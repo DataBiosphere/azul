@@ -3,7 +3,7 @@ import json
 from azul.deployment import aws
 
 
-class StepFunctionClient:
+class StepFunctionHelper:
     """
     Wrapper around boto3 SFN client to handle resource name generation
     """
@@ -36,7 +36,7 @@ class StepFunctionClient:
         }
         if execution_name is not None:
             execution_params['name'] = execution_name
-        return aws.step_functions.start_execution(**execution_params)
+        return aws.stepfunctions.start_execution(**execution_params)
 
     @classmethod
     def describe_execution(cls, state_machine_name, execution_name):
@@ -55,7 +55,7 @@ class StepFunctionClient:
                 'output': 'string'
             }
         """
-        return aws.step_functions.describe_execution(
+        return aws.stepfunctions.describe_execution(
             executionArn=cls.execution_arn(state_machine_name, execution_name))
 
 

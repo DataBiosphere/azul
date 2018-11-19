@@ -2,7 +2,7 @@ import base64
 import json
 
 from azul import config
-from azul.service.responseobjects.step_function_client import StateMachineError, StepFunctionClient
+from azul.service.responseobjects.step_function_helper import StateMachineError, StepFunctionHelper
 
 
 class ManifestService:
@@ -11,12 +11,10 @@ class ManifestService:
     """
     manifest_endpoint = '/repository/manifest/files'
 
-    @classmethod
-    def encode_params(cls, params, encoding='utf-8'):
+    def encode_params(self, params, encoding='utf-8'):
         return base64.urlsafe_b64encode(bytes(json.dumps(params), encoding=encoding)).decode(encoding)
 
-    @classmethod
-    def decode_params(cls, token, encoding='utf-8'):
+    def decode_params(self, token, encoding='utf-8'):
         return json.loads(base64.urlsafe_b64decode(token).decode(encoding))
 
     def start_manifest_generation(self, filters):
@@ -49,12 +47,14 @@ class ManifestService:
                 'Location': json.loads(execution['output'])
             }
         elif execution['status'] == 'RUNNING':
+            wait_times = [1, 1, 2, 6, 10]
             base_url = 'http://localhost:8000' if local else config.service_endpoint()
             return {
                 'Status': 301,
+                'Retry-After': wait_times[wait],
                 'Location': f'{base_url}{self.manifest_endpoint}?token={self.encode_params(params)}&wait={wait}'
             }
         raise StateMachineError('Failed to generate manifest')
 
     def __init__(self, step_function_client=None):
-        self.step_function_client = step_function_client or StepFunctionClient  # Allow custom client for mocking
+        self.step_function_client = step_function_client or StepFunctionHelper  # Allow custom client for mocking
