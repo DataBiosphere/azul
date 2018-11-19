@@ -11,6 +11,8 @@ class ManifestService:
     """
     manifest_endpoint = '/repository/manifest/files'
 
+    step_function_helper = StepFunctionHelper()
+
     def encode_params(self, params, encoding='utf-8'):
         return base64.urlsafe_b64encode(bytes(json.dumps(params), encoding=encoding)).decode(encoding)
 
@@ -24,7 +26,7 @@ class ManifestService:
         :param filters: filters to use for the manifest
         :return: The id of the execution of the state machine
         """
-        return self.step_function_client.start_execution(
+        return self.step_function_helper.start_execution(
             config.manifest_state_machine_name,
             execution_input={'filters': filters}
         )['executionArn'].split(':')[-1]
@@ -38,7 +40,7 @@ class ManifestService:
         :param local: True if running chalice locally, False otherwise
         :return: dict containing status of the job and a redirect url for the client
         """
-        execution = self.step_function_client.describe_execution(
+        execution = self.step_function_helper.describe_execution(
             config.manifest_state_machine_name, params['execution_id'])
 
         if execution['status'] == 'SUCCEEDED':
@@ -52,10 +54,7 @@ class ManifestService:
             base_url = 'http://localhost:8000' if local else config.service_endpoint()
             return {
                 'Status': 301,
-                'Retry-After': wait_times[wait],
+                'Retry-After': wait_times[max(0, min(wait, len(wait_times) - 1))],
                 'Location': f'{base_url}{self.manifest_endpoint}?token={self.encode_params(params)}&wait={wait}'
             }
         raise StateMachineError('Failed to generate manifest')
-
-    def __init__(self, step_function_client=None):
-        self.step_function_client = step_function_client or StepFunctionHelper  # Allow custom client for mocking

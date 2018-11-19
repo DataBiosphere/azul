@@ -584,8 +584,7 @@ def start_manifest_generation_view():
                                      local=app.lambda_context.invoked_function_arn == '')
 
 
-def start_manifest_generation(filters=None, token=None, wait=0, local=False,
-                              manifest_service_class=ManifestService):
+def start_manifest_generation(filters=None, token=None, wait=0, local=False):
     """
     When not given a token, start execution of a job generating the manifest.
     Check the status of a manifest generation job.
@@ -597,13 +596,12 @@ def start_manifest_generation(filters=None, token=None, wait=0, local=False,
     :param token:  Encoded json string containing information about the manifest generation job
     :param wait: Integer indicating amount of time to wait before checking status
     :param local: Boolean indicating whether chalice is running locally
-    :param manifest_service_class: class to use as manifest service to allow mocking
     :return: Response with location of the generated manifest
     """
-    manifest_service = manifest_service_class()
+    manifest_service = ManifestService()
     if token is not None:
         try:
-            params = ManifestService().decode_params(token)
+            params = manifest_service.decode_params(token)
             if 'execution_id' not in params:
                 raise KeyError
         except Exception:
