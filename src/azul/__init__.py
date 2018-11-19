@@ -161,6 +161,9 @@ class Config:
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
 
+    def get_lambda_arn(self, function_name, suffix):
+        return f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{function_name}-{suffix}"
+
     lambda_timeout = 300
 
     term_re = re.compile("[a-z][a-z0-9]{2,29}")

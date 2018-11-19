@@ -8,7 +8,7 @@ from moto import mock_s3, mock_sts
 
 from azul import config
 from azul.service.responseobjects.manifest_service import ManifestService
-from azul.service.responseobjects.step_function_client import StepFunctionClient, StateMachineError
+from azul.service.responseobjects.step_function_helper import StepFunctionHelper, StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
 from lambdas.service.app import generate_manifest, start_manifest_generation
 from service import WebServiceTestCase
@@ -107,20 +107,20 @@ class ManifestTest(WebServiceTestCase):
         Parameter encoding and decoding functions should be inverse of each other
         """
         uuid = '{"uuid": "6c9dfa3f-e92e-11e8-9764-ada973595c11"}'
-        self.assertEqual(uuid, ManifestService.decode_params(ManifestService.encode_params(uuid)))
+        self.assertEqual(uuid, ManifestService().decode_params(ManifestService().encode_params(uuid)))
 
         encoding = 'IjRkMWE4MGQxLWU5MmUtMTFlOC1iYzc2LWY5NTQ3MzRjNmU5YiI='
-        self.assertEqual(encoding, ManifestService.encode_params(ManifestService.decode_params(encoding)))
+        self.assertEqual(encoding, ManifestService().encode_params(ManifestService().decode_params(encoding)))
 
     @mock_sts
-    @mock.patch('azul.service.responseobjects.step_function_client.StepFunctionClient')
+    @mock.patch('azul.service.responseobjects.step_function_helper.StepFunctionHelper')
     def test_start_manifest_generation(self, MockStepFunctions):
         """
         Starting manifest generation should return the name of the execution
         """
         execution_id = '9e53a9da-e8d5-4fc5-948e-6bd1e771d6a1'
         execution_start_output = {
-            'executionArn': StepFunctionClient.execution_arn(config.manifest_state_machine_name, execution_id),
+            'executionArn': StepFunctionHelper.execution_arn(config.manifest_state_machine_name, execution_id),
             'startDate': datetime.datetime(2018, 11, 16, 12, 29, 12, 474000)
         }
         MockStepFunctions.start_execution.return_value = execution_start_output
@@ -129,16 +129,16 @@ class ManifestTest(WebServiceTestCase):
                          manifest_service.start_manifest_generation({'file': {}}))
 
     @mock_sts
-    @mock.patch('azul.service.responseobjects.step_function_client.StepFunctionClient')
+    @mock.patch('azul.service.responseobjects.step_function_helper.StepFunctionHelper')
     def test_manifest_status_success(self, MockStepFunctions):
         """
-        A successful manifest job shouuld return a 302 status and a url to the manifest
+        A successful manifest job should return a 302 status and a url to the manifest
         """
         manifest_url = '"https://url.to.manifest"'
         execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2'
         execution_success_output = {
-            'executionArn': StepFunctionClient.execution_arn(config.manifest_state_machine_name, execution_id),
-            'stateMachineArn': StepFunctionClient.state_machine_arn(config.manifest_state_machine_name),
+            'executionArn': StepFunctionHelper.execution_arn(config.manifest_state_machine_name, execution_id),
+            'stateMachineArn': StepFunctionHelper.state_machine_arn(config.manifest_state_machine_name),
             'name': execution_id,
             'status': 'SUCCEEDED',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
@@ -149,7 +149,7 @@ class ManifestTest(WebServiceTestCase):
         MockStepFunctions.return_value.describe_execution.return_value = execution_success_output
         params = {'execution_id': execution_id}
         manifest_service = ManifestService(MockStepFunctions())
-        response = manifest_service.get_manifest_status(params, 1)
+        response = manifest_service.get_manifest_status(params, 0)
         expected_output = {
             'Status': 302,
             'Location': manifest_url[1:-1]  # quotation marks should not be in the location string
@@ -157,15 +157,15 @@ class ManifestTest(WebServiceTestCase):
         self.assertEqual(expected_output, response)
 
     @mock_sts
-    @mock.patch('azul.service.responseobjects.step_function_client.StepFunctionClient')
+    @mock.patch('azul.service.responseobjects.step_function_helper.StepFunctionHelper')
     def test_manifest_status_running(self, MockStepFunctions):
         """
         A running manifest job should return a 301 status and a url to retry checking the job status
         """
         execution_id = 'd4ee1bed-0bd7-4c11-9c86-372e07801536'
         execution_running_output = {
-            'executionArn': StepFunctionClient.execution_arn(config.manifest_state_machine_name, execution_id),
-            'stateMachineArn': StepFunctionClient.state_machine_arn(config.manifest_state_machine_name),
+            'executionArn': StepFunctionHelper.execution_arn(config.manifest_state_machine_name, execution_id),
+            'stateMachineArn': StepFunctionHelper.state_machine_arn(config.manifest_state_machine_name),
             'name': execution_id,
             'status': 'RUNNING',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
@@ -180,15 +180,15 @@ class ManifestTest(WebServiceTestCase):
             f'{config.service_endpoint()}{ManifestService.manifest_endpoint}'))
 
     @mock_sts
-    @mock.patch('azul.service.responseobjects.step_function_client.StepFunctionClient')
+    @mock.patch('azul.service.responseobjects.step_function_helper.StepFunctionHelper')
     def test_manifest_status_failed(self, MockStepFunctions):
         """
         A failed manifest job should raise a StateMachineError
         """
         execution_id = '068579b6-9d7b-4e19-ac4e-77626851be1c'
         execution_failed_output = {
-            'executionArn': StepFunctionClient.execution_arn(config.manifest_state_machine_name, execution_id),
-            'stateMachineArn': StepFunctionClient.state_machine_arn(config.manifest_state_machine_name),
+            'executionArn': StepFunctionHelper.execution_arn(config.manifest_state_machine_name, execution_id),
+            'stateMachineArn': StepFunctionHelper.state_machine_arn(config.manifest_state_machine_name),
             'name': execution_id,
             'status': 'FAILED',
             'startDate': datetime.datetime(2018, 11, 14, 16, 6, 53, 382000),

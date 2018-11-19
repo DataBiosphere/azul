@@ -1,12 +1,7 @@
 import json
 
 from azul import config
-from azul.deployment import aws
 from azul.template import emit
-
-
-def create_lambda_name(basename):
-    return f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{config.service_name}-{basename}"
 
 
 emit({
@@ -42,7 +37,7 @@ emit({
                                 "lambda:InvokeFunction"
                             ],
                             "Resource": [
-                                create_lambda_name(config.manifest_lambda_basename)
+                                config.get_lambda_arn(config.service_name, config.manifest_lambda_basename),
                             ]
                         }
                     ]
@@ -59,7 +54,7 @@ emit({
                     "States": {
                         "WriteManifest": {
                             "Type": "Task",
-                            "Resource": create_lambda_name(config.manifest_lambda_basename),
+                            "Resource": config.get_lambda_arn(config.service_name, config.manifest_lambda_basename),
                             "End": True
                         }
                     }

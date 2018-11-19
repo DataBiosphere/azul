@@ -17,7 +17,7 @@ from azul.service.responseobjects.elastic_request_builder import (BadArgumentExc
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
 from azul.service.responseobjects.manifest_service import ManifestService
-from azul.service.responseobjects.step_function_client import StateMachineError
+from azul.service.responseobjects.step_function_helper import StateMachineError
 from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
@@ -600,12 +600,10 @@ def start_manifest_generation(filters=None, token=None, wait=0, local=False,
     :param manifest_service_class: class to use as manifest service to allow mocking
     :return: Response with location of the generated manifest
     """
-    logger = logging.getLogger("dashboardService.webservice.get_manifest")
-
     manifest_service = manifest_service_class()
     if token is not None:
         try:
-            params = ManifestService.decode_params(token)
+            params = ManifestService().decode_params(token)
             if 'execution_id' not in params:
                 raise KeyError
         except Exception:
@@ -613,11 +611,7 @@ def start_manifest_generation(filters=None, token=None, wait=0, local=False,
     else:
         filters = filters or {"file": {}}
         execution_id = manifest_service.start_manifest_generation(filters)
-        logger.info(f'Started manifest generation execution: {execution_id}')
         params = {'execution_id': execution_id}
-
-    wait_times = [1, 1, 2, 6, 10]
-    time.sleep(wait_times[max(min(int(wait), len(wait_times) - 1), 0)])
 
     try:
         return manifest_service.get_manifest_status(params, wait + 1, local)
@@ -632,15 +626,14 @@ def start_manifest_generation(filters=None, token=None, wait=0, local=False,
 @app.lambda_function(name=config.manifest_lambda_basename)
 def generate_manifest(event, context):
     """
-    Create a manifest based on the given filters and store it in s3
+    Create a manifest based on the given filters and store it in S3
 
     :param: event: dict containing function input
         Valid params:
             - filters: dict containing filters to use in ES request
-    :return: The url to the generated manifest
+    :return: The URL to the generated manifest
     """
     filters = event.get('filters', {'file': {}})
-    log.info(f'Creating the manifest using filters: {filters}')
     response = EsTd().transform_manifest(filters=filters)
     return response.headers['Location']
 
