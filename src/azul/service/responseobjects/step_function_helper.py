@@ -5,18 +5,15 @@ from azul.deployment import aws
 
 class StepFunctionHelper:
     """
-    Wrapper around boto3 SFN client to handle resource name generation
+    Wrapper around boto3 SFN client to handle resource name generation and state machine executions
     """
-    @classmethod
-    def state_machine_arn(cls, state_machine_name):
+    def state_machine_arn(self, state_machine_name):
         return f'arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{state_machine_name}'
 
-    @classmethod
-    def execution_arn(cls, state_machine_name, execution_name):
+    def execution_arn(self, state_machine_name, execution_name):
         return f'arn:aws:states:{aws.region_name}:{aws.account}:execution:{state_machine_name}:{execution_name}'
 
-    @classmethod
-    def start_execution(cls, state_machine_name, execution_name=None, execution_input=None):
+    def start_execution(self, state_machine_name, execution_name=None, execution_input=None):
         """
         Start an execution of a state machine
         Wrapper around https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/stepfunctions.html#SFN.Client.start_execution
@@ -31,15 +28,14 @@ class StepFunctionHelper:
             }
         """
         execution_params = {
-            'stateMachineArn': cls.state_machine_arn(state_machine_name),
+            'stateMachineArn': self.state_machine_arn(state_machine_name),
             'input': json.dumps(execution_input)
         }
         if execution_name is not None:
             execution_params['name'] = execution_name
         return aws.stepfunctions.start_execution(**execution_params)
 
-    @classmethod
-    def describe_execution(cls, state_machine_name, execution_name):
+    def describe_execution(self, state_machine_name, execution_name):
         """
         Wrapper around https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/stepfunctions.html#SFN.Client.describe_execution
 
@@ -56,7 +52,7 @@ class StepFunctionHelper:
             }
         """
         return aws.stepfunctions.describe_execution(
-            executionArn=cls.execution_arn(state_machine_name, execution_name))
+            executionArn=self.execution_arn(state_machine_name, execution_name))
 
 
 class StateMachineError(BaseException):
