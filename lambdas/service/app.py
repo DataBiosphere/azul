@@ -1,10 +1,11 @@
 import ast
 import base64
 import binascii
-import json
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import logging.config
+import json
+import math
 import os
 import re
 import time
@@ -14,13 +15,16 @@ import uuid
 # noinspection PyPackageRequirements
 import boto3
 from botocore.exceptions import ClientError
-# noinspection PyPackageRequirements
-from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, UnauthorizedError
+from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, AuthResponse, UnauthorizedError
 from more_itertools import one
 import requests
 
 from azul import config
 from azul.health import Health
+from azul.security.auth import (is_client_authenticated,
+                                authenticate,
+                                get_fusillade_login_url,
+                                AuthenticationError)
 from azul.service import service_config
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
@@ -43,7 +47,6 @@ app = Chalice(app_name=config.service_name, configure_logs=False)
 app.debug = True
 # FIXME: please use module logger instead (https://github.com/DataBiosphere/azul/issues/419)
 app.log.setLevel(logging.DEBUG)
-
 
 # TODO: Write the docstrings so they can support swagger.
 # Please see https://github.com/rochacbruno/flasgger
@@ -71,6 +74,37 @@ def _get_pagination(current_request):
         raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
 
     return pagination
+
+
+@app.authorizer()
+def jwt_auth(auth_request) -> AuthResponse:
+    given_token = auth_request.token
+
+    try:
+        access_token = authenticate(given_token)
+    except AuthenticationError as e:
+        # By specifying no routes, the access is denied.
+        log.warning('Auth: ERROR', stack_info=True)
+        return AuthResponse(routes=[], principal_id='anonymous')
+    except Exception as e:
+        # Unknown error, block all access temporarily.
+        # Note: When the code is running on AWS, this function will become a
+        #       separate lambda function, unlike how to work on a local machine.
+        #       Due to that, this method cannot fail unexpectedly. Otherwise,
+        #       The endpoint will respond with HTTP 500 with no log messages.
+        log.error(f'Auth: AUTHENTICATE: Critical ERROR {e} {given_token}', stack_info=True, exc_info=e)
+        return AuthResponse(routes=[], principal_id='no_access')
+
+    # When this code is running on AWS, the context of the authorizer has to be
+    # a string-to-primitive-type dictionary. When the context is retrieved in
+    # the caller function, the value somehow got casted into string.
+    return AuthResponse(routes=['*'],
+                        principal_id='user',
+                        context={
+                            prop: value
+                            for prop, value in access_token.items()
+                            if not isinstance(value, (list, tuple, dict))
+                        })
 
 
 @app.route('/', cors=True)
@@ -808,13 +842,6 @@ def files_proxy(uuid):
         dss_response.raise_for_status()
 
 
-def file_url(uuid, **params):
-    uuid = urllib.parse.quote(uuid, safe="")
-    url = self_url(endpoint_path=f'{proxy_endpoint_path}/{uuid}')
-    params = urllib.parse.urlencode(params)
-    return f'{url}?{params}'
-
-
 def self_url(endpoint_path=None):
     protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
     base_url = app.current_request.headers['host']
@@ -822,6 +849,58 @@ def self_url(endpoint_path=None):
         endpoint_path = app.current_request.context['path']
     retry_url = f'{protocol}://{base_url}{endpoint_path}'
     return retry_url
+
+
+def file_url(uuid, **params):
+    uuid = urllib.parse.quote(uuid, safe="")
+    url = self_url(endpoint_path=f'{proxy_endpoint_path}/{uuid}')
+    params = urllib.parse.urlencode(params)
+    return f'{url}?{params}'
+
+
+@app.route('/auth', methods=['GET'], cors=True)
+def authenticate_via_fusillade():
+    # For prototyping only
+    request = app.current_request
+    if is_client_authenticated(request.headers):
+        return Response(body='', status_code=200)
+    else:
+        return Response(body='',
+                        status_code=302,
+                        headers=dict(Location=get_fusillade_login_url()))
+
+
+@app.route('/auth/callback', methods=['GET'], cors=True)
+def handle_callback_from_fusillade():
+    # For prototyping only
+    try:
+        request = app.current_request
+        query = request.query_params or {}
+        expected_params = ('access_token', 'id_token', 'expires_in', 'decoded_token', 'state')
+        response_body = {k: json.loads(query[k]) if k == 'decoded_token' else query[k] for k in expected_params}
+        response_body.update(dict(login_url=get_fusillade_login_url()))
+
+        return Response(body=json.dumps(response_body), status_code=200)
+    except KeyError:
+        return Response(body='', status_code=400)
+
+
+@app.route('/me', methods=['GET'], cors=True, authorizer=jwt_auth)
+def access_info():
+    request = app.current_request
+    last_updated_timestamp = time.time()
+    claims = {
+        k: int(v) if k in ('exp', 'iat') else v
+        for k, v in request.context['authorizer'].items()
+    }
+    ttl_in_seconds = math.ceil(claims['exp'] - last_updated_timestamp)
+    response_body = dict(
+        claims=claims,
+        ttl=ttl_in_seconds,
+        last_updated=last_updated_timestamp
+    )
+    return Response(body=json.dumps(response_body, sort_keys=True),
+                    status_code=200)
 
 
 @app.route('/url', methods=['POST'], cors=True)
