@@ -536,8 +536,8 @@ def get_manifest():
     return response
 
 
-@app.route(ManifestService.manifest_endpoint, methods=['GET'], cors=True)
-def start_manifest_generation_view():
+@app.route('/manifest/files', methods=['GET'], cors=True)
+def start_manifest_generation():
     """
     Start and check status of manifest generation jobs
 
@@ -549,17 +549,11 @@ def start_manifest_generation_view():
         - name: token
           in: query
           type: string
-          description: Encoded json string containing information about the manifest generation job
-        - name: wait
-          in: query
-          type: any
-          description: Integer indicating amount of time to wait before checking status
-    :return: Response with location of the generated manifest
+          description: An opaque string describing the manifest generation job
+    :return: Response with either a 302 status and the location of the generated manifest,
+        or a 301 status and a URL to re-check the status of the job
     """
     logger = logging.getLogger("dashboardService.webservice.get_manifest")
-
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
 
     query_params = app.current_request.query_params or {}
 
@@ -573,52 +567,28 @@ def start_manifest_generation_view():
         logger.error('Malformed filters parameter: {}'.format(e))
         raise BadRequestError('Malformed filters parameter')
 
-    try:
-        wait = int(query_params.get('wait', 0))
-    except ValueError:
-        raise BadRequestError('Invalid wait parameter')
+    token = query_params.get('token')
 
-    return start_manifest_generation(filters=filters,
-                                     token=query_params.get('token'),
-                                     wait=wait,
-                                     local=app.lambda_context.invoked_function_arn == '')
-
-
-def start_manifest_generation(filters=None, token=None, wait=0, local=False):
-    """
-    When not given a token, start execution of a job generating the manifest.
-    Check the status of a manifest generation job.
-        - If in progress, return a url to recheck the status
-        - If successful, return a url to download the manifest
-        - If errored or aborted, raise a 500 error
-
-    :param filters: Filters to be applied when generating the manifest
-    :param token:  Encoded json string containing information about the manifest generation job
-    :param wait: Integer indicating amount of time to wait before checking status
-    :param local: Boolean indicating whether chalice is running locally
-    :return: Response with location of the generated manifest
-    """
     manifest_service = ManifestService()
-    if token is not None:
-        try:
-            params = manifest_service.decode_params(token)
-            if 'execution_id' not in params:
-                raise KeyError
-        except Exception:
-            raise BadRequestError('Invalid token given')
-    else:
-        filters = filters or {"file": {}}
+    if token is None:
         execution_id = manifest_service.start_manifest_generation(filters)
-        params = {'execution_id': execution_id}
+        token = manifest_service.encode_params({'execution_id': execution_id})
+
+    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
+    base_url = app.current_request.headers['host']
+    endpoint_path = app.current_request.context['path']
+    retry_url = f'{protocol}://{base_url}{endpoint_path}'
 
     try:
-        return manifest_service.get_manifest_status(params, wait + 1, local)
+        return manifest_service.get_manifest_status(token, retry_url)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
             raise BadRequestError('Invalid token given')
         raise
-    except StateMachineError:
-        raise ChaliceViewError('Failed to generate manifest')
+    except StateMachineError as e:
+        raise ChaliceViewError(e.msg)
+    except ValueError as e:
+        raise BadRequestError(e.args)
 
 
 @app.lambda_function(name=config.manifest_lambda_basename)
