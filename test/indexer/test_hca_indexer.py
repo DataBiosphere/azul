@@ -54,19 +54,17 @@ class TestHCAIndexer(IndexerTestCase):
         for result_dict in es_results:
             entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
             if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
-            index_id = result_dict["_id"]
-            expected_ids = set()
+            actual = sort_frozen(freeze(result_dict["_source"]))
+            expected = None
             path = os.path.join(data_prefix, f'aee55415-d128-4b30-9644-e6b2742fa32b.{entity_type}.results.json')
             with open(path, 'r') as fp:
                 expected_dict = json.load(fp)
-                self.assertGreater(len(expected_dict["hits"]["hits"]), 0)
                 for expected_hit in expected_dict["hits"]["hits"]:
-                    expected_ids.add(expected_hit["_id"])
-                    if index_id == expected_hit["_id"]:
+                    if result_dict["_id"] == expected_hit["_id"]:
+                        self.assertIsNone(expected)
                         expected = sort_frozen(freeze(expected_hit["_source"]))
-                        actual = sort_frozen(freeze(result_dict["_source"]))
-                        self.assertEqual(expected, actual, entity_type)
-            self.assertIn(index_id, expected_ids)
+                        self.assertIsNotNone(expected)
+            self.assertEqual(expected, actual, entity_type)
 
     def test_delete_correctness(self):
         """
