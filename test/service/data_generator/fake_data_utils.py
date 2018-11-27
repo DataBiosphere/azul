@@ -83,16 +83,10 @@ class ElasticsearchFakeDataLoader(object):
                         "file_format": ["file_extension"]
                     }
                 ],
-                "processes": [
+                "protocols": [
                     {
-                        "_type": "safe_color_name",
-                        "document_id": "uuid4",
-                        "instrument_manufacturer_model": "safe_color_name",
-                        "library_construction_approach": "safe_color_name",
-                        "process_id": "safe_color_name",
-                        "process_name": "safe_color_name",
-                        "protocol_name": "safe_color_name",
-                        "protocol_id": "safe_color_name"
+                        "library_construction_approach": ["safe_color_name"],
+                        "instrument_manufacturer_model": ["safe_color_name"]
                     }
                 ],
                 "projects": [
