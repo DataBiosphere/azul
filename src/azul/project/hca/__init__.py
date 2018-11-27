@@ -69,7 +69,7 @@ class Plugin(azul.plugin.Plugin):
                                                     "must": [
                                                         {
                                                             "prefix": {
-                                                                "files.project_json.project_core.project_short_name": "integration/"
+                                                                "files.project_json.project_core.project_short_name": "staging/"
                                                             }
                                                         },
                                                         {
