@@ -55,8 +55,12 @@ class ManifestService:
                 'Location': execution_output['Location']
             }
         elif execution['status'] == 'RUNNING':
+            wait_times = [1, 1, 2, 6, 10]
+            wait = max(0, min(params.get('wait', 0), len(wait_times)))
+            params['wait'] = wait + 1
             return {
                 'Status': 301,
+                'Retry-After': wait_times[wait],
                 'Location': f'{retry_url}?token={self.encode_params(params)}'
             }
         raise StateMachineError('Failed to generate manifest')
