@@ -33,7 +33,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         self.assertTrue('hits' in response_json)
         self.assertGreater(len(response_json['hits']), 0)
         for hit in response_json['hits']:
-            self.assertTrue('processes' in hit)
+            self.assertTrue('protocols' in hit)
             self.assertTrue('entryId' in hit)
             assert_file_type_summaries(hit)
             self.assertTrue('projects' in hit)
@@ -63,7 +63,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         self.assertGreater(hit['fileTypeSummaries'][0]['count'], 0)
         self.assertGreater(hit['fileTypeSummaries'][0]['totalSize'], 0)
 
-        self.assertTrue('processes' in hit)
+        self.assertTrue('protocols' in hit)
         self.assertTrue('entryId' in hit)
         self.assertTrue('projects' in hit)
         self.assertTrue('specimens' in hit)
