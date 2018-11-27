@@ -21,7 +21,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
         cls.production_test_bundles = [("17a3d288-01a0-464a-9599-7375fda3353d", "2018-03-28T151023.074974Z"),
                                        ("2a87dc5c-0c3c-4d91-a348-5d784ab48b92", "2018-03-29T104041.822717Z"),
                                        ("4afbb0ea-81ad-49dc-9b12-9f77f4f50be8", "2018-03-29T090403.442059Z"),
-                                       ("aee55415-d128-4b30-9644-e6b2742fa32b", "2018-03-29T152812.404846Z"),
+                                       ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z"),
                                        ("b0850e79-5544-49fe-b54d-e29b9fc3f61f", "2018-03-29T090340.934358Z"),
                                        ("c94a43f9-257f-4cd0-b2fe-eaf6d5d37d18", "2018-03-29T090343.782253Z")]
         cls.test_same_ids_different_bundles = [("b2216048-7eaa-45f4-8077-5a3fb4204953", "2018-03-29T142048.835519Z"),

@@ -38,8 +38,8 @@ class TestHCAIndexer(IndexerTestCase):
             self.es_client.indices.delete(index=index_name, ignore=[400, 404])
         super().tearDown()
 
-    old_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b", "2018-03-29T152812.404846Z")
-    new_bundle = ("aee55415-d128-4b30-9644-e6b2742fa32b", "2018-03-30T152812.404846Z")
+    old_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")
+    new_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z")
 
     def test_index_correctness(self):
         """
@@ -56,7 +56,7 @@ class TestHCAIndexer(IndexerTestCase):
             if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
             actual = sort_frozen(freeze(result_dict["_source"]))
             expected = None
-            path = os.path.join(data_prefix, f'aee55415-d128-4b30-9644-e6b2742fa32b.{entity_type}.results.json')
+            path = os.path.join(data_prefix, f'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.{entity_type}.results.json')
             with open(path, 'r') as fp:
                 expected_dict = json.load(fp)
                 for expected_hit in expected_dict["hits"]["hits"]:
@@ -135,14 +135,14 @@ class TestHCAIndexer(IndexerTestCase):
             old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
             self.assertEqual(self.old_bundle[1], old_result_version)
-            self.assertEqual("Melanoma infiltration of stromal and immune cells",
+            self.assertEqual("Single cell transcriptome patterns.",
                              old_result_contents["projects"][0]["project_title"])
             old_project = old_result_contents["projects"][0]
-            self.assertEqual("Mouse Melanoma", old_project["project_shortname"])
-            self.assertIn("Sarah Teichmann", old_project["laboratory"])
-            self.assertIn("University of Helsinki",
+            self.assertEqual("Single of human pancreas", old_project["project_shortname"])
+            self.assertIn("John Dear", old_project["laboratory"])
+            self.assertIn("Farmers Trucks",
                           [c.get('institution') for c in old_project["contributors"]])
-            self.assertIn("Mus musculus", old_result_contents["specimens"][0]["genus_species"])
+            self.assertIn("Australopithecus", old_result_contents["specimens"][0]["genus_species"])
 
         self._mock_index(self.new_bundle, updated=True)
         new_results = self._get_es_results()
@@ -160,18 +160,19 @@ class TestHCAIndexer(IndexerTestCase):
             old_project = old_result_contents["projects"][0]
             new_project = new_result_contents["projects"][0]
             self.assertNotEqual(old_project["project_title"], new_project["project_title"])
-            self.assertEqual("Melanoma infiltration of stromal and immune cells 2",
+            self.assertEqual("Single cell transcriptome analysis of human pancreas reveals transcriptional signatures "
+                             "of aging and somatic mutation patterns.",
                              new_project["project_title"])
 
             self.assertNotEqual(old_project["project_shortname"], new_project["project_shortname"])
-            self.assertEqual("Aardvark Ailment", new_project["project_shortname"])
+            self.assertEqual("Single cell transcriptome analysis of human pancreas", new_project["project_shortname"])
 
             self.assertNotEqual(old_project["laboratory"], new_project["laboratory"])
             self.assertNotIn("Sarah Teichmann", new_project["laboratory"])
-            self.assertIn("John Denver", new_project["laboratory"])
+            self.assertIn("Molecular Atlas", new_project["laboratory"])
 
             self.assertNotEqual(old_project["contributors"], new_project["contributors"])
-            self.assertNotIn("University of Helsinki", [c.get('institution') for c in new_project["contributors"]])
+            self.assertNotIn("Farmers Trucks", [c.get('institution') for c in new_project["contributors"]])
 
             self.assertNotEqual(old_result_contents["specimens"][0]["genus_species"],
                                 new_result_contents["specimens"][0]["genus_species"])
@@ -191,14 +192,15 @@ class TestHCAIndexer(IndexerTestCase):
             old_result_contents = result_dict["_source"]["bundles"][0]["contents"]
 
             self.assertEqual(self.new_bundle[1], old_result_version)
-            self.assertEqual("Melanoma infiltration of stromal and immune cells 2",
+            self.assertEqual("Single cell transcriptome analysis of human pancreas reveals transcriptional signatures "
+                             "of aging and somatic mutation patterns.",
                              old_result_contents["projects"][0]["project_title"])
             old_project = old_result_contents["projects"][0]
-            self.assertEqual("Aardvark Ailment", old_project["project_shortname"])
-            self.assertIn("John Denver", old_project["laboratory"])
-            self.assertNotIn("University of Helsinki",
+            self.assertEqual("Single cell transcriptome analysis of human pancreas", old_project["project_shortname"])
+            self.assertIn("Molecular Atlas", old_project["laboratory"])
+            self.assertNotIn("Farmers Trucks",
                              [c.get('institution') for c in old_project["contributors"]])
-            self.assertIn("Lorem ipsum", old_result_contents["specimens"][0]["genus_species"])
+            self.assertIn("Homo sapiens", old_result_contents["specimens"][0]["genus_species"])
 
         self._mock_index(self.old_bundle)
         new_results = self._get_es_results()
