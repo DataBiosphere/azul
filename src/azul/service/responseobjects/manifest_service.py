@@ -56,7 +56,7 @@ class ManifestService:
             }
         elif execution['status'] == 'RUNNING':
             wait_times = [1, 1, 2, 6, 10]
-            wait = max(0, min(params.get('wait', 0), len(wait_times)))
+            wait = max(0, min(params.get('wait', 0), len(wait_times) - 1))
             params['wait'] = wait + 1
             return {
                 'Status': 301,
