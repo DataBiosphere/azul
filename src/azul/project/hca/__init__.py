@@ -34,7 +34,7 @@ class Plugin(azul.plugin.Plugin):
                                 {
                                     "range": {
                                         "manifest.version": {
-                                            "gte": "2018-11-13"
+                                            "gte": "2018-11-27"
                                         }
                                     }
                                 }
@@ -75,7 +75,7 @@ class Plugin(azul.plugin.Plugin):
                                                         {
                                                             "range": {
                                                                 "manifest.version": {
-                                                                    "gte": "2018-11-13"
+                                                                    "gte": "2018-11-27"
                                                                 }
                                                             }
                                                         }
