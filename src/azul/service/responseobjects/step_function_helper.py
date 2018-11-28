@@ -13,17 +13,17 @@ class StepFunctionHelper:
     def execution_arn(self, state_machine_name, execution_name):
         return f'arn:aws:states:{aws.region_name}:{aws.account}:execution:{state_machine_name}:{execution_name}'
 
-    def start_execution(self, state_machine_name, execution_input, execution_name=None):
+    def start_execution(self, state_machine_name, execution_name, execution_input):
         """
         Wrapper around https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/stepfunctions.html#SFN.Client.start_execution
         """
         execution_params = {
             'stateMachineArn': self.state_machine_arn(state_machine_name),
+            'name': execution_name,
             'input': json.dumps(execution_input)
         }
-        if execution_name is not None:
-            execution_params['name'] = execution_name
-        return aws.stepfunctions.start_execution(**execution_params)
+        execution_response = aws.stepfunctions.start_execution(**execution_params)
+        assert self.execution_arn(state_machine_name, execution_name) == execution_response['executionArn']
 
     def describe_execution(self, state_machine_name, execution_name):
         """

@@ -7,7 +7,7 @@ from chalice import BadRequestError, ChaliceViewError
 from moto import mock_s3, mock_sts
 
 from azul import config
-from azul.service.responseobjects.step_function_helper import StepFunctionHelper, StateMachineError
+from azul.service.responseobjects.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
 from lambdas.service.app import generate_manifest, start_manifest_generation
 from service import WebServiceTestCase
@@ -31,19 +31,20 @@ class ManifestTest(WebServiceTestCase):
     @mock_sts
     @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
-    def test_manifest_endpoint_start_execution(self, current_request, step_function_helper):
+    @mock.patch('uuid.uuid4')
+    def test_manifest_endpoint_start_execution(self, mock_uuid, current_request, step_function_helper):
         """
         Calling start manifest generation without a token should start an execution and check the status
         """
-        step_function_helper.start_execution.return_value = {
-            'executionArn': StepFunctionHelper().execution_arn('name', '6c9dfa3f-e92e-11e8-9764-ada973595c11')
-        }
+        execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
+        mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
         filters = {'file': {'organ': {'is': ['lymph node']}}}
         current_request.query_params = {'filters': json.dumps(filters)}
         execution_status = start_manifest_generation()
         self.assertEqual(301, execution_status['Status'])
         step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
+                                                                     execution_name,
                                                                      execution_input={'filters': filters})
         step_function_helper.describe_execution.assert_called_once()
 
