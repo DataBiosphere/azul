@@ -46,10 +46,23 @@ ADD crontab /etc/cron.d/action-cron
 RUN chmod 0644 /etc/cron.d/action-cron
 RUN cron
 
-# Java install
-RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
-RUN echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
-RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886 && apt-get update && apt-get install -y curl dnsutils oracle-java8-installer ca-certificates
+# Java install: add PPA to sources list
+RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" | tee /etc/apt/sources.list.d/webupd8team-java.list
+RUN echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list
+RUN echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | /usr/bin/debconf-set-selections
+
+# Fetch GPG key
+RUN export GNUPGHOME="$(mktemp -d)"
+RUN gpg --batch --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C2518248EEA14886
+RUN gpg --export --armor C2518248EEA14886 | tee /etc/apt/trusted.gpg.d/docker.gpg.asc
+RUN rm -rf "$GNUPGHOME"
+
+RUN apt-get update
+RUN apt-get install -y curl dnsutils oracle-java8-installer
+
+# Update certificates
+RUN echo "deb-src  http://deb.debian.org/debian  stretch main" | tee -a /etc/apt/sources.list
+RUN apt-get update
+RUN apt-get install -y ca-certificates
 
 CMD ["/usr/bin/supervisord"]
