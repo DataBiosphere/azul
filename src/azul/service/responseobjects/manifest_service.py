@@ -18,17 +18,17 @@ class ManifestService:
     def decode_params(self, token):
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
-    def start_manifest_generation(self, filters):
+    def start_manifest_generation(self, filters, execution_id):
         """
         Start the execution of a state machine generating the manifest
 
         :param filters: filters to use for the manifest
-        :return: The execution id of the state machine
+        :param execution_id: name to give the execution (must be unique across executions of the state machine)
+        :return: The id of the state machine execution that was started
         """
-        return self.step_function_helper.start_execution(
-            config.manifest_state_machine_name,
-            execution_input={'filters': filters}
-        )['executionArn'].split(':')[-1]
+        self.step_function_helper.start_execution(config.manifest_state_machine_name,
+                                                  execution_id,
+                                                  execution_input={'filters': filters})
 
     def get_manifest_status(self, token, retry_url):
         """

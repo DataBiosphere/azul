@@ -25,21 +25,6 @@ class ManifestServiceTest(TestCase):
 
     @mock_sts
     @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
-    def test_start_manifest_generation(self, step_function_helper):
-        """
-        Starting manifest generation should return the name of the execution
-        """
-        execution_id = '9e53a9da-e8d5-4fc5-948e-6bd1e771d6a1'
-        execution_start_output = {
-            'executionArn': StepFunctionHelper().execution_arn(config.manifest_state_machine_name, execution_id),
-            'startDate': datetime.datetime(2018, 11, 16, 12, 29, 12, 474000)
-        }
-        step_function_helper.start_execution.return_value = execution_start_output
-        manifest_service = ManifestService()
-        self.assertEqual(execution_id, manifest_service.start_manifest_generation({'file': {}}))
-
-    @mock_sts
-    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
     def test_manifest_status_success(self, step_function_helper):
         """
         A successful manifest job should return a 302 status and a url to the manifest

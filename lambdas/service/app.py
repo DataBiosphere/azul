@@ -4,6 +4,7 @@ import logging.config
 import os
 import time
 import urllib.parse
+import uuid
 
 # noinspection PyPackageRequirements
 from botocore.exceptions import ClientError
@@ -571,7 +572,8 @@ def start_manifest_generation():
 
     manifest_service = ManifestService()
     if token is None:
-        execution_id = manifest_service.start_manifest_generation(filters)
+        execution_id = str(uuid.uuid4())
+        manifest_service.start_manifest_generation(filters, execution_id)
         token = manifest_service.encode_params({'execution_id': execution_id})
 
     protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
