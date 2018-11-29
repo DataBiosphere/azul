@@ -18,6 +18,7 @@ build_develop:
   environment:
     name: develop
   script:
+#    - _select dev
 #    - make terraform
 #    - make deploy
 # How to handle tagging tag will cause the job to re-run maybe the committer tags?
