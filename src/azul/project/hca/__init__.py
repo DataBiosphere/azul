@@ -54,7 +54,6 @@ class Plugin(azul.plugin.Plugin):
                                                         "67bc798b-a34a-4104-8cab-cad648471f69",  # Teichmann-mouse-melanoma
                                                         "81b5f43d-3c20-4575-9efa-bfb0b070a6e3",  # Meyer
                                                         "519b58ef-6462-4ed3-8c0d-375b54f53c31",  # EGEOD106540
-                                                        "1f9a699a-262c-40a0-8b2c-7ba960ca388c",  # tabulamuris
                                                         "1f9a699a-262c-40a0-8b2c-7ba960ca388c",  # ido_amit
                                                         "62aa3211-bf52-4873-9029-0bcc1d09e553",  # humphreys
                                                         "a71dee10-9a4d-4ea2-a6f3-ae7314112cf1",  # peer
