@@ -1,0 +1,27 @@
+
+stages:
+  - build
+
+
+# Build Jobs
+# Build Job Template
+.build_template: &build_template
+  image: python:3.6-stretch
+  stage: build
+  before_script:
+    - pip install -r requirements.dev.txt
+
+# Develop Build
+build_develop:
+  <<: *build_template
+  environment:
+    name: develop
+  script:
+#    - make terraform
+#    - make deploy
+# How to handle tagging tag will cause the job to re-run maybe the committer tags?
+# Any tests we can run?
+#    - make subscribe
+## How to decide make reindex or delete_and_reindex
+  only:
+    - develop
