@@ -9,6 +9,7 @@ stages:
   image: python:3.6-stretch
   stage: build
   before_script:
+    - source environment
     - pip install -r requirements.dev.txt
 
 # Develop Build
