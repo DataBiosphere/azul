@@ -230,10 +230,10 @@ make reindex
 
 
 1) Go to the Simple Queue Service dashboard in the AWS Console. Then, find your target notify SQS queue (should be named azul-notify-...). 
-2. Go to the Lambda dashboard in the AWS Console. Find the azul-indexer...-write lambda. Then, disable the event binding document queue (usually named azul-documents-...). This is done by clicking on the `SQS` trigger in the `Designer` box, clicking on the Enabled switch of azul-documents-... in the newly appeared `SQS` box, then finally saving your settings.
-3. Purge the remaining queues.
-4. Renable the event binding from step 2.
-5. Repeat until azul-documents-..., azul-documents-....fifo, azul-notify-... is empty.
+2) Go to the Lambda dashboard in the AWS Console. Find the azul-indexer...-write lambda. Then, disable the event binding document queue (usually named azul-documents-...). This is done by clicking on the `SQS` trigger in the `Designer` box, clicking on the Enabled switch of azul-documents-... in the newly appeared `SQS` box, then finally saving your settings.
+3) Purge the remaining queues.
+4) Renable the event binding from step 2.
+5) Repeat until azul-documents-..., azul-documents-....fifo, azul-notify-... is empty.
 
 ## 3. Running indexer or service locally
 
