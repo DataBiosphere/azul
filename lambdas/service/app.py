@@ -1,4 +1,5 @@
 import ast
+import json
 from concurrent.futures import ThreadPoolExecutor
 import logging.config
 import os
@@ -162,7 +163,7 @@ def get_data(file_id=None):
 
         for hit in response['hits']:
             for file in hit['files']:
-                file['url'] = file_url(file['uuid'], file['version'])
+                file['url'] = file_url(file['uuid'], version=file['version'], replica='aws')
 
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
@@ -660,10 +661,7 @@ def handle_manifest_generation_request():
         manifest_service.start_manifest_generation(filters, execution_id)
         token = manifest_service.encode_params({'execution_id': execution_id})
 
-    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
-    base_url = app.current_request.headers['host']
-    endpoint_path = app.current_request.context['path']
-    retry_url = f'{protocol}://{base_url}{endpoint_path}'
+    retry_url = self_url()
 
     try:
         return manifest_service.get_manifest_status(token, retry_url)
@@ -727,11 +725,19 @@ def files_proxy(uuid):
         dss_response.raise_for_status()
 
 
-def file_url(uuid, version):
-    return _file_url(uuid, version=version, replica='aws')
+def file_url(uuid, **kwargs):
+    endpoint_path = '/dss/files'
+    uuid = urllib.parse.quote(uuid, safe="")
+    composit_url = f'{endpoint_path}/{uuid}'
+    url = self_url(composit_url)
+    params = urllib.parse.urlencode(kwargs)
+    return f'{url}?{params}'
 
 
-def _file_url(uuid, **kwargs):
-    return (config.service_endpoint() + '/dss/files' +
-            '/' + urllib.parse.quote(uuid, safe='') +
-            '?' + urllib.parse.urlencode(kwargs))
+def self_url(endpoint_path=None):
+    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
+    base_url = app.current_request.headers['host']
+    if endpoint_path is None:
+        endpoint_path = app.current_request.context['path']
+    retry_url = f'{protocol}://{base_url}{endpoint_path}'
+    return retry_url
