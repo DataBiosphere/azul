@@ -226,13 +226,14 @@ index them run:
 make reindex
 ```
 
-### 2.6 Clearing SQS queues
+### 2.6 Cancelling all ongoing (re)indexing operations
 
-1. Purge Notification Queue
-2. Disable event binding document queue and azul-indexer-write lambda
-3. Purge Remaining Queue
-4. Renable event binding
-5. Repeat until queue is empty
+
+1) Go to the Simple Queue Service dashboard in the AWS Console. Then, find your target notify SQS queue (should be named azul-notify-...). 
+2. Go to the Lambda dashboard in the AWS Console. Find the azul-indexer...-write lambda. Then, disable the event binding document queue (usually named azul-documents-...). This is done by clicking on the `SQS` trigger in the `Designer` box, clicking on the Enabled switch of azul-documents-... in the newly appeared `SQS` box, then finally saving your settings.
+3. Purge the remaining queues.
+4. Renable the event binding from step 2.
+5. Repeat until azul-documents-..., azul-documents-....fifo, azul-notify-... is empty.
 
 ## 3. Running indexer or service locally
 
