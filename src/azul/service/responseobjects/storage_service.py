@@ -81,7 +81,6 @@ class MultipartUploadHandler:
         self.upload_id = None
         self.mp_upload = None
         self.next_part_number = 1
-        self.closed = False
         self.content_type = content_type
         self.parts = []
         self.futures = []
