@@ -79,6 +79,7 @@ class MultipartUploadHandler:
         self.bucket_name = config.s3_bucket
         self.object_key = object_key
         self.upload_id = None
+        self.mp_upload = None
         self.next_part_number = 1
         self.closed = False
         self.content_type = content_type
@@ -91,7 +92,8 @@ class MultipartUploadHandler:
 
     def __exit__(self, type, value, traceback):
         if type:
-            self.abort(raise_exception=True)
+            self.abort()
+            raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
         self.shutdown()
 
     @property
@@ -125,7 +127,7 @@ class MultipartUploadHandler:
             return
 
         if not self.parts:
-            self.abort(raise_exception=False)
+            self.abort()
             raise EmptyMultipartUploadError(f'{self.bucket_name}/{self.object_key}')
 
         last_part = self.parts[-1]
@@ -141,27 +143,16 @@ class MultipartUploadHandler:
         self.mp_upload = None
         self.closed = True
 
-    def abort(self, raise_exception:bool=True):
-        """
-        Aborts a multipart upload.
-
-        :param raise_exception: Flag to raise exception on successful abort.
-        :raises UnexpectedMultipartUploadAbort: An abort due to unexpected
-                                                error occurred
-
-        If ``raise_exception`` is ``True``, :class:`UnexpectedMultipartUploadAbort`
-        will be raised.
-        """
+    def abort(self):
         if not self.is_active:
             return
 
         self.mp_upload.abort()
         self.mp_upload = None
         self.closed = True
+        self.thread_pool.shutdown()
 
         logger.warning('Upload %s: Aborted', self.upload_id)
-        if raise_exception:
-            raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
 
     def push(self, data: bytes):
         part = self._get_next_part(data)
