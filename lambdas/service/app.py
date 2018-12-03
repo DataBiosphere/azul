@@ -540,7 +540,7 @@ def get_manifest():
 @app.route('/manifest/files', methods=['GET'], cors=True)
 def start_manifest_generation():
     """
-    Start and check status of manifest generation jobs
+    Initiate and check status of a manifest generation job.
 
     parameters:
         - name: filters
@@ -551,39 +551,45 @@ def start_manifest_generation():
           in: query
           type: string
           description: An opaque string describing the manifest generation job
+
     :return: A 200 response with a JSON body describing the status of the manifest.
 
-        If the manifest is still being generated, the response will look like:
-        ```
-        {
-            "Status": 301,
-            "Retry-After": 2,
-            "Location": "https://retry.url"
-        }
-        ```
+    If the manifest generation has been started or is still ongoing, the response will look like:
 
-        The `Status` field emulates an HTTP status code (301 moved permanently).
-        Note that the actual HTTP response is still 200. The body of the 200 response merely emulates HTTP
-        in order to bypass the default user agent behavior which, in many cases, disobeys Retry-After.
-        It is intended to be processed by client-side Javascript such that the recommended delay can be
-        handled in Javascript rather relying on a native implementation by the browser.
+    ```
+    {
+        "Status": 301,
+        "Retry-After": 2,
+        "Location": "https://…"
+    }
+    ```
 
-        `Retry-After` is the recommended number of seconds to wait before rechecking the status of the manifest.
+    The `Status` field emulates HTTP status code 301 Moved Permanently.
 
-        `Location` is the URL to make a GET request to in order to recheck the status
-        (it is this endpoint so the response format is the same)
+    `Retry-After` is the recommended number of seconds to wait before requesting the URL the `Location` field.
 
-        If the manifest is done and ready to be downloaded the response will be:
-        ```
-        {
-            "Status": 302,
-            "Location": "https://manifest.url"
-        }
-        ```
+    `Location` is the URL to make a GET request to in order to recheck the status.
 
-        The `Status` field emulates an HTTP status code (302 moved temporarily)
+    If the client receives a response body with the `Status` field set to 301, the client should wait the number of
+    seconds specified in `Retry-After` and then request the URL given in the `Location` field. The URL will point
+    back at this endpoint so the client should expect a response of the same shape. Note that the actual HTTP
+    response is of status 200, only the `Status` field of the body will be 301. The intent is to emulate HTTP while
+    bypassing the default client behavior which, in most web browsers, is to ignore `Retry-After`. The response
+    described here is intended to be processed by client-side Javascript such that the recommended delay in
+    `Retry-After` can be handled in Javascript rather that relying on the native implementation by the web browser.
 
-        `Location` is the URL at which the manifest can be downloaded
+    If the manifest generation is done and the manifest is ready to be downloaded, the response will be:
+
+    ```
+    {
+        "Status": 302,
+        "Location": "https://manifest.url"
+    }
+    ```
+
+    The client should request the URL given in the `Location` field. The URL will point to a different service and
+    the client should expect a response containing the actual manifest. Currently the `Location` field of the final
+    response is a signed URL to an object in S3 but clients should not depend on that.
     """
     logger = logging.getLogger("dashboardService.webservice.get_manifest")
 
