@@ -21,9 +21,9 @@ class StorageService:
     def client(self):
         return boto3.client('s3')
 
-    def get(self, object_key: str) -> str:
+    def get(self, object_key: str) -> bytes:
         try:
-            return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read().decode()
+            return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read()
         except self.client.exceptions.NoSuchKey:
             raise GetObjectError(object_key)
 
