@@ -28,7 +28,6 @@ class StepFunctionHelper:
     def describe_execution(self, state_machine_name, execution_name):
         """
         Wrapper around https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/stepfunctions.html#SFN.Client.describe_execution
-
         """
         return aws.stepfunctions.describe_execution(
             executionArn=self.execution_arn(state_machine_name, execution_name))
