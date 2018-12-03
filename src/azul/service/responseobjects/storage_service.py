@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from functools import lru_cache
 from logging import getLogger
 from typing import Optional, List
 import boto3
@@ -7,23 +8,18 @@ from azul import config
 
 logger = getLogger(__name__)
 AWS_S3_DEFAULT_MINIMUM_PART_SIZE = 5242880  # 5 MB; see https://docs.aws.amazon.com/AmazonS3/latest/dev/qfacts.html
-MULTIPART_UPLOAD_MAX_WORKERS = 12
+MULTIPART_UPLOAD_MAX_WORKERS = 4
 
 
 class StorageService:
 
     def __init__(self):
         self.bucket_name = config.s3_bucket
-        self._client = None  # the default client will be assigned later to allow patching.
 
     @property
+    @lru_cache(maxsize=1)
     def client(self):
-        if not self._client:
-            self._client = boto3.client('s3')
-        return self._client
-
-    def set_client(self, client):
-        self._client = client
+        return boto3.client('s3')
 
     def get(self, object_key: str) -> str:
         try:
@@ -83,7 +79,6 @@ class MultipartUploadHandler:
         self.bucket_name = config.s3_bucket
         self.object_key = object_key
         self.upload_id = None
-        self.handler = None
         self.next_part_number = 1
         self.closed = False
         self.content_type = content_type
