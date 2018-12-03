@@ -551,27 +551,39 @@ def start_manifest_generation():
           in: query
           type: string
           description: An opaque string describing the manifest generation job
-    :return: Response with either a 302 status and the location of the generated manifest,
-        or a 301 status and a URL to re-check the status of the job
+    :return: A 200 response with a JSON body describing the status of the manifest.
 
-        If manifest is still generating the response will look like:
+        If the manifest is still being generated, the response will look like:
+        ```
         {
             "Status": 301,
             "Retry-After": 2,
             "Location": "https://retry.url"
         }
-        Status represents an HTTP status code (301 moved permanently)
-        Retry-After is the recommended number of seconds to wait before rechecking the status of the manifest
-        Location is the URL to make a GET request to in order to recheck the status
-            (it is this endpoint so the response format is the same)
+        ```
+
+        The `Status` field emulates an HTTP status code (301 moved permanently).
+        Note that the actual HTTP response is still 200. The body of the 200 response merely emulates HTTP
+        in order to bypass the default user agent behavior which, in many cases, disobeys Retry-After.
+        It is intended to be processed by client-side Javascript such that the recommended delay can be
+        handled in Javascript rather relying on a native implementation by the browser.
+
+        `Retry-After` is the recommended number of seconds to wait before rechecking the status of the manifest.
+
+        `Location` is the URL to make a GET request to in order to recheck the status
+        (it is this endpoint so the response format is the same)
 
         If the manifest is done and ready to be downloaded the response will be:
+        ```
         {
             "Status": 302,
             "Location": "https://manifest.url"
         }
-        Status represents an HTTP status code (302 moved temporarily)
-        Location is the URL at which the manifest can be downloaded
+        ```
+
+        The `Status` field emulates an HTTP status code (302 moved temporarily)
+
+        `Location` is the URL at which the manifest can be downloaded
     """
     logger = logging.getLogger("dashboardService.webservice.get_manifest")
 

@@ -49,7 +49,6 @@ emit({
                 "name": config.manifest_state_machine_name,
                 "role_arn": "${aws_iam_role.state_machine_iam_role.arn}",
                 "definition": json.dumps({
-                    "Comment": "Write all entities matching a filter to DynamoDB",
                     "StartAt": "WriteManifest",
                     "States": {
                         "WriteManifest": {
