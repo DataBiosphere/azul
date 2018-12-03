@@ -33,7 +33,7 @@ class StorageServiceTest(TestCase):
 
         storage_service.put(sample_key, sample_content)
 
-        self.assertEqual(sample_content, storage_service.get(sample_key))
+        self.assertEqual(sample_content, storage_service.get(sample_key).decode('utf-8'))
 
     @mock_s3
     @mock_sts
@@ -78,7 +78,7 @@ class StorageServiceTest(TestCase):
             for part in sample_content_parts:
                 upload.push(part.encode())
 
-        self.assertEqual(expected_content, storage_service.get(sample_key))
+        self.assertEqual(expected_content, storage_service.get(sample_key).decode('utf-8'))
 
     @mock_s3
     @mock_sts
@@ -97,7 +97,7 @@ class StorageServiceTest(TestCase):
             for part in sample_content_parts:
                 upload.push(part.encode())
 
-        self.assertEqual(expected_content, storage_service.get(sample_key))
+        self.assertEqual(expected_content, storage_service.get(sample_key).decode('utf-8'))
 
     @mock_s3
     @mock_sts
@@ -117,7 +117,7 @@ class StorageServiceTest(TestCase):
             for part in sample_content_parts:
                 upload.push(part.encode())
 
-        self.assertEqual(expected_content, storage_service.get(sample_key))
+        self.assertEqual(expected_content, storage_service.get(sample_key).decode('utf-8'))
 
     @mock_s3
     @mock_sts
