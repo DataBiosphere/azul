@@ -8,6 +8,7 @@ from azul.service.responseobjects.storage_service import (StorageService,
                                                           GetObjectError,
                                                           EmptyMultipartUploadError,
                                                           InactiveMultipartUploadAbort,
+                                                          UploadPartSizeOutOfBoundError,
                                                           UnexpectedMultipartUploadAbort,
                                                           MultipartUploadHandler)
 
@@ -101,23 +102,21 @@ class StorageServiceTest(TestCase):
 
     @mock_s3
     @mock_sts
-    def test_multipart_upload_ok_with_merging(self):
+    def test_multipart_upload_error_with_out_of_bound_part(self):
         sample_key = 'foo-multipart-upload'
         sample_content_parts = [
-            "a" * 1024,  # This part will not be uploaded right away and merged
-                         # with the next part.
+            "a" * 1024,  # This part will cause an error raised by MPU.
             "b" * 5242880,
             "c" * 1024
         ]
-        expected_content = "".join(sample_content_parts)
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with MultipartUploadHandler(sample_key, 'text/plain') as upload:
-            for part in sample_content_parts:
-                upload.push(part.encode())
 
-        self.assertEqual(expected_content, storage_service.get(sample_key).decode('utf-8'))
+        with self.assertRaises(UploadPartSizeOutOfBoundError):
+            with MultipartUploadHandler(sample_key, 'text/plain') as upload:
+                for part in sample_content_parts:
+                    upload.push(part.encode())
 
     @mock_s3
     @mock_sts

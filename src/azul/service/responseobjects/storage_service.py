@@ -131,16 +131,18 @@ class MultipartUploadHandler:
             self.abort()
             raise EmptyMultipartUploadError(f'{self.bucket_name}/{self.object_key}')
 
-        last_part = self.parts[-1]
-
-        if not last_part.already_uploaded:
-            # Per documentation, the last part can be at any size. Hence, the uploadable condition is ignored.
-            self.futures.append(self.thread_pool.submit(self._upload_part, last_part))
-
         for _ in as_completed(self.futures):
             pass  # Blocked until all uploads are done.
 
-        self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
+        try:
+            self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
+        except self.mp_upload.meta.client.exceptions.ClientError as e:
+            logger.error('Upload %s: Error detected while completing the upload.', self.upload_id)
+            self.abort()
+            if 'EntityTooSmall' in e.args[0]:
+                raise UploadPartSizeOutOfBoundError(f'{self.bucket_name}/{self.object_key}')
+            raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
+
         self.mp_upload = None
         self.thread_pool.shutdown()
 
@@ -155,39 +157,21 @@ class MultipartUploadHandler:
         logger.warning('Upload %s: Aborted', self.upload_id)
 
     def push(self, data: bytes):
-        part = self._get_next_part(data)
-
-        if not part.is_uploadable:
-            return
-
+        part = self._create_new_part(data)
         part.uploaded = True
 
         self.futures.append(self.thread_pool.submit(self._upload_part, part))
 
     def _create_new_part(self, data: bytes):
-        part = Part(part_number=self.next_part_number, etag=None, content=[data], uploaded=False)
+        part = Part(part_number=self.next_part_number, etag=None, content=data, uploaded=False)
         self.parts.append(part)
         self.next_part_number += 1
 
         return part
 
-    def _get_next_part(self, data):
-        if not self.parts:
-            part = self._create_new_part(data)
-        else:
-            # If the last part is under the minimum limit, the data will be appended.
-            last_part = self.parts[-1]
-            if last_part.already_uploaded:
-                part = self._create_new_part(data)
-            else:
-                part = last_part
-                part.content.append(data)
-
-        return part
-
     def _upload_part(self, part):
         upload_part = self.mp_upload.Part(part.part_number)
-        result = upload_part.upload(Body=b''.join(part.content))
+        result = upload_part.upload(Body=part.content)
         part.etag = result['ETag']
 
 
@@ -195,16 +179,12 @@ class MultipartUploadHandler:
 class Part:
     etag: str  # If ETag is defined, the content is already pushed to S3.
     part_number: int
-    content: List[bytes]
+    content: bytes
     uploaded: bool  # If true, the content is either being uploaded or already pushed to S3 (with etag defined).
 
     @property
     def already_uploaded(self):
         return self.uploaded or self.etag is not None
-
-    @property
-    def is_uploadable(self):
-        return sum(map(len, self.content)) >= AWS_S3_DEFAULT_MINIMUM_PART_SIZE
 
     def to_dict(self):
         return dict(PartNumber=self.part_number, ETag=self.etag)
@@ -223,4 +203,8 @@ class UnexpectedMultipartUploadAbort(RuntimeError):
 
 
 class InactiveMultipartUploadAbort(RuntimeError):
+    pass
+
+
+class UploadPartSizeOutOfBoundError(RuntimeError):
     pass
