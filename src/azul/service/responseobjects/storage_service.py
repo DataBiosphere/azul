@@ -88,13 +88,20 @@ class MultipartUploadHandler:
         self.thread_pool = None
 
     def __enter__(self):
-        return self.start()
+        api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,
+                                                                  Key=self.object_key,
+                                                                  ContentType=self.content_type)
+        self.upload_id = api_response['UploadId']
+        self.mp_upload = boto3.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
+        self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
+        return self
 
     def __exit__(self, type, value, traceback):
         if type:
             self.abort()
             raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
-        self.shutdown()
+        self.complete()
+        self.thread_pool.shutdown()
 
     @property
     def is_active(self):
@@ -108,10 +115,6 @@ class MultipartUploadHandler:
         self.mp_upload = boto3.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
         self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
         return self
-
-    def shutdown(self):
-        self.complete()
-        self.thread_pool.shutdown()
 
     def complete(self):
         """
@@ -204,7 +207,7 @@ class Part:
 
     @property
     def is_uploadable(self):
-        return len(b''.join(self.content)) >= AWS_S3_DEFAULT_MINIMUM_PART_SIZE
+        return sum(map(len, self.content)) >= AWS_S3_DEFAULT_MINIMUM_PART_SIZE
 
     def to_dict(self):
         return dict(PartNumber=self.part_number, ETag=self.etag)
