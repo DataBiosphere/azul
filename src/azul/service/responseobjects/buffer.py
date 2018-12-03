@@ -5,11 +5,14 @@ from typing import Callable
 logger = getLogger(__name__)
 
 
-class BytesBuffer(BytesIO):
+class FlushableBuffer(BytesIO):
+    """
+    Allows the buffer to be passed on to the callback function before being removed from the memory.
+    """
 
-    def __init__(self, limit_size: int, inbetween_callback: Callable):
-        super(BytesBuffer, self).__init__()
-        self.limit_size = limit_size
+    def __init__(self, min_size: int, inbetween_callback: Callable):
+        super(FlushableBuffer, self).__init__()
+        self.min_size = min_size
         self.inbetween_callback = inbetween_callback
         self._remaining_size = 0
         self._total_size = 0
@@ -21,7 +24,7 @@ class BytesBuffer(BytesIO):
         self._total_size += byte_count
 
     def flush(self, check_limit: bool = True):
-        if check_limit and self._remaining_size < self.limit_size:
+        if check_limit and self._remaining_size < self.min_size:
             return
 
         self.inbetween_callback(self.getvalue())
