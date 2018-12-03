@@ -101,11 +101,10 @@ class MultipartUploadHandler:
             self.abort()
             raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
         self.complete()
-        self.thread_pool.shutdown()
 
     @property
     def is_active(self):
-        return not self.closed
+        return self.mp_upload is not None
 
     def start(self):
         api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,
@@ -144,15 +143,14 @@ class MultipartUploadHandler:
 
         self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
         self.mp_upload = None
-        self.closed = True
+        self.thread_pool.shutdown()
 
     def abort(self):
         if not self.is_active:
-            return
+            raise InactiveMultipartUploadAbort()
 
         self.mp_upload.abort()
         self.mp_upload = None
-        self.closed = True
         self.thread_pool.shutdown()
 
         logger.warning('Upload %s: Aborted', self.upload_id)
@@ -222,4 +220,8 @@ class EmptyMultipartUploadError(RuntimeError):
 
 
 class UnexpectedMultipartUploadAbort(RuntimeError):
+    pass
+
+
+class InactiveMultipartUploadAbort(RuntimeError):
     pass
