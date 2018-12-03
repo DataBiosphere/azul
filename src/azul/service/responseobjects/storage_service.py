@@ -90,6 +90,8 @@ class MultipartUploadHandler:
         return self.start()
 
     def __exit__(self, type, value, traceback):
+        if type:
+            self.abort(raise_exception=True)
         self.shutdown()
 
     @property
