@@ -19,7 +19,7 @@ from jsonobject import (FloatProperty,
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
                                                           AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
-from azul.service.responseobjects.buffer import BytesBuffer
+from azul.service.responseobjects.buffer import FlushableBuffer
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
@@ -204,7 +204,7 @@ class ManifestResponse(AbstractResponse):
         content_type = 'text/tab-separated-values'
 
         with MultipartUploadHandler(object_key, content_type) as multipart_upload:
-            buffer = BytesBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push)
+            buffer = FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push)
             buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
             writer = csv.writer(buffer_wrapper, dialect='excel-tab')
 
@@ -271,10 +271,9 @@ class ManifestResponse(AbstractResponse):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
-        :param raw_response: The raw response from ElasticSearch
+        :param es_search: The ElasticSearch DSL Search object
         :param mapping: The mapping between the columns to values within ES
         :param manifest_entries: The columns that will be present in the tsv
-        :param storage_service: The storage service used to store temporary downloadable content
         """
         self.es_search = es_search
         self.manifest_entries = OrderedDict(manifest_entries)
