@@ -1,0 +1,192 @@
+{
+  "hits": {
+    "total": 1,
+    "max_score": 1,
+    "hits": [
+      {
+        "_index": "azul_specimens_dev",
+        "_type": "doc",
+        "_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+        "_score": 1.0,
+        "_source": {
+          "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+          "bundles": [
+            {
+              "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+              "version": "2018-11-02T113344.698028Z",
+              "contents": {
+                "specimens": [
+                  {
+                    "has_input_biomaterial": [
+                      null
+                    ],
+                    "_source": [
+                      "donor_organism",
+                      "specimen_from_organism"
+                    ],
+                    "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                    "biomaterial_id": "DID_scRSq06_pancreas",
+                    "disease": [
+                      "normal"
+                    ],
+                    "organ": "pancreas",
+                    "organ_part": "islet of Langerhans",
+                    "preservation_method": null,
+                    "_type": "specimen",
+                    "donor_document_id": [
+                      "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                    ],
+                    "donor_biomaterial_id": [
+                      "DID_scRSq06"
+                    ],
+                    "genus_species": [
+                      "Australopithecus"
+                    ],
+                    "organism_age": [
+                      "38"
+                    ],
+                    "organism_age_unit": [
+                      "year"
+                    ],
+                    "min_organism_age_in_seconds": 1198368000.0,
+                    "max_organism_age_in_seconds": 1198368000.0,
+                    "biological_sex": [
+                      "female"
+                    ]
+                  }
+                ],
+                "cell_suspensions": [
+                  {
+                    "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                    "total_estimated_cells": 1,
+                    "organ": [
+                      "pancreas"
+                    ],
+                    "organ_part": [
+                      "islet of Langerhans"
+                    ]
+                  }
+                ],
+                "files": [
+                  {
+                    "content-type": "application/gzip; dcp-type=data",
+                    "indexed": false,
+                    "name": "SRR3562915_2.fastq.gz",
+                    "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
+                    "size": 190330156,
+                    "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                    "version": "2018-11-02T113344.450442Z",
+                    "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                    "file_format": "fastq.gz",
+                    "_type": "file",
+                    "read_index": "read2",
+                    "lane_index": null
+                  },
+                  {
+                    "content-type": "application/gzip; dcp-type=data",
+                    "indexed": false,
+                    "name": "SRR3562915_1.fastq.gz",
+                    "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                    "size": 195142097,
+                    "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                    "version": "2018-11-02T113344.698028Z",
+                    "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                    "file_format": "fastq.gz",
+                    "_type": "file",
+                    "read_index": "read1",
+                    "lane_index": null
+                  }
+                ],
+                "processes": [
+                  {
+                    "document_id": "4c28e079-59af-4bd3-8c8b-763ea0beba98.31e708d3-79df-49b8-a3df-b1d694963468",
+                    "process_id": "process_id_714",
+                    "process_name": null,
+                    "protocol_id": "dissociation_protocol_1",
+                    "protocol_name": null,
+                    "_type": "process"
+                  },
+                  {
+                    "document_id": "4c28e079-59af-4bd3-8c8b-763ea0beba98.5bd4ba68-4c0e-4d22-840d-afc025e7badc",
+                    "process_id": "process_id_714",
+                    "process_name": null,
+                    "protocol_id": "enrichment_protocol_1",
+                    "protocol_name": null,
+                    "_type": "process"
+                  },
+                  {
+                    "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4.9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                    "process_id": "SRR3562915",
+                    "process_name": null,
+                    "protocol_id": "library_preparation_protocol_1",
+                    "protocol_name": null,
+                    "_type": "process",
+                    "library_construction_approach": "Smart-seq2"
+                  },
+                  {
+                    "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4.61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                    "process_id": "SRR3562915",
+                    "process_name": null,
+                    "protocol_id": "sequencing_protocol_1",
+                    "protocol_name": null,
+                    "_type": "process",
+                    "instrument_manufacturer_model": "Illumina NextSeq 500"
+                  }
+                ],
+                "projects": [
+                  {
+                    "project_title": "Single cell transcriptome patterns.",
+                    "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                    "project_shortname": "Single of human pancreas",
+                    "laboratory": [
+                      "John Dear"
+                    ],
+                    "institutions": [
+                      "University",
+                      "Farmers Trucks"
+                    ],
+                    "contact_names": [
+                      "Matthew,,Green",
+                      "Martin, Enge",
+                      "Laura,,Huerta"
+                    ],
+                    "contributors": [
+                      {
+                        "contact_name": "Laura,,Huerta",
+                        "email": "lauhuema@ebi.ac.uk",
+                        "institution": "Farmers Trucks",
+                        "laboratory": "John Dear",
+                        "corresponding_contributor": false,
+                        "project_role": "external curator"
+                      },
+                      {
+                        "contact_name": "Martin, Enge",
+                        "email": "martin.enge@gmail.com",
+                        "institution": "University",
+                        "laboratory": null,
+                        "corresponding_contributor": null,
+                        "project_role": null
+                      },
+                      {
+                        "contact_name": "Matthew,,Green",
+                        "email": "hewgreen@ebi.ac.uk",
+                        "institution": "Farmers Trucks",
+                        "laboratory": "John Dear",
+                        "corresponding_contributor": false,
+                        "project_role": "Human Cell Atlas wrangler"
+                      }
+                    ],
+                    "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                    "publication_titles": [],
+                    "publications": [],
+                    "_type": "project"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
