@@ -91,11 +91,15 @@ class Plugin(azul.plugin.Plugin):
                                             {
                                                 "terms": {
                                                     "files.project_json.provenance.document_id": [
-                                                        # CBeta Release spreadsheet as of 11/13/2018
+                                                        # CBeta Release spreadsheet as of 12/03/2018
                                                         "2a0faf83-e342-4b1c-bb9b-cf1d1147f3bb",  # treutlein
                                                         "e8642221-4c2c-4fd7-b926-a68bce363c88",  # pancreas6decades
                                                         "cf8439db-fcc9-44a8-b66f-8ffbf729bffa",  # meyer
                                                         "f396fa53-2a2d-4b8a-ad18-03bf4bd46833",  # Teichmann-mouse-melanoma
+                                                        "fd1d163d-d6a7-41cd-b3bc-9d77ba9a36fe",  # peer
+                                                        "f8880be0-210c-4aa3-9348-f5a423e07421",  # neuron_diff
+                                                        "0c7bbbce-3c70-4d6b-a443-1b92c1f205c8",  # ido_amit
+                                                        "1630e3dc-5501-4faf-9726-2e2c0b4da6d7",  # humphreys
                                                     ]
                                                 }
                                             }
