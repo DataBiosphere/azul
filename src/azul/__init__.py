@@ -55,6 +55,14 @@ class Config:
         return os.environ['AZUL_S3_BUCKET']
 
     @property
+    def url_redirect_full_domain_name(self) -> str:
+        return os.environ['AZUL_URL_REDIRECT_FULL_DOMAIN_NAME']
+
+    @property
+    def url_redirect_base_domain_name(self) -> str:
+        return os.environ['AZUL_URL_REDIRECT_BASE_DOMAIN_NAME']
+
+    @property
     def es_timeout(self) -> int:
         return int(os.environ['AZUL_ES_TIMEOUT'])
 
@@ -269,6 +277,10 @@ class Config:
     @property
     def manifest_state_machine_name(self):
         return config.qualified_resource_name('manifest')
+
+    @property
+    def url_shortener_whitelist(self):
+        return [r'.*humancellatlas\.org']
 
     @property
     def es_refresh_interval(self) -> int:
