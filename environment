@@ -107,6 +107,20 @@ azul_vars=(
     # content requested by client.
     AZUL_S3_BUCKET
 
+    # Name of the Route 53 zone used for shortened URLs.
+    # This hosted zone will have to be created manually prior to running
+    # `make terraform`. Personal deployments typically share a zone with the
+    # `dev` deployment.
+    # If this variable is empty, a route 53 record will not be created and it
+    # is assumed that the record and zone have been created manually.  This is
+    # the case for staging, integration, and prod environments.
+    AZUL_URL_REDIRECT_BASE_DOMAIN_NAME
+
+    # Full domain name to be used in the URL redirection URLs
+    # This is also used as the name of the S3 bucket used to store URL
+    # redirection objects
+    AZUL_URL_REDIRECT_FULL_DOMAIN_NAME
+
     # Determine if CloudWatch alarms should be deployed (1 yes, 0 no)
     # CloudWatch alarms should not be enabled for personal deployments
     AZUL_ENABLE_CLOUDWATCH_ALARMS
@@ -176,6 +190,8 @@ _set AZUL_INDEX_PREFIX "azul"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_SHARE_ES_DOMAIN 0
 _set AZUL_S3_BUCKET "azul-storage-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME ""
+_set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.url.data.humancellatlas.org"
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "r4.2xlarge.elasticsearch"  # Indexing performance benefits from the increased memory offered
                                                        # by the `r` family, especially now that the number of shards is

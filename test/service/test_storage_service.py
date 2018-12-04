@@ -6,7 +6,6 @@ from moto import mock_s3, mock_sts
 import requests
 
 from azul.service.responseobjects.storage_service import (StorageService,
-                                                          GetObjectError,
                                                           MultipartUploadError,
                                                           MultipartUploadHandler)
 
@@ -27,7 +26,7 @@ class StorageServiceTest(TestCase):
         storage_service.create_bucket()
 
         # NOTE: Ensure that the key does not exist before writing.
-        with self.assertRaises(GetObjectError):
+        with self.assertRaises(storage_service.client.exceptions.NoSuchKey):
             storage_service.get(sample_key)
 
         storage_service.put(sample_key, sample_content)
@@ -43,7 +42,7 @@ class StorageServiceTest(TestCase):
         storage_service = StorageService()
         storage_service.create_bucket()
 
-        with self.assertRaises(GetObjectError):
+        with self.assertRaises(storage_service.client.exceptions.NoSuchKey):
             storage_service.get(sample_key)
 
     @mock_s3

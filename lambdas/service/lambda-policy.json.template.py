@@ -37,9 +37,20 @@ emit({
             "Effect": "Allow",
             "Action": [
                 "s3:PutObject",
-                "s3:GetObject"
+                "s3:GetObject",
+                "s3:PutObjectAcl"
             ],
-            "Resource": f"arn:aws:s3:::{config.s3_bucket}/*"
+            "Resource": [
+                f"arn:aws:s3:::{config.s3_bucket}/*",
+                f"arn:aws:s3:::{config.url_redirect_full_domain_name}/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
         },
         {
             "Effect": "Allow",
