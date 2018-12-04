@@ -37,9 +37,20 @@ emit({
             "Effect": "Allow",
             "Action": [
                 "s3:PutObject",
-                "s3:GetObject"
+                "s3:GetObject",
+                "s3:PutObjectAcl"
             ],
-            "Resource": f"arn:aws:s3:::{config.s3_bucket}/*"
+            "Resource": [
+                f"arn:aws:s3:::{config.s3_private_bucket}/*",
+                f"arn:aws:s3:::{config.s3_public_bucket}/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": f"arn:aws:s3:::{config.s3_public_bucket}"
         },
         {
             "Effect": "Allow",

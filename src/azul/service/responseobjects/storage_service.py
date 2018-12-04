@@ -8,8 +8,8 @@ logger = getLogger(__name__)
 
 class StorageService:
 
-    def __init__(self):
-        self.__bucket_name = config.s3_bucket
+    def __init__(self, bucket_name=config.s3_private_bucket):
+        self.__bucket_name = bucket_name
         self.__client = None  # the default client will be assigned later to allow patching.
 
     @property
@@ -27,8 +27,8 @@ class StorageService:
         except self.client.exceptions.NoSuchKey:
             raise GetObjectError(object_key)
 
-    def put(self, object_key: str, data: bytes, content_type: Optional[str] = None) -> str:
-        params = {'Bucket': self.__bucket_name, 'Key': object_key, 'Body': data}
+    def put(self, object_key: str, data: bytes, content_type: Optional[str] = None, **kwargs) -> str:
+        params = {'Bucket': self.__bucket_name, 'Key': object_key, 'Body': data, **kwargs}
 
         if content_type:
             params['ContentType'] = content_type
