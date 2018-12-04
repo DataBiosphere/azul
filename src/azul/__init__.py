@@ -47,8 +47,12 @@ class Config:
         return self._boolean(os.environ['AZUL_SHARE_ES_DOMAIN'])
 
     @property
-    def s3_bucket(self) -> str:
-        return os.environ['AZUL_S3_BUCKET']
+    def s3_private_bucket(self) -> str:
+        return os.environ['AZUL_PRIVATE_S3_BUCKET']
+
+    @property
+    def s3_public_bucket(self) -> str:
+        return os.environ['AZUL_PUBLIC_S3_BUCKET']
 
     @property
     def es_timeout(self) -> int:
@@ -224,6 +228,10 @@ class Config:
     @property
     def manifest_state_machine_name(self):
         return config.qualified_resource_name('manifest')
+
+    @property
+    def url_shortener_whitelist(self):
+        return [r'.*humancellatlas\.org']
 
 
 config = Config()
