@@ -29,13 +29,15 @@ generic with minimal need for project-specific behavior.
 
 - Python 3.6 with `virtualenv` and `pip`
 
-- Make sure that you are using the `bash` shell.
+- `bash` (our `environment` script uses bash-isms)
 
 - Terraform (optional, to create new deployments):
   https://www.terraform.io/intro/getting-started/install.html On macOS with
   Homebrew installed, 'brew install terraform' works, too.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
+
+- Docker (unsure about the minimal version required, but 17.09 and 18.09 work)
 
 ### 1.2. Runtime Preequisites (Infrastructure)
 
