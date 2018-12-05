@@ -4,9 +4,11 @@ import logging.config
 import os
 import time
 import urllib.parse
+import uuid
 
 # noinspection PyPackageRequirements
-from chalice import BadRequestError, Chalice, NotFoundError, Response
+from botocore.exceptions import ClientError
+from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response
 from more_itertools import one
 import requests
 
@@ -15,6 +17,8 @@ from azul.service import service_config
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
+from azul.service.responseobjects.manifest_service import ManifestService
+from azul.service.responseobjects.step_function_helper import StateMachineError
 from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
@@ -531,6 +535,114 @@ def get_manifest():
     response = es_td.transform_manifest(filters=filters)
     # Return the excel file
     return response
+
+
+@app.route('/manifest/files', methods=['GET'], cors=True)
+def start_manifest_generation():
+    """
+    Initiate and check status of a manifest generation job.
+
+    parameters:
+        - name: filters
+          in: query
+          type: string
+          description: Filters to be applied when generating the manifest
+        - name: token
+          in: query
+          type: string
+          description: An opaque string describing the manifest generation job
+
+    :return: A 200 response with a JSON body describing the status of the manifest.
+
+    If the manifest generation has been started or is still ongoing, the response will look like:
+
+    ```
+    {
+        "Status": 301,
+        "Retry-After": 2,
+        "Location": "https://…"
+    }
+    ```
+
+    The `Status` field emulates HTTP status code 301 Moved Permanently.
+
+    `Retry-After` is the recommended number of seconds to wait before requesting the URL the `Location` field.
+
+    `Location` is the URL to make a GET request to in order to recheck the status.
+
+    If the client receives a response body with the `Status` field set to 301, the client should wait the number of
+    seconds specified in `Retry-After` and then request the URL given in the `Location` field. The URL will point
+    back at this endpoint so the client should expect a response of the same shape. Note that the actual HTTP
+    response is of status 200, only the `Status` field of the body will be 301. The intent is to emulate HTTP while
+    bypassing the default client behavior which, in most web browsers, is to ignore `Retry-After`. The response
+    described here is intended to be processed by client-side Javascript such that the recommended delay in
+    `Retry-After` can be handled in Javascript rather that relying on the native implementation by the web browser.
+
+    If the manifest generation is done and the manifest is ready to be downloaded, the response will be:
+
+    ```
+    {
+        "Status": 302,
+        "Location": "https://manifest.url"
+    }
+    ```
+
+    The client should request the URL given in the `Location` field. The URL will point to a different service and
+    the client should expect a response containing the actual manifest. Currently the `Location` field of the final
+    response is a signed URL to an object in S3 but clients should not depend on that.
+    """
+    logger = logging.getLogger("dashboardService.webservice.get_manifest")
+
+    query_params = app.current_request.query_params or {}
+
+    filters = query_params.get('filters', '{"file": {}}')
+    logger.debug('Filters string is: {}'.format(filters))
+    try:
+        logger.info('Extracting the filter parameter from the request')
+        filters = ast.literal_eval(filters)
+        filters = {'file': {}} if filters == {} else filters
+    except Exception as e:
+        logger.error('Malformed filters parameter: {}'.format(e))
+        raise BadRequestError('Malformed filters parameter')
+
+    token = query_params.get('token')
+
+    manifest_service = ManifestService()
+    if token is None:
+        execution_id = str(uuid.uuid4())
+        manifest_service.start_manifest_generation(filters, execution_id)
+        token = manifest_service.encode_params({'execution_id': execution_id})
+
+    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
+    base_url = app.current_request.headers['host']
+    endpoint_path = app.current_request.context['path']
+    retry_url = f'{protocol}://{base_url}{endpoint_path}'
+
+    try:
+        return manifest_service.get_manifest_status(token, retry_url)
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
+            raise BadRequestError('Invalid token given')
+        raise
+    except StateMachineError as e:
+        raise ChaliceViewError(e.msg)
+    except ValueError as e:
+        raise BadRequestError(e.args)
+
+
+@app.lambda_function(name=config.manifest_lambda_basename)
+def generate_manifest(event, context):
+    """
+    Create a manifest based on the given filters and store it in S3
+
+    :param: event: dict containing function input
+        Valid params:
+            - filters: dict containing filters to use in ES request
+    :return: The URL to the generated manifest
+    """
+    filters = event.get('filters', {'file': {}})
+    response = EsTd().transform_manifest(filters=filters)
+    return {'Location': response.headers['Location']}
 
 
 @app.route('/dss/files/{uuid}', methods=['GET'], cors=True)
