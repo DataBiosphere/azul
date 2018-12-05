@@ -30,7 +30,10 @@ generic with minimal need for project-specific behavior.
 
 - Python 3.6 with `virtualenv` and `pip`
 
-- Make sure that you are using the `bash` shell.
+- The `bash` shell
+
+- Docker for running the tests. The minimal required version is uncertain but 
+  18.09 and 17.09 are known to work
 
 - Terraform (optional, to create new deployments):
   https://www.terraform.io/intro/getting-started/install.html On macOS with
