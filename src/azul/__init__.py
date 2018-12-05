@@ -161,6 +161,9 @@ class Config:
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
 
+    def get_lambda_arn(self, function_name, suffix):
+        return f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{function_name}-{suffix}"
+
     lambda_timeout = 300
 
     term_re = re.compile("[a-z][a-z0-9]{2,29}")
@@ -209,6 +212,14 @@ class Config:
     @property
     def document_queue_name(self):
         return config.qualified_resource_name('documents', suffix='.fifo')
+
+    @property
+    def manifest_lambda_basename(self):
+        return 'manifest'
+
+    @property
+    def manifest_state_machine_name(self):
+        return config.qualified_resource_name('manifest')
 
 
 config = Config()
