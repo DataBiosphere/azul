@@ -24,14 +24,10 @@ def setUpModule():
 class TestHCAIndexer(IndexerTestCase):
 
     def _get_es_results(self):
-        es_results = []
-        for entity_index in self.hca_indexer.index_names():
-            results = self.es_client.search(index=entity_index,
-                                            doc_type="doc",
-                                            size=100)
-            for result_dict in results["hits"]["hits"]:
-                es_results.append(result_dict)
-        return es_results
+        results = self.es_client.search(index=','.join(self.hca_indexer.index_names()),
+                                        doc_type="doc",
+                                        size=100)
+        return results['hits']['hits']
 
     def tearDown(self):
         for index_name in self.hca_indexer.index_names():
@@ -43,28 +39,29 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_index_correctness(self):
         """
-        Index a bundle and check that the index contains the correct attributes
+        Index a bundle and assert the index contents verbatim
         """
         self._mock_index(self.old_bundle)
         self.maxDiff = None
 
-        es_results = self._get_es_results()
-        self.assertGreater(len(es_results), 0)
+        # Load the canned results and patch the '_index' entry in each to the index name used by the current deployment
         data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
-        for result_dict in es_results:
-            entity_type, aggregate = config.parse_es_index_name(result_dict["_index"])
-            if aggregate: continue  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
-            actual = sort_frozen(freeze(result_dict["_source"]))
-            expected = None
-            path = os.path.join(data_prefix, f'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.{entity_type}.results.json')
-            with open(path, 'r') as fp:
-                expected_dict = json.load(fp)
-                for expected_hit in expected_dict["hits"]["hits"]:
-                    if result_dict["_id"] == expected_hit["_id"]:
-                        self.assertIsNone(expected)
-                        expected = sort_frozen(freeze(expected_hit["_source"]))
-                        self.assertIsNotNone(expected)
-            self.assertEqual(expected, actual, entity_type)
+        path = os.path.join(data_prefix, f'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.results.json')
+        with open(path, 'r') as f:
+            expected_hits = json.load(f)
+            for hit in expected_hits:
+                _, _, entity_type, aggregate = config.parse_foreign_es_index_name(hit['_index'])
+                hit['_index'] = config.es_index_name(entity_type, aggregate=aggregate)
+
+        # Load the actual result from the index …
+        hits = []
+        for hit in self._get_es_results():
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            if not aggregate:  # FIXME (https://github.com/DataBiosphere/azul/issues/425)
+                hits.append(hit)
+
+        # … and compare them with the patched, canned results
+        self.assertEqual(sort_frozen(freeze(expected_hits)), sort_frozen(freeze(hits)))
 
     def test_delete_correctness(self):
         """
