@@ -81,15 +81,21 @@ dss_subscription_query = {
                                     {
                                         "terms": {
                                             "files.project_json.provenance.document_id": [
-                                                # CBeta Release spreadsheet as of 12/03/2018
+                                                # CBeta Release spreadsheet as of 12/06/2018
                                                 "2a0faf83-e342-4b1c-bb9b-cf1d1147f3bb",  # treutlein
                                                 "e8642221-4c2c-4fd7-b926-a68bce363c88",  # pancreas6decades
-                                                "cf8439db-fcc9-44a8-b66f-8ffbf729bffa",  # meyer
+                                                "209e6402-d854-49ea-815f-421dae5e3f4d",  # meyer
                                                 "f396fa53-2a2d-4b8a-ad18-03bf4bd46833",  # Teichmann-mouse-melanoma
-                                                "fd1d163d-d6a7-41cd-b3bc-9d77ba9a36fe",  # peer
+                                                "29f53b7e-071b-44b5-998a-0ae70d0229a4",  # peer
                                                 "f8880be0-210c-4aa3-9348-f5a423e07421",  # neuron_diff
                                                 "0c7bbbce-3c70-4d6b-a443-1b92c1f205c8",  # ido_amit
-                                                "1630e3dc-5501-4faf-9726-2e2c0b4da6d7",  # humphreys
+                                                "34ec62a2-9643-430d-b41a-1e342bd615fc",  # humphreys
+                                                "0ec2b05f-ddbe-4e5a-b30f-e81f4b1e330c",  # EGEOD106540
+                                                "179bf9e6-5b33-4c5b-ae26-96c7270976b8",  # Regev-ICA
+                                                "1a0f98b8-746a-489d-8af9-d5c657482aab",  # EMTAB5061
+                                                "c765e3f9-7cfc-4501-8832-79e5f7abd321",  # basu
+                                                "ff481f29-3d0b-4533-9de2-a760c61c162d",  # 10x-mouse-brain
+                                                "5f256182-5dfc-4070-8404-f6fa71d37c73",  # rsatija
                                             ]
                                         }
                                     }
