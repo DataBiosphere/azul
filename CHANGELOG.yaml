@@ -12,6 +12,20 @@ meta:
 
 changes:
 
+  - title: Use step functions to produce manifest
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/546
+      - https://github.com/humancellatlas/data-browser/issues/372
+      - https://github.com/databiosphere/azul/issues/566
+    upgrade:
+      - terraform
+      - deploy
+      - clients
+    notes: The manifest download endpoint should be changed to `/manifest/files` as described here
+           https://github.com/DataBiosphere/azul/blob/8d8fbac6474868cc7ebaebc6a726c427fad5c14b/lambdas/service/app.py#L543
+           This increases the time limmit for manifest generation but also requires clents to make changes to handle
+           the download.
+
   - title: Replace `process` inner entity with `protocol`
     issues:
     - https://github.com/databiosphere/azul/issues/540
