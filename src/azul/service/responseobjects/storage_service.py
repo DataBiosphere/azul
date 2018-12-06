@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from functools import lru_cache
 from logging import getLogger
-from typing import Optional, List
+from typing import Optional
 import boto3
 from azul import config
 
