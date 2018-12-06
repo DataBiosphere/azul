@@ -208,7 +208,6 @@ class ManifestResponse(AbstractResponse):
             buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
             writer = csv.writer(buffer_wrapper, dialect='excel-tab')
 
-            # Started with the headers
             writer.writerow(list(self.manifest_entries['bundles'].keys()) +
                             list(self.manifest_entries['contents.files'].keys()))
             for hit in self.es_search.scan():
@@ -243,9 +242,10 @@ class ManifestResponse(AbstractResponse):
 
     def _construct_tsv_content(self):
         es_search = self.es_search
+
         output = StringIO()
         writer = csv.writer(output, dialect='excel-tab')
-        # Started with the headers
+
         writer.writerow(list(self.manifest_entries['bundles'].keys()) +
                         list(self.manifest_entries['contents.files'].keys()))
         for hit in es_search.scan():
