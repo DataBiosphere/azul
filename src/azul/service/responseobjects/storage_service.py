@@ -56,17 +56,6 @@ class MultipartUploadHandler:
 
     .. code-block:: python
 
-       handler = MultipartUploadHandler('samples.txt', 'text/plain')
-       handler.start()
-       handler.push(b'abc')
-       handler.push(b'defg')
-       # ...
-       handler.shutdown()
-
-    or
-
-    .. code-block:: python
-
        with MultipartUploadHandler('samples.txt', 'text/plain'):
            handler.push(b'abc')
            handler.push(b'defg')
@@ -105,24 +94,27 @@ class MultipartUploadHandler:
     def is_active(self):
         return self.mp_upload is not None
 
-    def start(self):
-        api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,
-                                                                  Key=self.object_key,
-                                                                  ContentType=self.content_type)
-        self.upload_id = api_response['UploadId']
-        self.mp_upload = boto3.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
-        self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
-        return self
-
     def complete(self):
         """
-        Completes a multipart upload by assembling previously uploaded parts.
+        Completes the multipart upload session.
 
-        When this method is invoked, if the last part is not uploaded, the method
-        will upload that part before assembling the list of uploaded parts.
+        When there exists no uploads in the session or the session completion
+        request fails unexpectedly due to client error, this method will
+        automatically abort the multipart upload session and raises
+        corresponding exceptions.
 
-        In addition, this method raises :class:`EmptyMultipartUploadError` if no
+        This method will raises :class:`EmptyMultipartUploadError` if no
         parts are uploaded.
+
+        This method will raises :class:`UploadPartSizeOutOfBoundError` if an
+        uploaded part is too small. The minimum size of non-final part is
+        defined as ``AWS_S3_DEFAULT_MINIMUM_PART_SIZE`` (quantifier: bytes,
+        according to the AWS documentation) in the same module.
+
+        This method will raises :class:`UnexpectedMultipartUploadAbort` if an
+        uploaded part is too small. The minimum size of non-final part is
+        defined as ``AWS_S3_DEFAULT_MINIMUM_PART_SIZE`` (quantifier: bytes,
+        according to the AWS documentation) in the same module.
         """
         if not self.is_active:
             return
