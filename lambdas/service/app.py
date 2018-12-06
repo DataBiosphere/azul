@@ -551,8 +551,28 @@ def start_manifest_generation():
           in: query
           type: string
           description: An opaque string describing the manifest generation job
+        - name browser
+          in: query
+          type: boolean
+          description: If present, the endpoint will return the redirection headers in the body of a
+                       200 response.  Only the presence of the parameter is checked, not the value.
+                       This is to allow the data browser to handle the redirects in Javascript instead
+                       of letting the browser redirect repeatedly.
 
-    :return: A 200 response with a JSON body describing the status of the manifest.
+    :return: The response structure will depend on whether the `browser` query parameter is present.
+
+    If the browser parameter is not present, a 301 or 302 redirect response is returned depending on
+    the status of the manifest.
+
+    If the manifest generation has been started or is still ongoing, the response will have a 301 status
+    and will redirect to a URL that will get a recheck the status of the manifest.
+
+    If the manifest generation is done and the manifest is ready to be downloaded, the response will
+    have a 302 status and will redirect to the URL of the manifest.
+
+
+    If the browser parameter is present, a 200 response with a JSON body describing the
+    status of the manifest is returned.
 
     If the manifest generation has been started or is still ongoing, the response will look like:
 
@@ -606,6 +626,7 @@ def start_manifest_generation():
         raise BadRequestError('Malformed filters parameter')
 
     token = query_params.get('token')
+    browser_request = 'browser' in query_params
 
     manifest_service = ManifestService()
     if token is None:
@@ -619,7 +640,7 @@ def start_manifest_generation():
     retry_url = f'{protocol}://{base_url}{endpoint_path}'
 
     try:
-        return manifest_service.get_manifest_status(token, retry_url)
+        return manifest_service.get_manifest_status(token, retry_url, browser_request)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
             raise BadRequestError('Invalid token given')

@@ -2,6 +2,8 @@ import base64
 import binascii
 import json
 
+from chalice import Response
+
 from azul import config
 from azul.service.responseobjects.step_function_helper import StateMachineError, StepFunctionHelper
 
@@ -12,31 +14,33 @@ class ManifestService:
     """
     step_function_helper = StepFunctionHelper()
 
-    def encode_params(self, params):
+    def encode_params(self, params: dict) -> str:
         return base64.urlsafe_b64encode(bytes(json.dumps(params), encoding='utf-8')).decode('utf-8')
 
-    def decode_params(self, token):
+    def decode_params(self, token: str) -> dict:
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
-    def start_manifest_generation(self, filters, execution_id):
+    def start_manifest_generation(self, filters: dict, execution_id: str):
         """
         Start the execution of a state machine generating the manifest
 
         :param filters: filters to use for the manifest
         :param execution_id: name to give the execution (must be unique across executions of the state machine)
-        :return: The id of the state machine execution that was started
         """
         self.step_function_helper.start_execution(config.manifest_state_machine_name,
                                                   execution_id,
                                                   execution_input={'filters': filters})
 
-    def get_manifest_status(self, token, retry_url):
+    def get_manifest_status(self, token: str, retry_url: str, browser_request: bool) -> Response:
         """
         Get the status of a manifest generation job (in progress, success, or failed)
 
         :param token: Encoded parameters to use when checking the status of the execution
         :param retry_url: URL to direct the client to if the manifest is still generating
-        :return: dict containing status of the job and a redirect url for the client
+        :param browser_request: boolean indicating if the request was made by a browser in order
+            to return either a 200 response with simulated headers in the body or a 301/301 response
+            with redirection headers
+        :return: tuple of HTTP status code, Retry-After value, and URL to request on retry
         """
         try:
             params = self.decode_params(token)
@@ -45,22 +49,36 @@ class ManifestService:
         except (KeyError, UnicodeDecodeError, binascii.Error, json.decoder.JSONDecodeError):
             raise ValueError('Invalid token given')
 
+        browser_request = browser_request or 'browser' in params
+
         execution = self.step_function_helper.describe_execution(
             config.manifest_state_machine_name, params['execution_id'])
 
         if execution['status'] == 'SUCCEEDED':
             execution_output = json.loads(execution['output'])
-            return {
-                'Status': 302,
-                'Location': execution_output['Location']
-            }
+            if browser_request:
+                return Response(body={
+                    'Status': 302,
+                    'Location': execution_output['Location']
+                })
+            return Response(body='',
+                            headers={'Location': execution_output['Location']},
+                            status_code=302)
         elif execution['status'] == 'RUNNING':
             wait_times = [1, 1, 2, 6, 10]
             wait = max(0, min(params.get('wait', 0), len(wait_times) - 1))
             params['wait'] = wait + 1
-            return {
-                'Status': 301,
-                'Retry-After': wait_times[wait],
-                'Location': f'{retry_url}?token={self.encode_params(params)}'
-            }
+            if browser_request:
+                params['browser'] = True
+                return Response(body={
+                    'Status': 301,
+                    'Retry-After': wait_times[wait],
+                    'Location': f'{retry_url}?token={self.encode_params(params)}'
+                })
+            return Response(body='',
+                            headers={
+                                'Retry-After': str(wait_times[wait]),
+                                'Location': f'{retry_url}?token={self.encode_params(params)}'
+                            },
+                            status_code=301)
         raise StateMachineError('Failed to generate manifest')

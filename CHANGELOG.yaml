@@ -12,6 +12,17 @@ meta:
 
 changes:
 
+  - title: Make the manifest endpoint dual mode (standard HTTP and lifted 200)
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/567
+    upgrade:
+      - deploy
+    notes: This change allows the manifest endpoint to return the redirect information in either
+           the header of a 301 or 301 response, or in the body of a 200 response depending on
+           the client.  For example the data browser would take a 200 response and handle redirection
+           in Javascript while the matrix service can be redirected by a 301/302 response with a
+           `Location` header.
+
   - title: Use step functions to produce manifest
     issues:
       - https://github.com/DataBiosphere/azul/issues/546
