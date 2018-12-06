@@ -120,6 +120,12 @@ class Config:
         return f"{self._index_prefix}_{entity_type}{'_aggregate' if aggregate else ''}_{self.deployment_stage}"
 
     def parse_es_index_name(self, index_name: str) -> Tuple[str, bool]:
+        prefix, deployment_stage, entity_type, aggregate = self.parse_foreign_es_index_name(index_name)
+        assert prefix == self._index_prefix
+        assert deployment_stage == self.deployment_stage
+        return entity_type, aggregate
+
+    def parse_foreign_es_index_name(self, index_name) -> Tuple[str, str, str, bool]:
         index_name = index_name.split('_')
         if len(index_name) == 3:
             aggregate = False
@@ -129,9 +135,7 @@ class Config:
         else:
             assert False
         prefix, entity_type, deployment_stage = index_name
-        assert prefix == self._index_prefix
-        assert deployment_stage == self.deployment_stage
-        return entity_type, aggregate
+        return prefix, deployment_stage, entity_type, aggregate
 
     @property
     def domain_name(self) -> str:
