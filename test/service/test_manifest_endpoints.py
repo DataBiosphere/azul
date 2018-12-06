@@ -13,7 +13,7 @@ from lambdas.service.app import generate_manifest, start_manifest_generation
 from service import WebServiceTestCase
 
 
-class ManifestTest(WebServiceTestCase):
+class ManifestEndpointTest(WebServiceTestCase):
 
     @mock_s3
     @mock_sts
@@ -34,15 +34,42 @@ class ManifestTest(WebServiceTestCase):
     @mock.patch('uuid.uuid4')
     def test_manifest_endpoint_start_execution(self, mock_uuid, current_request, step_function_helper):
         """
-        Calling start manifest generation without a token should start an execution and check the status
+        Calling start manifest generation without a token should start an execution and return a response
+        with Retry-After and Location in the headers
         """
         execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
         mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
         filters = {'file': {'organ': {'is': ['lymph node']}}}
         current_request.query_params = {'filters': json.dumps(filters)}
-        execution_status = start_manifest_generation()
-        self.assertEqual(301, execution_status['Status'])
+        response = start_manifest_generation()
+        self.assertEqual(301, response.status_code)
+        self.assertIn('Retry-After', response.headers)
+        self.assertIn('Location', response.headers)
+        step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
+                                                                     execution_name,
+                                                                     execution_input={'filters': filters})
+        step_function_helper.describe_execution.assert_called_once()
+
+    @mock_sts
+    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('lambdas.service.app.app.current_request')
+    @mock.patch('uuid.uuid4')
+    def test_manifest_endpoint_start_execution_browser(self, mock_uuid, current_request, step_function_helper):
+        """
+        Calling start manifest generation with the browser parameter should return the status code,
+        Retry-After, and Location in the body of a 200 response instead of the headers
+        """
+        execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
+        mock_uuid.return_value = execution_name
+        step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
+        filters = {'file': {'organ': {'is': ['lymph node']}}}
+        current_request.query_params = {'filters': json.dumps(filters), 'browser': ''}
+        response = start_manifest_generation()
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(301, response.body['Status'])
+        self.assertIn('Retry-After', response.body)
+        self.assertIn('Location', response.body)
         step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
                                                                      execution_name,
                                                                      execution_input={'filters': filters})
