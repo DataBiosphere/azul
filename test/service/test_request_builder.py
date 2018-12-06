@@ -421,7 +421,7 @@ class TestRequestBuilder(WebServiceTestCase):
                         "specimens": [],
                         "cell_suspensions": [],
                         "files": [],
-                        "processes": [],
+                        "protocols": [],
                         "project": {
                             "document_id": "a"
                         }
@@ -477,7 +477,7 @@ class TestRequestBuilder(WebServiceTestCase):
                             }
                         ],
                         "files": [],
-                        "processes": [],
+                        "protocols": [],
                         "project": {
                             "document_id": "b"
                         }

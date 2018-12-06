@@ -48,16 +48,10 @@ class TestResponse(WebServiceTestCase):
                         "count": 1,
                     }
                 ],
-                "processes": [
+                "protocols": [
                     {
-                        "_type": ["navy"],
-                        "document_id": ["4188ddbe-8865-a433-a1f6-213d49aa5719"],
-                        "instrument_manufacturer_model": ["green"],
-                        "library_construction_approach": ["fuchsia"],
-                        "process_id": ["maroon"],
-                        "process_name": ["olive"],
-                        "protocol_name": ["olive"],
-                        "protocol_id": ["green"]
+                        "library_construction_approach": ["Smart-seq2"],
+                        "instrument_manufacturer_model": ["Illumina NextSeq 500"]
                     }
                 ],
                 "projects": [
@@ -164,14 +158,10 @@ class TestResponse(WebServiceTestCase):
                             "version": "2001-03-16T05:26:40"
                         }
                     ],
-                    "processes": [
+                    "protocols": [
                         {
-                            "instrumentManufacturerModel": ["green"],
-                            "libraryConstructionApproach": ["fuchsia"],
-                            "processId": ["maroon"],
-                            "processName": ["olive"],
-                            "protocol": ["olive"],
-                            "protocolId": ["green"]
+                            "libraryConstructionApproach": ["Smart-seq2"],
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"]
                         }
                     ],
                     "projects": [
@@ -230,14 +220,10 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 6667
                         }
                     ],
-                    "processes": [
+                    "protocols": [
                         {
-                            "instrumentManufacturerModel": ["green"],
-                            "libraryConstructionApproach": ["fuchsia"],
-                            "processId": ["maroon"],
-                            "processName": ["olive"],
-                            "protocol": ["olive"],
-                            "protocolId": ["green"]
+                            "libraryConstructionApproach": ["Smart-seq2"],
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"]
                         }
                     ],
                     "projects": [
@@ -322,14 +308,10 @@ class TestResponse(WebServiceTestCase):
                                 "version": "2001-03-16T05:26:40"
                             }
                         ],
-                        "processes": [
+                        "protocols": [
                             {
-                                "instrumentManufacturerModel": ["green"],
-                                "libraryConstructionApproach": ["fuchsia"],
-                                "processId": ["maroon"],
-                                "processName": ["olive"],
-                                "protocol": ["olive"],
-                                "protocolId": ["green"]
+                                "libraryConstructionApproach": ["Smart-seq2"],
+                                "instrumentManufacturerModel": ["Illumina NextSeq 500"]
                             }
                         ],
                         "projects": [
@@ -397,14 +379,10 @@ class TestResponse(WebServiceTestCase):
                                 "version": "2001-03-16T05:26:40"
                             }
                         ],
-                        "processes": [
+                        "protocols": [
                             {
-                                "instrumentManufacturerModel": ["green"],
-                                "libraryConstructionApproach": ["fuchsia"],
-                                "processId": ["maroon"],
-                                "processName": ["olive"],
-                                "protocol": ["olive"],
-                                "protocolId": ["green"]
+                                "libraryConstructionApproach": ["Smart-seq2"],
+                                "instrumentManufacturerModel": ["Illumina NextSeq 500"]
                             }
                         ],
                         "projects": [
@@ -632,7 +610,7 @@ class TestResponse(WebServiceTestCase):
 
             ],
             "files": [],
-            "processes": [],
+            "protocols": [],
             "project": {
                 "document_id": "a"
             }
@@ -710,14 +688,10 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 6667
                         }
                     ],
-                    "processes": [
+                    "protocols": [
                         {
-                            "instrumentManufacturerModel": ["green"],
-                            "libraryConstructionApproach": ["fuchsia"],
-                            "processId": ["maroon"],
-                            "processName": ["olive"],
-                            "protocol": ["olive"],
-                            "protocolId": ["green"]
+                            "libraryConstructionApproach": ["Smart-seq2"],
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"]
                         }
                     ],
                     "projects": [
@@ -805,14 +779,10 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 6667
                         }
                     ],
-                    "processes": [
+                    "protocols": [
                         {
-                            "instrumentManufacturerModel": ["green"],
-                            "libraryConstructionApproach": ["fuchsia"],
-                            "processId": ["maroon"],
-                            "processName": ["olive"],
-                            "protocol": ["olive"],
-                            "protocolId": ["green"]
+                            "libraryConstructionApproach": ["Smart-seq2"],
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"]
                         }
                     ],
                     "projects": [
@@ -951,14 +921,10 @@ class TestResponse(WebServiceTestCase):
                                 "total_estimated_cells": 0
                             }
                         ],
-                        "processes": [
+                        "protocols": [
                             {
-                                "_type": ["process"],
-                                "library_construction_approach": ["Smart-seq2"]
-                            },
-                            {
-                                "_type": ["process"],
-                                "library_construction_approach": ["Smart-seq2"]
+                                "library_construction_approach": ["Smart-seq2"],
+                                "instrument_manufacturer_model": ["Illumina NextSeq 500"]
                             }
                         ]
                     }
@@ -1006,13 +972,10 @@ class TestResponse(WebServiceTestCase):
                                 "total_estimated_cells": 10
                             }
                         ],
-                        "processes": [
+                        "protocols": [
                             {
-                                "_type": ["process"],
-                                "library_construction_approach": ["10x_v2"]
-                            },
-                            {
-                                "_type": ["process"]
+                                "library_construction_approach": ["Illumina NextSeq 500"],
+                                "instrument_manufacturer_model": ["Smart-seq2"]
                             }
                         ]
                     }
@@ -1055,13 +1018,10 @@ class TestResponse(WebServiceTestCase):
                                 "total_estimated_cells": 528092
                             }
                         ],
-                        "processes": [
+                        "protocols": [
                             {
-                                "_type": ["process"]
-                            },
-                            {
-                                "_type": ["process"],
-                                "library_construction_approach": ["10x_v2"]
+                                "library_construction_approach": ["Celera PicoPlus 3000"],
+                                "instrument_manufacturer_model": ["Smart-seq2"]
                             }
                         ]
                     }
@@ -1089,7 +1049,7 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(2, project_summary2['donorCount'])
         self.assertEqual(39300011, project_summary2['totalCellCount'])
         self.assertEqual(['Homo sapiens'], sorted(project_summary2['genusSpecies']))
-        self.assertEqual(['10x_v2'], sorted(project_summary2['libraryConstructionApproach']))
+        self.assertEqual(['Illumina NextSeq 500'], sorted(project_summary2['libraryConstructionApproach']))
         self.assertEqual(['normal', 'not normal'], sorted(project_summary2['disease']))
         expected_organ_summary2 = [
             {
@@ -1110,7 +1070,7 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(16, project_summary3['donorCount'])
         self.assertEqual(528092, project_summary3['totalCellCount'])
         self.assertEqual(['Homo sapiens'], sorted(project_summary3['genusSpecies']))
-        self.assertEqual(['10x_v2'], sorted(project_summary3['libraryConstructionApproach']))
+        self.assertEqual(['Celera PicoPlus 3000'], sorted(project_summary3['libraryConstructionApproach']))
         self.assertEqual([], sorted(project_summary3['disease']))
         expected_organ_summary3 = [
             {

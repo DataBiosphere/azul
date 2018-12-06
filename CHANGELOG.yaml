@@ -11,6 +11,19 @@ meta:
     - clients: the service API changed in a way that requires clients to be updated
 
 changes:
+
+  - title: Replace `process` inner entity with `protocol`
+    issues:
+    - https://github.com/databiosphere/azul/issues/540
+    upgrade:
+    - deploy
+    - reindex
+    notes: Previously one process inner entity was created for every pair of protocol and process metadata entity.
+           With this change only protocol metadata entities are indexed, the inner entity is renamed from process
+           to protocol and unused fields have been removed. Only the fields instrumentManufacturerModel and
+           libraryConstructionApproach are being indexed. This change also removes the grouping of the
+           process/protocol inner entities by the libraryConstructionApproach field.
+
   - title: Add CloudWatch alarms on certain ES metrics to main deployments
     issues:
       - https://github.com/DataBiosphere/azul/issues/332

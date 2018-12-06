@@ -5,10 +5,8 @@
     "fileSize": "contents.files.size",
     "fileId": "contents.files.uuid",
 
-    "instrumentManufacturerModel": "contents.processes.instrument_manufacturer_model",
-    "libraryConstructionApproach": "contents.processes.library_construction_approach",
-    "processId": "contents.processes.process_id",
-    "protocol": "contents.processes.protocol_id",
+    "instrumentManufacturerModel": "contents.protocols.instrument_manufacturer_model",
+    "libraryConstructionApproach": "contents.protocols.library_construction_approach",
 
     "contactName": "contents.projects.contact_names",
     "projectId": "contents.projects.document_id",

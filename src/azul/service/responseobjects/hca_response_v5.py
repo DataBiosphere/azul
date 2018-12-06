@@ -370,9 +370,9 @@ class ProjectSummaryResponse(AbstractResponse):
                     accumulator.accumulate(specimen[property_name])
 
         library_accumulator = SetAccumulator()
-        for process in es_hit_contents['processes']:
-            if 'library_construction_approach' in process:
-                library_accumulator.accumulate(process['library_construction_approach'])
+        for protocol in es_hit_contents['protocols']:
+            if 'library_construction_approach' in protocol:
+                library_accumulator.accumulate(protocol['library_construction_approach'])
 
         total_cell_count, organ_cell_count = self.get_cell_count(es_hit_contents)
 
@@ -420,19 +420,15 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_bundles(self, entry):
         return [{"bundleUuid": b["uuid"], "bundleVersion": b["version"]} for b in entry["bundles"]]
 
-    def make_processes(self, entry):
-        processes = []
-        for process in entry["contents"]["processes"]:
+    def make_protocols(self, entry):
+        protocols = []
+        for protocol in entry["contents"]["protocols"]:
             translated_process = {
-                "processId": process["process_id"],
-                "processName": process.get("process_name", None),
-                "libraryConstructionApproach": process.get("library_construction_approach", None),
-                "instrumentManufacturerModel": process.get("instrument_manufacturer_model", None),
-                "protocolId": process.get("protocol_id", None),
-                "protocol": process.get("protocol_name", None),
+                "libraryConstructionApproach": protocol.get("library_construction_approach", []),
+                "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", [])
             }
-            processes.append(translated_process)
-        return processes
+            protocols.append(translated_process)
+        return protocols
 
     def make_projects(self, entry):
         projects = []
@@ -512,7 +508,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json()
                                   for aggregate_file in entry["contents"]["files"]]
         }
-        return HitEntry(processes=self.make_processes(entry),
+        return HitEntry(protocols=self.make_protocols(entry),
                         entryId=entry["entity_id"],
                         projects=self.make_projects(entry),
                         specimens=self.make_specimens(entry),

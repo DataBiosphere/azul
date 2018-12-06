@@ -97,39 +97,13 @@
                     "lane_index": null
                   }
                 ],
-                "processes": [
+                "protocols": [
                   {
-                    "document_id": "4c28e079-59af-4bd3-8c8b-763ea0beba98.31e708d3-79df-49b8-a3df-b1d694963468",
-                    "process_id": "process_id_714",
-                    "process_name": null,
-                    "protocol_id": "dissociation_protocol_1",
-                    "protocol_name": null,
-                    "_type": "process"
-                  },
-                  {
-                    "document_id": "4c28e079-59af-4bd3-8c8b-763ea0beba98.5bd4ba68-4c0e-4d22-840d-afc025e7badc",
-                    "process_id": "process_id_714",
-                    "process_name": null,
-                    "protocol_id": "enrichment_protocol_1",
-                    "protocol_name": null,
-                    "_type": "process"
-                  },
-                  {
-                    "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4.9c32cf70-3ed7-4720-badc-5ee71e8a38af",
-                    "process_id": "SRR3562915",
-                    "process_name": null,
-                    "protocol_id": "library_preparation_protocol_1",
-                    "protocol_name": null,
-                    "_type": "process",
+                    "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
                     "library_construction_approach": "Smart-seq2"
                   },
                   {
-                    "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4.61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
-                    "process_id": "SRR3562915",
-                    "process_name": null,
-                    "protocol_id": "sequencing_protocol_1",
-                    "protocol_name": null,
-                    "_type": "process",
+                    "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                     "instrument_manufacturer_model": "Illumina NextSeq 500"
                   }
                 ],
