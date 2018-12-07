@@ -9,7 +9,8 @@ from moto import mock_s3, mock_sts
 from azul import config
 from azul.service.responseobjects.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
-from lambdas.service.app import generate_manifest, start_manifest_generation
+from lambdas.service.app import (generate_manifest, start_manifest_generation,
+                                 start_manifest_generation_fetch, handle_manifest_generation_request)
 from service import WebServiceTestCase
 
 
@@ -64,12 +65,11 @@ class ManifestEndpointTest(WebServiceTestCase):
         mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
         filters = {'file': {'organ': {'is': ['lymph node']}}}
-        current_request.query_params = {'filters': json.dumps(filters), 'browser': ''}
-        response = start_manifest_generation()
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(301, response.body['Status'])
-        self.assertIn('Retry-After', response.body)
-        self.assertIn('Location', response.body)
+        current_request.query_params = {'filters': json.dumps(filters)}
+        response = start_manifest_generation_fetch()
+        self.assertEqual(301, response['Status'])
+        self.assertIn('Retry-After', response)
+        self.assertIn('Location', response)
         step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
                                                                      execution_name,
                                                                      execution_input={'filters': filters})
@@ -85,7 +85,7 @@ class ManifestEndpointTest(WebServiceTestCase):
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
-        start_manifest_generation()
+        handle_manifest_generation_request()
         step_function_helper.start_execution.assert_not_called()
         step_function_helper.describe_execution.assert_called_once()
 
@@ -103,7 +103,7 @@ class ManifestEndpointTest(WebServiceTestCase):
                 'Code': 'ExecutionDoesNotExist'
             }
         }, '')
-        self.assertRaises(BadRequestError, start_manifest_generation)
+        self.assertRaises(BadRequestError, handle_manifest_generation_request)
 
     @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
@@ -119,7 +119,7 @@ class ManifestEndpointTest(WebServiceTestCase):
                 'Code': 'OtherError'
             }
         }, '')
-        self.assertRaises(ClientError, start_manifest_generation)
+        self.assertRaises(ClientError, handle_manifest_generation_request)
 
     @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
@@ -131,7 +131,7 @@ class ManifestEndpointTest(WebServiceTestCase):
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
         step_function_helper.get_manifest_status.side_effect = StateMachineError
-        self.assertRaises(ChaliceViewError, start_manifest_generation)
+        self.assertRaises(ChaliceViewError, handle_manifest_generation_request)
 
     @mock.patch('lambdas.service.app.app.current_request')
     def test_manifest_endpoint_invalid_token(self, current_request):
@@ -139,4 +139,4 @@ class ManifestEndpointTest(WebServiceTestCase):
         Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
         """
         current_request.query_params = {'token': 'Invalid base64'}
-        self.assertRaises(BadRequestError, start_manifest_generation)
+        self.assertRaises(BadRequestError, handle_manifest_generation_request)
