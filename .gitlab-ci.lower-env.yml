@@ -18,6 +18,7 @@ build_noopdog:
   script:
     - cd deployments
     - ln -snf noopdog.local .active
+    - ls -la
     - cd ..
     - source environment
 #    - make terraform -  need to override commandline switch add new target, force terraform to add the
