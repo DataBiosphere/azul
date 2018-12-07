@@ -12,7 +12,7 @@ deploy:
 	$(MAKE) -C lambdas
 
 subscribe:
-	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py --shared; fi
+	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py; fi
 
 reindex:
 	python scripts/reindex.py --delete --partition-prefix-length=2

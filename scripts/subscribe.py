@@ -37,11 +37,11 @@ def main(argv):
         raise NotImplementedError("https://github.com/DataBiosphere/azul/issues/110")
 
 
-def subscribe(will_subscribe, dss_client):
+def subscribe(dss_client, subscribe=True):
     response = dss_client.get_subscriptions(replica='aws')
     current_subscriptions = freeze(response['subscriptions'])
 
-    if will_subscribe:
+    if subscribe:
         plugin = Plugin.load()
         base_url = config.indexer_endpoint()
         prefix = config.dss_query_prefix
