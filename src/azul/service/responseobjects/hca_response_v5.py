@@ -204,28 +204,15 @@ class ManifestResponse(AbstractResponse):
         content_type = 'text/tab-separated-values'
 
         with MultipartUploadHandler(object_key, content_type) as multipart_upload:
-            buffer = FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push)
-            buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
-            writer = csv.writer(buffer_wrapper, dialect='excel-tab')
+            with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
+                buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
+                writer = csv.writer(buffer_wrapper, dialect='excel-tab')
 
-            writer.writerow(list(self.manifest_entries['bundles'].keys()) +
-                            list(self.manifest_entries['contents.files'].keys()))
-            for hit in self.es_search.scan():
-                hit_dict = hit.to_dict()
-                assert len(hit_dict['contents']['files']) == 1
-                file = hit_dict['contents']['files'][0]
-                file_fields = self._translate(file, 'contents.files')
-
-                for bundle in hit_dict['bundles']:
-                    # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
-                    # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-                    writer.writerow(self._translate(bundle, 'bundles') + file_fields)
-
-                buffer.flush()
-
-            if buffer.remaining_size > 0:
-                logger.warning(f'ManifestResponse: Clearing the remaining buffer (approx. {buffer.remaining_size} B)')
-                buffer.flush(check_limit=False)
+                writer.writerow(list(self.manifest_entries['bundles'].keys()) +
+                                list(self.manifest_entries['contents.files'].keys()))
+                for hit in self.es_search.scan():
+                    self._iterate_hit(hit, writer)
+                    buffer.flush()
 
         return object_key
 
@@ -249,16 +236,19 @@ class ManifestResponse(AbstractResponse):
         writer.writerow(list(self.manifest_entries['bundles'].keys()) +
                         list(self.manifest_entries['contents.files'].keys()))
         for hit in es_search.scan():
-            hit_dict = hit.to_dict()
-            assert len(hit_dict['contents']['files']) == 1
-            file = hit_dict['contents']['files'][0]
-            file_fields = self._translate(file, 'contents.files')
-            for bundle in hit_dict['bundles']:
-                # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
-                # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-                writer.writerow(self._translate(bundle, 'bundles') + file_fields)
+            self._iterate_hit(hit, writer)
 
         return output.getvalue()
+
+    def _iterate_hit(self, es_search_hit, writer):
+        hit_dict = es_search_hit.to_dict()
+        assert len(hit_dict['contents']['files']) == 1
+        file = hit_dict['contents']['files'][0]
+        file_fields = self._translate(file, 'contents.files')
+        for bundle in hit_dict['bundles']:
+            # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
+            # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
+            writer.writerow(self._translate(bundle, 'bundles') + file_fields)
 
     def return_response(self):
         object_key = self._push_content_single_part()
