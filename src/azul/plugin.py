@@ -46,6 +46,13 @@ class Plugin(ABC):
 
     @classmethod
     def load(cls) -> 'Plugin':
+        """
+        First the load() method imports the module located in `azul.project.$AZUL_PROJECT`. Then, it retrieves the
+        plugin subclass from that module by calling the module's Plugin attribute. It validates that class is a subclass
+        of Plugin.  Finally, it returns an instance of that plugin subclass.
+
+        :return: an instance that is a concrete subclass of Plugin
+        """
         plugin_module = importlib.import_module(config.plugin_name)
         plugin_cls = plugin_module.Plugin
         assert issubclass(plugin_cls, cls)
