@@ -7,7 +7,13 @@ logger = getLogger(__name__)
 
 class FlushableBuffer(BytesIO):
     """
-    Allows the buffer to be passed on to the callback function before being removed from the memory.
+    A in-memory buffer that is designed to flush the output to the callback
+    function (``inbetween_callback``), either if there exists the size of
+    the remaining data is large enough (over ``min_size``) on flush or when
+    the buffer is getting closed, before being removed from the memory.
+
+    :param min_size: The minimum size of buffer (byte length)
+    :param inbetween_callback: The callback function to receive flushed output
     """
 
     def __init__(self, min_size: int, inbetween_callback: Callable):
@@ -28,17 +34,17 @@ class FlushableBuffer(BytesIO):
             return
         self.__clean_up()
 
-    def __clean_up(self):
-        self.__inbetween_callback(self.getvalue())
-        self.truncate(0)
-        self.seek(0)
-        self.__remaining_size = 0
-
     def close(self):
         if self.__remaining_size > 0:
             logger.warning(f'Clearing the remaining buffer (approx. {self.__remaining_size} B)')
             self.__clean_up()
         super().close()
+
+    def __clean_up(self):
+        self.__inbetween_callback(self.getvalue())
+        self.truncate(0)
+        self.seek(0)
+        self.__remaining_size = 0
 
     @property
     def remaining_size(self):

@@ -150,12 +150,11 @@ class MultipartUploadHandler:
 
     def push(self, data: bytes):
         part = self._create_new_part(data)
-        part.uploaded = True
 
         self.futures.append(self.thread_pool.submit(self._upload_part, part))
 
     def _create_new_part(self, data: bytes):
-        part = Part(part_number=self.next_part_number, etag=None, content=data, uploaded=False)
+        part = Part(part_number=self.next_part_number, etag=None, content=data)
         self.parts.append(part)
         self.next_part_number += 1
 
@@ -172,11 +171,10 @@ class Part:
     etag: str  # If ETag is defined, the content is already pushed to S3.
     part_number: int
     content: bytes
-    uploaded: bool  # If true, the content is either being uploaded or already pushed to S3 (with etag defined).
 
     @property
     def already_uploaded(self):
-        return self.uploaded or self.etag is not None
+        return self.etag is not None
 
     def to_dict(self):
         return dict(PartNumber=self.part_number, ETag=self.etag)
