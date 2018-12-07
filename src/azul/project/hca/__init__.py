@@ -26,7 +26,6 @@ class Plugin(azul.plugin.Plugin):
                     "must": [
                         {
                             "exists": {
-                                # Remove conditional when prod bundles are converted to vx structure
                                 "field": "files.project_json"
                             }
                         }, *(
