@@ -1,4 +1,3 @@
-
 stages:
   - build
 
@@ -9,21 +8,26 @@ stages:
   image: python:3.6-stretch
   stage: build
   before_script:
-    - source environment
     - pip install -r requirements.dev.txt
 
 # Develop Build
-build_develop:
+build_noopdog:
   <<: *build_template
   environment:
-    name: develop
+    name: noopdog
   script:
-#    - _select dev
-#    - make terraform
+    - cd deployments
+    - ln -snf noopdog .active
+    - cd ..
+    - source environment
+#    - make terraform -  need to override commandline switch add new target, force terraform to add the
 #    - make deploy
 # How to handle tagging tag will cause the job to re-run maybe the committer tags?
 # Any tests we can run?
 #    - make subscribe
-## How to decide make reindex or delete_and_reindex
+## How to decide make reindex or delete_and_reindex - trigger reindex manually
+##one bulild at a time
+##kill old reindex
+##exclude make delete and reindex till we have kill build II
   only:
-    - develop
+    -  gitlab-dev
