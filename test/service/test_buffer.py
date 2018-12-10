@@ -48,12 +48,14 @@ class FlushableBufferTest(TestCase):
             fb.write(b'?' * 4)
             self.assertEqual(4, fb.remaining_size)
             self.assertEqual(0, mock_callback.call_count)
-            fb.write(b'?' * 15)
-            self.assertEqual(0, fb.remaining_size)
-            self.assertEqual(1, mock_callback.call_count)
-            fb.write(b'?' * 7)
-            self.assertEqual(2, mock_callback.call_count)
-            fb.write(b'?' * 4)
-            self.assertEqual(2, mock_callback.call_count)
-        self.assertEqual(3, mock_callback.call_count)
+            fb.write(b'?' * 15)  # total: 19
+            self.assertEqual(4, fb.remaining_size)
+            self.assertEqual(3, mock_callback.call_count)
+            fb.write(b'?' * 7)  # total: 26
+            self.assertEqual(1, fb.remaining_size)
+            self.assertEqual(5, mock_callback.call_count)
+            fb.write(b'?' * 3)  # total: 28
+            self.assertEqual(4, fb.remaining_size)
+            self.assertEqual(5, mock_callback.call_count)
+        self.assertEqual(6, mock_callback.call_count)
         self.assertEqual(0, fb.remaining_size)
