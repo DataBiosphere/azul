@@ -24,7 +24,7 @@ from azul.service.responseobjects.elastic_request_builder import (BadArgumentExc
                                                                   IndexNotFoundError)
 from azul.service.responseobjects.manifest_service import ManifestService
 from azul.service.responseobjects.step_function_helper import StateMachineError
-from azul.service.responseobjects.storage_service import GetObjectError, StorageService
+from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
@@ -818,18 +818,18 @@ def shorten_query_url():
                        config.url_shortener_whitelist))) == 0:
         raise BadRequestError('Invalid URL given')
 
-    encoded_url = encode_url(url)
+    url_hash = hash_url(url)
     storage_service = StorageService(config.s3_public_bucket)
 
     def get_url_response(path):
         return {'url': f'http://{config.s3_public_bucket}.s3-website-{aws.region_name}.amazonaws.com/{path}'}
 
     key_length = 3
-    while key_length <= len(encoded_url):
-        key = f'url/{encoded_url[:key_length]}'
+    while key_length <= len(url_hash):
+        key = f'url/{url_hash[:key_length]}'
         try:
             existing_url = storage_service.get(key)
-        except GetObjectError:
+        except storage_service.client.exceptions.NoSuchKey:
             try:
                 storage_service.put(key,
                                     data=bytes(url, encoding='utf-8'),
@@ -838,14 +838,15 @@ def shorten_query_url():
             except ClientError as e:
                 if e.response['Error']['Code'] == 'InvalidRedirectLocation':
                     raise BadRequestError('Invalid URL given')
-                raise
+                else:
+                    raise
             return get_url_response(key)
         if existing_url == url:
             return get_url_response(key)
         key_length += 1
-    raise ChaliceViewError('Could not create URL')
+    raise ChaliceViewError('Could not create shortened URL')
 
 
-def encode_url(url):
+def hash_url(url):
     url_hash = hashlib.sha1(bytes(url, encoding='utf-8')).digest()
     return base64.urlsafe_b64encode(url_hash).decode()
