@@ -83,14 +83,14 @@ class TestQueryShortener(TestCase):
 
     @mock_sts
     @mock_s3
-    @mock.patch('lambdas.service.app.encode_url')
+    @mock.patch('lambdas.service.app.hash_url')
     @mock.patch('lambdas.service.app.app.current_request')
-    def test_shortened_url_collision(self, current_request, encode_url):
+    def test_shortened_url_collision(self, current_request, hash_url):
         """
         URL shortener should increase the key length by one for each time there is a key collision on
         non-matching URLs, raising an exception if an entire key matches another
         """
-        encode_url.return_value = 'abcde'
+        hash_url.return_value = 'abcde'
         StorageService().create_bucket(config.s3_public_bucket)
 
         current_request.json_body = {'url': 'https://humancellatlas.org'}
