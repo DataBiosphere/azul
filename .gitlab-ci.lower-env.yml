@@ -17,7 +17,7 @@ build_noopdog:
     name: noopdog
   script:
     - cd deployments
-    - ln -snf noopdog.local .active
+    - ln -snf noopdog .active
     - ls -la
     - cd ..
     - source environment
