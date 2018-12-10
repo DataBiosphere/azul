@@ -835,11 +835,8 @@ def shorten_query_url():
                                     data=bytes(url, encoding='utf-8'),
                                     ACL='public-read',
                                     WebsiteRedirectLocation=url)
-            except ClientError as e:
-                if e.response['Error']['Code'] == 'InvalidRedirectLocation':
-                    raise BadRequestError('Invalid URL given')
-                else:
-                    raise
+            except storage_service.client.exceptions.InvalidRedirectLocation:
+                raise BadRequestError('Invalid URL given')
             return get_url_response(key)
         if existing_url == url:
             return get_url_response(key)
