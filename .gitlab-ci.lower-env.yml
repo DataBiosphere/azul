@@ -7,8 +7,9 @@ stages:
 .build_template: &build_template
   image: python:3.6-stretch
   stage: build
-#  before_script:
-#    - pip install -r requirements.dev.txt
+  before_script:
+   - pip install virtualenv
+#  - pip install -r requirements.dev.txt
 
 # Develop Build
 build_noopdog:
