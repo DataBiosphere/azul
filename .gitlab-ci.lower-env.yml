@@ -8,7 +8,8 @@ stages:
   image: python:3.6-stretch
   stage: build
   before_script:
-   - pip install virtualenv
+    - cat /etc/*-release
+    - pip install virtualenv
 #  - pip install -r requirements.dev.txt
 
 # Develop Build
