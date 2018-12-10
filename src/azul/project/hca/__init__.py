@@ -87,7 +87,6 @@ dss_subscription_query = {
                                                 "2a0faf83-e342-4b1c-bb9b-cf1d1147f3bb",  # treutlein
                                                 "cf8439db-fcc9-44a8-b66f-8ffbf729bffa",  # meyer
                                                 "179bf9e6-5b33-4c5b-ae26-96c7270976b8",  # Regev-ICA
-                                                "20ef439c-a31e-479c-94fc-1c45376c857b",  # neuron_diff
                                                 # remove once https://github.com/DataBiosphere/azul/issues/86 is fixed
                                                 "32eb86db-6842-480f-a49a-a2b0161ed35a"   # tabulamuris
                                             ]
