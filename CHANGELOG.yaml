@@ -29,11 +29,9 @@ changes:
       - clients
     notes: >
            The `/url` endpoint was added to accept URLs and return a URL redirecting to the given URL.
-           Documentation:
-           https://github.com/DataBiosphere/azul/blob/2ab5c91d13e576a0e831298681e221ab0048bbcd/lambdas/service/app.py#L701
-           Running `make terraform` will delete the previously existing azul-storage- bucket.
-           This will fail if the bucket is not empty so manual deletion is required.
-           The storage bucket should have only been used for manifests and has a 1 day expiration policy.
+           Documentation: /lambdas/service/app.py#L701
+           Running `make terraform` after upgrading will delete the previously existing `azul-storage-...` bucket.
+           This will fail if the bucket is not empty and manual deletion will be required.
 
   - title: Make the manifest endpoint dual mode (standard HTTP and lifted 200)
     issues:

@@ -22,10 +22,7 @@ class StorageService:
         self.__client = client
 
     def get(self, object_key: str):
-        try:
-            return self.client.get_object(Bucket=self.__bucket_name, Key=object_key)['Body'].read().decode()
-        except self.client.exceptions.NoSuchKey:
-            raise GetObjectError(object_key)
+        return self.client.get_object(Bucket=self.__bucket_name, Key=object_key)['Body'].read().decode()
 
     def put(self, object_key: str, data: bytes, content_type: Optional[str] = None, **kwargs) -> str:
         params = {'Bucket': self.__bucket_name, 'Key': object_key, 'Body': data, **kwargs}

@@ -4,7 +4,7 @@ from chalice import BadRequestError, ChaliceViewError
 from moto import mock_s3, mock_sts
 
 from azul import config
-from azul.service.responseobjects.storage_service import GetObjectError, StorageService
+from azul.service.responseobjects.storage_service import StorageService
 from lambdas.service.app import shorten_query_url
 
 
@@ -21,7 +21,7 @@ class TestQueryShortener(TestCase):
         current_request.json_body = {
             'url': 'https://dev.data.humancellatlas.org/explore/specimens?filter=%5B%7B%22facetName%22%3A%22organ%22%2C%22terms%22%3A%5B%22bone%22%5D%7D%5D'
         }
-        storage_service_get.side_effect = GetObjectError()
+        storage_service_get.side_effect = StorageService().client.exceptions.NoSuchKey
 
         response = shorten_query_url()
         self.assertIn('url', response)
