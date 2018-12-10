@@ -110,7 +110,7 @@ class MultipartUploadHandler:
         try:
             self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
         except self.mp_upload.meta.client.exceptions.ClientError as e:
-            logger.error('Upload %s: Error detected while completing the upload.', self.upload_id)
+            logger.error('Upload %s: Error detected while completing the upload. %s', self.upload_id, e)
             self.__abort()
             if 'EntityTooSmall' in e.args[0]:
                 raise UploadPartSizeOutOfBoundError(f'{self.bucket_name}/{self.object_key}')
