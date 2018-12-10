@@ -90,34 +90,13 @@ class MultipartUploadHandler:
             logger.error('Upload %s: Error detected within the MPU context.\n\n%s',
                          self.upload_id,
                          '\n'.join(format_exception(etype, value, traceback)))
-            self.abort()
+            self.__abort()
             return
-        self.complete()
+        self.__complete()
 
-    def complete(self):
-        """
-        Completes the multipart upload session.
-
-        When there exists no uploads in the session or the session completion
-        request fails unexpectedly due to client error, this method will
-        automatically abort the multipart upload session and raises
-        corresponding exceptions.
-
-        This method will raises :class:`EmptyMultipartUploadError` if no
-        parts are uploaded.
-
-        This method will raises :class:`UploadPartSizeOutOfBoundError` if an
-        uploaded part is too small. The minimum size of non-final part is
-        defined as ``AWS_S3_DEFAULT_MINIMUM_PART_SIZE`` (quantifier: bytes,
-        according to the AWS documentation) in the same module.
-
-        This method will raises :class:`UnexpectedMultipartUploadAbort` if an
-        uploaded part is too small. The minimum size of non-final part is
-        defined as ``AWS_S3_DEFAULT_MINIMUM_PART_SIZE`` (quantifier: bytes,
-        according to the AWS documentation) in the same module.
-        """
+    def __complete(self):
         if not self.parts:
-            self.abort()
+            self.__abort()
             raise EmptyMultipartUploadError(f'{self.bucket_name}/{self.object_key}')
 
         for future in as_completed(self.futures):
@@ -125,14 +104,14 @@ class MultipartUploadHandler:
             if exception is not None:
                 logger.error('Upload %s: Error detected while uploading a part (%s: %s).', self.upload_id,
                              type(exception).__name__, exception)
-                self.abort()
+                self.__abort()
                 raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
 
         try:
             self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
         except self.mp_upload.meta.client.exceptions.ClientError as e:
             logger.error('Upload %s: Error detected while completing the upload.', self.upload_id)
-            self.abort()
+            self.__abort()
             if 'EntityTooSmall' in e.args[0]:
                 raise UploadPartSizeOutOfBoundError(f'{self.bucket_name}/{self.object_key}')
             raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
@@ -140,7 +119,7 @@ class MultipartUploadHandler:
         self.mp_upload = None
         self.thread_pool.shutdown()
 
-    def abort(self):
+    def __abort(self):
         logger.info('Upload %s: Aborting', self.upload_id)
         # This implementation will ignore any pending/active part uploads and force the thread pool to shut down.
         self.mp_upload.abort()
