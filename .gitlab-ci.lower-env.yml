@@ -16,6 +16,8 @@ build_noopdog:
   environment:
     name: noopdog
   script:
+    - virtualenv -p python3 .venv
+    - source .venv/bin/activate
     - cd deployments
     - ln -snf noopdog .active
     - cd ..
