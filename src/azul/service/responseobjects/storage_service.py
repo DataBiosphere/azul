@@ -41,7 +41,3 @@ class StorageService:
     def create_bucket(self, bucket_name: str = None):
         self.client.create_bucket(Bucket=(bucket_name or self.__bucket_name))
         logger.warning(f'{type(self).__name__}: Created a bucket called "{bucket_name or self.__bucket_name}"')
-
-
-class GetObjectError(RuntimeError):
-    pass
