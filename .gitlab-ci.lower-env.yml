@@ -12,9 +12,12 @@ stages:
     - pip install virtualenv
     - apt-get update
     - apt-get install unzip
+    - mkdir tf-install
+    - cd tf-install
     - wget https://releases.hashicorp.com/terraform/0.11.10/terraform_0.11.10_linux_amd64.zip
     - unzip terraform_0.11.10_linux_amd64.zip
     - mv terraform /usr/local/bin/
+    - cd ..
     - terraform --version
 #  - pip install -r requirements.dev.txt
 
