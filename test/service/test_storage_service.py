@@ -1,5 +1,6 @@
 import json
 from unittest import TestCase
+from unittest.mock import patch
 
 from moto import mock_s3, mock_sts
 import requests
@@ -129,7 +130,7 @@ class StorageServiceTest(TestCase):
 
     @mock_s3
     @mock_sts
-    def test_multipart_upload_inflight_error_with_nothing_pushed(self):
+    def test_multipart_upload_error_inside_context_with_nothing_pushed(self):
         sample_key = 'foo-multipart-upload-error'
         sample_content_parts = [
             "a" * 5242880,
@@ -144,3 +145,20 @@ class StorageServiceTest(TestCase):
             with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                 for part in sample_content_parts:
                     upload.push(part.encode())
+
+    @mock_s3
+    @mock_sts
+    def test_multipart_upload_error_inside_thread_with_nothing_pushed(self):
+        sample_key = 'foo-multipart-upload-error'
+        sample_content_parts = [
+            "a" * 5242880,
+            "b" * 5242880
+        ]
+
+        storage_service = StorageService()
+        storage_service.create_bucket()
+        with patch.object(MultipartUploadHandler, '_upload_part', side_effect=RuntimeError('test')):
+            with self.assertRaises(UnexpectedMultipartUploadAbort):
+                with MultipartUploadHandler(sample_key, 'text/plain') as upload:
+                    for part in sample_content_parts:
+                        upload.push(part.encode())
