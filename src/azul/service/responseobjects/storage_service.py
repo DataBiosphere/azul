@@ -128,10 +128,10 @@ class MultipartUploadHandler:
         logger.warning('Upload %s: Aborted', self.upload_id)
 
     def push(self, data: bytes):
-        part = self._create_new_part(data)
+        part = self.__create_new_part(data)
         self.futures.append(self.thread_pool.submit(self._upload_part, part))
 
-    def _create_new_part(self, data: bytes):
+    def __create_new_part(self, data: bytes):
         part = Part(part_number=self.next_part_number, etag=None, content=data)
         self.parts.append(part)
         self.next_part_number += 1
