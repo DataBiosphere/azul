@@ -25,21 +25,30 @@ class FlushableBuffer(BytesIO):
         super().write(b)
         byte_count = len(b)
         self.__remaining_size += byte_count
-        if self.__remaining_size < self.__chunk_size:
-            return
         self.__clean_up()
 
     def close(self):
         if self.__remaining_size > 0:
             logger.warning(f'Clearing the remaining buffer (approx. {self.__remaining_size} B)')
-            self.__clean_up()
+            self.__inbetween_callback(self.getvalue())
+            self.__remaining_size = 0
+            # As the buffer is closed, the pointer doesn't need to be reset.
         super().close()
 
     def __clean_up(self):
-        self.__inbetween_callback(self.getvalue())
+        if self.__remaining_size < self.__chunk_size:
+            return
+        value = self.getvalue()
+        first_index = 0
+        last_index = self.__chunk_size
+        while last_index <= self.remaining_size:
+            self.__inbetween_callback(value[first_index:last_index])
+            first_index = last_index
+            last_index += self.__chunk_size
         self.truncate(0)
         self.seek(0)
         self.__remaining_size = 0
+        self.write(value[first_index:last_index])
 
     @property
     def remaining_size(self):
