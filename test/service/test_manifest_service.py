@@ -17,7 +17,7 @@ class ManifestServiceTest(TestCase):
         """
         Parameter encoding and decoding functions should be inverse of each other
         """
-        uuid = '{"uuid": "6c9dfa3f-e92e-11e8-9764-ada973595c11"}'
+        uuid = {"uuid": "6c9dfa3f-e92e-11e8-9764-ada973595c11"}
         self.assertEqual(uuid, ManifestService().decode_params(ManifestService().encode_params(uuid)))
 
         encoding = 'IjRkMWE4MGQxLWU5MmUtMTFlOC1iYzc2LWY5NTQ3MzRjNmU5YiI='
@@ -44,12 +44,9 @@ class ManifestServiceTest(TestCase):
         step_function_helper.describe_execution.return_value = execution_success_output
         manifest_service = ManifestService()
         token = manifest_service.encode_params({'execution_id': execution_id})
-        response = manifest_service.get_manifest_status(token, '')
-        expected_output = {
-            'Status': 302,
-            'Location': manifest_url
-        }
-        self.assertEqual(expected_output, response)
+        status_code, retry_after, location = manifest_service.get_manifest_status(token, '')
+        self.assertEqual(302, status_code)
+        self.assertEqual(manifest_url, location)
 
     @mock_sts
     @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
@@ -69,11 +66,11 @@ class ManifestServiceTest(TestCase):
         step_function_helper.describe_execution.return_value = execution_running_output
         manifest_service = ManifestService()
         token = manifest_service.encode_params({'execution_id': execution_id})
-        expected_token = manifest_service.encode_params({'execution_id': execution_id, 'wait': 1})
         retry_url = config.service_endpoint() + '/manifest/files'
-        response = manifest_service.get_manifest_status(token, retry_url)
-        self.assertEqual(301, response['Status'])
-        self.assertEqual(response['Location'], f'{retry_url}?token={expected_token}')
+        status_code, retry_after, location = manifest_service.get_manifest_status(token, retry_url)
+        self.assertEqual(301, status_code)
+        expected_token = manifest_service.encode_params({'execution_id': execution_id, 'wait': 1})
+        self.assertEqual(f'{retry_url}?token={expected_token}', location)
 
     @mock_sts
     @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')

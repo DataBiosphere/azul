@@ -12,6 +12,18 @@ meta:
 
 changes:
 
+  - title: Make the manifest endpoint dual mode (standard HTTP and lifted 200)
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/567
+    upgrade:
+      - deploy
+    notes: The previous `/manifest/files` endpoint behaviour has been moved to `/fetch/manifest/files`.
+           `/fetch/manifest/files` will return a 200 response with redirection information in the body.
+           `/manifest/files` has been changed to return either a 301 or 302 response with a `Location`
+           header to allow the client to automatically redirect.  This change allows different clients
+           to be able to choose the type of response.  e.g. Data browser can handle redirects in Javascript
+           and matrix service can automatically be redirected.
+
   - title: Use step functions to produce manifest
     issues:
       - https://github.com/DataBiosphere/azul/issues/546

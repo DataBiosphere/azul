@@ -540,7 +540,8 @@ def get_manifest():
 @app.route('/manifest/files', methods=['GET'], cors=True)
 def start_manifest_generation():
     """
-    Initiate and check status of a manifest generation job.
+    Initiate and check status of a manifest generation job, returning a either a 301 or 302 response
+    redirecting to either the location of the manifest or a URL to re-check the status of the manifest job.
 
     parameters:
         - name: filters
@@ -552,7 +553,38 @@ def start_manifest_generation():
           type: string
           description: An opaque string describing the manifest generation job
 
-    :return: A 200 response with a JSON body describing the status of the manifest.
+    :return: If the manifest generation has been started or is still ongoing, the response will have a
+    301 status and will redirect to a URL that will get a recheck the status of the manifest.
+
+    If the manifest generation is done and the manifest is ready to be downloaded, the response will
+    have a 302 status and will redirect to the URL of the manifest.
+    """
+    status_code, retry_after, location = handle_manifest_generation_request()
+    return Response(body='',
+                    headers={
+                        'Retry-After': str(retry_after),
+                        'Location': location
+                    },
+                    status_code=status_code)
+
+
+@app.route('/fetch/manifest/files', methods=['GET'], cors=True)
+def start_manifest_generation_fetch():
+    """
+    Initiate and check status of a manifest generation job, returning a 200 response with
+    simulated headers in the body.
+
+    parameters:
+        - name: filters
+          in: query
+          type: string
+          description: Filters to be applied when generating the manifest
+        - name: token
+          in: query
+          type: string
+          description: An opaque string describing the manifest generation job
+
+    :return:  A 200 response with a JSON body describing the status of the manifest.
 
     If the manifest generation has been started or is still ongoing, the response will look like:
 
@@ -590,6 +622,21 @@ def start_manifest_generation():
     The client should request the URL given in the `Location` field. The URL will point to a different service and
     the client should expect a response containing the actual manifest. Currently the `Location` field of the final
     response is a signed URL to an object in S3 but clients should not depend on that.
+    """
+    status_code, retry_after, location = handle_manifest_generation_request()
+    response = {
+        'Status': status_code,
+        'Location': location
+    }
+    if status_code == 301:  # Only return Retry-After if manifest is not ready
+        response['Retry-After'] = retry_after
+    return response
+
+
+def handle_manifest_generation_request():
+    """
+    Start a manifest generation job and return a status code, Retry-After, and a retry URL for
+    the view function to handle
     """
     logger = logging.getLogger("dashboardService.webservice.get_manifest")
 
