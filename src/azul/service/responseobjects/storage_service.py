@@ -94,10 +94,6 @@ class MultipartUploadHandler:
             return
         self.complete()
 
-    @property
-    def is_active(self):
-        return self.mp_upload is not None
-
     def complete(self):
         """
         Completes the multipart upload session.
@@ -120,16 +116,11 @@ class MultipartUploadHandler:
         defined as ``AWS_S3_DEFAULT_MINIMUM_PART_SIZE`` (quantifier: bytes,
         according to the AWS documentation) in the same module.
         """
-        if not self.is_active:
-            return
-
         if not self.parts:
             self.abort()
             raise EmptyMultipartUploadError(f'{self.bucket_name}/{self.object_key}')
 
         for future in as_completed(self.futures):
-            if future.cancelled():
-                continue
             exception = future.exception()
             if exception is not None:
                 logger.error('Upload %s: Error detected while uploading a part (%s: %s).', self.upload_id,
@@ -150,22 +141,11 @@ class MultipartUploadHandler:
         self.thread_pool.shutdown()
 
     def abort(self):
-        if not self.is_active:
-            raise InactiveMultipartUploadAbort()
-        logger.info('Upload %s: Cancelling all pending async part uploads', self.upload_id)
-        for future in self.futures:
-            if future.done():
-                continue
-            if future.running():
-                continue
-            future.cancel()
-        logger.warning('Upload %s: Waiting for all active async part uploads', self.upload_id)
-        for _ in as_completed(self.futures):
-            pass  # Wait for all active async uploads to finish.
         logger.info('Upload %s: Aborting', self.upload_id)
+        # This implementation will ignore any pending/active part uploads and force the thread pool to shut down.
         self.mp_upload.abort()
         self.mp_upload = None
-        self.thread_pool.shutdown()
+        self.thread_pool.shutdown(wait=False)
         logger.warning('Upload %s: Aborted', self.upload_id)
 
     def push(self, data: bytes):
@@ -208,10 +188,6 @@ class EmptyMultipartUploadError(RuntimeError):
 
 
 class UnexpectedMultipartUploadAbort(RuntimeError):
-    pass
-
-
-class InactiveMultipartUploadAbort(RuntimeError):
     pass
 
 
