@@ -16,15 +16,15 @@ build_noopdog:
   environment:
     name: noopdog
   script:
+    - virtualenv -p python3 .venv
+    - source .venv/bin/activate
     - cd deployments
     - ln -snf noopdog .active
-    - ls -la
     - cd ..
     - source environment
     - _select noopdog
-    - virtualenv -p python3 .venv && source .venv/bin/activate
     - pip install -r requirements.dev.txt
-    - python scripts/envhook.py install
+    - make terraform
   #    - make terraform -  need to override commandline switch add new target, force terraform to add the
 #    - make deploy
 # How to handle tagging tag will cause the job to re-run maybe the committer tags?
