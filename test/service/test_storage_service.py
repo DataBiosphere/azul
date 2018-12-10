@@ -141,7 +141,7 @@ class StorageServiceTest(TestCase):
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with self.assertRaises(UnexpectedMultipartUploadAbort):
+        with self.assertRaises(AttributeError):
             with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                 for part in sample_content_parts:
                     upload.push(part.encode())

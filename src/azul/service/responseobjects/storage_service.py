@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from functools import lru_cache
 from logging import getLogger
+from traceback import format_exception
 from typing import Optional
 import boto3
 from azul import config
@@ -84,10 +85,13 @@ class MultipartUploadHandler:
         self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
         return self
 
-    def __exit__(self, type, value, traceback):
-        if type:
+    def __exit__(self, etype, value, traceback):
+        if etype:
+            logger.error('Upload %s: Error detected within the MPU context.\n\n%s',
+                         self.upload_id,
+                         '\n'.join(format_exception(etype, value, traceback)))
             self.abort()
-            raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
+            return
         self.complete()
 
     @property
@@ -123,8 +127,15 @@ class MultipartUploadHandler:
             self.abort()
             raise EmptyMultipartUploadError(f'{self.bucket_name}/{self.object_key}')
 
-        for _ in as_completed(self.futures):
-            pass  # Blocked until all uploads are done.
+        for future in as_completed(self.futures):
+            if future.cancelled():
+                continue
+            exception = future.exception()
+            if exception is not None:
+                logger.error('Upload %s: Error detected while uploading a part (%s: %s).', self.upload_id,
+                             type(exception).__name__, exception)
+                self.abort()
+                raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
 
         try:
             self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
@@ -141,16 +152,24 @@ class MultipartUploadHandler:
     def abort(self):
         if not self.is_active:
             raise InactiveMultipartUploadAbort()
-
+        logger.info('Upload %s: Cancelling all pending async part uploads', self.upload_id)
+        for future in self.futures:
+            if future.done():
+                continue
+            if future.running():
+                continue
+            future.cancel()
+        logger.warning('Upload %s: Waiting for all active async part uploads', self.upload_id)
+        for _ in as_completed(self.futures):
+            pass  # Wait for all active async uploads to finish.
+        logger.info('Upload %s: Aborting', self.upload_id)
         self.mp_upload.abort()
         self.mp_upload = None
         self.thread_pool.shutdown()
-
         logger.warning('Upload %s: Aborted', self.upload_id)
 
     def push(self, data: bytes):
         part = self._create_new_part(data)
-
         self.futures.append(self.thread_pool.submit(self._upload_part, part))
 
     def _create_new_part(self, data: bytes):
