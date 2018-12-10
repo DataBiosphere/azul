@@ -7,7 +7,6 @@ import requests
 from azul.service.responseobjects.storage_service import (StorageService,
                                                           GetObjectError,
                                                           EmptyMultipartUploadError,
-                                                          InactiveMultipartUploadAbort,
                                                           UploadPartSizeOutOfBoundError,
                                                           UnexpectedMultipartUploadAbort,
                                                           MultipartUploadHandler)
@@ -145,17 +144,3 @@ class StorageServiceTest(TestCase):
             with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                 for part in sample_content_parts:
                     upload.push(part.encode())
-
-    @mock_s3
-    @mock_sts
-    def test_multipart_upload_error_due_to_inactive_abort(self):
-        sample_key = 'foo-multipart-upload-error'
-
-        storage_service = StorageService()
-        storage_service.create_bucket()
-        with MultipartUploadHandler(sample_key, 'text/plain') as upload:
-            self.assertTrue(upload.is_active)
-            upload.abort()  # This is a manual abort. No exception should be raised here.
-            self.assertFalse(upload.is_active)
-            with self.assertRaises(InactiveMultipartUploadAbort):
-                upload.abort()  # The second abort will trigger an exception.
