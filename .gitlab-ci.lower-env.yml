@@ -5,7 +5,7 @@ stages:
 # Build Jobs
 # Build Job Template
 .build_template: &build_template
-  image: python:3.6-stretch
+  image: hashicorp/terraform:light
   stage: build
   before_script:
     - cat /etc/*-release
