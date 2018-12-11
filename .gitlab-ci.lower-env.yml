@@ -9,7 +9,6 @@ stages:
   stage: build
   before_script:
     - cat /etc/*-release
-    - pip install virtualenv
     - apt-get update
     - apt-get install unzip
     - mkdir tf-install
@@ -19,7 +18,7 @@ stages:
     - mv terraform /usr/local/bin/
     - cd ..
     - terraform --version
-#  - pip install -r requirements.dev.txt
+    - pip install virtualenv
 
 # Develop Build
 build_noopdog:
@@ -35,16 +34,13 @@ build_noopdog:
     - cd ..
     - source environment
     - _select noopdog
-#    - pip install -r requirements.dev.txt
-#    - make terraform
-  #    - make terraform -  need to override commandline switch add new target, force terraform to add the
-#    - make deploy
-# How to handle tagging tag will cause the job to re-run maybe the committer tags?
-# Any tests we can run?
-#    - make subscribe
-## How to decide make reindex or delete_and_reindex - trigger reindex manually
-##one bulild at a time
-##kill old reindex
-##exclude make delete and reindex till we have kill build II
+    - pip install -r requirements.dev.txt
+    - cd terraform
+    - terraform init
+    - terrform validate
+    - terraform plan -out "planfile"
+    - terraform apply planfile
+    - cd ..
+    - make deploy
   only:
     -  gitlab-dev
