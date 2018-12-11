@@ -93,8 +93,8 @@ def post_notification():
             log.info("Queued notification %r", notification)
         return {"status": "done"}
     else:
-        log.warning(f'Ignored notification %r. This indexer is currently in TEST MODE.', notification)
-        raise chalice.ChaliceViewError(f'Ignored notification {notification}. This indexer is currently in TEST MODE.')
+        log.warning('Ignored notification %r. This indexer is currently in TEST MODE.', notification)
+        raise chalice.ChaliceViewError('This indexer is currently in TEST MODE.')
 
 
 @app.route('/delete', methods=['POST'])
