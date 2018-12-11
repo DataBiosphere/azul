@@ -570,7 +570,7 @@ class TestResponse(WebServiceTestCase):
             self.assertIn('url', file_data.keys())
             actual_url = urllib.parse.urlparse(file_data['url'])
             actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
-            expected_base_url = urllib.parse.urlparse(config.service_endpoint())
+            expected_base_url = urllib.parse.urlparse(base_url)
             self.assertEquals(expected_base_url.netloc, actual_url.netloc)
             self.assertEquals(expected_base_url.scheme, actual_url.scheme)
             self.assertIsNotNone(actual_url.path)
