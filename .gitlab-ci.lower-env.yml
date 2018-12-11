@@ -26,6 +26,7 @@ build_noopdog:
   environment:
     name: noopdog
   script:
+    - export AWS_DEFAULT_REGION=us-east-1
     - virtualenv --version
     - virtualenv -p python3 .venv
     - source .venv/bin/activate
