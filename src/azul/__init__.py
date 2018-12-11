@@ -55,6 +55,10 @@ class Config:
         return os.environ['AZUL_PUBLIC_S3_BUCKET']
 
     @property
+    def s3_public_bucket_domain(self) -> str:
+        return self.deployment_stage + '.' + self.domain_name
+
+    @property
     def es_timeout(self) -> int:
         return int(os.environ['AZUL_ES_TIMEOUT'])
 

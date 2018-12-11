@@ -822,7 +822,7 @@ def shorten_query_url():
     storage_service = StorageService(config.s3_public_bucket)
 
     def get_url_response(path):
-        return {'url': f'http://{config.s3_public_bucket}.s3-website-{aws.region_name}.amazonaws.com/{path}'}
+        return {'url': f'http://{config.s3_public_bucket_domain}/{path}'}
 
     key_length = 3
     while key_length <= len(url_hash):
