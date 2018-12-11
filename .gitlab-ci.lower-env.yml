@@ -36,10 +36,8 @@ build_noopdog:
     - _select noopdog
     - pip install -r requirements.dev.txt
     - cd terraform
-    - terraform init
-    - terrform validate
-    - terraform plan -out "planfile"
-    - terraform apply planfile
+    - make gitlab-plan
+    - make gitlab-apply
     - cd ..
     - make deploy
   only:
