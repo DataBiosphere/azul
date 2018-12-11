@@ -16,13 +16,13 @@ plan: validate
 	terraform plan
 
 gitlab-plan: validate
-    terraform plan -out "planfile"
+	terraform plan -out "planfile"
 
 apply: validate
 	terraform apply
 
 gitlab-apply: validate
-    terraform apply planfile
+	terraform apply planfile
 
 destroy: validate
 	terraform destroy
