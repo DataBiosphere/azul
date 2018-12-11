@@ -1,4 +1,5 @@
 import ast
+import json
 from concurrent.futures import ThreadPoolExecutor
 import logging.config
 import os
@@ -162,7 +163,7 @@ def get_data(file_id=None):
 
         for hit in response['hits']:
             for file in hit['files']:
-                file['url'] = file_url(file['uuid'], file['version'])
+                file['url'] = file_url(file['uuid'], version=file['version'], replica='aws')
 
     except BadArgumentException as bae:
         raise BadRequestError(msg=bae.message)
@@ -660,10 +661,7 @@ def handle_manifest_generation_request():
         manifest_service.start_manifest_generation(filters, execution_id)
         token = manifest_service.encode_params({'execution_id': execution_id})
 
-    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
-    base_url = app.current_request.headers['host']
-    endpoint_path = app.current_request.context['path']
-    retry_url = f'{protocol}://{base_url}{endpoint_path}'
+    retry_url = self_url()
 
     try:
         return manifest_service.get_manifest_status(token, retry_url)
@@ -692,46 +690,92 @@ def generate_manifest(event, context):
     return {'Location': response.headers['Location']}
 
 
-@app.route('/dss/files/{uuid}', methods=['GET'], cors=True)
+proxy_endpoint_path = "/fetch/dss/files"
+
+
+@app.route(proxy_endpoint_path + '/{uuid}', methods=['GET'], cors=True)
 def files_proxy(uuid):
     """
-    Proxies requests to DSS' /files endpoint, with the intend of implementing Retry-After on the client's behalf. The
-    file URL that this service returns on the /repository/files endpoint points at this endpoint. This proxy endpoint
-    was added to prevent browsers that don't implement Retry-After from quickly exhausting their limit on the number
-    of retries.
+    Initiate checking out a file for download from the data store
 
-    This is only a best effort since we can only wait at most 30s before API Gateway times out.
+    parameters:
+        - name: uuid
+          in: path
+          type: string
+          description: UUID of the file to be checked out
+
+    :return: A 200 response with a JSON body describing the status of the checkout from DSS.
+
+    All query parameters are forwarded to DSS in order to initiate checkout process for the correct file.
+    For more information refer to https://dss.data.humancellatlas.org under GET `/files/{uuid}`.
+
+    If the file checkout has been started or is still ongoing, the response will look like:
+
+    ```
+    {
+        "Status": 301,
+        "Retry-After": 2,
+        "Location": "https://…"
+    }
+    ```
+
+    The `Status` field emulates HTTP status code 301 Moved Permanently.
+
+    `Retry-After` is the recommended number of seconds to wait before requesting the URL specified in
+     the `Location` field.
+
+    `Location` is the URL to make a GET request to in order to recheck the status of the checkout process.
+
+    If the client receives a response body with the `Status` field set to 301, the client should wait the number of
+    seconds specified in `Retry-After` and then request the URL given in the `Location` field. The URL will point
+    back at this endpoint so the client should expect a response of the same shape. Note that the actual HTTP
+    response is of status 200, only the `Status` field of the body will be 301. The intent is to emulate HTTP while
+    bypassing the default client behavior which, in most web browsers, is to ignore `Retry-After`. The response
+    described here is intended to be processed by client-side Javascript such that the recommended delay in
+    `Retry-After` can be handled in Javascript rather that relying on the native implementation by the web browser.
+
+    If the file checkout is done and the file is ready to be downloaded, the response will be:
+
+    ```
+    {
+        "Status": 302,
+        "Location": "https://org-humancellatlas-dss-checkout.s3.amazonaws.com/blobs/…"
+    }
+    ```
+
+    The client should request the URL given in the `Location` field. The URL will point to a different service and
+    the client should expect a response containing the actual manifest. Currently the `Location` field of the final
+    response is a signed URL to an object in S3 but clients should not depend on that.
     """
     params = app.current_request.query_params
     url = config.dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
     dss_response = requests.get(url, params=params, allow_redirects=False)
     if dss_response.status_code == 301:
-        retry_after = dss_response.headers.get('Retry-After')
+        retry_after = int(dss_response.headers.get('Retry-After'))
         location = dss_response.headers['Location']
         query = urllib.parse.urlparse(location).query
         params = {k: one(v) for k, v in urllib.parse.parse_qs(query, strict_parsing=True).items()}
-        if retry_after is not None:
-            now = time.time()
-            retry_after = parse_http_date(retry_after, base_time=now)
-            sleep_time = retry_after - now
-            if sleep_time > 0:
-                remaining_time = app.lambda_context.get_remaining_time_in_millis() / 1000
-                sleep_time = min(sleep_time, remaining_time - 2)
-                if sleep_time > 0:
-                    time.sleep(sleep_time)
-        return Response(body='', status_code=301, headers={'Location': _file_url(uuid, **params)})
+        body = {"Status": 301, "Retry-After": retry_after, "Location": file_url(uuid, **params)}
+        return Response(body=json.dumps(body), status_code=200)
     elif dss_response.status_code == 302:
         location = dss_response.headers['Location']
-        return Response(body='', status_code=302, headers={'Location': location})
+        body = {"Status": 302, "Location": location}
+        return Response(body=json.dumps(body), status_code=200)
     else:
         dss_response.raise_for_status()
 
 
-def file_url(uuid, version):
-    return _file_url(uuid, version=version, replica='aws')
+def file_url(uuid, **params):
+    uuid = urllib.parse.quote(uuid, safe="")
+    url = self_url(endpoint_path=f'{proxy_endpoint_path}/{uuid}')
+    params = urllib.parse.urlencode(params)
+    return f'{url}?{params}'
 
 
-def _file_url(uuid, **kwargs):
-    return (config.service_endpoint() + '/dss/files' +
-            '/' + urllib.parse.quote(uuid, safe='') +
-            '?' + urllib.parse.urlencode(kwargs))
+def self_url(endpoint_path=None):
+    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
+    base_url = app.current_request.headers['host']
+    if endpoint_path is None:
+        endpoint_path = app.current_request.context['path']
+    retry_url = f'{protocol}://{base_url}{endpoint_path}'
+    return retry_url

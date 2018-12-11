@@ -11,6 +11,14 @@ meta:
     - clients: the service API changed in a way that requires clients to be updated
 
 changes:
+  - title: Emulate HTTP redirects and retry-after in DSS file proxy
+    issues:
+    - https://github.com/DataBiosphere/azul/issues/551
+    upgrade:
+    - deploy
+    - client
+    notes: Refer to docstring for service API handler `/fetch/dss/files/{uuid}`.
+           Note that the DSS file proxy endpoint changed from `/dss/files/{uuid}` to `/fetch/dss/files/{uuid}`
 
   - title: Make the manifest endpoint dual mode (standard HTTP and lifted 200)
     issues:
