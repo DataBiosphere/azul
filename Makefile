@@ -18,7 +18,7 @@ reindex:
 	python scripts/reindex.py
 
 delete_and_reindex:
-	python scripts/reindex.py --delete
+	python scripts/reindex.py --delete --prefix=2
 
 clean:
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
