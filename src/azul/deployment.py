@@ -16,7 +16,12 @@ class AWS:
     def profile(self):
         session = botocore.session.Session()
         profile_name = session.get_config_variable('profile')
-        return session.full_config['profiles'][profile_name]
+        if profile_name is None:
+            return {}
+        else:
+            if not profile_name in session.full_config['profiles']:
+                raise ValueError("Profile " +profile_name+ " not found in .aws/config!" )
+            return session.full_config['profiles'][profile_name]
 
     @memoized_property
     def region_name(self):
