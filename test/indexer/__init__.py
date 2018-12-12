@@ -1,10 +1,15 @@
+from copy import deepcopy
 import json
 import os
-from typing import Any, Mapping
+import threading
+from typing import List, Tuple
 from unittest.mock import patch
 from uuid import uuid4
 
+from azul import config
+from azul.indexer import IndexWriter
 from azul.plugin import Plugin
+from azul.types import JSON
 from es_test_case import ElasticsearchTestCase
 
 
@@ -13,10 +18,20 @@ class IndexerTestCase(ElasticsearchTestCase):
     def setUp(self):
         super().setUp()
         plugin = Plugin.load()
-        indexer_cls = plugin.indexer_class()
-        self.hca_indexer = indexer_cls(refresh='wait_for')
+        self.indexer_cls = plugin.indexer_class()
+        self.per_thread = threading.local()
 
-    def _make_fake_notification(self, uuid: str, version: str) -> Mapping[str, Any]:
+    @property
+    def hca_indexer(self):
+        try:
+            indexer = self.per_thread.indexer
+        except AttributeError:
+            indexer = self.indexer_cls()
+            self.per_thread.indexer = indexer
+        return indexer
+
+    def _make_fake_notification(self, bundle_fqid) -> JSON:
+        bundle_uuid, bundle_version = bundle_fqid
         return {
             "query": {
                 "match_all": {}
@@ -24,41 +39,60 @@ class IndexerTestCase(ElasticsearchTestCase):
             "subscription_id": str(uuid4()),
             "transaction_id": str(uuid4()),
             "match": {
-                "bundle_uuid": uuid,
-                "bundle_version": version
+                "bundle_uuid": bundle_uuid,
+                "bundle_version": bundle_version
             }
         }
 
-    def _get_data_files(self, filename, bundle_version, updated=False):
+    def _load_canned_file(self, bundle_fqid, extension) -> JSON:
+        bundle_uuid, bundle_version = bundle_fqid
         data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
-        metadata_suffix = ".metadata.json"
-        manifest_suffix = ".manifest.json"
-        if updated:
-            filename += ".updated"
+        for suffix in '.' + bundle_version, '':
+            try:
+                with open(os.path.join(data_prefix, f'{bundle_uuid}{suffix}.{extension}.json'), 'r') as infile:
+                    return json.load(infile)
+            except FileNotFoundError:
+                if not suffix:
+                    raise
 
-        with open(os.path.join(data_prefix, filename + metadata_suffix), 'r') as infile:
-            metadata = json.load(infile)
+    def _load_canned_bundle(self, bundle_fqid) -> Tuple[List[JSON], JSON]:
+        manifest = self._load_canned_file(bundle_fqid, 'manifest')
+        metadata = self._load_canned_file(bundle_fqid, 'metadata')
+        assert isinstance(manifest, list)
+        return manifest, metadata
 
-        with open(os.path.join(data_prefix, filename + manifest_suffix), 'r') as infile:
-            manifest = json.load(infile)
+    def _load_canned_result(self, bundle_fqid) -> List[JSON]:
+        """
+        Load the canned index contents for the given canned bundle and fix the '_index' entry in each to match the
+        index name used by the current deployment
+        """
+        expected_hits = self._load_canned_file(bundle_fqid, 'results')
+        assert isinstance(expected_hits, list)
+        for hit in expected_hits:
+            _, _, entity_type, aggregate = config.parse_foreign_es_index_name(hit['_index'])
+            hit['_index'] = config.es_index_name(entity_type, aggregate=aggregate)
+        return expected_hits
 
-        return bundle_version, manifest, metadata
+    def _index_canned_bundle(self, bundle_fqid):
+        manifest, metadata = self._load_canned_bundle(bundle_fqid)
+        self._index_bundle(bundle_fqid, manifest, metadata)
 
-    def _mock_index(self, test_bundle, updated=False):
-        bundle_uuid, bundle_version = test_bundle
-        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+    def _index_bundle(self, bundle_fqid, manifest, metadata):
+        def mocked_get_bundle(bundle_uuid, bundle_version):
+            self.assertEqual(bundle_fqid, (bundle_uuid, bundle_version))
+            return deepcopy(manifest), deepcopy(metadata)
 
-        def mocked_extract_bundle(**kwargs):
-            return self._get_data_files(filename=kwargs['uuid'], bundle_version=kwargs['version'], updated=updated)
-
+        index_writer = self._create_index_writer()
+        notifaction = self._make_fake_notification(bundle_fqid)
         with patch('azul.DSSClient'):
-            with patch('azul.indexer.download_bundle_metadata', new=mocked_extract_bundle):
-                self.hca_indexer.index(fake_event)
+            with patch.object(self.hca_indexer, '_get_bundle', new=mocked_get_bundle):
+                self.hca_indexer.index(index_writer, notifaction)
 
-    def _mock_delete(self, test_bundle, data_pack):
-        bundle_uuid, bundle_version = test_bundle
-        self._mock_index(test_bundle, data_pack)
+    def _create_index_writer(self):
+        return IndexWriter(refresh='wait_for', conflict_retry_limit=2, error_retry_limit=0)
 
-        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+    def _delete_bundle(self, bundle_fqid):
+        index_writer = self._create_index_writer()
+        notification = self._make_fake_notification(bundle_fqid)
         with patch('azul.DSSClient'):
-            self.hca_indexer.delete(fake_event)
+            self.hca_indexer.delete(index_writer, notification)
