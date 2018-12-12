@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import logging
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set, Callable, Tuple, Iterable
+from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Tuple
 
 from humancellatlas.data.metadata import api
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -8,18 +8,19 @@ from humancellatlas.data.metadata.helpers.json import as_json
 from azul import reject
 from azul.transformer import (Accumulator,
                               AggregatingTransformer,
-                              Bundle,
-                              ElasticSearchDocument,
-                              OptionalValueAccumulator,
+                              Contribution,
+                              DistinctAccumulator,
+                              Document,
+                              EntityReference,
                               GroupingAggregator,
                               ListAccumulator,
+                              MandatoryValueAccumulator,
                               MaxAccumulator,
                               MinAccumulator,
-                              SumAccumulator,
-                              MandatoryValueAccumulator,
+                              OptionalValueAccumulator,
                               SetAccumulator,
                               SimpleAggregator,
-                              DistinctAccumulator)
+                              SumAccumulator)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -293,18 +294,29 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         assert isinstance(project, api.Project)
         return project
 
+    def _contribution(self, bundle, contents, entity):
+        entity_reference = EntityReference(entity_type=self.entity_type(),
+                                           entity_id=str(entity.document_id))
+        # noinspection PyArgumentList
+        # https://youtrack.jetbrains.com/issue/PY-28506
+        return Contribution(entity=entity_reference,
+                            version=None,
+                            contents=contents,
+                            bundle_uuid=str(bundle.uuid),
+                            bundle_version=bundle.version)
+
 
 class FileTransformer(Transformer):
 
     def entity_type(self) -> str:
         return 'files'
 
-    def create_documents(self,
-                         uuid: str,
-                         version: str,
-                         manifest: List[JSON],
-                         metadata_files: Mapping[str, JSON]
-                         ) -> Sequence[ElasticSearchDocument]:
+    def transform(self,
+                  uuid: str,
+                  version: str,
+                  manifest: List[JSON],
+                  metadata_files: Mapping[str, JSON]
+                  ) -> Iterable[Document]:
         bundle = api.Bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
@@ -323,12 +335,7 @@ class FileTransformer(Transformer):
                             files=[_file_dict(file)],
                             protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
                             projects=[_project_dict(project)])
-            es_document = ElasticSearchDocument(entity_type=self.entity_type(),
-                                                entity_id=str(file.document_id),
-                                                bundles=[Bundle(uuid=str(bundle.uuid),
-                                                                version=bundle.version,
-                                                                contents=contents)])
-            yield es_document
+            yield self._contribution(bundle, contents, file)
 
 
 class SpecimenTransformer(Transformer):
@@ -336,12 +343,12 @@ class SpecimenTransformer(Transformer):
     def entity_type(self) -> str:
         return 'specimens'
 
-    def create_documents(self,
-                         uuid: str,
-                         version: str,
-                         manifest: List[JSON],
-                         metadata_files: Mapping[str, JSON]
-                         ) -> Sequence[ElasticSearchDocument]:
+    def transform(self,
+                  uuid: str,
+                  version: str,
+                  manifest: List[JSON],
+                  metadata_files: Mapping[str, JSON]
+                  ) -> Sequence[Document]:
         bundle = api.Bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
@@ -356,12 +363,7 @@ class SpecimenTransformer(Transformer):
                             files=[_file_dict(f) for f in visitor.files.values()],
                             protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
                             projects=[_project_dict(project)])
-            es_document = ElasticSearchDocument(entity_type=self.entity_type(),
-                                                entity_id=str(specimen.document_id),
-                                                bundles=[Bundle(uuid=str(bundle.uuid),
-                                                                version=bundle.version,
-                                                                contents=contents)])
-            yield es_document
+            yield self._contribution(bundle, contents, specimen)
 
 
 class ProjectTransformer(Transformer):
@@ -369,12 +371,12 @@ class ProjectTransformer(Transformer):
     def entity_type(self) -> str:
         return 'projects'
 
-    def create_documents(self,
-                         uuid: str,
-                         version: str,
-                         manifest: List[JSON],
-                         metadata_files: Mapping[str, JSON]
-                         ) -> Sequence[ElasticSearchDocument]:
+    def transform(self,
+                  uuid: str,
+                  version: str,
+                  manifest: List[JSON],
+                  metadata_files: Mapping[str, JSON]
+                  ) -> Sequence[Document]:
         bundle = api.Bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
@@ -397,8 +399,4 @@ class ProjectTransformer(Transformer):
                         files=[_file_dict(f) for f in visitor.files.values()],
                         protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
                         projects=[_project_dict(project)])
-        yield ElasticSearchDocument(entity_type=self.entity_type(),
-                                    entity_id=str(project.document_id),
-                                    bundles=[Bundle(uuid=str(bundle.uuid),
-                                                    version=bundle.version,
-                                                    contents=contents)])
+        yield self._contribution(bundle, contents, project)

@@ -1,8 +1,8 @@
 import json
 
+from chalice.config import Config as ChaliceConfig
 import requests
 import responses
-from chalice.config import Config as ChaliceConfig
 
 from app_test_case import LocalAppTestCase
 from azul import config

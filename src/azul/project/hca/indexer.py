@@ -15,14 +15,14 @@ class Indexer(BaseIndexer):
                 {
                     "project_nested_contributors": {
                         "match_pattern": "regex",
-                        "path_match": ".*projects?\.contributors",
+                        "path_match": r".*projects?\.contributors",
                         "mapping": {}
                     }
                 },
                 {
                     "project_nested_publications": {
                         "match_pattern": "regex",
-                        "path_match": ".*projects?\.publications",
+                        "path_match": r".*projects?\.publications",
                         "mapping": {}
                     }
                 },
