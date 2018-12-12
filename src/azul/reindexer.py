@@ -6,6 +6,7 @@ from itertools import product
 import json
 import logging
 from pprint import PrettyPrinter
+from typing import List
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -44,15 +45,15 @@ class Reindexer(object):
         """
         Send a mock DSS notification to the indexer
         """
-        bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
-        simulated_event = self._make_notification(bundle_uuid, bundle_version)
+        simulated_event = self._make_notification(bundle_fqid)
         body = json.dumps(simulated_event).encode('utf-8')
         request = Request(indexer_url, body)
         request.add_header("content-type", "application/json")
         with urlopen(request) as f:
             return f.read()
 
-    def _make_notification(self, bundle_uuid, bundle_version):
+    def _make_notification(self, bundle_fqid):
+        bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
         return {
             "query": self.es_query,
             "subscription_id": str(uuid4()),
@@ -70,8 +71,7 @@ class Reindexer(object):
         total = 0
 
         logger.info('Querying DSS using %s', json.dumps(self.es_query, indent=4))
-        response = self._post_dss_search()
-        bundle_fqids = [r['bundle_fqid'] for r in response]
+        bundle_fqids = self._post_dss_search()
         logger.info("Bundle FQIDs to index: %i", len(bundle_fqids))
 
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
@@ -129,8 +129,30 @@ class Reindexer(object):
         logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
         logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
 
-    def _post_dss_search(self):
-        return self.dss_client.post_search.iterate(es_query=self.es_query, replica='aws', per_page=500)
+    def _post_dss_search(self) -> List[str]:
+        """
+        Works around https://github.com/HumanCellAtlas/data-store/issues/1768
+        """
+        kwargs = dict(es_query=self.es_query, replica='aws', per_page=500)
+        bundle_fqids, url = [], None
+        while True:
+            # noinspection PyProtectedMember
+            page = self.dss_client.post_search._request(kwargs, url=url)
+            body = page.json()
+            for result in body['results']:
+                bundle_fqids.append(result['bundle_fqid'])
+            try:
+                next_link = page.links['next']
+            except KeyError:
+                total = body['total_hits']
+                if len(bundle_fqids) == total:
+                    return bundle_fqids
+                else:
+                    logger.warning('Result count mismatch: expected %i, actual %i. Restarting bundle listing.',
+                                   total, len(bundle_fqids))
+                    bundle_fqids, url = [], None
+            else:
+                url = next_link['url']
 
     @property
     @lru_cache(maxsize=1)
@@ -169,13 +191,12 @@ class Reindexer(object):
         self = cls(dss_url=message['dss_url'],
                    es_query=message['query'],
                    dryrun=message['dryrun'])
-        prefix=message['prefix']
-        response = self._post_dss_search()
+        prefix = message['prefix']
         # Render list of bundle FQIDs before moving on, reducing probability of duplicate notifications on retries
-        bundle_fqids = [r['bundle_fqid'].partition('.') for r in response]
+        bundle_fqids = self._post_dss_search()
         logger.info("DSS returned %i bundles for prefix %s", len(bundle_fqids), prefix)
-        messages = (dict(action='add', notification=self._make_notification(bundle_uuid, bundle_version))
-                    for bundle_uuid, _, bundle_version in bundle_fqids)
+        messages = (dict(action='add', notification=self._make_notification(bundle_fqid))
+                    for bundle_fqid in bundle_fqids)
         notify_queue = self.queue(config.notify_queue_name)
         num_messages = 0
         for batch in chunked(messages, 10):
