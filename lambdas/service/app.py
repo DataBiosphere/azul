@@ -17,7 +17,6 @@ from more_itertools import one
 import requests
 
 from azul import config, parse_http_date
-from azul.deployment import aws
 from azul.service import service_config
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   ElasticTransformDump as EsTd,
@@ -801,7 +800,7 @@ def shorten_query_url():
 
     ```
     {
-        "url": "http://shortened.url/ABC"
+        "url": "http://url.data.humancellatlas.org/ABC"
     }
     ```
 
@@ -819,14 +818,14 @@ def shorten_query_url():
         raise BadRequestError('Invalid URL given')
 
     url_hash = hash_url(url)
-    storage_service = StorageService(config.s3_public_bucket)
+    storage_service = StorageService(config.url_redirect_s3_bucket)
 
     def get_url_response(path):
-        return {'url': f'http://{config.s3_public_bucket_domain}/{path}'}
+        return {'url': f'http://{config.url_redirect_s3_bucket}/{path}'}
 
     key_length = 3
     while key_length <= len(url_hash):
-        key = f'url/{url_hash[:key_length]}'
+        key = url_hash[:key_length]
         try:
             existing_url = storage_service.get(key)
         except storage_service.client.exceptions.NoSuchKey:

@@ -2,11 +2,21 @@ from azul import config
 from azul.template import emit
 
 emit({
+    "data": [
+        {
+            "aws_route53_zone": {
+                "azul_url": {
+                    "name": config.url_redirect_domain_name + ".",
+                    "private_zone": False
+                }
+            }
+        }
+    ],
     "resource": [
         {
             "aws_s3_bucket": {
-                "private_bucket": {
-                    "bucket": config.s3_private_bucket,
+                "bucket": {
+                    "bucket": config.s3_bucket,
                     "acl": "private",
                     "lifecycle_rule": {
                         "id": "manifests",
@@ -17,26 +27,24 @@ emit({
                         }
                     }
                 },
-                "public_bucket": {
-                    "bucket": config.s3_public_bucket,
+                "url_bucket": {
+                    "bucket": config.url_redirect_s3_bucket,
                     "acl": "public-read",
                     "website": {
-                        "index_document": "error.html"
+                        # index_document is required; pointing to a non-existent file to return a 404
+                        "index_document": "404.html"
                     }
                 }
             }
         },
         {
             "aws_route53_record": {
-                "public_bucket_alias": {
-                    "zone_id": "${data.aws_route53_zone.azul.zone_id}",
-                    "name": config.s3_public_bucket_domain,
-                    "type": "A",
-                    "alias": {
-                        "name": "${aws_s3_bucket.public_bucket.website_endpoint}",
-                        "zone_id": "${aws_s3_bucket.public_bucket.hosted_zone_id}",
-                        "evaluate_target_health": True
-                    }
+                "url_redirect_record": {
+                    "zone_id": "${data.aws_route53_zone.azul_url.zone_id}",
+                    "name": config.url_redirect_s3_bucket,
+                    "type": "CNAME",
+                    "ttl": "300",
+                    "records": ["${aws_s3_bucket.url_bucket.website_endpoint}"]
                 }
             }
         }

@@ -47,16 +47,16 @@ class Config:
         return self._boolean(os.environ['AZUL_SHARE_ES_DOMAIN'])
 
     @property
-    def s3_private_bucket(self) -> str:
-        return os.environ['AZUL_PRIVATE_S3_BUCKET']
+    def s3_bucket(self) -> str:
+        return os.environ['AZUL_S3_BUCKET']
 
     @property
-    def s3_public_bucket(self) -> str:
-        return os.environ['AZUL_PUBLIC_S3_BUCKET']
+    def url_redirect_s3_bucket(self) -> str:
+        return os.environ['AZUL_URL_REDIRECT_S3_BUCKET']
 
     @property
-    def s3_public_bucket_domain(self) -> str:
-        return self.deployment_stage + '.' + self.domain_name
+    def url_redirect_domain_name(self) -> str:
+        return os.environ['AZUL_URL_REDIRECT_DOMAIN_NAME']
 
     @property
     def es_timeout(self) -> int:

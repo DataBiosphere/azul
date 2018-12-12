@@ -9,6 +9,8 @@ meta:
     - terraform: (requires `make terraform`)
     - requirements: (requires `pip -Ur requirements.dev.txt`)
     - clients: the service API changed in a way that requires clients to be updated
+    - environment: an environment variable was added to the `/deployments/.example.local` deployment
+                   and needs to be copied to local deployments
 
 changes:
   - title: Emulate HTTP redirects and retry-after in DSS file proxy
@@ -27,11 +29,13 @@ changes:
       - terraform
       - deploy
       - clients
+      - environment
     notes: >
            The `/url` endpoint was added to accept URLs and return a URL redirecting to the given URL.
            Documentation: /lambdas/service/app.py#L701
-           Running `make terraform` after upgrading will delete the previously existing `azul-storage-...` bucket.
-           This will fail if the bucket is not empty and manual deletion will be required.
+           AZUL_URL_REDIRECT_DOMAIN_NAME and AZUL_URL_REDIRECT_S3_BUCKET should be copied from the example
+           deployment environment to local deployments
+
 
   - title: Make the manifest endpoint dual mode (standard HTTP and lifted 200)
     issues:
