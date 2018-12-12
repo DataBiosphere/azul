@@ -32,12 +32,22 @@ parser.add_argument('--workers',
                     default=defaults.num_workers,
                     type=int,
                     help='The number of workers that will be sending bundles to the indexer concurrently')
-parser.add_argument('--sync',
-                    dest='sync',
-                    default=False,
-                    action='store_true',
-                    help='Have the indexer lambda process the notification synchronously instead of queueing it for '
-                         'asynchronous processing by a worker lambda.')
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--sync',
+                   dest='sync',
+                   default=False,
+                   action='store_true',
+                   help='Have the indexer lambda process the notification synchronously instead of queueing it for '
+                        'asynchronous processing by a worker lambda.')
+group.add_argument('--prefix',
+                   default=0,
+                   type=int,
+                   help='The length of the bundle UUID prefix by which to partition the set of bundles that match the '
+                        'ES query. Each query partition is processed independently in a local worker thread. The '
+                        'worker invokes the reindex() lambda, passing the query partition. The lambda queries the '
+                        'DSS and queues a notification for each matching bundle. If 0 (the default) no partitioning '
+                        'occurs, the DSS is queried locally and the indexer notification endpoint is invoked for each '
+                        'bundle individually and concurrently using worker threads.')
 parser.add_argument('--delete',
                     default=False,
                     action='store_true',
@@ -54,13 +64,14 @@ def main(argv: List[str]):
     reindexer = Reindexer(indexer_url=args.indexer_url,
                           dss_url=args.dss_url,
                           es_query=args.es_query,
-                          sync=args.sync,
                           num_workers=args.num_workers,
                           dryrun=args.dryrun)
     if args.delete:
         reindexer.delete_all_indices()
-
-    reindexer.reindex()
+    if args.prefix:
+        reindexer.remote_reindex(args.prefix)
+    else:
+        reindexer.reindex(args.sync)
 
 
 if __name__ == "__main__":
