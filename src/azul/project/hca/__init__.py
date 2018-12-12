@@ -53,6 +53,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "67bc798b-a34a-4104-8cab-cad648471f69",  # Teichmann-mouse-melanoma
                                                         "81b5f43d-3c20-4575-9efa-bfb0b070a6e3",  # Meyer
                                                         "519b58ef-6462-4ed3-8c0d-375b54f53c31",  # EGEOD106540
+                                                        "2cd14cf5-f8e0-4c97-91a2-9e8957f41ea8",  # tabulamuris
                                                         "1f9a699a-262c-40a0-8b2c-7ba960ca388c",  # ido_amit
                                                         "62aa3211-bf52-4873-9029-0bcc1d09e553",  # humphreys
                                                         "a71dee10-9a4d-4ea2-a6f3-ae7314112cf1",  # peer
@@ -101,8 +102,6 @@ class Plugin(azul.plugin.Plugin):
                                                         "6b9f514d-d738-403f-a9c2-62580bbe5c83",  # Q4_DEMO-…
                                                         "311d013c-01e4-42c0-9c2d-25472afa9cbc",  # Q4_DEMO-…
                                                         "d237ed6a-3a7f-4a91-b300-b070888a8542",  # DCP_Infrastructure_Test_
-                                                        # remove once https://github.com/DataBiosphere/azul/issues/86 is fixed
-                                                        "32eb86db-6842-480f-a49a-a2b0161ed35a"  # tabulamuris
                                                     ]
                                                 }
                                             }
