@@ -41,8 +41,8 @@ emit({
                 "s3:PutObjectAcl"
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.s3_private_bucket}/*",
-                f"arn:aws:s3:::{config.s3_public_bucket}/*"
+                f"arn:aws:s3:::{config.s3_bucket}/*",
+                f"arn:aws:s3:::{config.url_redirect_s3_bucket}/*"
             ]
         },
         {
@@ -50,7 +50,7 @@ emit({
             "Action": [
                 "s3:ListBucket"
             ],
-            "Resource": f"arn:aws:s3:::{config.s3_public_bucket}"
+            "Resource": f"arn:aws:s3:::{config.url_redirect_s3_bucket}"
         },
         {
             "Effect": "Allow",

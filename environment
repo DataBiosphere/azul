@@ -103,11 +103,15 @@ azul_vars=(
     #
     AZUL_INDEXER_CONCURRENCY
 
-    # The name of the private S3 bucket.
-    AZUL_PRIVATE_S3_BUCKET
+    # The name of the S3 bucket where the manifest API stores the downloadable
+    # content requested by client.
+    AZUL_S3_BUCKET
 
-    # The name of the public S3 bucket.
-    AZUL_PUBLIC_S3_BUCKET
+    # URL pointing to the static website hosted at the S3 bucket for URL redirection
+    AZUL_URL_REDIRECT_DOMAIN_NAME
+
+    # The name of the S3 bucket containing URL redirection objects
+    AZUL_URL_REDIRECT_S3_BUCKET
 
     # Determine if CloudWatch alarms should be deployed (1 yes, 0 no)
     # CloudWatch alarms should not be enabled for personal deployments
@@ -169,8 +173,9 @@ _set AZUL_RESOURCE_PREFIX "azul"
 _set AZUL_INDEX_PREFIX "azul"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_SHARE_ES_DOMAIN 0
-_set AZUL_PRIVATE_S3_BUCKET "azul-private-$AZUL_DEPLOYMENT_STAGE"
-_set AZUL_PUBLIC_S3_BUCKET "azul-public-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_S3_BUCKET "azul-storage-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_URL_REDIRECT_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.url.data.humancellatlas.org"
+_set AZUL_URL_REDIRECT_S3_BUCKET "$AZUL_URL_REDIRECT_DOMAIN_NAME"
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "r4.2xlarge.elasticsearch"  # Indexing performance benefits from the increased memory offered
                                                        # by the `r` family, especially now that the number of shards is

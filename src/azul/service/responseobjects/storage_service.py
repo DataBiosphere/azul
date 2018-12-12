@@ -8,7 +8,7 @@ logger = getLogger(__name__)
 
 class StorageService:
 
-    def __init__(self, bucket_name=config.s3_private_bucket):
+    def __init__(self, bucket_name=config.s3_bucket):
         self.__bucket_name = bucket_name
         self.__client = None  # the default client will be assigned later to allow patching.
 
