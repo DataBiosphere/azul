@@ -31,9 +31,9 @@ changes:
       - clients
       - environment
     notes: >
-           The `/url` endpoint was added to accept URLs and return a URL redirecting to the given URL.
+           The `/url` endpoint was added to return a URL that redirects to a given long URL.
            Documentation: /lambdas/service/app.py#L701
-           AZUL_URL_REDIRECT_DOMAIN_NAME and AZUL_URL_REDIRECT_S3_BUCKET should be copied from the example
+           AZUL_URL_REDIRECT_BASE_DOMAIN_NAME and AZUL_URL_REDIRECT_FULL_DOMAIN_NAME should be copied from the example
            deployment environment to local deployments
 
 

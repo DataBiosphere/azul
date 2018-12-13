@@ -42,7 +42,7 @@ class TestQueryShortener(TestCase):
             'https://subdomain.humancellatlas.org/',
             'https://sub.subdomain.humancellatlas.org/abc/def'
         ]
-        StorageService().create_bucket(config.url_redirect_s3_bucket)
+        StorageService().create_bucket(config.url_redirect_full_domain_name)
         for i in range(len(urls)):
             with self.subTest(i=i):
                 current_request.json_body = {'url': urls[i]}
@@ -61,7 +61,7 @@ class TestQueryShortener(TestCase):
             'http://humancellatlas.xyz.org',
             'humancellatlas.org'
         ]
-        StorageService().create_bucket(config.url_redirect_s3_bucket)
+        StorageService().create_bucket(config.url_redirect_full_domain_name)
         for i in range(len(urls)):
             with self.subTest(i=i):
                 current_request.json_body = {'url': urls[i]}
@@ -76,7 +76,7 @@ class TestQueryShortener(TestCase):
         """
         current_request.json_body = {'url': 'https://humancellatlas.org'}
 
-        StorageService().create_bucket(config.url_redirect_s3_bucket)
+        StorageService().create_bucket(config.url_redirect_full_domain_name)
         shortened_url1 = shorten_query_url()
         shortened_url2 = shorten_query_url()
         self.assertEqual(shortened_url1, shortened_url2)
@@ -91,16 +91,16 @@ class TestQueryShortener(TestCase):
         non-matching URLs, raising an exception if an entire key matches another
         """
         hash_url.return_value = 'abcde'
-        StorageService().create_bucket(config.url_redirect_s3_bucket)
+        StorageService().create_bucket(config.url_redirect_full_domain_name)
 
         current_request.json_body = {'url': 'https://humancellatlas.org'}
-        self.assertEqual(shorten_query_url()['url'], f'http://{config.url_redirect_s3_bucket}/abc')
+        self.assertEqual(shorten_query_url()['url'], f'http://{config.url_redirect_full_domain_name}/abc')
 
         current_request.json_body = {'url': 'https://humancellatlas.org/2'}
-        self.assertEqual(shorten_query_url()['url'], f'http://{config.url_redirect_s3_bucket}/abcd')
+        self.assertEqual(shorten_query_url()['url'], f'http://{config.url_redirect_full_domain_name}/abcd')
 
         current_request.json_body = {'url': 'https://humancellatlas.org/3'}
-        self.assertEqual(shorten_query_url()['url'], f'http://{config.url_redirect_s3_bucket}/abcde')
+        self.assertEqual(shorten_query_url()['url'], f'http://{config.url_redirect_full_domain_name}/abcde')
 
         current_request.json_body = {'url': 'https://humancellatlas.org/4'}
         self.assertRaises(ChaliceViewError, shorten_query_url)

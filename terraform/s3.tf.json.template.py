@@ -6,7 +6,7 @@ emit({
         {
             "aws_route53_zone": {
                 "azul_url": {
-                    "name": config.url_redirect_domain_name + ".",
+                    "name": config.url_redirect_base_domain_name + ".",
                     "private_zone": False
                 }
             }
@@ -28,7 +28,7 @@ emit({
                     }
                 },
                 "url_bucket": {
-                    "bucket": config.url_redirect_s3_bucket,
+                    "bucket": config.url_redirect_full_domain_name,
                     "acl": "public-read",
                     "website": {
                         # index_document is required; pointing to a non-existent file to return a 404
@@ -41,7 +41,7 @@ emit({
             "aws_route53_record": {
                 "url_redirect_record": {
                     "zone_id": "${data.aws_route53_zone.azul_url.zone_id}",
-                    "name": config.url_redirect_s3_bucket,
+                    "name": config.url_redirect_full_domain_name,
                     "type": "CNAME",
                     "ttl": "300",
                     "records": ["${aws_s3_bucket.url_bucket.website_endpoint}"]

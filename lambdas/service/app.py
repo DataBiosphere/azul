@@ -800,7 +800,7 @@ def shorten_query_url():
 
     ```
     {
-        "url": "http://url.data.humancellatlas.org/ABC"
+        "url": "http://url.data.humancellatlas.org/b3N"
     }
     ```
 
@@ -818,10 +818,10 @@ def shorten_query_url():
         raise BadRequestError('Invalid URL given')
 
     url_hash = hash_url(url)
-    storage_service = StorageService(config.url_redirect_s3_bucket)
+    storage_service = StorageService(config.url_redirect_full_domain_name)
 
     def get_url_response(path):
-        return {'url': f'http://{config.url_redirect_s3_bucket}/{path}'}
+        return {'url': f'http://{config.url_redirect_full_domain_name}/{path}'}
 
     key_length = 3
     while key_length <= len(url_hash):
