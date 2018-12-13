@@ -230,6 +230,7 @@ class BaseIndexer(ABC):
         # FIXME: these are all modified contributions, not new ones. This also happens when we reindex without
         # deleting the indices first. The tallies refer to number of updated or added contributions but we treat them
         # as if they are all new when we estimate the number of contributions per bundle.
+        # https://github.com/DataBiosphere/azul/issues/610
         tallies = self.contribute(writer, contributions)
         self.aggregate(writer, tallies)
 
