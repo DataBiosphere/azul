@@ -29,7 +29,7 @@ class FlushableBuffer(BytesIO):
         super().write(b)
         self.__remaining_size += len(b)
         if self.__remaining_size >= self.__chunk_size:
-            value = self.getbuffer()
+            value = self.getvalue()
             first_index = 0
             last_index = self.__chunk_size
             while last_index <= self.remaining_size:
@@ -44,7 +44,7 @@ class FlushableBuffer(BytesIO):
     def close(self):
         if self.__remaining_size > 0:
             logger.debug(f'Clearing the remaining buffer (approx. {self.__remaining_size} B)')
-            self.__callback(self.getbuffer())
+            self.__callback(self.getvalue())
             self.__remaining_size = 0
             # As the buffer is closed, the buffer doesn't need to be reset.
         super().close()
