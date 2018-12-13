@@ -212,33 +212,8 @@ class ManifestResponse(AbstractResponse):
                                 list(self.manifest_entries['contents.files'].keys()))
                 for hit in self.es_search.scan():
                     self._iterate_hit(hit, writer)
-                    buffer.flush()
 
         return object_key
-
-    def _push_content_single_part(self) -> str:
-        """
-        Push the content to S3 in a single object put
-
-        :return: S3 object key
-        """
-        parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
-                          data=self._construct_tsv_content().encode(),
-                          content_type='text/tab-separated-values')
-        return self.storage_service.put(**parameters)
-
-    def _construct_tsv_content(self):
-        es_search = self.es_search
-
-        output = StringIO()
-        writer = csv.writer(output, dialect='excel-tab')
-
-        writer.writerow(list(self.manifest_entries['bundles'].keys()) +
-                        list(self.manifest_entries['contents.files'].keys()))
-        for hit in es_search.scan():
-            self._iterate_hit(hit, writer)
-
-        return output.getvalue()
 
     def _iterate_hit(self, es_search_hit, writer):
         hit_dict = es_search_hit.to_dict()
@@ -251,7 +226,7 @@ class ManifestResponse(AbstractResponse):
             writer.writerow(self._translate(bundle, 'bundles') + file_fields)
 
     def return_response(self):
-        object_key = self._push_content_single_part()
+        object_key = self._push_content()
         presigned_url = self.storage_service.get_presigned_url(object_key)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
