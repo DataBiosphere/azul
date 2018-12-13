@@ -15,9 +15,6 @@ subscribe:
 	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py --shared; fi
 
 reindex:
-	python scripts/reindex.py
-
-delete_and_reindex:
 	python scripts/reindex.py --delete --prefix=2
 
 clean:
