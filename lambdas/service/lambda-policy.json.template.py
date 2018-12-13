@@ -42,7 +42,7 @@ emit({
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}/*",
-                f"arn:aws:s3:::{config.url_redirect_s3_bucket}/*"
+                f"arn:aws:s3:::{config.url_redirect_full_domain_name}/*"
             ]
         },
         {
@@ -50,7 +50,7 @@ emit({
             "Action": [
                 "s3:ListBucket"
             ],
-            "Resource": f"arn:aws:s3:::{config.url_redirect_s3_bucket}"
+            "Resource": f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
         },
         {
             "Effect": "Allow",

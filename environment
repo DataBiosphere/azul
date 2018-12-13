@@ -107,11 +107,13 @@ azul_vars=(
     # content requested by client.
     AZUL_S3_BUCKET
 
-    # URL pointing to the static website hosted at the S3 bucket for URL redirection
-    AZUL_URL_REDIRECT_DOMAIN_NAME
+    # Name of the Route 53 zone used for URL redirection
+    AZUL_URL_REDIRECT_BASE_DOMAIN_NAME
 
-    # The name of the S3 bucket containing URL redirection objects
-    AZUL_URL_REDIRECT_S3_BUCKET
+    # Full domain name to be used in the URL redirection URLs
+    # This is also used as the name of the S3 bucket used to store URL
+    # redirection objects
+    AZUL_URL_REDIRECT_FULL_DOMAIN_NAME
 
     # Determine if CloudWatch alarms should be deployed (1 yes, 0 no)
     # CloudWatch alarms should not be enabled for personal deployments
@@ -174,8 +176,8 @@ _set AZUL_INDEX_PREFIX "azul"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_SHARE_ES_DOMAIN 0
 _set AZUL_S3_BUCKET "azul-storage-$AZUL_DEPLOYMENT_STAGE"
-_set AZUL_URL_REDIRECT_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.url.data.humancellatlas.org"
-_set AZUL_URL_REDIRECT_S3_BUCKET "$AZUL_URL_REDIRECT_DOMAIN_NAME"
+_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.url.data.humancellatlas.org"
+_set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "r4.2xlarge.elasticsearch"  # Indexing performance benefits from the increased memory offered
                                                        # by the `r` family, especially now that the number of shards is
