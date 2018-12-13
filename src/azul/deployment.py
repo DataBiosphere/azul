@@ -17,6 +17,8 @@ class AWS:
         session = botocore.session.Session()
         profile_name = session.get_config_variable('profile')
         if profile_name is None:
+            # For gitlab deploys no profile is specified and boto/terraform pick up
+            # user info from the gitlab instance metadata.
             return {}
         else:
             if not profile_name in session.full_config['profiles']:
