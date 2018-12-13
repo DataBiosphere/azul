@@ -31,12 +31,13 @@ class FlushableBuffer(BytesIO):
 
         if self.__remaining_size >= self.__chunk_size:
             offset = 0
-            while offset + self.__chunk_size <= self.remaining_size:
+            while self.__remaining_size >= self.__chunk_size:
                 self.seek(offset)
                 self.__callback(self.read(self.__chunk_size))
                 offset += self.__chunk_size
+                self.__remaining_size -= self.__chunk_size
 
-            # Get the remainer before resetting the pointer.
+            # Get the remainder before resetting the pointer.
             self.seek(offset)
             remainder = self.read()
 
@@ -45,7 +46,7 @@ class FlushableBuffer(BytesIO):
             self.truncate(0)
             self.__remaining_size = 0
 
-            # Write the remainer back to the buffer.
+            # Write the remainder back to the buffer.
             self.write(remainder)
 
     def close(self):
