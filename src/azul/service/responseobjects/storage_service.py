@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from functools import lru_cache
 from logging import getLogger
-from traceback import format_exception
 from typing import Optional
 import boto3
 from azul import config
@@ -48,12 +47,10 @@ class StorageService:
 
 class MultipartUploadHandler:
     """
-    S3 Multipart Upload Handler
+    A context manager that facilitates multipart upload to S3. It uploads parts
+    concurrently.
 
-    This class is to facilitate multipart upload to S3 storage. The class itself
-    is also a context manager.
-
-    Here is the sample usage.
+    Sample usage:
 
     .. code-block:: python
 
@@ -62,7 +59,10 @@ class MultipartUploadHandler:
            handler.push(b'defg')
            # ...
 
-    where the context pattern will automatically shutdown upon exiting the context.
+    Upon exit of the body of the with statement, all parts will have been
+    uploaded and the S3 object is guaranteed to exist, or an exception is raised.
+    When an exception is raised within the context, the upload will be aborted
+    automatically.
     """
 
     def __init__(self, object_key, content_type: str):
@@ -87,34 +87,35 @@ class MultipartUploadHandler:
 
     def __exit__(self, etype, value, traceback):
         if etype:
-            logger.error('Upload %s: Error detected within the MPU context.\n\n%s',
+            logger.error('Upload %s: Error detected within the MPU context.',
                          self.upload_id,
-                         '\n'.join(format_exception(etype, value, traceback)))
+                         exc_info = (etype, value, traceback)
+                         )
             self.__abort()
-            return
-        self.__complete()
+        else:
+            self.__complete()
 
     def __complete(self):
-        if not self.parts:
-            self.__abort()
-            raise EmptyMultipartUploadError(f'{self.bucket_name}/{self.object_key}')
-
         for future in as_completed(self.futures):
             exception = future.exception()
             if exception is not None:
-                logger.error('Upload %s: Error detected while uploading a part (%s: %s).', self.upload_id,
-                             type(exception).__name__, exception)
+                logger.error('Upload %s: Error detected while uploading a part.',
+                             self.upload_id,
+                             exc_info=(type(exception), exception, None))
                 self.__abort()
-                raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
+                raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}') from exception
 
         try:
             self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
-        except self.mp_upload.meta.client.exceptions.ClientError as e:
-            logger.error('Upload %s: Error detected while completing the upload. %s', self.upload_id, e)
+        except self.mp_upload.meta.client.exceptions.ClientError as exception:
+            logger.error('Upload %s: Error detected while completing the upload.',
+                         self.upload_id,
+                         exc_info=(type(exception), exception, None))
             self.__abort()
-            if 'EntityTooSmall' in e.args[0]:
+            if 'EntityTooSmall' in exception.args[0]:
                 raise UploadPartSizeOutOfBoundError(f'{self.bucket_name}/{self.object_key}')
-            raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
+            else:
+                raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
 
         self.mp_upload = None
         self.thread_pool.shutdown()

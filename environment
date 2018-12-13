@@ -110,6 +110,10 @@ azul_vars=(
     # Determine if CloudWatch alarms should be deployed (1 yes, 0 no)
     # CloudWatch alarms should not be enabled for personal deployments
     AZUL_ENABLE_CLOUDWATCH_ALARMS
+
+    # Boolean value, 1 to use the single-part upload (SPU) in Manifest API, 0 to
+    # to use the multipart upload (MPU) in Manifest API
+    AZUL_DISABLE_MULTIPART_MANIFESTS
 )
 
 unset ${azul_vars[*]}
@@ -179,6 +183,7 @@ _set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front 
 _set AZUL_DSS_WORKERS 8
 _set AZUL_INDEXER_CONCURRENCY 64
 _set AZUL_SUBSCRIBE_TO_DSS 1
+_set AZUL_DISABLE_MULTIPART_MANIFESTS 0 # Enable the multipart upload by default.
 
 # This is the same TF bucket as the one DSS uses
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"

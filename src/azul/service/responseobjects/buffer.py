@@ -11,9 +11,9 @@ class FlushableBuffer(BytesIO):
     when either if the remaining size is large enough (more than ``chunk_size``)
     or when the buffer is closed.
 
-    Let ``N`` be the remaining size. On each ``write``, the callback will be
-    invoked ``floor(N / chunk_size)`` times. Any remaining bytes will be flushed
-    when the buffer is closed.
+    The callback is invoked zero or more times with an argument that is N bytes
+    long, followed by exactly one invocation with an argument that is between 1
+    and N bytes long.
 
     :param chunk_size: The exact size of each chunk
     :param callback: The callback function to receive flushed output
@@ -50,7 +50,6 @@ class FlushableBuffer(BytesIO):
 
     def close(self):
         if self.__remaining_size > 0:
-            logger.debug(f'Clearing the remaining buffer (approx. {self.__remaining_size} B)')
             self.__callback(self.getvalue())
             self.__remaining_size = 0
             # As the buffer is closed, the buffer doesn't need to be reset.
