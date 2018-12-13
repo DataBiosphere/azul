@@ -12,8 +12,8 @@ class FlushableBuffer(BytesIO):
     or when the buffer is closed.
 
     Let ``N`` be the remaining size. On each ``write``, the callback will be
-    invoked ``floor(N / chunk_size)`` times. The remaining bytes will not be
-    flushed unless the buffer is closed.
+    invoked ``floor(N / chunk_size)`` times. Any remaining bytes will be flushed
+    when the buffer is closed.
 
     :param chunk_size: The exact size of each chunk
     :param callback: The callback function to receive flushed output
@@ -28,18 +28,25 @@ class FlushableBuffer(BytesIO):
     def write(self, b: bytes):
         super().write(b)
         self.__remaining_size += len(b)
+
         if self.__remaining_size >= self.__chunk_size:
-            value = self.getvalue()
-            first_index = 0
-            last_index = self.__chunk_size
-            while last_index <= self.remaining_size:
-                self.__callback(value[first_index:last_index])
-                first_index = last_index
-                last_index += self.__chunk_size
-            self.truncate(0)
+            offset = 0
+            while offset + self.__chunk_size <= self.remaining_size:
+                self.seek(offset)
+                self.__callback(self.read(self.__chunk_size))
+                offset += self.__chunk_size
+
+            # Get the remainer before resetting the pointer.
+            self.seek(offset)
+            remainder = self.read()
+
+            # Reset the buffer to the empty state.
             self.seek(0)
+            self.truncate(0)
             self.__remaining_size = 0
-            self.write(value[first_index:last_index])
+
+            # Write the remainer back to the buffer.
+            self.write(remainder)
 
     def close(self):
         if self.__remaining_size > 0:
