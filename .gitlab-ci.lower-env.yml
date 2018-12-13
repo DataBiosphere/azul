@@ -41,5 +41,6 @@ build_noopdog:
     - make gitlab-apply
     - cd ..
     - make deploy
+
   only:
     -  gitlab-dev
