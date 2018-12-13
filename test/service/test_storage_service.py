@@ -120,16 +120,6 @@ class StorageServiceTest(TestCase):
 
     @mock_s3
     @mock_sts
-    def test_multipart_upload_error_with_nothing_pushed(self):
-        sample_key = 'foo-multipart-upload-error'
-        storage_service = StorageService()
-        storage_service.create_bucket()
-        with self.assertRaises(EmptyMultipartUploadError):
-            with MultipartUploadHandler(sample_key, 'text/plain') as upload:
-                pass  # upload nothing... this should fail the "complete" process.
-
-    @mock_s3
-    @mock_sts
     def test_multipart_upload_error_inside_context_with_nothing_pushed(self):
         sample_key = 'foo-multipart-upload-error'
         sample_content_parts = [

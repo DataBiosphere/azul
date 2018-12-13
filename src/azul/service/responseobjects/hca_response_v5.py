@@ -16,6 +16,7 @@ from jsonobject import (FloatProperty,
                         ObjectProperty,
                         StringProperty)
 
+from azul import config
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
                                                           AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
@@ -250,7 +251,7 @@ class ManifestResponse(AbstractResponse):
             writer.writerow(self._translate(bundle, 'bundles') + file_fields)
 
     def return_response(self):
-        object_key = self._push_content()
+        object_key = self._push_content_single_part() if config.disable_multipart_manifests else self._push_content()
         presigned_url = self.storage_service.get_presigned_url(object_key)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
@@ -260,7 +261,7 @@ class ManifestResponse(AbstractResponse):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
-        :param es_search: The ElasticSearch DSL Search object
+        :param es_search: The Elasticsearch DSL Search object
         :param mapping: The mapping between the columns to values within ES
         :param manifest_entries: The columns that will be present in the tsv
         """
