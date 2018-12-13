@@ -178,8 +178,6 @@ class Accumulator(ABC):
     Accumulates multiple values into a single value, not necessarily of the same type.
     """
 
-    # FIXME: handling of None values isn't fully thought through and inconsistent
-
     @abstractmethod
     def accumulate(self, value):
         """

@@ -279,8 +279,9 @@ class TestHCAIndexer(IndexerTestCase):
                     aggregate_file_names.add(one(files)['name'])
                 else:
                     for file in files:
-                        if one(file[
-                                   'file_format']) == 'matrix':  # FIXME: need for one() is odd, file_format is a group field
+                        # FIXME: need for one() is odd, file_format is a group field
+                        # https://github.com/DataBiosphere/azul/issues/612
+                        if one(file['file_format']) == 'matrix':
                             self.assertEqual(1, file['count'])
                             entities_with_matrix_files.add(hit['_source']['entity_id'])
             else:

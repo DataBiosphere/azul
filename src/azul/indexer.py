@@ -226,6 +226,7 @@ class BaseIndexer(ABC):
     def delete(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
         # FIXME: this only works if the bundle version is not being indexed concurrently
         # The fix could be to optimistically lock on the aggregate version
+        # https://github.com/DataBiosphere/azul/issues/611
         contributions = self.transform_deletion(dss_notification)
         # FIXME: these are all modified contributions, not new ones. This also happens when we reindex without
         # deleting the indices first. The tallies refer to number of updated or added contributions but we treat them
