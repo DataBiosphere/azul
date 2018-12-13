@@ -107,7 +107,10 @@ azul_vars=(
     # content requested by client.
     AZUL_S3_BUCKET
 
-    # Name of the Route 53 zone used for URL redirection
+    # Name of the Route 53 zone used for shortened URLs.
+    # This hosted zone will have to be created manually prior to running
+    # `make terraform`. Personal deployments typically share a zone with the
+    # `dev` deployment.
     AZUL_URL_REDIRECT_BASE_DOMAIN_NAME
 
     # Full domain name to be used in the URL redirection URLs
