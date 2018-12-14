@@ -70,6 +70,47 @@ class Config:
         self._validate_term(resource_name)
         return f"{self._resource_prefix}-{resource_name}-{self.deployment_stage}{suffix}"
 
+    def unqualified_resource_name(self, qualified_resource_name: str, suffix: str = '') -> tuple:
+        """
+        >>> config.unqualified_resource_name('azul-foo-dev')
+        ('foo', 'dev')
+
+        >>> config.unqualified_resource_name('azul-foo')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError
+
+
+        :param qualified_resource_name:
+        :param suffix:
+        :return:
+        """
+        require(qualified_resource_name.endswith(suffix))
+        if len(suffix) > 0:
+            qualified_resource_name = qualified_resource_name[:-len(suffix)]
+        components = qualified_resource_name.split('-')
+        require(len(components) == 3)
+        prefix, resource_name, deployment_stage = components
+        require(prefix == 'azul')
+        return resource_name, deployment_stage
+
+    def unqualified_resource_name_or_none(self, qualified_resource_name: str, suffix: str = '') -> tuple:
+        """
+        >>> config.unqualified_resource_name_or_none('azul-foo-dev')
+        ('foo', 'dev')
+
+        >>> config.unqualified_resource_name_or_none('invalid-foo-dev')
+        (None, None)
+
+        :param qualified_resource_name:
+        :param suffix:
+        :return:
+        """
+        try:
+            return self.unqualified_resource_name(qualified_resource_name, suffix=suffix)
+        except RequirementError:
+            return None, None
+
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].format(lambda_name=lambda_name)
 
