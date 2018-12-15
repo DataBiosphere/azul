@@ -7,9 +7,7 @@ import requests
 
 from azul.service.responseobjects.storage_service import (StorageService,
                                                           GetObjectError,
-                                                          EmptyMultipartUploadError,
-                                                          UploadPartSizeOutOfBoundError,
-                                                          UnexpectedMultipartUploadAbort,
+                                                          MultipartUploadError,
                                                           MultipartUploadHandler)
 
 
@@ -113,7 +111,7 @@ class StorageServiceTest(TestCase):
         storage_service = StorageService()
         storage_service.create_bucket()
 
-        with self.assertRaises(UploadPartSizeOutOfBoundError):
+        with self.assertRaises(MultipartUploadError):
             with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                 for part in sample_content_parts:
                     upload.push(part.encode())
@@ -148,7 +146,7 @@ class StorageServiceTest(TestCase):
         storage_service = StorageService()
         storage_service.create_bucket()
         with patch.object(MultipartUploadHandler, '_upload_part', side_effect=RuntimeError('test')):
-            with self.assertRaises(UnexpectedMultipartUploadAbort):
+            with self.assertRaises(MultipartUploadError):
                 with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                     for part in sample_content_parts:
                         upload.push(part.encode())
