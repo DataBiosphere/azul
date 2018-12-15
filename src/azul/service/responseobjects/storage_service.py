@@ -101,21 +101,18 @@ class MultipartUploadHandler:
             if exception is not None:
                 logger.error('Upload %s: Error detected while uploading a part.',
                              self.upload_id,
-                             exc_info=(type(exception), exception, None))
+                             exc_info=exception)
                 self.__abort()
-                raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}') from exception
+                raise MultipartUploadError(self.bucket_name, self.object_key) from exception
 
         try:
             self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
         except self.mp_upload.meta.client.exceptions.ClientError as exception:
             logger.error('Upload %s: Error detected while completing the upload.',
                          self.upload_id,
-                         exc_info=(type(exception), exception, None))
+                         exc_info=exception)
             self.__abort()
-            if 'EntityTooSmall' in exception.args[0]:
-                raise UploadPartSizeOutOfBoundError(f'{self.bucket_name}/{self.object_key}')
-            else:
-                raise UnexpectedMultipartUploadAbort(f'{self.bucket_name}/{self.object_key}')
+            raise MultipartUploadError(self.bucket_name, self.object_key) from exception
 
         self.mp_upload = None
         self.thread_pool.shutdown()
@@ -136,7 +133,6 @@ class MultipartUploadHandler:
         part = Part(part_number=self.next_part_number, etag=None, content=data)
         self.parts.append(part)
         self.next_part_number += 1
-
         return part
 
     def _upload_part(self, part):
@@ -163,13 +159,6 @@ class GetObjectError(RuntimeError):
     pass
 
 
-class EmptyMultipartUploadError(RuntimeError):
-    pass
-
-
-class UnexpectedMultipartUploadAbort(RuntimeError):
-    pass
-
-
-class UploadPartSizeOutOfBoundError(RuntimeError):
-    pass
+class MultipartUploadError(RuntimeError):
+    def __init__(self, bucket_name, object_key):
+        super(MultipartUploadError, self).__init__(f'{bucket_name}/{object_key}')
