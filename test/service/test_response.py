@@ -571,10 +571,10 @@ class TestResponse(WebServiceTestCase):
             actual_url = urllib.parse.urlparse(file_data['url'])
             actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
             expected_base_url = urllib.parse.urlparse(base_url)
-            self.assertEquals(expected_base_url.netloc, actual_url.netloc)
-            self.assertEquals(expected_base_url.scheme, actual_url.scheme)
+            self.assertEqual(expected_base_url.netloc, actual_url.netloc)
+            self.assertEqual(expected_base_url.scheme, actual_url.scheme)
             self.assertIsNotNone(actual_url.path)
-            self.assertEquals('aws', actual_query_vars['replica'])
+            self.assertEqual('aws', actual_query_vars['replica'])
             self.assertIsNotNone(actual_query_vars['version'])
 
     def test_project_summary_cell_count(self):
