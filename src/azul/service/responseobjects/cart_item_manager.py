@@ -97,19 +97,22 @@ class CartItemManager:
                                                 {'UserId': user_id, 'CartId': cart_id},
                                                 update_values=update_attributes)
 
-    def add_cart_item(self, user_id, cart_id, entity_id, bundle_id, bundle_version, entity_type):
+    def create_cart_item_id(self, cart_id, entity_id, entity_type, bundle_uuid, bundle_version):
+        return hashlib.sha256(f'{cart_id}/{entity_id}/{bundle_uuid}/{bundle_version}/{entity_type}'.encode('utf-8')).hexdigest()
+
+    def add_cart_item(self, user_id, cart_id, entity_id, bundle_uuid, bundle_version, entity_type):
         """
         Add an item to a cart and return the created item ID
         An error will be raised if the cart does not exist or does not belong to the user
         """
         # TODO: Cart item should have some user readable name
         self.check_cart_permission(user_id, cart_id)
-        item_id = hashlib.sha256(f'{cart_id}/{entity_id}/{bundle_id}/{bundle_version}'.encode('utf-8')).hexdigest()
+        item_id = self.create_cart_item_id(cart_id, entity_id, entity_type, bundle_uuid, bundle_version)
         self.dynamo_accessor.insert_item(
             config.dynamo_cart_item_table_name,
             {
                 'CartItemId': item_id, 'CartId': cart_id, 'EntityId': entity_id,
-                'BundleUuid': bundle_id, 'BundleVersion': bundle_version, 'EntityType': entity_type
+                'BundleUuid': bundle_uuid, 'BundleVersion': bundle_version, 'EntityType': entity_type
             })
         return item_id
 
@@ -154,9 +157,8 @@ class CartItemManager:
             'BundleUuid': bundle['uuid'],
             'BundleVersion': bundle['version'],
         }
-        item_id = hashlib.sha256(f'{cart_item["CartId"]}/{cart_item["EntityId"]}/'
-                                 f'{cart_item["BundleUuid"]}/{cart_item["BundleVersion"]}'
-                                 .encode('utf-8')).hexdigest()
+        item_id = self.create_cart_item_id(cart_item['CartId'], cart_item['EntityId'], cart_item['EntityType'],
+                                           cart_item['BundleUuid'], cart_item['BundleVersion'])
         cart_item['CartItemId'] = item_id
         return cart_item
 
