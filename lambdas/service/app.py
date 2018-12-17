@@ -72,6 +72,15 @@ def _get_pagination(current_request):
 
 @app.route('/', cors=True)
 def hello():
+    with open('doc.txt', 'w') as f:
+        for path, routes in app.routes.items():
+            for method, fun in routes.items():
+                f.write(fun.method + ' ' + fun.uri_pattern)
+                f.write('\n')
+                f.write(fun.view_function.__doc__ or '')
+                f.write('\n\n')
+                pass
+
     return {'Hello': 'World!'}
 
 
@@ -1080,21 +1089,22 @@ def delete_cart_item(cart_id, item_id):
 
     Returns a 404 error if the cart does not exist or does not belong to the user, or if the item does not exist
 
-    :return: The deleted item
+    :return: If an item was deleted, return:
+        ```
         {
-            "CartItemId": str,
-            "CartId": str,
-            "EntityId": str,
-            "BundleUuid": str,
-            "BundleVersion": str,
-            "EntityType": str
+            "deleted": true
         }
+        ```
+
     """
     user_id = get_user_id()
-    deleted_item = CartItemManager().delete_cart_item(user_id, cart_id, item_id)
+    try:
+        deleted_item = CartItemManager().delete_cart_item(user_id, cart_id, item_id)
+    except ResourceAccessError as e:
+        raise NotFoundError(e.msg)
     if deleted_item is None:
         raise NotFoundError('Item does not exist')
-    return deleted_item
+    return {'deleted': True}
 
 
 @app.route('/resources/carts/{cart_id}/items/batch', methods=['POST'], cors=True)
@@ -1111,6 +1121,7 @@ def add_all_results_to_cart(cart_id):
           in: body
           type: string
           description: Entity type to apply the filters on
+
     :return: number of items that will be written and a URL to check the status of the write
         e.g.: {
             "count": 1000,
@@ -1177,6 +1188,8 @@ def get_cart_item_write_progress(token):
     """
     Get the status of a batch cart item write job
 
+    Returns a 400 error if the token cannot be decoded or the token points to a non-existent execution
+
     parameters:
         - name: token
           in: path
@@ -1207,6 +1220,11 @@ def get_cart_item_write_progress(token):
         status = CartItemManager().get_batch_cart_item_write_status(token)
     except (KeyError, UnicodeDecodeError, binascii.Error, json.decoder.JSONDecodeError):
         raise BadRequestError('Invalid token given')
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
+            raise BadRequestError('Invalid token given')
+        else:
+            raise
     response = {
         'done': status != 'RUNNING',
     }
