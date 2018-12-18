@@ -51,7 +51,7 @@ API endpoints can be found in [cart-api-endpoint.md](cart-api-endpoints.md)
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/resources/carts/{cart_id}/items` | Add an item to a cart |
-| `GET` | `GET /resources/carts/{cart_id}/items` | Retrieve all items in the given cart |
+| `GET` | `/resources/carts/{cart_id}/items` | Retrieve all items in the given cart |
 | `DELETE` | `/resources/carts/{cart_id}/items/{item_id}` | Delete an item from the cart |
 | `POST` | `/resources/carts/{cart_id}/items/batch` | Add all items matching the given filters to a cart |
 
@@ -107,10 +107,72 @@ Here is the sample response.
 ### Batch cart item write
 
 The batch cart item write is executed by a step function state machine that is triggered by the 
-`POST /resources/carts/{cart_id}/items/batch` endpoint.
+`POST /resources/carts/{cart_id}/items/batch` endpoint.  This is to avoid both the 30 second limit
+imposed by API Gateway and the 15 minute limit of a single Lambda execution.  This implementation
+also allows for a simple method to monitor the status of ongoing writes (can check the status of an execution).
+
+Filters and an entity type are given to `POST /resources/carts/{cart_id}/items/batch`.
+The endpoint will start a state machine execution and immediately return the number
+of items that will be written and a URL to send a GET request to in order to check the
+status of the write.
+
+The status check endpoint is `GET /resources/carts/status/{token}`.
+`token` is a base64-encoded JSON containing the ID of the state machine execution.
+
+If the write is still ongoing, the endpoint will return a flag indicating "not done" and
+a URL at which the status can be rechecked.  e.g.:
+```
+{
+    "done": false,
+    "statusUrl": "https://status.url/resources/carts/status/{token}"
+}
+```
+
+If the write is finished (or errored), the endpoint will return a flag indicating "done" 
+and a flag indicating if the write was successful.  e.g.: 
+```
+{
+    "done": true,
+    "success": true
+}
+```  
+
+#### State machine
+
+The step function state machine consists of the states
 
 State machine visualization:
 
 ![State machine visualization](state_machine.png)
 
-TODO: Finish doc
+The input of the state machine is:
+
+```json
+{
+    "filters" : { ... },
+    "entity_type" : str,
+    "cart_id" : str,
+    "item_count" : int,
+    "batch_size" : int
+}
+```
+
+The `WriteBatch` state will write up to `batch_size` items to DynamoDB and output the input, 
+as well as pagination information (`search_after`) for Elasticsearch and the number of items 
+that were written.
+
+The `NextBatch` state will check the number of items that were written in the previous state.
+- If the number is 0, that means all items have been written and the state will transition to
+the `SuccessState`.
+- If the number is not 0, then the state will transition to `WriteBatch` to continue writing
+items starting at the given `search_after` position.
+
+The `SuccessState` will end the execution with a success.
+
+#### Limitations:
+
+Because this implementation uses Elasticsearch search after for retrieving each batch, 
+if the underlying data is changed in the middle of a write job (e.g. matching entities 
+are added or deleted), then the resulting written cart items may not exactly match
+the query results the user sees.
+
