@@ -55,7 +55,7 @@ API endpoints can be found in [cart-api-endpoint.md](cart-api-endpoints.md)
 | `DELETE` | `/resources/carts/{cart_id}/items/{item_id}` | Delete an item from the cart |
 | `POST` | `/resources/carts/{cart_id}/items/batch` | Add all items matching the given filters to a cart |
 
-## Default Cart
+## Default Cart - *TODO*
 
 The default cart is a special case and will be given back to the client ONLY IF `id` is `default` (all lowercase).
 
@@ -103,6 +103,33 @@ Here is the sample response.
     items: [...]
 }
 ```
+
+## Export to DSS Collection - *TODO*
+
+Carts can be exported to the DSS Collection via the `POST /resources/carts/{cart_id}/export` endpoint.
+This endpoint will make use of `PUT /collections` in the DSS API corresponding to the matching environment 
+(dev, staging, integration, prod).
+
+The collection will look like:
+```json
+{
+    "contents": [
+        {
+          "type": "files",
+          "uuid": "ec4b742d-816b-4029-8194-418f714cd05d"
+        },
+        ...
+    ],
+    "description": "Exported cart f0734d85-f098-488f-b2cb-6e59dc20a65a",
+    "details": {},
+    "name": "Cart Name"
+}
+```
+
+When a cart is exported, an attribute `CollectionId` is added to the cart in DynamoDB.
+This attribute is the UUID of the latest exported collection of the cart.
+
+If a cart is exported again, it will create a new collection and the `CollectionId` will be updated.
 
 ## Batch cart item write
 
@@ -180,3 +207,4 @@ the query results the user sees.
 
 - Default cart behaviour is not implemented
 - Only one bundle is associated with each cart item but a project or specimen may have multiple bundles
+- Export to DSS Collection API
