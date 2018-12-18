@@ -55,7 +55,7 @@ API endpoints can be found in [cart-api-endpoint.md](cart-api-endpoints.md)
 | `DELETE` | `/resources/carts/{cart_id}/items/{item_id}` | Delete an item from the cart |
 | `POST` | `/resources/carts/{cart_id}/items/batch` | Add all items matching the given filters to a cart |
 
-### Default Cart *TODO*
+## Default Cart
 
 The default cart is a special case and will be given back to the client ONLY IF `id` is `default` (all lowercase).
 
@@ -104,7 +104,7 @@ Here is the sample response.
 }
 ```
 
-### Batch cart item write
+## Batch cart item write
 
 The batch cart item write is executed by a step function state machine that is triggered by the 
 `POST /resources/carts/{cart_id}/items/batch` endpoint.  This is to avoid both the 30 second limit
@@ -176,3 +176,7 @@ if the underlying data is changed in the middle of a write job (e.g. matching en
 are added or deleted), then the resulting written cart items may not exactly match
 the query results the user sees.
 
+## TODO
+
+- Default cart behaviour is not implemented
+- Only one bundle is associated with each cart item but a project or specimen may have multiple bundles
