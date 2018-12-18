@@ -14,3 +14,4 @@ _set AZUL_DEPLOYMENT_STAGE dev
 _set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
 
 _set AZUL_ENABLE_CLOUDWATCH_ALARMS 1
+_set AZUL_ES_INSTANCE_COUNT 4
