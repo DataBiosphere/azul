@@ -57,16 +57,6 @@ class Indexer(BaseIndexer):
             ]
         }
 
-    def settings(self) -> JSON:
-        return {
-            "index": {
-                # This is important. It may slow down searches but it does increase concurrency during indexing,
-                # currently our biggest performance bottleneck.
-                "number_of_shards": config.indexer_concurrency,
-                "number_of_replicas": 1
-            }
-        }
-
     def transformers(self) -> Iterable[Transformer]:
         return FileTransformer(), SpecimenTransformer(), ProjectTransformer()
 

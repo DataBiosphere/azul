@@ -34,9 +34,16 @@ class BaseIndexer(ABC):
     def mapping(self) -> JSON:
         raise NotImplementedError()
 
-    @abstractmethod
     def settings(self) -> JSON:
-        raise NotImplementedError()
+        return {
+            "index": {
+                # This is important. It may slow down searches but it does increase concurrency during indexing,
+                # currently our biggest performance bottleneck.
+                "number_of_shards": config.indexer_concurrency,
+                "number_of_replicas": 1,
+                "refresh_interval": f"{config.es_refresh_interval}s"
+            }
+        }
 
     @abstractmethod
     def transformers(self) -> Iterable[Transformer]:
@@ -124,6 +131,9 @@ class BaseIndexer(ABC):
                                      for old_aggregate in old_aggregates.values()})
             # Read all contributions from Elasticsearch
             contributions = self._read_contributions(absolute_tallies)
+            actual_tallies = Counter(contribution.entity for contribution in contributions)
+            assert len(tallies) == len(actual_tallies)
+            assert all(tallies[entity] <= actual_tally for entity, actual_tally in actual_tallies.items())
             # Combine the contributions into old_aggregates, one per entity
             new_aggregates = self._aggregate(contributions)
             # Set the expected document version from the old version
