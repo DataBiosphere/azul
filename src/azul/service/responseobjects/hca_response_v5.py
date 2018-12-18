@@ -2,7 +2,7 @@
 import abc
 from collections import OrderedDict, defaultdict
 import csv
-from io import StringIO
+from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
 import os
@@ -16,7 +16,11 @@ from jsonobject import (FloatProperty,
                         ObjectProperty,
                         StringProperty)
 
-from azul.service.responseobjects.storage_service import StorageService
+from azul import config
+from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
+                                                          StorageService,
+                                                          AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
+from azul.service.responseobjects.buffer import FlushableBuffer
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
@@ -191,6 +195,38 @@ class ManifestResponse(AbstractResponse):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
+    def _push_content(self) -> str:
+        """
+        Push the content to S3 with multipart upload
+
+        :return: S3 object key
+        """
+        object_key = f'manifests/{uuid4()}.tsv'
+        content_type = 'text/tab-separated-values'
+
+        with MultipartUploadHandler(object_key, content_type) as multipart_upload:
+            with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
+                buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
+                writer = csv.writer(buffer_wrapper, dialect='excel-tab')
+
+                writer.writerow(list(self.manifest_entries['bundles'].keys()) +
+                                list(self.manifest_entries['contents.files'].keys()))
+                for hit in self.es_search.scan():
+                    self._iterate_hit(hit, writer)
+
+        return object_key
+
+    def _push_content_single_part(self) -> str:
+        """
+        Push the content to S3 in a single object put
+
+        :return: S3 object key
+        """
+        parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
+                          data=self._construct_tsv_content().encode(),
+                          content_type='text/tab-separated-values')
+        return self.storage_service.put(**parameters)
+
     def _construct_tsv_content(self):
         es_search = self.es_search
 
@@ -200,23 +236,22 @@ class ManifestResponse(AbstractResponse):
         writer.writerow(list(self.manifest_entries['bundles'].keys()) +
                         list(self.manifest_entries['contents.files'].keys()))
         for hit in es_search.scan():
-            hit_dict = hit.to_dict()
-            assert len(hit_dict['contents']['files']) == 1
-            file = hit_dict['contents']['files'][0]
-            file_fields = self._translate(file, 'contents.files')
-            for bundle in hit_dict['bundles']:
-                # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
-                # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-                bundle_fields = self._translate(bundle, 'bundles')
-                writer.writerow(bundle_fields + file_fields)
+            self._iterate_hit(hit, writer)
 
         return output.getvalue()
 
+    def _iterate_hit(self, es_search_hit, writer):
+        hit_dict = es_search_hit.to_dict()
+        assert len(hit_dict['contents']['files']) == 1
+        file = hit_dict['contents']['files'][0]
+        file_fields = self._translate(file, 'contents.files')
+        for bundle in hit_dict['bundles']:
+            # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
+            # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
+            writer.writerow(self._translate(bundle, 'bundles') + file_fields)
+
     def return_response(self):
-        parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
-                          data=self._construct_tsv_content().encode(),
-                          content_type='text/tab-separated-values')
-        object_key = self.storage_service.put(**parameters)
+        object_key = self._push_content_single_part() if config.disable_multipart_manifests else self._push_content()
         presigned_url = self.storage_service.get_presigned_url(object_key)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
@@ -226,10 +261,9 @@ class ManifestResponse(AbstractResponse):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
-        :param raw_response: The raw response from ElasticSearch
+        :param es_search: The Elasticsearch DSL Search object
         :param mapping: The mapping between the columns to values within ES
         :param manifest_entries: The columns that will be present in the tsv
-        :param storage_service: The storage service used to store temporary downloadable content
         """
         self.es_search = es_search
         self.manifest_entries = OrderedDict(manifest_entries)

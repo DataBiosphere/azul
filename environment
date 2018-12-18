@@ -110,6 +110,14 @@ azul_vars=(
     # Determine if CloudWatch alarms should be deployed (1 yes, 0 no)
     # CloudWatch alarms should not be enabled for personal deployments
     AZUL_ENABLE_CLOUDWATCH_ALARMS
+
+    # Boolean value, 1 to upload a manifest in a single request to S3, 0 to
+    # upload the manifest in multiple concurrent requests for equal parts of
+    # a smaller size. This allows the manifest generation code to start
+    # uploading the manifest to S3 while the manifest data is still being
+    # fetched from Elasticsearch, shortening the overall time needed to
+    # generate and upload the manifest.
+    AZUL_DISABLE_MULTIPART_MANIFESTS
 )
 
 unset ${azul_vars[*]}
@@ -179,6 +187,7 @@ _set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front 
 _set AZUL_DSS_WORKERS 8
 _set AZUL_INDEXER_CONCURRENCY 64
 _set AZUL_SUBSCRIBE_TO_DSS 1
+_set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 
 # This is the same TF bucket as the one DSS uses
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"
