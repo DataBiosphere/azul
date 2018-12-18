@@ -270,6 +270,13 @@ class Config:
     def manifest_state_machine_name(self):
         return config.qualified_resource_name('manifest')
 
+    @property
+    def es_refresh_interval(self) -> int:
+        """
+        Integral number of seconds between index refreshes in Elasticsearch
+        """
+        return 1
+
 
 config = Config()
 
