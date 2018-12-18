@@ -827,7 +827,7 @@ def shorten_query_url():
     while key_length <= len(url_hash):
         key = url_hash[:key_length]
         try:
-            existing_url = storage_service.get(key)
+            existing_url = storage_service.get(key).decode(encoding='utf-8')
         except storage_service.client.exceptions.NoSuchKey:
             try:
                 storage_service.put(key,
