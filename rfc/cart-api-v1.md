@@ -34,34 +34,28 @@ Please note that:
 | 410 | Resource no longer existed | Used on `DELETE` only |
 | 412 | Invalid input / precondition failed | Requires input validation |
 
+API endpoints can be found in [cart-api-endpoint.md](cart-api-endpoints.md)
+
 ### CRUD APIs for `Cart`
 
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/resources/carts/` | Create a new (non-default) cart |
 | `GET` | `/resources/carts/` | Retrieve a list of carts |
-| `GET` | `/resources/carts/{id}` | Retrieve a single cart (see more detail below) |
-| `PUT` | `/resources/carts/{id}` | Update the cart (see more detail below) |
-| `DELETE` | `/resources/carts/{id}` | Delete a single cart (see more detail below) |
+| `GET` | `/resources/carts/{id}` | Retrieve a single cart |
+| `PUT` | `/resources/carts/{id}` | Update the cart |
+| `DELETE` | `/resources/carts/{id}` | Delete a single cart |
 
-#### `GET /resources/carts/{id}`
+### CRUD APIs for `CartItem`
 
-Retrieve a single cart.
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/resources/carts/{cart_id}/items` | Add an item to a cart |
+| `GET` | `GET /resources/carts/{cart_id}/items` | Retrieve all items in the given cart |
+| `DELETE` | `/resources/carts/{cart_id}/items/{item_id}` | Delete an item from the cart |
+| `POST` | `/resources/carts/{cart_id}/items/batch` | Add all items matching the given filters to a cart |
 
-##### Response
-
-Instead of returning `Cart` information, the response will be also returning the list of associated `CartItem`, as shown below:
-
-```javascript
-{
-    id: str, // Cart ID
-    cart_name: str,
-    default: bool,
-    items: List[CartItem] // Each CartItem object will not have `cart_id`.
-}
-```
-
-##### Default Cart
+### Default Cart *TODO*
 
 The default cart is a special case and will be given back to the client ONLY IF `id` is `default` (all lowercase).
 
@@ -109,3 +103,14 @@ Here is the sample response.
     items: [...]
 }
 ```
+
+### Batch cart item write
+
+The batch cart item write is executed by a step function state machine that is triggered by the 
+`POST /resources/carts/{cart_id}/items/batch` endpoint.
+
+State machine visualization:
+
+![State machine visualization](state_machine.png)
+
+TODO: Finish doc

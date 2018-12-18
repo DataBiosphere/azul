@@ -1,8 +1,8 @@
 ### POST /resources/carts
 
-    Create a cart with the given name for the authenticated user
+Create a cart with the given name for the authenticated user
 
-    Returns a 400 error if a cart with the given name already exists
+Returns a 400 error if a cart with the given name already exists
 
     parameters:
         - name: CartName
@@ -19,7 +19,7 @@
 
 ### GET /resources/carts
 
-    Get a list of all carts belonging the user
+Get a list of all carts belonging the user
 
     :return: {
         "carts": [
@@ -34,9 +34,9 @@
 
 ### GET /resources/carts/{cart_id}
 
-    Get the cart of the given ID belonging to the user
+Get the cart of the given ID belonging to the user
 
-    Returns a 404 error if the cart does not exist or does not belong to the user
+Returns a 404 error if the cart does not exist or does not belong to the user
 
     :return: {
         "CartName": str,
@@ -46,9 +46,9 @@
 
 ### DELETE /resources/carts/{cart_id}
 
-    Delete the given cart if it exists and return the deleted cart
+Delete the given cart if it exists and return the deleted cart
 
-    Returns a 404 error if the cart does not exist or does not belong to the user
+Returns a 404 error if the cart does not exist or does not belong to the user
 
     :return: The deleted cart
         {
@@ -59,9 +59,9 @@
 
 ### PUT /resources/carts/{cart_id}
 
-    Update a cart's attributes.  Only the listed parameters can be updated
+Update a cart's attributes.  Only the listed parameters can be updated
 
-    Returns a 404 error if the cart does not exist or does not belong to the user
+Returns a 404 error if the cart does not exist or does not belong to the user
 
     parameters:
         - name: CartName
@@ -78,9 +78,9 @@
 
 ### GET /resources/carts/{cart_id}/items
 
-    Get a list of items in a cart
+Get a list of items in a cart
 
-    Returns a 404 error if the cart does not exist or does not belong to the user
+Returns a 404 error if the cart does not exist or does not belong to the user
 
     :return: {
         "CartId": str,
@@ -100,10 +100,10 @@
 
 ### POST /resources/carts/{cart_id}/items
 
-    Add cart item to a cart and return the ID of the created item
+Add cart item to a cart and return the ID of the created item
 
-    Returns a 404 error if the cart does not exist or does not belong to the user
-    Returns a 400 error if an invalid item was given
+Returns a 404 error if the cart does not exist or does not belong to the user
+Returns a 400 error if an invalid item was given
 
     parameters:
         - name: EntityId
@@ -126,9 +126,9 @@
 
 ### DELETE /resources/carts/{cart_id}/items/{item_id}
 
-    Delete an item from the cart
+Delete an item from the cart
 
-    Returns a 404 error if the cart does not exist or does not belong to the user, or if the item does not exist
+Returns a 404 error if the cart does not exist or does not belong to the user, or if the item does not exist
 
     :return: If an item was deleted, return:
         ```
@@ -141,7 +141,7 @@
 
 ### POST /resources/carts/{cart_id}/items/batch
 
-    Add all entities matching the given filters to a cart
+Add all entities matching the given filters to a cart
 
     parameters:
         - name: filters
@@ -162,9 +162,9 @@
 
 ### GET /resources/carts/status/{token}
 
-    Get the status of a batch cart item write job
+Get the status of a batch cart item write job
 
-    Returns a 400 error if the token cannot be decoded or the token points to a non-existent execution
+Returns a 400 error if the token cannot be decoded or the token points to a non-existent execution
 
     parameters:
         - name: token
