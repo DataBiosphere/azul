@@ -28,7 +28,12 @@ class Plugin(azul.plugin.Plugin):
                             "exists": {
                                 "field": "files.project_json"
                             }
-                        }, *(
+                        },
+                        # This line constraints the number of docs loaded into
+                        # the index for testing purposes.
+                        # TODO: remove before committing
+                        {"prefix": {"uuid": "aaa"}},
+                        *(
                             [
                                 {
                                     "range": {
