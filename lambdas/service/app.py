@@ -1224,34 +1224,3 @@ def get_cart_item_write_progress(token):
     else:
         response['success'] = status == 'SUCCEEDED'
     return response
-
-
-@app.route('/resources/carts/{cart_id}/export', methods=['PUT'], cors=True)
-def export_cart_to_collection(cart_id):
-    user_id = get_user_id()
-    cart_item_manager = CartItemManager()
-    items = cart_item_manager.get_cart_items(user_id, cart_id)
-
-    def transform_cart_item_to_collection_item(cart_item):
-        return {
-            'type': cart_item['EntityType'],
-            'uuid': cart_item['EntityId'],
-            'version': cart_item['BundleVersion']
-        }
-
-    collection_details = {
-        'contents': [transform_cart_item_to_collection_item(item) for item in items],
-        'description': 'Exported cart',
-        'details': {},
-        'name': cart_item_manager.get_cart(user_id, cart_id)['CartName']
-    }
-
-    response = requests.put('https://dss.dev.data.humancellatlas.org/collection',
-                            data=collection_details,
-                            headers={
-                                'Authorization': app.current_request.headers['Authorization']
-                            })
-    response.raise_for_status()
-    collection_uuid = response.json()['uuid']
-    cart_item_manager.update_cart(user_id, cart_id, {'CollectionUuid': collection_uuid}, validate_attributes=False)
-    return {'collectionUuid': collection_uuid}
