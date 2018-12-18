@@ -72,15 +72,6 @@ def _get_pagination(current_request):
 
 @app.route('/', cors=True)
 def hello():
-    with open('doc.txt', 'w') as f:
-        for path, routes in app.routes.items():
-            for method, fun in routes.items():
-                f.write(fun.method + ' ' + fun.uri_pattern)
-                f.write('\n')
-                f.write(fun.view_function.__doc__ or '')
-                f.write('\n\n')
-                pass
-
     return {'Hello': 'World!'}
 
 
@@ -1229,9 +1220,7 @@ def get_cart_item_write_progress(token):
         'done': status != 'RUNNING',
     }
     if not response['done']:
-        protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
-        base_url = app.current_request.headers['host']
-        response['statusUrl'] = f'{protocol}://{base_url}/resources/carts/status/{token}'
+        response['statusUrl'] = self_url()
     else:
         response['success'] = status == 'SUCCEEDED'
     return response
