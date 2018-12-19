@@ -5,7 +5,7 @@ from azul import config
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 from dynamo_test_case import DynamoTestCase
-from lambdas.service.app import cart_item_write_batch
+from lambdas.service.app import add_all_results_to_cart, cart_item_write_batch
 from service import WebServiceTestCase
 
 
@@ -374,9 +374,11 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
 
         self.assertEqual(write_response['count'], len(list(inserted_items)))
 
+    @mock.patch('lambdas.service.app.get_user_id')
+    @mock.patch('lambdas.service.app.app')
     @mock.patch('azul.service.responseobjects.cart_item_manager.CartItemManager.step_function_helper')
     @mock.patch('azul.deployment.aws.dynamo')
-    def test_add_all_results_to_cart_endpoint(self, dynamo, step_function_helper):
+    def test_add_all_results_to_cart_endpoint(self, dynamo, step_function_helper, mock_app, get_user_id):
         """
         Write all results endpoint should start an execution of the cart item write state machine and
         return the name of the execution and the number items that will be written
@@ -388,12 +390,14 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
             'executionArn': f'arn:aws:states:us-east-1:1234567890:execution:state_machine:{execution_id}'
         }
 
+        mock_app.current_request.json_body = {'filters': '{"file": {}}', 'entityType': 'projects'}
+
         user_id = '123'
+        get_user_id.return_value = user_id
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
 
-        response = requests.post(self.base_url + f'/resources/carts/{cart_id}/items/batch',
-                                 headers={'Fake-Authorization': user_id},
-                                 json={'filters': '{"file": {}}', 'entityType': 'projects'}).json()
+        response = add_all_results_to_cart(cart_id)
+
         self.assertEqual(response['count'], self.number_of_documents)
         token = response['statusUrl'].split('/')[-1]
         params = self.cart_item_manager.decode_token(token)
