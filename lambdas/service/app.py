@@ -1173,7 +1173,6 @@ def cart_item_write_batch(event, context):
     }
 
 
-# TODO: Think of a better route
 @app.route('/resources/carts/status/{token}', methods=['GET'], cors=True)
 def get_cart_item_write_progress(token):
     """
