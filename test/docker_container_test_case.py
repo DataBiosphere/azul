@@ -37,4 +37,5 @@ class DockerContainerTestCase(TestCase):
     def tearDownClass(cls):
         for container in cls._containers:
             container.kill()
+        cls._containers.clear()
         super().tearDownClass()
