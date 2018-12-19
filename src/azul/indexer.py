@@ -78,6 +78,8 @@ class BaseIndexer(ABC):
         bundle_version = dss_notification['match']['bundle_version']
         manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
 
+        self._add_test_modifications(manifest, metadata_files, dss_notification)
+
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
         # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
         es_client = ESClientFactory.get()
@@ -102,6 +104,18 @@ class BaseIndexer(ABC):
                                                                num_workers=config.num_dss_workers)
         assert _ == bundle_version
         return manifest, metadata_files
+
+    def _add_test_modifications(self, manifest, metadata_files, dss_notification):
+        integration_test_name = dss_notification.get('test_name', None)
+        if integration_test_name is not None:
+            for dss_file in manifest:
+                if 'project_0.json' in dss_file['name']:
+                    dss_file['uuid'] = integration_test_name.split('_')[1]
+                    metadata_files['project_0.json']['project_core']['project_short_name'] = integration_test_name
+                    metadata_files['project_0.json']['provenance']['document_id'] = integration_test_name.split('_')[1]
+                    break
+            else:
+                assert False, "project_0.json doesn't exist for this bundle."
 
     def contribute(self, writer: 'IndexWriter', contributions: List[Contribution]) -> Tallies:
         """

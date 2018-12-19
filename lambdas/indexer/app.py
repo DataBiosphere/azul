@@ -80,7 +80,7 @@ def post_notification():
     log.info("Received notification %r", notification)
     params = app.current_request.query_params
 
-    if config.test_mode or notification.get('test_name'):
+    if not config.test_mode or notification.get('test_name'):
         if params and params.get('sync', 'False').lower() == 'true':
             indexer_cls = plugin.indexer_class()
             indexer = indexer_cls()

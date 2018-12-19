@@ -140,6 +140,8 @@ class Reindexer(object):
         logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
         logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
 
+        return bundle_fqids
+
     def _post_dss_search(self) -> List[str]:
         """
         Works around https://github.com/HumanCellAtlas/data-store/issues/1768

@@ -5,7 +5,7 @@ from more_itertools import one
 import random
 import requests
 import time
-from typing import List, Set
+from typing import List, Set, Dict
 import unittest
 import urllib
 import uuid
@@ -25,8 +25,7 @@ def setUpModule():
 
 class IntegrationTest(unittest.TestCase):
     bundle_uuid_prefix = None
-    prefix_length = 2
-    queue_empty_timeout = 4500 / (7 ** (prefix_length - 1)) if prefix_length <= 3 else 60
+    prefix_length = 3
 
     def setUp(self):
         super().setUp()
@@ -60,6 +59,7 @@ class IntegrationTest(unittest.TestCase):
         logger.info('Starting test using test name, %s ...', test_name)
         logger.info('Creating indices and reindexing ...')
         selected_bundle_fqids = test_reindexer.reindex()
+        self.num_of_bundles = len(selected_bundle_fqids)
         self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
         self.check_endpoint_is_working('/')
         self.check_endpoint_is_working('/health')
@@ -73,31 +73,51 @@ class IntegrationTest(unittest.TestCase):
         response = requests.get(url)
         response.raise_for_status()
 
-    def wait_for_queues_to_empty(self, queue_names: List[str], timeout: int = queue_empty_timeout):
+    def get_number_of_messages(self, queues: Dict[str, boto3.resources.base.ServiceResource]):
+        total_message_count = 0
+        for queue_name, queue in queues.items():
+            attributes = tuple('ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed'))
+            num_messages = tuple(int(queue.attributes[attribute]) for attribute in attributes)
+            num_available, num_inflight, num_delayed = num_messages
+            queue.reload()
+            message_sum = sum((num_available, num_inflight, num_delayed))
+            logger.info('Queue %s has %i messages, %i available, %i in flight and %i delayed',
+                        queue_name, message_sum, num_available, num_inflight, num_delayed)
+            total_message_count += message_sum
+        logger.info('Total # of messages: %i', total_message_count)
+        return total_message_count
+
+    @property
+    def default_queue_empty_timeout(self):
+        return max(self.num_of_bundles * 30, 60)
+
+    def wait_for_queues_to_empty(self, queue_names: List[str], timeout: int = None):
+        empty_queue_timeout = timeout or self.default_queue_empty_timeout
         queues = {queue_name: boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
                   for queue_name in queue_names}
+        populating_timeout = 60
+        populating_start_time = time.time()
 
-        start_time = time.time()
         while True:
-            total_message_count = 0
-            for queue_name, queue in queues.items():
-                attributes = tuple('ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed'))
-                num_messages = tuple(int(queue.attributes[attribute]) for attribute in attributes)
-                num_available, num_inflight, num_delayed = num_messages
-                queue.reload()
-                message_sum = sum((num_available, num_inflight, num_delayed))
-                logger.info('Queue %s has %i messages, %i available, %i in flight and %i delayed',
-                            queue_name, message_sum, num_available, num_inflight, num_delayed)
-                total_message_count += message_sum
-            logger.info('Total # of messages: %i', total_message_count)
+            total_message_count = self.get_number_of_messages(queues)
+            queue_wait_time_elapsed = (time.time() - populating_start_time)
+            if queue_wait_time_elapsed > populating_timeout:
+                logger.error('The queue(s) are still empty')
+                return
+            elif 0 < total_message_count:
+                logger.info('The queue(s) have messages.')
+                break
+            time.sleep(5)
 
-            queue_wait_time_elapsed = (time.time() - start_time)
-            if queue_wait_time_elapsed > timeout:
+        emptying_start_time = time.time()
+        while True:
+            total_message_count = self.get_number_of_messages(queues)
+            queue_wait_time_elapsed = (time.time() - emptying_start_time)
+            if queue_wait_time_elapsed > empty_queue_timeout:
                 self.fail(f'Timed out waiting for the queues to empty after {queue_wait_time_elapsed}')
             elif 0 >= total_message_count:
                 logger.info('Queue emptied successfully.')
                 break
-
             time.sleep(5)
 
         # Hack that removes the ResourceWarning that is caused by an unclosed SQS session
@@ -105,7 +125,7 @@ class IntegrationTest(unittest.TestCase):
             queue.meta.client._endpoint.http_session.close()
 
     def check_bundles_are_indexed(self, test_name: str, entity_type: str, indexed_bundle_fqids: Set[str]):
-        max_num_of_retries = 5
+        max_retries = 5
         delay_between_retries = 5
         page_size = 100
 
@@ -121,25 +141,26 @@ class IntegrationTest(unittest.TestCase):
         logger.info('Checking if bundles are referenced by the service response ...')
         retries = 0
         found_bundle_fqids = set()
-        fqids_with_prefix = None
-        response_json = None
-        while retries < max_num_of_retries:
+
+        while True:
             response_json = requests.get(url).json()
             hits = response_json.get('hits', [])
-            found_bundle_fqids.update({f"{entity['bundleUuid']}.{entity['bundleVersion']}"
-                                       for bundle in hits for entity in bundle.get('bundles', [])})
-            fqids_with_prefix = {bundle_fqid for bundle_fqid in found_bundle_fqids
-                                 if bundle_fqid.startswith(self.bundle_uuid_prefix)}
+            found_bundle_fqids.update(f"{entity['bundleUuid']}.{entity['bundleVersion']}"
+                                      for bundle in hits for entity in bundle.get('bundles', [])
+                                      if entity['bundleUuid'].startswith(self.bundle_uuid_prefix))
             search_after = response_json['pagination']['search_after']
             search_after_uid = response_json['pagination']['search_after_uid']
             total_entities = response_json['pagination']['total']
-            logger.info('On attempt #%i/%i, found %i out of %s bundles. There are a total of %s hits.'
-                        ' The current page has %s hits in %s.', retries+1, max_num_of_retries, len(fqids_with_prefix),
-                        num_bundles, total_entities, len(hits), url)
+            logger.info('Found %i/%i bundles on try #%i/%i. There are %i total hits. Current page has %i hits in %s.',
+                        len(found_bundle_fqids), num_bundles, retries+1, max_retries, total_entities, len(hits), url)
 
             if search_after is None:
-                if fqids_with_prefix == indexed_bundle_fqids:
+                assert search_after_uid is None
+                if indexed_bundle_fqids == found_bundle_fqids:
                     logger.info('Found all bundles.')
+                    break
+                elif retries >= max_retries:
+                    logger.error('Unable to find all the bundles. Retried too many (%i) times.', retries)
                     break
                 else:
                     time.sleep(delay_between_retries)
@@ -149,8 +170,8 @@ class IntegrationTest(unittest.TestCase):
                 url = base_url + '&' + urllib.parse.urlencode({'search_after': search_after,
                                                                'search_after_uid': search_after_uid})
 
-        logger.info('Actual bundle count is %s.', len(fqids_with_prefix))
-        self.assertEqual(fqids_with_prefix, indexed_bundle_fqids)
+        logger.info('Actual bundle count is %i.', len(found_bundle_fqids))
+        self.assertEqual(found_bundle_fqids, indexed_bundle_fqids)
         for hit in response_json['hits']:
             project = one(hit['projects'])
             bundle_fqids = [bundle['bundleUuid'] + '.' + bundle['bundleVersion'] for bundle in hit['bundles']]
