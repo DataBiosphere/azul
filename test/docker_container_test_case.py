@@ -27,13 +27,6 @@ class DockerContainerTestCase(TestCase):
         return f'{container_port["HostIp"]}:{int(container_port["HostPort"])}'
 
     @classmethod
-    def get_container_address(cls, docker_container, api_container_port):
-        container_info = cls._docker_client.api.inspect_container(docker_container.name)
-        container_ports = container_info['NetworkSettings']['Ports']
-        container_port = container_ports[api_container_port][0]
-        return f'{container_port["HostIp"]}:{int(container_port["HostPort"])}'
-
-    @classmethod
     def tearDownClass(cls):
         for container in cls._containers:
             container.kill()

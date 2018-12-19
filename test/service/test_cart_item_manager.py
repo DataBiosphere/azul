@@ -1,4 +1,3 @@
-import requests
 from unittest import mock
 
 from azul import config
