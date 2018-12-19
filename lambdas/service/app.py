@@ -856,8 +856,7 @@ def hash_url(url):
 # TODO: Authentication for carts
 def get_user_id():
     user_id = app.current_request.headers.get('Fake-Authorization', '')
-    print(user_id)
-    if user_id == '':
+    if user_id == '' or app.current_request.context['identity']['sourceIp'] not in config.cart_api_ip_whitelist:
         raise UnauthorizedError('Missing access key')
     return user_id
 
