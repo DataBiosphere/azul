@@ -1,8 +1,11 @@
 import ast
+import base64
 import json
 from concurrent.futures import ThreadPoolExecutor
+import hashlib
 import logging.config
 import os
+import re
 import time
 import urllib.parse
 import uuid
@@ -20,6 +23,7 @@ from azul.service.responseobjects.elastic_request_builder import (BadArgumentExc
                                                                   IndexNotFoundError)
 from azul.service.responseobjects.manifest_service import ManifestService
 from azul.service.responseobjects.step_function_helper import StateMachineError
+from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
@@ -779,3 +783,69 @@ def self_url(endpoint_path=None):
         endpoint_path = app.current_request.context['path']
     retry_url = f'{protocol}://{base_url}{endpoint_path}'
     return retry_url
+
+
+@app.route('/url', methods=['POST'], cors=True)
+def shorten_query_url():
+    """
+    Take a URL as input and return a (potentially) shortened URL that will redirect to the given URL
+
+    parameters:
+        - name: url
+          in: body
+          type: string
+          description: URL to shorten
+
+    :return: A 200 response with JSON body containing the shortened URL:
+
+    ```
+    {
+        "url": "http://url.data.humancellatlas.org/b3N"
+    }
+    ```
+
+    A 400 error is returned if an invalid URL is given.  This could be a URL that is not whitelisted
+    or a string that is not a valid web URL.
+    """
+    try:
+        url = app.current_request.json_body['url']
+    except KeyError:
+        raise BadRequestError('`url` must be given in the request body')
+
+    url_hostname = urllib.parse.urlparse(url).netloc
+    if len(list(filter(lambda whitelisted_url: re.fullmatch(whitelisted_url, url_hostname),
+                       config.url_shortener_whitelist))) == 0:
+        raise BadRequestError('Invalid URL given')
+
+    url_hash = hash_url(url)
+    storage_service = StorageService(config.url_redirect_full_domain_name)
+
+    def get_url_response(path):
+        return {'url': f'http://{config.url_redirect_full_domain_name}/{path}'}
+
+    key_length = 3
+    while key_length <= len(url_hash):
+        key = url_hash[:key_length]
+        try:
+            existing_url = storage_service.get(key).decode(encoding='utf-8')
+        except storage_service.client.exceptions.NoSuchKey:
+            try:
+                storage_service.put(key,
+                                    data=bytes(url, encoding='utf-8'),
+                                    ACL='public-read',
+                                    WebsiteRedirectLocation=url)
+            except ClientError as e:
+                if e.response['Error']['Code'] == 'InvalidRedirectLocation':
+                    raise BadRequestError('Invalid URL given')
+                else:
+                    raise
+            return get_url_response(key)
+        if existing_url == url:
+            return get_url_response(key)
+        key_length += 1
+    raise ChaliceViewError('Could not create shortened URL')
+
+
+def hash_url(url):
+    url_hash = hashlib.sha1(bytes(url, encoding='utf-8')).digest()
+    return base64.urlsafe_b64encode(url_hash).decode()

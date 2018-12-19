@@ -9,6 +9,8 @@ meta:
     - terraform: (requires `make terraform`)
     - requirements: (requires `pip -Ur requirements.dev.txt`)
     - clients: the service API changed in a way that requires clients to be updated
+    - environment: an environment variable was added to the `/deployments/.example.local` deployment
+                   and needs to be copied to local deployments
 
 changes:
   - title: Emulate HTTP redirects and retry-after in DSS file proxy
@@ -19,6 +21,21 @@ changes:
     - client
     notes: Refer to docstring for service API handler `/fetch/dss/files/{uuid}`.
            Note that the DSS file proxy endpoint changed from `/dss/files/{uuid}` to `/fetch/dss/files/{uuid}`
+
+  - title: Add endpoint to shorten URLs
+    issues:
+      - https://github.com/databiosphere/azul/issues/66
+    upgrade:
+      - terraform
+      - deploy
+      - clients
+      - environment
+    notes: >
+           The `/url` endpoint was added to return a URL that redirects to a given long URL.
+           Documentation: /lambdas/service/app.py#L701
+           AZUL_URL_REDIRECT_BASE_DOMAIN_NAME and AZUL_URL_REDIRECT_FULL_DOMAIN_NAME should be copied from the example
+           deployment environment to local deployments
+
 
   - title: Make the manifest endpoint dual mode (standard HTTP and lifted 200)
     issues:
