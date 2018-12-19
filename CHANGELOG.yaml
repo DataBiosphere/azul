@@ -13,14 +13,6 @@ meta:
                    and needs to be copied to local deployments
 
 changes:
-  - title: Emulate HTTP redirects and retry-after in DSS file proxy
-    issues:
-    - https://github.com/DataBiosphere/azul/issues/551
-    upgrade:
-    - deploy
-    - client
-    notes: Refer to docstring for service API handler `/fetch/dss/files/{uuid}`.
-           Note that the DSS file proxy endpoint changed from `/dss/files/{uuid}` to `/fetch/dss/files/{uuid}`
 
   - title: Add endpoint to shorten URLs
     issues:
@@ -36,6 +28,14 @@ changes:
            AZUL_URL_REDIRECT_BASE_DOMAIN_NAME and AZUL_URL_REDIRECT_FULL_DOMAIN_NAME should be copied from the example
            deployment environment to local deployments
 
+  - title: Emulate HTTP redirects and retry-after in DSS file proxy
+    issues:
+    - https://github.com/DataBiosphere/azul/issues/551
+    upgrade:
+    - deploy
+    - client
+    notes: Refer to docstring for service API handler `/fetch/dss/files/{uuid}`.
+           Note that the DSS file proxy endpoint changed from `/dss/files/{uuid}` to `/fetch/dss/files/{uuid}`
 
   - title: Make the manifest endpoint dual mode (standard HTTP and lifted 200)
     issues:
@@ -82,8 +82,7 @@ changes:
       - terraform
     notes: Alarms will only be created for the main deployments. Personal deployments are not affected.
 
-  - title: >
-        Fix: file type summary is truncated to ten entries
+  - title: "Fix: file type summary is truncated to ten entries"
     issues:
       - https://github.com/DataBiosphere/azul/issues/535
       - https://github.com/HumanCellAtlas/data-browser/issues/318
@@ -98,7 +97,7 @@ changes:
     upgrade:
       - deploy
 
-  - title:  Removed `disease` extraction from `donor_organism`
+  - title: Removed `disease` extraction from `donor_organism`
     issues:
       - https://github.com/DataBiosphere/azul/issues/527
       - https://github.com/HumanCellAtlas/data-browser/issues/335
