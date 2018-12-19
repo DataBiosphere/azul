@@ -16,4 +16,6 @@ _set AZUL_DSS_ENDPOINT "https://dss.data.humancellatlas.org/v1"
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-{account_id}-terraform"
 _set AZUL_DOMAIN_NAME "explore.data.humancellatlas.org"
 
+_set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "url.data.humancellatlas.org"
+
 _set AZUL_ENABLE_CLOUDWATCH_ALARMS 1

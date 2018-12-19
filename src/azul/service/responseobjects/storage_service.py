@@ -13,8 +13,8 @@ MULTIPART_UPLOAD_MAX_WORKERS = 4
 
 class StorageService:
 
-    def __init__(self):
-        self.bucket_name = config.s3_bucket
+    def __init__(self, bucket_name=config.s3_bucket):
+        self.bucket_name = bucket_name
 
     @property
     @lru_cache(maxsize=1)
@@ -22,13 +22,10 @@ class StorageService:
         return boto3.client('s3')
 
     def get(self, object_key: str) -> bytes:
-        try:
-            return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read()
-        except self.client.exceptions.NoSuchKey:
-            raise GetObjectError(object_key)
+        return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read()
 
-    def put(self, object_key: str, data: bytes, content_type: Optional[str] = None) -> str:
-        params = {'Bucket': self.bucket_name, 'Key': object_key, 'Body': data}
+    def put(self, object_key: str, data: bytes, content_type: Optional[str] = None, **kwargs) -> str:
+        params = {'Bucket': self.bucket_name, 'Key': object_key, 'Body': data, **kwargs}
 
         if content_type:
             params['ContentType'] = content_type
@@ -153,10 +150,6 @@ class Part:
 
     def to_dict(self):
         return dict(PartNumber=self.part_number, ETag=self.etag)
-
-
-class GetObjectError(RuntimeError):
-    pass
 
 
 class MultipartUploadError(RuntimeError):
