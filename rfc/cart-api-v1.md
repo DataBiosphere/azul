@@ -176,4 +176,4 @@ the query results the user sees.
 - Default cart behaviour is not implemented
 - Only one bundle is associated with each cart item but a project or specimen may have multiple bundles
 - Export to DSS Collection API
-- Authentication
+- Authentication and remove IP whitelist

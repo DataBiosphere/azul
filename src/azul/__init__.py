@@ -305,6 +305,10 @@ class Config:
     def cart_item_state_machine_name(self):
         return self.qualified_resource_name('cartitems')
 
+    @property
+    def cart_api_ip_whitelist(self):  # TODO: Remove when authentication is added
+        return os.environ['AZUL_CART_API_IP_WHITELIST'].split(' ')
+
 
 config = Config()
 
