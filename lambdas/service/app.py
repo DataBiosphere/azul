@@ -1144,9 +1144,7 @@ def add_all_results_to_cart(cart_id):
         'batch_size': 10000
     }
     token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, write_params)
-    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
-    base_url = app.current_request.headers['host']
-    status_url = f'{protocol}://{base_url}/resources/carts/status/{token}'
+    status_url = self_url(f'/resources/carts/status/{token}')
 
     return {'count': item_count, 'statusUrl': status_url}
 
