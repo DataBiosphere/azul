@@ -132,6 +132,10 @@ azul_vars=(
     # fetched from Elasticsearch, shortening the overall time needed to
     # generate and upload the manifest.
     AZUL_DISABLE_MULTIPART_MANIFESTS
+
+    # Space separated list of IP addresses to allow access to Cart API endpoint
+    # TODO: Remove when authentication is added
+    AZUL_CART_API_IP_WHITELIST
 )
 
 unset ${azul_vars[*]}
@@ -208,6 +212,8 @@ _set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 # This is the same TF bucket as the one DSS uses
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"
 _set AZUL_ENABLE_CLOUDWATCH_ALARMS 0
+
+_set AZUL_CART_API_IP_WHITELIST  # TODO: Remove when authentication is added
 
 unset -f _set
 

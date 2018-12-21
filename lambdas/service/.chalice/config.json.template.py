@@ -19,6 +19,9 @@ emit({
             'lambda_functions': {
                 config.manifest_lambda_basename: {
                     'lambda_timeout': 15 * 60
+                },
+                config.cart_item_write_lambda_basename: {
+                    'lambda_timeout': 15 * 60
                 }
             }
         }

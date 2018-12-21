@@ -1,5 +1,6 @@
 import ast
 import base64
+import binascii
 import json
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
@@ -12,12 +13,13 @@ import uuid
 
 # noinspection PyPackageRequirements
 from botocore.exceptions import ClientError
-from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response
+from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, UnauthorizedError
 from more_itertools import one
 import requests
 
 from azul import config, parse_http_date
 from azul.service import service_config
+from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
@@ -849,3 +851,372 @@ def shorten_query_url():
 def hash_url(url):
     url_hash = hashlib.sha1(bytes(url, encoding='utf-8')).digest()
     return base64.urlsafe_b64encode(url_hash).decode()
+
+
+# TODO: Authentication for carts
+def get_user_id():
+    user_id = app.current_request.headers.get('Fake-Authorization', '')
+    if user_id == '' or app.current_request.context['identity']['sourceIp'] not in config.cart_api_ip_whitelist:
+        raise UnauthorizedError('Missing access key')
+    return user_id
+
+
+def transform_cart_to_response(cart):
+    """
+    Remove fields from response to return only user-relevant attributes
+    """
+    return {
+        'CartId': cart['CartId'],
+        'CartName': cart['CartName']
+    }
+
+
+@app.route('/resources/carts', methods=['POST'], cors=True)
+def create_cart():
+    """
+    Create a cart with the given name for the authenticated user
+
+    Returns a 400 error if a cart with the given name already exists
+
+    parameters:
+        - name: CartName
+          in: body
+          type: string
+          description: Name to give the cart (must be unique to the user)
+
+    :return: Name and ID of the created cart
+        {
+            "CartName": str,
+            "CartId": str
+        }
+    """
+    user_id = get_user_id()
+    try:
+        cart_name = app.current_request.json_body['CartName']
+    except KeyError:
+        raise BadRequestError('CartName parameter must be given')
+    try:
+        cart_id = CartItemManager().create_cart(user_id, cart_name, False)
+    except DuplicateItemError as e:
+        raise BadRequestError(e.msg)
+    return {
+        'CartId': cart_id,
+        'CartName': cart_name
+    }
+
+
+# TODO: implement default cart (may need to change get_all_carts() endpoint)
+@app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True)
+def get_cart(cart_id):
+    """
+    Get the cart of the given ID belonging to the user
+
+    Returns a 404 error if the cart does not exist or does not belong to the user
+
+    :return: {
+        "CartName": str,
+        "CartId": str
+    }
+    """
+    user_id = get_user_id()
+    cart = CartItemManager().get_cart(user_id, cart_id)
+    if cart is None:
+        raise NotFoundError('Cart does not exist')
+    return transform_cart_to_response(cart)
+
+
+@app.route('/resources/carts', methods=['GET'], cors=True)
+def get_all_carts():
+    """
+    Get a list of all carts belonging the user
+
+    :return: {
+        "carts": [
+            {
+                "CartName": str,
+                "CartId": str
+            },
+            ...
+        ]
+    }
+    """
+    user_id = get_user_id()
+    carts = CartItemManager().get_user_carts(user_id)
+    return [transform_cart_to_response(cart) for cart in carts]
+
+
+@app.route('/resources/carts/{cart_id}', methods=['DELETE'], cors=True)
+def delete_cart(cart_id):
+    """
+    Delete the given cart if it exists and return the deleted cart
+
+    Returns a 404 error if the cart does not exist or does not belong to the user
+
+    :return: The deleted cart
+        {
+            "CartName": str,
+            "CartId": str
+        }
+    """
+    user_id = get_user_id()
+    deleted_cart = CartItemManager().delete_cart(user_id, cart_id)
+    if deleted_cart is None:
+        raise NotFoundError('Cart does not exist')
+    return transform_cart_to_response(deleted_cart)
+
+
+@app.route('/resources/carts/{cart_id}', methods=['PUT'], cors=True)
+def update_cart(cart_id):
+    """
+    Update a cart's attributes.  Only the listed parameters can be updated
+
+    Returns a 404 error if the cart does not exist or does not belong to the user
+
+    parameters:
+        - name: CartName
+          in: body
+          type: string
+          description: Name to update the cart with (must be unique to the user)
+
+    :return: The updated cart
+        {
+            "CartName": str,
+            "CartId": str
+        }
+    """
+    user_id = get_user_id()
+    request_body = app.current_request.json_body
+    update_params = dict(request_body)
+    try:
+        updated_cart = CartItemManager().update_cart(user_id, cart_id, update_params)
+    except ResourceAccessError as e:
+        raise NotFoundError(e.msg)
+    except DuplicateItemError as e:
+        raise BadRequestError(e.msg)
+    return transform_cart_to_response(updated_cart)
+
+
+@app.route('/resources/carts/{cart_id}/items', methods=['GET'], cors=True)
+def get_items_in_cart(cart_id):
+    """
+    Get a list of items in a cart
+
+    Returns a 404 error if the cart does not exist or does not belong to the user
+
+    :return: {
+        "CartId": str,
+        "items": [
+            {
+                "CartItemId": str,
+                "CartId": str,
+                "EntityId": str,
+                "BundleUuid": str,
+                "BundleVersion": str,
+                "EntityType": str
+            },
+            ...
+        ]
+    }
+    """
+    user_id = get_user_id()
+    try:
+        return {
+            'CartId': cart_id,
+            'items': CartItemManager().get_cart_items(user_id, cart_id)
+        }
+    except ResourceAccessError as e:
+        raise NotFoundError(e.msg)
+
+
+@app.route('/resources/carts/{cart_id}/items', methods=['POST'], cors=True)
+def add_item_to_cart(cart_id):
+    """
+    Add cart item to a cart and return the ID of the created item
+
+    Returns a 404 error if the cart does not exist or does not belong to the user
+    Returns a 400 error if an invalid item was given
+
+    parameters:
+        - name: EntityId
+          in: body
+          type: string
+        - name: BundleUuid
+          in: body
+          type: string
+        - name: BundleVersion
+          in: body
+          type: string
+        - name: EntityType
+          in: body
+          type: string
+
+    :return: {
+        "CartItemId": str
+    }
+    """
+    user_id = get_user_id()
+    try:
+        request_body = app.current_request.json_body
+        entity_id = request_body['EntityId']
+        bundle_id = request_body['BundleUuid']
+        bundle_version = request_body['BundleVersion']
+        entity_type = request_body['EntityType']
+    except KeyError:
+        raise BadRequestError('EntityId, BundleUuid, BundleVersion, and EntityType must be given')
+    try:
+        item_id = CartItemManager().add_cart_item(user_id, cart_id, entity_id, bundle_id, bundle_version, entity_type)
+    except ResourceAccessError as e:
+        raise NotFoundError(e.msg)
+    return {
+        'CartItemId': item_id
+    }
+
+
+@app.route('/resources/carts/{cart_id}/items/{item_id}', methods=['DELETE'], cors=True)
+def delete_cart_item(cart_id, item_id):
+    """
+    Delete an item from the cart
+
+    Returns a 404 error if the cart does not exist or does not belong to the user, or if the item does not exist
+
+    :return: If an item was deleted, return:
+        ```
+        {
+            "deleted": true
+        }
+        ```
+
+    """
+    user_id = get_user_id()
+    try:
+        deleted_item = CartItemManager().delete_cart_item(user_id, cart_id, item_id)
+    except ResourceAccessError as e:
+        raise NotFoundError(e.msg)
+    if deleted_item is None:
+        raise NotFoundError('Item does not exist')
+    return {'deleted': True}
+
+
+@app.route('/resources/carts/{cart_id}/items/batch', methods=['POST'], cors=True)
+def add_all_results_to_cart(cart_id):
+    """
+    Add all entities matching the given filters to a cart
+
+    parameters:
+        - name: filters
+          in: body
+          type: string
+          description: Filter for the entities to add to the cart
+        - name: entityType
+          in: body
+          type: string
+          description: Entity type to apply the filters on
+
+    :return: number of items that will be written and a URL to check the status of the write
+        e.g.: {
+            "count": 1000,
+            "statusUrl": "https://status.url/resources/carts/status/{token}"
+        }
+    """
+    user_id = get_user_id()
+    request_body = app.current_request.json_body
+    try:
+        entity_type = request_body['entityType']
+        filters = request_body['filters']
+    except KeyError:
+        raise BadRequestError('entityType and filters must be given')
+
+    if entity_type not in {'files', 'specimens', 'projects'}:
+        raise BadRequestError('entityType must be one of files, specimens, or projects')
+
+    try:
+        filters = json.loads(filters)
+    except json.JSONDecodeError:
+        raise BadRequestError('Invalid filters given')
+    hits, search_after = EsTd().transform_cart_item_request(entity_type, filters=filters, size=1)
+    item_count = hits.total
+
+    write_params = {
+        'filters': filters,
+        'entity_type': entity_type,
+        'cart_id': cart_id,
+        'item_count': item_count,
+        'batch_size': 10000
+    }
+    token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, write_params)
+    status_url = self_url(f'/resources/carts/status/{token}')
+
+    return {'count': item_count, 'statusUrl': status_url}
+
+
+@app.lambda_function(name=config.cart_item_write_lambda_basename)
+def cart_item_write_batch(event, context):
+    """Write a single batch to Dynamo and return pagination information for next batch to write"""
+    entity_type = event['entity_type']
+    filters = event['filters']
+    cart_id = event['cart_id']
+    batch_size = event['batch_size']
+
+    if 'write_result' in event:
+        search_after = event['write_result']['search_after']
+    else:
+        search_after = None
+
+    num_written, next_search_after = CartItemManager().write_cart_item_batch(entity_type, filters, cart_id,
+                                                                             batch_size, search_after)
+    return {
+        'search_after': next_search_after,
+        'count': num_written
+    }
+
+
+@app.route('/resources/carts/status/{token}', methods=['GET'], cors=True)
+def get_cart_item_write_progress(token):
+    """
+    Get the status of a batch cart item write job
+
+    Returns a 400 error if the token cannot be decoded or the token points to a non-existent execution
+
+    parameters:
+        - name: token
+          in: path
+          type: string
+          description: An opaque string generated by the server containing information about the write job to check
+
+    :return: The status of the job
+
+        If the job is still running a URL to recheck the status is given:
+            e.g.:
+            ```
+            {
+                "done": false,
+                "statusUrl": "https://status.url/resources/carts/status/{token}"
+            }
+            ```
+
+        If the job is finished, a boolean indicating if the write was successful is returned:
+            e.g.:
+            ```
+            {
+                "done": true,
+                "success": true
+            }
+            ```
+    """
+    try:
+        status = CartItemManager().get_batch_cart_item_write_status(token)
+    except (KeyError, UnicodeDecodeError, binascii.Error, json.decoder.JSONDecodeError):
+        raise BadRequestError('Invalid token given')
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
+            raise BadRequestError('Invalid token given')
+        else:
+            raise
+    response = {
+        'done': status != 'RUNNING',
+    }
+    if not response['done']:
+        response['statusUrl'] = self_url()
+    else:
+        response['success'] = status == 'SUCCEEDED'
+    return response
