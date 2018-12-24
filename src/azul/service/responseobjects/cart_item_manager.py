@@ -47,12 +47,11 @@ class CartItemManager:
             raise DuplicateItemError(f'Cart `{cart_name}` already exists')
 
         if default:
-            if self.dynamo_accessor.count(table_name=config.dynamo_cart_table_name,
-                                          key_conditions={'UserId': user_id},
-                                          filters={'DefaultCart': 1},
-                                          index_name='UserIndex') > 0:
+            default_cart_count = self.dynamo_accessor.count(table_name=config.dynamo_cart_table_name,
+                                                            key_conditions={'UserId': user_id, 'DefaultCart': 1},
+                                                            index_name='UserDefaultCartIndex')
+            if default_cart_count > 0:
                 raise DuplicateItemError('Default cart already exists')
-
         cart_id = str(uuid.uuid4())
         self.dynamo_accessor.insert_item(config.dynamo_cart_table_name,
                                          item={'CartId': cart_id, 'DefaultCart': int(default), **query_dict})
