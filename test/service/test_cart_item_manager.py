@@ -1,5 +1,6 @@
 import logging
 from unittest import mock
+from unittest.mock import patch
 
 from azul import config
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
@@ -60,6 +61,10 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
                 {
                     'AttributeName': 'CartName',
                     'AttributeType': 'S'
+                },
+                {
+                    'AttributeName': 'DefaultCart',
+                    'AttributeType': 'N'
                 }
             ],
             ProvisionedThroughput={
@@ -90,6 +95,26 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
                         },
                         {
                             'AttributeName': 'CartName',
+                            'KeyType': 'RANGE'
+                        }
+                    ],
+                    'Projection': {
+                        'ProjectionType': 'ALL'
+                    },
+                    'ProvisionedThroughput': {
+                        'ReadCapacityUnits': 1,
+                        'WriteCapacityUnits': 1
+                    }
+                },
+                {
+                    'IndexName': 'UserDefaultCartIndex',
+                    'KeySchema': [
+                        {
+                            'AttributeName': 'UserId',
+                            'KeyType': 'HASH'
+                        },
+                        {
+                            'AttributeName': 'DefaultCart',
                             'KeyType': 'RANGE'
                         }
                     ],
@@ -144,18 +169,22 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         self.assertEqual(cart['CartName'], cart_name)
         self.assertEqual(cart['DefaultCart'], False)
 
+
     def test_cart_creation_default(self):
         """
         Creating a default cart should create a cart with the ID 'default' and DefaultCart flag set to True
         """
+        mock_cart_id = 'test_default_cart'
         user_id = '123'
         cart_name = 'cart name'
-        cart_id = self.cart_item_manager.create_cart(user_id, cart_name, True)
+        with patch('uuid.uuid4') as uuid4_mock:
+            uuid4_mock.return_value = mock_cart_id
+            cart_id = self.cart_item_manager.create_cart(user_id, cart_name, True)
         cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name, {'UserId': user_id, 'CartId': cart_id})
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
         self.assertEqual(cart['DefaultCart'], True)
-        self.assertEqual(cart['CartId'], 'default')
+        self.assertEqual(cart['CartId'], mock_cart_id)
 
     def test_cart_creation_duplicate_name(self):
         """
