@@ -911,7 +911,8 @@ def transform_cart_to_response(cart):
     """
     return {
         'CartId': cart['CartId'],
-        'CartName': cart['CartName']
+        'CartName': cart['CartName'],
+        'DefaultCart': bool(cart['DefaultCart'])
     }
 
 
@@ -931,7 +932,8 @@ def create_cart():
     :return: Name and ID of the created cart
         {
             "CartName": str,
-            "CartId": str
+            "CartId": str,
+            "DefaultCart": str
         }
     """
     user_id = get_user_id()
@@ -945,7 +947,8 @@ def create_cart():
         raise BadRequestError(e.msg)
     return {
         'CartId': cart_id,
-        'CartName': cart_name
+        'CartName': cart_name,
+        "DefaultCart": False
     }
 
 
@@ -953,13 +956,18 @@ def create_cart():
 @app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True)
 def get_cart(cart_id):
     """
-    Get the cart of the given ID belonging to the user
+    Get the cart of the given ID belonging to the user.
 
-    Returns a 404 error if the cart does not exist or does not belong to the user
+    The default cart can be accessible by using the actual cart UUID or
+    setting the requesting cart ID to "default". If the default cart does
+    not exist, the endpoint will create one automatically.
+
+    This endpoint returns a 404 error if the cart does not exist or does not belong to the user.
 
     :return: {
         "CartName": str,
-        "CartId": str
+        "CartId": str,
+        "DefaultCart": str
     }
     """
     user_id = get_user_id()
@@ -979,7 +987,8 @@ def get_all_carts():
         "carts": [
             {
                 "CartName": str,
-                "CartId": str
+                "CartId": str,
+                "DefaultCart": str
             },
             ...
         ]
@@ -1000,7 +1009,8 @@ def delete_cart(cart_id):
     :return: The deleted cart
         {
             "CartName": str,
-            "CartId": str
+            "CartId": str,
+            "DefaultCart": str
         }
     """
     user_id = get_user_id()
@@ -1026,7 +1036,8 @@ def update_cart(cart_id):
     :return: The updated cart
         {
             "CartName": str,
-            "CartId": str
+            "CartId": str,
+            "DefaultCart": str
         }
     """
     user_id = get_user_id()
