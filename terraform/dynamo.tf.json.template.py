@@ -23,6 +23,10 @@ emit(
                             {
                                 "name": "CartName",
                                 "type": "S"
+                            },
+                            {
+                                "name": "DefaultCart",
+                                "type": "N"  # Due to Terraform limitation, 0 or 1 will be used instead of boolean.
                             }
                         ],
                         "global_secondary_index": [
@@ -35,6 +39,12 @@ emit(
                                 "name": "UserCartNameIndex",
                                 "hash_key": "UserId",
                                 "range_key": "CartName",
+                                "projection_type": "ALL"
+                            },
+                            {
+                                "name": "UserDefaultCartIndex",
+                                "hash_key": "UserId",
+                                "range_key": "DefaultCart",
                                 "projection_type": "ALL"
                             }
                         ]

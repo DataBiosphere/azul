@@ -963,7 +963,8 @@ def get_cart(cart_id):
     }
     """
     user_id = get_user_id()
-    cart = CartItemManager().get_cart(user_id, cart_id)
+    manager = CartItemManager()
+    cart = manager.get_default_cart(user_id) if cart_id == 'default' else manager.get_cart(user_id, cart_id)
     if cart is None:
         raise NotFoundError('Cart does not exist')
     return transform_cart_to_response(cart)
