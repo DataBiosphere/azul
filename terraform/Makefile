@@ -27,4 +27,4 @@ destroy_cloudwatch_alarms: validate
 clean:
 	-rm *.tf.json
 
-.PHONY: all init validate plan apply clean config
+.PHONY: all init validate plan apply clean config destroy_cloudwatch_alarms
