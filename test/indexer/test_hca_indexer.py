@@ -9,7 +9,6 @@ from elasticsearch import Elasticsearch
 from more_itertools import one
 
 from azul import config
-from azul.json_freeze import freeze, sort_frozen
 from azul.transformer import Aggregate, Contribution
 from indexer import IndexerTestCase
 
@@ -44,7 +43,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(self.old_bundle)
         expected_hits = self._load_canned_result(self.old_bundle)
         hits = self._get_es_results()
-        self.assertEqual(sort_frozen(freeze(expected_hits)), sort_frozen(freeze(hits)))
+        self.assertElasticsearchResultsEqual(expected_hits, hits)
 
     def test_deletion(self):
         """
