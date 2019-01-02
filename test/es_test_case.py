@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from azul.es import ESClientFactory
 from docker_container_test_case import DockerContainerTestCase
+from azul.json_freeze import freeze, sort_frozen
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,15 @@ class ElasticsearchTestCase(DockerContainerTestCase):
                 time.sleep(1)
         logger.info(f'Took {time.time() - start_time:.3f}s to have ES reachable')
         logger.info('Elasticsearch appears to be up.')
+
+    def assertElasticsearchResultsEqual(self, first, second):
+        """
+        The ordering of list items in our Elasticsearch responses typically doesn't matter.
+        The comparison done by this method is insensitive to ordering differences in lists.
+
+        For details see the doc string for sort_frozen() and freeze()
+        """
+        self.assertEqual(sort_frozen(freeze(first)), sort_frozen(freeze(second)))
 
     @classmethod
     def tearDownClass(cls):
