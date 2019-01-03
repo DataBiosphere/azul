@@ -8,13 +8,14 @@ class DynamoTestCase(DockerContainerTestCase):
 
     dynamo_accessor = None
 
-    dynamo_url = None
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        container_host = cls.create_container('amazon/dynamodb-local', '8000/tcp')
-        cls.dynamo_url = f'http://{container_host}'
-
-        with mock_sts():
-            cls.dynamo_accessor = DynamoDataAccessor(cls.dynamo_url, 'us-east-1')
+        host, port = cls._create_container('amazon/dynamodb-local', container_port=8000)
+        try:
+            endpoint = f'http://{host}:{port}'
+            with mock_sts():
+                cls.dynamo_accessor = DynamoDataAccessor(endpoint, 'us-east-1')
+        except:  # no coverage
+            cls._kill_containers()
+            raise
