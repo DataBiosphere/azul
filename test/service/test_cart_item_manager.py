@@ -1,3 +1,4 @@
+import logging
 from unittest import mock
 
 from azul import config
@@ -8,8 +9,11 @@ from lambdas.service.app import add_all_results_to_cart, cart_item_write_batch
 from service import WebServiceTestCase
 
 
-class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
+
+class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
     number_of_documents = 1500
 
     @classmethod

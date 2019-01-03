@@ -10,22 +10,29 @@ logger = logging.getLogger(__name__)
 
 
 class ElasticsearchTestCase(DockerContainerTestCase):
-
+    """
+    A test case that uses an Elasticsearch instance running in a container. The same Elasticsearch instance will be
+    shared by all tests in the class.
+    """
     es_client = None
-
     _old_es_endpoint = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        es_host = cls.create_container('docker.elastic.co/elasticsearch/elasticsearch:5.5.3',
-                                       '9200/tcp',
-                                       environment=["xpack.security.enabled=false", "discovery.type=single-node"])
-        cls._old_es_endpoint = os.environ.get('AZUL_ES_ENDPOINT')
-        os.environ['AZUL_ES_ENDPOINT'] = es_host
-
-        cls.es_client = ESClientFactory.get()
-        cls._wait_for_es()
+        host, port = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:5.5.3',
+                                           container_port=9200,
+                                           environment=['xpack.security.enabled=false',
+                                                        'discovery.type=single-node',
+                                                        'ES_JAVA_OPTS=-Xms512m -Xmx512m'])
+        try:
+            cls._old_es_endpoint = os.environ.get('AZUL_ES_ENDPOINT')
+            os.environ['AZUL_ES_ENDPOINT'] = f'{host}:{port}'
+            cls.es_client = ESClientFactory.get()
+            cls._wait_for_es()
+        except:  # no coverage
+            cls._kill_containers()
+            raise
 
     @classmethod
     def _wait_for_es(cls):
