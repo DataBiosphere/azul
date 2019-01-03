@@ -1,6 +1,12 @@
+import logging
+
 from botocore.exceptions import ClientError
 
 from dynamo_test_case import DynamoTestCase
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class TestDynamoAccessor(DynamoTestCase):
@@ -102,7 +108,8 @@ class TestDynamoAccessor(DynamoTestCase):
         """
         self.dynamo_accessor.insert_item(
             'Carts',
-            item={'UserId': '1', 'CartName': 'test1', 'Number': 10, 'SS': {'a', 'b', 'c'}, 'Bool': False, 'Bytes': b'abc'}
+            item={'UserId': '1', 'CartName': 'test1', 'Number': 10, 'SS': {'a', 'b', 'c'}, 'Bool': False,
+                  'Bytes': b'abc'}
         )
         result = self.dynamo_accessor.get_item('Carts', keys={'UserId': '1', 'CartName': 'test1'})
         self.assertEqual(10, result['Number'])
