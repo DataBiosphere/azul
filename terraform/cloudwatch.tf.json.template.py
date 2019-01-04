@@ -21,7 +21,10 @@ emit({
                         "ClientId": aws.account,
                         "DomainName": config.es_domain
                     },
-                    "insufficient_data_actions": []
+                    "alarm_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ]
                 }
             }
         },
@@ -42,7 +45,10 @@ emit({
                         "ClientId": aws.account,
                         "DomainName": config.es_domain
                     },
-                    "insufficient_data_actions": []
+                    "alarm_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ]
                 }
             }
         },
@@ -63,7 +69,10 @@ emit({
                         "ClientId": aws.account,
                         "DomainName": config.es_domain
                     },
-                    "insufficient_data_actions": []
+                    "alarm_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ]
                 }
             }
         }
