@@ -59,6 +59,11 @@
     "bundles": {
       "bundle_uuid": "uuid",
       "bundle_version": "version"
+    },
+    "terra-attributes": {
+      "participant": "participant_id",
+      "sample": "sample_id",
+      "cell_suspension": "cell_suspension"
     }
   },
   "cart-item": {
