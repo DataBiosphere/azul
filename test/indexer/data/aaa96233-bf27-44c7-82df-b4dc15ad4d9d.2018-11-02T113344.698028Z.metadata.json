@@ -194,7 +194,23 @@
         "corresponding_contributor": false
       }
     ],
-    "publications": [],
+    "publications": [
+      {
+        "authors": [
+          "Enge M",
+          "Arda HE",
+          "Mignardi M",
+          "Beausang J",
+          "Bottino R",
+          "Kim SK",
+          "Quake SR"
+        ],
+        "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+        "doi": "10.1016/j.cell.2017.09.004",
+        "pmid": 28965763,
+        "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+      }
+    ],
     "provenance": {
       "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
       "submission_date": "2018-11-02T10:02:12.133Z",

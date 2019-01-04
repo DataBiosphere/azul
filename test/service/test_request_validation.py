@@ -205,7 +205,8 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(200, response.status_code, 'Unable to download manifest')
         tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
-        self.assertEqual(len(list(tsv_file)), 1000, 'Wrong number of files were found.')
+        # 2 because self.bundle has 2 files
+        self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
         manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
         expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['contents.files'].keys())
         self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')

@@ -19,10 +19,6 @@ from azul.service.responseobjects.utilities import json_pp
 logger = logging.getLogger(__name__)
 module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
 
-# The minimum total number of hits for which search_after pagination
-# will be used instead of standard from/to pagination.
-SEARCH_AFTER_THRESHOLD = 10000
-
 
 class BadArgumentException(Exception):
     def __init__(self, message):

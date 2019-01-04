@@ -22,13 +22,13 @@ def setUpModule():
 class TestHCAIndexer(IndexerTestCase):
 
     def _get_es_results(self):
-        results = self.es_client.search(index=','.join(self.hca_indexer.index_names()),
+        results = self.es_client.search(index=','.join(self.get_hca_indexer().index_names()),
                                         doc_type="doc",
                                         size=100)
         return results['hits']['hits']
 
     def tearDown(self):
-        for index_name in self.hca_indexer.index_names():
+        for index_name in self.get_hca_indexer().index_names():
             self.es_client.indices.delete(index=index_name, ignore=[400, 404])
         super().tearDown()
 
