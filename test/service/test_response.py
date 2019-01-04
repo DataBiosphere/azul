@@ -147,6 +147,13 @@ class TestResponse(WebServiceTestCase):
                             "bundleVersion": "2003-08-12T00:52:21"
                         }
                     ],
+                    "cellSuspensions": [
+                        {
+                            "organ": ["purple"],
+                            "organPart": ["black"],
+                            "totalCells": 5306
+                        }
+                    ],
                     "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
                     "files": [
                         {
@@ -158,17 +165,17 @@ class TestResponse(WebServiceTestCase):
                             "version": "2001-03-16T05:26:40"
                         }
                     ],
-                    "protocols": [
-                        {
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"]
-                        }
-                    ],
                     "projects": [
                         {
-                            "projectTitle": ["purple"],
                             "laboratory": ["silver"],
-                            "projectShortname": ["blue"]
+                            "projectShortname": ["blue"],
+                            "projectTitle": ["purple"]
+                        }
+                    ],
+                    "protocols": [
+                        {
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                            "libraryConstructionApproach": ["Smart-seq2"]
                         }
                     ],
                     "specimens": [
@@ -181,15 +188,8 @@ class TestResponse(WebServiceTestCase):
                             "organPart": ["black"],
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
-                            "source": ["purple"],
                             "preservationMethod": ["aqua"],
-                        }
-                    ],
-                    "cellSuspensions": [
-                        {
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "totalCells": 5306
+                            "source": ["purple"]
                         }
                     ]
                 }
@@ -212,6 +212,13 @@ class TestResponse(WebServiceTestCase):
         expected_response = {
             "hits": [
                 {
+                    "cellSuspensions": [
+                        {
+                            "organ": ["purple"],
+                            "organPart": ["black"],
+                            "totalCells": 5306
+                        }
+                    ],
                     "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
                     "fileTypeSummaries": [
                         {
@@ -220,17 +227,17 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 6667
                         }
                     ],
-                    "protocols": [
-                        {
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"]
-                        }
-                    ],
                     "projects": [
                         {
-                            "projectTitle": ["purple"],
                             "laboratory": ["silver"],
-                            "projectShortname": ["blue"]
+                            "projectShortname": ["blue"],
+                            "projectTitle": ["purple"]
+                        }
+                    ],
+                    "protocols": [
+                        {
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                            "libraryConstructionApproach": ["Smart-seq2"]
                         }
                     ],
                     "specimens": [
@@ -243,15 +250,8 @@ class TestResponse(WebServiceTestCase):
                             "organPart": "black",
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
-                            "source": ["purple"],
-                            "preservationMethod": "aqua"
-                        }
-                    ],
-                    "cellSuspensions": [
-                        {
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "totalCells": 5306
+                            "preservationMethod": "aqua",
+                            "source": ["purple"]
                         }
                     ]
                 }
@@ -297,6 +297,13 @@ class TestResponse(WebServiceTestCase):
                                 "bundleVersion": "2003-08-12T00:52:21"
                             }
                         ],
+                        "cellSuspensions": [
+                            {
+                                "organ": ["purple"],
+                                "organPart": ["black"],
+                                "totalCells": 5306
+                            }
+                        ],
                         "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
                         "files": [
                             {
@@ -308,17 +315,17 @@ class TestResponse(WebServiceTestCase):
                                 "version": "2001-03-16T05:26:40"
                             }
                         ],
-                        "protocols": [
-                            {
-                                "libraryConstructionApproach": ["Smart-seq2"],
-                                "instrumentManufacturerModel": ["Illumina NextSeq 500"]
-                            }
-                        ],
                         "projects": [
                             {
-                                "projectTitle": ["purple"],
                                 "laboratory": ["silver"],
-                                "projectShortname": ["blue"]
+                                "projectShortname": ["blue"],
+                                "projectTitle": ["purple"]
+                            }
+                        ],
+                        "protocols": [
+                            {
+                                "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                                "libraryConstructionApproach": ["Smart-seq2"]
                             }
                         ],
                         "specimens": [
@@ -331,15 +338,8 @@ class TestResponse(WebServiceTestCase):
                                 "organPart": ["black"],
                                 "organismAge": ["purple"],
                                 "organismAgeUnit": ["navy"],
-                                "source": ["purple"],
-                                "preservationMethod": ["aqua"]
-                            }
-                        ],
-                        "cellSuspensions": [
-                            {
-                                "organ": ["purple"],
-                                "organPart": ["black"],
-                                "totalCells": 5306
+                                "preservationMethod": ["aqua"],
+                                "source": ["purple"]
                             }
                         ]
                     }
@@ -356,16 +356,22 @@ class TestResponse(WebServiceTestCase):
                     "sort": "entryId",
                     "total": 2
                 },
-                "termFacets": {
-
-                }
-            }, {
+                "termFacets": {}
+            },
+            {
                 "hits": [
                     {
                         "bundles": [
                             {
                                 "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
                                 "bundleVersion": "2003-08-12T00:52:21"
+                            }
+                        ],
+                        "cellSuspensions": [
+                            {
+                                "organ": ["purple"],
+                                "organPart": ["black"],
+                                "totalCells": 5306
                             }
                         ],
                         "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
@@ -379,17 +385,17 @@ class TestResponse(WebServiceTestCase):
                                 "version": "2001-03-16T05:26:40"
                             }
                         ],
-                        "protocols": [
-                            {
-                                "libraryConstructionApproach": ["Smart-seq2"],
-                                "instrumentManufacturerModel": ["Illumina NextSeq 500"]
-                            }
-                        ],
                         "projects": [
                             {
-                                "projectTitle": ["purple"],
                                 "laboratory": ["silver"],
-                                "projectShortname": ["blue"]
+                                "projectShortname": ["blue"],
+                                "projectTitle": ["purple"]
+                            }
+                        ],
+                        "protocols": [
+                            {
+                                "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                                "libraryConstructionApproach": ["Smart-seq2"]
                             }
                         ],
                         "specimens": [
@@ -402,15 +408,8 @@ class TestResponse(WebServiceTestCase):
                                 "organPart": ["black"],
                                 "organismAge": ["purple"],
                                 "organismAgeUnit": ["navy"],
-                                "source": ["purple"],
-                                "preservationMethod": ["aqua"]
-                            }
-                        ],
-                        "cellSuspensions": [
-                            {
-                                "organ": ["purple"],
-                                "organPart": ["black"],
-                                "totalCells": 5306
+                                "preservationMethod": ["aqua"],
+                                "source": ["purple"]
                             }
                         ]
                     }
@@ -427,11 +426,8 @@ class TestResponse(WebServiceTestCase):
                     "sort": "entryId",
                     "total": 2
                 },
-                "termFacets": {
-
-                }
+                "termFacets": {}
             }
-
         ]
         for n in 0, 1:
             with self.subTest(n=n):
@@ -680,6 +676,13 @@ class TestResponse(WebServiceTestCase):
         expected_output = {
             "hits": [
                 {
+                    "cellSuspensions": [
+                        {
+                            "organ": ["purple"],
+                            "organPart": ["black"],
+                            "totalCells": 5306
+                        }
+                    ],
                     "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
                     "fileTypeSummaries": [
                         {
@@ -688,18 +691,8 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 6667
                         }
                     ],
-                    "protocols": [
-                        {
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"]
-                        }
-                    ],
                     "projects": [
                         {
-                            "projectTitle": "purple",
-                            "projectDescription": "navy",
-                            "laboratory": ["silver"],
-                            "projectShortname": "blue",
                             "contributors": [
                                 {
                                     "contactName": "yellow",
@@ -714,6 +707,10 @@ class TestResponse(WebServiceTestCase):
                                     "laboratory": "silver"
                                 }
                             ],
+                            "laboratory": ["silver"],
+                            "projectDescription": "navy",
+                            "projectShortname": "blue",
+                            "projectTitle": "purple",
                             "publications": [
                                 {
                                     "authors": [
@@ -721,12 +718,18 @@ class TestResponse(WebServiceTestCase):
                                         "maroon",
                                         "gray"
                                     ],
-                                    "publicationTitle": "gray",
                                     "doi": "green",
                                     "pmid": 5331933,
+                                    "publicationTitle": "gray",
                                     "publicationUrl": "black"
                                 }
                             ]
+                        }
+                    ],
+                    "protocols": [
+                        {
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                            "libraryConstructionApproach": ["Smart-seq2"]
                         }
                     ],
                     "specimens": [
@@ -739,15 +742,8 @@ class TestResponse(WebServiceTestCase):
                             "organPart": ["black"],
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
-                            "source": ["purple"],
-                            "preservationMethod": ["aqua"]
-                        }
-                    ],
-                    "cellSuspensions": [
-                        {
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "totalCells": 5306
+                            "preservationMethod": ["aqua"],
+                            "source": ["purple"]
                         }
                     ]
                 }
@@ -771,6 +767,13 @@ class TestResponse(WebServiceTestCase):
         expected_output = {
             "hits": [
                 {
+                    "cellSuspensions": [
+                        {
+                            "organ": ["purple"],
+                            "organPart": ["black"],
+                            "totalCells": 5306
+                        }
+                    ],
                     "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
                     "fileTypeSummaries": [
                         {
@@ -779,18 +782,8 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 6667
                         }
                     ],
-                    "protocols": [
-                        {
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"]
-                        }
-                    ],
                     "projects": [
                         {
-                            "projectTitle": "purple",
-                            "projectDescription": "navy",
-                            "laboratory": ["silver"],
-                            "projectShortname": "blue",
                             "contributors": [
                                 {
                                     "contactName": "yellow",
@@ -805,6 +798,10 @@ class TestResponse(WebServiceTestCase):
                                     "laboratory": "silver"
                                 }
                             ],
+                            "laboratory": ["silver"],
+                            "projectDescription": "navy",
+                            "projectShortname": "blue",
+                            "projectTitle": "purple",
                             "publications": [
                                 {
                                     "authors": [
@@ -812,12 +809,18 @@ class TestResponse(WebServiceTestCase):
                                         "maroon",
                                         "gray"
                                     ],
-                                    "publicationTitle": "gray",
                                     "doi": "green",
                                     "pmid": 5331933,
+                                    "publicationTitle": "gray",
                                     "publicationUrl": "black"
                                 }
                             ]
+                        }
+                    ],
+                    "protocols": [
+                        {
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                            "libraryConstructionApproach": ["Smart-seq2"]
                         }
                     ],
                     "specimens": [
@@ -830,15 +833,8 @@ class TestResponse(WebServiceTestCase):
                             "organPart": ["black"],
                             "organismAge": ["purple"],
                             "organismAgeUnit": ["navy"],
-                            "source": ["purple"],
-                            "preservationMethod": ["aqua"]
-                        }
-                    ],
-                    "cellSuspensions": [
-                        {
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "totalCells": 5306
+                            "preservationMethod": ["aqua"],
+                            "source": ["purple"]
                         }
                     ]
                 }
@@ -847,29 +843,15 @@ class TestResponse(WebServiceTestCase):
                 "count": 2,
                 "order": "desc",
                 "pages": 1,
-                "size": 5,
-                "sort": "entryId",
-                "total": 2,
                 "search_after": None,
                 "search_after_uid": None,
                 "search_before": None,
-                "search_before_uid": None
+                "search_before_uid": None,
+                "size": 5,
+                "sort": "entryId",
+                "total": 2
             },
             "termFacets": {
-                "organ": {
-                    "terms": [
-                        {
-                            "count": 11,
-                            "term": "silver"
-                        },
-                        {
-                            "count": 10,
-                            "term": "teal"
-                        }
-                    ],
-                    "total": 21,
-                    "type": "terms"
-                },
                 "disease": {
                     "terms": [
                         {
@@ -879,6 +861,20 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 12,
                             "term": None
+                        }
+                    ],
+                    "total": 21,
+                    "type": "terms"
+                },
+                "organ": {
+                    "terms": [
+                        {
+                            "count": 11,
+                            "term": "silver"
+                        },
+                        {
+                            "count": 10,
+                            "term": "teal"
                         }
                     ],
                     "total": 21,
