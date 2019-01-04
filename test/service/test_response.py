@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import json
-import os
 import unittest
 import urllib.parse
 
@@ -13,118 +12,23 @@ from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
                                                           KeywordSearchResponse,
                                                           ProjectSummaryResponse)
 from service import WebServiceTestCase
-from service.data_generator.fake_data_utils import ElasticsearchFakeDataLoader
 
 
 class TestResponse(WebServiceTestCase):
     maxDiff = None
 
-    def input(self, entity_type):
-        def specimen_value(v):
-            return v if entity_type == 'specimens' else [v]
-
-        def project_value(v):
-            return v if entity_type == 'projects' else [v]
-
-        template = {
-            "contents": {
-                "files": [
-                    {
-                        "_type": "fuchsia",
-                        "content-type": "green",
-                        "file_format": "csv",
-                        "document_id": "a350b29c-2609-7b92-0c49-23971a4f9371",
-                        "indexed": True,
-                        "lane_index": 5108,
-                        "name": "billion.key",
-                        "read_index": "blue",
-                        "sha256": "fc5923256fb9dd349698d29228246a5c94653e80",
-                        "size": 6667,
-                        "uuid": "e9772583-4240-4757-6357-32bef0e51150",
-                        "version": "2001-03-16T05:26:40"
-                    } if entity_type == 'files' else {
-                        "file_format": ["csv"],
-                        "size": 6667,
-                        "count": 1,
-                    }
-                ],
-                "protocols": [
-                    {
-                        "library_construction_approach": ["Smart-seq2"],
-                        "instrument_manufacturer_model": ["Illumina NextSeq 500"]
-                    }
-                ],
-                "projects": [
-                    {
-                        "_type": project_value("maroon"),
-                        "document_id": project_value("37a92077-530f-fdbb-df14-2926665cc697"),
-                        "project_title": project_value("purple"),
-                        "project_description": project_value("navy"),
-                        "laboratory": ["silver"],
-                        "project_shortname": project_value("blue"),
-                        "contributors": [
-                            {
-                                "contact_name": "yellow",
-                                "corresponding_contributor": False,
-                                "email": "gray"
-                            },
-                            {
-                                "contact_name": "teal",
-                                "corresponding_contributor": True,
-                                "email": "purple",
-                                "institution": "yellow",
-                                "laboratory": "silver"
-                            }
-                        ],
-                        "publications": [
-                            {
-                                "authors": [
-                                    "green",
-                                    "maroon",
-                                    "gray"
-                                ],
-                                "publication_title": "gray",
-                                "doi": "green",
-                                "pmid": 5331933,
-                                "publication_url": "black"
-                            }
-                        ]
-                    }
-                ],
-                "specimens": [
-                    {
-                        "_type": specimen_value("teal"),
-                        "organism_age": ["purple"],
-                        "organism_age_unit": ["navy"],
-                        "biomaterial_id": specimen_value("6e7d782e-44a2-0d3f-2bf1-337468f62467"),
-                        "disease": ["yellow"],
-                        "id": specimen_value("1cae440e-3be6-ce39-49e9-74721f0066e0"),
-                        "organ": specimen_value("purple"),
-                        "organ_part": specimen_value("black"),
-                        "parent": specimen_value("aqua"),
-                        "biological_sex": ["silver"],
-                        "_source": ["purple"],
-                        "genus_species": ["teal"],
-                        "preservation_method": specimen_value("aqua")
-                    }
-                ],
-                "cell_suspensions": [
-                    {
-                        "organ": ["purple"],
-                        "organ_part": ["black"],
-                        "total_estimated_cells": 5306
-                    }
-                ]
-            },
-            "bundles": [
-                {
-                    "uuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
-                    "version": "2003-08-12T00:52:21"
+    def get_hits(self, entity_type: str, entity_id: str):
+        """Fetches hits from es instance searching for a particular entity ID"""
+        body = {
+            "query": {
+                "term": {
+                    "entity_id.keyword": entity_id
                 }
-            ],
-            "entity_id": "08d3440a-7481-41c5-5140-e15ed269ea63"
+            }
         }
-        return [ElasticsearchFakeDataLoader.fix_canned_document(entity_type, template)]
+        # Tests are assumed to only ever run with the azul dev index
+        results = self.es_client.search(index=config.es_index_name(entity_type, aggregate=True), body=body)
+        return [results['hits']['hits'][0]['_source']]
 
     def test_key_search_files_response(self):
         """
@@ -134,7 +38,8 @@ class TestResponse(WebServiceTestCase):
         """
         # Still need a way to test the response.
         keyword_response = KeywordSearchResponse(
-            hits=self.input('files'),
+            # the entity_id is hardcoded, but corresponds to the bundle above
+            hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
             entity_type='files'
         ).return_response().to_json()
 
@@ -143,33 +48,33 @@ class TestResponse(WebServiceTestCase):
                 {
                     "bundles": [
                         {
-                            "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
-                            "bundleVersion": "2003-08-12T00:52:21"
+                            "bundleUuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                            "bundleVersion": "2018-11-02T113344.698028Z"
                         }
                     ],
                     "cellSuspensions": [
                         {
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "totalCells": 5306
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "totalCells": 1
                         }
                     ],
-                    "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                    "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                     "files": [
                         {
-                            "format": "csv",
-                            "name": "billion.key",
-                            "sha256": "fc5923256fb9dd349698d29228246a5c94653e80",
-                            "size": 6667,
-                            "uuid": "e9772583-4240-4757-6357-32bef0e51150",
-                            "version": "2001-03-16T05:26:40"
+                            "format": "fastq.gz",
+                            "name": "SRR3562915_1.fastq.gz",
+                            "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                            "size": 195142097,
+                            "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                            "version": "2018-11-02T113344.698028Z"
                         }
                     ],
                     "projects": [
                         {
-                            "laboratory": ["silver"],
-                            "projectShortname": ["blue"],
-                            "projectTitle": ["purple"]
+                            "laboratory": ["John Dear"],
+                            "projectShortname": ["Single of human pancreas"],
+                            "projectTitle": ["Single cell transcriptome patterns."]
                         }
                     ],
                     "protocols": [
@@ -180,32 +85,33 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": ["silver"],
-                            "disease": ["yellow"],
-                            "genusSpecies": ["teal"],
-                            "id": ["6e7d782e-44a2-0d3f-2bf1-337468f62467"],
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "organismAge": ["purple"],
-                            "organismAgeUnit": ["navy"],
-                            "preservationMethod": ["aqua"],
-                            "source": ["purple"]
+                            "biologicalSex": ["female"],
+                            "disease": ["normal"],
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
+                            "preservationMethod": [None],
+                            "source": [
+                                "donor_organism",
+                                "specimen_from_organism"
+                            ]
                         }
                     ]
                 }
             ]
         }
-
-        self.assertEqual(json.dumps(keyword_response, sort_keys=True, indent=4),
-                         json.dumps(expected_response, sort_keys=True, indent=4))
+        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
     def test_key_search_specimens_response(self):
         """
         KeywordSearchResponse for the specimens endpoint should return file type summaries instead of files
         """
-        # Still need a way to test the response.
         keyword_response = KeywordSearchResponse(
-            hits=self.input('specimens'),
+            # the entity_id is hardcoded, but corresponds to the bundle above
+            hits=self.get_hits('specimens', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
             entity_type='specimens'
         ).return_response().to_json()
 
@@ -214,24 +120,24 @@ class TestResponse(WebServiceTestCase):
                 {
                     "cellSuspensions": [
                         {
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "totalCells": 5306
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "totalCells": 1
                         }
                     ],
-                    "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                    "entryId": "a21dc760-a500-4236-bcff-da34a0e873d2",
                     "fileTypeSummaries": [
                         {
-                            "count": 1,
-                            "fileType": "csv",
-                            "totalSize": 6667
+                            "count": 2,
+                            "fileType": "fastq.gz",
+                            "totalSize": 385472253
                         }
                     ],
                     "projects": [
                         {
-                            "laboratory": ["silver"],
-                            "projectShortname": ["blue"],
-                            "projectTitle": ["purple"]
+                            "laboratory": ["John Dear"],
+                            "projectShortname": ["Single of human pancreas"],
+                            "projectTitle": ["Single cell transcriptome patterns."]
                         }
                     ],
                     "protocols": [
@@ -242,23 +148,25 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": ["silver"],
-                            "disease": ["yellow"],
-                            "genusSpecies": ["teal"],
-                            "id": "6e7d782e-44a2-0d3f-2bf1-337468f62467",
-                            "organ": "purple",
-                            "organPart": "black",
-                            "organismAge": ["purple"],
-                            "organismAgeUnit": ["navy"],
-                            "preservationMethod": "aqua",
-                            "source": ["purple"]
+                            "biologicalSex": ["female"],
+                            "disease": ["normal"],
+                            "genusSpecies": ["Australopithecus"],
+                            "id": "DID_scRSq06_pancreas",
+                            "organ": "pancreas",
+                            "organPart": "islet of Langerhans",
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
+                            "preservationMethod": None,
+                            "source": [
+                                "specimen_from_organism",
+                                "donor_organism"
+                            ]
                         }
                     ]
                 }
             ]
         }
-        self.assertEqual(json.dumps(keyword_response, sort_keys=True, indent=4),
-                         json.dumps(expected_response, sort_keys=True, indent=4))
+        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
     paginations = [
         {
@@ -268,7 +176,8 @@ class TestResponse(WebServiceTestCase):
             "size": 5,
             "sort": "entryId",
             "total": 2
-        }, {
+        },
+        {
             "count": 2,
             "order": "desc",
             "pages": 1,
@@ -293,33 +202,33 @@ class TestResponse(WebServiceTestCase):
                     {
                         "bundles": [
                             {
-                                "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
-                                "bundleVersion": "2003-08-12T00:52:21"
+                                "bundleUuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                                "bundleVersion": "2018-11-02T113344.698028Z"
                             }
                         ],
                         "cellSuspensions": [
                             {
-                                "organ": ["purple"],
-                                "organPart": ["black"],
-                                "totalCells": 5306
+                                "organ": ["pancreas"],
+                                "organPart": ["islet of Langerhans"],
+                                "totalCells": 1
                             }
                         ],
-                        "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                        "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "files": [
                             {
-                                "format": "csv",
-                                "name": "billion.key",
-                                "sha256": "fc5923256fb9dd349698d29228246a5c94653e80",
-                                "size": 6667,
-                                "uuid": "e9772583-4240-4757-6357-32bef0e51150",
-                                "version": "2001-03-16T05:26:40"
+                                "format": "fastq.gz",
+                                "name": "SRR3562915_1.fastq.gz",
+                                "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                                "size": 195142097,
+                                "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                                "version": "2018-11-02T113344.698028Z"
                             }
                         ],
                         "projects": [
                             {
-                                "laboratory": ["silver"],
-                                "projectShortname": ["blue"],
-                                "projectTitle": ["purple"]
+                                "laboratory": ["John Dear"],
+                                "projectShortname": ["Single of human pancreas"],
+                                "projectTitle": ["Single cell transcriptome patterns."]
                             }
                         ],
                         "protocols": [
@@ -330,16 +239,19 @@ class TestResponse(WebServiceTestCase):
                         ],
                         "specimens": [
                             {
-                                "biologicalSex": ["silver"],
-                                "disease": ["yellow"],
-                                "genusSpecies": ["teal"],
-                                "id": ["6e7d782e-44a2-0d3f-2bf1-337468f62467"],
-                                "organ": ["purple"],
-                                "organPart": ["black"],
-                                "organismAge": ["purple"],
-                                "organismAgeUnit": ["navy"],
-                                "preservationMethod": ["aqua"],
-                                "source": ["purple"]
+                                "biologicalSex": ["female"],
+                                "disease": ["normal"],
+                                "genusSpecies": ["Australopithecus"],
+                                "id": ["DID_scRSq06_pancreas"],
+                                "organ": ["pancreas"],
+                                "organPart": ["islet of Langerhans"],
+                                "organismAge": ["38"],
+                                "organismAgeUnit": ["year"],
+                                "preservationMethod": [None],
+                                "source": [
+                                    "specimen_from_organism",
+                                    "donor_organism"
+                                ]
                             }
                         ]
                     }
@@ -363,33 +275,33 @@ class TestResponse(WebServiceTestCase):
                     {
                         "bundles": [
                             {
-                                "bundleUuid": "cfc75555-f551-ba6c-2e62-0bf0ee01313c",
-                                "bundleVersion": "2003-08-12T00:52:21"
+                                "bundleUuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                                "bundleVersion": "2018-11-02T113344.698028Z"
                             }
                         ],
                         "cellSuspensions": [
                             {
-                                "organ": ["purple"],
-                                "organPart": ["black"],
-                                "totalCells": 5306
+                                "organ": ["pancreas"],
+                                "organPart": ["islet of Langerhans"],
+                                "totalCells": 1
                             }
                         ],
-                        "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                        "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "files": [
                             {
-                                "format": "csv",
-                                "name": "billion.key",
-                                "sha256": "fc5923256fb9dd349698d29228246a5c94653e80",
-                                "size": 6667,
-                                "uuid": "e9772583-4240-4757-6357-32bef0e51150",
-                                "version": "2001-03-16T05:26:40"
+                                "format": "fastq.gz",
+                                "name": "SRR3562915_1.fastq.gz",
+                                "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                                "size": 195142097,
+                                "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                                "version": "2018-11-02T113344.698028Z"
                             }
                         ],
                         "projects": [
                             {
-                                "laboratory": ["silver"],
-                                "projectShortname": ["blue"],
-                                "projectTitle": ["purple"]
+                                "laboratory": ["John Dear"],
+                                "projectShortname": ["Single of human pancreas"],
+                                "projectTitle": ["Single cell transcriptome patterns."]
                             }
                         ],
                         "protocols": [
@@ -400,16 +312,19 @@ class TestResponse(WebServiceTestCase):
                         ],
                         "specimens": [
                             {
-                                "biologicalSex": ["silver"],
-                                "disease": ["yellow"],
-                                "genusSpecies": ["teal"],
-                                "id": ["6e7d782e-44a2-0d3f-2bf1-337468f62467"],
-                                "organ": ["purple"],
-                                "organPart": ["black"],
-                                "organismAge": ["purple"],
-                                "organismAgeUnit": ["navy"],
-                                "preservationMethod": ["aqua"],
-                                "source": ["purple"]
+                                "biologicalSex": ["female"],
+                                "disease": ["normal"],
+                                "genusSpecies": ["Australopithecus"],
+                                "id": ["DID_scRSq06_pancreas"],
+                                "organ": ["pancreas"],
+                                "organPart": ["islet of Langerhans"],
+                                "organismAge": ["38"],
+                                "organismAgeUnit": ["year"],
+                                "preservationMethod": [None],
+                                "source": [
+                                    "specimen_from_organism",
+                                    "donor_organism"
+                                ]
                             }
                         ]
                     }
@@ -432,21 +347,19 @@ class TestResponse(WebServiceTestCase):
         for n in 0, 1:
             with self.subTest(n=n):
                 filesearch_response = FileSearchResponse(
-                    hits=self.input('files'),
+                    hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
                     pagination=self.paginations[n],
                     facets={},
                     entity_type="files"
                 ).return_response().to_json()
-
-                self.assertEqual(json.dumps(filesearch_response, sort_keys=True, indent=4),
-                                 json.dumps(responses[n], sort_keys=True, indent=4))
+                self.assertElasticsearchResultsEqual(filesearch_response, responses[n])
 
     def test_file_search_response_file_summaries(self):
         """
         Test non-'files' entity type passed to FileSearchResponse will give file summaries
         """
         filesearch_response = FileSearchResponse(
-            hits=self.input('specimens'),
+            hits=self.get_hits('specimens', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
             pagination=self.paginations[0],
             facets={},
             entity_type="specimens"
@@ -533,8 +446,7 @@ class TestResponse(WebServiceTestCase):
                 "type": "terms"
             }
         }
-        self.assertEqual(json.dumps(facets, sort_keys=True, indent=4),
-                         json.dumps(expected_output, sort_keys=True, indent=4))
+        self.assertElasticsearchResultsEqual(facets, expected_output)
 
     def test_summary_endpoint(self):
         url = self.base_url + "/repository/summary"
@@ -627,8 +539,7 @@ class TestResponse(WebServiceTestCase):
 
         self.assertEqual(total_cell_count,
                          sum([cell_count['value'] for cell_count in expected_output]))
-        self.assertEqual(json.dumps(organ_cell_count, sort_keys=True, indent=4),
-                         json.dumps(expected_output, sort_keys=True, indent=4))
+        self.assertElasticsearchResultsEqual(organ_cell_count, expected_output)
 
     project_buckets = {
         "buckets": [
@@ -669,59 +580,64 @@ class TestResponse(WebServiceTestCase):
         Response should include project detail fields that do not appear for other entity type responses
         """
         keyword_response = KeywordSearchResponse(
-            hits=self.input('projects'),
+            hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
             entity_type='projects'
         ).return_response().to_json()
 
-        expected_output = {
+        expected_response = {
             "hits": [
                 {
                     "cellSuspensions": [
                         {
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "totalCells": 5306
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "totalCells": 1
                         }
                     ],
-                    "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                    "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
                     "fileTypeSummaries": [
                         {
-                            "count": 1,
-                            "fileType": "csv",
-                            "totalSize": 6667
+                            "count": 2,
+                            "fileType": "fastq.gz",
+                            "totalSize": 385472253
                         }
                     ],
                     "projects": [
                         {
                             "contributors": [
                                 {
-                                    "contactName": "yellow",
-                                    "correspondingContributor": False,
-                                    "email": "gray"
+                                    "contactName": "Martin, Enge",
+                                    "correspondingContributor": None,
+                                    "email": "martin.enge@gmail.com",
+                                    "institution": "University",
+                                    "laboratory": None,
+                                    "projectRole": None
                                 },
                                 {
-                                    "contactName": "teal",
-                                    "correspondingContributor": True,
-                                    "email": "purple",
-                                    "institution": "yellow",
-                                    "laboratory": "silver"
+                                    "contactName": "Matthew,,Green",
+                                    "correspondingContributor": False,
+                                    "email": "hewgreen@ebi.ac.uk",
+                                    "institution": "Farmers Trucks",
+                                    "laboratory": "John Dear",
+                                    "projectRole": "Human Cell Atlas wrangler"
+                                },
+                                {
+                                    "contactName": "Laura,,Huerta",
+                                    "correspondingContributor": False,
+                                    "email": "lauhuema@ebi.ac.uk",
+                                    "institution": "Farmers Trucks",
+                                    "laboratory": "John Dear",
+                                    "projectRole": "external curator"
                                 }
                             ],
-                            "laboratory": ["silver"],
-                            "projectDescription": "navy",
-                            "projectShortname": "blue",
-                            "projectTitle": "purple",
+                            "laboratory": ["John Dear"],
+                            "projectDescription": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                            "projectShortname": "Single of human pancreas",
+                            "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
                                 {
-                                    "authors": [
-                                        "green",
-                                        "maroon",
-                                        "gray"
-                                    ],
-                                    "doi": "green",
-                                    "pmid": 5331933,
-                                    "publicationTitle": "gray",
-                                    "publicationUrl": "black"
+                                    "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                    "publicationUrl": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                                 }
                             ]
                         }
@@ -734,23 +650,25 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": ["silver"],
-                            "disease": ["yellow"],
-                            "genusSpecies": ["teal"],
-                            "id": ["6e7d782e-44a2-0d3f-2bf1-337468f62467"],
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "organismAge": ["purple"],
-                            "organismAgeUnit": ["navy"],
-                            "preservationMethod": ["aqua"],
-                            "source": ["purple"]
+                            "biologicalSex": ["female"],
+                            "disease": ["normal"],
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
+                            "preservationMethod": [None],
+                            "source": [
+                                "specimen_from_organism",
+                                "donor_organism"
+                            ]
                         }
                     ]
                 }
             ]
         }
-        self.assertEqual(json.dumps(keyword_response, sort_keys=True, indent=4),
-                         json.dumps(expected_output, sort_keys=True, indent=4))
+        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
     def test_projects_file_search_response(self):
         """
@@ -758,61 +676,66 @@ class TestResponse(WebServiceTestCase):
         Response should include project detail fields that do not appear for other entity type responses
         """
         keyword_response = FileSearchResponse(
-            hits=self.input('projects'),
+            hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
             pagination=self.paginations[0],
             facets=self.facets_populated,
             entity_type='projects'
         ).return_response().to_json()
 
-        expected_output = {
+        expected_response = {
             "hits": [
                 {
                     "cellSuspensions": [
                         {
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "totalCells": 5306
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "totalCells": 1
                         }
                     ],
-                    "entryId": "08d3440a-7481-41c5-5140-e15ed269ea63",
+                    "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
                     "fileTypeSummaries": [
                         {
-                            "count": 1,
-                            "fileType": "csv",
-                            "totalSize": 6667
+                            "count": 2,
+                            "fileType": "fastq.gz",
+                            "totalSize": 385472253
                         }
                     ],
                     "projects": [
                         {
                             "contributors": [
                                 {
-                                    "contactName": "yellow",
+                                    "contactName": "Matthew,,Green",
                                     "correspondingContributor": False,
-                                    "email": "gray"
+                                    "email": "hewgreen@ebi.ac.uk",
+                                    "institution": "Farmers Trucks",
+                                    "laboratory": "John Dear",
+                                    "projectRole": "Human Cell Atlas wrangler"
                                 },
                                 {
-                                    "contactName": "teal",
-                                    "correspondingContributor": True,
-                                    "email": "purple",
-                                    "institution": "yellow",
-                                    "laboratory": "silver"
+                                    "contactName": "Martin, Enge",
+                                    "correspondingContributor": None,
+                                    "email": "martin.enge@gmail.com",
+                                    "institution": "University",
+                                    "laboratory": None,
+                                    "projectRole": None
+                                },
+                                {
+                                    "contactName": "Laura,,Huerta",
+                                    "correspondingContributor": False,
+                                    "email": "lauhuema@ebi.ac.uk",
+                                    "institution": "Farmers Trucks",
+                                    "laboratory": "John Dear",
+                                    "projectRole": "external curator"
                                 }
                             ],
-                            "laboratory": ["silver"],
-                            "projectDescription": "navy",
-                            "projectShortname": "blue",
-                            "projectTitle": "purple",
+                            "laboratory": ["John Dear"],
+                            "projectDescription": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                            "projectShortname": "Single of human pancreas",
+                            "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
                                 {
-                                    "authors": [
-                                        "green",
-                                        "maroon",
-                                        "gray"
-                                    ],
-                                    "doi": "green",
-                                    "pmid": 5331933,
-                                    "publicationTitle": "gray",
-                                    "publicationUrl": "black"
+                                    "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                    "publicationUrl": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                                 }
                             ]
                         }
@@ -825,16 +748,19 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": ["silver"],
-                            "disease": ["yellow"],
-                            "genusSpecies": ["teal"],
-                            "id": ["6e7d782e-44a2-0d3f-2bf1-337468f62467"],
-                            "organ": ["purple"],
-                            "organPart": ["black"],
-                            "organismAge": ["purple"],
-                            "organismAgeUnit": ["navy"],
-                            "preservationMethod": ["aqua"],
-                            "source": ["purple"]
+                            "biologicalSex": ["female"],
+                            "disease": ["normal"],
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
+                            "preservationMethod": [None],
+                            "source": [
+                                "donor_organism",
+                                "specimen_from_organism"
+                            ]
                         }
                     ]
                 }
@@ -883,8 +809,7 @@ class TestResponse(WebServiceTestCase):
             }
         }
 
-        self.assertEqual(json.dumps(keyword_response, sort_keys=True, indent=4),
-                         json.dumps(expected_output, sort_keys=True, indent=4))
+        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
     def test_project_summary_response(self):
         """

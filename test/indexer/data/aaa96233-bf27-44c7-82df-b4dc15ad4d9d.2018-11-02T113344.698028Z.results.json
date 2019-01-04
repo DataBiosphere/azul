@@ -132,8 +132,13 @@
                             }
                         ],
                         "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-                        "publication_titles": [],
-                        "publications": [],
+                        "publication_titles": ["Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."],
+                        "publications": [
+                            {
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
                         "_type": "project"
                     }
                 ]
@@ -273,8 +278,13 @@
                             }
                         ],
                         "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-                        "publication_titles": [],
-                        "publications": [],
+                        "publication_titles": ["Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."],
+                        "publications": [
+                            {
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
                         "_type": "project"
                     }
                 ]
@@ -428,8 +438,13 @@
                             }
                         ],
                         "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-                        "publication_titles": [],
-                        "publications": [],
+                        "publication_titles": ["Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."],
+                        "publications": [
+                            {
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
                         "_type": "project"
                     }
                 ]
@@ -583,8 +598,13 @@
                             }
                         ],
                         "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-                        "publication_titles": [],
-                        "publications": [],
+                        "publication_titles": ["Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."],
+                        "publications": [
+                            {
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
                         "_type": "project"
                     }
                 ]
@@ -1108,8 +1128,13 @@
                             }
                         ],
                         "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-                        "publication_titles": [],
-                        "publications": [],
+                        "publication_titles": ["Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."],
+                        "publications": [
+                            {
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
                         "_type": "project"
                     }
                 ]
