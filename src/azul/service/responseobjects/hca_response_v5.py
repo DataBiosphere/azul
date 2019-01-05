@@ -234,7 +234,8 @@ class ManifestResponse(AbstractResponse):
         writer = csv.writer(output, dialect='excel-tab')
 
         writer.writerow(list(self.manifest_entries['bundles'].keys()) +
-                        list(self.manifest_entries['contents.files'].keys()))
+                        list(self.manifest_entries['contents.files'].keys()) +
+                        list(self.manifest_entries['terra_attributes'].keys()))
         for hit in es_search.scan():
             self._iterate_hit(hit, writer)
 
