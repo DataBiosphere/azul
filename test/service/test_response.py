@@ -1082,11 +1082,6 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(json.dumps(expected_organ_summary3, sort_keys=True),
                          json.dumps(project_summary3['organSummaries'], sort_keys=True))
 
-    def _load(self, filename):
-        data_folder_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
-        with open(os.path.join(data_folder_filepath, filename)) as fp:
-            return json.load(fp)
-
 
 if __name__ == '__main__':
     unittest.main()
