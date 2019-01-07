@@ -50,7 +50,7 @@
     "terra-attributes": {
       "participant": "participant_id",
       "sample": "sample_id",
-      "cell_suspension": "cell_suspension"
+      "cell_suspension": "cell_suspension_id"
     },
     "contents.files": {
       "file_content_type": "content-type",
