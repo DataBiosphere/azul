@@ -17,23 +17,22 @@ class TestQueryShortener(TestCase):
         Passing in a valid url should create an object in s3 and return a link
         that redirects to the given url
         """
+        # FIXME: local import for now to delay side effects of the import like logging being configured
+        # https://github.com/DataBiosphere/azul/issues/637
+        from lambdas.service.app import shorten_query_url
         current_request.json_body = {
             'url': 'https://dev.data.humancellatlas.org/explore/specimens'
                    '?filter=%5B%7B%22facetName%22%3A%22organ%22%2C%22terms%22%3A%5B%22bone%22%5D%7D%5D'
         }
-        storage_service_get.side_effect = StorageService().client.exceptions.NoSuchKey
-
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import shorten_query_url
+        storage_service_get.side_effect = StorageService().client.exceptions.NoSuchKey({}, "")
         response = shorten_query_url()
-        self.assertIn('url', response)
+        self.assertEqual({'url': 'http://dev.dev.url.data.humancellatlas.org/FFq'}, response)
         storage_service_put.assert_called_once()
 
     @mock_sts
     @mock_s3
     @mock.patch('lambdas.service.app.app.current_request')
-    def test_valid_url(self, current_request):
+    def test_whitelisting(self, current_request):
         """
         URL shortener should accept any humancellatlas domain
         """
