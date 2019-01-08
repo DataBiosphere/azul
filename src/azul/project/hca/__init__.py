@@ -81,7 +81,7 @@ dss_subscription_query = {
                                     {
                                         "terms": {
                                             "files.project_json.provenance.document_id": [
-                                                # CBeta Release spreadsheet (Production Obsolete Datasets) as of 12/18/2018
+                                                # CBeta Release spreadsheet (Production Obsolete Datasets) as of 1/8/2019
                                                 "1630e3dc-5501-4faf-9726-2e2c0b4da6d7",  # ???
                                                 "fd1d163d-d6a7-41cd-b3bc-9d77ba9a36fe",  # peer
                                                 "2a0faf83-e342-4b1c-bb9b-cf1d1147f3bb",  # treutlein
@@ -92,6 +92,8 @@ dss_subscription_query = {
                                                 "d237ed6a-3a7f-4a91-b300-b070888a8542",  # DCP_Infrastructure_Test_
                                                 "e6cc0b02-2125-4faa-9903-a9025a62efec",  # Q4_DEMO-…
                                                 "e4dbcb98-0562-4071-8bea-5e8de5f3c147",  # Q4_DEMO-…
+                                                "e79e9284-c337-4dfd-853d-66fa3facfbbd",  # 10x_prod_test_01_08_2019
+                                                "560cd061-9165-4699-bc6e-8253e164c079",  # ss2_prod_test_01_08_2019
                                                 # remove once https://github.com/DataBiosphere/azul/issues/86 is fixed
                                                 "32eb86db-6842-480f-a49a-a2b0161ed35a",  # tabulamuris
                                             ]
