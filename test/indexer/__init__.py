@@ -24,6 +24,9 @@ class IndexerTestCase(ElasticsearchTestCase):
     @property
     def hca_indexer(self):
         try:
+            # One of the indexer tests uses multiple threads to facilate concurrent indexing. Each of these threads
+            # must use its own indexer instance because each one needs to be mock.patch'ed to a different canned
+            # bundle.
             indexer = self.per_thread.indexer
         except AttributeError:
             indexer = self.indexer_cls()
