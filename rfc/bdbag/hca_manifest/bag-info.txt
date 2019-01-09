@@ -1,4 +1,0 @@
-Bag-Software-Agent: bagit.py v1.6.4 <https://github.com/LibraryOfCongress/bagit-python>
-Bagging-Date: 2019-01-08
-Payload-Oxum: 2787.2
-info: some info
