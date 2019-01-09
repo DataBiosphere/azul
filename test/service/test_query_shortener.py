@@ -26,7 +26,7 @@ class TestQueryShortener(TestCase):
         }
         storage_service_get.side_effect = StorageService().client.exceptions.NoSuchKey({}, "")
         response = shorten_query_url()
-        self.assertEqual({'url': 'http://dev.dev.url.data.humancellatlas.org/FFq'}, response)
+        self.assertEqual({'url': f'http://{config.url_redirect_full_domain_name}/FFq'}, response)
         storage_service_put.assert_called_once()
 
     @mock_sts
