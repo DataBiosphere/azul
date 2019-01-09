@@ -98,7 +98,6 @@ class Plugin(azul.plugin.Plugin):
                                                         "fd1d163d-d6a7-41cd-b3bc-9d77ba9a36fe",  # peer
                                                         "2a0faf83-e342-4b1c-bb9b-cf1d1147f3bb",  # treutlein
                                                         "cf8439db-fcc9-44a8-b66f-8ffbf729bffa",  # meyer
-                                                        "179bf9e6-5b33-4c5b-ae26-96c7270976b8",  # Regev-ICA
                                                         "6b9f514d-d738-403f-a9c2-62580bbe5c83",  # Q4_DEMO-…
                                                         "311d013c-01e4-42c0-9c2d-25472afa9cbc",  # Q4_DEMO-…
                                                         "d237ed6a-3a7f-4a91-b300-b070888a8542",  # DCP_Infrastructure_Test_
@@ -117,6 +116,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "7cb4940d-7c85-43d1-b2f5-1d99813e65df",  # Q4_DEMO-…
                                                         "6ec8e247-2eb0-42d1-823f-75facd03988d",  # meyer
                                                         "93f6a42f-1790-4af4-b5d1-8c436cb6feae",  # Teichmann-mouse-melanoma
+                                                        "6504d48c-1610-43aa-8cf8-214a960e110c",  # duplicate of Regev-ICA
                                                     ]
                                                 }
                                             }
