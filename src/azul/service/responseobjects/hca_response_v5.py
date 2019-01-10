@@ -247,7 +247,9 @@ class ManifestResponse(AbstractResponse):
         hit_dict = es_search_hit.to_dict()
         assert len(hit_dict['contents']['files']) == 1
         file = hit_dict['contents']['files'][0]
-        file_fields = self._translate(file, 'contents.files')
+        file_fields = self._translate(file, 'contents.specimens')
+        file_fields.append(self._translate(file, 'contents.cellsuspensions'))
+        file_fields.append(self._translate(file, 'contents.files'))
         for bundle in hit_dict['bundles']:
             # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
             # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
