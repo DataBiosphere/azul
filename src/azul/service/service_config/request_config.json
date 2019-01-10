@@ -47,10 +47,12 @@
     }
   },
   "manifest": {
-    "terra-attributes": {
-      "participant": "participant_id",
-      "sample": "sample_id",
-      "cell_suspension": "cell_suspension_id"
+    "contents.cellsuspensions": {
+      "cell_suspension_id": "document_id"
+    },
+    "contents.specimens": {
+      "participant_id": "donor_document_id",
+      "sample_id": "donor_material_id"
     },
     "contents.files": {
       "file_content_type": "content-type",
