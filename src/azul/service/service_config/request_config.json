@@ -30,7 +30,9 @@
     "organismAge": "contents.specimens.organism_age",
     "organismAgeUnit": "contents.specimens.organism_age_unit",
     "preservationMethod": "contents.specimens.preservation_method",
+
     "cellCount": "contents.cell_suspensions.total_estimated_cells",
+    "documentId": "contents.cell_suspensions.document_id",
 
     "bundleUuid": "bundles.uuid",
     "bundleVersion": "bundles.version",
