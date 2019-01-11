@@ -110,6 +110,10 @@ class Config:
         return int(os.environ['AZUL_DSS_WORKERS'])
 
     @property
+    def drs_endpoint(self) -> str:
+        return os.environ['AZUL_DRS_ENDPOINT']
+
+    @property
     def _resource_prefix(self):
         return self._term_from_env('AZUL_RESOURCE_PREFIX')
 
