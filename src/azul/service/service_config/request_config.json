@@ -54,7 +54,7 @@
     },
     "contents.specimens": {
       "participant_id": "donor_document_id",
-      "sample_id": "donor_material_id"
+      "sample_id": "donor_biomaterial_id"
     },
     "contents.files": {
       "file_content_type": "content-type",
