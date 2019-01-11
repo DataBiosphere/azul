@@ -248,7 +248,7 @@ class ManifestResponse(AbstractResponse):
         assert len(hit_dict['contents']['files']) == 1
         file = hit_dict['contents']['files'][0]
         file_fields = self._translate(file, 'contents.specimens')
-        file_fields.append(self._translate(file, 'contents.cellsuspensions'))
+        file_fields.append(self._translate(file, 'contents.cell_suspensions'))
         file_fields.append(self._translate(file, 'contents.files'))
         for bundle in hit_dict['bundles']:
             # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
