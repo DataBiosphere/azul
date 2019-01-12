@@ -19,10 +19,7 @@ apply: validate
 destroy: validate
 	terraform destroy
 
-destroy_cloudwatch_alarms: validate
-	terraform destroy $(terraform state list | grep '^aws_cloudwatch_metric_alarm' | sed 's/^/-target /')
-
 clean:
 	-rm *.tf.json
 
-.PHONY: all config init validate plan apply destroy destroy_cloudwatch_alarms clean
+.PHONY: all config init validate plan apply destroy clean
