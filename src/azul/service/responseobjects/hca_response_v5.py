@@ -212,7 +212,8 @@ class ManifestResponse(AbstractResponse):
                 writer.writerow(list(self.manifest_entries['contents.specimens'].keys()) +
                                 list(self.manifest_entries['contents.cell_suspensions'].keys()) +
                                 list(self.manifest_entries['bundles'].keys()) +
-                                list(self.manifest_entries['contents.files'].keys()))
+                                list(self.manifest_entries['contents.files'].keys()) +
+                                ['drs_uri'])
                 for hit in self.es_search.scan():
                     self._iterate_hit(hit, writer)
 
@@ -237,7 +238,8 @@ class ManifestResponse(AbstractResponse):
         writer.writerow(list(self.manifest_entries['contents.specimens'].keys()) +
                         list(self.manifest_entries['contents.cell_suspensions'].keys()) +
                         list(self.manifest_entries['bundles'].keys()) +
-                        list(self.manifest_entries['contents.files'].keys()))
+                        list(self.manifest_entries['contents.files'].keys()) +
+                        ['drs_uri'])
         for hit in es_search.scan():
             self._iterate_hit(hit, writer)
 
