@@ -1,10 +1,10 @@
 include ../../common.mk
 
-templates = .chalice/config.json lambda-policy.json
-
 all: deploy
 
-state: $(templates)
+config: .chalice/config.json lambda-policy.json
+
+state: config
 	python $(AZUL_HOME)/scripts/manage_chalice_deployed.py indexer download
 
 deploy: state
@@ -17,10 +17,10 @@ delete: state
 	chalice delete --stage $(AZUL_DEPLOYMENT_STAGE)
 	python $(AZUL_HOME)/scripts/manage_chalice_deployed.py indexer upload
 
-local: $(templates)
+local: config
 	chalice local
 
 clean:
 	git clean -Xdf
 
-.PHONY: all deploy delete clean state
+.PHONY: all config state deploy delete local clean
