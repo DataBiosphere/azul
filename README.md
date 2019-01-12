@@ -97,7 +97,7 @@ end.
 6) Confirm proper configuration, run the following:
    
    ```
-   python test/indexer/test_hca_indexer.py
+   make test
    ``` 
 
 #### 1.3.1 For personal deployment (AWS credentials available)
