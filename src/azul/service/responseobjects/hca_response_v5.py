@@ -226,20 +226,30 @@ class ManifestResponse(AbstractResponse):
         :return: S3 object key
         """
         parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
-                          data=self._construct_tsv_content().encode(),
+                          data=self._construct_content().encode(),
                           content_type='text/tab-separated-values')
         return self.storage_service.put(**parameters)
 
-    def _construct_tsv_content(self):
+    def _construct_content(self):
         es_search = self.es_search
 
         output = StringIO()
         writer = csv.writer(output, dialect='excel-tab')
-        writer.writerow(list(self.manifest_entries['contents.specimens'].keys()) +
-                        list(self.manifest_entries['contents.cell_suspensions'].keys()) +
-                        list(self.manifest_entries['bundles'].keys()) +
-                        list(self.manifest_entries['contents.files'].keys()) +
-                        ['drs_uri'])
+        if format == 'tsv':
+            writer.writerow(
+                list(self.manifest_entries['bundles'].keys()) +
+                list(self.manifest_entries['contents.files'].keys()))
+        elif format == 'bdbag':
+            writer.writerow(
+                list(self.manifest_entries['contents.specimens'].keys()) +
+                list(
+                    self.manifest_entries['contents.cell_suspensions'].keys()) +
+                list(self.manifest_entries['bundles'].keys()) +
+                list(self.manifest_entries['contents.files'].keys()) +
+                ['drs_uri'])
+        else:
+            raise ValueError(f'{format} is an invalid format.')
+
         for hit in es_search.scan():
             self._iterate_hit(hit, writer)
 
@@ -249,13 +259,28 @@ class ManifestResponse(AbstractResponse):
         hit_dict = es_search_hit.to_dict()
         assert len(hit_dict['contents']['files']) == 1
         file = hit_dict['contents']['files'][0]
-        file_fields = self._translate(file, 'contents.specimens')
-        file_fields.append(self._translate(file, 'contents.cell_suspensions'))
-        file_fields.append(self._translate(file, 'contents.files'))
-        for bundle in hit_dict['bundles']:
-            # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
-            # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-            writer.writerow(self._translate(bundle, 'bundles') + file_fields)
+        if self.format == 'tsv':
+            file_fields = self._translate(file, 'contents.files')
+
+            for bundle in hit_dict['bundles']:
+                # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
+                # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
+                writer.writerow(
+                    self._translate(bundle, 'bundles') + file_fields)
+        else:  # construct manifest for BDBag
+            file_fields = self._translate(file, 'contents.specimens')
+            file_fields.append(
+                self._translate(file, 'contents.cell_suspensions'))
+            file_fields.append(self._translate(file, 'contents.files'))
+
+            uri = os.getenv('AZUL_DRS_ENDPOINT')
+            file_id = file['uuid']
+            drs_uri = f'{uri}/{file_id}'
+
+            for bundle in hit_dict['bundles']:
+                writer.writerow(
+                    self._translate(bundle, 'bundles') + file_fields + drs_uri)
+
 
     def return_response(self):
         object_key = self._push_content_single_part() if config.disable_multipart_manifests else self._push_content()
@@ -265,7 +290,7 @@ class ManifestResponse(AbstractResponse):
 
         return Response(body='', headers=headers, status_code=302)
 
-    def __init__(self, es_search, manifest_entries, mapping):
+    def __init__(self, es_search, manifest_entries, mapping, format):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
@@ -277,6 +302,7 @@ class ManifestResponse(AbstractResponse):
         self.manifest_entries = OrderedDict(manifest_entries)
         self.mapping = mapping
         self.storage_service = StorageService()
+        self.format = format
 
 
 class EntryFetcher:
