@@ -38,34 +38,6 @@ class FacetNameValidationTest(WebServiceTestCase):
                           "Message": "BadRequestError: Unable to sort by undefined facet bad-facet."}
     service_config_dir = os.path.dirname(service_config.__file__)
 
-    def test_health(self):
-        url = self.base_url + "/health"
-        response = requests.get(url)
-        response.raise_for_status()
-        expected_json = {
-            'status': 'UP',
-            'elasticsearch': {
-                'domain': config.es_domain,
-                'status': 'UP'
-            }
-        }
-        self.assertEqual(response.json(), expected_json)
-
-    def test_health_es_unreachable(self):
-        with mock.patch.dict(os.environ, AZUL_ES_ENDPOINT='nonexisting-index.com:80'):
-            url = self.base_url + "/health"
-            response = requests.get(url)
-            response.raise_for_status()
-            expected_json = {
-                'status': 'UP',
-                'elasticsearch': {
-                    'domain': config.es_domain,
-                    'message': 'Unable to reach the host',
-                    'status': 'DOWN'
-                }
-            }
-            self.assertEqual(response.json(), expected_json)
-
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
         with TemporaryDirectory() as tmpdir:
