@@ -703,10 +703,13 @@ def generate_manifest(event, context):
     :param: event: dict containing function input
         Valid params:
             - filters: dict containing filters to use in ES request
+            - format: str to specify manifest output format, values are
+                      'tsv' (default) or 'bdbag'
     :return: The URL to the generated manifest
     """
     filters = event.get('filters', {'file': {}})
-    response = EsTd().transform_manifest(filters=filters)
+    format = event.get('format')
+    response = EsTd().transform_manifest(filters=filters, format=format)
     return {'Location': response.headers['Location']}
 
 
