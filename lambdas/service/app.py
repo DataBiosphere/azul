@@ -535,6 +535,7 @@ def get_manifest():
     if app.current_request.query_params is None:
         app.current_request.query_params = {}
     filters = app.current_request.query_params.get('filters', '{"file": {}}')
+    format = app.current_request.query_params.get('format', 'tsv')
     logger.debug("Filters string is: {}".format(filters))
     try:
         logger.info("Extracting the filter parameter from the request")
@@ -548,7 +549,11 @@ def get_manifest():
     es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_manifest(filters=filters)
+    try:
+        response = es_td.transform_manifest(filters=filters, format=format)
+    except ValueError as e:
+            return 400, str(e)
+
     # Return the excel file
     return response
 
