@@ -1,3 +1,5 @@
+import json
+
 from azul.template import emit
 from azul import config
 from azul.deployment import aws
@@ -16,7 +18,10 @@ emit({
                     "period": "3600",
                     "statistic": "Average",
                     "threshold": "85",
-                    "alarm_description": "This metric monitors ES CPU utilization",
+                    "alarm_description": json.dumps({
+                        "slack_channel": "dcp-ops-alerts",
+                        "description": config.es_domain + " CPUUtilization alarm"
+                    }),
                     "dimensions": {
                         "ClientId": aws.account,
                         "DomainName": config.es_domain
@@ -40,7 +45,10 @@ emit({
                     "period": "300",
                     "statistic": "Average",
                     "threshold": "14000",
-                    "alarm_description": "This metric monitors ES Disk usage",
+                    "alarm_description": json.dumps({
+                        "slack_channel": "dcp-ops-alerts",
+                        "description": config.es_domain + " FreeStorageSpace alarm"
+                    }),
                     "dimensions": {
                         "ClientId": aws.account,
                         "DomainName": config.es_domain
@@ -64,7 +72,10 @@ emit({
                     "period": "300",
                     "statistic": "Minimum",
                     "threshold": "65",
-                    "alarm_description": "This metric monitors memory pressure, should not exceed 65%",
+                    "alarm_description": json.dumps({
+                        "slack_channel": "dcp-ops-alerts",
+                        "description": config.es_domain + " JVMMemoryPressure alarm"
+                    }),
                     "dimensions": {
                         "ClientId": aws.account,
                         "DomainName": config.es_domain
