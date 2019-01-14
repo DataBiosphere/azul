@@ -17,7 +17,8 @@ from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, R
 from more_itertools import one
 import requests
 
-from azul import config, parse_http_date
+from azul import config
+from azul.health import Health
 from azul.service import service_config
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
@@ -75,14 +76,20 @@ def hello():
     return {'Hello': 'World!'}
 
 
+@app.route('/health/basic', methods=['GET'], cors=True)
+def basic_health():
+    return {
+        'up': True,
+    }
+
+
 @app.route('/health', methods=['GET'], cors=True)
 def health():
-    from azul.health import get_elasticsearch_health
-
-    return {
-        'status': 'UP',
-        'elasticsearch': get_elasticsearch_health()
-    }
+    health = Health('service')
+    return Response(
+        body=json.dumps(health.as_json),
+        status_code=200 if health.up else 503
+    )
 
 
 @app.route('/version', methods=['GET'], cors=True)

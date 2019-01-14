@@ -9,6 +9,8 @@ import json
 import logging
 import random
 import time
+
+from chalice import Response
 from typing import List, MutableMapping
 import uuid
 
@@ -19,6 +21,7 @@ from dataclasses import asdict, dataclass, replace
 from more_itertools import chunked, partition
 
 from azul import config
+from azul.health import Health
 from azul.indexer import IndexWriter
 from azul.plugin import Plugin
 from azul.reindexer import Reindexer
@@ -47,15 +50,25 @@ def version():
     }
 
 
+@app.route('/health/basic', methods=['GET'], cors=True)
+def basic_health():
+    return {
+        'up': True,
+    }
+
+
 @app.route('/health', methods=['GET'], cors=True)
 def health():
-    from azul.health import get_elasticsearch_health, get_queue_health
+    health = Health('indexer')
+    return Response(
+        body=json.dumps(health.as_json),
+        status_code=200 if health.up else 503
+    )
 
-    return {
-        'status': 'UP',
-        'elasticsearch': get_elasticsearch_health(),
-        'queues': get_queue_health()
-    }
+
+@app.route('/', cors=True)
+def hello():
+    return {'Hello': 'World!'}
 
 
 @app.route('/', methods=['POST'])
@@ -332,7 +345,7 @@ class Token:
     False
 
     >>> t = Token.mint(5)
-    >>> c = Token.from_json(t.to_json())
+    >>> c = Token.from_json(t._to_json())
     >>> c == t, c is t
     (True, False)
     """
@@ -381,7 +394,7 @@ def _dispense_tokens(size, total):
 def _send_tokens(tokens, delay=0):
     queue(config.token_queue_name).send_messages(Entries=[dict(Id=str(i),
                                                                DelaySeconds=delay,
-                                                               MessageBody=json.dumps(token.to_json()))
+                                                               MessageBody=json.dumps(token._to_json()))
                                                           for i, token in enumerate(tokens)])
 
 
