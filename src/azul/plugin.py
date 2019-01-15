@@ -23,10 +23,25 @@ class Plugin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def dss_subscription_query(self) -> JSON:
+    def dss_subscription_query(self, prefix: str) -> JSON:
+        """
+        The query to use for subscribing Azul to bundle additions in the DSS. This query will also be used for
+        listing bundles in the DSS during reindexing.
+
+        :param prefix: a prefix that restricts the set of bundles to subscribe to. This parameter is used to subset
+                       or partition the set of bundles in the DSS. The returned query should only match bundles whose
+                       UUID starts with the given prefix.
+        """
         raise NotImplementedError()
 
-    def dss_deletion_subscription_query(self) -> JSON:
+    def dss_deletion_subscription_query(self, prefix: str) -> JSON:
+        """
+        The query to use for subscribing Azul to bundle deletions in the DSS.
+
+        :param prefix: a prefix that restricts the set of bundles to subscribe to. This parameter is used to subset
+                       or partition the set of bundles in the DSS. The returned query should only match bundles whose
+                       UUID starts with the given prefix.
+        """
         raise NotImplementedError()
 
     @classmethod
