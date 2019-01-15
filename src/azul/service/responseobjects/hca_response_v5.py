@@ -5,17 +5,17 @@ import csv
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-import os
+import os, bagit, boto3, urllib.request
 from uuid import uuid4
 
 from chalice import Response
+from zipfile import ZipFile, ZIP_DEFLATED
 from jsonobject import (FloatProperty,
                         IntegerProperty,
                         JsonObject,
                         ListProperty,
                         ObjectProperty,
                         StringProperty)
-
 from azul import config
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
@@ -230,30 +230,54 @@ class ManifestResponse(AbstractResponse):
                           content_type='text/tab-separated-values')
         return self.storage_service.put(**parameters)
 
-    def _construct_content(self):
+    def _construct_tsv_content(self):
         es_search = self.es_search
 
         output = StringIO()
         writer = csv.writer(output, dialect='excel-tab')
-        if format == 'tsv':
-            writer.writerow(
-                list(self.manifest_entries['bundles'].keys()) +
-                list(self.manifest_entries['contents.files'].keys()))
-        elif format == 'bdbag':
-            writer.writerow(
-                list(self.manifest_entries['contents.specimens'].keys()) +
-                list(
-                    self.manifest_entries['contents.cell_suspensions'].keys()) +
-                list(self.manifest_entries['bundles'].keys()) +
-                list(self.manifest_entries['contents.files'].keys()) +
-                ['drs_uri'])
-        else:
-            raise ValueError(f'{format} is an invalid format.')
 
+        writer.writerow(
+            list(self.manifest_entries['bundles'].keys()) +
+            list(self.manifest_entries['contents.files'].keys()))
         for hit in es_search.scan():
             self._iterate_hit(hit, writer)
 
         return output.getvalue()
+
+    def _construct_bdbag(self):
+        es_search = self.es_search
+        sample_tsv = StringIO()
+        writer = csv.writer(sample_tsv, dialect='excel-tab')
+        writer.writerow(
+            list(self.manifest_entries['contents.specimens'].keys()) +
+            list(
+                self.manifest_entries['contents.cell_suspensions'].keys()) +
+            list(self.manifest_entries['bundles'].keys()) +
+            list(self.manifest_entries['contents.files'].keys()) +
+            ['drs_uri'])
+
+        for hit in es_search.scan():
+            self._iterate_hit(hit, writer)
+
+        # Obtain second TSV file (currently still) needed for Terra.
+        participant_tsv = self._get_single_column_in_file_obj(sample_tsv,
+                                                              'participant_id')
+
+        zip = StringIO()
+        tsv = StringIO()
+
+        zipfile(output)
+
+        return output.getvalue()
+
+    @staticmethod
+    def _get_single_column_in_file_obj(file_object, header_str: str):
+        """Return column header_str from memory TSV-file file_object."""
+        s = file_object.getvalue()
+        idx = s.splitlines()[0].split('\t').index(header_str)
+        L = [x.split('\t')[idx] for x in s.splitlines()]
+        L[0] = 'entity:participant_id'
+        return L
 
     def _iterate_hit(self, es_search_hit, writer):
         hit_dict = es_search_hit.to_dict()
@@ -274,7 +298,7 @@ class ManifestResponse(AbstractResponse):
             file_fields.append(self._translate(file, 'contents.files'))
 
             uri = os.getenv('AZUL_DRS_ENDPOINT')
-            file_id = file['uuid']
+            file_id = file['file_uuid']
             drs_uri = f'{uri}/{file_id}'
 
             for bundle in hit_dict['bundles']:
