@@ -1,6 +1,10 @@
+# Only variables whose names start in `AZUL_` will be exported to a deployed
+# Lambda. Note that by implication, `azul_` variables will not be exported, even
+# though they are considered part of Azul.
+
 azul_vars=(
-    # The path to the project root directory
-    AZUL_HOME
+    # The path to the root directory of the project
+    azul_home
 
     # The name of the current deployment. This variable controls the name of all
     # cloud resources and is the main vehicle for isolating cloud resources
@@ -140,9 +144,9 @@ azul_vars=(
 
 unset ${azul_vars[*]}
 
-AZUL_HOME="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+azul_home="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ ! -f "${AZUL_HOME}/deployments/.active/environment" ]]; then
+if [[ ! -f "${azul_home}/deployments/.active/environment" ]]; then
     echo "Please create a symlink to the active deployment. " \
          "For example 'cd deployments && ln -snf dev .active'"
     return
@@ -154,7 +158,7 @@ _set () {
             eval ": \${$1:='$2'}"
             # Only echo in interactive shells
             if [[ -n $PS1 ]]; then
-                self=${BASH_SOURCE[1]#${AZUL_HOME}/}
+                self=${BASH_SOURCE[1]#${azul_home}/}
                 if [[ ${!1} == $2 ]]; then
                     echo ${self}: Set $1 to "'$2'"
                 else
@@ -173,16 +177,16 @@ _set () {
 
 # Set variables specific to the active deployment and the current user. This is
 # the most specific level.
-if [[ -f "${AZUL_HOME}/deployments/.active/environment.local" ]]; then
-    source "${AZUL_HOME}/deployments/.active/environment.local"
+if [[ -f "${azul_home}/deployments/.active/environment.local" ]]; then
+    source "${azul_home}/deployments/.active/environment.local"
 fi
 
 # Set variables specific to the active deployment
-source "${AZUL_HOME}/deployments/.active/environment"
+source "${azul_home}/deployments/.active/environment"
 
 # Set variables specific to the current user
-if [[ -f "${AZUL_HOME}/environment.local" ]]; then
-    source "${AZUL_HOME}/environment.local"
+if [[ -f "${azul_home}/environment.local" ]]; then
+    source "${azul_home}/environment.local"
 fi
 
 # Set the global defaults. This is the least specific level.
@@ -222,7 +226,7 @@ export ${azul_vars[*]}
 # A little helper to make re-sourcing this script easier.
 #
 _refresh () {
-    source ${AZUL_HOME}/environment
+    source ${azul_home}/environment
 }
 
 # Manage the symlink to the active deployment
@@ -230,15 +234,15 @@ _refresh () {
 _select () {
     if [[ $1 != "" ]]; then
         ( # use sub-shell so `cd` is temporary
-            cd ${AZUL_HOME}/deployments &&
+            cd ${azul_home}/deployments &&
             test -d "$1" &&
             { [ ! -e .active ] || { [ -L .active ] && rm .active ;} ;} &&
             ln -s "$1" .active
         ) || { echo error: "$1" && return ;}
         _refresh
     fi
-    ( cd ${AZUL_HOME}/deployments && ls -l .active )
+    ( cd ${azul_home}/deployments && ls -l .active )
 }
 
-export PYTHONPATH="$AZUL_HOME/src:$AZUL_HOME/test"
-export TF_DATA_DIR="${AZUL_HOME}/deployments/.active/.terraform"
+export PYTHONPATH="${azul_home}/src:${azul_home}/test"
+export TF_DATA_DIR="${azul_home}/deployments/.active/.terraform"
