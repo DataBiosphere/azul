@@ -1257,3 +1257,63 @@ def get_cart_item_write_progress(token):
     else:
         response['success'] = status == 'SUCCEEDED'
     return response
+
+def azul_to_obj(result):
+    """
+    Takes an Azul ElasticSearch result and converts it to a DOS data
+    object.
+
+    :param result: the ElasticSearch result dictionary for a single file
+    :return: DataObject
+    """
+    azul = result
+    data_object = {}
+    data_object['id'] = azul['uuid']
+    replicas = ['aws']
+    urls = [{"url": file_url(azul['uuid'], version=azul['version'], replica=replica)} for replica in replicas]
+    data_object['urls'] = urls
+    data_object['size'] = str(azul.get('size', ''))
+    data_object['checksums'] = [
+        {'checksum': azul['sha256'], 'type': 'sha256'}]
+    data_object['aliases'] = [azul['name']]
+    data_object['version'] = azul['version']
+    data_object['name'] = azul['name']
+    return data_object
+
+
+@app.route('/ga4gh/dos/v1/dataobjects/{data_object_id}', methods=['GET'], cors=True)
+def get_data_object(data_object_id):
+    """
+    Gets a data object by file identifier by making a query against the
+    configured data object index and returns the first matching file.
+
+    :param data_object_id: the id of the data object
+    :raises LookupError: if no data object is found for the given query
+    :rtype: DataObject
+    """
+    logger = app.log
+    filters = {"file": {"fileId": {"is": [data_object_id]}}}
+    logger.debug('DOS request for Data Object with uuid: {}'.format(data_object_id))
+    # We don't care about the query params, only the path
+    app.current_request.query_params = {}
+    logger.debug("Filters string is: {}".format(filters))
+    try:
+        # Create and instance of the ElasticTransformDump
+        logger.info("Creating ElasticTransformDump object")
+        es_td = EsTd()
+        pagination = _get_pagination(app.current_request)
+        # Get the response back
+        logger.info("Creating the API response")
+        response = es_td.transform_request(filters=filters,
+                                           pagination=pagination,
+                                           post_filter=True,
+                                           entity_type='files')
+        print(response['hits'][0])
+        file_document = response['hits'][0]['files'][0]
+        data_obj = azul_to_obj(file_document)
+        # Double check to verify identity (since `file_id` is an analyzed field)
+        if data_obj['id'] != data_object_id:
+            raise LookupError
+    except LookupError:
+         return Response({'msg': "Data object not found."}, status_code=404)
+    return Response({'data_object': data_obj}, status_code=200)
