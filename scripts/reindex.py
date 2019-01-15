@@ -34,34 +34,41 @@ parser.add_argument('--indexer-url',
                     metavar='URL',
                     default=defaults.indexer_url,
                     help="The URL of the indexer's notification endpoint to send bundles to")
-parser.add_argument('--es-query',
-                    default=defaults.es_query,
+group1 = parser.add_mutually_exclusive_group()
+group1.add_argument('--query',
                     metavar='JSON',
                     type=json.loads,
-                    help='The Elasticsearch query to use against DSS to enumerate the bundles to be indexed')
+                    help=f'The Elasticsearch query to use against DSS to enumerate the bundles to be indexed. '
+                    f'The default is {defaults.query()}')
+group1.add_argument('--prefix',
+                    metavar='HEX',
+                    default=defaults.prefix,
+                    help='A bundle UUID prefix. This must be a sequence of hexadecimal characters. Only bundles whose '
+                         'UUID starts with the given prefix will be indexed. If --partition-prefix-length is given, '
+                         'the prefix of a partition will be appended to the prefix specified with --prefix.')
 parser.add_argument('--workers',
                     metavar='NUM',
                     dest='num_workers',
                     default=defaults.num_workers,
                     type=int,
                     help='The number of workers that will be sending bundles to the indexer concurrently')
-group = parser.add_mutually_exclusive_group()
-group.add_argument('--sync',
-                   dest='sync',
-                   default=False,
-                   action='store_true',
-                   help='Have the indexer lambda process the notification synchronously instead of queueing it for '
-                        'asynchronous processing by a worker lambda.')
-group.add_argument('--prefix',
+group2 = parser.add_mutually_exclusive_group()
+group2.add_argument('--sync',
+                    dest='sync',
+                    default=False,
+                    action='store_true',
+                    help='Have the indexer lambda process the notification synchronously instead of queueing it for '
+                         'asynchronous processing by a worker lambda.')
+group2.add_argument('--partition-prefix-length',
                     metavar='NUM',
-                   default=0,
-                   type=int,
-                   help='The length of the bundle UUID prefix by which to partition the set of bundles that match the '
-                        'ES query. Each query partition is processed independently in a local worker thread. The '
-                        'worker invokes the reindex() lambda, passing the query partition. The lambda queries the '
-                        'DSS and queues a notification for each matching bundle. If 0 (the default) no partitioning '
-                        'occurs, the DSS is queried locally and the indexer notification endpoint is invoked for each '
-                        'bundle individually and concurrently using worker threads.')
+                    default=0,
+                    type=int,
+                    help='The length of the bundle UUID prefix by which to partition the set of bundles matching the '
+                         'query. Each query partition is processed independently and remotely by the indexer lambda. '
+                         'The lambda queries the DSS and queues a notification for each matching bundle. If 0 (the '
+                         'default) no partitioning occurs, the DSS is queried locally and the indexer notification '
+                         'endpoint is invoked for each bundle individually and concurrently using worker threads. '
+                         'This is magnitudes slower that partitioned indexing.')
 parser.add_argument('--delete',
                     default=False,
                     action='store_true',
@@ -86,13 +93,14 @@ def main(argv: List[str]):
 
     reindexer = Reindexer(indexer_url=args.indexer_url,
                           dss_url=args.dss_url,
-                          es_query=args.es_query,
+                          query=args.query,
+                          prefix=args.prefix,
                           num_workers=args.num_workers,
                           dryrun=args.dryrun)
     if args.delete:
         reindexer.delete_all_indices()
-    if args.prefix:
-        reindexer.remote_reindex(args.prefix)
+    if args.partition_prefix_length:
+        reindexer.remote_reindex(args.partition_prefix_length)
     else:
         reindexer.reindex(args.sync)
 

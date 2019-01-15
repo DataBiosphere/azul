@@ -70,6 +70,10 @@ class Config:
         return os.environ['AZUL_DSS_ENDPOINT']
 
     @property
+    def dss_query_prefix(self) -> str:
+        return os.environ['azul_dss_query_prefix']
+
+    @property
     def num_dss_workers(self) -> int:
         return int(os.environ['AZUL_DSS_WORKERS'])
 

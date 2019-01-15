@@ -13,6 +13,13 @@ meta:
                    and needs to be copied to local deployments
 
 changes:
+  - title: Personal deployment should index a limited subset of bundles
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/646
+    upgrade:
+      - environment
+      - reindex
+    notes: Please append `_set azul_dss_query_prefix '42'` to deployments/*.local/environment.
 
   - title: Add endpoint to shorten URLs
     issues:
