@@ -35,7 +35,7 @@ class Config:
 
     @property
     def project_root(self) -> str:
-        return os.environ['AZUL_HOME']
+        return os.environ['azul_home']
 
     @property
     def es_domain(self) -> str:
@@ -209,7 +209,7 @@ class Config:
         repo = git.Repo(self.project_root)
         host, port = self.es_endpoint
         return {
-            **{k: v for k, v in os.environ.items() if k.startswith('AZUL_') and k != 'AZUL_HOME'},
+            **{k: v for k, v in os.environ.items() if k.startswith('AZUL_')},
             # Hard-wire the ES endpoint, so we don't need to look it up at run-time, for every request/invocation
             'AZUL_ES_ENDPOINT': f"{host}:{port}",
             'azul_git_commit': repo.head.object.hexsha,
