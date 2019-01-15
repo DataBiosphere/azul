@@ -12,7 +12,7 @@ class Plugin(azul.plugin.Plugin):
     def indexer_class(self) -> Type[BaseIndexer]:
         return Indexer
 
-    def dss_subscription_query(self) -> JSON:
+    def dss_subscription_query(self, prefix: str) -> JSON:
         return {
             "query": {
                 "bool": {
@@ -28,7 +28,9 @@ class Plugin(azul.plugin.Plugin):
                             "exists": {
                                 "field": "files.project_json"
                             }
-                        }, *(
+                        },
+                        *self._prefix_clause(prefix),
+                        *(
                             [
                                 {
                                     "range": {
@@ -125,7 +127,7 @@ class Plugin(azul.plugin.Plugin):
             }
         }
 
-    def dss_deletion_subscription_query(self) -> JSON:
+    def dss_deletion_subscription_query(self, prefix: str) -> JSON:
         return {
             "query": {
                 "bool": {
@@ -134,8 +136,18 @@ class Plugin(azul.plugin.Plugin):
                             "term": {
                                 "admin_deleted": True
                             }
-                        }
+                        },
+                        *self._prefix_clause(prefix)
                     ]
                 }
             }
         }
+
+    def _prefix_clause(self, prefix):
+        return [
+            {
+                'prefix': {
+                    'uuid': prefix
+                }
+            }
+        ] if prefix else []

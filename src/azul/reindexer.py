@@ -6,7 +6,7 @@ from itertools import product
 import json
 import logging
 from pprint import PrettyPrinter
-from typing import List
+from typing import List, Optional
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -27,19 +27,27 @@ class Reindexer(object):
     def __init__(self,
                  indexer_url: str = "https://" + config.api_lambda_domain('indexer') + "/",
                  dss_url: str = config.dss_endpoint,
-                 es_query: JSON = None,
+                 query: Optional[JSON] = None,
+                 prefix: str = config.dss_query_prefix,
                  num_workers: int = 16,
                  dryrun: bool = False):
-
-        if es_query is None:
-            plugin = Plugin.load()
-            es_query = plugin.dss_subscription_query()
-
+        assert query is None or not prefix, "Cannot mix `prefix` and `query`"
         self.num_workers = num_workers
-        self.es_query = es_query
+        self._query = query
+        self.prefix = prefix
         self.dss_url = dss_url
         self.indexer_url = indexer_url
         self.dryrun = dryrun
+
+    def query(self, prefix=None):
+        if prefix is None:
+            prefix = self.prefix
+        if self._query is None:
+            plugin = Plugin.load()
+            return plugin.dss_subscription_query(prefix)
+        else:
+            assert not prefix
+            return self._query
 
     def post_bundle(self, bundle_fqid, indexer_url):
         """
@@ -55,7 +63,7 @@ class Reindexer(object):
     def _make_notification(self, bundle_fqid):
         bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
         return {
-            "query": self.es_query,
+            "query": self.query(),
             "subscription_id": str(uuid4()),
             "transaction_id": str(uuid4()),
             "match": {
@@ -70,7 +78,7 @@ class Reindexer(object):
         indexed = 0
         total = 0
 
-        logger.info('Querying DSS using %s', json.dumps(self.es_query, indent=4))
+        logger.info('Querying DSS using %s', json.dumps(self.query(), indent=4))
         bundle_fqids = self._post_dss_search()
         logger.info("Bundle FQIDs to index: %i", len(bundle_fqids))
 
@@ -133,7 +141,7 @@ class Reindexer(object):
         """
         Works around https://github.com/HumanCellAtlas/data-store/issues/1768
         """
-        kwargs = dict(es_query=self.es_query, replica='aws', per_page=500)
+        kwargs = dict(es_query=self.query(), replica='aws', per_page=500)
         bundle_fqids, url = [], None
         while True:
             # noinspection PyProtectedMember
@@ -169,19 +177,21 @@ class Reindexer(object):
     def queue(self, queue_name):
         return self.sqs.get_queue_by_name(QueueName=queue_name)
 
-    def remote_reindex(self, bundle_uuid_prefix_length):
-        prefixes = map(''.join, product('0123456789abcdef', repeat=bundle_uuid_prefix_length))
+    def remote_reindex(self, partition_prefix_length):
+        partition_prefixes = map(''.join, product('0123456789abcdef', repeat=partition_prefix_length))
 
-        def message(prefix):
-            logger.info("Preparing message for prefix %s", prefix)
-            query = deepcopy(self.es_query)
-            must = query['query']['bool']['must']
-            assert isinstance(must, list)
-            must.append({'prefix': {'uuid': prefix}})
-            return dict(action='reindex', dss_url=self.dss_url, query=query, dryrun=self.dryrun, prefix=prefix)
+        def message(partition_prefix):
+            prefix = self.prefix + partition_prefix
+            logger.info('Preparing message for partition with prefix %s', prefix)
+            logger.debug('DSS query for partion is\n%s', json.dumps(self.query(), indent=4))
+            return dict(action='reindex',
+                        dss_url=self.dss_url,
+                        query=self.query(prefix),
+                        dryrun=self.dryrun,
+                        prefix=prefix)
 
         notify_queue = self.queue(config.notify_queue_name)
-        messages = map(message, prefixes)
+        messages = map(message, partition_prefixes)
         for batch in chunked(messages, 10):
             notify_queue.send_messages(Entries=[dict(Id=str(i), MessageBody=json.dumps(message))
                                                 for i, message in enumerate(batch)])
@@ -189,7 +199,8 @@ class Reindexer(object):
     @classmethod
     def do_remote_reindex(cls, message):
         self = cls(dss_url=message['dss_url'],
-                   es_query=message['query'],
+                   query=message['query'],
+                   prefix='',
                    dryrun=message['dryrun'])
         prefix = message['prefix']
         # Render list of bundle FQIDs before moving on, reducing probability of duplicate notifications on retries

@@ -43,9 +43,10 @@ def subscribe(options, dss_client):
     if options.subscribe:
         plugin = Plugin.load()
         base_url = "https://" + config.api_lambda_domain('indexer')
+        prefix = config.dss_query_prefix
         new_subscriptions = [freeze(dict(replica='aws', es_query=query, callback_url=base_url + path))
-                             for query, path in [(plugin.dss_subscription_query(), '/'),
-                                                 (plugin.dss_deletion_subscription_query(), '/delete')]]
+                             for query, path in [(plugin.dss_subscription_query(prefix), '/'),
+                                                 (plugin.dss_deletion_subscription_query(prefix), '/delete')]]
     else:
         new_subscriptions = []
 
