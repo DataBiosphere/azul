@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 
-ifndef AZUL_HOME
+ifndef azul_home
 $(error Please run "source environment" from the project root directory before running make commands)
 endif
 
