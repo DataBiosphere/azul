@@ -47,7 +47,7 @@ def changelog() -> JSON:
     # noinspection PyPackageRequirements
     import yaml
     with open(os.path.join(config.project_root, 'CHANGELOG.yaml')) as f:
-        return yaml.load(f, )
+        return yaml.safe_load(f, )
 
 
 if __name__ == '__main__':
