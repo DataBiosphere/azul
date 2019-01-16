@@ -5,6 +5,7 @@ import uuid
 from more_itertools import flatten, one, first
 
 from app_test_case import LocalAppTestCase
+from azul import config
 from indexer import IndexerTestCase
 
 
@@ -37,7 +38,8 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
                 "match_all": {}
             }
         }
-        return cls.es_client.search(index='azul_files_aggregate_dev', body=body)['hits']['hits']
+        return cls.es_client.search(index=config.es_index_name('files', aggregate=True),
+                                    body=body)['hits']['hits']
 
     @classmethod
     def _duplicate_es_doc(cls, doc):
@@ -62,4 +64,5 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
             (json.dumps({"create": {"_type": "doc", "_id": doc['entity_id']}}),
              json.dumps(doc))
             for doc in docs))
-        cls.es_client.bulk(fake_data_body, index='azul_files_aggregate_dev', doc_type='meta', refresh='wait_for')
+        cls.es_client.bulk(fake_data_body, index=config.es_index_name('files', aggregate=True),
+                           doc_type='meta', refresh='wait_for')
