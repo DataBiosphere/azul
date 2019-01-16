@@ -10,10 +10,11 @@ from moto import mock_s3, mock_sts
 import requests
 import responses
 
-import azul
+from azul import config
 import azul.changelog
 from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService
+from retorts import ResponsesHelper
 from service import WebServiceTestCase
 
 log = logging.getLogger(__name__)
@@ -195,16 +196,17 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_manifest(self):
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-        responses.add_passthru(self.base_url)
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
 
-        url = self.base_url + '/repository/files/export?filters={"file":{}}'
-        response = requests.get(url)
-        self.assertEqual(200, response.status_code, 'Unable to download manifest')
-        tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
-        # 2 because self.bundle has 2 files
-        self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
-        manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
-        expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['contents.files'].keys())
-        self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
+            url = self.base_url + '/repository/files/export?filters={"file":{}}'
+            response = requests.get(url)
+            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            # 2 because self.bundle has 2 files
+            self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
+            manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
+            expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['contents.files'].keys())
+            self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
