@@ -2,7 +2,7 @@ import functools
 import os
 import re
 import time
-from typing import Mapping, Tuple
+from typing import Mapping, Tuple, List
 
 from hca.dss import DSSClient
 from urllib3 import Timeout
@@ -146,11 +146,20 @@ class Config:
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].format(lambda_name=lambda_name)
 
-    def api_lambda_domain(self, lambda_name):
-        return config.subdomain(lambda_name) + "." + config.domain_name
+    def api_lambda_domain(self, lambda_name: str) -> str:
+        return self.subdomain(lambda_name) + "." + self.domain_name
 
-    def service_endpoint(self):
-        return "https://" + config.api_lambda_domain('service')
+    def lambda_endpoint(self, lambda_name: str) -> str:
+        return "https://" + self.api_lambda_domain(lambda_name)
+
+    def indexer_endpoint(self) -> str:
+        return self.lambda_endpoint('indexer')
+
+    def service_endpoint(self) -> str:
+        return self.lambda_endpoint('service')
+
+    def lambda_names(self) -> List[str]:
+        return ['indexer', 'service']
 
     @property
     def indexer_name(self) -> str:
@@ -289,6 +298,19 @@ class Config:
     @property
     def document_queue_name(self):
         return config.qualified_resource_name('documents', suffix='.fifo')
+
+    @property
+    def fail_queue_name(self):
+        return config.qualified_resource_name('fail')
+
+    @property
+    def fail_fifo_queue_name(self):
+        return config.qualified_resource_name('fail', suffix='.fifo')
+
+    @property
+    def all_queue_names(self):
+        return (self.token_queue_name, self.document_queue_name, self.fail_queue_name,
+                self.fail_fifo_queue_name, self.notify_queue_name)
 
     @property
     def manifest_lambda_basename(self):
