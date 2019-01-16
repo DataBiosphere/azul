@@ -11,7 +11,6 @@ import requests
 import responses
 
 import azul
-from azul import config
 import azul.changelog
 from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService
