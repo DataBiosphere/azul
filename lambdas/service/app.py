@@ -536,8 +536,6 @@ def get_manifest():
         app.current_request.query_params = {}
     filters = app.current_request.query_params.get('filters', '{"file": {}}')
     format = app.current_request.query_params.get('format', 'tsv')
-    if format == 'bdbag':
-        config.disable_multipart_manifests = True  # triggers single-part upload
     logger.debug("Filters string is: {}".format(filters))
     try:
         logger.info("Extracting the filter parameter from the request")
