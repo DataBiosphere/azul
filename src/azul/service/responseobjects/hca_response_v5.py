@@ -267,7 +267,9 @@ class ManifestResponse(AbstractResponse):
         for hit in es_search.scan():
             self._iterate_hit(hit, sample_writer, participant_writer)
 
-        #return output.getvalue()
+        bag = _create_zipped_bdbag(participant_tsv.getvalue(),
+                                   sample_tsv.getvalue())
+        return bag
 
     @staticmethod
     def _get_single_column_in_file_obj(file_object, header_str: str):
