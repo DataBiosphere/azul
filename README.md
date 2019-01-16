@@ -28,7 +28,7 @@ generic with minimal need for project-specific behavior.
 
 ### 1.1. Development Preequisites
 
-- Python 3.6 with `virtualenv` and `pip`
+- Python 3.6 (3.7 does not work) with `virtualenv` and `pip`
 
 - The `bash` shell
 
