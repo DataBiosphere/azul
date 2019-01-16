@@ -816,8 +816,12 @@ def file_url(uuid, **params):
 
 
 def self_url(endpoint_path=None):
-    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
-    base_url = app.current_request.headers['host']
+    if app.current_request is not None:
+        protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
+        base_url = app.current_request.headers.get('host')
+    else:
+        protocol = 'http'
+        base_url = 'localhost:8000'
     if endpoint_path is None:
         endpoint_path = app.current_request.context['path']
     retry_url = f'{protocol}://{base_url}{endpoint_path}'
