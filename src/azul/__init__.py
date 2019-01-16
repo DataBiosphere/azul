@@ -1,9 +1,8 @@
-from email.utils import parsedate_to_datetime
 import functools
 import os
 import re
 import time
-from typing import Mapping, Optional, Tuple
+from typing import Mapping, Tuple
 
 from hca.dss import DSSClient
 from urllib3 import Timeout
@@ -395,31 +394,3 @@ def str_to_bool(string: str):
         return False
     else:
         raise ValueError(string)
-
-
-def parse_http_date(http_date: str, base_time: Optional[float] = None) -> float:
-    """
-    Convert an HTTP date string to a Python timestamp (UNIX time).
-
-    :param http_date: a string matching https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1
-
-    :param base_time: the timestamp for converting a relative HTTP date into Python timestamp, if None, the current
-                      time will be used.
-
-    >>> parse_http_date('123', 0.4)
-    123.4
-    >>> t = 1541313273.0
-    >>> parse_http_date('Sun, 04 Nov 2018 06:34:33 GMT') == t
-    True
-    >>> parse_http_date('Sun, 04 Nov 2018 06:34:33 PST') == t + 8 * 60 * 60
-    True
-    """
-    if base_time is None:
-        base_time = time.time()
-    try:
-        http_date = int(http_date)
-    except ValueError:
-        http_date = parsedate_to_datetime(http_date)
-        return http_date.timestamp()
-    else:
-        return base_time + float(http_date)

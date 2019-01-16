@@ -7,7 +7,6 @@ import hashlib
 import logging.config
 import os
 import re
-import time
 import urllib.parse
 import uuid
 
@@ -17,7 +16,7 @@ from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, R
 from more_itertools import one
 import requests
 
-from azul import config, parse_http_date
+from azul import config
 from azul.service import service_config
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
