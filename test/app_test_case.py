@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABCMeta
+import importlib.util
 import os
 import sys
 import time
@@ -11,6 +12,7 @@ from threading import Thread
 from chalice.local import LocalDevServer
 # noinspection PyPackageRequirements
 from chalice.config import Config as ChaliceConfig
+
 from azul import config
 
 
@@ -61,27 +63,30 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
         host, port = self.server_thread.address
         return f"http://{host}:{port}"
 
-    _path_to_app = None
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls._path_to_app = os.path.join(config.project_root, 'lambdas', cls.lambda_name())
-        sys.path.append(cls._path_to_app)
-        # noinspection PyUnresolvedReferences, PyPackageRequirements
-        from app import app
-        cls.app = app
+        # Load the application module without modifying `sys.path` and without adding it to `sys.modules`. This
+        # simplifies tear down and isolates the app modules from different lambdas loaded by different concrete
+        # subclasses. It does, however, violate this one invariant: `sys.modules[module.__name__] == module`
+        path = os.path.join(config.project_root, 'lambdas', cls.lambda_name(), 'app.py')
+        spec = importlib.util.spec_from_file_location('__main__', path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        assert path == module.__file__
+        assert module.__name__ == '__main__'
+        cls.app_module = module
 
     @classmethod
     def tearDownClass(cls):
-        sys.path.remove(cls._path_to_app)
+        cls.app_module = None
         super().tearDownClass()
 
     def setUp(self):
         super().setUp()
         log.debug("Setting up tests")
         log.debug("Created Thread")
-        self.server_thread = ChaliceServerThread(self.app, self.chalice_config(), 'localhost', 0)
+        self.server_thread = ChaliceServerThread(self.app_module.app, self.chalice_config(), 'localhost', 0)
         log.debug("Started Thread")
         self.server_thread.start()
         deadline = time.time() + 10
