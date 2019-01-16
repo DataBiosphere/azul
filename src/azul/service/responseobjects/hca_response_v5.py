@@ -309,7 +309,10 @@ class ManifestResponse(AbstractResponse):
 
 
     def return_response(self):
-        object_key = self._push_content_single_part() if config.disable_multipart_manifests else self._push_content()
+        if config.disable_multipart_manifests or self.format == 'bdbag':
+            object_key = self._push_content_single_part()
+        else:
+            object_key = self._push_content()
         file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
         presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
