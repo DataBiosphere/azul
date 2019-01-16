@@ -225,8 +225,12 @@ class ManifestResponse(AbstractResponse):
 
         :return: S3 object key
         """
+        if self.format == 'tsv':
+            data = self._construct_tsv_content().encode()
+        else:
+            data = self._construct_bdbag().encode()
         parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
-                          data=self._construct_content().encode(),
+                          data=data,
                           content_type='text/tab-separated-values')
         return self.storage_service.put(**parameters)
 
@@ -247,8 +251,8 @@ class ManifestResponse(AbstractResponse):
     def _construct_bdbag(self):
         es_search = self.es_search
         sample_tsv = StringIO()
-        writer = csv.writer(sample_tsv, dialect='excel-tab')
-        writer.writerow(
+        sample_writer = csv.writer(sample_tsv, dialect='excel-tab')
+        sample_writer.writerow(
             list(self.manifest_entries['contents.specimens'].keys()) +
             list(
                 self.manifest_entries['contents.cell_suspensions'].keys()) +
@@ -256,19 +260,14 @@ class ManifestResponse(AbstractResponse):
             list(self.manifest_entries['contents.files'].keys()) +
             ['drs_uri'])
 
+        participant_tsv = StringIO()
+        participant_writer = csv.writer(participant_tsv, dialect='excel-tab')
+        participant_writer.writerow(['entity:participant_id'])
+
         for hit in es_search.scan():
-            self._iterate_hit(hit, writer)
+            self._iterate_hit(hit, sample_writer, participant_writer)
 
-        # Obtain second TSV file (currently still) needed for Terra.
-        participant_tsv = self._get_single_column_in_file_obj(sample_tsv,
-                                                              'participant_id')
-
-        zip = StringIO()
-        tsv = StringIO()
-
-        zipfile(output)
-
-        return output.getvalue()
+        #return output.getvalue()
 
     @staticmethod
     def _get_single_column_in_file_obj(file_object, header_str: str):
@@ -279,7 +278,7 @@ class ManifestResponse(AbstractResponse):
         L[0] = 'entity:participant_id'
         return L
 
-    def _iterate_hit(self, es_search_hit, writer):
+    def _iterate_hit(self, es_search_hit, writer, participant_writer=None):
         hit_dict = es_search_hit.to_dict()
         assert len(hit_dict['contents']['files']) == 1
         file = hit_dict['contents']['files'][0]
@@ -292,6 +291,9 @@ class ManifestResponse(AbstractResponse):
                 writer.writerow(
                     self._translate(bundle, 'bundles') + file_fields)
         else:  # construct manifest for BDBag
+            if participant_writer:
+                file_fields_participant = self._translate(file, 'content.files')
+                participant_writer.writerow(file_fields_participant)
             file_fields = self._translate(file, 'contents.specimens')
             file_fields.append(
                 self._translate(file, 'contents.cell_suspensions'))
