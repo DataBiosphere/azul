@@ -190,10 +190,9 @@ class FacetNameValidationTest(WebServiceTestCase):
             expected_field_order = [entity_field.strip() for entity_field in order_settings_file.readlines()]
             self.assertEqual(expected_field_order, actual_field_order, "Field order is not configured correctly")
 
-    @mock_s3
     @mock_sts
+    @mock_s3
     def test_manifest(self):
-        logging.getLogger('test_request_validation').warning('test_manifest is invoked')
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         responses.add_passthru(self.base_url)
