@@ -91,9 +91,8 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
         self.server_thread.start()
         deadline = time.time() + 10
         while True:
-            url = self.base_url
             try:
-                response = requests.get(url)
+                response = self._ping()
                 response.raise_for_status()
             except Exception:
                 if time.time() > deadline:
@@ -102,6 +101,9 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
                 time.sleep(1)
             else:
                 break
+
+    def _ping(self):
+        return requests.get(self.base_url)
 
     def chalice_config(self):
         return ChaliceConfig()
