@@ -6,9 +6,7 @@ import boto3
 import botocore.session
 from more_itertools import one
 
-
-def memoized_property(f):
-    return property(lru_cache(maxsize=1)(f))
+from azul.decorators import memoized_property
 
 
 class AWS:
@@ -78,8 +76,6 @@ class AWS:
         es_domain_status = self.es.describe_elasticsearch_domain(DomainName=es_domain)
         return es_domain_status['DomainStatus']['Endpoint'], 443
 
-
-del memoized_property
 
 aws = AWS()
 
