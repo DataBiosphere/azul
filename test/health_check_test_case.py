@@ -20,6 +20,13 @@ from retorts import ResponsesHelper
 logger = logging.getLogger(__name__)
 
 
+# FIXME: This is inelegant: https://github.com/DataBiosphere/azul/issues/652
+# noinspection PyUnusedLocal
+def load_tests(loader, tests, pattern):
+    suite = TestSuite()
+    return suite
+
+
 class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABCMeta):
 
     def _other_lambda_names(self) -> List[str]:
