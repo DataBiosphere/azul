@@ -1270,18 +1270,17 @@ def azul_to_obj(result):
     :param result: the ElasticSearch result dictionary for a single file
     :return: DataObject
     """
-    azul = result
     data_object = {}
-    data_object['id'] = azul['uuid']
+    data_object['id'] = result['uuid']
     replicas = ['aws']
-    urls = [{"url": file_url(azul['uuid'], version=azul['version'], replica=replica)} for replica in replicas]
+    urls = [{"url": file_url(result['uuid'], version=result['version'], replica=replica)} for replica in replicas]
     data_object['urls'] = urls
-    data_object['size'] = str(azul.get('size', ''))
+    data_object['size'] = str(result.get('size', ''))
     data_object['checksums'] = [
-        {'checksum': azul['sha256'], 'type': 'sha256'}]
-    data_object['aliases'] = [azul['name']]
-    data_object['version'] = azul['version']
-    data_object['name'] = azul['name']
+        {'checksum': result['sha256'], 'type': 'sha256'}]
+    data_object['aliases'] = [result['name']]
+    data_object['version'] = result['version']
+    data_object['name'] = result['name']
     return data_object
 
 
@@ -1312,7 +1311,6 @@ def get_data_object(data_object_id):
                                            pagination=pagination,
                                            post_filter=True,
                                            entity_type='files')
-        print(response['hits'][0])
         file_document = response['hits'][0]['files'][0]
         data_obj = azul_to_obj(file_document)
         # Double check to verify identity (since `file_id` is an analyzed field)
