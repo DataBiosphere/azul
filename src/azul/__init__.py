@@ -73,6 +73,23 @@ class Config:
     def dss_query_prefix(self) -> str:
         return os.environ['azul_dss_query_prefix']
 
+    # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+
+    @property
+    def dss_deployment_stage(self):
+        from urllib.parse import urlparse
+        domain = urlparse(self.dss_endpoint).host
+        host, stage, domain = domain.split('.', maxsplit=2)
+        require(host == 'dss')
+        require(domain == 'data.humancellatlas.org')
+        return stage
+
+    # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+
+    @property
+    def dss_checkout_bucket(self):
+        return f'org-hca-dss-checkout-{self.dss_deployment_stage}'
+
     @property
     def num_dss_workers(self) -> int:
         return int(os.environ['AZUL_DSS_WORKERS'])
