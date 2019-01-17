@@ -21,7 +21,6 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         response = requests.get(url)
         response.raise_for_status()
         response_json = response.json()
-        print(response_json)
         file_id = response_json['hits'][0]['files'][0]['uuid']
         get_url = "{}/ga4gh/dos/v1/dataobjects/{}".format(self.base_url, file_id)
         drs_response = requests.get(get_url)
@@ -53,6 +52,8 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
             drs_response = requests.get(get_url)
             drs_response.raise_for_status()
 
+    @unittest.skip("DSS and Azul indices do not match in testing"
+                   "unskip when the index data is generated dynamically")
     def test_url_presence(self):
         """
         Demonstrates the presence of URLs that can be used to fetch
@@ -60,7 +61,6 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         :return:
         """
         data_object, _ = self.get_data_object()
-        print(data_object)
         url = data_object['urls'][0]['url']
         self.assertIn('http', url, "Make sure it is url-like")
         fetch_response = requests.get(url)
