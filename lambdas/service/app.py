@@ -7,10 +7,12 @@ import hashlib
 import logging.config
 import os
 import re
+import time
 import urllib.parse
 import uuid
 
 # noinspection PyPackageRequirements
+import boto3
 from botocore.exceptions import ClientError
 from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, UnauthorizedError
 from more_itertools import one
@@ -708,11 +710,15 @@ def files_proxy(uuid):
           in: path
           type: string
           description: UUID of the file to be checked out
+        - name: fileName
+          in: query
+          type: string
+          description: The desired name of the file. If absent, the UUID of the file will be used.
 
-    :return: A 200 response with a JSON body describing the status of the checkout from DSS.
+    :return: A 200 response with a JSON body describing the status of the checkout performed by DSS.
 
-    All query parameters are forwarded to DSS in order to initiate checkout process for the correct file.
-    For more information refer to https://dss.data.humancellatlas.org under GET `/files/{uuid}`.
+    All other query parameters are forwarded to DSS in order to initiate checkout process for the correct file. For
+    more information refer to https://dss.data.humancellatlas.org under GET `/files/{uuid}`.
 
     If the file checkout has been started or is still ongoing, the response will look like:
 
@@ -748,22 +754,44 @@ def files_proxy(uuid):
     }
     ```
 
-    The client should request the URL given in the `Location` field. The URL will point to a different service and
-    the client should expect a response containing the actual manifest. Currently the `Location` field of the final
-    response is a signed URL to an object in S3 but clients should not depend on that.
+    The client should request the URL given in the `Location` field. The URL will point to an entirely different
+    service and when requesting the URL, the client should expect a response containing the actual manifest.
+    Currently the `Location` field of the final response is a signed URL to an object in S3 but clients should not
+    depend on that. The response will also include a `Content-Disposition` header set to `attachment; filename=`
+    followed by the value of the fileName parameter specified in the initial request or the UUID of the file if that
+    parameter was omitted.
     """
     params = app.current_request.query_params
     url = config.dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
+    file_name = params.pop('fileName', None)
     dss_response = requests.get(url, params=params, allow_redirects=False)
     if dss_response.status_code == 301:
         retry_after = int(dss_response.headers.get('Retry-After'))
         location = dss_response.headers['Location']
-        query = urllib.parse.urlparse(location).query
-        params = {k: one(v) for k, v in urllib.parse.parse_qs(query, strict_parsing=True).items()}
+        location = urllib.parse.urlparse(location)
+        query = urllib.parse.parse_qs(location.query, strict_parsing=True)
+        params = {k: one(v) for k, v in query.items()}
+        if file_name is not None:
+            params['fileName'] = file_name
         body = {"Status": 301, "Retry-After": retry_after, "Location": file_url(uuid, **params)}
         return Response(body=json.dumps(body), status_code=200)
     elif dss_response.status_code == 302:
         location = dss_response.headers['Location']
+        # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+        if True:
+            location = urllib.parse.urlparse(location)
+            query = urllib.parse.parse_qs(location.query, strict_parsing=True)
+            expires = int(one(query['Expires']))
+            s3 = boto3.client('s3')
+            if file_name is None:
+                file_name = uuid
+            location = s3.generate_presigned_url(ClientMethod=s3.get_object.__name__,
+                                                 ExpiresIn=round(expires - time.time()),
+                                                 Params={
+                                                     'Bucket': location.netloc.partition('.')[0],
+                                                     'Key': location.path[1:],
+                                                     'ResponseContentDisposition': 'attachment;filename=' + file_name,
+                                                 })
         body = {"Status": 302, "Location": location}
         return Response(body=json.dumps(body), status_code=200)
     else:
