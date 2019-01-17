@@ -10,5 +10,8 @@ class TestHealthCheck(HealthCheckTestCase):
         return 'indexer'
 
 
+# FIXME: This is inelegant: https://github.com/DataBiosphere/azul/issues/652
+del HealthCheckTestCase
+
 if __name__ == "__main__":
     unittest.main()
