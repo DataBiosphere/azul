@@ -13,6 +13,14 @@ meta:
                    and needs to be copied to local deployments
 
 changes:
+  - title: Include content disposition header in the final /fetch/dss/files response
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/660
+    upgrade:
+      - deploy
+    notes: If `&fileName=...` is passed to `/fetch/dss/files` the response header will include that file name.
+           Otherwise the header will specify the file's UUID as the file name.
+
   - title: Personal deployment should index a limited subset of bundles
     issues:
       - https://github.com/DataBiosphere/azul/issues/646
