@@ -16,6 +16,8 @@ class StorageService:
     def __init__(self, bucket_name=config.s3_bucket):
         self.bucket_name = bucket_name
 
+    # FIXME: Use @memoized_property from azul.decorators
+
     @property
     @lru_cache(maxsize=1)
     def client(self):
@@ -34,9 +36,22 @@ class StorageService:
 
         return object_key
 
-    def get_presigned_url(self, key: str) -> str:
-        return self.client.generate_presigned_url(ClientMethod='get_object',
-                                                  Params=dict(Bucket=self.bucket_name, Key=key))
+    def get_presigned_url(self, key: str, file_name: Optional[str] = None) -> str:
+        """
+        Return a pre-signed URL to the given key.
+
+        :param key: the key of the S3 object whose content a request to the signed URL will return
+
+        :param file_name: the file name to be returned as part of a Content-Disposition header in the response to a
+                          request to the signed URL. If None, no such header will be present in the response.
+        """
+        return self.client.generate_presigned_url(
+            ClientMethod=self.client.get_object.__name__,
+            Params={
+                'Bucket': self.bucket_name,
+                'Key': key,
+                **({} if file_name is None else {'ResponseContentDisposition': 'attachment;filename=' + file_name})
+            })
 
     def create_bucket(self, bucket_name: str = None):
         self.client.create_bucket(Bucket=(bucket_name or self.bucket_name))
@@ -86,7 +101,7 @@ class MultipartUploadHandler:
         if etype:
             logger.error('Upload %s: Error detected within the MPU context.',
                          self.upload_id,
-                         exc_info = (etype, value, traceback)
+                         exc_info=(etype, value, traceback)
                          )
             self.__abort()
         else:

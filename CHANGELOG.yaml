@@ -14,6 +14,14 @@ meta:
 
 changes:
 
+  - title: Include content disposition header in manifest responses
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/655
+    upgrade:
+      - deploy
+    notes: All manifest responses include a content disposition header that specifies the file name as
+           `hca-manifest-<UUID>.tsv`.
+
   - title: Improved health check endpoints include indexing progress information
     issues:
       - https://github.com/databiosphere/azul/issues/624
