@@ -20,7 +20,7 @@ class StorageServiceTest(TestCase):
     @mock_sts
     def test_simple_get_put(self):
         sample_key = 'foo-simple'
-        sample_content = 'bar'
+        sample_content = b'bar'
 
         storage_service = StorageService()
         storage_service.create_bucket()
@@ -31,13 +31,12 @@ class StorageServiceTest(TestCase):
 
         storage_service.put(sample_key, sample_content)
 
-        self.assertEqual(sample_content, storage_service.get(sample_key).decode('utf-8'))
+        self.assertEqual(sample_content, storage_service.get(sample_key))
 
     @mock_s3
     @mock_sts
     def test_simple_get_unknown_item(self):
         sample_key = 'foo-simple'
-        sample_content = 'bar'
 
         storage_service = StorageService()
         storage_service.create_bucket()
@@ -66,45 +65,45 @@ class StorageServiceTest(TestCase):
     def test_multipart_upload_ok_with_one_part(self):
         sample_key = 'foo-multipart-upload'
         sample_content_parts = [
-            "a" * 1024  # The last part can be smaller than the limit.
+            b'a' * 1024  # The last part can be smaller than the limit.
         ]
-        expected_content = "".join(sample_content_parts)
+        expected_content = b"".join(sample_content_parts)
 
         storage_service = StorageService()
         storage_service.create_bucket()
         with MultipartUploadHandler(sample_key, 'text/plain') as upload:
             for part in sample_content_parts:
-                upload.push(part.encode())
+                upload.push(part)
 
-        self.assertEqual(expected_content, storage_service.get(sample_key).decode('utf-8'))
+        self.assertEqual(expected_content, storage_service.get(sample_key))
 
     @mock_s3
     @mock_sts
     def test_multipart_upload_ok_with_n_parts(self):
         sample_key = 'foo-multipart-upload'
         sample_content_parts = [
-            "a" * 5242880,  # The minimum file size for multipart upload is 5 MB.
-            "b" * 5242880,
-            "c" * 1024  # The last part can be smaller than the limit.
+            b'a' * 5242880,  # The minimum file size for multipart upload is 5 MB.
+            b'b' * 5242880,
+            b'c' * 1024  # The last part can be smaller than the limit.
         ]
-        expected_content = "".join(sample_content_parts)
+        expected_content = b''.join(sample_content_parts)
 
         storage_service = StorageService()
         storage_service.create_bucket()
         with MultipartUploadHandler(sample_key, 'text/plain') as upload:
             for part in sample_content_parts:
-                upload.push(part.encode())
+                upload.push(part)
 
-        self.assertEqual(expected_content, storage_service.get(sample_key).decode('utf-8'))
+        self.assertEqual(expected_content, storage_service.get(sample_key))
 
     @mock_s3
     @mock_sts
     def test_multipart_upload_error_with_out_of_bound_part(self):
         sample_key = 'foo-multipart-upload'
         sample_content_parts = [
-            "a" * 1024,  # This part will cause an error raised by MPU.
-            "b" * 5242880,
-            "c" * 1024
+            b'a' * 1024,  # This part will cause an error raised by MPU.
+            b'b' * 5242880,
+            b'c' * 1024
         ]
 
         storage_service = StorageService()
@@ -113,33 +112,33 @@ class StorageServiceTest(TestCase):
         with self.assertRaises(MultipartUploadError):
             with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                 for part in sample_content_parts:
-                    upload.push(part.encode())
+                    upload.push(part)
 
     @mock_s3
     @mock_sts
     def test_multipart_upload_error_inside_context_with_nothing_pushed(self):
         sample_key = 'foo-multipart-upload-error'
         sample_content_parts = [
-            "a" * 5242880,
-            "b" * 5242880,
+            b'a' * 5242880,
+            b'b' * 5242880,
             1234567,  # This should cause an error.
-            "c" * 1024
+            b'c' * 1024
         ]
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(MultipartUploadError):
             with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                 for part in sample_content_parts:
-                    upload.push(part.encode())
+                    upload.push(part)
 
     @mock_s3
     @mock_sts
     def test_multipart_upload_error_inside_thread_with_nothing_pushed(self):
         sample_key = 'foo-multipart-upload-error'
         sample_content_parts = [
-            "a" * 5242880,
-            "b" * 5242880
+            b'a' * 5242880,
+            b'b' * 5242880
         ]
 
         storage_service = StorageService()
@@ -148,4 +147,4 @@ class StorageServiceTest(TestCase):
             with self.assertRaises(MultipartUploadError):
                 with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                     for part in sample_content_parts:
-                        upload.push(part.encode())
+                        upload.push(part)
