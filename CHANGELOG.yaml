@@ -13,6 +13,20 @@ meta:
                    and needs to be copied to local deployments
 
 changes:
+
+  - title: Application health endpoints improvements
+    issues:
+      - https://github.com/databiosphere/azul/issues/624
+      - https://github.com/databiosphere/azul/issues/615
+      - https://github.com/databiosphere/azul/issues/548
+    upgrade:
+      - deploy
+      - clients
+    notes: >
+           Improvements to health endpoint include information about resources used by the application. Request to both
+           indexer `/health` & service `/health` lambdas contain a symmetric response. If the application or any
+           resource is down the response will contain a 503 status code and a body with information about the failure.
+
   - title: Include content disposition header in the final /fetch/dss/files response
     issues:
       - https://github.com/DataBiosphere/azul/issues/660
