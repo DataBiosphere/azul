@@ -54,11 +54,20 @@ class StorageServiceTest(TestCase):
         storage_service.create_bucket()
         storage_service.put(sample_key, sample_content)
 
-        presigned_url = storage_service.get_presigned_url(sample_key)
-
-        response = requests.get(presigned_url)
-
-        self.assertEqual(sample_content, response.text)
+        for file_name in None, 'foo.json':
+            with self.subTest(file_name=file_name):
+                presigned_url = storage_service.get_presigned_url(sample_key, file_name=file_name)
+                response = requests.get(presigned_url)
+                if file_name is None:
+                    self.assertNotIn('Content-Disposition', response.headers)
+                else:
+                    # noinspection PyUnreachableCode
+                    if False:  # no coverage
+                        # Unfortunately, moto does not support emulating S3's mechanism of specifying response headers
+                        # via request parameters (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html,
+                        # section Request Parameters).
+                        self.assertEqual(response.headers['Content-Disposition'], f'attachment;filename={file_name}')
+                self.assertEqual(sample_content, response.text)
 
     @mock_s3
     @mock_sts
