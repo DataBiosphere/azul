@@ -229,11 +229,13 @@ class ManifestResponse(AbstractResponse):
         """
         if self.format == 'tsv':
             data = self._construct_tsv_content().encode()
+            content_type = 'text/tab-separated-values'
         else:
-            data = self._construct_bdbag().encode()
+            data = self._construct_bdbag()
+            content_type = 'application/zip'
         parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
                           data=data,
-                          content_type='text/tab-separated-values')
+                          content_type=content_type)
         return self.storage_service.put(**parameters)
 
     def _construct_tsv_content(self):
@@ -270,8 +272,8 @@ class ManifestResponse(AbstractResponse):
         for hit in es_search.scan():
             self._iterate_hit(hit, sample_writer, participant_writer)
 
-        return _create_zipped_bdbag({'participant.tsv': participant_tsv,
-                                    'sample.tsv': sample_tsv})
+        return self._create_zipped_bdbag({'participant.tsv': participant_tsv,
+                                          'sample.tsv': sample_tsv})
 
     @staticmethod
     def _create_zipped_bdbag(data: dict):
@@ -280,16 +282,6 @@ class ManifestResponse(AbstractResponse):
         :returns bdbag: archived (zipped) BDBag with values of data as
                         payloads
         """
-        def listfiles(basepath: str) -> list:
-            """Return list of file names only (no directories) in basepath."""
-            filelist = []
-            for fname in os.listdir(basepath):
-                path = os.path.join(basepath, fname)
-                if os.path.isdir(path):
-                    continue  # skip directories\n"
-                filelist.append(os.path.basename(path))
-            return filelist
-
         with tempfile.mkdtemp('_bdbag') as bag_path:
             bag = bdbag_api.make_bag(bag_path)
             data_path = os.path.join(bag_path, 'data')
@@ -298,11 +290,9 @@ class ManifestResponse(AbstractResponse):
                 f.write(fobj.getvalue())
                 f.close()
 
-            tsv_files = list(filter(lambda x: x.endswith('.tsv'),
-                                    listfiles('/tmp')))
-            for tsv_file in tsv_files:
+            for tsv_file in data.keys():
                 copy(tsv_file, data_path)
-            assert ['participant.tsv', 'sample.tsv'] == listfiles(data_path)
+            assert ['participant.tsv', 'sample.tsv'] == os.listdir(data_path)
             bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
             assert bdbag_api.is_bag(bag_path)
             bdbag_api.validate_bag(bag_path)
@@ -311,7 +301,7 @@ class ManifestResponse(AbstractResponse):
             # TODO: in case of concurrency, is it one user = one lambda?
             # Otherwise, there might be problems figuring out what TSV file
             # belongs to which user...
-            for tsv_file in tsv_files:
+            for tsv_file in data.items():
                 os.remove(tsv_file)
 
             return bdbag_api.archive_bag(bag_path, 'zip')
@@ -339,7 +329,7 @@ class ManifestResponse(AbstractResponse):
                     self._translate(bundle, 'bundles') + file_fields)
         else:  # construct manifest for BDBag
             if participant_writer:
-                file_fields_participant = self._translate(file, 'content.files')
+                file_fields_participant = self._translate(file, 'contents.files')
                 participant_writer.writerow(file_fields_participant)
             file_fields = self._translate(file, 'contents.specimens')
             file_fields.append(
