@@ -290,25 +290,31 @@ class ManifestResponse(AbstractResponse):
                 filelist.append(os.path.basename(path))
             return filelist
 
-        bag_path = tempfile.mkdtemp('_bdbag')
-        bag = bdbag_api.make_bag(bag_path)
-        data_path = os.path.join(bag_path, 'data')
-        for fname, fobj in data.items():
-            f = open('/tmp' + fname, 'w')
-            f.write(fobj.getvalue())
-            f.close()
+        with tempfile.mkdtemp('_bdbag') as bag_path:
+            bag = bdbag_api.make_bag(bag_path)
+            data_path = os.path.join(bag_path, 'data')
+            for fname, fobj in data.items():
+                f = open('/tmp' + fname, 'w')
+                f.write(fobj.getvalue())
+                f.close()
 
-        tsv_files = list(filter(lambda x: x.endswith('.tsv'),
-                                listfiles('/tmp')))
-        for tsv_file in tsv_files:
-            copy(tsv_file, data_path)
-        assert ['participant.tsv', 'sample.tsv'] == listfiles(data_path)
-        bdbag_api.make_bag(bag_path, update=True)  # write checksums into respective files
-        assert bdbag_api.is_bag(bag_path)
-        bdbag_api.validate_bag(bag_path)
-        assert bdbag_api.check_payload_consistency(bag)
+            tsv_files = list(filter(lambda x: x.endswith('.tsv'),
+                                    listfiles('/tmp')))
+            for tsv_file in tsv_files:
+                copy(tsv_file, data_path)
+            assert ['participant.tsv', 'sample.tsv'] == listfiles(data_path)
+            bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
+            assert bdbag_api.is_bag(bag_path)
+            bdbag_api.validate_bag(bag_path)
+            assert bdbag_api.check_payload_consistency(bag)
 
-        return bdbag_api.archive_bag(bag_path, 'zip')
+            # TODO: in case of concurrency, is it one user = one lambda?
+            # Otherwise, there might be problems figuring out what TSV file
+            # belongs to which user...
+            for tsv_file in tsv_files:
+                os.remove(tsv_file)
+
+            return bdbag_api.archive_bag(bag_path, 'zip')
 
     @staticmethod
     def _get_single_column_in_file_obj(file_object, header_str: str):
