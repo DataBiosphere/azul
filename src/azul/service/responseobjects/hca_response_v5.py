@@ -337,7 +337,7 @@ class ManifestResponse(AbstractResponse):
             file_fields.append(self._translate(file, 'contents.files'))
 
             uri = os.getenv('AZUL_DRS_ENDPOINT')
-            file_id = file['file_uuid']
+            file_id = file['uuid']
             drs_uri = f'{uri}/{file_id}'
 
             for bundle in hit_dict['bundles']:
