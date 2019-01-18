@@ -78,7 +78,7 @@ class Config:
     @property
     def dss_deployment_stage(self):
         from urllib.parse import urlparse
-        domain = urlparse(self.dss_endpoint).host
+        domain = urlparse(self.dss_endpoint).netloc
         host, stage, domain = domain.split('.', maxsplit=2)
         require(host == 'dss')
         require(domain == 'data.humancellatlas.org')
