@@ -14,7 +14,7 @@ meta:
 
 changes:
 
-  - title: Application health endpoints improvements
+  - title: Improved health check endpoints include indexing progress information
     issues:
       - https://github.com/databiosphere/azul/issues/624
       - https://github.com/databiosphere/azul/issues/615
@@ -22,10 +22,11 @@ changes:
     upgrade:
       - deploy
       - clients
-    notes: >
-           Improvements to health endpoint include information about resources used by the application. Request to both
-           indexer `/health` & service `/health` lambdas contain a symmetric response. If the application or any
-           resource is down the response will contain a 503 status code and a body with information about the failure.
+    notes: The health check endpoint (`/health`) of either lambda returns a 503 status code if the lambda (or any of the
+           resources used by it) is unavailable (down). Both `/health` endpoints return the same response except that
+           the service lambda's `/health` response includes the status of the indexer lambda and vice versa. A `/health`
+           response includes the number of bundles and documents waiting to be indexed (`unindexed_bundles` and
+           `unindexed_documents`). These fields can be used in the Data Browser for visualizing indexing progress.
 
   - title: Include content disposition header in the final /fetch/dss/files response
     issues:
