@@ -816,12 +816,8 @@ def file_url(uuid, **params):
 
 
 def self_url(endpoint_path=None):
-    if app.current_request is not None:
-        protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
-        base_url = app.current_request.headers.get('host')
-    else:
-        protocol = 'http'
-        base_url = 'localhost:8000'
+    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
+    base_url = app.current_request.headers['host']
     if endpoint_path is None:
         endpoint_path = app.current_request.context['path']
     retry_url = f'{protocol}://{base_url}{endpoint_path}'
@@ -1296,7 +1292,7 @@ def get_data_object(data_object_id):
     """
     logger = app.log
     filters = {"file": {"fileId": {"is": [data_object_id]}}}
-    logger.debug('DOS request for Data Object with uuid: {}'.format(data_object_id))
+    logger.debug(f'DOS request for Data Object with uuid: {data_object_id}')
     # We don't care about the query params, only the path
     app.current_request.query_params = {}
     logger.debug("Filters string is: {}".format(filters))

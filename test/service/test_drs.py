@@ -4,11 +4,6 @@ import sys
 
 from service import WebServiceTestCase
 
-sys.path.insert(0, ".")
-
-from lambdas.service.app import azul_to_obj
-
-
 class DataRepositoryServiceEndpointTest(WebServiceTestCase):
 
     def get_data_object(self):
@@ -22,7 +17,7 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         response.raise_for_status()
         response_json = response.json()
         file_id = response_json['hits'][0]['files'][0]['uuid']
-        get_url = "{}/ga4gh/dos/v1/dataobjects/{}".format(self.base_url, file_id)
+        get_url = f"{self.base_url}/ga4gh/dos/v1/dataobjects/{file_id}"
         drs_response = requests.get(get_url)
         drs_response.raise_for_status()
         drs_response_json = drs_response.json()
@@ -38,6 +33,8 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         """
         data_object, file_id = self.get_data_object()
         self.assertEqual(file_id, data_object['id'], "The IDs should match")
+        azul_response = requests.get(f"{self.base_url}/repository/files/{file_id}").json()
+        self.assertEqual(azul_response['files'][0]['url'], data_object['urls'][0]['url'])
 
     def test_data_object_not_found(self):
         """
@@ -48,49 +45,8 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         file_id = "NOT_A_GOOD_IDEA"
         get_url = "{}/ga4gh/dos/v1/dataobjects/{}".format(self.base_url, file_id)
         # Should cause a 404 error
-        with self.assertRaises(requests.exceptions.HTTPError):
-            drs_response = requests.get(get_url)
-            drs_response.raise_for_status()
-
-    @unittest.skip("DSS and Azul indices do not match in testing"
-                   "unskip when the index data is generated dynamically")
-    def test_url_presence(self):
-        """
-        Demonstrates the presence of URLs that can be used to fetch
-        files within the DRS response.
-        :return:
-        """
-        data_object, _ = self.get_data_object()
-        url = data_object['urls'][0]['url']
-        self.assertIn('http', url, "Make sure it is url-like")
-        fetch_response = requests.get(url)
-        fetch_response.raise_for_status()
-        self.assertEqual(fetch_response.status_code, 200, "The file should fetch based"
-                                                          "on the URL provided in DRS")
-
-
-    def test_azul_to_drs(self):
-        """
-        A unit test rather than integration test for demonstrating
-        the function that translates from Azul file index to DRS.
-        :return:
-        """
-        mock_azul_file = {
-            "format": "fastq.gz",
-            "name": "AB-HE0202B-CZI-day3-Drop_S3_R1_001.fastq.gz",
-            "sha256": "a91d88ac03b52649d7299f8a5efcd74fc5b4f8d1901214c2a80b29f325573a37",
-            "size": 2067772560,
-            "url": "http://localhost:8000/fetch/dss/files/b3ebf536-e8a6-4796-a66a-7b3c088680a3?version=2018-12-05T230803.983133Z&replica=aws",
-            "uuid": "b3ebf536-e8a6-4796-a66a-7b3c088680a3",
-            "version": "2018-12-05T230803.983133Z"
-        }
-        # First try to transfer a bad entry
-        with self.assertRaises(KeyError):
-            obj = azul_to_obj({})
-
-        data_object = azul_to_obj(mock_azul_file)
-        self.assertEqual(mock_azul_file['uuid'], data_object['id'])
-        self.assertEqual(mock_azul_file['url'], data_object['urls'][0]['url'])
+        drs_response = requests.get(get_url)
+        self.assertEquals(404, drs_response.status_code)
 
 
 
