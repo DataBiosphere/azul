@@ -1,11 +1,11 @@
 #!/usr/bin/python
 import abc
 from collections import OrderedDict, defaultdict
-import csv
+import os, csv, tempfile
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-import os, bagit, boto3, urllib.request
+
 from uuid import uuid4
 
 from chalice import Response
@@ -16,6 +16,8 @@ from jsonobject import (FloatProperty,
                         ListProperty,
                         ObjectProperty,
                         StringProperty)
+from bdbag import bdbag_api
+from shutil import copy
 from azul import config
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
@@ -248,7 +250,8 @@ class ManifestResponse(AbstractResponse):
 
         return output.getvalue()
 
-    def _construct_bdbag(self):
+    def _construct_bdbag(self) -> dict:
+        """Create participant.tsv and sample.tsv and return as zipped BDBag."""
         es_search = self.es_search
         sample_tsv = StringIO()
         sample_writer = csv.writer(sample_tsv, dialect='excel-tab')
@@ -267,12 +270,45 @@ class ManifestResponse(AbstractResponse):
         for hit in es_search.scan():
             self._iterate_hit(hit, sample_writer, participant_writer)
 
-        return _create_zipped_bdbag(participant_tsv.getvalue(),
-                                   sample_tsv.getvalue())
+        return _create_zipped_bdbag({'participant.tsv': participant_tsv,
+                                    'sample.tsv': sample_tsv})
 
     @staticmethod
-    def _create_zipped_bdbag(participant_tsv: str, sample_tsv: str):
-        pass
+    def _create_zipped_bdbag(data: dict):
+        """Writes strings of file objects to disk, creates and returns BDBag.
+        :parameter data: keys are the file names, values the file objects
+        :returns bdbag: archived (zipped) BDBag with values of data as
+                        payloads
+        """
+        def listfiles(basepath: str) -> list:
+            """Return list of file names only (no directories) in basepath."""
+            filelist = []
+            for fname in os.listdir(basepath):
+                path = os.path.join(basepath, fname)
+                if os.path.isdir(path):
+                    continue  # skip directories\n"
+                filelist.append(os.path.basename(path))
+            return filelist
+
+        bag_path = tempfile.mkdtemp('_bdbag')
+        bag = bdbag_api.make_bag(bag_path)
+        data_path = os.path.join(bag_path, 'data')
+        for fname, fobj in data.items():
+            f = open('/tmp' + fname, 'w')
+            f.write(fobj.getvalue())
+            f.close()
+
+        tsv_files = list(filter(lambda x: x.endswith('.tsv'),
+                                listfiles('/tmp')))
+        for tsv_file in tsv_files:
+            copy(tsv_file, data_path)
+        assert ['participant.tsv', 'sample.tsv'] == listfiles(data_path)
+        bdbag_api.make_bag(bag_path, update=True)  # write checksums into respective files
+        assert bdbag_api.is_bag(bag_path)
+        bdbag_api.validate_bag(bag_path)
+        assert bdbag_api.check_payload_consistency(bag)
+
+        return bdbag_api.archive_bag(bag_path, 'zip')
 
     @staticmethod
     def _get_single_column_in_file_obj(file_object, header_str: str):
