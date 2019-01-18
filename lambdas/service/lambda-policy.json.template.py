@@ -36,6 +36,17 @@ emit({
         {
             "Effect": "Allow",
             "Action": [
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+            ],
+            "Resource": [
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:{name}"
+                for name in config.all_queue_names
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
                 "s3:PutObject",
                 "s3:GetObject",
                 "s3:PutObjectAcl"
