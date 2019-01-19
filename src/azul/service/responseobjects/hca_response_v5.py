@@ -338,7 +338,7 @@ class ManifestResponse(AbstractResponse):
 
             uri = os.getenv('AZUL_DRS_ENDPOINT')
             file_id = file['uuid']
-            drs_uri = f'{uri}/{file_id}'
+            drs_uri = [f'{uri}/{file_id}']
 
             for bundle in hit_dict['bundles']:
                 writer.writerow(
