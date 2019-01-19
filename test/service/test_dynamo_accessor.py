@@ -11,10 +11,7 @@ def setUpModule():
 
 class TestDynamoAccessor(DynamoTestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.table_name = 'Carts'
+    table_name = 'Carts'
 
     def create_tables(self):
         self.dynamo_accessor.dynamo_client.create_table(
@@ -69,8 +66,8 @@ class TestDynamoAccessor(DynamoTestCase):
         self.create_tables()
 
     def tearDown(self):
-        super().tearDown()
         self.dynamo_accessor.get_table(self.table_name).delete()
+        super().tearDown()
 
     def test_query_empty(self):
         """
