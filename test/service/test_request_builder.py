@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import difflib
 import json
 import logging.config
