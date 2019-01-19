@@ -1,6 +1,11 @@
+import logging
 import unittest
 
 from health_check_test_case import HealthCheckTestCase
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class TestHealthCheck(HealthCheckTestCase):

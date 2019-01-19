@@ -8,9 +8,7 @@ from unittest import mock
 
 from moto import mock_s3, mock_sts
 import requests
-import responses
 
-from azul import config
 import azul.changelog
 from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService
@@ -20,11 +18,8 @@ from service import WebServiceTestCase
 log = logging.getLogger(__name__)
 
 
-# noinspection PyPep8Naming
 def setUpModule():
-    log.setLevel(logging.DEBUG)
-    stream_handler = logging.StreamHandler(sys.stdout)
-    log.addHandler(stream_handler)
+    logging.basicConfig(level=logging.INFO)
 
 
 class FacetNameValidationTest(WebServiceTestCase):

@@ -1,11 +1,15 @@
 #!/usr/bin/python
-
-import requests
 import json
+import logging
 import unittest
 
+import requests
 
 from service import WebServiceTestCase
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class PaginationTestCase(WebServiceTestCase):

@@ -1,15 +1,20 @@
 import json
+import logging
 from unittest import mock
 
-import requests
 from botocore.exceptions import ClientError
 from chalice import BadRequestError, ChaliceViewError
 from moto import mock_s3, mock_sts
+import requests
 
 from azul import config
 from azul.service.responseobjects.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
 from service import WebServiceTestCase
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class ManifestEndpointTest(WebServiceTestCase):
