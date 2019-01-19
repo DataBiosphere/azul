@@ -13,6 +13,7 @@ def setUpModule():
 
 
 class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
+
     number_of_documents = 1500
 
     @classmethod
@@ -28,9 +29,9 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         self.create_tables()
 
     def tearDown(self):
-        super().tearDown()
         self.dynamo_accessor.get_table(config.dynamo_cart_table_name).delete()
         self.dynamo_accessor.get_table(config.dynamo_cart_item_table_name).delete()
+        super().tearDown()
 
     def create_tables(self):
         # Table definitions here must match definitions in Terraform
