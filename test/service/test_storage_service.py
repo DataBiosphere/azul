@@ -1,5 +1,4 @@
 import json
-from unittest import TestCase
 from unittest.mock import patch
 
 from moto import mock_s3, mock_sts
@@ -8,9 +7,10 @@ import requests
 from azul.service.responseobjects.storage_service import (StorageService,
                                                           MultipartUploadError,
                                                           MultipartUploadHandler)
+from azul_test_case import AzulTestCase
 
 
-class StorageServiceTest(TestCase):
+class StorageServiceTest(AzulTestCase):
     """
     Functional Test for Storage Service
     """
