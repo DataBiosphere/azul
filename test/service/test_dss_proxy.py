@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import os
 import time
 from unittest import mock
@@ -14,6 +15,11 @@ import responses
 from app_test_case import LocalAppTestCase
 from azul import config
 from retorts import ResponsesHelper
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
+
 
 # These are the credentials defined in moto.instance_metadata.responses.InstanceMetadataResponse which, for reasons
 # yet to be determined, is used on Travis but not when I run this locally. Maybe it's the absence of

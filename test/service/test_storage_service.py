@@ -1,13 +1,18 @@
 import json
+import logging
 from unittest.mock import patch
 
 from moto import mock_s3, mock_sts
 import requests
 
-from azul.service.responseobjects.storage_service import (StorageService,
-                                                          MultipartUploadError,
-                                                          MultipartUploadHandler)
+from azul.service.responseobjects.storage_service import (MultipartUploadError,
+                                                          MultipartUploadHandler,
+                                                          StorageService)
 from azul_test_case import AzulTestCase
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class StorageServiceTest(AzulTestCase):

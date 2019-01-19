@@ -1,6 +1,12 @@
+import logging
+
 import requests
 
 from service import WebServiceTestCase
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class RepositorySpecimenEndpointTest(WebServiceTestCase):

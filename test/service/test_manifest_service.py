@@ -1,17 +1,22 @@
 import datetime
 import json
+import logging
 from unittest import mock
 
 from moto import mock_sts
 
 from azul import config
 from azul.service.responseobjects.manifest_service import ManifestService
-from azul.service.responseobjects.step_function_helper import StepFunctionHelper, StateMachineError
+from azul.service.responseobjects.step_function_helper import StateMachineError, StepFunctionHelper
 from azul_test_case import AzulTestCase
 
 
     # @mock_sts is required for tests calling the arn helper methods in StepFunctionHelper
     # because they require an account id
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
+
+
 class ManifestServiceTest(AzulTestCase):
 
     def test_param_encoding_invertibility(self):
