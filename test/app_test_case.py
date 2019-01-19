@@ -1,20 +1,18 @@
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta, abstractmethod
 import importlib.util
-import os
-import sys
-import time
 import logging
-import unittest
-
-import requests
+import os
 from threading import Thread
-# noinspection PyPackageRequirements
-from chalice.local import LocalDevServer
+import time
+
 # noinspection PyPackageRequirements
 from chalice.config import Config as ChaliceConfig
+# noinspection PyPackageRequirements
+from chalice.local import LocalDevServer
+import requests
 
 from azul import config
-
+from azul_test_case import AzulTestCase
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +34,7 @@ class ChaliceServerThread(Thread):
         return self.server_wrapper.server.server_address
 
 
-class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
+class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
     """
     A mixin for test cases against a locally running instance of a AWS Lambda Function aka Chalice application. By
     default, the local instance will use the remote AWS Elasticsearch domain configured via AZUL_ES_DOMAIN or
