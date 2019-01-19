@@ -11,8 +11,6 @@ from azul.service.responseobjects.step_function_helper import StateMachineError,
 from azul_test_case import AzulTestCase
 
 
-    # @mock_sts is required for tests calling the arn helper methods in StepFunctionHelper
-    # because they require an account id
 def setUpModule():
     logging.basicConfig(level=logging.INFO)
 
@@ -28,6 +26,9 @@ class ManifestServiceTest(AzulTestCase):
 
         encoding = 'IjRkMWE4MGQxLWU5MmUtMTFlOC1iYzc2LWY5NTQ3MzRjNmU5YiI='
         self.assertEqual(encoding, ManifestService().encode_params(ManifestService().decode_params(encoding)))
+
+    # @mock_sts is required for tests calling the arn helper methods in StepFunctionHelper
+    # because they require an account id
 
     @mock_sts
     @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
