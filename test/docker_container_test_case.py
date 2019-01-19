@@ -1,15 +1,16 @@
 import logging
 import os
 from typing import Tuple
-from unittest import TestCase
 
 import docker
 from more_itertools import one
 
+from azul_test_case import AzulTestCase
+
 logger = logging.getLogger(__name__)
 
 
-class DockerContainerTestCase(TestCase):
+class DockerContainerTestCase(AzulTestCase):
     """
     A test case facilitating the creation of Docker containers that live as long as the class.
     """
