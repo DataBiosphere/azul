@@ -1,3 +1,4 @@
+import logging
 from unittest import mock
 
 from chalice import BadRequestError, ChaliceViewError
@@ -6,6 +7,10 @@ from moto import mock_s3, mock_sts
 from azul import config
 from azul.service.responseobjects.storage_service import StorageService
 from azul_test_case import AzulTestCase
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class TestQueryShortener(AzulTestCase):

@@ -1,10 +1,15 @@
+import logging
+
 import requests
 
 from service import WebServiceTestCase
 
 
-class RepositoryProjectsEndpointTest(WebServiceTestCase):
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
+
+class RepositoryProjectsEndpointTest(WebServiceTestCase):
     # Set a seed so that we can test the detail response with a stable project ID
     seed = 123
 

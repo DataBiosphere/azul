@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import json
+import logging
 import unittest
 import urllib.parse
 
@@ -12,6 +13,10 @@ from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
                                                           KeywordSearchResponse,
                                                           ProjectSummaryResponse)
 from service import WebServiceTestCase
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class TestResponse(WebServiceTestCase):
