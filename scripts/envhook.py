@@ -62,9 +62,13 @@ def setenv():
     before = _parse(_run('env'))
     after = _parse(_run(f'source {environment} && env'))
     diff = set(after.items()).symmetric_difference(before.items())
-    for k, v in sorted(diff):
-        print(f"{self.name}: Setting {k} to '{v}'", file=sys.stderr)
-        os.environ[k] = v
+    if diff:
+        pycharm_hosted = bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
+        if not pycharm_hosted:
+            raise RuntimeError(f'It appears as though you need to source {environment}')
+        for k, v in sorted(diff):
+            print(f"{self.name}: Setting {k} to '{v}'", file=sys.stderr)
+            os.environ[k] = v
 
 
 def _run(command) -> str:
