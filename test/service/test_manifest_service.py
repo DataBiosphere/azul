@@ -1,17 +1,18 @@
 import datetime
 import json
-from unittest import mock, TestCase
+from unittest import mock
 
 from moto import mock_sts
 
 from azul import config
 from azul.service.responseobjects.manifest_service import ManifestService
 from azul.service.responseobjects.step_function_helper import StepFunctionHelper, StateMachineError
+from azul_test_case import AzulTestCase
 
 
-class ManifestServiceTest(TestCase):
     # @mock_sts is required for tests calling the arn helper methods in StepFunctionHelper
     # because they require an account id
+class ManifestServiceTest(AzulTestCase):
 
     def test_param_encoding_invertibility(self):
         """

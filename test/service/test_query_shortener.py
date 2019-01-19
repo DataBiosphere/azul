@@ -1,13 +1,14 @@
-from unittest import mock, TestCase
+from unittest import mock
 
 from chalice import BadRequestError, ChaliceViewError
 from moto import mock_s3, mock_sts
 
 from azul import config
 from azul.service.responseobjects.storage_service import StorageService
+from azul_test_case import AzulTestCase
 
 
-class TestQueryShortener(TestCase):
+class TestQueryShortener(AzulTestCase):
 
     @mock.patch('azul.service.responseobjects.storage_service.StorageService.put')
     @mock.patch('azul.service.responseobjects.storage_service.StorageService.get')
