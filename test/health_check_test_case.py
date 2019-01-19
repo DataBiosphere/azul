@@ -1,23 +1,17 @@
+from abc import ABCMeta
 import os
+from typing import List
+from unittest import TestSuite, mock
 
 import boto3
-import logging
+from moto import mock_sqs, mock_sts
 import requests
 import responses
 
-from abc import ABCMeta
-
-from typing import List
-from unittest import mock, TestSuite
-from moto import mock_sqs, mock_sts
-
-from azul import config
 from app_test_case import LocalAppTestCase
+from azul import config
 from es_test_case import ElasticsearchTestCase
 from retorts import ResponsesHelper
-
-
-logger = logging.getLogger(__name__)
 
 
 # FIXME: This is inelegant: https://github.com/DataBiosphere/azul/issues/652
