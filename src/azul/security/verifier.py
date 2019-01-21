@@ -1,7 +1,8 @@
 # The code is based on dss.util.security.
-from logging import getLogger
-
 from base64 import urlsafe_b64decode
+import logging
+from urllib.parse import urlparse
+
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 import jwt
@@ -10,7 +11,7 @@ import requests
 
 from azul import config
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 allowed_algorithms = ('RS256',)
 gserviceaccount_domain = "iam.gserviceaccount.com"
@@ -31,8 +32,8 @@ def verify(token: str):
     except KeyError:
         raise InvalidTokenError(token)
 
-    if not issuer.startswith('http://127.0.0.1:') and issuer != config.access_token_issuer:
-        logger.warning(f"Detected a JWT with UNKNOWN ISSUER.", exc_info=True)
+    if not is_valid_issuer(issuer):
+        logger.warning(f"Detected a JWT with UNKNOWN ISSUER. ({issuer})", exc_info=True)
         raise InvalidTokenError(token)
 
     public_keys = get_public_keys(issuer)
@@ -54,6 +55,19 @@ def verify(token: str):
     except PyJWTError:
         logger.warning(f"Detected a JWT with INVALID SIGNATURE.", exc_info=True)
         raise InvalidTokenError(token)
+
+
+def is_valid_issuer(issuer):
+    if issuer.startswith('http://127.0.0.1:'):
+        return True
+
+    given_issuer = urlparse(issuer)
+    expected_issuer = urlparse(config.access_token_issuer)
+
+    logger.info('Expected ISSUER: %s', expected_issuer)
+    logger.info('Given ISSUER: %s', given_issuer)
+
+    return given_issuer.scheme == expected_issuer.scheme and given_issuer.netloc == expected_issuer.netloc
 
 
 def get_jwks_uri(openid_provider):
