@@ -793,10 +793,12 @@ def files_proxy(uuid):
             s3 = boto3.client('s3')
             if file_name is None:
                 file_name = uuid
+            bucket = location.netloc.partition('.')[0]
+            assert bucket == config.dss_checkout_bucket
             location = s3.generate_presigned_url(ClientMethod=s3.get_object.__name__,
                                                  ExpiresIn=round(expires - time.time()),
                                                  Params={
-                                                     'Bucket': location.netloc.partition('.')[0],
+                                                     'Bucket': bucket,
                                                      'Key': location.path[1:],
                                                      'ResponseContentDisposition': 'attachment;filename=' + file_name,
                                                  })

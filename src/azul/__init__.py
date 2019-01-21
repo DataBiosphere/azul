@@ -77,18 +77,33 @@ class Config:
 
     @property
     def dss_deployment_stage(self):
+        return self._dss_deployment_stage(self.dss_endpoint)
+
+    def _dss_deployment_stage(self, dss_endpoint):
+        """
+        >>> config._dss_deployment_stage('https://dss.staging.data.humancellatlas.org/v1')
+        'staging'
+        >>> config._dss_deployment_stage('https://dss.data.humancellatlas.org/v1')
+        'prod'
+        """
         from urllib.parse import urlparse
-        domain = urlparse(self.dss_endpoint).netloc
-        host, stage, domain = domain.split('.', maxsplit=2)
-        require(host == 'dss')
-        require(domain == 'data.humancellatlas.org')
-        return stage
+        user, _, domain = urlparse(dss_endpoint).netloc.rpartition('@')
+        domain = domain.split('.')
+        require(domain[-3:] == ['data', 'humancellatlas', 'org'])
+        require(domain[0] == 'dss')
+        stage = domain[1:-3]
+        assert len(stage) < 2
+        return 'prod' if stage == [] else stage[0]
 
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 
     @property
     def dss_checkout_bucket(self):
-        return f'org-hca-dss-checkout-{self.dss_deployment_stage}'
+        stage = self.dss_deployment_stage
+        # For domain_part, DSS went from `humancellatlas` to `hca` in 9/2018 and started reverting back to
+        # `humancellatlas` in 12/2018. As I write this, only `dev` is back on `humancellatlas`
+        domain_part = 'humancellatlas' if stage == 'dev' else 'hca'
+        return f'org-{domain_part}-dss-checkout-{stage}'
 
     @property
     def num_dss_workers(self) -> int:
