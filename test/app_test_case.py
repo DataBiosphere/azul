@@ -12,6 +12,7 @@ from chalice.local import LocalDevServer
 import requests
 
 from azul import config
+from azul.modules import load_module
 from azul_test_case import AzulTestCase
 
 log = logging.getLogger(__name__)
@@ -68,12 +69,7 @@ class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
         # simplifies tear down and isolates the app modules from different lambdas loaded by different concrete
         # subclasses. It does, however, violate this one invariant: `sys.modules[module.__name__] == module`
         path = os.path.join(config.project_root, 'lambdas', cls.lambda_name(), 'app.py')
-        spec = importlib.util.spec_from_file_location('__main__', path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        assert path == module.__file__
-        assert module.__name__ == '__main__'
-        cls.app_module = module
+        cls.app_module = load_module(path, '__main__')
 
     @classmethod
     def tearDownClass(cls):
