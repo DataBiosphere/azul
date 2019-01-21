@@ -1,10 +1,13 @@
 #! /usr/bin/env python3
 
 import errno
+from itertools import chain
 import os
 import subprocess
 import sys
 from pathlib import Path
+
+from typing import Mapping, TypeVar, Tuple, MutableMapping
 
 __all__ = ('setenv', 'main')
 
@@ -59,16 +62,68 @@ def setenv():
     self = Path(__file__).resolve()
     project = self.parent.parent
     environment = project.joinpath('environment')
-    before = _parse(_run('env'))
-    after = _parse(_run(f'source {environment} && env'))
-    diff = set(after.items()).symmetric_difference(before.items())
-    if diff:
-        pycharm_hosted = bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
-        if not pycharm_hosted:
-            raise RuntimeError(f'It appears as though you need to source {environment}')
-        for k, v in sorted(diff):
-            print(f"{self.name}: Setting {k} to '{v}'", file=sys.stderr)
-            os.environ[k] = v
+    old = _parse(_run('env'))
+    new = _parse(_run(f'source {environment} && env'))
+    pycharm_hosted = bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
+
+    for k, (o, n) in sorted(zip_dict(old, new).items()):
+        if o is None:
+            if pycharm_hosted:
+                _print(f"{self.name}: Setting {k} to '{n}'")
+                os.environ[k] = n
+            else:
+                _print(f"{self.name}: Warning: {k} is not set but should be {n}, you must run `source environment`")
+        elif n is None:
+            if pycharm_hosted:
+                _print(f"{self.name}: Removing {k}, was set to '{o}'")
+                del os.environ[k]
+            else:
+                _print(f"{self.name}: Warning: {k} is '{o}' but should not be set, you must run `source environment`")
+        elif n != o:
+            if k.startswith('PYTHON'):
+                _print(f"{self.name}: Ignoring change in {k} from '{o}' to '{n}'")
+            else:
+                if pycharm_hosted:
+                    _print(f"{self.name}: Changing {k} from '{o}' to '{n}'")
+                    os.environ[k] = n
+                else:
+                    _print(f"{self.name}: Warning: {k} is '{o}' but should be '{n}', you must run `source environment`")
+
+
+K = TypeVar('K')
+O = TypeVar('O')
+N = TypeVar('N')
+
+
+def zip_dict(old: Mapping[K, O], new: Mapping[K, N], missing=None) -> MutableMapping[K, Tuple[O, N]]:
+    """
+    Merge two dictionaries. The resulting dictionary contains an entry for every key in either `old` or `new`. Each
+    entry in the result associates a key to two values: the value from `old` for that key followed by the value from
+    `new` for that key. If the key is absent from either argument, the respective tuple element will be `missing`,
+    which defaults to None. If either `old` or `new` could contain None values, some other value should be passed for
+    `missing` in order to distinguish None values from values for absent entries.
+
+    >>> zip_dict({1:2}, {1:2})
+    {1: (2, 2)}
+    >>> zip_dict({1:2}, {3:4})
+    {1: (2, None), 3: (None, 4)}
+    >>> zip_dict({1:2}, {1:3})
+    {1: (2, 3)}
+    >>> zip_dict({1:2}, {})
+    {1: (2, None)}
+    >>> zip_dict({}, {1:2})
+    {1: (None, 2)}
+    >>> zip_dict({'deleted': 1, 'same': 2, 'changed': 3}, {'same': 2, 'changed': 4, 'added': 5}, missing=-1)
+    {'deleted': (1, -1), 'same': (2, 2), 'changed': (3, 4), 'added': (-1, 5)}
+    """
+    result = ((k, (old.get(k, missing), n)) for k, n in new.items())
+    removed = ((k, o) for k, o in old.items() if k not in new)
+    removed = ((k, (o, missing)) for k, o in removed)
+    return dict(chain(removed, result))
+
+
+def _print(msg):
+    print(msg, file=sys.stderr)
 
 
 def _run(command) -> str:
@@ -89,7 +144,7 @@ def _run(command) -> str:
     return output
 
 
-def _parse(env: str):
+def _parse(env: str) -> MutableMapping[str, str]:
     return {k: v for k, _, v in (line.partition('=') for line in env.splitlines())}
 
 
