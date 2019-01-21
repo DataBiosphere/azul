@@ -368,14 +368,18 @@ class Config:
 
     @property
     def access_token_issuer(self):
-        return "https://humancellatlas.auth0.com/"
+        return "https://humancellatlas.auth0.com"
 
     @property
     def access_token_audience_list(self):
         return [
             f"https://{self.deployment_stage}.data.humancellatlas.org/",
-            f"{self.access_token_issuer}userinfo"
+            f"{self.access_token_issuer}/userinfo"
         ]
+
+    @property
+    def fusillade_hostname(self) -> str:
+        return os.environ['AZUL_FUSILLADE_HOSTNAME']
 
 
 config = Config()

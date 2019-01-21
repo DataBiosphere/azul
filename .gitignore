@@ -7,10 +7,6 @@
 #
 # - No leading slash means the pattern matches at any depth.
 
-# OpenSSL Private-Public Keys for testing authentication
-# The test case will automatically generate and remove the keys.
-test/*.pem
-
 # Python files
 *.pyc
 __pycache__/

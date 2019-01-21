@@ -77,10 +77,14 @@ class ChaliceServerThread(Thread):
 
     def __add_test_routes(self):
         app = self.server_wrapper.app_object
-        encode_int = lambda x: b64encode(x.to_bytes(math.ceil(x.bit_length()/8), 'big')).decode('utf-8')
-        generate_json_response = lambda body: Response(json.dumps(body, indent=4, sort_keys=True),
-                                                       headers={'Content-Type': 'application/json'},
-                                                       status_code=200)
+
+        def encode_int(x):
+            return b64encode(x.to_bytes(math.ceil(x.bit_length()/8), 'big')).decode('utf-8')
+
+        def generate_json_response(body):
+            return Response(json.dumps(body, indent=4, sort_keys=True),
+                            headers={'Content-Type': 'application/json'},
+                            status_code=200)
 
         private_key, public_key = get_test_keys()
 

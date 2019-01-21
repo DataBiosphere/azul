@@ -13,28 +13,8 @@ logger = getLogger(__name__)
 fusillade_callback_url = f'{config.service_endpoint()}/auth/callback'
 
 
-def get_fusillade_hostname():
-    # This can be moved to config.
-    deployment_stage = get_fusillade_stage()
-    fusillade_subdomain =f'auth.{deployment_stage}' if deployment_stage else 'auth'
-    return f'{fusillade_subdomain}.data.humancellatlas.org'
-
-
-def get_fusillade_stage() -> str:
-    production_deployment_stages = ('prod', 'production')
-    testing_deployment_stages = ('staging', 'integration')
-    deployment_stage = config.deployment_stage
-    if deployment_stage in production_deployment_stages:
-        return None
-    elif deployment_stage not in testing_deployment_stages:
-        # Override any non-testing/production deployment stage to dev.
-        # This will make all development environments to share to the same Fusillade deployment.
-        return 'dev'
-    return deployment_stage
-
-
 def get_fusillade_url(request_path):
-    return f'https://{get_fusillade_hostname()}/{request_path}'
+    return f'https://{config.fusillade_hostname}/{request_path}'
 
 
 def get_fusillade_login_url() -> str:
@@ -80,13 +60,12 @@ def get_access_token(request_headers: Dict[str, str]) -> Dict[str, Any]:
 
 
 def authenticate(authorization_token:str) -> Dict[str, Any]:
-    try:
-        bearer_token_prefix = "Bearer "
-        assert authorization_token.startswith(bearer_token_prefix), "not_bearer_token"
-        access_token = authorization_token[len(bearer_token_prefix):]
-        assert access_token, "missing_bearer_token"
-    except AssertionError as e:
-        raise AuthenticationError(e.args[0])
+    bearer_token_prefix = "Bearer "
+    if not authorization_token.startswith(bearer_token_prefix):
+        raise AuthenticationError("not_bearer_token")
+    access_token = authorization_token[len(bearer_token_prefix):]
+    if not access_token:
+        raise AuthenticationError("missing_bearer_token")
 
     try:
         return verify(access_token)
