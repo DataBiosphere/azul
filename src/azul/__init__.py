@@ -2,7 +2,7 @@ import functools
 import os
 import re
 import time
-from typing import Mapping, Tuple, List
+from typing import List, Mapping, Tuple
 
 from hca.dss import DSSClient
 from urllib3 import Timeout
@@ -71,7 +71,7 @@ class Config:
 
     @property
     def dss_query_prefix(self) -> str:
-        return os.environ['azul_dss_query_prefix']
+        return os.environ.get('azul_dss_query_prefix', '')
 
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 
