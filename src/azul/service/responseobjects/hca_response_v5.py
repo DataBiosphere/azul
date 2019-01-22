@@ -282,18 +282,19 @@ class ManifestResponse(AbstractResponse):
         :returns bdbag: archived (zipped) BDBag with values of data as
                         payloads
         """
-        with tempfile.mkdtemp('_bdbag') as bag_path:
+        with tempfile.TemporaryDirectory() as bag_path,\
+            tempfile.TemporaryDirectory() as tsv_file_dir:
             bag = bdbag_api.make_bag(bag_path)
             data_path = os.path.join(bag_path, 'data')
             for fname, fobj in data.items():
-                f = open('/tmp' + fname, 'w')
+                f = open(os.path.join(tsv_file_dir, fname), 'w')
                 f.write(fobj.getvalue())
                 f.close()
 
             for tsv_file in data.keys():
-                copy(tsv_file, data_path)
+                copy(os.path.join(tsv_file_dir, tsv_file), data_path)
             assert ['participant.tsv', 'sample.tsv'] == os.listdir(data_path)
-            bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
+            bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
             assert bdbag_api.is_bag(bag_path)
             bdbag_api.validate_bag(bag_path)
             assert bdbag_api.check_payload_consistency(bag)
@@ -301,8 +302,8 @@ class ManifestResponse(AbstractResponse):
             # TODO: in case of concurrency, is it one user = one lambda?
             # Otherwise, there might be problems figuring out what TSV file
             # belongs to which user...
-            for tsv_file in data.items():
-                os.remove(tsv_file)
+            # for tsv_file in data.items():
+            #    os.remove(os.path.join(tsv_file_dir, tsv_file))
 
             return bdbag_api.archive_bag(bag_path, 'zip')
 
