@@ -1,16 +1,18 @@
-#!/usr/bin/python
-
 import difflib
 import json
 import logging.config
+import os
 import unittest
 
 from elasticsearch_dsl.utils import AttrList
 
-from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+from azul.service import service_config
+from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump, ElasticTransformDump as EsTd
 from service import WebServiceTestCase
 
-logger = logging.getLogger(__name__)
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class TestRequestBuilder(WebServiceTestCase):
@@ -381,13 +383,15 @@ class TestRequestBuilder(WebServiceTestCase):
         }
 
         sample_filter = {}
-
+        request_config_path = os.path.join(os.path.dirname(service_config.__file__), 'request_config.json')
+        request_config = ElasticTransformDump.open_and_return_json(request_config_path)
         # Create a request object
         agg_field = 'facet1'
         aggregation = EsTd.create_aggregate(
             sample_filter,
             facet_config={agg_field: f'{agg_field}.translation'},
-            agg=agg_field
+            agg=agg_field,
+            request_config=request_config
         )
         # Convert objects to be compared to strings
         expected_output = json.dumps(
@@ -417,7 +421,7 @@ class TestRequestBuilder(WebServiceTestCase):
                         "specimens": [],
                         "cell_suspensions": [],
                         "files": [],
-                        "processes": [],
+                        "protocols": [],
                         "project": {
                             "document_id": "a"
                         }
@@ -473,7 +477,7 @@ class TestRequestBuilder(WebServiceTestCase):
                             }
                         ],
                         "files": [],
-                        "processes": [],
+                        "protocols": [],
                         "project": {
                             "document_id": "b"
                         }

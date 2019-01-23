@@ -9,10 +9,133 @@ meta:
     - terraform: (requires `make terraform`)
     - requirements: (requires `pip -Ur requirements.dev.txt`)
     - clients: the service API changed in a way that requires clients to be updated
+    - environment: an environment variable was added to the `/deployments/.example.local` deployment
+                   and needs to be copied to local deployments
 
 changes:
 
-  - title:  Removed `disease` extraction from `donor_organism`
+  - title: Include content disposition header in manifest responses
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/655
+    upgrade:
+      - deploy
+    notes: All manifest responses include a content disposition header that specifies the file name as
+           `hca-manifest-<UUID>.tsv`.
+
+  - title: Improved health check endpoints include indexing progress information
+    issues:
+      - https://github.com/databiosphere/azul/issues/624
+      - https://github.com/databiosphere/azul/issues/615
+      - https://github.com/databiosphere/azul/issues/548
+    upgrade:
+      - deploy
+      - clients
+    notes: The health check endpoint (`/health`) of either lambda returns a 503 status code if the lambda (or any of the
+           resources used by it) is unavailable (down). Both `/health` endpoints return the same response except that
+           the service lambda's `/health` response includes the status of the indexer lambda and vice versa. A `/health`
+           response includes the number of bundles and documents waiting to be indexed (`unindexed_bundles` and
+           `unindexed_documents`). These fields can be used in the Data Browser for visualizing indexing progress.
+
+  - title: Include content disposition header in the final /fetch/dss/files response
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/660
+    upgrade:
+      - deploy
+    notes: If `&fileName=...` is passed to `/fetch/dss/files` the response header will include that file name.
+           Otherwise the header will specify the file's UUID as the file name.
+
+  - title: Personal deployment should index a limited subset of bundles
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/646
+    upgrade:
+      - environment
+      - reindex
+    notes: Please append `_set azul_dss_query_prefix '42'` to deployments/*.local/environment.
+
+  - title: Add endpoint to shorten URLs
+    issues:
+      - https://github.com/databiosphere/azul/issues/66
+    upgrade:
+      - terraform
+      - deploy
+      - clients
+      - environment
+    notes: >
+           The `/url` endpoint was added to return a URL that redirects to a given long URL.
+           Documentation: /lambdas/service/app.py#L701
+           AZUL_URL_REDIRECT_BASE_DOMAIN_NAME and AZUL_URL_REDIRECT_FULL_DOMAIN_NAME should be copied from the example
+           deployment environment to local deployments
+
+  - title: Emulate HTTP redirects and retry-after in DSS file proxy
+    issues:
+    - https://github.com/DataBiosphere/azul/issues/551
+    upgrade:
+    - deploy
+    - client
+    notes: Refer to docstring for service API handler `/fetch/dss/files/{uuid}`.
+           Note that the DSS file proxy endpoint changed from `/dss/files/{uuid}` to `/fetch/dss/files/{uuid}`
+
+  - title: Make the manifest endpoint dual mode (standard HTTP and lifted 200)
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/567
+    upgrade:
+      - deploy
+    notes: The previous `/manifest/files` endpoint behaviour has been moved to `/fetch/manifest/files`.
+           `/fetch/manifest/files` will return a 200 response with redirection information in the body.
+           `/manifest/files` has been changed to return either a 301 or 302 response with a `Location`
+           header to allow the client to automatically redirect.  This change allows different clients
+           to be able to choose the type of response.  e.g. Data browser can handle redirects in Javascript
+           and matrix service can automatically be redirected.
+
+  - title: Use step functions to produce manifest
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/546
+      - https://github.com/humancellatlas/data-browser/issues/372
+      - https://github.com/databiosphere/azul/issues/566
+    upgrade:
+      - terraform
+      - deploy
+      - clients
+    notes: The manifest download endpoint should be changed to `/manifest/files` as described here
+           https://github.com/DataBiosphere/azul/blob/8d8fbac6474868cc7ebaebc6a726c427fad5c14b/lambdas/service/app.py#L543
+           This increases the time limmit for manifest generation but also requires clents to make changes to handle
+           the download.
+
+  - title: Replace `process` inner entity with `protocol`
+    issues:
+    - https://github.com/databiosphere/azul/issues/540
+    upgrade:
+    - deploy
+    - reindex
+    notes: Previously one process inner entity was created for every pair of protocol and process metadata entity.
+           With this change only protocol metadata entities are indexed, the inner entity is renamed from process
+           to protocol and unused fields have been removed. Only the fields instrumentManufacturerModel and
+           libraryConstructionApproach are being indexed. This change also removes the grouping of the
+           process/protocol inner entities by the libraryConstructionApproach field.
+
+  - title: Add CloudWatch alarms on certain ES metrics to main deployments
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/332
+    upgrade:
+      - terraform
+    notes: Alarms will only be created for the main deployments. Personal deployments are not affected.
+
+  - title: "Fix: file type summary is truncated to ten entries"
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/535
+      - https://github.com/HumanCellAtlas/data-browser/issues/318
+    upgrade:
+      - deploy
+
+  - title: Remove protocol facet from service response
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/516
+      - https://github.com/databiosphere/azul/issues/540
+      - https://github.com/HumanCellAtlas/data-browser/issues/320
+    upgrade:
+      - deploy
+
+  - title: Removed `disease` extraction from `donor_organism`
     issues:
       - https://github.com/DataBiosphere/azul/issues/527
       - https://github.com/HumanCellAtlas/data-browser/issues/335
