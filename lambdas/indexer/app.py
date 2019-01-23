@@ -87,7 +87,7 @@ def post_notification():
     else:
         message = dict(action='add', notification=notification)
         notify_queue = queue(config.notify_queue_name)
-        notify_queue.send_message(MessageBody=message)
+        notify_queue.send_message(MessageBody=json.dumps(message))
         log.info("Queued notification %r", notification)
     return {"status": "done"}
 
@@ -101,7 +101,7 @@ def delete_notification():
     log.info("Received deletion notification %r", notification)
     message = dict(action='delete', notification=notification)
     notify_queue = queue(config.notify_queue_name)
-    notify_queue.send_message(MessageBody=message)
+    notify_queue.send_message(MessageBody=json.dumps(message))
     log.info("Queued notification %r", notification)
 
     return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
