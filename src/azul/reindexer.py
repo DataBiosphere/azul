@@ -222,8 +222,6 @@ class Reindexer(object):
             num_messages += len(batch)
         logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, prefix)
 
-        return bundle_fqids
-
     def delete_all_indices(self):
         es_client = ESClientFactory.get()
         plugin = Plugin.load()

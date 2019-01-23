@@ -80,7 +80,7 @@ def post_notification():
     log.info("Received notification %r", notification)
     params = app.current_request.query_params
 
-    if not config.test_mode or notification.get('test_name'):
+    if not config.test_mode or notification.get('test_name', None):
         if params and params.get('sync', 'False').lower() == 'true':
             indexer_cls = plugin.indexer_class()
             indexer = indexer_cls()
@@ -93,8 +93,9 @@ def post_notification():
             log.info("Queued notification %r", notification)
         return {"status": "done"}
     else:
-        log.warning('Ignored notification %r. This indexer is currently in TEST MODE.', notification)
-        raise chalice.ChaliceViewError('This indexer is currently in TEST MODE.')
+        test_mode_error = f'Ignored notification {notification}. This indexer is currently in TEST MODE.'
+        log.error(test_mode_error)
+        raise chalice.ChaliceViewError(test_mode_error)
 
 
 @app.route('/delete', methods=['POST'])
