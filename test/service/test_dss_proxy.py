@@ -1,12 +1,35 @@
+import io
+import json
+import logging
+import os
 import time
-from unittest import TestCase, mock
+from unittest import mock
 
+import boto3
+from chalice.config import Config as ChaliceConfig
+from furl import furl
+from moto import mock_s3
 import requests
 import responses
-from chalice.config import Config as ChaliceConfig
 
 from app_test_case import LocalAppTestCase
 from azul import config
+from retorts import ResponsesHelper
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
+
+
+# These are the credentials defined in moto.instance_metadata.responses.InstanceMetadataResponse which, for reasons
+# yet to be determined, is used on Travis but not when I run this locally. Maybe it's the absence of
+# ~/.aws/credentials. The credentials that @mock_sts provides look more realistic but boto3's STS credential provider
+# would be skipped on CI because the lack of ~/.aws/credentials there implies that AssumeRole credentials aren't
+# configured, causing boto3 to default to use credentials from mock instance metadata.
+#
+mock_access_key_id = 'test-key'  # @mock_sts uses AKIAIOSFODNN7EXAMPLE
+mock_secret_access_key = 'test-secret-key'  # @mock_sts uses wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY
+mock_session_token = 'test-session-token'  # @mock_sts token starts with  AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk …
 
 
 class TestDssProxy(LocalAppTestCase):
@@ -18,33 +41,103 @@ class TestDssProxy(LocalAppTestCase):
     def chalice_config(self):
         return ChaliceConfig.create(lambda_timeout=15)
 
-    @responses.activate
+    def assertUrlEqual(self, a: furl, b: furl):
+        if isinstance(a, str):
+            a = furl(a)
+        if isinstance(b, str):
+            b = furl(b)
+        self.assertEqual(a.scheme, b.scheme)
+        self.assertEqual(a.username, b.username)
+        self.assertEqual(a.password, b.password)
+        self.assertEqual(a.host, b.host)
+        self.assertEqual(a.port, b.port)
+        self.assertEqual(a.path, b.path)
+        self.assertEqual(sorted(a.args.allitems()), sorted(b.args.allitems()))
+
+    @mock.patch.dict(os.environ,
+                     AWS_ACCESS_KEY_ID=mock_access_key_id,
+                     AWS_SECRET_ACCESS_KEY=mock_secret_access_key,
+                     AWS_SESSION_TOKEN=mock_session_token)
+    @mock_s3
     def test_dss_files_proxy(self):
-        responses.add_passthru(self.base_url)
-        with mock.patch.object(config, 'service_endpoint', lambda: self.base_url):
-            file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
-            file_version = '2018-09-12T121154.054628Z'
-            dss_url = f'{config.dss_endpoint}/files/{file_uuid}?replica=aws&version={file_version}'
-            s3_url = 'https://org-humancellatlas-dss-checkout-staging.s3.amazonaws.com/blobs/some_blob'
-            token = '&token=some_token'
-            retry_after = 3
-            responses.add(responses.Response(method='GET',
-                                             url=dss_url,
-                                             status=301,
-                                             headers={'Location': dss_url + token,
-                                                      'Retry-After': str(retry_after)}))
-            azul_url = f'{self.base_url}/dss/files/{file_uuid}?replica=aws&version={file_version}'
-            before = time.time()
-            response = requests.get(azul_url, allow_redirects=False)
-            request_duration = time.time() - before
-            self.assertLessEqual(retry_after, request_duration)
-            self.assertLess(request_duration, 2 * retry_after)
-            self.assertEqual(301, response.status_code)
-            self.assertEqual(azul_url + token, response.headers['Location'])
-            responses.add(responses.Response(method='GET',
-                                             url=dss_url + token,
-                                             status=302,
-                                             headers={'Location': s3_url}))
-            response = requests.get(azul_url + token, allow_redirects=False)
-            self.assertEqual(302, response.status_code)
-            self.assertEqual(s3_url, response.headers['Location'])
+        self.maxDiff = None
+        key = ("blobs/6929799f227ae5f0b3e0167a6cf2bd683db097848af6ccde6329185212598779"
+               ".f2237ad0a776fd7057eb3d3498114c85e2f521d7"
+               ".7e892bf8f6aa489ccb08a995c7f017e1."
+               "847325b6")
+        bucket_name = 'org-hca-dss-checkout-staging'
+        s3 = boto3.client('s3')
+        s3.create_bucket(Bucket=bucket_name)
+        s3.upload_fileobj(Bucket=bucket_name, Fileobj=io.BytesIO(b'foo'), Key=key)
+        file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
+        file_version = '2018-09-12T121154.054628Z'
+        retry_after = 3
+        dss_url = furl(
+            url=config.dss_endpoint,
+            path='/v1/files',
+            args={
+                'replica': 'aws',
+                'version': file_version
+            }).add(path=file_uuid)
+        dss_token = 'some_token'
+        dss_url_with_token = dss_url.copy().add(args={'token': dss_token})
+        for file_name, signature in [(None, 'lG7pb44+ruFQMJomZ234Naiw4Sk='),
+                                     ('foo.txt', '6JGr8/HuwktNSf35iJyZ8vIJdds='),
+                                     ('foo bar.txt', 'z9uI4zJgBPzF5hkkFmylSpQrYRA='),
+                                     ('foo&bar.txt', 'bu8ATMDQ6qeZj9SbygF0bgK5tUU=')]:
+            with self.subTest(file_name=file_name):
+                with mock.patch('time.time', new=lambda: 1547691253.07010):
+                    with ResponsesHelper() as helper:
+                        helper.add_passthru(self.base_url)
+                        expires = str(round(time.time() + 3600))
+                        s3_url = furl(
+                            url=f'https://{bucket_name}.s3.amazonaws.com',
+                            path=key,
+                            args={
+                                'AWSAccessKeyId': 'SOMEACCESSKEY',
+                                'Signature': 'SOMESIGNATURE=',
+                                'x-amz-security-token': 'SOMETOKEN',
+                                'Expires': expires
+                            })
+                        helper.add(responses.Response(method='GET',
+                                                      url=dss_url.url,
+                                                      status=301,
+                                                      headers={'Location': dss_url_with_token.url,
+                                                               'Retry-After': str(retry_after)}))
+                        azul_url = furl(
+                            url=self.base_url,
+                            path='/fetch/dss/files',
+                            args={
+                                'replica': 'aws',
+                                'version': file_version
+                            }).add(path=file_uuid)
+                        if file_name is not None:
+                            azul_url.args['fileName'] = file_name
+                        response = requests.get(azul_url.url, allow_redirects=False)
+                        self.assertEqual(200, response.status_code)
+                        body = json.loads(response.content)
+                        azul_url.args['token'] = dss_token
+                        self.assertUrlEqual(azul_url, body['Location'])
+                        self.assertEqual(retry_after, body["Retry-After"])
+                        self.assertEqual(301, body["Status"])
+                        helper.add(responses.Response(method='GET',
+                                                      url=dss_url_with_token.url,
+                                                      status=302,
+                                                      headers={'Location': s3_url.url}))
+                        response = requests.get(body['Location'], allow_redirects=False)
+                        self.assertEqual(200, response.status_code)
+                        body = json.loads(response.content)
+                        self.assertEqual(302, body["Status"])
+                        if file_name is None:
+                            file_name = file_uuid
+                        re_pre_signed_s3_url = furl(
+                            url=f'https://{bucket_name}.s3.amazonaws.com',
+                            path=key,
+                            args={
+                                'response-content-disposition': f'attachment;filename={file_name}',
+                                'AWSAccessKeyId': mock_access_key_id,
+                                'Signature': signature,
+                                'Expires': expires,
+                                'x-amz-security-token': mock_session_token
+                            })
+                        self.assertUrlEqual(re_pre_signed_s3_url, body['Location'])

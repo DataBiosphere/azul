@@ -1,18 +1,19 @@
-from abc import abstractmethod, ABCMeta
-import os
-import sys
-import time
+from abc import ABCMeta, abstractmethod
+import importlib.util
 import logging
-import unittest
-
-import requests
+import os
 from threading import Thread
-# noinspection PyPackageRequirements
-from chalice.local import LocalDevServer
+import time
+
 # noinspection PyPackageRequirements
 from chalice.config import Config as ChaliceConfig
-from azul import config
+# noinspection PyPackageRequirements
+from chalice.local import LocalDevServer
+import requests
 
+from azul import config
+from azul.modules import load_module
+from azul_test_case import AzulTestCase
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class ChaliceServerThread(Thread):
         return self.server_wrapper.server.server_address
 
 
-class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
+class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
     """
     A mixin for test cases against a locally running instance of a AWS Lambda Function aka Chalice application. By
     default, the local instance will use the remote AWS Elasticsearch domain configured via AZUL_ES_DOMAIN or
@@ -48,7 +49,7 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
     def lambda_name(cls) -> str:
         """
         Return the name of the AWS Lambda function aka. Chalice app to start locally. Must match the name of a
-        subdirectory of $AZUL_HOME/lambdas. Subclasses must override this to select which Chalice app to start locally.
+        subdirectory of ${azul_home}/lambdas. Subclasses must override this to select which Chalice app to start locally.
         """
         raise NotImplementedError()
 
@@ -61,34 +62,31 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
         host, port = self.server_thread.address
         return f"http://{host}:{port}"
 
-    _path_to_app = None
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls._path_to_app = os.path.join(config.project_root, 'lambdas', cls.lambda_name())
-        sys.path.append(cls._path_to_app)
-        # noinspection PyUnresolvedReferences, PyPackageRequirements
-        from app import app
-        cls.app = app
+        # Load the application module without modifying `sys.path` and without adding it to `sys.modules`. This
+        # simplifies tear down and isolates the app modules from different lambdas loaded by different concrete
+        # subclasses. It does, however, violate this one invariant: `sys.modules[module.__name__] == module`
+        path = os.path.join(config.project_root, 'lambdas', cls.lambda_name(), 'app.py')
+        cls.app_module = load_module(path, '__main__')
 
     @classmethod
     def tearDownClass(cls):
-        sys.path.remove(cls._path_to_app)
+        cls.app_module = None
         super().tearDownClass()
 
     def setUp(self):
         super().setUp()
         log.debug("Setting up tests")
         log.debug("Created Thread")
-        self.server_thread = ChaliceServerThread(self.app, self.chalice_config(), 'localhost', 0)
+        self.server_thread = ChaliceServerThread(self.app_module.app, self.chalice_config(), 'localhost', 0)
         log.debug("Started Thread")
         self.server_thread.start()
         deadline = time.time() + 10
         while True:
-            url = self.base_url
             try:
-                response = requests.get(url)
+                response = self._ping()
                 response.raise_for_status()
             except Exception:
                 if time.time() > deadline:
@@ -97,6 +95,9 @@ class LocalAppTestCase(unittest.TestCase, metaclass=ABCMeta):
                 time.sleep(1)
             else:
                 break
+
+    def _ping(self):
+        return requests.get(self.base_url)
 
     def chalice_config(self):
         return ChaliceConfig()

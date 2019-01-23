@@ -1,23 +1,28 @@
-from abc import ABC
-from collections import OrderedDict, defaultdict
+from abc import ABC, abstractmethod
+from collections import Counter, defaultdict
 import logging
-from typing import Callable, List, Mapping, MutableMapping, MutableSet, Optional, Sequence, Union
+from operator import attrgetter
+from typing import Iterable, List, Mapping, MutableMapping, MutableSet, Union
 
 from elasticsearch import ConflictError, ElasticsearchException
-from elasticsearch.helpers import parallel_bulk, streaming_bulk
+from elasticsearch.helpers import parallel_bulk, scan, streaming_bulk
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
+from more_itertools import one
 
 from azul import config
-from azul.base_config import BaseIndexProperties
 from azul.es import ESClientFactory
-from azul.transformer import DocumentCoordinates, ElasticSearchDocument
+from azul.transformer import (Aggregate,
+                              AggregatingTransformer,
+                              Contribution,
+                              Document,
+                              DocumentCoordinates,
+                              EntityReference,
+                              Transformer)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
 
-DocumentsById = Mapping[DocumentCoordinates, ElasticSearchDocument]
-
-DocumentHandler = Callable[[DocumentsById], None]
+Tallies = Mapping[EntityReference, int]
 
 
 class BaseIndexer(ABC):
@@ -25,65 +30,255 @@ class BaseIndexer(ABC):
     The base indexer class provides the framework to do indexing.
     """
 
-    def __init__(self, properties: BaseIndexProperties,
-                 document_handler: DocumentHandler = None,
-                 refresh: Union[bool, str] = False) -> None:
-        self.properties = properties
-        self.document_handler = document_handler or self.write
-        self.refresh = refresh
+    @abstractmethod
+    def mapping(self) -> JSON:
+        raise NotImplementedError()
 
-    def index(self, dss_notification: JSON) -> None:
+    def settings(self) -> JSON:
+        return {
+            "index": {
+                # This is important. It may slow down searches but it does increase concurrency during indexing,
+                # currently our biggest performance bottleneck.
+                "number_of_shards": config.indexer_concurrency,
+                "number_of_replicas": 1,
+                "refresh_interval": f"{config.es_refresh_interval}s"
+            }
+        }
+
+    @abstractmethod
+    def transformers(self) -> Iterable[Transformer]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def entities(self) -> Iterable[str]:
+        raise NotImplementedError()
+
+    def index_names(self, aggregate=None) -> List[str]:
+        aggregates = (False, True) if aggregate is None else (aggregate,)
+        return [config.es_index_name(entity, aggregate=aggregate)
+                for entity in self.entities()
+                for aggregate in aggregates]
+
+    def index(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
+        """
+        Index the bundle referenced by the given notification. This is an inefficient default implementation. A more
+        efficient implementation would transform many bundles, collect their contributions and aggregate all affected
+        entities at the end.
+        """
+        contributions = self.transform(dss_notification)
+        tallies = self.contribute(writer, contributions)
+        self.aggregate(writer, tallies)
+
+    def transform(self, dss_notification: JSON) -> List[Contribution]:
+        """
+        Transform the metadata in the bundle referenced by the given notification into a list of contributions to
+        documents, each document representing one metadata entity in the index.
+        """
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
-        _, manifest, metadata_files = download_bundle_metadata(client=config.dss_client(self.properties.dss_url),
+        manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
+
+        # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
+        # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
+        es_client = ESClientFactory.get()
+        for index_name in self.index_names():
+            es_client.indices.create(index=index_name,
+                                     ignore=[400],
+                                     body=dict(settings=self.settings(),
+                                               mappings=dict(doc=self.mapping())))
+        contributions = []
+        for transformer in self.transformers():
+            contributions.extend(transformer.transform(uuid=bundle_uuid,
+                                                       version=bundle_version,
+                                                       manifest=manifest,
+                                                       metadata_files=metadata_files))
+        return contributions
+
+    def _get_bundle(self, bundle_uuid, bundle_version):
+        _, manifest, metadata_files = download_bundle_metadata(client=config.dss_client(),
                                                                replica='aws',
                                                                uuid=bundle_uuid,
                                                                version=bundle_version,
                                                                num_workers=config.num_dss_workers)
         assert _ == bundle_version
+        return manifest, metadata_files
 
-        # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
-        # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
+    def contribute(self, writer: 'IndexWriter', contributions: List[Contribution]) -> Tallies:
+        """
+        Write the given entity contributions to the index and return tallies, a dictionary tracking the number of
+        contributions made to each entity.
+        """
+        while True:
+            writer.write(contributions)
+            if not writer.retries:
+                break
+            contributions = [v for v in contributions if v.coordinates in writer.retries]
+        writer.raise_on_errors()
+        tallies = Counter(c.entity for c in contributions)
+        return tallies
+
+    def aggregate(self, writer: 'IndexWriter', tallies: Tallies):
+        """
+        Read all contributions to the entities listed in the given tallies from the index, aggregate the
+        contributions into one aggregate per entity and write the resulting aggregates to the index.
+        """
+        while True:
+            # Read the aggregates
+            # FIXME: we should source filter so we only read the num_contributions and version values
+            old_aggregates = self._read_aggregates(entity for entity in tallies.keys())
+            absolute_tallies = Counter(tallies)
+            absolute_tallies.update({old_aggregate.entity: old_aggregate.num_contributions
+                                     for old_aggregate in old_aggregates.values()})
+            # Read all contributions from Elasticsearch
+            contributions = self._read_contributions(absolute_tallies)
+            actual_tallies = Counter(contribution.entity for contribution in contributions)
+            assert len(tallies) == len(actual_tallies)
+            assert all(tallies[entity] <= actual_tally for entity, actual_tally in actual_tallies.items())
+            # Combine the contributions into old_aggregates, one per entity
+            new_aggregates = self._aggregate(contributions)
+            # Set the expected document version from the old version
+            for new_aggregate in new_aggregates:
+                old_aggregate = old_aggregates.pop(new_aggregate.entity, None)
+                new_aggregate.version = None if old_aggregate is None else old_aggregate.version
+            # Empty out any unreferenced aggregates (can only happen for deletions)
+            for old_aggregate in old_aggregates.values():
+                old_aggregate.contents = {}
+                new_aggregates.append(old_aggregate)
+            # Write aggregates to Elasticsearch
+            writer.write(new_aggregates)
+            # Retry if necessary
+            if not writer.retries:
+                break
+            tallies = {aggregate.entity: tallies[aggregate.entity]
+                       for aggregate in new_aggregates
+                       if aggregate.coordinates in writer.retries}
+        writer.raise_on_errors()
+
+    def _read_aggregates(self, entities: Iterable[EntityReference]) -> MutableMapping[EntityReference, Aggregate]:
+        request = dict(docs=[dict(_type=Aggregate.type,
+                                  _index=Aggregate.index_name(entity.entity_type),
+                                  _id=entity.entity_id)  # FIXME: assumes that document_id is entity_id for aggregates
+                             for entity in entities])
+        response = ESClientFactory.get().mget(body=request)
+        aggregates = (Aggregate.from_index(doc) for doc in response['docs'] if doc['found'])
+        aggregates = {a.entity: a for a in aggregates}
+        return aggregates
+
+    def _read_contributions(self, tallies: Tallies) -> List[Contribution]:
         es_client = ESClientFactory.get()
-        for index_name in self.properties.index_names:
-            es_client.indices.create(index=index_name,
-                                     ignore=[400],
-                                     body=dict(settings=self.properties.settings,
-                                               mappings=dict(doc=self.properties.mapping)))
+        query = {
+            "query": {
+                "terms": {
+                    "entity_id.keyword": [e.entity_id for e in tallies.keys()]
+                }
+            }
+        }
+        index = sorted(list({config.es_index_name(e.entity_type, aggregate=False) for e in tallies.keys()}))
+        # scan() uses a server-side cursor and is expensive. Only use it if the number of contributions is large
+        page_size = 100
+        num_contributions = sum(tallies.values())
+        hits = None
+        if num_contributions <= page_size:
+            log.info('Reading %i expected contribution(s) using search().', num_contributions)
+            response = es_client.search(index=index, body=query, size=page_size, doc_type=Document.type)
+            total_hits = response['hits']['total']
+            if total_hits <= page_size:
+                hits = response['hits']['hits']
+                assert len(hits) == total_hits
+            else:
+                log.info('Expected only %i contribution(s) but got %i.', num_contributions, total_hits)
+                num_contributions = total_hits
+        if hits is None:
+            log.info('Reading %i expected contribution(s) using scan().', num_contributions)
+            hits = scan(es_client, index=index, query=query, size=page_size, doc_type=Document.type)
+        contributions = [Contribution.from_index(hit) for hit in hits]
+        log.info('Read %i contribution(s).', len(contributions))
+        return contributions
 
-        # Collect the documents to be indexed
-        indexable_documents = {}
-        for transformer in self.properties.transformers:
-            documents = transformer.create_documents(uuid=bundle_uuid,
-                                                     version=bundle_version,
-                                                     manifest=manifest,
-                                                     metadata_files=metadata_files)
-            for document in documents:
-                indexable_documents[document.coordinates] = document
+    def _aggregate(self, contributions: List[Contribution]) -> List[Aggregate]:
+        # Group contributions by entity ID and bundle UUID
+        contributions_by_bundle = defaultdict(list)
+        tallies = Counter()
+        for contribution in contributions:
+            contributions_by_bundle[contribution.entity.entity_id, contribution.bundle_uuid].append(contribution)
+            # Track the raw, unfiltered number of contributions per entity
+            tallies[contribution.entity.entity_id] += 1
 
-        self.document_handler(indexable_documents)
+        # Among the contributions by a particular bundle to a particular entity, select the contribution from latest
+        # version of that bundle. If the latest version is a deletion, take no contribution from that bundle. Group
+        # selected contributions by entity type and ID.
+        contributions_by_entity = defaultdict(list)
+        for bundle_contributions in contributions_by_bundle.values():
+            contribution = max(bundle_contributions, key=attrgetter('bundle_version'))
+            if not contribution.bundle_deleted:
+                contributions_by_entity[contribution.entity].append(contribution)
 
-    def collate(self, documents: Sequence[ElasticSearchDocument]) -> DocumentsById:
+        # Create lookup for transformer by entity type
+        transformers = {t.entity_type(): t for t in self.transformers() if isinstance(t, AggregatingTransformer)}
+
+        # Aggregate contributions for the same entity
+        aggregates = []
+        for entity, contributions in contributions_by_entity.items():
+            transformer = transformers[entity.entity_type]
+            contents = transformer.aggregate(contributions)
+            bundles = [dict(uuid=c.bundle_uuid, version=c.bundle_version) for c in contributions]
+            # noinspection PyArgumentList
+            # https://youtrack.jetbrains.com/issue/PY-28506
+            aggregate = Aggregate(entity=entity,
+                                  version=None,
+                                  contents=contents,
+                                  bundles=bundles,
+                                  num_contributions=tallies[entity.entity_id])
+            aggregates.append(aggregate)
+
+        return aggregates
+
+    def delete(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
+        # FIXME: this only works if the bundle version is not being indexed concurrently
+        # The fix could be to optimistically lock on the aggregate version
+        # https://github.com/DataBiosphere/azul/issues/611
+        contributions = self.transform_deletion(dss_notification)
+        # FIXME: these are all modified contributions, not new ones. This also happens when we reindex without
+        # deleting the indices first. The tallies refer to number of updated or added contributions but we treat them
+        # as if they are all new when we estimate the number of contributions per bundle.
+        # https://github.com/DataBiosphere/azul/issues/610
+        tallies = self.contribute(writer, contributions)
+        self.aggregate(writer, tallies)
+
+    def transform_deletion(self, dss_notification: JSON) -> List[Contribution]:
+        match = dss_notification['match']
+        es_client = ESClientFactory.get()
+        query = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {"term": {"bundle_uuid.keyword": match['bundle_uuid']}},
+                        {"term": {"bundle_version.keyword": match['bundle_version']}}
+                    ]
+                }
+            }
+        }
+        # FIXME: decide if we want to keep the contents of the contribution, or not (and use source filtering to
+        # minimize the response size)
+        response = es_client.search(body=query,
+                                    doc_type="doc",
+                                    index=self.index_names(aggregate=False))
+        contributions = []
+        for hit in response['hits']['hits']:
+            contribution = Contribution.from_index(hit)
+            contribution.bundle_deleted = True
+            contributions.append(contribution)
+
+        return contributions
+
+
+class IndexWriter:
+    def __init__(self,
+                 refresh: Union[bool, str],
+                 conflict_retry_limit: int,
+                 error_retry_limit: int) -> None:
         """
-        Group the given documents by ID and consolidate the documents within each group into a single document.
-        """
-        groups_by_id: MutableMapping[DocumentCoordinates, List[ElasticSearchDocument]] = defaultdict(list)
-        for document in documents:
-            groups_by_id[document.coordinates].append(document)
-        documents_by_id = {}
-        for documents in groups_by_id.values():
-            first, rest = documents[0], documents[1:]
-            first.consolidate(rest)
-            documents_by_id[first.coordinates] = first
-        return documents_by_id
-
-    def write(self, contributions: DocumentsById, conflict_retry_limit=None, error_retry_limit=2) -> None:
-        """
-        For each of the given document contributions, this method loads the existing document using the coordinates
-        of the contribution, merges the contribution into that document, derives an aggregate from the merged
-        document and lastly writes both the merged document and the aggregate.
-        
-        :param contributions: the document contributions to be written by their coordinates
+        :param refresh: https://www.elastic.co/guide/en/elasticsearch/reference/5.5/docs-refresh.html
 
         :param conflict_retry_limit: The maximum number of retries (the second attempt is the first retry) on version
                                      conflicts. Specify 0 for no retries or None for unlimited retries.
@@ -91,102 +286,6 @@ class BaseIndexer(ABC):
         :param error_retry_limit: The maximum number of retries (the second attempt is the first retry) on other
                                   errors. Specify 0 for no retries or None for unlimited retries.
         """
-        writer = IndexWriter(refresh=self.refresh,
-                             conflict_retry_limit=conflict_retry_limit,
-                             error_retry_limit=error_retry_limit)
-        while contributions:
-            originals = self._merge_existing_docs(contributions)
-            aggregates = self._aggregate_docs(originals)
-            log.info("Writing %i modified and %i aggregate document(s) for of a total of %i contribution(s).",
-                     len(originals), len(aggregates), len(contributions))
-            writer.write(aggregates, originals)
-            contributions = {k: v for k, v in contributions.items() if k in writer.retries}
-        writer.raise_on_errors()
-
-    def _aggregate_docs(self, modified_docs):
-        aggregate_docs = {}
-        for doc in modified_docs.values():
-            for transformer in self.properties.transformers:
-                aggregate_doc = transformer.aggregate_document(doc)
-                if aggregate_doc is not None:
-                    assert aggregate_doc.aggregate
-                    aggregate_docs[aggregate_doc.coordinates] = aggregate_doc
-        return aggregate_docs
-
-    def _merge_existing_docs(self, documents: DocumentsById) -> DocumentsById:
-        mget_body = dict(docs=[dict(_index=doc.document_index,
-                                    _type=doc.document_type,
-                                    _id=doc.document_id) for doc in documents.values()])
-        response = ESClientFactory.get().mget(body=mget_body)
-        existing_documents = [doc for doc in response["docs"] if doc['found']]
-        if existing_documents:
-            log.info("Merging %i existing document(s).", len(existing_documents))
-            # Make a mutable copy …
-            merged_documents = dict(documents)
-            # … and update with documents already in index
-            for existing in existing_documents:
-                existing = ElasticSearchDocument.from_index(existing)
-                update = merged_documents[existing.coordinates]
-                if existing.update_with(update):
-                    merged_documents[existing.coordinates] = existing
-                else:
-                    log.debug('Successfully verified document %s/%s with contributions from %i bundle(s).',
-                              existing.entity_type, existing.document_id, len(existing.bundles))
-                    merged_documents.pop(existing.coordinates)
-            return merged_documents
-        else:
-            log.info("No existing documents to merge with.")
-            return documents
-
-    def delete(self, dss_notification: JSON) -> None:
-        bundle_uuid = dss_notification['match']['bundle_uuid']
-        bundle_version = dss_notification['match']['bundle_version']
-        docs = self._get_docs_by_uuid_and_version(bundle_uuid, bundle_version)
-
-        documents_by_id = {}
-        for hit in docs['hits']['hits']:
-            doc = ElasticSearchDocument.from_index(hit)
-            if not doc.aggregate:
-                for bundle in doc.bundles:
-                    if bundle.version == bundle_version and bundle.uuid == bundle_uuid:
-                        bundle.delete()
-                documents_by_id[doc.coordinates] = doc
-
-        self.document_handler(documents_by_id)
-
-    def _get_docs_by_uuid_and_version(self, bundle_uuid, bundle_version):
-        search_query = {
-            "version": True,
-            "query": {
-                "bool": {
-                    "must": [
-                        {
-                            "term": {
-                                "bundles.uuid.keyword": {
-                                    "value": bundle_uuid
-                                }
-                            }
-                        },
-                        {
-                            "term": {
-                                "bundles.version.keyword": {
-                                    "value": bundle_version
-                                }
-                            }
-                        }
-                    ]
-                }
-            }
-        }
-        es_client = ESClientFactory.get()
-        return es_client.search(doc_type="doc", body=search_query)
-
-
-class IndexWriter:
-    def __init__(self,
-                 refresh: Union[bool, str],
-                 conflict_retry_limit: Optional[int],
-                 error_retry_limit: Optional[int]) -> None:
         super().__init__()
         self.refresh = refresh
         self.conflict_retry_limit = conflict_retry_limit
@@ -196,55 +295,29 @@ class IndexWriter:
         self.conflicts: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
         self.retries: MutableSet[DocumentCoordinates] = None
 
-    # Since we are piggy-backing the versioning of the aggregate documents onto the versioning of the original
-    # documents, we need to ensure that all concurrent writers update the documents in the same order or else we risk
-    #  dead-lock. It is also important that we write the aggregate before the original, to ensure that success in
-    # writing the original implies success in writing the aggregate. Without this invariant we could not safely skip
-    # writing both original and aggregate was found to be original already up-to-date in the index.
-
-    def write(self, originals: DocumentsById, aggregates: DocumentsById):
+    def write(self, documents: List[Document]):
+        # documents.sort(key=attrgetter('coordinates'))
         self.retries = set()
-        self._write(aggregates)
-        self._write(originals)
-
-    def _write(self, documents: DocumentsById):
-        documents = sorted(documents.values(), key=lambda doc: (doc.entity_type, doc.document_id))
-        documents = OrderedDict((doc.coordinates, doc) for doc in documents)
-        if len(documents) < 128:
+        if len(documents) <= 32:
             self._write_individually(documents)
         else:
             self._write_bulk(documents)
 
-    def _write_individually(self, documents):
+    def _write_individually(self, documents: Iterable[Document]):
         log.info('Writing documents individually')
-        for doc in documents.values():
-            if self._writeable(doc):
-                try:
-                    version_type = self._version_type(doc)
-                    self.es_client.index(index=doc.document_index,
-                                         doc_type=doc.document_type,
-                                         body=doc.to_source(),
-                                         id=doc.document_id,
-                                         refresh=self.refresh,
-                                         version=doc.document_version,
-                                         version_type=version_type)
-                except ConflictError as e:
-                    self._on_conflict(doc, e)
-                except ElasticsearchException as e:
-                    self._on_error(doc, e)
-                else:
-                    self._on_success(doc)
+        for doc in documents:
+            try:
+                self.es_client.index(refresh=self.refresh, **doc.to_index())
+            except ConflictError as e:
+                self._on_conflict(doc, e)
+            except ElasticsearchException as e:
+                self._on_error(doc, e)
+            else:
+                self._on_success(doc)
 
-    def _write_bulk(self, documents):
-        actions = [dict(_op_type='index',
-                        _index=doc.document_index,
-                        _type=doc.document_type,
-                        _source=doc.to_source(),
-                        _id=doc.document_id,
-                        version=doc.document_version,
-                        version_type=self._version_type(doc))
-                   for doc in documents.values()
-                   if self._writeable(doc)]
+    def _write_bulk(self, documents: Iterable[Document]):
+        documents: Mapping[DocumentCoordinates, Document] = {doc.coordinates: doc for doc in documents}
+        actions = [doc.to_index(bulk=True) for doc in documents.values()]
         if len(actions) < 1024:
             log.info('Writing documents using streaming_bulk().')
             helper = streaming_bulk
@@ -257,7 +330,9 @@ class IndexWriter:
                           raise_on_error=False,
                           max_chunk_bytes=10485760)
         for success, info in response:
-            coordinates = info['index']['_index'], info['index']['_id']
+            op_type, info = one(info.items())
+            assert op_type in ('index', 'create')
+            coordinates = DocumentCoordinates(document_index=info['_index'], document_id=info['_id'])
             doc = documents[coordinates]
             if success:
                 self._on_success(doc)
@@ -267,54 +342,33 @@ class IndexWriter:
                 else:
                     self._on_error(doc, info)
 
-    def _version_type(self, doc):
-        """
-        Return the ES version type to be used for this document
+    def _on_success(self, doc: Document):
+        coordinates = doc.coordinates
+        self.conflicts.pop(coordinates, None)
+        self.errors.pop(coordinates, None)
+        if isinstance(doc, Aggregate):
+            log.debug('Successfully wrote document %s/%s with %i contribution(s).',
+                      coordinates.document_index, coordinates.document_id, doc.num_contributions)
+        else:
+            log.debug('Successfully wrote document %s/%s.',
+                      coordinates.document_index, coordinates.document_id)
 
-        If writing the aggregate succeeds and writing the orginal fails (either due to a conflict or a general
-        error), the aggregate will be one version ahead of the original. In fact, the version difference will
-        invariantly be either 0 or 1. This is acceptable and the inconsistency will be fixed eventually by a retry.
-        We could actually disable versioning on aggregates without detriment but in order to assert the invariant
-        here we use `external_gte` for aggregates.
-        """
-        return 'external' if doc.original else 'external_gte'
-
-    def _writeable(self, doc):
-        """
-        Return True if this document can be written.
-
-        If writing the aggregate document fails, don't even attempt to write the original. This is not just an
-        optimization: If a loser to the aggregate race continued on to write the original and won that race,
-        it would spoil the aggregate winner's victory and could lead to deadlock. Deadlocks manifest itself in two or
-        more processes processes spoiling each others victory perpetually.
-        """
-        return doc.aggregate or (doc.aggregate_coordinates not in self.errors and
-                                 doc.aggregate_coordinates not in self.conflicts)
-
-    def _on_success(self, doc):
-        self.conflicts.pop(doc.coordinates, None)
-        self.errors.pop(doc.coordinates, None)
-        log.debug('Successfully wrote document %s%s/%s with contributions from %i bundle(s).',
-                  doc.entity_type, '_aggregate' if doc.aggregate else '', doc.document_id, len(doc.bundles))
-
-    def _on_error(self, doc, e):
+    def _on_error(self, doc: Document, e):
         self.errors[doc.coordinates] += 1
         if self.error_retry_limit is None or self.errors[doc.coordinates] <= self.error_retry_limit:
             action = 'retrying'
-            # Always retry the original. This will regenerate and retry the aggregate.
-            self.retries.add(doc.original_coordinates)
+            self.retries.add(doc.coordinates)
         else:
             action = 'giving up'
         log.warning('There was a general error with document %r: %r. Total # of errors: %i, %s.',
                     doc.coordinates, e, self.errors[doc.coordinates], action)
 
-    def _on_conflict(self, doc, e):
+    def _on_conflict(self, doc: Document, e):
         self.conflicts[doc.coordinates] += 1
         self.errors.pop(doc.coordinates, None)  # a conflict resets the error count
         if self.conflict_retry_limit is None or self.conflicts[doc.coordinates] <= self.conflict_retry_limit:
             action = 'retrying'
-            # Always retry the original. This will regenerate and retry the aggregate.
-            self.retries.add(doc.original_coordinates)
+            self.retries.add(doc.coordinates)
         else:
             action = 'giving up'
         log.warning('There was a conflict with document %r: %r. Total # of errors: %i, %s.',

@@ -1,27 +1,32 @@
 """
 Chalice application module to receive and process DSS event notifications.
 """
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime
 import http
+from itertools import chain
 import json
 import logging
 import random
 import time
-from typing import List
+
+from chalice import Response
+from typing import List, MutableMapping
 import uuid
 
 import boto3
 # noinspection PyPackageRequirements
 import chalice
-from dataclasses import asdict, dataclass
-from elasticsearch import JSONSerializer
+from dataclasses import asdict, dataclass, replace
 from more_itertools import chunked, partition
 
 from azul import config
-from azul.indexer import DocumentsById
+from azul.health import Health
+from azul.indexer import IndexWriter
+from azul.plugin import Plugin
+from azul.reindexer import Reindexer
 from azul.time import RemainingLambdaContextTime
-from azul.transformer import ElasticSearchDocument
+from azul.transformer import EntityReference
 from azul.types import JSON
 
 logging.basicConfig(level=logging.WARNING)
@@ -33,11 +38,7 @@ app = chalice.Chalice(app_name=config.indexer_name)
 app.debug = True
 app.log.setLevel(logging.DEBUG)  # please use module logger instead
 
-# Initialize the project-specific plugin
-#
-plugin = config.plugin()
-properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
-                                    es_endpoint=config.es_endpoint)
+plugin = Plugin.load()
 
 
 @app.route('/version', methods=['GET'], cors=True)
@@ -49,15 +50,25 @@ def version():
     }
 
 
+@app.route('/health/basic', methods=['GET'], cors=True)
+def basic_health():
+    return {
+        'up': True,
+    }
+
+
 @app.route('/health', methods=['GET'], cors=True)
 def health():
-    from azul.health import get_elasticsearch_health, get_queue_health
+    health = Health('indexer')
+    return Response(
+        body=json.dumps(health.as_json),
+        status_code=200 if health.up else 503
+    )
 
-    return {
-        'status': 'UP',
-        'elasticsearch': get_elasticsearch_health(),
-        'queues': get_queue_health()
-    }
+
+@app.route('/', cors=True)
+def hello():
+    return {'Hello': 'World!'}
 
 
 @app.route('/', methods=['POST'])
@@ -69,12 +80,14 @@ def post_notification():
     log.info("Received notification %r", notification)
     params = app.current_request.query_params
     if params and params.get('sync', 'False').lower() == 'true':
-        indexer = plugin.Indexer(properties)
-        indexer.index(notification)
+        indexer_cls = plugin.indexer_class()
+        indexer = indexer_cls()
+        writer = _create_index_writer()
+        indexer.index(writer, notification)
     else:
-        message = _make_message(action='add', notification=notification)
+        message = dict(action='add', notification=notification)
         notify_queue = queue(config.notify_queue_name)
-        notify_queue.send_message(MessageBody=message)
+        notify_queue.send_message(MessageBody=json.dumps(message))
         log.info("Queued notification %r", notification)
     return {"status": "done"}
 
@@ -86,18 +99,12 @@ def delete_notification():
     """
     notification = app.current_request.json_body
     log.info("Received deletion notification %r", notification)
-    message = _make_message(action='delete', notification=notification)
+    message = dict(action='delete', notification=notification)
     notify_queue = queue(config.notify_queue_name)
-    notify_queue.send_message(MessageBody=message)
+    notify_queue.send_message(MessageBody=json.dumps(message))
     log.info("Queued notification %r", notification)
 
     return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
-
-
-def _make_message(action, notification):
-    if action not in ['add', 'delete']:
-        raise ValueError(action)
-    return json.dumps({'action': action, 'notification': notification})
 
 
 # Work around https://github.com/aws/chalice/issues/856
@@ -123,42 +130,40 @@ def index(event: chalice.app.SQSEvent):
         log.info(f'Worker handling message {message}, attempt #{attempts} (approx).')
         start = time.time()
         try:
-            indexer = plugin.Indexer(properties, handle_documents)
             action = message['action']
-            notification = message['notification']
-            if action == 'add':
-                indexer.index(notification)
-            if action == 'delete':
-                indexer.delete(notification)
+            if action == 'reindex':
+                Reindexer.do_remote_reindex(message)
+            else:
+                notification = message['notification']
+                indexer_cls = plugin.indexer_class()
+                indexer = indexer_cls()
+                if action == 'add':
+                    contributions = indexer.transform(notification)
+                elif action == 'delete':
+                    contributions = indexer.transform_deletion(notification)
+                else:
+                    assert False
+
+                log.info("Writing %i contributions to index.", len(contributions))
+                writer = _create_index_writer()
+                tallies = indexer.contribute(writer, contributions)
+                tallies = [DocumentTally.for_entity(entity, num_contributions)
+                           for entity, num_contributions in tallies.items()]
+
+                log.info("Queueing %i entities for aggregating a total of %i contributions.",
+                         len(tallies), sum(tally.num_contributions for tally in tallies))
+                token_queue = queue(config.token_queue_name)
+                document_queue = queue(config.document_queue_name)
+                for batch in chunked(tallies, document_batch_size):
+                    token_queue.send_message(MessageBody=json.dumps(Token.mint(len(batch)).to_json()))
+                    document_queue.send_messages(Entries=[dict(tally.to_message(), Id=str(i))
+                                                          for i, tally in enumerate(batch)])
         except:
             log.warning(f"Worker failed to handle message {message}.", exc_info=True)
             raise
         else:
             duration = time.time() - start
             log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
-
-
-def handle_documents(documents_by_id: DocumentsById) -> None:
-    log.info("Queueing %i document(s) for indexing.", len(documents_by_id))
-    json_serializer = JSONSerializer()  # Elasticsearch's serializer translates UUIDs
-    sqs = boto3.client('sqs')
-    token_queue = queue(config.token_queue_name)
-    document_queue = queue(config.document_queue_name)
-
-    def message(doc):
-        return dict(MessageBody=json_serializer.dumps(doc.to_json()),
-                    MessageGroupId=doc.document_id,
-                    MessageDeduplicationId=str(uuid.uuid4()))
-
-    for batch in chunked(documents_by_id.values(), document_batch_size):
-        value = len(batch)
-        token_queue.send_message(MessageBody=json_serializer.dumps(Token.mint(value).to_json()))
-        try:
-            document_queue.send_messages(Entries=[dict(message(doc), Id=str(i)) for i, doc in enumerate(batch)])
-        except sqs.exceptions.BatchRequestTooLong:
-            log.info('Message batch was too big. Sending messages individually.', exc_info=True)
-            for doc in batch:
-                document_queue.send_message(**message(doc))
 
 
 # The number of documents to be queued in a single SQS `send_messages`. Theoretically, larger batches are better but
@@ -175,7 +180,7 @@ document_batch_size = 10
 #
 token_batch_size = 2
 
-token_lifetime: float = 10 * 60 * 60
+token_lifetime: float = 60 * 60
 
 
 @app.on_sqs_message(queue=config.token_queue_name, batch_size=token_batch_size)
@@ -188,31 +193,57 @@ def write(event: chalice.app.SQSEvent):
     messages = document_queue.receive_messages(WaitTimeSeconds=20,
                                                AttributeNames=['ApproximateReceiveCount', 'MessageGroupId'],
                                                VisibilityTimeout=round(remaining_time.get()) + 10,
-                                               MaxNumberOfMessages=min(document_batch_size, total))
+                                               MaxNumberOfMessages=document_batch_size)
     log.info('Received %i messages for %i token(s) with a total value of %i',
              len(messages), len(tokens), total)
     assert len(messages) <= document_batch_size
 
     if messages:
         _log_document_grouping(messages)
-        documents = []
-        for message in messages:
-            document = ElasticSearchDocument.from_json(json.loads(message.body))
-            attempts = int(message.attributes['ApproximateReceiveCount'])
-            assert len(document.bundles) == 1
-            bundle = document.bundles[0]
-            log.info('Attempt %i of writing document %s/%s from bundle %s, version %s',
-                     attempts, document.entity_type, document.document_id, bundle.uuid, bundle.version)
-            documents.append(document)
 
-        indexer = plugin.Indexer(properties)
-        documents_by_id = indexer.collate(documents)
-        # Merge documents into index, without retries (let SQS take care of that)
-        indexer.write(documents_by_id, conflict_retry_limit=0, error_retry_limit=0)
+        # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
+        # queues try to put as many messages from the same message group in a reception batch, a single message per
+        # group may indicate that that message is the last one in the group. Inversely, multiple messages per group
+        # in a batch are a likely indidicator for the presence of even more queued messages in that group. The more
+        # bundle contributions we defer, the higher the amortized savings on aggregation become. Aggregating bundle
+        # contributions is a costly operation for any entity with many contributions e.g., a large project.
+        #
+        tallies_by_id: MutableMapping[EntityReference, List[DocumentTally]] = defaultdict(list)
+        for message in messages:
+            tally = DocumentTally.from_message(message)
+            log.info('Attempt %i of handling %i contribution(s) for entity %s/%s',
+                     tally.attempts, tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+            tallies_by_id[tally.entity].append(tally)
+        deferrals, referrals = [], []
+        for tallies in tallies_by_id.values():
+            if len(tallies) == 1:
+                referrals.append(tallies[0])
+            elif len(tallies) > 1:
+                deferrals.append(tallies[0].consolidate(tallies[1:]))
+            else:
+                assert False
+
+        if referrals:
+            for tally in referrals:
+                log.info('Aggregating %i contribution(s) to entity %s/%s',
+                         tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+            indexer_cls = plugin.indexer_class()
+            indexer = indexer_cls()
+            tallies = {tally.entity: tally.num_contributions for tally in referrals}
+            writer = _create_index_writer()
+            indexer.aggregate(writer, tallies)
+
+        if deferrals:
+            for tally in deferrals:
+                log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
+                         tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+            document_queue.send_messages(Entries=[dict(tally.to_message(), Id=str(i))
+                                                  for i, tally in enumerate(deferrals)])
 
         document_queue.delete_messages(Entries=[dict(Id=str(i), ReceiptHandle=message.receipt_handle)
-                                                for i, message in enumerate(messages)])
+                                                for i, message in enumerate(chain(messages))])
         total -= len(messages)
+        total += len(deferrals)
     else:
         tokens, expired_tokens = map(list, partition(Token.expired, tokens))
         if expired_tokens:
@@ -220,15 +251,66 @@ def write(event: chalice.app.SQSEvent):
             log.info('Expiring %i token(s) with a total value of %i', len(expired_tokens), expired_total)
             total -= expired_total
 
-    assert total >= 0
-
-    if total:
+    if total > 0:
         expiration = max(token.expiration for token in tokens)
         tokens = Token.mint_many(total, expiration=expiration)
         delay = 0 if messages else round(random.uniform(30, 90))
         log.info('Recirculating %i token(s), after a delay of %is, for a total value of %i, expiring at %s',
                  len(tokens), delay, total, datetime.utcfromtimestamp(expiration).isoformat(timespec='seconds') + 'Z')
         _send_tokens(tokens, delay=delay)
+    elif total < 0:
+        # Discarding token deficit will lead to an overall surplus of token value which will expire at some point.
+        log.info("Discarding token deficit of %i.", total)
+
+
+def _create_index_writer():
+    # The should be no conflicts because we use SQS FIFO message group per entity.
+    # For other errors we use SQS message redelivery to take care of the retries.
+    index_writer = IndexWriter(refresh=False, conflict_retry_limit=0, error_retry_limit=0)
+    return index_writer
+
+
+@dataclass(frozen=True)
+class DocumentTally:
+    """
+    Tracks the number of bundle contributions to a particular metadata entity.
+
+    Each instance represents a message in the document queue.
+    """
+    entity: EntityReference
+    num_contributions: int
+    attempts: int
+
+    @classmethod
+    def from_message(cls, message) -> 'DocumentTally':
+        body = json.loads(message.body)
+        return cls(entity=EntityReference(entity_type=body['entity_type'],
+                                          entity_id=body['entity_id']),
+                   num_contributions=body['num_contributions'],
+                   attempts=int(message.attributes['ApproximateReceiveCount']))
+
+    @classmethod
+    def for_entity(cls, entity: EntityReference, num_contributions: int) -> 'DocumentTally':
+        return cls(entity=entity,
+                   num_contributions=num_contributions,
+                   attempts=0)
+
+    def to_json(self) -> JSON:
+        return {
+            'entity_type': self.entity.entity_type,
+            'entity_id': self.entity.entity_id,
+            'num_contributions': self.num_contributions
+        }
+
+    def to_message(self) -> JSON:
+        return dict(MessageBody=json.dumps(self.to_json()),
+                    MessageGroupId=self.entity.entity_id,
+                    MessageDeduplicationId=str(uuid.uuid4()))
+
+    def consolidate(self, others: List['DocumentTally']) -> 'DocumentTally':
+        assert all(self.entity == other.entity for other in others)
+        return replace(self, num_contributions=sum((other.num_contributions for other in others),
+                                                   self.num_contributions))
 
 
 @dataclass(frozen=True)
@@ -243,6 +325,9 @@ class Token:
     Traceback (most recent call last):
     ...
     ValueError: 11
+
+    >>> Token.mint(5) # doctest: +ELLIPSIS
+    Token(uuid='...', value=5, expiration=...)
 
     >>> [t.value for t in Token.mint_many(0)]
     []
@@ -317,21 +402,22 @@ def _log_document_grouping(messages):
     message_group_sizes = Counter()
     for message in messages:
         message_group_sizes[message.attributes['MessageGroupId']] += 1
-    log.info('Document grouping for received messages: %r', dict(message_group_sizes))
+    log.info('Document grouping for messages received: %r', dict(message_group_sizes))
 
 
 @app.schedule('rate(10 minutes)')
 def nudge(event: chalice.app.CloudWatchEvent):
     """
-    Work around token deficit (https://github.com/DataBiosphere/azul/issues/390). Current hypothesis is that SQS
-    trigger is dropping messages because I cannot see how the current code could result in a token deficit. There are
-    two places where tokens are sent: handle_documents() and write(). In handle_documents() they are sent before the
-    documents, so a crash or exception would result in a token surplus. In write(), they are sent after the document
-    messages have been deleted, to return unused tokens. But if an exception or crash prevents the tokens to be
-    returned, SQS trigger should return all tokens (used and unused) which should also result in a token surplus.
+    Work around token deficit. The hypothesis is that SQS trigger is dropping messages because I cannot see any other
+    way in which the current implementation could result in a token deficit. There are two places where tokens are
+    sent: index() and write(). In index() tokens are sent before documents, so a crash or exception would result in a
+    token surplus. In write(), they are sent after the document messages have been deleted, to recirculate unused
+    token value. But if an exception or crash prevents that from happening, SQS trigger should return all tokens,
+    used and unused ones, which should also result in a token surplus.
 
     So what we do here is periodically check if more tokens are needed and mint them if necessary.
     """
+    assert event is not None  # avoid linter warning
     num_tokens, num_documents = (sum(int(queue(queue_name).attributes['ApproximateNumberOfMessages' + k])
                                      for k in ('', 'Delayed', 'NotVisible'))
                                  for queue_name in (config.token_queue_name, config.document_queue_name))
