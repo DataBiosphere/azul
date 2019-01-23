@@ -1,10 +1,8 @@
 include ../common.mk
 
-templates=$(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
-
 all: apply
 
-config: $(templates)
+config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
 init: config
 	terraform init
@@ -24,4 +22,4 @@ destroy: validate
 clean:
 	-rm *.tf.json
 
-.PHONY: all init validate plan apply clean config
+.PHONY: all config init validate plan apply destroy clean

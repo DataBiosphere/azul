@@ -8,23 +8,18 @@ from unittest import mock
 
 from moto import mock_s3, mock_sts
 import requests
-import responses
 
-import azul
-from azul import config
 import azul.changelog
 from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService
+from retorts import ResponsesHelper
 from service import WebServiceTestCase
 
 log = logging.getLogger(__name__)
 
 
-# noinspection PyPep8Naming
 def setUpModule():
-    log.setLevel(logging.DEBUG)
-    stream_handler = logging.StreamHandler(sys.stdout)
-    log.addHandler(stream_handler)
+    logging.basicConfig(level=logging.INFO)
 
 
 class FacetNameValidationTest(WebServiceTestCase):
@@ -37,34 +32,6 @@ class FacetNameValidationTest(WebServiceTestCase):
     sort_facet_message = {"Code": "BadRequestError",
                           "Message": "BadRequestError: Unable to sort by undefined facet bad-facet."}
     service_config_dir = os.path.dirname(service_config.__file__)
-
-    def test_health(self):
-        url = self.base_url + "/health"
-        response = requests.get(url)
-        response.raise_for_status()
-        expected_json = {
-            'status': 'UP',
-            'elasticsearch': {
-                'domain': config.es_domain,
-                'status': 'UP'
-            }
-        }
-        self.assertEqual(response.json(), expected_json)
-
-    def test_health_es_unreachable(self):
-        with mock.patch.dict(os.environ, AZUL_ES_ENDPOINT='nonexisting-index.com:80'):
-            url = self.base_url + "/health"
-            response = requests.get(url)
-            response.raise_for_status()
-            expected_json = {
-                'status': 'UP',
-                'elasticsearch': {
-                    'domain': config.es_domain,
-                    'message': 'Unable to reach the host',
-                    'status': 'DOWN'
-                }
-            }
-            self.assertEqual(response.json(), expected_json)
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
@@ -191,21 +158,22 @@ class FacetNameValidationTest(WebServiceTestCase):
             expected_field_order = [entity_field.strip() for entity_field in order_settings_file.readlines()]
             self.assertEqual(expected_field_order, actual_field_order, "Field order is not configured correctly")
 
-    @mock_s3
     @mock_sts
+    @mock_s3
     def test_manifest(self):
-        logging.getLogger('test_request_validation').warning('test_manifest is invoked')
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-        responses.add_passthru(self.base_url)
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
 
-        url = self.base_url + '/repository/files/export?filters={"file":{}}'
-        response = requests.get(url)
-        self.assertEqual(200, response.status_code, 'Unable to download manifest')
-        tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
-        self.assertEqual(len(list(tsv_file)), 1000, 'Wrong number of files were found.')
-        manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
-        expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['contents.files'].keys())
-        self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
+            url = self.base_url + '/repository/files/export?filters={"file":{}}'
+            response = requests.get(url)
+            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            # 2 because self.bundle has 2 files
+            self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
+            manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
+            expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['contents.files'].keys())
+            self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
