@@ -302,8 +302,6 @@ class ManifestResponse(AbstractResponse):
             # TODO: in case of concurrency, is it one user = one lambda?
             # Otherwise, there might be problems figuring out what TSV file
             # belongs to which user...
-            # for tsv_file in data.items():
-            #    os.remove(os.path.join(tsv_file_dir, tsv_file))
 
             return bdbag_api.archive_bag(bag_path, 'zip')
 
