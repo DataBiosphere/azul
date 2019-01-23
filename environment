@@ -61,9 +61,8 @@ azul_vars=(
     # multiple developers to collaboratively use TerraForm in a single AWS
     # account. This bucket is likely going be shared with other projects such as
     # DSS and might require some coordination with the developers of those
-    # projects. The special string {account_id} is replaced with the ID of the
-    # AWS account the currently configured AWS credentials belong to.
-    AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE
+    # projects.
+    AZUL_TERRAFORM_BACKEND_BUCKET
 
     # The number of workers pulling files from DSS. There is one such set of DSS
     # workers per index worker!
@@ -219,9 +218,7 @@ _set AZUL_INDEXER_CONCURRENCY 64
 _set AZUL_SUBSCRIBE_TO_DSS 1
 _set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 
-# FIXME: This is the TF bucket DSS used to use. We should have one exclusively for Azul.
-# https://github.com/DataBiosphere/azul/issues/645
-_set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"
+_set AZUL_TERRAFORM_BACKEND_BUCKET "org-humancellatlas-azul-dev-config"
 
 _set AZUL_ENABLE_CLOUDWATCH_ALARMS 0
 
