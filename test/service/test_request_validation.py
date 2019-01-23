@@ -183,17 +183,22 @@ class FacetNameValidationTest(WebServiceTestCase):
     @mock_sts
     @mock_s3
     def test_bdbag_manifest(self):
-        logging.getLogger('test_request_validation').warning('test_manifest is invoked')
-        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
-        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        logging.getLogger('test_request_validation').\
+            warning('test_manifest is invoked')
+        # moto will mock the requests.get call so we can't hit localhost;
+        # add_passthru let's us hit the server
+        # see this GitHub issue and comment:
+        # https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper, \
                 tempfile.TemporaryDirectory() as zip_dir:
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            url = self.base_url + '/repository/files/export?filters={"file":{}}&format=bdbag'
+            url = self.base_url +\
+                  '/repository/files/export?filters={"file":{}}&format=bdbag'
             response = requests.get(url)
-            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            self.assertEqual(200, response.status_code,
+                             'Unable to download manifest')
             zip_fh = ZipFile(response.text, 'r')
             zip_fh.extractall(zip_dir)
             zip_fh.close()
@@ -201,11 +206,16 @@ class FacetNameValidationTest(WebServiceTestCase):
             fh = open(os.path.join(zip_dir, zip_fname, 'data', 'sample.tsv'))
             tsv_file = csv.DictReader(fh, delimiter='\t')
             # 2 because self.bundle has 2 files
-            self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
-            manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
-            expected_fieldnames = list(manifest_config['contents.specimens'].keys()) +\
-                                  list(manifest_config['contents.cell_suspensions'].keys()) +\
-                                  list(manifest_config['bundles'].keys()) +\
-                                  list(manifest_config['contents.files'].keys()) +\
-                                  ['drs_uri']
-            self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
+            self.assertEqual(len(list(tsv_file)), 2,
+                             'Wrong number of files were found.')
+            manifest_config = json.load(
+                open('{}/request_config.json'.format(self.service_config_dir),
+                     'r'))['manifest']
+            expected_fieldnames = \
+                list(manifest_config['contents.specimens'].keys()) +\
+                list(manifest_config['contents.cell_suspensions'].keys()) +\
+                list(manifest_config['bundles'].keys()) +\
+                list(manifest_config['contents.files'].keys()) +\
+                ['drs_uri']
+            self.assertEqual(expected_fieldnames, tsv_file.fieldnames,
+                             'Manifest headers are not configured correctly')
