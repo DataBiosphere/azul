@@ -180,8 +180,8 @@ class FacetNameValidationTest(WebServiceTestCase):
             expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['contents.files'].keys())
             self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
 
-    @mock_s3
     @mock_sts
+    @mock_s3
     def test_bdbag_manifest(self):
         logging.getLogger('test_request_validation').warning('test_manifest is invoked')
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
