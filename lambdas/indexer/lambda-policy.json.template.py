@@ -38,8 +38,6 @@ emit({
             "Action": [
                 "sqs:ChangeMessageVisibility*",
                 "sqs:DeleteMessage*",
-                "sqs:GetQueueAttributes",
-                "sqs:GetQueueUrl",
                 "sqs:ReceiveMessage",
                 "sqs:SendMessage"
             ],
@@ -48,6 +46,17 @@ emit({
                 for name in (config.notify_queue_name,
                              config.token_queue_name,
                              config.document_queue_name)
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+            ],
+            "Resource": [
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:{name}"
+                for name in config.all_queue_names
             ]
         },
         {

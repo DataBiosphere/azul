@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 
-ifndef AZUL_HOME
+ifndef azul_home
 $(error Please run "source environment" from the project root directory before running make commands)
 endif
 
@@ -8,7 +8,7 @@ ifneq ($(shell python -c "import os; print('VIRTUAL_ENV' in os.environ)"),True)
 $(error Looks like no virtualenv is active)
 endif
 
-ifneq ($(shell python -c "import sys; print(sys.version_info >= (3,6))"),True)
+ifneq ($(shell python -c "import sys; print(sys.version_info[0:2] == (3,6))"),True)
 $(error Looks like Python 3.6 is not installed or active in the current virtualenv)
 endif
 

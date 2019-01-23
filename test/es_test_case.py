@@ -1,46 +1,39 @@
 import logging
 import os
 import time
-import unittest
 from unittest.mock import patch
 
-import docker
-
 from azul.es import ESClientFactory
+from docker_container_test_case import DockerContainerTestCase
+from azul.json_freeze import freeze, sort_frozen
 
 logger = logging.getLogger(__name__)
 
 
-class ElasticsearchTestCase(unittest.TestCase):
-
+class ElasticsearchTestCase(DockerContainerTestCase):
+    """
+    A test case that uses an Elasticsearch instance running in a container. The same Elasticsearch instance will be
+    shared by all tests in the class.
+    """
     es_client = None
-
-    _es_docker_container = None
     _old_es_endpoint = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        docker_client = docker.from_env()
-        api_container_port = '9200/tcp'
-
-        cls._es_docker_container = docker_client.containers.run("docker.elastic.co/elasticsearch/elasticsearch:5.5.3",
-                                                                detach=True,
-                                                                auto_remove=True, # Automatically remove an ES container upon stop/kill
-                                                                ports={api_container_port: ('127.0.0.1', None)},
-                                                                environment=["xpack.security.enabled=false",
-                                                                             "discovery.type=single-node"])
-        container_info = docker_client.api.inspect_container(cls._es_docker_container.name)
-        container_ports = container_info['NetworkSettings']['Ports']
-        container_port = container_ports[api_container_port][0]
-        es_host_port = int(container_port['HostPort'])
-        es_host_ip = container_port['HostIp']
-        es_host = f'{es_host_ip}:{es_host_port}'
-        cls._old_es_endpoint = os.environ.get('AZUL_ES_ENDPOINT')
-        os.environ['AZUL_ES_ENDPOINT'] = es_host
-
-        cls.es_client = ESClientFactory.get()
-        cls._wait_for_es()
+        host, port = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:5.5.3',
+                                           container_port=9200,
+                                           environment=['xpack.security.enabled=false',
+                                                        'discovery.type=single-node',
+                                                        'ES_JAVA_OPTS=-Xms512m -Xmx512m'])
+        try:
+            cls._old_es_endpoint = os.environ.get('AZUL_ES_ENDPOINT')
+            os.environ['AZUL_ES_ENDPOINT'] = f'{host}:{port}'
+            cls.es_client = ESClientFactory.get()
+            cls._wait_for_es()
+        except:  # no coverage
+            cls._kill_containers()
+            raise
 
     @classmethod
     def _wait_for_es(cls):
@@ -55,12 +48,19 @@ class ElasticsearchTestCase(unittest.TestCase):
         logger.info(f'Took {time.time() - start_time:.3f}s to have ES reachable')
         logger.info('Elasticsearch appears to be up.')
 
+    def assertElasticsearchResultsEqual(self, first, second):
+        """
+        The ordering of list items in our Elasticsearch responses typically doesn't matter.
+        The comparison done by this method is insensitive to ordering differences in lists.
+
+        For details see the doc string for sort_frozen() and freeze()
+        """
+        self.assertEqual(sort_frozen(freeze(first)), sort_frozen(freeze(second)))
+
     @classmethod
     def tearDownClass(cls):
         if cls._old_es_endpoint is None:
             del os.environ['AZUL_ES_ENDPOINT']
         else:
             os.environ['AZUL_ES_ENDPOINT'] = cls._old_es_endpoint
-        cls._es_docker_container.kill()
-        cls._es_docker_container = None
         super().tearDownClass()

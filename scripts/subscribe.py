@@ -10,6 +10,7 @@ import boto3
 
 from azul import config
 from azul.json_freeze import freeze, thaw
+from azul.plugin import Plugin
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +41,12 @@ def subscribe(options, dss_client):
     current_subscriptions = freeze(response['subscriptions'])
 
     if options.subscribe:
-        plugin = config.plugin()
-        base_url = "https://" + config.api_lambda_domain('indexer')
+        plugin = Plugin.load()
+        base_url = config.indexer_endpoint()
+        prefix = config.dss_query_prefix
         new_subscriptions = [freeze(dict(replica='aws', es_query=query, callback_url=base_url + path))
-                             for query, path in [(plugin.dss_subscription_query, '/'),
-                                                 (plugin.dss_deletion_subscription_query, '/delete')]]
+                             for query, path in [(plugin.dss_subscription_query(prefix), '/'),
+                                                 (plugin.dss_deletion_subscription_query(prefix), '/delete')]]
     else:
         new_subscriptions = []
 

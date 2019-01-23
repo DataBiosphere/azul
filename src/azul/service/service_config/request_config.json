@@ -5,10 +5,8 @@
     "fileSize": "contents.files.size",
     "fileId": "contents.files.uuid",
 
-    "instrumentManufacturerModel": "contents.processes.instrument_manufacturer_model",
-    "libraryConstructionApproach": "contents.processes.library_construction_approach",
-    "processId": "contents.processes.process_id",
-    "protocol": "contents.processes.protocol_id",
+    "instrumentManufacturerModel": "contents.protocols.instrument_manufacturer_model",
+    "libraryConstructionApproach": "contents.protocols.library_construction_approach",
 
     "contactName": "contents.projects.contact_names",
     "projectId": "contents.projects.document_id",
@@ -33,6 +31,9 @@
     "organismAgeUnit": "contents.specimens.organism_age_unit",
     "preservationMethod": "contents.specimens.preservation_method",
     "cellCount": "contents.cell_suspensions.total_estimated_cells",
+
+    "bundleUuid": "bundles.uuid",
+    "bundleVersion": "bundles.version",
 
     "entryId": "entity_id"
 },
@@ -60,6 +61,21 @@
       "bundle_version": "version"
     }
   },
+  "cart-item": {
+    "files": [
+      "fileId"
+    ],
+    "specimens": [
+      "specimenId"
+    ],
+    "projects": [
+      "project"
+    ],
+    "bundles": [
+      "bundleUuid",
+      "bundleVersion"
+    ]
+  },
   "facets": [
     "organ",
     "organPart",
@@ -71,7 +87,6 @@
     "disease",
     "instrumentManufacturerModel",
     "project",
-    "protocol",
     "fileFormat",
     "laboratory",
     "preservationMethod",

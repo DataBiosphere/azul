@@ -4,10 +4,9 @@ from typing import Optional, Tuple
 
 import boto3
 import botocore.session
+from more_itertools import one
 
-
-def memoized_property(f):
-    return property(lru_cache(maxsize=1)(f))
+from azul.decorators import memoized_property
 
 
 class AWS:
@@ -41,6 +40,14 @@ class AWS:
     def es(self):
         return boto3.client('es')
 
+    @memoized_property
+    def stepfunctions(self):
+        return boto3.client('stepfunctions')
+
+    @lru_cache(maxsize=1)
+    def dynamo(self, endpoint_url, region_name):
+        return boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
+
     def api_gateway_id(self, function_name: str, validate=True) -> Optional[str]:
         try:
             response = self.lambda_.get_policy(FunctionName=function_name)
@@ -48,7 +55,8 @@ class AWS:
             return None
         else:
             policy = json.loads(response['Policy'])
-            api_stage_arn = policy['Statement'][0]['Condition']['ArnLike']['AWS:SourceArn']
+            # For unknown reasons, Chalice may create more than one statement. We should fail if that's the case.
+            api_stage_arn = one(policy['Statement'])['Condition']['ArnLike']['AWS:SourceArn']
             api_gateway_id = api_stage_arn.split(':')[-1].split('/', 1)[0]
             if validate:
                 try:
@@ -68,8 +76,6 @@ class AWS:
         es_domain_status = self.es.describe_elasticsearch_domain(DomainName=es_domain)
         return es_domain_status['DomainStatus']['Endpoint'], 443
 
-
-del memoized_property
 
 aws = AWS()
 
