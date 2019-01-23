@@ -212,8 +212,7 @@ class ManifestResponse(AbstractResponse):
                 writer = csv.writer(buffer_wrapper, dialect='excel-tab')
 
                 writer.writerow(list(self.manifest_entries['bundles'].keys()) +
-                                list(self.manifest_entries['contents.files'].keys()) +
-                                ['drs_uri'])
+                                list(self.manifest_entries['contents.files'].keys()))
                 for hit in self.es_search.scan():
                     self._iterate_hit(hit, writer)
 
