@@ -186,14 +186,14 @@ class FacetNameValidationTest(WebServiceTestCase):
         logging.getLogger('test_request_validation').warning('test_manifest is invoked')
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-        responses.add_passthru(self.base_url)
-        storage_service = StorageService()
-        storage_service.create_bucket()
-
-        url = self.base_url + '/repository/files/export?filters={"file":{}}&format=bdbag'
-        response = requests.get(url)
-        self.assertEqual(200, response.status_code, 'Unable to download manifest')
-        with tempfile.TemporaryDirectory() as zip_dir:
+        with ResponsesHelper() as helper, \
+                tempfile.TemporaryDirectory() as zip_dir:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+            url = self.base_url + '/repository/files/export?filters={"file":{}}&format=bdbag'
+            response = requests.get(url)
+            self.assertEqual(200, response.status_code, 'Unable to download manifest')
             zip_fh = ZipFile(response.text, 'r')
             zip_fh.extractall(zip_dir)
             zip_fh.close()
