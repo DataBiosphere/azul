@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import sys
-import tempfile
+
 from tempfile import TemporaryDirectory
 from unittest import mock
 
@@ -189,8 +189,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         # add_passthru let's us hit the server
         # see this GitHub issue and comment:
         # https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-        with ResponsesHelper() as helper, \
-                tempfile.TemporaryDirectory() as zip_dir:
+        with ResponsesHelper() as helper, TemporaryDirectory() as zip_dir:
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
