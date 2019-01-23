@@ -307,15 +307,6 @@ class ManifestResponse(AbstractResponse):
 
             return bdbag_api.archive_bag(bag_path, 'zip')
 
-    @staticmethod
-    def _get_single_column_in_file_obj(file_object, header_str: str):
-        """Return column header_str from memory TSV-file file_object."""
-        s = file_object.getvalue()
-        idx = s.splitlines()[0].split('\t').index(header_str)
-        L = [x.split('\t')[idx] for x in s.splitlines()]
-        L[0] = 'entity:participant_id'
-        return L
-
     def _iterate_hit(self, es_search_hit, writer, participant_writer=None):
         hit_dict = es_search_hit.to_dict()
         assert len(hit_dict['contents']['files']) == 1
