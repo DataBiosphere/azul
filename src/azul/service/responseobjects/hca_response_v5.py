@@ -211,9 +211,7 @@ class ManifestResponse(AbstractResponse):
                 buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
                 writer = csv.writer(buffer_wrapper, dialect='excel-tab')
 
-                writer.writerow(list(self.manifest_entries['contents.specimens'].keys()) +
-                                list(self.manifest_entries['contents.cell_suspensions'].keys()) +
-                                list(self.manifest_entries['bundles'].keys()) +
+                writer.writerow(list(self.manifest_entries['bundles'].keys()) +
                                 list(self.manifest_entries['contents.files'].keys()) +
                                 ['drs_uri'])
                 for hit in self.es_search.scan():
