@@ -12,3 +12,5 @@
 
 _set AZUL_DEPLOYMENT_STAGE integration
 _set AZUL_DSS_ENDPOINT "https://dss.integration.data.humancellatlas.org/v1"
+
+_set AZUL_ENABLE_CLOUDWATCH_ALARMS 1

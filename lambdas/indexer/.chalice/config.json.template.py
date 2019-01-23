@@ -19,10 +19,10 @@ emit({
         config.deployment_stage: {
             "lambda_functions": {
                 "write": {
-                    "lambda_memory_size": 512  # Needed for preview freak bundles
+                    "lambda_memory_size": 2048
                 },
                 "nudge": {
-                    "lambda_memory_size": 128  # Doesn't do much so it can be small
+                    "lambda_memory_size": 128
                 }
             }
         }

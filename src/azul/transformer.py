@@ -1,10 +1,9 @@
 from abc import ABC, ABCMeta, abstractmethod
 from collections import defaultdict
-import itertools
 import logging
-from typing import Iterable, List, Mapping, Optional, Sequence, Tuple, MutableMapping, Any
+from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple, ClassVar
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from azul import config
 from azul.json_freeze import freeze, thaw
@@ -12,239 +11,153 @@ from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 
+Entities = List[JSON]
 
-@dataclass
-class Bundle:
-    uuid: str
-    version: str
-    contents: Optional[JSON] = field(default_factory=dict)
+EntityID = str
 
-    def to_json(self) -> JSON:
-        json = dict(uuid=self.uuid, version=self.version)
-        # To save space in the document source we suppress the `content` entry if it is None
-        if self.contents is not None:
-            json['contents'] = self.contents
-        return json
+BundleVersion = str
 
-    @classmethod
-    def from_json(cls, json) -> 'Bundle':
-        return cls(uuid=json['uuid'], version=json['version'], contents=json.get('contents'))
+BundleUUID = str
 
-    @property
-    def deleted(self) -> bool:
-        return self.contents.get('deleted', False)
-
-    def delete(self):
-        self.contents = {'deleted': True}
+EntityType = str
 
 
-DocumentCoordinates = Tuple[str, str]
+class EntityReference(NamedTuple):
+    entity_type: EntityType
+    entity_id: EntityID
+
+
+class DocumentCoordinates(NamedTuple):
+    document_index: str
+    document_id: str
 
 
 @dataclass
-class ElasticSearchDocument:
-    entity_type: str
-    entity_id: str
-    bundles: List[Bundle]
-    document_type: str = "doc"
-    document_version: int = 1
-    contents: Optional[JSON] = None
-
-    def to_json(self) -> JSON:
-        return dict(entity_type=self.entity_type,
-                    entity_id=self.entity_id,
-                    bundles=[b.to_json() for b in self.bundles],
-                    document_type=self.document_type,
-                    document_version=self.document_version,
-                    contents=self.contents)
+class Document:
+    entity: EntityReference
+    type: ClassVar[str] = 'doc'
+    version: Optional[int]
+    version_type: ClassVar[Optional[str]] = None
+    contents: Optional[JSON]
 
     @classmethod
-    def from_json(cls, json: JSON):
-        return cls(entity_type=json['entity_type'],
-                   entity_id=json['entity_id'],
-                   bundles=list(map(Bundle.from_json, json['bundles'])),
-                   document_type=json['document_type'],
-                   document_version=json['document_version'],
-                   contents=json['contents'])
+    def index_name(cls, entity_type: EntityType) -> str:
+        return config.es_index_name(entity_type, aggregate=issubclass(cls, Aggregate))
 
-    @property
-    def original(self) -> bool:
-        return self.contents is None
-
-    @property
-    def aggregate(self) -> bool:
-        return not self.original
+    @classmethod
+    def entity_type(cls, index_name: str) -> EntityType:
+        entity_type, is_aggregate = config.parse_es_index_name(index_name)
+        assert is_aggregate == issubclass(cls, Aggregate)
+        return entity_type
 
     @property
     def document_id(self) -> str:
-        return self.entity_id
+        return self.entity.entity_id
 
     @property
     def document_index(self) -> str:
-        return config.es_index_name(self.entity_type, aggregate=self.aggregate)
+        return self.index_name(self.entity.entity_type)
 
     @property
     def coordinates(self) -> DocumentCoordinates:
-        return self.document_index, self.document_id
-
-    @property
-    def original_coordinates(self) -> DocumentCoordinates:
-        return config.es_index_name(self.entity_type, aggregate=False), self.document_id
-
-    @property
-    def aggregate_coordinates(self) -> DocumentCoordinates:
-        return config.es_index_name(self.entity_type, aggregate=True), self.document_id
+        return DocumentCoordinates(document_index=self.document_index,
+                                   document_id=self.document_id)
 
     def to_source(self) -> JSON:
-        source = {
-            "entity_id": self.entity_id,
-            "bundles": [b.to_json() for b in self.bundles]
-        }
-        if self.aggregate:
-            source["contents"] = self.contents
-        return source
+        return dict(entity_id=self.entity.entity_id,
+                    contents=self.contents)
 
     @classmethod
-    def from_index(cls, hit: JSON):
-        source = hit["_source"]
-        entity_type, aggregate = config.parse_es_index_name(hit['_index'])
-        self = cls(entity_type=entity_type,
-                   entity_id=source['entity_id'],
-                   bundles=[Bundle.from_json(b) for b in source['bundles']],
-                   document_version=hit.get("_version", 0),
-                   contents=source.get("contents"))
-        assert self.aggregate == aggregate
+    def _from_source(cls, source: JSON) -> Mapping[str, Any]:
+        return {}
+
+    @classmethod
+    def from_index(cls, hit: JSON) -> 'Document':
+        source = hit['_source']
+        # noinspection PyArgumentList
+        # https://youtrack.jetbrains.com/issue/PY-28506
+        self = cls(entity=EntityReference(entity_type=cls.entity_type(hit['_index']),
+                                          entity_id=source['entity_id']),
+                   version=hit.get('_version', 0),
+                   contents=source.get('contents'),
+                   **cls._from_source(source))
         return self
 
-    def update_with(self, other: 'ElasticSearchDocument') -> bool:
-        """
-        Merge updates from another instance into this one. Typically, `self` represents a persistent document loaded
-        from an index while `other` contains contributions from incoming bundles.
+    def to_index(self, bulk=False) -> JSON:
+        result = {
+            '_index' if bulk else 'index': self.document_index,
+            '_type' if bulk else 'doc_type': self.type,
+            '_source' if bulk else 'body': self.to_source(),
+            '_id' if bulk else 'id': self.document_id
+        }
+        if self.version_type is None:
+            if bulk:
+                result['_op_type'] = 'index'
+        else:
+            if bulk:
+                result['_op_type'] = 'create' if self.version is None else 'index'
+            elif self.version is None:
+                result['op_type'] = 'create'
+            result['_version_type' if bulk else 'version_type'] = self.version_type
+            result['_version' if bulk else 'version'] = self.version
+        return result
 
-        :returns: True, if this document was modified and should be written back to the index
-        """
-        assert self._is_compatible_with(other)
-        modified, self.bundles = self._merge_bundles(self.bundles, other.bundles)
-        self.document_version = self.document_version + 1
-        return modified
 
-    def _is_compatible_with(self, other):
-        return (self.document_id == other.document_id and
-                self.document_index == other.document_index and
-                self.document_type == other.document_type and
-                self.entity_type == other.entity_type)
+@dataclass
+class Contribution(Document):
+    bundle_uuid: BundleUUID
+    bundle_version: BundleVersion
+    bundle_deleted: bool = False
 
-    @staticmethod
-    def _merge_bundles(current: List[Bundle], updates: List[Bundle]) -> Tuple[bool, List[Bundle]]:
-        """
-        Merge two bundle contribution lists into one. Bundles from either list are matched based on their UUID,
-        version and content. Bundles absent from either argument will be placed in the result. Of two bundles with
-        the same UUID the one with the higher version will be placed into the result. If UUID and version are the
-        same but the contents differ (as defined by `__eq__`), the update (from the second argument) is selected. All
-        three being equal, the bundle from the first argument will selected.
+    @property
+    def document_id(self) -> str:
+        return self.make_document_id(self.entity.entity_id, self.bundle_uuid, self.bundle_version)
 
-        :returns: the merged list of bundles and a boolean indicating whether at least one update was selected. Note
-        that bundles in the result may occur in a different order compared to the first argument, even if this
-        boolean is False.
+    @classmethod
+    def make_document_id(cls, entity_id, bundle_uuid, bundle_version):
+        document_id = entity_id, bundle_uuid, bundle_version
+        return '_'.join(document_id)
 
-        >>> merge = ElasticSearchDocument._merge_bundles
-        >>> B = Bundle
+    @classmethod
+    def _from_source(cls, source: JSON) -> Mapping[str, Any]:
+        return dict(super()._from_source(source),
+                    bundle_uuid=source['bundle_uuid'],
+                    bundle_version=source['bundle_version'],
+                    bundle_deleted=source['bundle_deleted'])
 
-        Bs without a match in the other list are chosen:
+    def to_source(self):
+        return dict(super().to_source(),
+                    bundle_uuid=self.bundle_uuid,
+                    bundle_version=self.bundle_version,
+                    bundle_deleted=self.bundle_deleted)
 
-            >>> merge([B(uuid='0', version='0'),                          ],
-            ...       [                          B(uuid='2', version='0') ])
-            (True, [Bundle(uuid='2', version='0', contents={}), Bundle(uuid='0', version='0', contents={})])
 
-        If the updates are a subset of the first argument, no changes are made, and the first argument is returned.
+@dataclass
+class Aggregate(Document):
+    bundles: JSON
+    num_contributions: int
+    version_type: ClassVar[Optional[str]] = 'internal'
 
-            >>> merge([B(uuid='0', version='0'), B(uuid='2', version='0')],
-            ...       [                          B(uuid='2', version='0')])
-            (False, [Bundle(uuid='2', version='0', contents={}), Bundle(uuid='0', version='0', contents={})])
+    @classmethod
+    def _from_source(cls, source: JSON) -> Mapping[str, Any]:
+        return dict(super()._from_source(source),
+                    num_contributions=source['num_contributions'],
+                    bundles=source['bundles'])
 
-        If the updates are a superset of the first argument, the updates are returned.
-
-            >>> merge([                          B(uuid='2', version='0')],
-            ...       [B(uuid='0', version='0'), B(uuid='2', version='0')])
-            (True, [Bundle(uuid='0', version='0', contents={}), Bundle(uuid='2', version='0', contents={})])
-
-        If the UUID matches, the more recent bundle version is chosen:
-
-            >>> merge([B(uuid='0', version='0'), B(uuid='2', version='1')],
-            ...       [B(uuid='0', version='1'), B(uuid='2', version='0')])
-            (True, [Bundle(uuid='0', version='1', contents={}), Bundle(uuid='2', version='1', contents={})])
-
-        Ties (identical UUID and version) are broken by favoring the bundle from the second argument as long as it is
-        different:
-
-            >>> merge([B(uuid='1', version='0', contents={'x':1})],
-            ...       [B(uuid='1', version='0', contents={'x':2})])
-            (True, [Bundle(uuid='1', version='0', contents={'x': 2})])
-
-        Everything being equal, the first argument is favored and no changes are reported:
-
-            >>> merge([B(uuid='1', version='0', contents={'x':1})],
-            ...       [B(uuid='1', version='0', contents={'x':1})])
-            (False, [Bundle(uuid='1', version='0', contents={'x': 1})])
-
-        A more complicated case:
-
-            >>> merge([B(uuid='0', version='0'), B(uuid='1', version='0', contents={'x':1}), B(uuid='2', version='0')],
-            ...       [                          B(uuid='1', version='0', contents={'x':2}), B(uuid='2', version='1')])
-            ... # doctest: +NORMALIZE_WHITESPACE
-            (True,
-            [Bundle(uuid='1', version='0', contents={'x': 2}),
-            Bundle(uuid='2', version='1', contents={}),
-            Bundle(uuid='0', version='0', contents={})])
-        """
-        modified = False
-        current_by_id = {bundle.uuid: bundle for bundle in current}
-        assert len(current_by_id) == len(current)
-        bundles = {}
-        for update in updates:
-            try:
-                cur_bundle = current_by_id.pop(update.uuid)
-            except KeyError:
-                modified, bundle = True, update
-            else:
-                if cur_bundle.version < update.version:
-                    modified, bundle = True, update
-                elif cur_bundle.version > update.version:
-                    bundle = cur_bundle
-                else:
-                    if update == cur_bundle:
-                        bundle = cur_bundle
-                    else:
-                        modified, bundle = True, update
-            assert bundles.setdefault(update.uuid, bundle) is bundle
-        for bundle in current_by_id.values():
-            assert bundles.setdefault(bundle.uuid, bundle) is bundle
-        return modified, list(bundles.values())
-
-    def consolidate(self, others: Iterable['ElasticSearchDocument']):
-        """
-        Combine bundle contributions from multiple other instances into this one. All involved instances must
-        represent the same metadata entity or an exception wioll be raised. The bundle contributions from all
-        involved instances must be disjunctive or an exception will be raised. See `:py:methd:`update_with` for a way
-        to reconcile two instances with non-disjunctive bundle contributions.
-        """
-        assert all(self._is_compatible_with(other) for other in others)
-        bundles = {}
-        for bundle in itertools.chain(self.bundles, *(other.bundles for other in others)):
-            assert bundles.setdefault((bundle.uuid, bundle.version), bundle) == bundle, \
-                f"Conflicting contributions for bundle {bundle.uuid}, version {bundle.version}"
-        self.bundles = list(bundles.values())
+    def to_source(self) -> JSON:
+        return dict(super().to_source(),
+                    num_contributions=self.num_contributions,
+                    bundles=self.bundles)
 
 
 class Transformer(ABC):
 
     @abstractmethod
-    def create_documents(self,
-                         uuid: str,
-                         version: str,
-                         manifest: List[JSON],
-                         metadata_files: Mapping[str, JSON]
-                         ) -> Sequence[ElasticSearchDocument]:
+    def transform(self,
+                  uuid: BundleUUID,
+                  version: BundleVersion,
+                  manifest: List[JSON],
+                  metadata_files: Mapping[str, JSON]) -> Iterable[Contribution]:
         """
         Given the metadata for a particular bundle, compute a list of contributions to Elasticsearch documents. The
         contributions constitute partial documents, e.g. their `bundles` attribute is a singleton list, representing
@@ -259,22 +172,12 @@ class Transformer(ABC):
         """
         raise NotImplementedError()
 
-    @abstractmethod
-    def aggregate_document(self, document: ElasticSearchDocument) -> Optional[ElasticSearchDocument]:
-        """
-        Given a
-        """
-        return None
-
-
-Entities = List[JSON]
-
-EntityID = str
-
-BundleVersion = str
-
 
 class Accumulator(ABC):
+    """
+    Accumulates multiple values into a single value, not necessarily of the same type.
+    """
+
     @abstractmethod
     def accumulate(self, value):
         """
@@ -291,6 +194,12 @@ class Accumulator(ABC):
 
 
 class SumAccumulator(Accumulator):
+    """
+    Add values.
+
+    Unlike the sum() built-in, this accumulator doesn't default to an initial
+    value of 0 but defaults to the first accumulated value instead.
+    """
 
     def __init__(self, initially=None) -> None:
         """
@@ -313,6 +222,10 @@ class SumAccumulator(Accumulator):
 
 
 class SetAccumulator(Accumulator):
+    """
+    Accumulates values into a set, discarding duplicates and,
+    optionally, values that would grow the set past the maximum size.
+    """
 
     def __init__(self, max_size=None) -> None:
         super().__init__()
@@ -344,6 +257,10 @@ class SetAccumulator(Accumulator):
 
 
 class ListAccumulator(Accumulator):
+    """
+    Accumulate values into a list, optionally discarding values that
+    would grow the list past the maximum size, if specified.
+    """
 
     def __init__(self, max_size=None) -> None:
         super().__init__()
@@ -362,6 +279,9 @@ class ListAccumulator(Accumulator):
 
 
 class SetOfDictAccumulator(SetAccumulator):
+    """
+    A set accumulator that supports mutable mappings as values.
+    """
 
     def accumulate(self, value) -> bool:
         return super().accumulate(freeze(value))
@@ -388,7 +308,8 @@ class LastValueAccumulator(Accumulator):
 
 class OptionalValueAccumulator(LastValueAccumulator):
     """
-    An accumulator that accepts at most one value and returns it. Recurrence of the same value is rejected.
+    An accumulator that accepts at most one value and returns it.
+    Occurrence of more than one value, same or different, raises a ValueError.
     """
 
     def accumulate(self, value):
@@ -401,6 +322,7 @@ class OptionalValueAccumulator(LastValueAccumulator):
 class MandatoryValueAccumulator(OptionalValueAccumulator):
     """
     An accumulator that requires exactly one value and returns it.
+    Occurrence of more than one value or no value at all raises a ValueError.
     """
 
     def get(self):
@@ -411,6 +333,9 @@ class MandatoryValueAccumulator(OptionalValueAccumulator):
 
 
 class MinAccumulator(LastValueAccumulator):
+    """
+    An accumulator that returns the minimal value seen.
+    """
 
     def accumulate(self, value):
         if value is not None and (self.value is None or value < self.value):
@@ -418,6 +343,9 @@ class MinAccumulator(LastValueAccumulator):
 
 
 class MaxAccumulator(LastValueAccumulator):
+    """
+    An accumulator that returns the maximal value seen.
+    """
 
     def accumulate(self, value):
         if value is not None and (self.value is None or value > self.value):
@@ -491,7 +419,7 @@ class SimpleAggregator(EntityAggregator):
             }
         ] if aggregate else []
 
-    def _accumulate(self, aggregate, entity):
+    def _accumulate(self, aggregate: MutableMapping[str, Optional[Accumulator]], entity: JSON):
         entity = self._transform_entity(entity)
         for field, value in entity.items():
             try:
@@ -526,6 +454,9 @@ class GroupingAggregator(SimpleAggregator):
         raise NotImplementedError
 
 
+CollatedEntities = MutableMapping[EntityID, Tuple[BundleVersion, JSON]]
+
+
 class AggregatingTransformer(Transformer, metaclass=ABCMeta):
 
     @abstractmethod
@@ -543,44 +474,35 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
         """
         return SimpleAggregator()
 
-    def aggregate_document(self, document: ElasticSearchDocument) -> ElasticSearchDocument:
-        if document.entity_type == self.entity_type():
-            contents = self._select_latest(document)
-            for entity_type in contents.keys():
-                if entity_type == self.entity_type():
-                    assert len(contents[entity_type]) == 1
-                else:
-                    aggregator = self.get_aggregator(entity_type)
-                    contents[entity_type] = aggregator.aggregate(contents[entity_type])
-            bundles = [Bundle(uuid=bundle.uuid, version=bundle.version, contents=None)
-                       for bundle in document.bundles if not bundle.deleted]
-            assert bool(contents) == bool(bundles)
-            return ElasticSearchDocument(entity_type=document.entity_type,
-                                         entity_id=document.entity_id,
-                                         bundles=bundles,
-                                         document_type=document.document_type,
-                                         document_version=document.document_version,
-                                         contents=contents)
-        else:
-            return super().aggregate_document(document)
+    def aggregate(self, contributions: List[Contribution]) -> JSON:
+        contents = self._select_latest(contributions)
+        aggregate_contents = {}
+        for entity_type, entities in contents.items():
+            if entity_type == self.entity_type():
+                assert len(entities) == 1
+            else:
+                aggregator = self.get_aggregator(entity_type)
+                entities = aggregator.aggregate(contents[entity_type])
+            aggregate_contents[entity_type] = entities
+        return aggregate_contents
 
-    def _select_latest(self, document) -> MutableMapping[str, Entities]:
+    def _select_latest(self, contributions: Iterable[Contribution]) -> MutableMapping[EntityType, Entities]:
         """
-        Collect the latest version of each entity from the document. If two or more bundles contribute copies of the
-        same entity, potentially with different contents, the copy from the newest bundle will be chosen.
+        Collect the latest version of each inner entity from multiple given documents.
+
+        If two or more contributions contain copies of the same entity, potentially with different contents, the copy
+        from the contribution with the latest bundle version will be selected.
         """
-        collated_contents: MutableMapping[str, MutableMapping[EntityID, Tuple[BundleVersion, JSON]]] = defaultdict(dict)
-        for bundle in document.bundles:
-            for entity_type, entities in bundle.contents.items():
-                if entity_type == 'deleted':
-                    assert entities is True
-                else:
-                    collated_entities = collated_contents[entity_type]
-                    for entity in entities:
-                        entity_id = entity['document_id']
-                        bundle_version, collated_entity = collated_entities.get(entity_id, ('', {}))
-                        if bundle_version < bundle.version:
-                            collated_entities[entity_id] = bundle.version, entity
-        contents = {entity_type: [entity for entity_id, (_, entity) in entities.items()]
-                    for entity_type, entities in collated_contents.items()}
-        return contents
+        contents: MutableMapping[EntityType, CollatedEntities] = defaultdict(dict)
+        for contribution in contributions:
+            for entity_type, entities in contribution.contents.items():
+                collated_entities = contents[entity_type]
+                for entity in entities:
+                    entity_id = entity['document_id']  # FIXME: the key 'document_id' is HCA specific
+                    bundle_version, _ = collated_entities.get(entity_id, ('', None))
+                    if bundle_version < contribution.bundle_version:
+                        collated_entities[entity_id] = contribution.bundle_version, entity
+        return {
+            entity_type: [entity for _, entity in entities.values()]
+            for entity_type, entities in contents.items()
+        }

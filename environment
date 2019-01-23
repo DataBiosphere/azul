@@ -1,6 +1,10 @@
+# Only variables whose names start in `AZUL_` will be exported to a deployed
+# Lambda. Note that by implication, `azul_` variables will not be exported, even
+# though they are considered part of Azul.
+
 azul_vars=(
-    # The path to the project root directory
-    AZUL_HOME
+    # The path to the root directory of the project
+    azul_home
 
     # The name of the current deployment. This variable controls the name of all
     # cloud resources and is the main vehicle for isolating cloud resources
@@ -35,7 +39,7 @@ azul_vars=(
     # use. The given ES domain's endpoint will be looked up dynamically.
     AZUL_ES_DOMAIN
 
-    # Boolean value, 1 to share `dev` ES domain, 0 (default) to create your own
+    # Boolean value, 1 to share `dev` ES domain, 0 to create your own
     AZUL_SHARE_ES_DOMAIN
 
     # Prefix to describe ES indices
@@ -106,13 +110,49 @@ azul_vars=(
     # The name of the S3 bucket where the manifest API stores the downloadable
     # content requested by client.
     AZUL_S3_BUCKET
+
+    # Name of the Route 53 zone used for shortened URLs.
+    # This hosted zone will have to be created manually prior to running
+    # `make terraform`. Personal deployments typically share a zone with the
+    # `dev` deployment.
+    # If this variable is empty, a route 53 record will not be created and it
+    # is assumed that the record and zone have been created manually.  This is
+    # the case for staging, integration, and prod environments.
+    AZUL_URL_REDIRECT_BASE_DOMAIN_NAME
+
+    # Full domain name to be used in the URL redirection URLs
+    # This is also used as the name of the S3 bucket used to store URL
+    # redirection objects
+    AZUL_URL_REDIRECT_FULL_DOMAIN_NAME
+
+    # Determine if CloudWatch alarms should be deployed (1 yes, 0 no)
+    # CloudWatch alarms should not be enabled for personal deployments
+    AZUL_ENABLE_CLOUDWATCH_ALARMS
+
+    # Boolean value, 1 to upload a manifest in a single request to S3, 0 to
+    # upload the manifest in multiple concurrent requests for equal parts of
+    # a smaller size. This allows the manifest generation code to start
+    # uploading the manifest to S3 while the manifest data is still being
+    # fetched from Elasticsearch, shortening the overall time needed to
+    # generate and upload the manifest.
+    AZUL_DISABLE_MULTIPART_MANIFESTS
+
+    # Space separated list of IP addresses to allow access to Cart API endpoint
+    # TODO: Remove when authentication is added
+    AZUL_CART_API_IP_WHITELIST
+
+    # The default bundle UUID prefix to use for reindexing bundles in the DSS
+    # and for subscriptions to the DSS. If this variable is set to a non-empty
+    # string, only bundles whose UUID starts with the specified string will be
+    # indexed.
+    azul_dss_query_prefix
 )
 
 unset ${azul_vars[*]}
 
-AZUL_HOME="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+azul_home="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ ! -f "${AZUL_HOME}/deployments/.active/environment" ]]; then
+if [[ ! -f "${azul_home}/deployments/.active/environment" ]]; then
     echo "Please create a symlink to the active deployment. " \
          "For example 'cd deployments && ln -snf dev .active'"
     return
@@ -124,7 +164,7 @@ _set () {
             eval ": \${$1:='$2'}"
             # Only echo in interactive shells
             if [[ -n $PS1 ]]; then
-                self=${BASH_SOURCE[1]#${AZUL_HOME}/}
+                self=${BASH_SOURCE[1]#${azul_home}/}
                 if [[ ${!1} == $2 ]]; then
                     echo ${self}: Set $1 to "'$2'"
                 else
@@ -143,16 +183,16 @@ _set () {
 
 # Set variables specific to the active deployment and the current user. This is
 # the most specific level.
-if [[ -f "${AZUL_HOME}/deployments/.active/environment.local" ]]; then
-    source "${AZUL_HOME}/deployments/.active/environment.local"
+if [[ -f "${azul_home}/deployments/.active/environment.local" ]]; then
+    source "${azul_home}/deployments/.active/environment.local"
 fi
 
 # Set variables specific to the active deployment
-source "${AZUL_HOME}/deployments/.active/environment"
+source "${azul_home}/deployments/.active/environment"
 
 # Set variables specific to the current user
-if [[ -f "${AZUL_HOME}/environment.local" ]]; then
-    source "${AZUL_HOME}/environment.local"
+if [[ -f "${azul_home}/environment.local" ]]; then
+    source "${azul_home}/environment.local"
 fi
 
 # Set the global defaults. This is the least specific level.
@@ -164,6 +204,8 @@ _set AZUL_INDEX_PREFIX "azul"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_SHARE_ES_DOMAIN 0
 _set AZUL_S3_BUCKET "azul-storage-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME ""
+_set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.url.data.humancellatlas.org"
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "r4.2xlarge.elasticsearch"  # Indexing performance benefits from the increased memory offered
                                                        # by the `r` family, especially now that the number of shards is
@@ -175,9 +217,17 @@ _set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front 
 _set AZUL_DSS_WORKERS 8
 _set AZUL_INDEXER_CONCURRENCY 64
 _set AZUL_SUBSCRIBE_TO_DSS 1
+_set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 
-# This is the same TF bucket as the one DSS uses
+# FIXME: This is the TF bucket DSS used to use. We should have one exclusively for Azul.
+# https://github.com/DataBiosphere/azul/issues/645
 _set AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE "org-humancellatlas-dss-config-{account_id}"
+
+_set AZUL_ENABLE_CLOUDWATCH_ALARMS 0
+
+_set AZUL_CART_API_IP_WHITELIST  # TODO: Remove when authentication is added
+
+_set azul_dss_query_prefix
 
 unset -f _set
 
@@ -186,7 +236,7 @@ export ${azul_vars[*]}
 # A little helper to make re-sourcing this script easier.
 #
 _refresh () {
-    source ${AZUL_HOME}/environment
+    source ${azul_home}/environment
 }
 
 # Manage the symlink to the active deployment
@@ -194,15 +244,15 @@ _refresh () {
 _select () {
     if [[ $1 != "" ]]; then
         ( # use sub-shell so `cd` is temporary
-            cd ${AZUL_HOME}/deployments &&
+            cd ${azul_home}/deployments &&
             test -d "$1" &&
             { [ ! -e .active ] || { [ -L .active ] && rm .active ;} ;} &&
             ln -s "$1" .active
         ) || { echo error: "$1" && return ;}
         _refresh
     fi
-    ( cd ${AZUL_HOME}/deployments && ls -l .active )
+    ( cd ${azul_home}/deployments && ls -l .active )
 }
 
-export PYTHONPATH="$AZUL_HOME/src:$AZUL_HOME/test"
-export TF_DATA_DIR="${AZUL_HOME}/deployments/.active/.terraform"
+export PYTHONPATH="${azul_home}/src:${azul_home}/test"
+export TF_DATA_DIR="${azul_home}/deployments/.active/.terraform"
