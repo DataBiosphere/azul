@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import sys
+import tempfile
 from tempfile import TemporaryDirectory
 from unittest import mock
 
@@ -14,6 +15,7 @@ from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
+from zipfile import ZipFile
 
 log = logging.getLogger(__name__)
 
@@ -158,22 +160,33 @@ class FacetNameValidationTest(WebServiceTestCase):
             expected_field_order = [entity_field.strip() for entity_field in order_settings_file.readlines()]
             self.assertEqual(expected_field_order, actual_field_order, "Field order is not configured correctly")
 
-    @mock_sts
     @mock_s3
-    def test_manifest(self):
+    @mock_sts
+    def test_bdbag_manifest(self):
+        logging.getLogger('test_request_validation').warning('test_manifest is invoked')
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-        with ResponsesHelper() as helper:
-            helper.add_passthru(self.base_url)
-            storage_service = StorageService()
-            storage_service.create_bucket()
+        responses.add_passthru(self.base_url)
+        storage_service = StorageService()
+        storage_service.create_bucket()
 
-            url = self.base_url + '/repository/files/export?filters={"file":{}}'
-            response = requests.get(url)
-            self.assertEqual(200, response.status_code, 'Unable to download manifest')
-            tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
+        url = self.base_url + '/repository/files/export?filters={"file":{}}&format=bdbag'
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+        with tempfile.TemporaryDirectory() as zip_dir:
+            zip_fh = ZipFile(response.text, 'r')
+            zip_fh.extractall(zip_dir)
+            zip_fh.close()
+            zip_fname = os.path.basename(os.path.splitext(response.text)[0])
+            fh = open(os.path.join(zip_dir, zip_fname, 'data', 'sample.tsv'))
+            tsv_file = csv.DictReader(fh, delimiter='\t')
+            #tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
             # 2 because self.bundle has 2 files
             self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
             manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
-            expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['contents.files'].keys())
+            expected_fieldnames = list(manifest_config['contents.specimens'].keys()) +\
+                                  list(manifest_config['contents.cell_suspensions'].keys()) +\
+                                  list(manifest_config['bundles'].keys()) +\
+                                  list(manifest_config['contents.files'].keys()) +\
+                                  ['drs_uri']
             self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
