@@ -10,7 +10,6 @@ import logging
 from uuid import uuid4
 
 from chalice import Response
-from zipfile import ZipFile, ZIP_DEFLATED
 from jsonobject import (FloatProperty,
                         IntegerProperty,
                         JsonObject,
