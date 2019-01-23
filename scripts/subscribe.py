@@ -31,8 +31,7 @@ def main(argv):
             f.write(creds['SecretString'])
             f.flush()
             with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
-                will_subscribe = options.subscribe
-                subscribe(will_subscribe, dss_client)
+                subscribe(options.subscribe, dss_client)
     else:
         raise NotImplementedError("https://github.com/DataBiosphere/azul/issues/110")
 
