@@ -1,7 +1,8 @@
 #!/usr/bin/python
 import abc
 from collections import OrderedDict, defaultdict
-import os, csv, tempfile
+import os, csv
+from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
@@ -282,8 +283,8 @@ class ManifestResponse(AbstractResponse):
         :returns bdbag: archived (zipped) BDBag with values of data as
                         payloads
         """
-        with tempfile.TemporaryDirectory() as bag_path,\
-            tempfile.TemporaryDirectory() as tsv_file_dir:
+        with TemporaryDirectory() as bag_path, \
+                TemporaryDirectory() as tsv_file_dir:
             bag = bdbag_api.make_bag(bag_path)
             data_path = os.path.join(bag_path, 'data')
             for fname, fobj in data.items():
