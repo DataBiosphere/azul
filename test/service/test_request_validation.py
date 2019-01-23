@@ -180,7 +180,6 @@ class FacetNameValidationTest(WebServiceTestCase):
             zip_fname = os.path.basename(os.path.splitext(response.text)[0])
             fh = open(os.path.join(zip_dir, zip_fname, 'data', 'sample.tsv'))
             tsv_file = csv.DictReader(fh, delimiter='\t')
-            #tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
             # 2 because self.bundle has 2 files
             self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
             manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
