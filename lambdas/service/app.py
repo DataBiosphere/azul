@@ -12,9 +12,9 @@ import time
 import urllib.parse
 import uuid
 
-# noinspection PyPackageRequirements
 import boto3
 from botocore.exceptions import ClientError
+# noinspection PyPackageRequirements
 from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, AuthResponse, UnauthorizedError
 from more_itertools import one
 import requests
