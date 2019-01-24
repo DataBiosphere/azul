@@ -673,12 +673,13 @@ def handle_manifest_generation_request():
         logger.error('Malformed filters parameter: {}'.format(e))
         raise BadRequestError('Malformed filters parameter')
 
+    format = query_params.get('format', 'tsv')
     token = query_params.get('token')
 
     manifest_service = ManifestService()
     if token is None:
         execution_id = str(uuid.uuid4())
-        manifest_service.start_manifest_generation(filters, execution_id)
+        manifest_service.start_manifest_generation(filters, format, execution_id)
         token = manifest_service.encode_params({'execution_id': execution_id})
 
     retry_url = self_url()
