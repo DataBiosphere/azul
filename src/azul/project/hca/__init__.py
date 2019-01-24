@@ -93,7 +93,7 @@ class Plugin(azul.plugin.Plugin):
                                             {
                                                 "terms": {
                                                     "files.project_json.provenance.document_id": [
-                                                        # CBeta Release spreadsheet (Production Obsolete Datasets) as of 1/8/2019
+                                                        # CBeta Release spreadsheet (Production Obsolete Datasets) as of 1/23/2019
                                                         "1630e3dc-5501-4faf-9726-2e2c0b4da6d7",  # ???
                                                         "fd1d163d-d6a7-41cd-b3bc-9d77ba9a36fe",  # peer
                                                         "2a0faf83-e342-4b1c-bb9b-cf1d1147f3bb",  # treutlein
@@ -105,6 +105,12 @@ class Plugin(azul.plugin.Plugin):
                                                         "e4dbcb98-0562-4071-8bea-5e8de5f3c147",  # Q4_DEMO-…
                                                         "e79e9284-c337-4dfd-853d-66fa3facfbbd",  # 10x_prod_test_01_08_2019
                                                         "560cd061-9165-4699-bc6e-8253e164c079",  # ss2_prod_test_01_08_2019
+                                                        "e83fda0e-6515-4f13-82cb-a5860ecfc2d4",  # prod/10x/2019-01-22T20:35:32Z
+                                                        "9a60e8c2-32ea-4586-bc1f-7ee58f462b07"   # prod/Smart-seq2/2019-01-22T20:35:33Z
+                                                        "71a6e049-4846-4c2a-8823-cc193c573efc",  # prod/Smart-seq2/2019-01-22T18:13:48Z
+                                                        "4b5a2268-507c-46e6-bab0-3efb30145e85",  # prod/10x/2019-01-22T18:44:02Z
+                                                        "364ebb73-652e-4d32-8938-1c922d0b2584",  # prod/Smart-seq2/2019-01-22T19:15:02Z
+                                                        "11f5d59b-0e2c-4f01-85ac-8d8dd3db53be",  # prod/Smart-seq2/2019-01-22T18:44:03Z
                                                     ]
                                                 }
                                             },
