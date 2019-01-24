@@ -9,8 +9,7 @@ from azul.security.verifier import (verify,
                                     NonDecodableTokenError)
 
 logger = getLogger(__name__)
-
-fusillade_callback_url = f'{config.service_endpoint()}/auth/callback'
+fusillade_callback_url = config.service_endpoint() + '/auth/callback'
 
 
 def get_fusillade_url(request_path):
