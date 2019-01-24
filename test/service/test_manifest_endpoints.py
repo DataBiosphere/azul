@@ -52,7 +52,8 @@ class ManifestEndpointTest(WebServiceTestCase):
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
         filters = {'file': {'organ': {'is': ['lymph node']}}}
         format = 'tsv'
-        current_request.query_params = {'filters': json.dumps(filters)}
+        current_request.query_params = {'filters': json.dumps(filters),
+                                        'format': format}
         response = start_manifest_generation()
         self.assertEqual(301, response.status_code)
         self.assertIn('Retry-After', response.headers)
