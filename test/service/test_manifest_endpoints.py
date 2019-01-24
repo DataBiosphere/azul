@@ -51,6 +51,7 @@ class ManifestEndpointTest(WebServiceTestCase):
         mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
         filters = {'file': {'organ': {'is': ['lymph node']}}}
+        format = 'tsv'
         current_request.query_params = {'filters': json.dumps(filters)}
         response = start_manifest_generation()
         self.assertEqual(301, response.status_code)
@@ -58,7 +59,8 @@ class ManifestEndpointTest(WebServiceTestCase):
         self.assertIn('Location', response.headers)
         step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
                                                                      execution_name,
-                                                                     execution_input={'filters': filters})
+                                                                     execution_input={'filters': filters,
+                                                                                      'format': format})
         step_function_helper.describe_execution.assert_called_once()
 
     @mock_sts
