@@ -89,8 +89,8 @@ class Config:
         return self._term_from_env('AZUL_DEPLOYMENT_STAGE')
 
     @property
-    def terraform_backend_bucket_template(self) -> str:
-        return os.environ['AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE']
+    def terraform_backend_bucket(self) -> str:
+        return os.environ['AZUL_TERRAFORM_BACKEND_BUCKET']
 
     @property
     def es_instance_type(self) -> str:

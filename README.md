@@ -281,7 +281,7 @@ Error inspecting states in the "s3" backend:
 
 … but the bucket does exist. Make sure
 `deployments/.active/.terraform/terraform.tfstate` refers to the correct
-bucket, the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE`. If it
+bucket, the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET`. If it
 doesn't, you may have to remove that file or modify it to fix the bucket name.
 
 ## 5. Branch flow & development process
