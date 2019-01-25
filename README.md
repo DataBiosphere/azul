@@ -530,3 +530,29 @@ source and target branches accordingly.
    that matches the target branch
 
 7) Run `git push origin`
+
+## 7 Scale testing
+
+Scale testing can be done with [Locust](https://locust.io/).
+Locust is a development requirement so running it is straight forward with your development
+environment set up.
+
+1. Make sure Locust is installed by running
+   ```
+   locust --version
+   ```
+   If it is not installed, do step 1.3 in this README.
+
+1. To scale test the Azul web service on integration run
+   ```
+   locust -f scripts/locust/service.py
+   ```
+
+   If you want to test against a different stage use the `--host` option:
+   ```
+   locust -f scripts/locust/service.py --host https://service.dev.explore.data.humancellatlas.org
+   ```
+
+1. Navigate to `http://localhost:8090` in your browser to start a test run.
+
+For more advanced usage see [the Locust documentation](https://docs.locust.io/en/stable/).
