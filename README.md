@@ -26,7 +26,7 @@ generic with minimal need for project-specific behavior.
 
 ## 1. Getting Started
 
-### 1.1. Development Preequisites
+### 1.1. Development Prerequisites
 
 - Python 3.6 (3.7 does not work) with `virtualenv` and `pip`
 
@@ -41,7 +41,7 @@ generic with minimal need for project-specific behavior.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
-### 1.2. Runtime Preequisites (Infrastructure)
+### 1.2. Runtime Prerequisites (Infrastructure)
 
 - HCA DSS (aka Blue Box): It is required to know the URL of the HumanCellAtlas
   Data Store webservice endpoint. See here for instructions:
@@ -60,7 +60,7 @@ end.
    
    ```
    cd azul
-   virtualenv -p python3 .venv
+   virtualenv -p python3.6 .venv
    source .venv/bin/activate
    ```
    
@@ -469,9 +469,9 @@ fast-forward. A push to any of the deployment branches will trigger a CI/CD
 build that performs the deployment. The promotion could be automatic and/or
 gated on a condition, like tests passing.
 
-### 6. Cheat sheets
+## 6. Cheat sheets
 
-## 6.1. Deploying to `dev`, `integration`, `staging` or `prod`
+### 6.1. Deploying to `dev`, `integration`, `staging` or `prod`
 
 1) Change into the Azul project root directory: `cd azul`
 
@@ -507,7 +507,7 @@ gated on a condition, like tests passing.
 
 15) Run `make reindex` or `make delete_and_reindex`
 
-## 6.2 Promoting changes
+### 6.2 Promoting changes
 
 For promoting `dev` to `integration` use the steps outlined below. For higher
 promotions (`integration` to `staging`, or `staging` to `prod`) change the
@@ -534,7 +534,7 @@ source and target branches accordingly.
 ## 7 Scale testing
 
 Scale testing can be done with [Locust](https://locust.io/).
-Locust is a development requirement so running it is straight forward with your development
+Locust is a development requirement so running it is straight-forward with your development
 environment set up.
 
 1. Make sure Locust is installed by running

@@ -521,7 +521,7 @@ def get_order():
 @app.route('/repository/files/export', methods=['GET'], cors=True)
 def get_manifest():
     """
-    Creates and returns a manifest based on the filters pased on
+    Creates and returns a manifest based on the filters passed on
     to this endpoint
     parameters:
         - name: filters
