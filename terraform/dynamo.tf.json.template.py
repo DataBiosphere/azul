@@ -6,6 +6,17 @@ emit(
         "resource": [
             {
                 "aws_dynamodb_table": {
+                    "users_table": {
+                        "name": config.dynamo_user_table_name,
+                        "billing_mode": "PAY_PER_REQUEST",
+                        "hash_key": "UserId",
+                        "attribute": [
+                            {
+                                "name": "UserId",
+                                "type": "S"
+                            }
+                        ]
+                    },
                     "carts_table": {
                         "name": config.dynamo_cart_table_name,
                         "billing_mode": "PAY_PER_REQUEST",
@@ -23,10 +34,6 @@ emit(
                             {
                                 "name": "CartName",
                                 "type": "S"
-                            },
-                            {
-                                "name": "DefaultCart",
-                                "type": "N"  # Due to Terraform limitation, 0 or 1 will be used instead of boolean.
                             }
                         ],
                         "global_secondary_index": [
@@ -39,12 +46,6 @@ emit(
                                 "name": "UserCartNameIndex",
                                 "hash_key": "UserId",
                                 "range_key": "CartName",
-                                "projection_type": "ALL"
-                            },
-                            {
-                                "name": "UserDefaultCartIndex",
-                                "hash_key": "UserId",
-                                "range_key": "DefaultCart",
                                 "projection_type": "ALL"
                             }
                         ]
