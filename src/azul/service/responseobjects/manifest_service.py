@@ -1,10 +1,17 @@
+import ast
 import base64
 import binascii
 import json
+import logging
+import uuid
+
+from botocore.exceptions import ClientError
 from typing import Tuple
 
 from azul import config
 from azul.service.responseobjects.step_function_helper import StateMachineError, StepFunctionHelper
+
+logger = logging.getLogger(__name__)
 
 
 class ManifestService:
@@ -19,7 +26,28 @@ class ManifestService:
     def decode_params(self, token: str) -> dict:
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
-    def start_manifest_generation(self, filters: dict, execution_id: str):
+    def run(self, token, retry_url, filters='{}'):
+        """
+        If a token is not empty it is decoded for a execution_id. The status of the state machine with
+        this id is reported back.
+
+        :raises ValueError: Will raise a ValueError if token is misformatted or invalid
+        :raises StateMachineError: if the state machine fails for some reason.
+        """
+        try:
+            filters = ast.literal_eval(filters)
+            filters = {'file': {}} if filters == {} else filters
+        except Exception as e:
+            logger.error('Malformed filters parameter: {}'.format(e))
+            raise ValueError('Malformed filters parameter')
+
+        if token is None:
+            execution_id = str(uuid.uuid4())
+            self._start_manifest_generation(filters, execution_id)
+            token = self.encode_params({'execution_id': execution_id})
+        return self._get_manifest_status(token, retry_url)
+
+    def _start_manifest_generation(self, filters: dict, execution_id: str):
         """
         Start the execution of a state machine generating the manifest
 
@@ -30,7 +58,7 @@ class ManifestService:
                                                   execution_id,
                                                   execution_input={'filters': filters})
 
-    def get_manifest_status(self, token: str, retry_url: str) -> Tuple[int, int, str]:
+    def _get_manifest_status(self, token: str, retry_url: str) -> Tuple[int, int, str]:
         """
         Get the status of a manifest generation job (in progress, success, or failed)
 
@@ -45,8 +73,13 @@ class ManifestService:
         except (KeyError, UnicodeDecodeError, binascii.Error, json.decoder.JSONDecodeError):
             raise ValueError('Invalid token given')
 
-        execution = self.step_function_helper.describe_execution(
-            config.manifest_state_machine_name, params['execution_id'])
+        try:
+            execution = self.step_function_helper.describe_execution(
+                config.manifest_state_machine_name, params['execution_id'])
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
+                raise ValueError('Invalid token given')
+            raise
 
         if execution['status'] == 'SUCCEEDED':
             execution_output = json.loads(execution['output'])

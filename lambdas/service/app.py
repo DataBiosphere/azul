@@ -661,32 +661,14 @@ def handle_manifest_generation_request():
     Start a manifest generation job and return a status code, Retry-After, and a retry URL for
     the view function to handle
     """
-    logger = logging.getLogger("dashboardService.webservice.get_manifest")
 
     query_params = app.current_request.query_params or {}
-
-    filters = query_params.get('filters', '{"file": {}}')
-    logger.debug('Filters string is: {}'.format(filters))
-    try:
-        logger.info('Extracting the filter parameter from the request')
-        filters = ast.literal_eval(filters)
-        filters = {'file': {}} if filters == {} else filters
-    except Exception as e:
-        logger.error('Malformed filters parameter: {}'.format(e))
-        raise BadRequestError('Malformed filters parameter')
-
+    filters = query_params.get('filters')
     token = query_params.get('token')
-
-    manifest_service = ManifestService()
-    if token is None:
-        execution_id = str(uuid.uuid4())
-        manifest_service.start_manifest_generation(filters, execution_id)
-        token = manifest_service.encode_params({'execution_id': execution_id})
-
     retry_url = self_url()
-
+    manifest_service = ManifestService()
     try:
-        return manifest_service.get_manifest_status(token, retry_url)
+        return manifest_service.run(token, retry_url, filters=filters)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
             raise BadRequestError('Invalid token given')

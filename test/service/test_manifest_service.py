@@ -51,7 +51,7 @@ class ManifestServiceTest(AzulTestCase):
         step_function_helper.describe_execution.return_value = execution_success_output
         manifest_service = ManifestService()
         token = manifest_service.encode_params({'execution_id': execution_id})
-        status_code, retry_after, location = manifest_service.get_manifest_status(token, '')
+        status_code, retry_after, location = manifest_service.run(token, '')
         self.assertEqual(302, status_code)
         self.assertEqual(manifest_url, location)
 
@@ -74,7 +74,7 @@ class ManifestServiceTest(AzulTestCase):
         manifest_service = ManifestService()
         token = manifest_service.encode_params({'execution_id': execution_id})
         retry_url = config.service_endpoint() + '/manifest/files'
-        status_code, retry_after, location = manifest_service.get_manifest_status(token, retry_url)
+        status_code, retry_after, location = manifest_service.run(token, retry_url)
         self.assertEqual(301, status_code)
         expected_token = manifest_service.encode_params({'execution_id': execution_id, 'wait': 1})
         self.assertEqual(f'{retry_url}?token={expected_token}', location)
@@ -98,4 +98,4 @@ class ManifestServiceTest(AzulTestCase):
         step_function_helper.describe_execution.return_value = execution_failed_output
         manifest_service = ManifestService()
         token = manifest_service.encode_params({'execution_id': execution_id})
-        self.assertRaises(StateMachineError, manifest_service.get_manifest_status, token, '')
+        self.assertRaises(StateMachineError, manifest_service.run, token, '')
