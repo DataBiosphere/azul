@@ -1,5 +1,4 @@
 import boto3
-import copy
 import logging
 from more_itertools import one
 import random
@@ -11,22 +10,11 @@ import urllib
 import uuid
 
 from azul import config
-from azul.plugin import Plugin
 from scripts.subscribe import subscribe
 from scripts.reindex import Reindexer
 
 
 logger = logging.getLogger(__name__)
-
-
-def set_lambda_test_mode(mode: str):
-    client = boto3.client('lambda')
-    environment_variables = client.get_function_configuration(FunctionName=config.indexer_name)['Environment']
-    environment_variables['Variables']['TEST_MODE'] = mode
-
-    client.update_function_configuration(
-        FunctionName=config.indexer_name,
-        Environment=environment_variables)
 
 
 def setUpModule():
@@ -39,20 +27,11 @@ class IntegrationTest(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        set_lambda_test_mode('1')
+        self.set_lambda_test_mode(True)
         self.bundle_uuid_prefix = ''.join([str(random.choice('abcdef0123456789')) for _ in range(self.prefix_length)])
-        plugin = Plugin.load()
-        test_dss_query = copy.deepcopy(plugin.dss_subscription_query(self.bundle_uuid_prefix))
-        prefix_section = {
-            "prefix": {
-                "uuid": self.bundle_uuid_prefix
-            }
-        }
-        test_dss_query['query']['bool']['must'].append(prefix_section)
-        self.dss_query = test_dss_query
 
     def tearDown(self):
-        set_lambda_test_mode('0')
+        self.set_lambda_test_mode(False)
         if config.subscribe_to_dss:
             subscribe(config.dss_client(), subscribe=False)
 
@@ -74,16 +53,26 @@ class IntegrationTest(unittest.TestCase):
         selected_bundle_fqids = test_reindexer.reindex()
         self.num_bundles = len(selected_bundle_fqids)
         self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
-        self.check_endpoint_is_working('/')
-        # FIXME Returns 503 due to https://github.com/DataBiosphere/azul/issues/670
-        # self.check_endpoint_is_working('/health')
-        self.check_endpoint_is_working('/version')
-        self.check_endpoint_is_working('/repository/summary')
-        self.check_endpoint_is_working('/repository/files/order')
-        self.check_endpoint_is_working('/repository/files/export')
+        self.check_endpoint_is_working(config.indexer_endpoint(), '/health')
+        self.check_endpoint_is_working(config.service_endpoint(), '/')
+        self.check_endpoint_is_working(config.service_endpoint(), '/health')
+        self.check_endpoint_is_working(config.service_endpoint(), '/version')
+        self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
+        self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
+        manifest_filter = {"file": {"organPart": {"is": ["temporal lobe"]}, "fileFormat": {"is": ["bai"]}}}
+        self.check_endpoint_is_working(config.service_endpoint(), f'/manifest/files?filters={manifest_filter}')
 
-    def check_endpoint_is_working(self, url: str):
-        url = config.service_endpoint() + url
+    def set_lambda_test_mode(self, mode: bool):
+        client = boto3.client('lambda')
+        indexer_lambda_config = client.get_function_configuration(FunctionName=config.indexer_name)
+        environment = indexer_lambda_config['Environment']
+        environment['Variables']['TEST_MODE'] = '1' if mode else '0'
+        client.update_function_configuration(
+            FunctionName=config.indexer_name,
+            Environment=environment)
+
+    def check_endpoint_is_working(self, lambda_endpoint: str, url: str):
+        url = lambda_endpoint + url
         response = requests.get(url)
         response.raise_for_status()
 
