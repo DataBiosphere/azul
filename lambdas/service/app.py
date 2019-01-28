@@ -911,8 +911,7 @@ def transform_cart_to_response(cart):
     """
     return {
         'CartId': cart['CartId'],
-        'CartName': cart['CartName'],
-        'IsDefaultCart': bool(cart['DefaultCart'])
+        'CartName': cart['CartName']
     }
 
 
@@ -932,8 +931,7 @@ def create_cart():
     :return: Name and ID of the created cart
         {
             "CartName": str,
-            "CartId": str,
-            "IsDefaultCart": bool
+            "CartId": str
         }
     """
     user_id = get_user_id()
@@ -947,8 +945,7 @@ def create_cart():
         raise BadRequestError(e.msg)
     return {
         'CartId': cart_id,
-        'CartName': cart_name,
-        "IsDefaultCart": False
+        'CartName': cart_name
     }
 
 
@@ -966,8 +963,7 @@ def get_cart(cart_id):
 
     :return: {
         "CartName": str,
-        "CartId": str,
-        "IsDefaultCart": bool
+        "CartId": str
     }
     """
     user_id = get_user_id()
@@ -987,8 +983,7 @@ def get_all_carts():
         "carts": [
             {
                 "CartName": str,
-                "CartId": str,
-                "IsDefaultCart": bool
+                "CartId": str
             },
             ...
         ]
@@ -1009,8 +1004,7 @@ def delete_cart(cart_id):
     :return: The deleted cart
         {
             "CartName": str,
-            "CartId": str,
-            "IsDefaultCart": bool
+            "CartId": str
         }
     """
     user_id = get_user_id()
@@ -1036,8 +1030,7 @@ def update_cart(cart_id):
     :return: The updated cart
         {
             "CartName": str,
-            "CartId": str,
-            "IsDefaultCart": bool
+            "CartId": str
         }
     """
     user_id = get_user_id()
