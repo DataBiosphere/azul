@@ -32,6 +32,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
     def tearDown(self):
         self.dynamo_accessor.get_table(config.dynamo_cart_table_name).delete()
         self.dynamo_accessor.get_table(config.dynamo_cart_item_table_name).delete()
+        self.dynamo_accessor.get_table(config.dynamo_user_table_name).delete()
         super().tearDown()
 
     def create_tables(self):
@@ -61,10 +62,6 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
                 {
                     'AttributeName': 'CartName',
                     'AttributeType': 'S'
-                },
-                {
-                    'AttributeName': 'DefaultCart',
-                    'AttributeType': 'N'
                 }
             ],
             ProvisionedThroughput={
@@ -102,28 +99,8 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
                         'ProjectionType': 'ALL'
                     },
                     'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 1,
-                        'WriteCapacityUnits': 1
-                    }
-                },
-                {
-                    'IndexName': 'UserDefaultCartIndex',
-                    'KeySchema': [
-                        {
-                            'AttributeName': 'UserId',
-                            'KeyType': 'HASH'
-                        },
-                        {
-                            'AttributeName': 'DefaultCart',
-                            'KeyType': 'RANGE'
-                        }
-                    ],
-                    'Projection': {
-                        'ProjectionType': 'ALL'
-                    },
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 1,
-                        'WriteCapacityUnits': 1
+                        'ReadCapacityUnits': 5,
+                        'WriteCapacityUnits': 5
                     }
                 }
             ]
@@ -152,8 +129,28 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
                 }
             ],
             ProvisionedThroughput={
-                'ReadCapacityUnits': 1,
-                'WriteCapacityUnits': 1
+                'ReadCapacityUnits': 5,
+                'WriteCapacityUnits': 5
+            }
+        )
+
+        self.dynamo_accessor.dynamo_client.create_table(
+            TableName=config.dynamo_user_table_name,
+            KeySchema=[
+                {
+                    'AttributeName': 'UserId',
+                    'KeyType': 'HASH'
+                }
+            ],
+            AttributeDefinitions=[
+                {
+                    'AttributeName': 'UserId',
+                    'AttributeType': 'S'
+                }
+            ],
+            ProvisionedThroughput={
+                'ReadCapacityUnits': 5,
+                'WriteCapacityUnits': 5
             }
         )
 
@@ -167,8 +164,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name, {'UserId': user_id, 'CartId': cart_id})
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
-        self.assertEqual(cart['DefaultCart'], False)
-
+        self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], None)
 
     def test_cart_creation_default(self):
         """
@@ -183,7 +179,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name, {'UserId': user_id, 'CartId': cart_id})
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
-        self.assertEqual(cart['DefaultCart'], True)
+        self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], cart['CartId'])
         self.assertEqual(cart['CartId'], mock_cart_id)
 
     def test_cart_creation_duplicate_name(self):
@@ -228,7 +224,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         cart = self.cart_item_manager.get_default_cart(user_id)
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
-        self.assertEqual(cart['DefaultCart'], True)
+        self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], cart['CartId'])
         self.assertEqual(cart['CartId'], mock_cart_id)
 
     def test_get_default_cart_with_no_default_cart(self):
@@ -246,7 +242,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
-        self.assertEqual(cart['DefaultCart'], True)
+        self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], cart['CartId'])
         self.assertEqual(cart['CartId'], mock_cart_id)
         # This assertion is to ensure that the code will never try to create more than one default cart at a time.
         with patch('uuid.uuid4') as uuid4_mock:

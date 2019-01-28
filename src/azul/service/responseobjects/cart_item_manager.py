@@ -8,6 +8,7 @@ from azul import config
 from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 from azul.service.responseobjects.step_function_helper import StepFunctionHelper
+from azul.service.responseobjects.user_service import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ class CartItemManager:
 
     def __init__(self):
         self.dynamo_accessor = DynamoDataAccessor()
+        self.user_service = UserService()
 
     def encode_params(self, params):
         return base64.urlsafe_b64encode(bytes(json.dumps(params), encoding='utf-8')).decode('utf-8')
@@ -45,16 +47,15 @@ class CartItemManager:
                                       key_conditions=query_dict,
                                       index_name='UserCartNameIndex') > 0:
             raise DuplicateItemError(f'Cart `{cart_name}` already exists')
-
         if default:
-            default_cart_count = self.dynamo_accessor.count(table_name=config.dynamo_cart_table_name,
-                                                            key_conditions={'UserId': user_id, 'DefaultCart': 1},
-                                                            index_name='UserDefaultCartIndex')
-            if default_cart_count > 0:
+            user = self.user_service.get(user_id)
+            if user['DefaultCartId'] is not None:
                 raise DuplicateItemError('Default cart already exists')
         cart_id = str(uuid.uuid4())
         self.dynamo_accessor.insert_item(config.dynamo_cart_table_name,
-                                         item={'CartId': cart_id, 'DefaultCart': int(default), **query_dict})
+                                         item={'CartId': cart_id, **query_dict})
+        if default:
+            self.user_service.update(user_id, default_cart_id=cart_id)
         return cart_id
 
     def get_cart(self, user_id, cart_id):
@@ -62,14 +63,11 @@ class CartItemManager:
                                              keys={'UserId': user_id, 'CartId': cart_id})
 
     def get_default_cart(self, user_id):
-        default_carts = list(self.dynamo_accessor.query(table_name=config.dynamo_cart_table_name,
-                                                        key_conditions={'UserId': user_id, 'DefaultCart': 1},
-                                                        index_name='UserDefaultCartIndex'))
-        if default_carts:
-            return default_carts[0]
-        else:
+        user = self.user_service.get(user_id)
+        cart_id = user['DefaultCartId']
+        if cart_id is None:
             cart_id = self.create_cart(user_id, 'Default Cart', default=True)
-            return self.get_cart(user_id, cart_id)
+        return self.get_cart(user_id, cart_id)
 
     def get_user_carts(self, user_id):
         return list(self.dynamo_accessor.query(table_name=config.dynamo_cart_table_name,
