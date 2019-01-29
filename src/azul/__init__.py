@@ -1,11 +1,8 @@
-from email.utils import parsedate_to_datetime
 import functools
-import importlib
 import os
 import re
 import time
-
-from typing import Tuple, Mapping, Optional
+from typing import List, Mapping, Tuple
 
 from hca.dss import DSSClient
 from urllib3 import Timeout
@@ -13,13 +10,18 @@ from urllib3 import Timeout
 from azul.deployment import aws
 
 
-# FIXME: This class collides conceptually with the plugin config classes derived from BaseIndexerConfig.
-# (https://github.com/DataBiosphere/azul/issues/420)
-
 class Config:
     """
     See `environment` for documentation of these settings.
     """
+
+    def _boolean(self, value: str) -> bool:
+        if value == "0":
+            return False
+        elif value == "1":
+            return True
+        else:
+            raise ValueError('Expected "0" or "1"', value)
 
     @property
     def es_endpoint(self) -> Tuple[str, int]:
@@ -33,7 +35,7 @@ class Config:
 
     @property
     def project_root(self) -> str:
-        return os.environ['AZUL_HOME']
+        return os.environ['azul_home']
 
     @property
     def es_domain(self) -> str:
@@ -41,11 +43,23 @@ class Config:
 
     @property
     def share_es_domain(self) -> bool:
-        return 0 != int(os.environ['AZUL_SHARE_ES_DOMAIN'])
+        return self._boolean(os.environ['AZUL_SHARE_ES_DOMAIN'])
+
+    @property
+    def disable_multipart_manifests(self) -> bool:
+        return self._boolean(os.environ['AZUL_DISABLE_MULTIPART_MANIFESTS'])
 
     @property
     def s3_bucket(self) -> str:
         return os.environ['AZUL_S3_BUCKET']
+
+    @property
+    def url_redirect_full_domain_name(self) -> str:
+        return os.environ['AZUL_URL_REDIRECT_FULL_DOMAIN_NAME']
+
+    @property
+    def url_redirect_base_domain_name(self) -> str:
+        return os.environ['AZUL_URL_REDIRECT_BASE_DOMAIN_NAME']
 
     @property
     def es_timeout(self) -> int:
@@ -54,6 +68,42 @@ class Config:
     @property
     def dss_endpoint(self) -> str:
         return os.environ['AZUL_DSS_ENDPOINT']
+
+    @property
+    def dss_query_prefix(self) -> str:
+        return os.environ.get('azul_dss_query_prefix', '')
+
+    # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+
+    @property
+    def dss_deployment_stage(self):
+        return self._dss_deployment_stage(self.dss_endpoint)
+
+    def _dss_deployment_stage(self, dss_endpoint):
+        """
+        >>> config._dss_deployment_stage('https://dss.staging.data.humancellatlas.org/v1')
+        'staging'
+        >>> config._dss_deployment_stage('https://dss.data.humancellatlas.org/v1')
+        'prod'
+        """
+        from urllib.parse import urlparse
+        user, _, domain = urlparse(dss_endpoint).netloc.rpartition('@')
+        domain = domain.split('.')
+        require(domain[-3:] == ['data', 'humancellatlas', 'org'])
+        require(domain[0] == 'dss')
+        stage = domain[1:-3]
+        assert len(stage) < 2
+        return 'prod' if stage == [] else stage[0]
+
+    # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+
+    @property
+    def dss_checkout_bucket(self):
+        stage = self.dss_deployment_stage
+        # For domain_part, DSS went from `humancellatlas` to `hca` in 9/2018 and started reverting back to
+        # `humancellatlas` in 12/2018. As I write this, only `dev` is back on `humancellatlas`
+        domain_part = 'humancellatlas' if stage == 'dev' else 'hca'
+        return f'org-{domain_part}-dss-checkout-{stage}'
 
     @property
     def num_dss_workers(self) -> int:
@@ -67,14 +117,64 @@ class Config:
         self._validate_term(resource_name)
         return f"{self._resource_prefix}-{resource_name}-{self.deployment_stage}{suffix}"
 
+    def unqualified_resource_name(self, qualified_resource_name: str, suffix: str = '') -> tuple:
+        """
+        >>> config.unqualified_resource_name('azul-foo-dev')
+        ('foo', 'dev')
+
+        >>> config.unqualified_resource_name('azul-foo')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError
+
+
+        :param qualified_resource_name:
+        :param suffix:
+        :return:
+        """
+        require(qualified_resource_name.endswith(suffix))
+        if len(suffix) > 0:
+            qualified_resource_name = qualified_resource_name[:-len(suffix)]
+        components = qualified_resource_name.split('-')
+        require(len(components) == 3)
+        prefix, resource_name, deployment_stage = components
+        require(prefix == 'azul')
+        return resource_name, deployment_stage
+
+    def unqualified_resource_name_or_none(self, qualified_resource_name: str, suffix: str = '') -> tuple:
+        """
+        >>> config.unqualified_resource_name_or_none('azul-foo-dev')
+        ('foo', 'dev')
+
+        >>> config.unqualified_resource_name_or_none('invalid-foo-dev')
+        (None, None)
+
+        :param qualified_resource_name:
+        :param suffix:
+        :return:
+        """
+        try:
+            return self.unqualified_resource_name(qualified_resource_name, suffix=suffix)
+        except RequirementError:
+            return None, None
+
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].format(lambda_name=lambda_name)
 
-    def api_lambda_domain(self, lambda_name):
-        return config.subdomain(lambda_name) + "." + config.domain_name
+    def api_lambda_domain(self, lambda_name: str) -> str:
+        return self.subdomain(lambda_name) + "." + self.domain_name
 
-    def service_endpoint(self):
-        return "https://" + config.api_lambda_domain('service')
+    def lambda_endpoint(self, lambda_name: str) -> str:
+        return "https://" + self.api_lambda_domain(lambda_name)
+
+    def indexer_endpoint(self) -> str:
+        return self.lambda_endpoint('indexer')
+
+    def service_endpoint(self) -> str:
+        return self.lambda_endpoint('service')
+
+    def lambda_names(self) -> List[str]:
+        return ['indexer', 'service']
 
     @property
     def indexer_name(self) -> str:
@@ -91,6 +191,10 @@ class Config:
     @property
     def terraform_backend_bucket(self) -> str:
         return os.environ['AZUL_TERRAFORM_BACKEND_BUCKET']
+
+    @property
+    def enable_cloudwatch_alarms(self) -> bool:
+        return self._boolean(os.environ['AZUL_ENABLE_CLOUDWATCH_ALARMS'])
 
     @property
     def es_instance_type(self) -> str:
@@ -113,6 +217,12 @@ class Config:
         return f"{self._index_prefix}_{entity_type}{'_aggregate' if aggregate else ''}_{self.deployment_stage}"
 
     def parse_es_index_name(self, index_name: str) -> Tuple[str, bool]:
+        prefix, deployment_stage, entity_type, aggregate = self.parse_foreign_es_index_name(index_name)
+        assert prefix == self._index_prefix
+        assert deployment_stage == self.deployment_stage
+        return entity_type, aggregate
+
+    def parse_foreign_es_index_name(self, index_name) -> Tuple[str, str, str, bool]:
         index_name = index_name.split('_')
         if len(index_name) == 3:
             aggregate = False
@@ -122,9 +232,7 @@ class Config:
         else:
             assert False
         prefix, entity_type, deployment_stage = index_name
-        assert prefix == self._index_prefix
-        assert deployment_stage == self.deployment_stage
-        return entity_type, aggregate
+        return prefix, deployment_stage, entity_type, aggregate
 
     @property
     def domain_name(self) -> str:
@@ -146,13 +254,16 @@ class Config:
         repo = git.Repo(self.project_root)
         host, port = self.es_endpoint
         return {
-            **{k: v for k, v in os.environ.items() if k.startswith('AZUL_') and k != 'AZUL_HOME'},
+            **{k: v for k, v in os.environ.items() if k.startswith('AZUL_')},
             # Hard-wire the ES endpoint, so we don't need to look it up at run-time, for every request/invocation
             'AZUL_ES_ENDPOINT': f"{host}:{port}",
             'azul_git_commit': repo.head.object.hexsha,
             'azul_git_dirty': str(repo.is_dirty()),
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
+
+    def get_lambda_arn(self, function_name, suffix):
+        return f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{function_name}-{suffix}"
 
     lambda_timeout = 300
 
@@ -173,18 +284,13 @@ class Config:
     def enable_gcp(self):
         return 'GOOGLE_PROJECT' in os.environ
 
-    def plugin(self):
-        from azul.base_config import BaseIndexProperties
-        from azul.indexer import BaseIndexer
-        plugin_name = 'azul.project.' + os.environ.get('AZUL_PROJECT', 'hca')
-        plugin = importlib.import_module(plugin_name)
-        assert issubclass(plugin.Indexer, BaseIndexer)
-        assert issubclass(plugin.IndexProperties, BaseIndexProperties)
-        return plugin
+    @property
+    def plugin_name(self) -> str:
+        return 'azul.project.' + os.environ.get('AZUL_PROJECT', 'hca')
 
     @property
     def subscribe_to_dss(self):
-        return 0 != int(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
+        return self._boolean(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
 
     def dss_client(self, dss_endpoint: str = None) -> DSSClient:
         swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
@@ -207,6 +313,58 @@ class Config:
     @property
     def document_queue_name(self):
         return config.qualified_resource_name('documents', suffix='.fifo')
+
+    @property
+    def fail_queue_name(self):
+        return config.qualified_resource_name('fail')
+
+    @property
+    def fail_fifo_queue_name(self):
+        return config.qualified_resource_name('fail', suffix='.fifo')
+
+    @property
+    def all_queue_names(self):
+        return (self.token_queue_name, self.document_queue_name, self.fail_queue_name,
+                self.fail_fifo_queue_name, self.notify_queue_name)
+
+    @property
+    def manifest_lambda_basename(self):
+        return 'manifest'
+
+    @property
+    def manifest_state_machine_name(self):
+        return config.qualified_resource_name('manifest')
+
+    @property
+    def url_shortener_whitelist(self):
+        return [r'.*humancellatlas\.org']
+
+    @property
+    def es_refresh_interval(self) -> int:
+        """
+        Integral number of seconds between index refreshes in Elasticsearch
+        """
+        return 1
+
+    @property
+    def dynamo_cart_table_name(self):
+        return self.qualified_resource_name('carts')
+
+    @property
+    def dynamo_cart_item_table_name(self):
+        return self.qualified_resource_name('cartitems')
+
+    @property
+    def cart_item_write_lambda_basename(self):
+        return 'cartitemwrite'
+
+    @property
+    def cart_item_state_machine_name(self):
+        return self.qualified_resource_name('cartitems')
+
+    @property
+    def cart_api_ip_whitelist(self):  # TODO: Remove when authentication is added
+        return os.environ['AZUL_CART_API_IP_WHITELIST'].split(' ')
 
 
 config = Config()
@@ -294,30 +452,3 @@ def str_to_bool(string: str):
         return False
     else:
         raise ValueError(string)
-
-
-def parse_http_date(http_date, base_time:Optional[float]=None):
-    """
-    Convert an HTTP date string as defined in https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1 to a
-    Python timestamp (UNIX time).
-
-    :param base_time: the timestamp for converting a relative HTTP date into Python timestamp, if None, the current
-                      time will be used.
-
-    >>> parse_http_date('123', 0.4)
-    123.4
-    >>> t = 1541313273.0
-    >>> parse_http_date('Sun, 04 Nov 2018 06:34:33 GMT') == t
-    True
-    >>> parse_http_date('Sun, 04 Nov 2018 06:34:33 PST') == t + 8 * 60 * 60
-    True
-    """
-    if base_time is None:
-        base_time=time.time()
-    try:
-        http_date = int(http_date)
-    except ValueError:
-        http_date = parsedate_to_datetime(http_date)
-        return http_date.timestamp()
-    else:
-        return base_time + float(http_date)
