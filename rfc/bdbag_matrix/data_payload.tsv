@@ -1,0 +1,2 @@
+source	content
+https://staging.data.humancellatlas.org/explore/projects	https://staging.data.humancellatlas.org/explore/projects?filter=%5B%7B%22facetName%22%3A%22project%22%2C%22terms%22%3A%5B%22staging%2FSmart-seq2%2F2019-01-20T23%3A01%3A06Z%22%5D%7D%5D
