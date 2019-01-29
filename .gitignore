@@ -16,6 +16,7 @@ __pycache__/
 /build/
 /dist/
 /.eggs/
+.ipynb_checkpoints
 
 # Sphinx documentation
 /docs/_build/

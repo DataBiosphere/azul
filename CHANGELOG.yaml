@@ -52,6 +52,17 @@ changes:
       - reindex
     notes: Please append `_set azul_dss_query_prefix '42'` to deployments/*.local/environment.
 
+  - title: Add GA4GH Data Repository Service GET Method
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/638
+      - https://github.com/DataBiosphere/azul/pull/642
+    upgrade:
+      - deploy
+      - clients
+    notes: >
+        Adds a Data Repository Service (DRS) endpoint at `ga4gh/dos/v1/dataobjects`. 
+        Implements the `GetDataObject` method, a subset of the DRS API.
+
   - title: Add endpoint to shorten URLs
     issues:
       - https://github.com/databiosphere/azul/issues/66
