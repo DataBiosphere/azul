@@ -470,7 +470,7 @@ class TestResponse(WebServiceTestCase):
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
-        self.assertEqual(summary_object['pagination']["sort"], "specimenId")
+        self.assertEqual(summary_object['pagination']["sort"], "fileName")
 
     def test_transform_request_with_file_url(self):
         base_url = self.base_url
