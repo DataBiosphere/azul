@@ -221,7 +221,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         with patch('uuid.uuid4') as uuid4_mock:
             uuid4_mock.side_effect = [mock_cart_id]
             self.cart_item_manager.create_cart(user_id, cart_name, True)
-        cart = self.cart_item_manager.get_default_cart(user_id)
+        cart = self.cart_item_manager.get_cart(user_id)
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
         self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], mock_cart_id)
@@ -239,7 +239,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         self.assertEqual(0, len(self.cart_item_manager.get_user_carts(user_id)))
         with patch('uuid.uuid4') as uuid4_mock:
             uuid4_mock.side_effect = [mock_cart_id]
-            cart1 = self.cart_item_manager.get_default_cart(user_id)
+            cart1 = self.cart_item_manager.get_cart(user_id)
             self.assertEqual(1, uuid4_mock.call_count)
             self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
             self.assertEqual(cart1['UserId'], user_id)
@@ -247,7 +247,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
             self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], mock_cart_id)
             self.assertEqual(cart1['CartId'], mock_cart_id)
             # The second call should return the same cart.
-            cart2 = self.cart_item_manager.get_default_cart(user_id)
+            cart2 = self.cart_item_manager.get_cart(user_id)
             self.assertEqual(cart1['CartId'], cart2['CartId'])
             self.assertEqual(1, uuid4_mock.call_count)
         self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
@@ -276,7 +276,8 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         self.cart_item_manager.add_cart_item(user_id, cart_id2, '2', 'bundle_id',
                                              'bundle_version', 'entity_type')
         self.cart_item_manager.delete_cart(user_id, cart_id1)
-        self.assertIsNone(self.cart_item_manager.get_cart(user_id, cart_id1))
+        with self.assertRaises(ResourceAccessError):
+            self.cart_item_manager.get_cart(user_id, cart_id1)
         self.assertIsNotNone(self.cart_item_manager.get_cart(user_id, cart_id2))
         self.assertEqual(0, self.dynamo_accessor.count(table_name=config.dynamo_cart_item_table_name,
                                                        key_conditions={'CartId': cart_id1}))
@@ -325,6 +326,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         """
         user_id = '111'
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
+        print('*****', user_id, cart_id, 'entity_id', 'bundle_id', 'bundle_version', 'entity_type')
         item_id = self.cart_item_manager.add_cart_item(user_id, cart_id, 'entity_id', 'bundle_id',
                                                        'bundle_version', 'entity_type')
         self.assertIsNotNone(self.dynamo_accessor.get_item(
