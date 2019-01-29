@@ -36,10 +36,88 @@ emit({
         {
             "Effect": "Allow",
             "Action": [
-                "s3:PutObject",
-                "s3:GetObject"
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
             ],
-            "Resource": f"arn:aws:s3:::{config.s3_bucket}/*"
+            "Resource": [
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:{name}"
+                for name in config.all_queue_names
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": [
+                f"arn:aws:s3:::{config.s3_bucket}/*",
+                f"arn:aws:s3:::{config.url_redirect_full_domain_name}/*"
+            ]
+        },
+        # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+            ],
+            "Resource": [
+                f"arn:aws:s3:::{config.dss_checkout_bucket}/*",
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:DescribeTable"
+            ],
+            "Resource": [
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_table_name}",
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_item_table_name}"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:Query"
+            ],
+            "Resource": [
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_table_name}/index/*",
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_item_table_name}/index/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "states:StartExecution"
+            ],
+            "Resource": [
+                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.manifest_state_machine_name}",
+                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.cart_item_state_machine_name}"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "states:DescribeExecution"
+            ],
+            "Resource": [
+                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.manifest_state_machine_name}:*",
+                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_item_state_machine_name}:*"
+            ]
         }
     ]
 })

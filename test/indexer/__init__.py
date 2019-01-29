@@ -1,29 +1,44 @@
+from copy import deepcopy
 import json
 import os
-from typing import Any, Mapping
+import threading
+from typing import List, Tuple
 from unittest.mock import patch
 from uuid import uuid4
 
 from azul import config
-from azul.project.hca.config import IndexProperties
-from azul.project.hca.indexer import Indexer
+from azul.indexer import IndexWriter
+from azul.plugin import Plugin
+from azul.types import JSON
 from es_test_case import ElasticsearchTestCase
 
 
 class IndexerTestCase(ElasticsearchTestCase):
-    index_properties = None
-    hca_indexer = None
-
-    _old_dss_endpoint = None
+    indexer_cls = None
+    per_thread = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.index_properties = IndexProperties(dss_url=config.dss_endpoint,
-                                               es_endpoint=config.es_endpoint)
-        cls.hca_indexer = Indexer(cls.index_properties, refresh='wait_for')
+        plugin = Plugin.load()
+        cls.indexer_cls = plugin.indexer_class()
+        cls.per_thread = threading.local()
 
-    def _make_fake_notification(self, uuid: str, version: str) -> Mapping[str, Any]:
+    @classmethod
+    def get_hca_indexer(cls):
+        try:
+            # One of the indexer tests uses multiple threads to facilate concurrent indexing. Each of these threads
+            # must use its own indexer instance because each one needs to be mock.patch'ed to a different canned
+            # bundle.
+            indexer = cls.per_thread.indexer
+        except AttributeError:
+            indexer = cls.indexer_cls()
+            cls.per_thread.indexer = indexer
+        return indexer
+
+    @staticmethod
+    def _make_fake_notification(bundle_fqid) -> JSON:
+        bundle_uuid, bundle_version = bundle_fqid
         return {
             "query": {
                 "match_all": {}
@@ -31,41 +46,65 @@ class IndexerTestCase(ElasticsearchTestCase):
             "subscription_id": str(uuid4()),
             "transaction_id": str(uuid4()),
             "match": {
-                "bundle_uuid": uuid,
-                "bundle_version": version
+                "bundle_uuid": bundle_uuid,
+                "bundle_version": bundle_version
             }
         }
 
-    def _get_data_files(self, filename, bundle_version, updated=False):
+    @classmethod
+    def _load_canned_file(cls, bundle_fqid, extension) -> JSON:
+        bundle_uuid, bundle_version = bundle_fqid
         data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
-        metadata_suffix = ".metadata.json"
-        manifest_suffix = ".manifest.json"
-        if updated:
-            filename += ".updated"
+        for suffix in '.' + bundle_version, '':
+            try:
+                with open(os.path.join(data_prefix, f'{bundle_uuid}{suffix}.{extension}.json'), 'r') as infile:
+                    return json.load(infile)
+            except FileNotFoundError:
+                if not suffix:
+                    raise
 
-        with open(os.path.join(data_prefix, filename + metadata_suffix), 'r') as infile:
-            metadata = json.load(infile)
+    @classmethod
+    def _load_canned_bundle(cls, bundle_fqid) -> Tuple[List[JSON], JSON]:
+        manifest = cls._load_canned_file(bundle_fqid, 'manifest')
+        metadata = cls._load_canned_file(bundle_fqid, 'metadata')
+        assert isinstance(manifest, list)
+        return manifest, metadata
 
-        with open(os.path.join(data_prefix, filename + manifest_suffix), 'r') as infile:
-            manifest = json.load(infile)
+    def _load_canned_result(self, bundle_fqid) -> List[JSON]:
+        """
+        Load the canned index contents for the given canned bundle and fix the '_index' entry in each to match the
+        index name used by the current deployment
+        """
+        expected_hits = self._load_canned_file(bundle_fqid, 'results')
+        assert isinstance(expected_hits, list)
+        for hit in expected_hits:
+            _, _, entity_type, aggregate = config.parse_foreign_es_index_name(hit['_index'])
+            hit['_index'] = config.es_index_name(entity_type, aggregate=aggregate)
+        return expected_hits
 
-        return bundle_version, manifest, metadata
+    @classmethod
+    def _index_canned_bundle(cls, bundle_fqid):
+        manifest, metadata = cls._load_canned_bundle(bundle_fqid)
+        cls._index_bundle(bundle_fqid, manifest, metadata)
 
-    def _mock_index(self, test_bundle, updated=False):
-        bundle_uuid, bundle_version = test_bundle
-        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+    @classmethod
+    def _index_bundle(cls, bundle_fqid, manifest, metadata):
+        def mocked_get_bundle(bundle_uuid, bundle_version):
+            assert bundle_fqid == (bundle_uuid, bundle_version)
+            return deepcopy(manifest), deepcopy(metadata)
 
-        def mocked_extract_bundle(**kwargs):
-            return self._get_data_files(filename=kwargs['uuid'], bundle_version=kwargs['version'], updated=updated)
-
+        index_writer = cls._create_index_writer()
+        notification = cls._make_fake_notification(bundle_fqid)
         with patch('azul.DSSClient'):
-            with patch('azul.indexer.download_bundle_metadata', new=mocked_extract_bundle):
-                self.hca_indexer.index(fake_event)
+            with patch.object(cls.get_hca_indexer(), '_get_bundle', new=mocked_get_bundle):
+                cls.get_hca_indexer().index(index_writer, notification)
 
-    def _mock_delete(self, test_bundle, data_pack):
-        bundle_uuid, bundle_version = test_bundle
-        self._mock_index(test_bundle, data_pack)
+    @classmethod
+    def _create_index_writer(cls):
+        return IndexWriter(refresh='wait_for', conflict_retry_limit=2, error_retry_limit=0)
 
-        fake_event = self._make_fake_notification(bundle_uuid, bundle_version)
+    def _delete_bundle(self, bundle_fqid):
+        index_writer = self._create_index_writer()
+        notification = self._make_fake_notification(bundle_fqid)
         with patch('azul.DSSClient'):
-            self.hca_indexer.delete(fake_event)
+            self.get_hca_indexer().delete(index_writer, notification)
