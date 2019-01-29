@@ -33,11 +33,23 @@ class IntegrationTest(unittest.TestCase):
     def tearDown(self):
         self.set_lambda_test_mode(False)
         if config.subscribe_to_dss:
-            subscribe(config.dss_client(), subscribe=False)
+            subscribe(config.dss_client(), subscribe=True)
 
     def test_webservice_and_indexer(self):
         if config.subscribe_to_dss:
+            subscribe(config.dss_client(), subscribe=False)
+            unsubscribe_waitime = 0
+
+            while True:
+                if not config.dss_client().get_subscriptions(replica='aws')['subscriptions']:
+                    break
+                elif unsubscribe_waitime > 60:
+                    self.fail('Unable to unsubscribe from DSS.')
+                time.sleep(1)
+                unsubscribe_waitime += 1
+            subscribe(config.dss_client(), subscribe=False)
             subscribe(config.dss_client(), subscribe=True)
+
         test_uuid = str(uuid.uuid4())
         test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
         test_reindexer = Reindexer(indexer_url=config.indexer_endpoint(),
