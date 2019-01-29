@@ -1,6 +1,12 @@
+import logging
+
 import requests
 
 from service import WebServiceTestCase
+
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class RepositorySpecimenEndpointTest(WebServiceTestCase):
@@ -20,7 +26,7 @@ class RepositorySpecimenEndpointTest(WebServiceTestCase):
         self.assertTrue('hits' in response_json)
         self.assertGreater(len(response_json['hits']), 0)
         for hit in response_json['hits']:
-            self.assertTrue('processes' in hit)
+            self.assertTrue('protocols' in hit)
             self.assertTrue('entryId' in hit)
             assert_file_type_summaries(hit)
             self.assertTrue('projects' in hit)

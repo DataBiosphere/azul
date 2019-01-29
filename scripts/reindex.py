@@ -5,62 +5,70 @@ Command line utility to trigger indexing of bundles from DSS into Azul
 """
 
 import argparse
-from collections import defaultdict
-from concurrent.futures import Future, ThreadPoolExecutor
-from functools import partial
 import json
 import logging
-from pprint import PrettyPrinter
+import shutil
 import sys
 from typing import List
-from urllib.error import HTTPError
-from urllib.parse import urlparse, urlencode, parse_qs
-from urllib.request import Request, urlopen
-from uuid import uuid4
 
-from azul import config
-from azul.es import ESClientFactory
+from azul.reindexer import Reindexer
 
 logger = logging.getLogger(__name__)
 
-plugin = config.plugin()
+defaults = Reindexer()
 
 
-class Defaults:
-    dss_url = config.dss_endpoint
-    indexer_url = "https://" + config.api_lambda_domain('indexer') + "/"
-    es_query = plugin.dss_subscription_query
-    num_workers = 16
+class MyFormatter(argparse.ArgumentDefaultsHelpFormatter):
+    def __init__(self, prog) -> None:
+        super().__init__(prog,
+                         max_help_position=50,
+                         width=min(shutil.get_terminal_size((80, 25)).columns, 120))
 
 
-parser = argparse.ArgumentParser(description=__doc__)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=MyFormatter)
 parser.add_argument('--dss-url',
-                    default=Defaults.dss_url,
+                    metavar='URL',
+                    default=defaults.dss_url,
                     help='The URL of the DSS aka Blue Box REST API endpoint')
 parser.add_argument('--indexer-url',
-                    default=Defaults.indexer_url,
+                    metavar='URL',
+                    default=defaults.indexer_url,
                     help="The URL of the indexer's notification endpoint to send bundles to")
-parser.add_argument('--es-query',
-                    default=Defaults.es_query,
+group1 = parser.add_mutually_exclusive_group()
+group1.add_argument('--query',
+                    metavar='JSON',
                     type=json.loads,
-                    help='The Elasticsearch query to use against DSS to enumerate the bundles to be indexed')
+                    help=f'The Elasticsearch query to use against DSS to enumerate the bundles to be indexed. '
+                    f'The default is {defaults.query()}')
+group1.add_argument('--prefix',
+                    metavar='HEX',
+                    default=defaults.prefix,
+                    help='A bundle UUID prefix. This must be a sequence of hexadecimal characters. Only bundles whose '
+                         'UUID starts with the given prefix will be indexed. If --partition-prefix-length is given, '
+                         'the prefix of a partition will be appended to the prefix specified with --prefix.')
 parser.add_argument('--workers',
+                    metavar='NUM',
                     dest='num_workers',
-                    default=Defaults.num_workers,
+                    default=defaults.num_workers,
                     type=int,
                     help='The number of workers that will be sending bundles to the indexer concurrently')
-parser.add_argument('--sync',
+group2 = parser.add_mutually_exclusive_group()
+group2.add_argument('--sync',
                     dest='sync',
-                    default=None,
+                    default=False,
                     action='store_true',
                     help='Have the indexer lambda process the notification synchronously instead of queueing it for '
                          'asynchronous processing by a worker lambda.')
-parser.add_argument('--async',
-                    dest='sync',
-                    default=None,
-                    action='store_false',
-                    help='Have the indexer lambda queue the notification for asynchronous processing by a worker '
-                         'lambda instead of processing it directly.')
+group2.add_argument('--partition-prefix-length',
+                    metavar='NUM',
+                    default=0,
+                    type=int,
+                    help='The length of the bundle UUID prefix by which to partition the set of bundles matching the '
+                         'query. Each query partition is processed independently and remotely by the indexer lambda. '
+                         'The lambda queries the DSS and queues a notification for each matching bundle. If 0 (the '
+                         'default) no partitioning occurs, the DSS is queried locally and the indexer notification '
+                         'endpoint is invoked for each bundle individually and concurrently using worker threads. '
+                         'This is magnitudes slower that partitioned indexing.')
 parser.add_argument('--delete',
                     default=False,
                     action='store_true',
@@ -69,115 +77,33 @@ parser.add_argument('--dryrun', '--dry-run',
                     default=False,
                     action='store_true',
                     help='Just print what would be done, do not actually do it.')
-
-
-def post_bundle(bundle_fqid, es_query, indexer_url):
-    """
-    Send a mock DSS notification to the indexer
-    """
-    bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
-    simulated_event = {
-        "query": es_query,
-        "subscription_id": str(uuid4()),
-        "transaction_id": str(uuid4()),
-        "match": {
-            "bundle_uuid": bundle_uuid,
-            "bundle_version": bundle_version
-        }
-    }
-    body = json.dumps(simulated_event).encode('utf-8')
-    request = Request(indexer_url, body)
-    request.add_header("content-type", "application/json")
-    with urlopen(request) as f:
-        return f.read()
+parser.add_argument('--verbose',
+                    default=False,
+                    action='store_true',
+                    help='Enable verbose logging')
 
 
 def main(argv: List[str]):
     args = parser.parse_args(argv)
 
+    level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(format="%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s", level=level)
+    logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger('azul').setLevel(level)
+
+    reindexer = Reindexer(indexer_url=args.indexer_url,
+                          dss_url=args.dss_url,
+                          query=args.query,
+                          prefix=args.prefix,
+                          num_workers=args.num_workers,
+                          dryrun=args.dryrun)
     if args.delete:
-        plugin = config.plugin()
-        es_client = ESClientFactory.get()
-        properties = plugin.IndexProperties(dss_url=config.dss_endpoint,
-                                            es_endpoint=config.es_endpoint)
-        for entity_type in properties.entities:
-            for aggregate in False, True:
-                index_name = config.es_index_name(entity_type, aggregate=aggregate)
-                if es_client.indices.exists(index_name):
-                    if args.dryrun:
-                        logger.info("Would delete index '%s'", index_name)
-                    else:
-                        es_client.indices.delete(index=index_name)
-
-    logger.info('Querying DSS using %s', json.dumps(args.es_query, indent=4))
-    dss_client = config.dss_client(dss_endpoint=args.dss_url)
-    # noinspection PyUnresolvedReferences
-    response = dss_client.post_search.iterate(es_query=args.es_query, replica="aws")
-    bundle_fqids = [r['bundle_fqid'] for r in response]
-    logger.info("Bundle FQIDs to index: %i", len(bundle_fqids))
-
-    errors = defaultdict(int)
-    missing = {}
-    indexed = 0
-    total = 0
-
-    with ThreadPoolExecutor(max_workers=args.num_workers, thread_name_prefix='pool') as tpe:
-
-        def attempt(bundle_fqid, i):
-            try:
-                logger.info("Bundle %s, attempt %i: Sending notification", bundle_fqid, i)
-                url = urlparse(args.indexer_url)
-                if args.sync is not None:
-                    # noinspection PyProtectedMember
-                    url = url._replace(query=urlencode({**parse_qs(url.query), 'sync': args.sync}, doseq=True))
-                if not args.dryrun:
-                    post_bundle(bundle_fqid=bundle_fqid,
-                                es_query=args.es_query,
-                                indexer_url=url.geturl())
-            except HTTPError as e:
-                if i < 3:
-                    logger.warning("Bundle %s, attempt %i: scheduling retry after error %s", bundle_fqid, i, e)
-                    return bundle_fqid, tpe.submit(partial(attempt, bundle_fqid, i + 1))
-                else:
-                    logger.warning("Bundle %s, attempt %i: giving up after error %s", bundle_fqid, i, e)
-                    return bundle_fqid, e
-            else:
-                logger.info("Bundle %s, attempt %i: success", bundle_fqid, i)
-                return bundle_fqid, None
-
-        def handle_future(future):
-            nonlocal indexed
-            # Block until future raises or succeeds
-            exception = future.exception()
-            if exception is None:
-                bundle_fqid, result = future.result()
-                if result is None:
-                    indexed += 1
-                elif isinstance(result, HTTPError):
-                    errors[result.code] += 1
-                    missing[bundle_fqid] = result.code
-                elif isinstance(result, Future):
-                    # The task scheduled a follow-on task, presumably a retry. Follow that new task.
-                    handle_future(result)
-                else:
-                    assert False
-            else:
-                logger.warning("Unhandled exception in worker:", exc_info=exception)
-
-        futures = []
-        for bundle_fqid in bundle_fqids:
-            total += 1
-            futures.append(tpe.submit(partial(attempt, bundle_fqid, 0)))
-        for future in futures:
-            handle_future(future)
-
-    printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
-    logger.info("Total of bundle FQIDs read: %i", total)
-    logger.info("Total of bundle FQIDs indexed: %i", indexed)
-    logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
-    logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
+        reindexer.delete_all_indices()
+    if args.partition_prefix_length:
+        reindexer.remote_reindex(args.partition_prefix_length)
+    else:
+        reindexer.reindex(args.sync)
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s", level=logging.INFO)
     main(sys.argv[1:])
