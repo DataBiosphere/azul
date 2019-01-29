@@ -213,42 +213,43 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
 
     def test_get_default_cart_with_existed_default_cart(self):
         """
-        Creating a default cart should create a cart with the ID 'default' and DefaultCart flag set to True
+        If the default cart already exists, the manager should not create a new cart.
         """
         mock_cart_id = 'test_default_cart'
         user_id = '123'
         cart_name = 'cart name'
         with patch('uuid.uuid4') as uuid4_mock:
-            uuid4_mock.return_value = mock_cart_id
+            uuid4_mock.side_effect = [mock_cart_id]
             self.cart_item_manager.create_cart(user_id, cart_name, True)
         cart = self.cart_item_manager.get_default_cart(user_id)
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
-        self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], cart['CartId'])
+        self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], mock_cart_id)
         self.assertEqual(cart['CartId'], mock_cart_id)
+        self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
 
     def test_get_default_cart_with_no_default_cart(self):
         """
-        Creating a default cart should create a cart with the ID 'default' and DefaultCart flag set to True
+        If the default cart does not exist, the manager should create a new cart and register that cart in the user
+        object as the default cart.
         """
         mock_cart_id = 'test_default_cart'
         user_id = '123'
         cart_name = 'Default Cart'
         self.assertEqual(0, len(self.cart_item_manager.get_user_carts(user_id)))
         with patch('uuid.uuid4') as uuid4_mock:
-            uuid4_mock.return_value = mock_cart_id
-            cart = self.cart_item_manager.get_default_cart(user_id)
+            uuid4_mock.side_effect = [mock_cart_id]
+            cart1 = self.cart_item_manager.get_default_cart(user_id)
             self.assertEqual(1, uuid4_mock.call_count)
-        self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
-        self.assertEqual(cart['UserId'], user_id)
-        self.assertEqual(cart['CartName'], cart_name)
-        self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], cart['CartId'])
-        self.assertEqual(cart['CartId'], mock_cart_id)
-        # This assertion is to ensure that the code will never try to create more than one default cart at a time.
-        with patch('uuid.uuid4') as uuid4_mock:
-            uuid4_mock.return_value = 'foo-bar'
-            self.cart_item_manager.get_default_cart(user_id)
-            self.assertEqual(0, uuid4_mock.call_count)
+            self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
+            self.assertEqual(cart1['UserId'], user_id)
+            self.assertEqual(cart1['CartName'], cart_name)
+            self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], mock_cart_id)
+            self.assertEqual(cart1['CartId'], mock_cart_id)
+            # The second call should return the same cart.
+            cart2 = self.cart_item_manager.get_default_cart(user_id)
+            self.assertEqual(cart1['CartId'], cart2['CartId'])
+            self.assertEqual(1, uuid4_mock.call_count)
         self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
 
     def test_get_user_carts(self):
