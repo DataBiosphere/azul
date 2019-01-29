@@ -968,10 +968,12 @@ def get_cart(cart_id):
     """
     user_id = get_user_id()
     manager = CartItemManager()
-    cart = manager.get_default_cart(user_id) if cart_id == 'default' else manager.get_cart(user_id, cart_id)
-    if cart is None:
+    try:
+        cart = manager.get_cart(user_id, cart_id)
+    except ResourceAccessError:
         raise NotFoundError('Cart does not exist')
-    return transform_cart_to_response(cart)
+    else:
+        return transform_cart_to_response(cart)
 
 
 @app.route('/resources/carts', methods=['GET'], cors=True)

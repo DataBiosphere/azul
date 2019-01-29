@@ -23,18 +23,15 @@ class CartItemManager:
         self.dynamo_accessor = DynamoDataAccessor()
         self.user_service = UserService()
 
+    @property
+    def default_cart_id_alias(self):
+        return "default"
+
     def encode_params(self, params):
         return base64.urlsafe_b64encode(bytes(json.dumps(params), encoding='utf-8')).decode('utf-8')
 
     def decode_token(self, token):
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
-
-    def check_cart_permission(self, user_id, cart_id):
-        """
-        Check if the user has a cart with the given id.  Raise exception if user does not have access to the cart
-        """
-        if self.get_cart(user_id, cart_id) is None:
-            raise ResourceAccessError('Cart does not exist')
 
     def create_cart(self, user_id:str, cart_name:str, default:bool):
         """
@@ -58,9 +55,19 @@ class CartItemManager:
             self.user_service.update(user_id, default_cart_id=cart_id)
         return cart_id
 
-    def get_cart(self, user_id, cart_id):
-        return self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
+    def get_cart(self, user_id, cart_id=None):
+        if cart_id is None or cart_id == self.default_cart_id_alias:
+            user = self.user_service.get(user_id)
+            cart_id = user['DefaultCartId']
+
+        if cart_id is None:
+            cart_id = self.create_cart(user_id, 'Default Cart', default=True)
+
+        cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
                                              keys={'UserId': user_id, 'CartId': cart_id})
+        if cart is None:
+            raise ResourceAccessError('Cart does not exist')
+        return cart
 
     def get_default_cart(self, user_id):
         user = self.user_service.get(user_id)
@@ -85,7 +92,7 @@ class CartItemManager:
         Update the attributes of a cart and return the updated item
         Only accepted attributes will be updated and any others will be ignored
         """
-        self.check_cart_permission(user_id, cart_id)
+        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
         if validate_attributes:
             accepted_attributes = {'CartName', 'Description'}
             for key in list(update_attributes.keys()):
@@ -100,11 +107,11 @@ class CartItemManager:
                                                              },
                                                              index_name='UserCartNameIndex'))
             # There cannot be more than one matching cart because of the index's keys
-            if len(matching_carts) > 0 and matching_carts[0]['CartId'] != cart_id:
+            if len(matching_carts) > 0 and matching_carts[0]['CartId'] != real_cart_id:
                 raise DuplicateItemError(f'Cart `{update_attributes["CartName"]}` already exists')
 
         return self.dynamo_accessor.update_item(config.dynamo_cart_table_name,
-                                                {'UserId': user_id, 'CartId': cart_id},
+                                                {'UserId': user_id, 'CartId': real_cart_id},
                                                 update_values=update_attributes)
 
     def create_cart_item_id(self, cart_id, entity_id, entity_type, bundle_uuid, bundle_version):
@@ -115,13 +122,12 @@ class CartItemManager:
         Add an item to a cart and return the created item ID
         An error will be raised if the cart does not exist or does not belong to the user
         """
-        # TODO: Cart item should have some user readable name
-        self.check_cart_permission(user_id, cart_id)
-        item_id = self.create_cart_item_id(cart_id, entity_id, entity_type, bundle_uuid, bundle_version)
+        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
+        item_id = self.create_cart_item_id(real_cart_id, entity_id, entity_type, bundle_uuid, bundle_version)
         self.dynamo_accessor.insert_item(
             config.dynamo_cart_item_table_name,
             {
-                'CartItemId': item_id, 'CartId': cart_id, 'EntityId': entity_id,
+                'CartItemId': item_id, 'CartId': real_cart_id, 'EntityId': entity_id,
                 'BundleUuid': bundle_uuid, 'BundleVersion': bundle_version, 'EntityType': entity_type
             })
         return item_id
@@ -131,19 +137,18 @@ class CartItemManager:
         Get all items in a cart
         An error will be raised if the cart does not exist or does not belong to the user
         """
-        self.check_cart_permission(user_id, cart_id)
+        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
         return list(self.dynamo_accessor.query(table_name=config.dynamo_cart_item_table_name,
-                                               key_conditions={'CartId': cart_id}))
+                                               key_conditions={'CartId': real_cart_id}))
 
     def delete_cart_item(self, user_id, cart_id, item_id):
         """
         Delete an item from a cart and return the deleted item if it exists, None otherwise
         An error will be raised if the cart does not exist or does not belong to the user
         """
-        if self.get_cart(user_id, cart_id) is None:
-            raise ResourceAccessError('Cart does not exist')
+        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
         return self.dynamo_accessor.delete_item(config.dynamo_cart_item_table_name,
-                                                keys={'CartId': cart_id, 'CartItemId': item_id})
+                                                keys={'CartId': real_cart_id, 'CartItemId': item_id})
 
     def transform_hit_to_cart_item(self, hit, entity_type, cart_id):
         """
@@ -185,7 +190,7 @@ class CartItemManager:
             'batch_size': int
         }
         """
-        self.check_cart_permission(user_id, cart_id)
+        self.get_cart(user_id, cart_id)  # This is to assert whether the user has access to the requesting cart.
         execution_id = str(uuid.uuid4())
         self.step_function_helper.start_execution(config.cart_item_state_machine_name,
                                                   execution_name=execution_id,
