@@ -173,8 +173,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         mock_cart_id = 'test_default_cart'
         user_id = '123'
         cart_name = 'cart name'
-        with patch('uuid.uuid4') as uuid4_mock:
-            uuid4_mock.return_value = mock_cart_id
+        with patch('uuid.uuid4', side_effect=[mock_cart_id]):
             cart_id = self.cart_item_manager.create_cart(user_id, cart_name, True)
         cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name, {'UserId': user_id, 'CartId': cart_id})
         self.assertEqual(cart['UserId'], user_id)
@@ -211,15 +210,14 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
                          self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
                                                        keys={'UserId': user_id, 'CartId': cart_id}))
 
-    def test_get_default_cart_with_existed_default_cart(self):
+    def test_get_default_cart_with_existing_default_cart(self):
         """
         If the default cart already exists, the manager should not create a new cart.
         """
         mock_cart_id = 'test_default_cart'
         user_id = '123'
         cart_name = 'cart name'
-        with patch('uuid.uuid4') as uuid4_mock:
-            uuid4_mock.side_effect = [mock_cart_id]
+        with patch('uuid.uuid4', side_effect=[mock_cart_id]):
             self.cart_item_manager.create_cart(user_id, cart_name, True)
         cart = self.cart_item_manager.get_cart(user_id)
         self.assertEqual(cart['UserId'], user_id)
@@ -237,10 +235,8 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         user_id = '123'
         cart_name = 'Default Cart'
         self.assertEqual(0, len(self.cart_item_manager.get_user_carts(user_id)))
-        with patch('uuid.uuid4') as uuid4_mock:
-            uuid4_mock.side_effect = [mock_cart_id]
+        with patch('uuid.uuid4', side_effect=[mock_cart_id]):
             cart1 = self.cart_item_manager.get_cart(user_id)
-            self.assertEqual(1, uuid4_mock.call_count)
             self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
             self.assertEqual(cart1['UserId'], user_id)
             self.assertEqual(cart1['CartName'], cart_name)
@@ -249,7 +245,6 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
             # The second call should return the same cart.
             cart2 = self.cart_item_manager.get_cart(user_id)
             self.assertEqual(cart1['CartId'], cart2['CartId'])
-            self.assertEqual(1, uuid4_mock.call_count)
         self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
 
     def test_get_user_carts(self):
