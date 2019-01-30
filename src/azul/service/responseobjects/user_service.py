@@ -1,3 +1,5 @@
+from typing import Optional
+
 from azul import config
 from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
 
@@ -21,7 +23,7 @@ class UserService:
                                                consistent_read=True)
             return next(users)
 
-    def update(self, user_id:str, default_cart_id:str):
+    def update(self, user_id:str, default_cart_id):
         return self.dynamo_accessor.update_item(table_name=config.dynamo_user_table_name,
                                                 keys={'UserId': user_id},
                                                 update_values={'DefaultCartId': default_cart_id})

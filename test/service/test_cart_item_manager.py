@@ -219,7 +219,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         cart_name = 'cart name'
         with patch('uuid.uuid4', side_effect=[mock_cart_id]):
             self.cart_item_manager.create_cart(user_id, cart_name, True)
-        cart = self.cart_item_manager.get_cart(user_id)
+        cart = self.cart_item_manager.get_cart(user_id, None)
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
         self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], mock_cart_id)
@@ -236,14 +236,14 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         cart_name = 'Default Cart'
         self.assertEqual(0, len(self.cart_item_manager.get_user_carts(user_id)))
         with patch('uuid.uuid4', side_effect=[mock_cart_id]):
-            cart1 = self.cart_item_manager.get_cart(user_id)
+            cart1 = self.cart_item_manager.get_cart(user_id, None)
             self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
             self.assertEqual(cart1['UserId'], user_id)
             self.assertEqual(cart1['CartName'], cart_name)
             self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], mock_cart_id)
             self.assertEqual(cart1['CartId'], mock_cart_id)
             # The second call should return the same cart.
-            cart2 = self.cart_item_manager.get_cart(user_id)
+            cart2 = self.cart_item_manager.get_cart(user_id, None)
             self.assertEqual(cart1['CartId'], cart2['CartId'])
         self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
 
@@ -401,7 +401,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         user_id = '111'
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
         with self.assertRaises(ResourceAccessError):
-            self.cart_item_manager.start_batch_cart_item_write('112', cart_id, write_params={})
+            self.cart_item_manager.start_batch_cart_item_write('112', cart_id, 'foo', {}, 12345, 10000)
 
     def test_transform_cart_item_pagination(self):
         """
