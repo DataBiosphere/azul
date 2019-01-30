@@ -952,7 +952,7 @@ def create_cart():
 @app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True)
 def get_cart(cart_id):
     """
-    Get the cart of the given ID belonging to the user.
+    Get the cart of the given ID belonging to the user
 
     The default cart can be accessible by using the actual cart UUID or
     setting the requesting cart ID to "default". If the default cart does

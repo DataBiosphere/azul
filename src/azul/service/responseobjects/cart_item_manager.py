@@ -112,6 +112,7 @@ class CartItemManager:
         Add an item to a cart and return the created item ID
         An error will be raised if the cart does not exist or does not belong to the user
         """
+        # TODO: Cart item should have some user readable name
         real_cart_id = self.get_cart(user_id, cart_id)['CartId']
         item_id = self.create_cart_item_id(real_cart_id, entity_id, entity_type, bundle_uuid, bundle_version)
         self.dynamo_accessor.insert_item(

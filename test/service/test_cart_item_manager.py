@@ -328,7 +328,6 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         """
         user_id = '111'
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
-        print('*****', user_id, cart_id, 'entity_id', 'bundle_id', 'bundle_version', 'entity_type')
         item_id = self.cart_item_manager.add_cart_item(user_id, cart_id, 'entity_id', 'bundle_id',
                                                        'bundle_version', 'entity_type')
         self.assertIsNotNone(self.dynamo_accessor.get_item(
