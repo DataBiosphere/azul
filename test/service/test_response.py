@@ -465,12 +465,17 @@ class TestResponse(WebServiceTestCase):
         self.assertIsNotNone(summary_object['organSummaries'])
 
     def test_default_sorting_parameter(self):
-        base_url = self.base_url
-        url = base_url + "/repository/files"
-        response = requests.get(url)
-        response.raise_for_status()
-        summary_object = response.json()
-        self.assertEqual(summary_object['pagination']["sort"], "specimenId")
+        # FIXME: local import for now to delay side effects of the import like logging being configured
+        # https://github.com/DataBiosphere/azul/issues/637
+        from lambdas.service.app import sort_defaults
+        for entity_type in 'files', 'specimens', 'projects':
+            with self.subTest(entity_type=entity_type):
+                base_url = self.base_url
+                url = base_url + "/repository/" + entity_type
+                response = requests.get(url)
+                response.raise_for_status()
+                summary_object = response.json()
+                self.assertEqual(summary_object['pagination']["sort"], sort_defaults[entity_type][0])
 
     def test_transform_request_with_file_url(self):
         base_url = self.base_url
