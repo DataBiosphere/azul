@@ -10,8 +10,8 @@ import urllib
 import uuid
 
 from azul import config
-from scripts.subscribe import subscribe
-from scripts.reindex import Reindexer
+from azul.subscription import subscribe
+from azul.reindexer import Reindexer
 
 
 logger = logging.getLogger(__name__)
