@@ -23,14 +23,12 @@ class CartItemManager:
         self.dynamo_accessor = DynamoDataAccessor()
         self.user_service = UserService()
 
-    @property
-    def default_cart_id_alias(self):
-        return "default"
-
-    def encode_params(self, params):
+    @staticmethod
+    def encode_params(params):
         return base64.urlsafe_b64encode(bytes(json.dumps(params), encoding='utf-8')).decode('utf-8')
 
-    def decode_token(self, token):
+    @staticmethod
+    def decode_token(token):
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
     def create_cart(self, user_id:str, cart_name:str, default:bool):
@@ -55,14 +53,10 @@ class CartItemManager:
             self.user_service.update(user_id, default_cart_id=cart_id)
         return cart_id
 
-    def get_cart(self, user_id, cart_id=None):
-        if cart_id is None or cart_id == self.default_cart_id_alias:
-            user = self.user_service.get(user_id)
-            cart_id = user['DefaultCartId']
-
+    def get_cart(self, user_id, cart_id):
         if cart_id is None:
-            cart_id = self.create_cart(user_id, 'Default Cart', default=True)
-
+            user = self.user_service.get(user_id)
+            cart_id = user['DefaultCartId'] or self.create_cart(user_id, 'Default Cart', default=True)
         cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
                                              keys={'UserId': user_id, 'CartId': cart_id})
         if cart is None:
@@ -75,6 +69,9 @@ class CartItemManager:
                                                index_name='UserIndex'))
 
     def delete_cart(self, user_id, cart_id):
+        default_cart_id = self.user_service.get(user_id)['DefaultCartId']
+        if default_cart_id == cart_id:
+            self.user_service.update(user_id, default_cart_id=None)
         self.dynamo_accessor.delete_by_key(config.dynamo_cart_item_table_name,
                                            {'CartId': cart_id})
         return self.dynamo_accessor.delete_item(config.dynamo_cart_table_name,
@@ -170,24 +167,22 @@ class CartItemManager:
         cart_item['CartItemId'] = item_id
         return cart_item
 
-    def start_batch_cart_item_write(self, user_id, cart_id, write_params):
+    def start_batch_cart_item_write(self, user_id, cart_id, entity_type, filters, item_count, batch_size):
         """
         Trigger the job that will write the cart items and return a token to be used to check the job status
-
-        Write params should have the format:
-        {
-            'filters': str,
-            'entity_type': str,
-            'cart_id': str,
-            'item_count': int,
-            'batch_size': int
-        }
         """
-        self.get_cart(user_id, cart_id)  # This is to assert whether the user has access to the requesting cart.
+        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
         execution_id = str(uuid.uuid4())
+        execution_input = {
+            'filters': filters,
+            'entity_type': entity_type,
+            'cart_id': real_cart_id,
+            'item_count': item_count,
+            'batch_size': batch_size
+        }
         self.step_function_helper.start_execution(config.cart_item_state_machine_name,
                                                   execution_name=execution_id,
-                                                  execution_input=write_params)
+                                                  execution_input=execution_input)
         return self.encode_params({'execution_id': execution_id})
 
     def get_batch_cart_item_write_status(self, token):
