@@ -27,6 +27,7 @@ from azul.service.responseobjects.elastic_request_builder import (BadArgumentExc
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
 from azul.service.responseobjects.manifest_service import ManifestService
+from azul.service.responseobjects.repository_service import RepositoryService
 from azul.service.responseobjects.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.utilities import json_pp
@@ -58,17 +59,17 @@ sort_defaults = {
 }
 
 def _get_pagination(current_request, entity_type):
+    query_params = current_request.query_params or {}
     default_sort, default_order = sort_defaults[entity_type]
     pagination = {
-        "order": current_request.query_params.get('order', default_order),
-        "size": int(current_request.query_params.get('size', ENTRIES_PER_PAGE)),
-        "sort": current_request.query_params.get('sort', default_sort),
+        "order": query_params.get('order', default_order),
+        "size": int(query_params.get('size', ENTRIES_PER_PAGE)),
+        "sort": query_params.get('sort', default_sort),
     }
-
-    sa = current_request.query_params.get('search_after')
-    sb = current_request.query_params.get('search_before')
-    sa_uid = current_request.query_params.get('search_after_uid')
-    sb_uid = current_request.query_params.get('search_before_uid')
+    sa = query_params.get('search_after')
+    sb = query_params.get('search_before')
+    sa_uid = query_params.get('search_after_uid')
+    sb_uid = query_params.get('search_before_uid')
 
     if not sb and sa:
         pagination['search_after'] = [sa, sa_uid]
@@ -108,6 +109,22 @@ def version():
         'git': config.git_status,
         'changes': compact_changes(limit=10)
     }
+
+
+def repository_search(entity_type, item_id):
+    query_params = app.current_request.query_params or {}
+    filters = query_params.get('filters', '{"file": {}}')
+    filters = ast.literal_eval(filters)
+    try:
+        pagination = _get_pagination(app.current_request, entity_type)
+    except BadArgumentException as bae:  # happens in _get_pagination
+        raise BadRequestError(msg=bae.message)
+        # Handle <file_id> request form (for single file search)
+    service = RepositoryService(url_func=file_url)
+    try:
+        return service.get_data(entity_type, pagination, filters, item_id)
+    except IndexNotFoundError as infe:  # raised in transform_request
+        raise NotFoundError(msg=infe.message)
 
 
 @app.route('/repository/files', methods=['GET'], cors=True)
@@ -154,47 +171,7 @@ def get_data(file_id=None):
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
-    # Setup logging
-    logger = app.log
-    # Get all the parameters from the URL
-    logger.debug('Parameter file_id: {}'.format(file_id))
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
-    logger.debug("Filters string is: {}".format(filters))
-    try:
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        # Make the default pagination
-        logger.info("Creating pagination")
-        pagination = _get_pagination(app.current_request, entity_type='files')
-        logger.debug("Pagination: \n".format(json_pp(pagination)))
-        # Handle <file_id> request form
-        if file_id is not None:
-            logger.info("Handling single file id search")
-            filters['file']['fileId'] = {"is": [file_id]}
-        # Create and instance of the ElasticTransformDump
-        logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd()
-        # Get the response back
-        logger.info("Creating the API response")
-        response = es_td.transform_request(filters=filters,
-                                           pagination=pagination,
-                                           post_filter=True,
-                                           entity_type='files')
-
-        for hit in response['hits']:
-            for file in hit['files']:
-                file['url'] = file_url(file['uuid'], version=file['version'], replica='aws')
-
-    except BadArgumentException as bae:
-        raise BadRequestError(msg=bae.message)
-    except IndexNotFoundError as infe:
-        raise NotFoundError(msg=infe.message)
-    else:
-        if file_id is not None:
-            response = response['hits'][0]
-        return response
+    return repository_search('files', file_id)
 
 
 @app.route('/repository/specimens', methods=['GET'], cors=True)
@@ -241,44 +218,7 @@ def get_specimen_data(specimen_id=None):
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
-    # Setup logging
-    logger = app.log
-    # Get all the parameters from the URL
-    logger.debug('Parameter specimen_id: {}'.format(specimen_id))
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
-    logger.debug("Filters string is: {}".format(filters))
-    logger.info("Extracting the filter parameter from the request")
-    filters = ast.literal_eval(filters)
-    # Make the default pagination
-    logger.info("Creating pagination")
-    pagination = _get_pagination(app.current_request, entity_type='specimens')
-    logger.debug("Pagination: \n".format(json_pp(pagination)))
-    # Handle <file_id> request form
-    if specimen_id is not None:
-        logger.info("Handling single file id search")
-        filters['file']['fileId'] = {"is": [specimen_id]}
-    # Create and instance of the ElasticTransformDump
-    logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
-    # Get the response back
-    logger.info("Creating the API response")
-
-    try:
-        response = es_td.transform_request(filters=filters,
-                                           pagination=pagination,
-                                           post_filter=True,
-                                           entity_type='specimens')
-    except BadArgumentException as bae:
-        raise BadRequestError(msg=bae.message)
-    except IndexNotFoundError as infe:
-        raise NotFoundError(msg=infe.message)
-    else:
-        # Returning a single response if <specimen_id> request form is used
-        if specimen_id is not None:
-            response = response['hits'][0]
-        return response
+    return repository_search('specimens', specimen_id)
 
 
 @app.route('/repository/projects', methods=['GET'], cors=True)
@@ -689,6 +629,7 @@ def generate_manifest(event, context):
             - filters: dict containing filters to use in ES request
     :return: The URL to the generated manifest
     """
+    print('current request', app.current_request)
     filters = event.get('filters', {'file': {}})
     response = EsTd().transform_manifest(filters=filters)
     return {'Location': response.headers['Location']}
