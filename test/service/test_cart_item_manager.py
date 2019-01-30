@@ -264,20 +264,27 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         user_id = '123'
         cart_id1 = self.cart_item_manager.create_cart(user_id, 'Cart1', True)
         cart_id2 = self.cart_item_manager.create_cart(user_id, 'Cart2', False)
+        cart_id3 = self.cart_item_manager.create_cart(user_id, 'Cart3', False)
         self.cart_item_manager.add_cart_item(user_id, cart_id1, '1', 'bundle_id',
                                              'bundle_version', 'entity_type')
         self.cart_item_manager.add_cart_item(user_id, cart_id1, '2', 'bundle_id',
                                              'bundle_version', 'entity_type')
         self.cart_item_manager.add_cart_item(user_id, cart_id2, '2', 'bundle_id',
                                              'bundle_version', 'entity_type')
+        # Delete the non-default cart.
+        # NOTE: The default cart should be left untouched.
+        self.cart_item_manager.delete_cart(user_id, cart_id3)
+        with self.assertRaises(ResourceAccessError):
+            self.cart_item_manager.get_cart(user_id, cart_id3)
+        self.assertEqual(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'], cart_id1)
+        self.assertIsNotNone(self.cart_item_manager.get_cart(user_id, cart_id1))
+        # Delete the default cart.
+        # NOTE: At this point, the user object should have the default cart ID undefined.
         self.cart_item_manager.delete_cart(user_id, cart_id1)
         with self.assertRaises(ResourceAccessError):
             self.cart_item_manager.get_cart(user_id, cart_id1)
+        self.assertIsNone(self.cart_item_manager.user_service.get(user_id)['DefaultCartId'])
         self.assertIsNotNone(self.cart_item_manager.get_cart(user_id, cart_id2))
-        self.assertEqual(0, self.dynamo_accessor.count(table_name=config.dynamo_cart_item_table_name,
-                                                       key_conditions={'CartId': cart_id1}))
-        self.assertEqual(1, self.dynamo_accessor.count(table_name=config.dynamo_cart_item_table_name,
-                                                       key_conditions={'CartId': cart_id2}))
 
     def test_update_cart_name(self):
         """
