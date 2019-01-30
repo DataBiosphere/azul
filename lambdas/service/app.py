@@ -58,8 +58,7 @@ sort_defaults = {
 }
 
 def _get_pagination(current_request, entity_type):
-    default_sort = sort_defaults[entity_type][0]
-    default_order = sort_defaults[entity_type][1]
+    default_sort, default_order = sort_defaults[entity_type]
     pagination = {
         "order": current_request.query_params.get('order', default_order),
         "size": int(current_request.query_params.get('size', ENTRIES_PER_PAGE)),
