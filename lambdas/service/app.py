@@ -51,11 +51,18 @@ app.log.setLevel(logging.DEBUG)
 # how-to-write-docstring-for-url-parameters
 
 
-def _get_pagination(current_request):
+sort_defaults = {
+    'files': ('fileName', 'asc'),
+    'specimens': ('specimenId', 'asc'),
+    'projects': ('projectTitle', 'asc'),
+}
+
+def _get_pagination(current_request, entity_type):
+    default_sort, default_order = sort_defaults[entity_type]
     pagination = {
-        "order": current_request.query_params.get('order', 'desc'),
+        "order": current_request.query_params.get('order', default_order),
         "size": int(current_request.query_params.get('size', ENTRIES_PER_PAGE)),
-        "sort": current_request.query_params.get('sort', 'specimenId'),
+        "sort": current_request.query_params.get('sort', default_sort),
     }
 
     sa = current_request.query_params.get('search_after')
@@ -160,7 +167,7 @@ def get_data(file_id=None):
         filters = ast.literal_eval(filters)
         # Make the default pagination
         logger.info("Creating pagination")
-        pagination = _get_pagination(app.current_request)
+        pagination = _get_pagination(app.current_request, entity_type='files')
         logger.debug("Pagination: \n".format(json_pp(pagination)))
         # Handle <file_id> request form
         if file_id is not None:
@@ -246,7 +253,7 @@ def get_specimen_data(specimen_id=None):
     filters = ast.literal_eval(filters)
     # Make the default pagination
     logger.info("Creating pagination")
-    pagination = _get_pagination(app.current_request)
+    pagination = _get_pagination(app.current_request, entity_type='specimens')
     logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Handle <file_id> request form
     if specimen_id is not None:
@@ -331,7 +338,7 @@ def get_project_data(project_id=None):
         filters = ast.literal_eval(filters)
         # Make the default pagination
         logger.info("Creating pagination")
-        pagination = _get_pagination(app.current_request)
+        pagination = _get_pagination(app.current_request, entity_type='projects')
         logger.debug("Pagination: \n".format(json_pp(pagination)))
         # Handle <file_id> request form
         if project_id is not None:
@@ -479,17 +486,17 @@ def get_search():
     except Exception as e:
         logger.error("Malformed filters parameter: {}".format(e))
         return "Malformed filters parameter"
-    # Generate the pagination dictionary out of the endpoint parameters
-    logger.info("Creating pagination")
-    pagination = _get_pagination(app.current_request)
-    logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Get the entry format and search field
-    _type = app.current_request.query_params.get('type', 'file')
+    _type = app.current_request.query_params.get('type', 'files')
     # Get the field to search
     field = app.current_request.query_params.get('field', 'fileId')
     # HACK: Adding this small check to make sure the search bar works with
     if _type in {'donor', 'file-donor'}:
         field = 'donor'
+    # Generate the pagination dictionary out of the endpoint parameters
+    logger.info("Creating pagination")
+    pagination = _get_pagination(app.current_request, entity_type=_type)
+    logger.debug("Pagination: \n".format(json_pp(pagination)))
     # Create and instance of the ElasticTransformDump
     logger.info("Creating ElasticTransformDump object")
     es_td = EsTd()
@@ -1300,7 +1307,7 @@ def get_data_object(data_object_id):
         # Create and instance of the ElasticTransformDump
         logger.info("Creating ElasticTransformDump object")
         es_td = EsTd()
-        pagination = _get_pagination(app.current_request)
+        pagination = _get_pagination(app.current_request, entity_type='files')
         # Get the response back
         logger.info("Creating the API response")
         response = es_td.transform_request(filters=filters,
