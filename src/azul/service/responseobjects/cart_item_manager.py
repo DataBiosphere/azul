@@ -69,13 +69,6 @@ class CartItemManager:
             raise ResourceAccessError('Cart does not exist')
         return cart
 
-    def get_default_cart(self, user_id):
-        user = self.user_service.get(user_id)
-        cart_id = user['DefaultCartId']
-        if cart_id is None:
-            cart_id = self.create_cart(user_id, 'Default Cart', default=True)
-        return self.get_cart(user_id, cart_id)
-
     def get_user_carts(self, user_id):
         return list(self.dynamo_accessor.query(table_name=config.dynamo_cart_table_name,
                                                key_conditions={'UserId': user_id},

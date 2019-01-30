@@ -949,7 +949,6 @@ def create_cart():
     }
 
 
-# TODO: implement default cart (may need to change get_all_carts() endpoint)
 @app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True)
 def get_cart(cart_id):
     """
