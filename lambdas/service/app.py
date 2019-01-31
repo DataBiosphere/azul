@@ -306,6 +306,7 @@ def get_summary():
     }
     with ThreadPoolExecutor(max_workers=len(summary_fields_by_authority)) as executor:
         summaries = dict(executor.map(lambda entity_type:
+                                      # FIXME: does transform_summary ever throw any exceptions we should be worried about?
                                       (entity_type, es_td.transform_summary(filters=filters, entity_type=entity_type)),
                                       summary_fields_by_authority))
     unified_summary = {field: summaries[entity_type][field]

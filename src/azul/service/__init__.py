@@ -1,6 +1,8 @@
 import ast
 import logging
 
+from azul.service.responseobjects.elastic_request_builder import BadArgumentException
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,4 +24,5 @@ class AbstractService:
             return default_value if filters == {} else filters
         except ValueError as e:
             logger.error('Malformed filters parameter: {}'.format(e))
-            raise ValueError('Malformed filters parameter')
+            # FIXME: should this be a new kind of exception??
+            raise BadArgumentException('Malformed filters parameter')
