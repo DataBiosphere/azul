@@ -42,7 +42,7 @@ class RepositoryService(AbstractService):
                     project.pop('publications')
         return response
 
-    def get_data(self, entity_type, pagination, filters=None, item_id=None):
+    def get_data(self, entity_type, pagination, filters, item_id):
         filters = self.parse_filters(filters)
         if item_id is not None:
             return self._get_item(entity_type, item_id, pagination, filters)
@@ -72,3 +72,15 @@ class RepositoryService(AbstractService):
                            for field in summary_fields}
         assert all(len(unified_summary) == len(summary) for summary in summaries.values())
         return unified_summary
+
+    def get_search(self, entity_type, pagination, filters, _query, field):
+        filters = self.parse_filters(filters)
+        # HACK: Adding this small check to make sure the search bar works with
+        if entity_type in {'donor', 'file-donor'}:
+            field = 'donor'
+        response = self.es_td.transform_autocomplete_request(pagination,
+                                                             filters=filters,
+                                                             _query=_query,
+                                                             search_field=field,
+                                                             entry_format=entity_type)
+        return response
