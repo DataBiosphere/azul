@@ -10,7 +10,7 @@ from typing import Tuple
 
 from azul import config
 from azul.service import AbstractService
-from azul.service.responseobjects.step_function_helper import StateMachineError, StepFunctionHelper
+from azul.service.step_function_helper import StateMachineError, StepFunctionHelper
 
 logger = logging.getLogger(__name__)
 

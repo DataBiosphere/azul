@@ -9,7 +9,6 @@ import os
 import re
 import time
 import urllib.parse
-import uuid
 
 # noinspection PyPackageRequirements
 import boto3
@@ -26,11 +25,10 @@ from azul.service.responseobjects.cart_item_manager import CartItemManager, Dupl
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
-from azul.service.responseobjects.manifest_service import ManifestService
-from azul.service.responseobjects.repository_service import RepositoryService
-from azul.service.responseobjects.step_function_helper import StateMachineError
+from azul.service.manifest import ManifestService
+from azul.service.repository import RepositoryService
+from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
-from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
 
