@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 from azul.service import AbstractService
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 
@@ -45,3 +47,28 @@ class RepositoryService(AbstractService):
         if item_id is not None:
             return self._get_item(entity_type, item_id, pagination, filters)
         return self._get_items(entity_type, pagination, filters)
+
+    def get_summary(self, filters):
+        filters = self.parse_filters(filters)
+        # Request a summary for each entity type and cherry-pick summary fields from the summaries for the entity
+        # that is authoritative for those fields.
+        summary_fields_by_authority = {
+            'files':
+                ['totalFileSize', 'fileTypeSummaries', 'fileCount'],
+            'specimens':
+                ['organCount', 'donorCount', 'labCount', 'totalCellCount', 'organSummaries', 'specimenCount'],
+            'projects':
+                ['projectCount']
+        }
+
+        def make_summary(entity_type):
+            """Returns the key and value for a dict entry to transformation summary"""
+            return entity_type, self.es_td.transform_summary(filters=filters, entity_type=entity_type)
+        with ThreadPoolExecutor(max_workers=len(summary_fields_by_authority)) as executor:
+            summaries = dict(executor.map(make_summary,
+                                          summary_fields_by_authority))
+        unified_summary = {field: summaries[entity_type][field]
+                           for entity_type, summary_fields in summary_fields_by_authority.items()
+                           for field in summary_fields}
+        assert all(len(unified_summary) == len(summary) for summary in summaries.values())
+        return unified_summary
