@@ -46,6 +46,11 @@ class Plugin(ABC):
 
     @classmethod
     def load(cls) -> 'Plugin':
+        """
+        Load and return the Azul plugin configured via the `AZUL_PROJECT` environment variable.
+
+        A plugin is an instance of a concrete subclass of the `Plugin` class.
+        """
         plugin_module = importlib.import_module(config.plugin_name)
         plugin_cls = plugin_module.Plugin
         assert issubclass(plugin_cls, cls)
