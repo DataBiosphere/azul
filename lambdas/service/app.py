@@ -113,18 +113,15 @@ def version():
 
 def repository_search(entity_type, item_id):
     query_params = app.current_request.query_params or {}
-    filters = query_params.get('filters', '{"file": {}}')
-    filters = ast.literal_eval(filters)
+    filters = query_params.get('filters')
     try:
         pagination = _get_pagination(app.current_request, entity_type)
-    except BadArgumentException as bae:  # happens in _get_pagination
-        raise BadRequestError(msg=bae.message)
-        # Handle <file_id> request form (for single file search)
-    service = RepositoryService(url_func=file_url)
-    try:
+        service = RepositoryService(url_func=file_url)
         return service.get_data(entity_type, pagination, filters, item_id)
-    except IndexNotFoundError as infe:  # raised in transform_request
-        raise NotFoundError(msg=infe.message)
+    except BadArgumentException as e:
+        raise BadRequestError(msg=e.message)
+    except IndexNotFoundError as e:
+        raise NotFoundError(msg=e.message)
 
 
 @app.route('/repository/files', methods=['GET'], cors=True)
@@ -265,48 +262,7 @@ def get_project_data(project_id=None):
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
-    # Setup logging
-    logger = app.log
-    # Get all the parameters from the URL
-    logger.debug('Parameter specimen_id: {}'.format(project_id))
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
-    logger.debug("Filters string is: {}".format(filters))
-    try:
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        # Make the default pagination
-        logger.info("Creating pagination")
-        pagination = _get_pagination(app.current_request, entity_type='projects')
-        logger.debug("Pagination: \n".format(json_pp(pagination)))
-        # Handle <file_id> request form
-        if project_id is not None:
-            logger.info("Handling single file id search")
-            filters['file']['projectId'] = {"is": [project_id]}
-        # Create and instance of the ElasticTransformDump
-        logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd()
-        # Get the response back
-        logger.info("Creating the API response")
-        response = es_td.transform_request(filters=filters,
-                                           pagination=pagination,
-                                           post_filter=True,
-                                           entity_type='projects')
-    except BadArgumentException as bae:
-        raise BadRequestError(msg=bae.message)
-    else:
-        # Return a single response if <project_id> request form is used
-        if project_id is not None:
-            return response['hits'][0]
-
-        # Filter out certain fields if getting list of projects
-        for hit in response['hits']:
-            for project in hit['projects']:
-                project.pop('contributors')
-                project.pop('projectDescription')
-                project.pop('publications')
-        return response
+    return repository_search('projects', project_id)
 
 
 @app.route('/repository/summary', methods=['GET'], cors=True)

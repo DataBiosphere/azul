@@ -9,12 +9,13 @@ from botocore.exceptions import ClientError
 from typing import Tuple
 
 from azul import config
+from azul.service import AbstractService
 from azul.service.responseobjects.step_function_helper import StateMachineError, StepFunctionHelper
 
 logger = logging.getLogger(__name__)
 
 
-class ManifestService:
+class ManifestService(AbstractService):
     """
     Class containing logic for starting and checking the status of manifest generation jobs
     """
@@ -34,12 +35,7 @@ class ManifestService:
         :raises ValueError: Will raise a ValueError if token is misformatted or invalid
         :raises StateMachineError: if the state machine fails for some reason.
         """
-        try:
-            filters = ast.literal_eval(filters)
-            filters = {'file': {}} if filters == {} else filters
-        except Exception as e:
-            logger.error('Malformed filters parameter: {}'.format(e))
-            raise ValueError('Malformed filters parameter')
+        filters = self.parse_filters(filters)
 
         if token is None:
             execution_id = str(uuid.uuid4())
