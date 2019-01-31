@@ -277,45 +277,13 @@ def get_summary():
           description: Filters to be applied when calling ElasticSearch
     :return: Returns a jsonified Summary API response
     """
-    logger = logging.getLogger("dashboardService.webservice.get_summary")
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    # Get the filters from the URL
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
-    logger.debug("Filters string is: {}".format(filters))
+    query_params = app.current_request.query_params or {}
+    filters = query_params.get('filters')
+    service = RepositoryService(file_url)
     try:
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        filters = {"file": {}} if filters == {} else filters
-    except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e))
-        return "Malformed filters parameter"
-    # Create and instance of the ElasticTransformDump
-    logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
-    # Get the response back
-    logger.info("Creating the API response")
-
-    # Request a summary for each entity type and cherry-pick summary fields from the summaries for the entity
-    # that is authoritative for those fields.
-    #
-    summary_fields_by_authority = {
-        'files': ['totalFileSize', 'fileTypeSummaries', 'fileCount'],
-        'specimens': ['organCount', 'donorCount', 'labCount', 'totalCellCount', 'organSummaries', 'specimenCount'],
-        'projects': ['projectCount']
-    }
-    with ThreadPoolExecutor(max_workers=len(summary_fields_by_authority)) as executor:
-        summaries = dict(executor.map(lambda entity_type:
-                                      # FIXME: does transform_summary ever throw any exceptions we should be worried about?
-                                      (entity_type, es_td.transform_summary(filters=filters, entity_type=entity_type)),
-                                      summary_fields_by_authority))
-    unified_summary = {field: summaries[entity_type][field]
-                       for entity_type, summary_fields in summary_fields_by_authority.items()
-                       for field in summary_fields}
-    assert all(len(unified_summary) == len(summary) for summary in summaries.values())
-
-    # Returning a single response if <file_id> request form is used
-    return unified_summary
+        return service.get_summary(filters)
+    except BadArgumentException as e:
+        raise BadRequestError(msg=e.message)
 
 
 @app.route('/keywords', methods=['GET'], cors=True)
