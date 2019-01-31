@@ -258,12 +258,18 @@ class SpecimenFromOrganism(Biomaterial):
 
 @dataclass(init=False)
 class CellSuspension(Biomaterial):
-    total_estimated_cells: int
+    estimated_cell_count: Optional[int]
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
         content = json.get('content', json)
-        self.total_estimated_cells = content.get('total_estimated_cells')
+        self.estimated_cell_count = lookup(content, 'estimated_cell_count', 'total_estimated_cells', default=None)
+
+    @property
+    def total_estimated_cells(self) -> int:
+        warnings.warn(f"CellSuspension.total_estimated_cells is deprecated. "
+                      f"Use CellSuspension.estimated_cell_count instead.", DeprecationWarning)
+        return self.estimated_cell_count
 
 
 @dataclass(init=False)
@@ -273,7 +279,14 @@ class CellLine(Biomaterial):
 
 @dataclass(init=False)
 class Organoid(Biomaterial):
-    pass
+    model_organ: str
+    model_organ_part: Optional[str]
+
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
+        content = json.get('content', json)
+        self.model_organ = lookup(content, 'model_organ', 'model_for_organ').get('text')
+        self.model_organ_part = content.get('model_organ_part', {}).get('text')
 
 
 @dataclass(init=False)

@@ -16,6 +16,7 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               Project,
                                               SequenceFile,
                                               SpecimenFromOrganism,
+                                              CellSuspension,
                                               SupplementaryFile)
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -208,6 +209,11 @@ class TestAccessorApi(TestCase):
         self.assertEqual(bundle.version, version)
         self.assertEqual(1, len(bundle.projects))
 
+        cell_suspension = next(x for x in bundle.biomaterials.values() if isinstance(x, CellSuspension))
+        self.assertEqual(CellSuspension, type(cell_suspension))
+        # noinspection PyDeprecation
+        self.assertEqual(cell_suspension.estimated_cell_count, cell_suspension.total_estimated_cells)
+
         project = list(bundle.projects.values())[0]
         self.assertEqual(Project, type(project))
         self.assertEqual(project_roles, {c.project_role for c in project.contributors})
@@ -225,6 +231,8 @@ class TestAccessorApi(TestCase):
         self.assertIsInstance(root_entity, DonorOrganism)
         self.assertEqual(root_entity.organism_age_in_seconds, age_range)
         self.assertTrue(root_entity.sex in ('female', 'male', 'unknown'))
+        # noinspection PyDeprecation
+        self.assertEqual(root_entity.sex, root_entity.biological_sex)
 
         sequencing_input = bundle.sequencing_input
         self.assertGreater(len(sequencing_input), 0,
