@@ -58,6 +58,7 @@ sort_defaults = {
     'projects': ('projectTitle', 'asc'),
 }
 
+
 def _get_pagination(current_request, entity_type):
     query_params = current_request.query_params or {}
     default_sort, default_order = sort_defaults[entity_type]
@@ -333,46 +334,17 @@ def get_search():
     :return: A dictionary with entries that best match the query passed in
     to the endpoint
     """
-    # Setup logging
-    logger = logging.getLogger("dashboardService.webservice.get_search")
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    # Get all the parameters from the URL
-    # Get the query to use for searching. Forcing it to be str for now
-    _query = app.current_request.query_params.get('q', '')
-    logger.debug("String query is: {}".format(_query))
-    # Get the filters
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
+    query_params = app.current_request.query_params or {}
+    filters = query_params.get('filters')
+    _query = query_params.get('q', '')
+    entity_type = query_params.get('type', 'files')
+    field = query_params.get('field', 'fileId')
+    service = RepositoryService(file_url)
     try:
-        # Set up the default filter if it is returned as an empty dictionary
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        filters = {"file": {}} if filters == {} else filters
-    except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e))
-        return "Malformed filters parameter"
-    # Get the entry format and search field
-    _type = app.current_request.query_params.get('type', 'files')
-    # Get the field to search
-    field = app.current_request.query_params.get('field', 'fileId')
-    # HACK: Adding this small check to make sure the search bar works with
-    if _type in {'donor', 'file-donor'}:
-        field = 'donor'
-    # Generate the pagination dictionary out of the endpoint parameters
-    logger.info("Creating pagination")
-    pagination = _get_pagination(app.current_request, entity_type=_type)
-    logger.debug("Pagination: \n".format(json_pp(pagination)))
-    # Create and instance of the ElasticTransformDump
-    logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
-    # Get the response back
-    logger.info("Creating the API response")
-    response = es_td.transform_autocomplete_request(pagination,
-                                                    filters=filters,
-                                                    _query=_query,
-                                                    search_field=field,
-                                                    entry_format=_type)
-    return response
+        pagination = _get_pagination(app.current_request, entity_type)
+    except BadArgumentException as e:
+        raise BadRequestError(msg=e.message)
+    return service.get_search(entity_type, pagination, filters, _query, field)
 
 
 @app.route('/repository/files/order', methods=['GET'], cors=True)
