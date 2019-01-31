@@ -79,17 +79,23 @@ def post_notification():
     notification = app.current_request.json_body
     log.info("Received notification %r", notification)
     params = app.current_request.query_params
-    if params and params.get('sync', 'False').lower() == 'true':
-        indexer_cls = plugin.indexer_class()
-        indexer = indexer_cls()
-        writer = _create_index_writer()
-        indexer.index(writer, notification)
+
+    if not config.test_mode or notification.get('test_name', None):
+        if params and params.get('sync', 'False').lower() == 'true':
+            indexer_cls = plugin.indexer_class()
+            indexer = indexer_cls()
+            writer = _create_index_writer()
+            indexer.index(writer, notification)
+        else:
+            message = dict(action='add', notification=notification)
+            notify_queue = queue(config.notify_queue_name)
+            notify_queue.send_message(MessageBody=json.dumps(message))
+            log.info("Queued notification %r", notification)
+        return {"status": "done"}
     else:
-        message = dict(action='add', notification=notification)
-        notify_queue = queue(config.notify_queue_name)
-        notify_queue.send_message(MessageBody=json.dumps(message))
-        log.info("Queued notification %r", notification)
-    return {"status": "done"}
+        test_mode_error = f'Ignored notification {notification}. This indexer is currently in TEST MODE.'
+        log.error(test_mode_error)
+        raise chalice.ChaliceViewError(test_mode_error)
 
 
 @app.route('/delete', methods=['POST'])
