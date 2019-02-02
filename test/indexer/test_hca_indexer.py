@@ -9,6 +9,7 @@ from elasticsearch import Elasticsearch
 from more_itertools import one
 
 from azul import config
+from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
 from indexer import IndexerTestCase
 
@@ -209,11 +210,12 @@ class TestHCAIndexer(IndexerTestCase):
         bundles = [("9dec1bd6-ced8-448a-8e45-1fc7846d8995", "2018-03-29T154319.834528Z"),
                    ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
         original_mget = Elasticsearch.mget
+        latch = Latch(len(bundles))
 
         def mocked_mget(self, body):
             mget_return = original_mget(self, body=body)
-            # both threads sleep after reading to force conflict while writing
-            time.sleep(0.5)
+            # all threads wait at the latch after reading to force conflict while writing
+            latch.decrement(1)
             return mget_return
 
         with patch.object(Elasticsearch, 'mget', new=mocked_mget):
