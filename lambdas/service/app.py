@@ -115,8 +115,11 @@ def repository_search(entity_type, item_id):
     filters = query_params.get('filters')
     try:
         pagination = _get_pagination(app.current_request, entity_type)
-        service = RepositoryService(url_func=file_url)
-        return service.get_data(entity_type, pagination, filters, item_id)
+        service = RepositoryService()
+        if entity_type == 'files':
+            return service.get_data(entity_type, pagination, filters, item_id, file_url_func=file_url)
+        else:
+            return service.get_data(entity_type, pagination, filters, item_id)
     except BadArgumentException as e:
         raise BadRequestError(msg=e.message)
     except IndexNotFoundError as e:
@@ -278,7 +281,7 @@ def get_summary():
     """
     query_params = app.current_request.query_params or {}
     filters = query_params.get('filters')
-    service = RepositoryService(file_url)
+    service = RepositoryService()
     try:
         return service.get_summary(filters)
     except BadArgumentException as e:
@@ -337,7 +340,7 @@ def get_search():
     _query = query_params.get('q', '')
     entity_type = query_params.get('type', 'files')
     field = query_params.get('field', 'fileId')
-    service = RepositoryService(file_url)
+    service = RepositoryService()
     try:
         pagination = _get_pagination(app.current_request, entity_type)
     except BadArgumentException as e:
