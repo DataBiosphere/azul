@@ -171,7 +171,7 @@ def subnet_number(zone, public):
 #
 nlb_preserve_source_ip = True
 
-emit({} if config.deployment_stage not in ('dev', 'prod') else {
+emit({} if config.deployment_stage not in ('dev', ) else {
     "data": {
         "aws_availability_zones": {
             "available": {}
