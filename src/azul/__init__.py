@@ -176,6 +176,9 @@ class Config:
     def lambda_names(self) -> List[str]:
         return ['indexer', 'service']
 
+    def indexer_endpoint(self):
+        return "https://" + config.api_lambda_domain('indexer')
+
     @property
     def indexer_name(self) -> str:
         return self.qualified_resource_name('indexer')
@@ -334,6 +337,10 @@ class Config:
     @property
     def manifest_state_machine_name(self):
         return config.qualified_resource_name('manifest')
+
+    @property
+    def test_mode(self) -> bool:
+        return self._boolean(os.environ.get('TEST_MODE', '0'))
 
     @property
     def url_shortener_whitelist(self):
