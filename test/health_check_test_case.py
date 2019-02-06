@@ -44,26 +44,10 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             },
             'queues': {
                 'up': True,
-                'azul-documents-dev': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                },
-                'azul-documents-dev.fifo': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                },
-                'azul-fail-dev': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                },
-                'azul-fail-dev.fifo': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                },
-                'azul-notify-dev': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                }
+                **({
+                    queue_name: {'up': True, 'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}}
+                    for queue_name in config.all_queue_names
+                })
             },
             **({
                 lambda_name: {'up': True}
@@ -87,26 +71,10 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             },
             'queues': {
                 'up': True,
-                'azul-documents-dev': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                },
-                'azul-documents-dev.fifo': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                },
-                'azul-fail-dev': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                },
-                'azul-fail-dev.fifo': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                },
-                'azul-notify-dev': {
-                    'up': True,
-                    'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                }
+                **({
+                    queue_name: {'up': True, 'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}}
+                    for queue_name in config.all_queue_names
+                })
             },
             **({
                 lambda_name: {'up': False}
@@ -123,39 +91,23 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         health_object = response.json()
         self.assertEqual(503, response.status_code)
         self.assertEqual({
-            "up": False,
-            "elastic_search": {
-                "up": True
+            'up': False,
+            'elastic_search': {
+                'up': True
             },
-            "queues": {
-                "up": False,
-                "azul-documents-dev": {
-                    "up": False,
-                    "error": "The specified queue does not exist for this wsdl version."
-                },
-                "azul-documents-dev.fifo": {
-                    "up": False,
-                    "error": "The specified queue does not exist for this wsdl version."
-                },
-                "azul-fail-dev": {
-                    "up": False,
-                    "error": "The specified queue does not exist for this wsdl version."
-                },
-                "azul-fail-dev.fifo": {
-                    "up": False,
-                    "error": "The specified queue does not exist for this wsdl version."
-                },
-                "azul-notify-dev": {
-                    "up": False,
-                    "error": "The specified queue does not exist for this wsdl version."
-                }
+            'queues': {
+                'up': False,
+                **({
+                    queue_name: {'up': False, 'error': 'The specified queue does not exist for this wsdl version.'}
+                    for queue_name in config.all_queue_names
+                })
             },
             **({
                 lambda_name: {'up': True}
                 for lambda_name in self._other_lambda_names()
             }),
-            "unindexed_bundles": 0,
-            "unindexed_documents": 0
+            'unindexed_bundles': 0,
+            'unindexed_documents': 0
         }, health_object)
 
     @mock_sts
@@ -173,26 +125,10 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                 },
                 'queues': {
                     'up': True,
-                    'azul-documents-dev': {
-                        'up': True,
-                        'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                    },
-                    'azul-documents-dev.fifo': {
-                        'up': True,
-                        'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                    },
-                    'azul-fail-dev': {
-                        'up': True,
-                        'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                    },
-                    'azul-fail-dev.fifo': {
-                        'up': True,
-                        'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                    },
-                    'azul-notify-dev': {
-                        'up': True,
-                        'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}
-                    }
+                    **({
+                        queue_name: {'up': True, 'messages': {'delayed': 0, 'invisible': 0, 'queued': 0}}
+                        for queue_name in config.all_queue_names
+                    })
                 },
                 **({
                     lambda_name: {'up': True}
