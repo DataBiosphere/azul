@@ -111,6 +111,14 @@ class Plugin(azul.plugin.Plugin):
                                                         "4b5a2268-507c-46e6-bab0-3efb30145e85",  # prod/10x/2019-01-22T18:44:02Z
                                                         "364ebb73-652e-4d32-8938-1c922d0b2584",  # prod/Smart-seq2/2019-01-22T19:15:02Z
                                                         "11f5d59b-0e2c-4f01-85ac-8d8dd3db53be",  # prod/Smart-seq2/2019-01-22T18:44:03Z
+                                                        "c1996526-6466-40ff-820f-dad4d63492ec",  # prod/10x/2019-01-29T22:06:07Z
+                                                        "c281dedc-e838-4464-bf51-1cc4efae3fb9",  # prod/10x/2019-01-29T23:14:07Z
+                                                        "40afcf6b-422a-47ba-ba7a-33678c949b5c",  # prod/10x/2019-01-30T05:22:07Z
+                                                        "71a6e049-4846-4c2a-8823-cc193c573efc",  # prod/Smart-seq2/2019-01-22T18:13:48Z
+                                                        "9a60e8c2-32ea-4586-bc1f-7ee58f462b07",  # prod/Smart-seq2/2019-01-22T20:35:33Z
+                                                        "0facfacd-5b0c-4228-8be5-37aa1f3a269d",  # prod/Smart-seq2/2019-01-29T22:06:07Z
+                                                        "76c209df-42bf-41dc-a5f5-3d27193ca7a6",  # prod/Smart-seq2/2019-01-29T23:14:07Z
+                                                        "bb409c34-bb87-4ed2-adaf-6d1ef10610b5",  # prod/Smart-seq2/2019-01-30T05:22:07Z
                                                     ]
                                                 }
                                             },
