@@ -954,9 +954,9 @@ def get_cart(cart_id):
     """
     Get the cart of the given ID belonging to the user
 
-    The default cart can be accessible by using the actual cart UUID or
-    setting the requesting cart ID to "default". If the default cart does
-    not exist, the endpoint will create one automatically.
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    WILL NOT create the default one automatically.
 
     This endpoint returns a 404 error if the cart does not exist or does not belong to the user.
 
@@ -965,10 +965,13 @@ def get_cart(cart_id):
         "CartId": str
     }
     """
-    cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
+    cart_item_manager = CartItemManager()
     try:
-        cart = CartItemManager().get_cart(user_id, cart_id)
+        if cart_id == 'default':
+            cart = cart_item_manager.get_default_cart(user_id)
+        else:
+            cart = cart_item_manager.get_cart(user_id, cart_id)
     except ResourceAccessError:
         raise NotFoundError('Cart does not exist')
     else:
@@ -1051,9 +1054,9 @@ def get_items_in_cart(cart_id):
     """
     Get a list of items in a cart
 
-    The default cart can be accessible by using the actual cart UUID or
-    setting the requesting cart ID to "default". If the default cart does
-    not exist, the endpoint will create one automatically.
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
 
     Returns a 404 error if the cart does not exist or does not belong to the user
 
@@ -1088,9 +1091,9 @@ def add_item_to_cart(cart_id):
     """
     Add cart item to a cart and return the ID of the created item
 
-    The default cart can be accessible by using the actual cart UUID or
-    setting the requesting cart ID to "default". If the default cart does
-    not exist, the endpoint will create one automatically.
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
 
     Returns a 404 error if the cart does not exist or does not belong to the user
     Returns a 400 error if an invalid item was given
@@ -1142,9 +1145,9 @@ def delete_cart_item(cart_id, item_id):
     """
     Delete an item from the cart
 
-    The default cart can be accessible by using the actual cart UUID or
-    setting the requesting cart ID to "default". If the default cart does
-    not exist, the endpoint will create one automatically.
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
 
     Returns a 404 error if the cart does not exist or does not belong to the user, or if the item does not exist
 
@@ -1172,9 +1175,9 @@ def add_all_results_to_cart(cart_id):
     """
     Add all entities matching the given filters to a cart
 
-    The default cart can be accessible by using the actual cart UUID or
-    setting the requesting cart ID to "default". If the default cart does
-    not exist, the endpoint will create one automatically.
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
 
     parameters:
         - name: filters
