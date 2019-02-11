@@ -54,14 +54,27 @@ class CartItemManager:
         return cart_id
 
     def get_cart(self, user_id, cart_id):
-        if cart_id is None:
-            user = self.user_service.get(user_id)
-            cart_id = user['DefaultCartId'] or self.create_cart(user_id, 'Default Cart', default=True)
         cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
                                              keys={'UserId': user_id, 'CartId': cart_id})
         if cart is None:
             raise ResourceAccessError('Cart does not exist')
         return cart
+
+    def get_default_cart(self, user_id):
+        user = self.user_service.get(user_id)
+        if user['DefaultCartId'] is None:
+            raise ResourceAccessError('Cart does not exist')
+        cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
+                                             keys={'UserId': user_id, 'CartId': user['DefaultCartId']})
+        if cart is None:
+            raise ResourceAccessError('Cart does not exist')
+        return cart
+
+    def get_or_create_default_cart(self, user_id):
+        user = self.user_service.get(user_id)
+        cart_id = user['DefaultCartId'] or self.create_cart(user_id, 'Default Cart', default=True)
+        return self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
+                                             keys={'UserId': user_id, 'CartId': cart_id})
 
     def get_user_carts(self, user_id):
         return list(self.dynamo_accessor.query(table_name=config.dynamo_cart_table_name,
@@ -82,7 +95,11 @@ class CartItemManager:
         Update the attributes of a cart and return the updated item
         Only accepted attributes will be updated and any others will be ignored
         """
-        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
         if validate_attributes:
             accepted_attributes = {'CartName', 'Description'}
             for key in list(update_attributes.keys()):
@@ -113,7 +130,11 @@ class CartItemManager:
         An error will be raised if the cart does not exist or does not belong to the user
         """
         # TODO: Cart item should have some user readable name
-        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
         item_id = self.create_cart_item_id(real_cart_id, entity_id, entity_type, bundle_uuid, bundle_version)
         self.dynamo_accessor.insert_item(
             config.dynamo_cart_item_table_name,
@@ -128,7 +149,11 @@ class CartItemManager:
         Get all items in a cart
         An error will be raised if the cart does not exist or does not belong to the user
         """
-        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
         return list(self.dynamo_accessor.query(table_name=config.dynamo_cart_item_table_name,
                                                key_conditions={'CartId': real_cart_id}))
 
@@ -137,7 +162,11 @@ class CartItemManager:
         Delete an item from a cart and return the deleted item if it exists, None otherwise
         An error will be raised if the cart does not exist or does not belong to the user
         """
-        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
         return self.dynamo_accessor.delete_item(config.dynamo_cart_item_table_name,
                                                 keys={'CartId': real_cart_id, 'CartItemId': item_id})
 
@@ -172,7 +201,11 @@ class CartItemManager:
         """
         Trigger the job that will write the cart items and return a token to be used to check the job status
         """
-        real_cart_id = self.get_cart(user_id, cart_id)['CartId']
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
         execution_id = str(uuid.uuid4())
         execution_input = {
             'filters': filters,
