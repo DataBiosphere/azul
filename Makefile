@@ -9,13 +9,7 @@ terraform:
 	$(MAKE) -C terraform
 
 deploy:
-ifeq ($(shell python -c "import wheel as w; \
-					  from pkg_resources import parse_version as p; \
-					  print(p(w.__version__) >= p('0.32.3'))"),True)
 	$(MAKE) -C lambdas
-else
-	$(error Looks like your Wheel package is outdated or doesn't exist. Please run 'pip install --upgrade wheel')
-endif
 
 subscribe:
 	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py --shared; fi
