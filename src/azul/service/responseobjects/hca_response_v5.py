@@ -200,7 +200,22 @@ class ManifestResponse(AbstractResponse):
 
     def _translate(self, untranslated, keyname):
         m = self.manifest_entries[keyname]
-        return [untranslated.get(es_name, "") for es_name in m.values()]
+        translated_values = []
+        for es_name in m.values():
+            translated_value = untranslated.get(es_name, "")
+
+            if ' || ' in str(translated_value):
+                raise Exception("Invalid value. Pipe substring (' || ') in value")
+
+            if isinstance(translated_value, list):
+                if all(_ is None for _ in translated_value):
+                    translated_value = ''
+                else:
+                    translated_value = ' || '.join(translated_value)
+
+            translated_values.append(translated_value)
+
+        return translated_values
 
     def _push_content(self) -> str:
         """
@@ -215,9 +230,7 @@ class ManifestResponse(AbstractResponse):
             with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
                 buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
                 writer = csv.writer(buffer_wrapper, dialect='excel-tab')
-
-                writer.writerow(list(self.manifest_entries['bundles'].keys()) +
-                                list(self.manifest_entries['contents.files'].keys()))
+                writer.writerow(self.ordered_column_names)
                 for hit in self.es_search.scan():
                     self._iterate_hit_tsv(hit, writer)
 
@@ -252,8 +265,7 @@ class ManifestResponse(AbstractResponse):
 
         output = StringIO()
         writer = csv.writer(output, dialect='excel-tab')
-        writer.writerow(list(self.manifest_entries['bundles'].keys()) +
-                        list(self.manifest_entries['contents.files'].keys()))
+        writer.writerow(self.ordered_column_names)
         for hit in es_search.scan():
             self._iterate_hit_tsv(hit, writer)
 
@@ -311,14 +323,21 @@ class ManifestResponse(AbstractResponse):
 
     def _iterate_hit_tsv(self, es_search_hit, writer):
         hit_dict = es_search_hit.to_dict()
-        assert len(hit_dict['contents']['files']) == 1
-        file = hit_dict['contents']['files'][0]
-        file_fields = self._translate(file, 'contents.files')
+
+        inner_entity_fields = []
+        for inner_entity_source in self.manifest_entries.keys():
+            inner_entity_name = inner_entity_source.split('.')[-1]
+            if inner_entity_name in hit_dict['contents'].keys() and inner_entity_name != 'bundles':
+                if inner_entity_name == 'files':
+                    assert len(hit_dict['contents'][inner_entity_name]) == 1
+
+                inner_entity_data = hit_dict['contents'][inner_entity_name][0]
+                inner_entity_fields += self._translate(inner_entity_data, inner_entity_source)
 
         for bundle in hit_dict['bundles']:
             # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
             # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-            writer.writerow(self._translate(bundle, 'bundles') + file_fields)
+            writer.writerow(self._translate(bundle, 'bundles') + inner_entity_fields)
 
     def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
         hit_dict = es_search_hit.to_dict()
@@ -373,6 +392,12 @@ class ManifestResponse(AbstractResponse):
         self.mapping = mapping
         self.storage_service = StorageService()
         self.format = format
+
+        bundles_field_names = [field_name for field_name in self.manifest_entries['bundles']]
+        sources = list(self.manifest_entries.keys())
+        sources.remove('bundles')
+        inner_entity_field_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
+        self.ordered_column_names = bundles_field_names + inner_entity_field_names
 
 
 class EntryFetcher:
