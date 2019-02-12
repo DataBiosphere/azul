@@ -16,6 +16,7 @@
                             null
                         ],
                         "_source": [
+                            "cell_suspension",
                             "donor_organism",
                             "specimen_from_organism"
                         ],
@@ -162,6 +163,7 @@
                             null
                         ],
                         "_source": [
+                            "cell_suspension",
                             "donor_organism",
                             "specimen_from_organism"
                         ],
@@ -308,6 +310,7 @@
                             null
                         ],
                         "_source": [
+                            "cell_suspension",
                             "donor_organism",
                             "specimen_from_organism"
                         ],
@@ -468,6 +471,7 @@
                             null
                         ],
                         "_source": [
+                            "cell_suspension",
                             "donor_organism",
                             "specimen_from_organism"
                         ],
@@ -625,6 +629,7 @@
                             null
                         ],
                         "_source": [
+                            "cell_suspension",
                             "donor_organism",
                             "specimen_from_organism"
                         ],
@@ -759,6 +764,7 @@
                             null
                         ],
                         "_source": [
+                            "cell_suspension",
                             "donor_organism",
                             "specimen_from_organism"
                         ],
@@ -893,6 +899,7 @@
                             null
                         ],
                         "_source": [
+                            "cell_suspension",
                             "donor_organism",
                             "specimen_from_organism"
                         ],
@@ -1004,6 +1011,7 @@
                             null
                         ],
                         "_source": [
+                            "cell_suspension",
                             "donor_organism",
                             "specimen_from_organism"
                         ],
