@@ -14,6 +14,13 @@ meta:
 
 changes:
 
+  - title: Prioritize `organ` and `organ_part` fields from organoids over specimens
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/695
+      - https://github.com/humancellatlas/data-browser/issues/302
+    upgrade:
+      - reindex
+
   - title: Migrate monitoring resources from HumanCellAtlas/dcp-monitoring to Azul
     issues:
       - https://github.com/DataBiosphere/azul/issues/622
