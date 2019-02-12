@@ -398,6 +398,47 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertEqual(1, len(diseases))
             self.assertEqual("atrophic vulva (specimen_from_organism)", diseases[0])
 
+    def test_organoid_priority(self):
+        '''
+        Index a bundle containing an Organoid and assert that the "organ" and "organ_part"
+        values saved are the ones from the Organoid and not the SpecimenFromOrganism
+        '''
+        self._index_canned_bundle(('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'))
+        es_results = self._get_es_results()
+        inner_specimens, inner_cell_suspensions = 0, 0
+        for index_results in es_results:
+
+            contents = index_results['_source']['contents']
+            entity_type, aggregate = config.parse_es_index_name(index_results['_index'])
+
+            if entity_type != 'files' or one(contents['files'])['file_format'] != 'pdf':
+                for cell_suspension in contents['cell_suspensions']:
+                    inner_cell_suspensions += 1
+                    self.assertEqual(['Brain'], cell_suspension['organ'])
+                    self.assertEqual([None], cell_suspension['organ_part'])
+
+            for specimen in contents['specimens']:
+                inner_specimens += 1
+                expect_list = aggregate and entity_type != 'specimens'
+                self.assertEqual(['Brain'] if expect_list else 'Brain', specimen['organ'])
+                self.assertEqual([None] if expect_list else None, specimen['organ_part'])
+
+        projects = 1
+        specimens = 4
+        cell_suspensions = 1
+        files = 16
+        inner_specimens_in_contributions = (files + projects) * specimens + specimens * 1
+        inner_specimens_in_aggregates = (files + specimens + projects) * 1
+        inner_cell_suspensions_in_contributions = (files + specimens + projects) * cell_suspensions
+        inner_cell_suspensions_in_aggregates = (files + specimens + projects) * 1
+
+        self.assertEqual(inner_specimens_in_contributions + inner_specimens_in_aggregates,
+                         inner_specimens)
+        self.assertEqual(inner_cell_suspensions_in_contributions  + inner_cell_suspensions_in_aggregates,
+                         inner_cell_suspensions)
+
+
+
 
 def get(v):
     return one(v) if isinstance(v, list) else v
