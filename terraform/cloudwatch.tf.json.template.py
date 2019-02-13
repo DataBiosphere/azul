@@ -88,5 +88,5 @@ emit({
             }
         }
     ]
-} if config.enable_cloudwatch_alarms else None)
+} if config.enable_monitoring else None)
 
