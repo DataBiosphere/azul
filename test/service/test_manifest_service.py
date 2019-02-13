@@ -17,15 +17,15 @@ def setUpModule():
 
 class ManifestServiceTest(AzulTestCase):
 
-    def test_param_encoding_invertibility(self):
+    def test_token_encoding_invertibility(self):
         """
         Parameter encoding and decoding functions should be inverse of each other
         """
         uuid = {"uuid": "6c9dfa3f-e92e-11e8-9764-ada973595c11"}
-        self.assertEqual(uuid, ManifestService().decode_params(ManifestService().encode_params(uuid)))
+        self.assertEqual(uuid, ManifestService().decode_token(ManifestService().encode_token(uuid)))
 
         encoding = 'IjRkMWE4MGQxLWU5MmUtMTFlOC1iYzc2LWY5NTQ3MzRjNmU5YiI='
-        self.assertEqual(encoding, ManifestService().encode_params(ManifestService().decode_params(encoding)))
+        self.assertEqual(encoding, ManifestService().encode_token(ManifestService().decode_token(encoding)))
 
     # @mock_sts is required for tests calling the arn helper methods in StepFunctionHelper
     # because they require an account id
@@ -50,9 +50,9 @@ class ManifestServiceTest(AzulTestCase):
         }
         step_function_helper.describe_execution.return_value = execution_success_output
         manifest_service = ManifestService()
-        token = manifest_service.encode_params({'execution_id': execution_id})
-        status_code, retry_after, location = manifest_service.run(token, '')
-        self.assertEqual(302, status_code)
+        token = manifest_service.encode_token({'execution_id': execution_id})
+        wait_time, location = manifest_service.start_or_inspect_manifest_generation('', token)
+        self.assertEqual(wait_time, 0)
         self.assertEqual(manifest_url, location)
 
     @mock_sts
@@ -72,11 +72,11 @@ class ManifestServiceTest(AzulTestCase):
         }
         step_function_helper.describe_execution.return_value = execution_running_output
         manifest_service = ManifestService()
-        token = manifest_service.encode_params({'execution_id': execution_id})
+        token = manifest_service.encode_token({'execution_id': execution_id})
         retry_url = config.service_endpoint() + '/manifest/files'
-        status_code, retry_after, location = manifest_service.run(token, retry_url)
-        self.assertEqual(301, status_code)
-        expected_token = manifest_service.encode_params({'execution_id': execution_id, 'wait': 1})
+        wait_time, location = manifest_service.start_or_inspect_manifest_generation(retry_url, token)
+        self.assertEqual(wait_time, 1)
+        expected_token = manifest_service.encode_token({'execution_id': execution_id, 'wait': 1})
         self.assertEqual(f'{retry_url}?token={expected_token}', location)
 
     @mock_sts
@@ -97,5 +97,5 @@ class ManifestServiceTest(AzulTestCase):
         }
         step_function_helper.describe_execution.return_value = execution_failed_output
         manifest_service = ManifestService()
-        token = manifest_service.encode_params({'execution_id': execution_id})
-        self.assertRaises(StateMachineError, manifest_service.run, token, '')
+        token = manifest_service.encode_token({'execution_id': execution_id})
+        self.assertRaises(StateMachineError, manifest_service.start_or_inspect_manifest_generation, '', token)

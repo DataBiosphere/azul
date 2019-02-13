@@ -420,13 +420,13 @@ def start_manifest_generation():
     If the manifest generation is done and the manifest is ready to be downloaded, the response will
     have a 302 status and will redirect to the URL of the manifest.
     """
-    status_code, retry_after, location = handle_manifest_generation_request()
+    wait_time, location = handle_manifest_generation_request()
     return Response(body='',
                     headers={
-                        'Retry-After': str(retry_after),
+                        'Retry-After': str(wait_time),
                         'Location': location
                     },
-                    status_code=status_code)
+                    status_code=301 if wait_time else 302)
 
 
 @app.route('/fetch/manifest/files', methods=['GET'], cors=True)
@@ -484,13 +484,13 @@ def start_manifest_generation_fetch():
     the client should expect a response containing the actual manifest. Currently the `Location` field of the final
     response is a signed URL to an object in S3 but clients should not depend on that.
     """
-    status_code, retry_after, location = handle_manifest_generation_request()
+    wait_time, location = handle_manifest_generation_request()
     response = {
-        'Status': status_code,
+        'Status': 301 if wait_time else 302,
         'Location': location
     }
-    if status_code == 301:  # Only return Retry-After if manifest is not ready
-        response['Retry-After'] = retry_after
+    if wait_time:  # Only return Retry-After if manifest is not ready
+        response['Retry-After'] = wait_time
     return response
 
 
