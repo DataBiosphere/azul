@@ -6,7 +6,7 @@ import logging
 import uuid
 
 from botocore.exceptions import ClientError
-from typing import Tuple
+from typing import Tuple, Optional
 
 from azul import config
 from azul.service import AbstractService
@@ -27,10 +27,10 @@ class ManifestService(AbstractService):
     def decode_params(self, token: str) -> dict:
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
-    def run(self, token, retry_url, filters='{}'):
+    def start_or_inspect_manifest_generation(self, retry_url, token, filters: Optional[str] = None):
         """
-        If a token is not empty it is decoded for a execution_id. The status of the state machine with
-        this id is reported back.
+        If token is None, start a manifest generation process and returns its status.
+        Otherwise return the status of the manifest generation process represented by the token.
 
         :raises ValueError: Will raise a ValueError if token is misformatted or invalid
         :raises StateMachineError: if the state machine fails for some reason.
