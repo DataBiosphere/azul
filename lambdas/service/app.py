@@ -506,7 +506,9 @@ def handle_manifest_generation_request():
     retry_url = self_url()
     manifest_service = ManifestService()
     try:
-        return manifest_service.run(token, retry_url, filters=filters)
+        return manifest_service.start_or_inspect_manifest_generation(retry_url,
+                                                                     token=token,
+                                                                     filters=filters)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
             raise BadRequestError('Invalid token given')
@@ -527,7 +529,6 @@ def generate_manifest(event, context):
             - filters: dict containing filters to use in ES request
     :return: The URL to the generated manifest
     """
-    print('current request', app.current_request)
     filters = event.get('filters', {'file': {}})
     response = EsTd().transform_manifest(filters=filters)
     return {'Location': response.headers['Location']}
