@@ -28,7 +28,7 @@ generic with minimal need for project-specific behavior.
 
 ### 1.1. Development Prerequisites
 
-- Python 3.6 (3.7 does not work) with `virtualenv` and `pip`
+- Python 3.6 (3.7 does not work) with `python -m venv` and `pip`
 
 - The `bash` shell
 
@@ -56,17 +56,13 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1) Create a Python 3.6 virtualenv and activate it, for example 
+1) Create a Python 3.6 virtual environment and activate it, for example 
    
    ```
    cd azul
-   virtualenv -p python3.6 .venv
+   python3.6 -m venv .venv
    source .venv/bin/activate
    ```
-   
-   Important: Note that Python 3's built-in virtual environment module 
-   (`python3 -m venv`) is currently not supported. See 
-   https://github.com/DataBiosphere/azul/issues/340 for details.
 
 2) Setup configuration for dev deployment: 
    
@@ -132,7 +128,7 @@ are deploying to.
 Running tests from PyCharm requires `environment` to be sourced. The easiest way
 to do this is to install `envhook.py`, a helper script that injects the
 environment variables from `environment` into the Python interpreter process
-started from the project's virtualenv in `.venv`:   
+started from the project's virtual environment in `.venv`:   
 
    ```
    python scripts/envhook.py install
@@ -232,7 +228,7 @@ make reindex
 
 ## 3. Running indexer or service locally
 
-1) As usual, activate the virtualenv and `source environment` if you haven't
+1) As usual, activate the virtual environment and `source environment` if you haven't
    done so already
 
 2) `cd lambdas/indexer` or `cd lambdas/service` 
@@ -490,7 +486,7 @@ gated on a condition, like tests passing.
 
 7) Run `deactivate; rm -rf .venv`
 
-8) Run `virtualenv -p python3 .venv && source .venv/bin/activate` followed by …
+8) Run `python3 -m venv .venv && source .venv/bin/activate` followed by …
 
 9) Run `pip install -r requirements.dev.txt` to ensure a consistent set of 
    dependencies.
