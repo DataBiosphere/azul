@@ -95,7 +95,6 @@ class TestUserService(DynamoTestCase):
         self.assertEqual(user['UserId'], test_user_id)
         self.assertIsNone(user['DefaultCartId'])
 
-
     def test_update_non_existing_user_raises_update_error(self):
         test_user_id = 'user_1'
         mock_cart_id = 'cart_1'
