@@ -110,7 +110,7 @@ def version():
     }
 
 
-def repository_search(entity_type, item_id):
+def repository_search(entity_type, item_id):  # TODO Hannes: type hints
     query_params = app.current_request.query_params or {}
     filters = query_params.get('filters')
     try:

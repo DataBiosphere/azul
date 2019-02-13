@@ -1,10 +1,11 @@
-import urllib.parse
-
 from concurrent.futures import ThreadPoolExecutor
+
+from typing import Callable, Mapping, Any
 
 from azul.service import AbstractService
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 
+FileUrlFunc = Callable[[str, Mapping[str, Any]], str]
 
 class RepositoryService(AbstractService):
 
@@ -18,7 +19,6 @@ class RepositoryService(AbstractService):
                                                 post_filter=True,
                                                 entity_type=entity_type)
         if entity_type == 'files':
-            assert file_url_func is not None
             # Compose URL to contents of file so clients can download easily
             for hit in response['hits']:
                 for file in hit['files']:
@@ -44,7 +44,9 @@ class RepositoryService(AbstractService):
                     project.pop('publications')
         return response
 
-    def get_data(self, entity_type, pagination, filters, item_id, file_url_func=None):
+
+
+    def get_data(self, entity_type, pagination, filters, item_id, file_url_func: FileUrlFunc):
         """
         Returns data for a particular entity type of single item.
 

@@ -447,7 +447,7 @@ class ElasticTransformDump(object):
             config_folder, request_config_file)
 
         # Get the Json Objects from the mapping_config and the request_config
-        # FIXME: cache the json
+        # FIXME: cache the json (or, even better, convert to Python module
         request_config = self.open_and_return_json(request_config_path)
         if not filters:
             filters = {"file": {}}

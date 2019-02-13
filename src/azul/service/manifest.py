@@ -1,4 +1,3 @@
-import ast
 import base64
 import binascii
 import json
@@ -28,10 +27,10 @@ class ManifestService(AbstractService):
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
     def start_or_inspect_manifest_generation(self,
-                                             retry_url,
+                                             self_url,
                                              token: Optional[str] = None,
                                              filters: Optional[str] = None
-                                             ) -> Tuple[int, str]:
+                                             ) -> Tuple[float, str]:
         """
         If token is None, start a manifest generation process and returns its status.
         Otherwise return the status of the manifest generation process represented by the token.
@@ -49,15 +48,17 @@ class ManifestService(AbstractService):
         else:
             try:
                 token = self.decode_token(token)
-                if 'execution_id' not in token:
+                if 'execution_id' not in token:  # TODO: Hannes move this validation code into decode_token
                     raise KeyError
             except (KeyError, UnicodeDecodeError, binascii.Error, json.decoder.JSONDecodeError):
                 raise ValueError('Invalid token given')
 
-        result = self._get_manifest_status(token['execution_id'], token.get('wait', 0))
-        if isinstance(result, int):
-            token['wait'] = result
-            return token['wait'], f'{retry_url}?token={self.encode_token(token)}'
+        request_index = token.get('request_index', 0)
+        result = self._get_manifest_status(token['execution_id'], request_index)
+        if isinstance(result, float):
+            request_index += 1
+            token['request_index'] = request_index
+            return result, f'{self_url}?token={self.encode_token(token)}'
         else:
             return 0, result
 
@@ -72,13 +73,11 @@ class ManifestService(AbstractService):
                                                   execution_id,
                                                   execution_input={'filters': filters})
 
-    def _get_next_wait_time(self, wait_time):
-        if wait_time == 0:
-            return 1
-        wait_time *= 2
-        return 10 if 10 < wait_time else wait_time
+    def _get_next_wait_time(self, request_index: int) -> float:
+        wait_times = [1, 1, 4, 6, 10]
+        return wait_times[min(request_index, len(wait_times) - 1)]
 
-    def _get_manifest_status(self, execution_id, wait_time) -> Union[int, str]:
+    def _get_manifest_status(self, execution_id: str, request_index: int) -> Union[float, str]:
         """
         Get the status of a manifest generation job (in progress, success, or failed)
 
@@ -98,5 +97,5 @@ class ManifestService(AbstractService):
             execution_output = json.loads(execution['output'])
             return execution_output['Location']
         elif execution['status'] == 'RUNNING':
-            return self._get_next_wait_time(wait_time)
+            return self._get_next_wait_time(request_index)
         raise StateMachineError('Failed to generate manifest')
