@@ -166,7 +166,7 @@ class DynamoDataAccessor:
                 **expression_params
             ).get('Attributes')
         except self.dynamo_client.meta.client.exceptions.ConditionalCheckFailedException:
-            raise UpdateItemError(table_name, keys, update_values)
+            raise ConditionalUpdateItemError(table_name, keys, update_values)
 
     def batch_write(self, table_name, items):
         """
@@ -200,5 +200,5 @@ class DynamoDataAccessor:
         return delete_count
 
 
-class UpdateItemError(RuntimeError):
+class ConditionalUpdateItemError(RuntimeError):
     pass

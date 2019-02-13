@@ -1,5 +1,5 @@
 from azul import config
-from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor, UpdateItemError
+from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor, ConditionalUpdateItemError
 
 
 class UserService:
@@ -22,6 +22,13 @@ class UserService:
             return next(users)
 
     def update(self, user_id:str, default_cart_id):
+        """
+        Update the user object
+
+        :param user_id: the user identifier
+        :param default_cart_id: the ID of the default cart (nullable)
+        :return: the full user object
+        """
         update_conditions = {}
         if default_cart_id is not None:
             update_conditions['DefaultCartId'] = None
@@ -30,7 +37,7 @@ class UserService:
                                                     keys={'UserId': user_id},
                                                     update_values={'DefaultCartId': default_cart_id},
                                                     conditions=update_conditions)
-        except UpdateItemError:
+        except ConditionalUpdateItemError:
             raise UpdateError(user_id, default_cart_id)
 
 
