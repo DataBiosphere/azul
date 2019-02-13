@@ -18,4 +18,4 @@ _set AZUL_DOMAIN_NAME "explore.data.humancellatlas.org"
 
 _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "url.data.humancellatlas.org"
 
-_set AZUL_ENABLE_CLOUDWATCH_ALARMS 1
+_set AZUL_ENABLE_MONITORING 1
