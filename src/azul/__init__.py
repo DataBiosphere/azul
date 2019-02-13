@@ -196,8 +196,8 @@ class Config:
         return os.environ['AZUL_TERRAFORM_BACKEND_BUCKET']
 
     @property
-    def enable_cloudwatch_alarms(self) -> bool:
-        return self._boolean(os.environ['AZUL_ENABLE_CLOUDWATCH_ALARMS'])
+    def enable_monitoring(self) -> bool:
+        return self._boolean(os.environ['AZUL_ENABLE_MONITORING'])
 
     @property
     def es_instance_type(self) -> str:
