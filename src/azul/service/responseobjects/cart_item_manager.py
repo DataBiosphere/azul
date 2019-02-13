@@ -8,7 +8,7 @@ from azul import config
 from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 from azul.service.responseobjects.step_function_helper import StepFunctionHelper
-from azul.service.responseobjects.user_service import UserService
+from azul.service.responseobjects.user_service import UserService, UpdateError
 
 logger = logging.getLogger(__name__)
 
@@ -31,26 +31,30 @@ class CartItemManager:
     def decode_token(token):
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
-    def create_cart(self, user_id:str, cart_name:str, default:bool):
+    def create_cart(self, user_id:str, cart_name:str, default:bool) -> str:
         """
         Add a cart to the cart table and return the ID of the created cart
         An error will be raised if the user already has a cart of the same name or
-        if a default cart is being created while one already exists
+        if a default cart is being created while one already exists.
         """
         query_dict = {'UserId': user_id, 'CartName': cart_name}
         if self.dynamo_accessor.count(table_name=config.dynamo_cart_table_name,
                                       key_conditions=query_dict,
                                       index_name='UserCartNameIndex') > 0:
             raise DuplicateItemError(f'Cart `{cart_name}` already exists')
+        cart_id = str(uuid.uuid4())
         if default:
             user = self.user_service.get_or_create(user_id)
             if user['DefaultCartId'] is not None:
                 raise DuplicateItemError('Default cart already exists')
-        cart_id = str(uuid.uuid4())
+            try:
+                self.user_service.update(user_id, default_cart_id=cart_id)
+            except UpdateError:
+                # This block is to handle the case where two concurrent requests
+                # try to create a default cart and the first check fails.
+                return self.get_default_cart()['CartId']
         self.dynamo_accessor.insert_item(config.dynamo_cart_table_name,
                                          item={'CartId': cart_id, **query_dict})
-        if default:
-            self.user_service.update(user_id, default_cart_id=cart_id)
         return cart_id
 
     def get_cart(self, user_id, cart_id):
