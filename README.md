@@ -62,6 +62,7 @@ end.
    cd azul
    python3.6 -m venv .venv
    source .venv/bin/activate
+   pip install -U wheel>=0.32.3 
    ```
 
 2) Setup configuration for dev deployment: 

@@ -16,7 +16,7 @@ before_install:
 
 install:
   - pip install -U setuptools>=40.1.0
-  - pip install wheel>=0.32.3 --upgrade
+  - pip install -U wheel>=0.32.3
   - pip install -r requirements.dev.txt
   - pip install coveralls codecov
 
