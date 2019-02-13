@@ -119,6 +119,8 @@ class Plugin(azul.plugin.Plugin):
                                                         "0facfacd-5b0c-4228-8be5-37aa1f3a269d",  # prod/Smart-seq2/2019-01-29T22:06:07Z
                                                         "76c209df-42bf-41dc-a5f5-3d27193ca7a6",  # prod/Smart-seq2/2019-01-29T23:14:07Z
                                                         "bb409c34-bb87-4ed2-adaf-6d1ef10610b5",  # prod/Smart-seq2/2019-01-30T05:22:07Z
+                                                        "1a6b5e5d-914f-4dd6-8817-a1f9b7f364d5",  # prod/10x/2019-02-12T18:43:49Z
+                                                        "dd401943-1059-4b2d-b187-7a9e11822f95",  # prod/Smart-seq2/2019-02-12T18:43:49Z
                                                     ]
                                                 }
                                             },
