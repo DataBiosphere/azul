@@ -43,7 +43,7 @@ class CartItemManager:
                                       index_name='UserCartNameIndex') > 0:
             raise DuplicateItemError(f'Cart `{cart_name}` already exists')
         if default:
-            user = self.user_service.get(user_id)
+            user = self.user_service.get_or_create(user_id)
             if user['DefaultCartId'] is not None:
                 raise DuplicateItemError('Default cart already exists')
         cart_id = str(uuid.uuid4())
@@ -61,7 +61,7 @@ class CartItemManager:
         return cart
 
     def get_default_cart(self, user_id):
-        user = self.user_service.get(user_id)
+        user = self.user_service.get_or_create(user_id)
         if user['DefaultCartId'] is None:
             raise ResourceAccessError('Cart does not exist')
         cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
@@ -71,7 +71,7 @@ class CartItemManager:
         return cart
 
     def get_or_create_default_cart(self, user_id):
-        user = self.user_service.get(user_id)
+        user = self.user_service.get_or_create(user_id)
         cart_id = user['DefaultCartId'] or self.create_cart(user_id, 'Default Cart', default=True)
         return self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
                                              keys={'UserId': user_id, 'CartId': cart_id})
@@ -82,7 +82,7 @@ class CartItemManager:
                                                index_name='UserIndex'))
 
     def delete_cart(self, user_id, cart_id):
-        default_cart_id = self.user_service.get(user_id)['DefaultCartId']
+        default_cart_id = self.user_service.get_or_create(user_id)['DefaultCartId']
         if default_cart_id == cart_id:
             self.user_service.update(user_id, default_cart_id=None)
         self.dynamo_accessor.delete_by_key(config.dynamo_cart_item_table_name,

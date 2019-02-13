@@ -158,12 +158,15 @@ class DynamoDataAccessor:
                 expression_params['ConditionExpression'] = And(*condition_terms)
             else:
                 expression_params['ConditionExpression'] = condition_terms[0]
-        return self.get_table(table_name).update_item(
-            TableName=table_name,
-            Key=keys,
-            ReturnValues='ALL_NEW',
-            **expression_params
-        ).get('Attributes')
+        try:
+            return self.get_table(table_name).update_item(
+                TableName=table_name,
+                Key=keys,
+                ReturnValues='ALL_NEW',
+                **expression_params
+            ).get('Attributes')
+        except self.dynamo_client.meta.client.exceptions.ConditionalCheckFailedException:
+            raise UpdateItemError(table_name, keys, update_values)
 
     def batch_write(self, table_name, items):
         """
@@ -195,3 +198,7 @@ class DynamoDataAccessor:
                 delete_count += 1
                 batch.delete_item(Key=item)
         return delete_count
+
+
+class UpdateItemError(RuntimeError):
+    pass
