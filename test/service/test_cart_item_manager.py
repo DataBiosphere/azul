@@ -191,14 +191,15 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         with self.assertRaises(DuplicateItemError):
             self.cart_item_manager.create_cart('123', cart_name, False)
 
-    def test_cart_creation_duplicate_default_raises_error_by_precondition(self):
+    def test_cart_creation_duplicate_default_will_not_create_new_cart(self):
         """
-        Trying to create a default cart when the user already has a default cart should raise an error
+        Trying to create a default cart when the user already has a default cart should not create a new default cart.
         """
-        self.cart_item_manager.create_cart('123', 'Cart1', True)
-        self.cart_item_manager.create_cart('124', 'Cart2', True)
-        with self.assertRaises(DuplicateItemError):
-            self.cart_item_manager.create_cart('123', 'Cart3', True)
+        test_user_id = '123'
+        cart_id_1 = self.cart_item_manager.create_cart(test_user_id, 'Cart1', True)
+        cart_id_2 = self.cart_item_manager.create_cart(test_user_id, 'Cart3', True)
+        self.assertEqual(cart_id_1, cart_id_2)
+        self.assertEqual(1, len(self.cart_item_manager.get_user_carts(test_user_id)))
 
     def test_get_cart(self):
         """

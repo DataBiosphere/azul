@@ -44,15 +44,20 @@ class CartItemManager:
             raise DuplicateItemError(f'Cart `{cart_name}` already exists')
         cart_id = str(uuid.uuid4())
         if default:
-            user = self.user_service.get_or_create(user_id)
-            if user['DefaultCartId'] is not None:
-                raise DuplicateItemError('Default cart already exists')
             try:
                 self.user_service.update(user_id, default_cart_id=cart_id)
             except UpdateError:
-                # This block is to handle the case where two concurrent requests
-                # try to create a default cart and the first check fails.
-                return self.get_default_cart()['CartId']
+                # As DynamoDB client doesn't differentiate errors caused by
+                # failing the key condition ("Key") or the condition expression
+                # ("ConditionExpression"). The method will attempt to update
+                # the user object again by ensuring that the user object exists
+                # before the update.
+                self.user_service.get_or_create(user_id)
+                try:
+                    self.user_service.update(user_id, default_cart_id=cart_id)
+                except UpdateError:
+                    # At this point, the user already has a default cart.
+                    return self.get_default_cart(user_id)['CartId']
         self.dynamo_accessor.insert_item(config.dynamo_cart_table_name,
                                          item={'CartId': cart_id, **query_dict})
         return cart_id
