@@ -62,10 +62,16 @@ end.
    cd azul
    python3.6 -m venv .venv
    source .venv/bin/activate
-   pip install -U wheel>=0.32.3 
+   ```
+   
+2) Install the development prerequisites
+
+   ```
+   pip install -U setuptools==40.1.0 wheel==0.32.3
+   pip install -r requirements.dev.txt
    ```
 
-2) Setup configuration for dev deployment: 
+3) Activate the `dev` deployment: 
    
    ```
    cd deployments
@@ -73,19 +79,13 @@ end.
    cd ..
    ```
 
-3) Load the environment:
+4) Load the environment:
 
    ```
    source environment
    ```
    
    Examine the output.
-
-4) Install the development prerequisites
-
-   ```
-   pip install -r requirements.dev.txt
-   ```
 
 5) Run `make`. It should say `Looking good!` If one of the sanity checks fails,
    address the complaint and repeat. The various sanity checks are defined in
