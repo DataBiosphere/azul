@@ -13,7 +13,7 @@ class RepositoryService(AbstractService):
         self.es_td = EsTd()
 
     def _get_data(self, entity_type, pagination, filters, file_url_func):
-        # FIXME: which of these args are really optional??? (looks like none of them)
+        # FIXME: which of these args are really optional? (looks like none of them)
         response = self.es_td.transform_request(filters=filters,
                                                 pagination=pagination,
                                                 post_filter=True,
@@ -43,8 +43,6 @@ class RepositoryService(AbstractService):
                     project.pop('projectDescription')
                     project.pop('publications')
         return response
-
-
 
     def get_data(self, entity_type, pagination, filters, item_id, file_url_func: FileUrlFunc):
         """
