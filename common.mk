@@ -28,9 +28,9 @@ $(warning Looks like TerraForm is not installed. This is ok as long as you're no
 endif
 
 ifneq ($(shell python -c "import wheel as w; \
-						  from pkg_resources import parse_version as p; \
-						  print(p(w.__version__) >= p('0.32.3'))"),True)
-$(error Looks like your Wheel package is outdated or doesn't exist. Please run 'pip install --upgrade wheel')
+                          from pkg_resources import parse_version as p; \
+                          print(p(w.__version__) >= p('0.32.3'))"),True)
+$(error Looks like the `wheel` package is outdated or missing. See README for instructions on how to fix this.)
 endif
 
 %: %.template.py .FORCE

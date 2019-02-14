@@ -28,7 +28,7 @@ generic with minimal need for project-specific behavior.
 
 ### 1.1. Development Prerequisites
 
-- Python 3.6 (3.7 does not work) with `python -m venv` and `pip`
+- Python 3.6 (3.7 does not work) with `pip`
 
 - The `bash` shell
 
@@ -56,7 +56,7 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1) Create a Python 3.6 virtual environment and activate it, for example 
+1) Create a Python 3.6 virtual environment and activate it:
    
    ```
    cd azul
@@ -64,7 +64,7 @@ end.
    source .venv/bin/activate
    ```
    
-2) Install the development prerequisites
+2) Install the development prerequisites:
 
    ```
    pip install -U setuptools==40.1.0 wheel==0.32.3
