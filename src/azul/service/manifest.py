@@ -20,11 +20,20 @@ class ManifestService(AbstractService):
     """
     step_function_helper = StepFunctionHelper()
 
-    def encode_token(self, params: dict) -> str:
+    @classmethod
+    def encode_token(cls, params: dict) -> str:
         return base64.urlsafe_b64encode(bytes(json.dumps(params), encoding='utf-8')).decode('utf-8')
 
-    def decode_token(self, token: str) -> dict:
-        return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
+    @classmethod
+    def decode_token(cls, token: str) -> dict:
+        try:
+            token = json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
+            if 'execution_id' not in token:
+                raise KeyError
+        except (KeyError, UnicodeDecodeError, binascii.Error, json.decoder.JSONDecodeError):
+            raise ValueError('Invalid token given')
+        else:
+            return token
 
     def start_or_inspect_manifest_generation(self,
                                              self_url,
@@ -46,12 +55,7 @@ class ManifestService(AbstractService):
             self._start_manifest_generation(filters, execution_id)
             token = {'execution_id': execution_id}
         else:
-            try:
-                token = self.decode_token(token)
-                if 'execution_id' not in token:  # TODO: Hannes move this validation code into decode_token
-                    raise KeyError
-            except (KeyError, UnicodeDecodeError, binascii.Error, json.decoder.JSONDecodeError):
-                raise ValueError('Invalid token given')
+            token = self.decode_token(token)
 
         request_index = token.get('request_index', 0)
         result = self._get_manifest_status(token['execution_id'], request_index)
@@ -74,17 +78,11 @@ class ManifestService(AbstractService):
                                                   execution_input={'filters': filters})
 
     def _get_next_wait_time(self, request_index: int) -> float:
-        wait_times = [1, 1, 4, 6, 10]
+        wait_times = [1.0, 1.0, 4.0, 6.0, 10.0]
         return wait_times[min(request_index, len(wait_times) - 1)]
 
     def _get_manifest_status(self, execution_id: str, request_index: int) -> Union[float, str]:
-        """
-        Get the status of a manifest generation job (in progress, success, or failed)
-
-        :param token: Encoded parameters to use when checking the status of the execution
-        :param retry_url: URL to direct the client to if the manifest is still generating
-        :return: Either the time to wait or the location of the result
-        """
+        """Returns either the time to wait or the location of the result"""
         try:
             execution = self.step_function_helper.describe_execution(
                 config.manifest_state_machine_name, execution_id)

@@ -2,7 +2,6 @@ import ast
 import base64
 import binascii
 import json
-from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import logging.config
 import os
@@ -110,16 +109,13 @@ def version():
     }
 
 
-def repository_search(entity_type, item_id):  # TODO Hannes: type hints
+def repository_search(entity_type: str, item_id: str):
     query_params = app.current_request.query_params or {}
     filters = query_params.get('filters')
     try:
         pagination = _get_pagination(app.current_request, entity_type)
         service = RepositoryService()
-        if entity_type == 'files':
-            return service.get_data(entity_type, pagination, filters, item_id, file_url_func=file_url)
-        else:
-            return service.get_data(entity_type, pagination, filters, item_id)
+        return service.get_data(entity_type, pagination, filters, item_id, file_url)
     except BadArgumentException as e:
         raise BadRequestError(msg=e.message)
     except IndexNotFoundError as e:

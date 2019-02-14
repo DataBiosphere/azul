@@ -21,11 +21,12 @@ class ManifestServiceTest(AzulTestCase):
         """
         Parameter encoding and decoding functions should be inverse of each other
         """
-        uuid = {"uuid": "6c9dfa3f-e92e-11e8-9764-ada973595c11"}
-        self.assertEqual(uuid, ManifestService().decode_token(ManifestService().encode_token(uuid)))
+        uuid = {"execution_id": "6c9dfa3f-e92e-11e8-9764-ada973595c11"}
+        self.assertEqual(uuid, ManifestService.decode_token(ManifestService.encode_token(uuid)))
 
-        encoding = 'IjRkMWE4MGQxLWU5MmUtMTFlOC1iYzc2LWY5NTQ3MzRjNmU5YiI='
-        self.assertEqual(encoding, ManifestService().encode_token(ManifestService().decode_token(encoding)))
+    def test_token_validation(self):
+        token = {'no': 'id'}
+        self.assertRaises(ValueError, ManifestService.decode_token, ManifestService.encode_token(token))
 
     # @mock_sts is required for tests calling the arn helper methods in StepFunctionHelper
     # because they require an account id
@@ -76,7 +77,7 @@ class ManifestServiceTest(AzulTestCase):
         retry_url = config.service_endpoint() + '/manifest/files'
         wait_time, location = manifest_service.start_or_inspect_manifest_generation(retry_url, token)
         self.assertEqual(wait_time, 1)
-        expected_token = manifest_service.encode_token({'execution_id': execution_id, 'wait': 1})
+        expected_token = manifest_service.encode_token({'execution_id': execution_id, 'request_index': 1})
         self.assertEqual(f'{retry_url}?token={expected_token}', location)
 
     @mock_sts
