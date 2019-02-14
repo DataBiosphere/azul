@@ -354,6 +354,10 @@ class Config:
         return 1
 
     @property
+    def dynamo_user_table_name(self):
+        return self.qualified_resource_name('users')
+
+    @property
     def dynamo_cart_table_name(self):
         return self.qualified_resource_name('carts')
 

@@ -949,13 +949,16 @@ def create_cart():
     }
 
 
-# TODO: implement default cart (may need to change get_all_carts() endpoint)
 @app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True)
 def get_cart(cart_id):
     """
     Get the cart of the given ID belonging to the user
 
-    Returns a 404 error if the cart does not exist or does not belong to the user
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    WILL NOT create the default one automatically.
+
+    This endpoint returns a 404 error if the cart does not exist or does not belong to the user.
 
     :return: {
         "CartName": str,
@@ -963,10 +966,16 @@ def get_cart(cart_id):
     }
     """
     user_id = get_user_id()
-    cart = CartItemManager().get_cart(user_id, cart_id)
-    if cart is None:
+    cart_item_manager = CartItemManager()
+    try:
+        if cart_id == 'default':
+            cart = cart_item_manager.get_default_cart(user_id)
+        else:
+            cart = cart_item_manager.get_cart(user_id, cart_id)
+    except ResourceAccessError:
         raise NotFoundError('Cart does not exist')
-    return transform_cart_to_response(cart)
+    else:
+        return transform_cart_to_response(cart)
 
 
 @app.route('/resources/carts', methods=['GET'], cors=True)
@@ -1045,6 +1054,10 @@ def get_items_in_cart(cart_id):
     """
     Get a list of items in a cart
 
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
+
     Returns a 404 error if the cart does not exist or does not belong to the user
 
     :return: {
@@ -1062,6 +1075,7 @@ def get_items_in_cart(cart_id):
         ]
     }
     """
+    cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
     try:
         return {
@@ -1076,6 +1090,10 @@ def get_items_in_cart(cart_id):
 def add_item_to_cart(cart_id):
     """
     Add cart item to a cart and return the ID of the created item
+
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
 
     Returns a 404 error if the cart does not exist or does not belong to the user
     Returns a 400 error if an invalid item was given
@@ -1098,6 +1116,7 @@ def add_item_to_cart(cart_id):
         "CartItemId": str
     }
     """
+    cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
     try:
         request_body = app.current_request.json_body
@@ -1108,7 +1127,12 @@ def add_item_to_cart(cart_id):
     except KeyError:
         raise BadRequestError('EntityId, BundleUuid, BundleVersion, and EntityType must be given')
     try:
-        item_id = CartItemManager().add_cart_item(user_id, cart_id, entity_id, bundle_id, bundle_version, entity_type)
+        item_id = CartItemManager().add_cart_item(user_id,
+                                                  cart_id,
+                                                  entity_id,
+                                                  bundle_id,
+                                                  bundle_version,
+                                                  entity_type)
     except ResourceAccessError as e:
         raise NotFoundError(e.msg)
     return {
@@ -1121,6 +1145,10 @@ def delete_cart_item(cart_id, item_id):
     """
     Delete an item from the cart
 
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
+
     Returns a 404 error if the cart does not exist or does not belong to the user, or if the item does not exist
 
     :return: If an item was deleted, return:
@@ -1131,6 +1159,7 @@ def delete_cart_item(cart_id, item_id):
         ```
 
     """
+    cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
     try:
         deleted_item = CartItemManager().delete_cart_item(user_id, cart_id, item_id)
@@ -1145,6 +1174,10 @@ def delete_cart_item(cart_id, item_id):
 def add_all_results_to_cart(cart_id):
     """
     Add all entities matching the given filters to a cart
+
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
 
     parameters:
         - name: filters
@@ -1162,6 +1195,7 @@ def add_all_results_to_cart(cart_id):
             "statusUrl": "https://status.url/resources/carts/status/{token}"
         }
     """
+    cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
     request_body = app.current_request.json_body
     try:
@@ -1180,14 +1214,7 @@ def add_all_results_to_cart(cart_id):
     hits, search_after = EsTd().transform_cart_item_request(entity_type, filters=filters, size=1)
     item_count = hits.total
 
-    write_params = {
-        'filters': filters,
-        'entity_type': entity_type,
-        'cart_id': cart_id,
-        'item_count': item_count,
-        'batch_size': 10000
-    }
-    token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, write_params)
+    token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, entity_type, filters, item_count, 10000)
     status_url = self_url(f'/resources/carts/status/{token}')
 
     return {'count': item_count, 'statusUrl': status_url}
@@ -1206,8 +1233,11 @@ def cart_item_write_batch(event, context):
     else:
         search_after = None
 
-    num_written, next_search_after = CartItemManager().write_cart_item_batch(entity_type, filters, cart_id,
-                                                                             batch_size, search_after)
+    num_written, next_search_after = CartItemManager().write_cart_item_batch(entity_type,
+                                                                             filters,
+                                                                             cart_id,
+                                                                             batch_size,
+                                                                             search_after)
     return {
         'search_after': next_search_after,
         'count': num_written
