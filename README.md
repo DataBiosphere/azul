@@ -489,8 +489,8 @@ gated on a condition, like tests passing.
 
 8) Run `python3 -m venv .venv && source .venv/bin/activate` followed by …
 
-9) Run `pip install -r requirements.dev.txt` to ensure a consistent set of 
-   dependencies.
+9) Run `pip install -U setuptools==40.1.0 wheel==0.32.3 && pip install -r requirements.dev.txt` 
+   to ensure a consistent set of dependencies.
 
 10) Run `python scripts/envhook.py install` if you use envhook.py
 
