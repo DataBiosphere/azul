@@ -14,6 +14,14 @@ meta:
 
 changes:
 
+  - title: Require wheel 0.32.3 to prevent corrupted deployments
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/340
+    upgrade:
+      - requirements
+    notes: Before reinstalling your requirements, delete your virtual environment. Then, use the `python -m venv`
+           command instead of `virtualenv` to create your virtual environment.
+
   - title: Include content disposition header in manifest responses
     issues:
       - https://github.com/DataBiosphere/azul/issues/655
