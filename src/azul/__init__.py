@@ -377,6 +377,21 @@ class Config:
     def cart_api_ip_whitelist(self):  # TODO: Remove when authentication is added
         return os.environ['AZUL_CART_API_IP_WHITELIST'].split(' ')
 
+    @property
+    def access_token_issuer(self):
+        return "https://humancellatlas.auth0.com"
+
+    @property
+    def access_token_audience_list(self):
+        return [
+            f"https://{self.deployment_stage}.data.humancellatlas.org/",
+            f"{self.access_token_issuer}/userinfo"
+        ]
+
+    @property
+    def fusillade_endpoint(self) -> str:
+        return os.environ['AZUL_FUSILLADE_ENDPOINT']
+
 
 config = Config()
 
