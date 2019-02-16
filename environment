@@ -145,6 +145,9 @@ azul_vars=(
     # string, only bundles whose UUID starts with the specified string will be
     # indexed.
     azul_dss_query_prefix
+
+    # The URL Prefix of Fusillade (Authentication Broker Service)
+    AZUL_FUSILLADE_ENDPOINT
 )
 
 unset ${azul_vars[*]}
@@ -225,6 +228,8 @@ _set AZUL_ENABLE_CLOUDWATCH_ALARMS 0
 _set AZUL_CART_API_IP_WHITELIST  # TODO: Remove when authentication is added
 
 _set azul_dss_query_prefix
+
+_set AZUL_FUSILLADE_ENDPOINT "https://auth.dev.data.humancellatlas.org"
 
 unset -f _set
 
