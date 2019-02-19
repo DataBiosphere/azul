@@ -228,12 +228,15 @@ make reindex
 
 ### 2.6 Cancelling all ongoing (re)indexing operations
 
+1) Go to the Simple Queue Service dashboard in the AWS Console. Then, find your target notify SQS queue (should be named azul-notify-…) and purge the queue.
 
-1) Go to the Simple Queue Service dashboard in the AWS Console. Then, find your target notify SQS queue (should be named azul-notify-...) and purge the queue.
-2) Go to the Lambda dashboard in the AWS Console. Find the `azul-indexer...-write` lambda. Then, disable the event binding to the document queue (usually named `azul-documents-...`). This is done by clicking on the `SQS` trigger in the *Designer* box, clicking on the *Enabled* switch of `azul-documents-...` in the newly appeared *SQS* box, then finally saving your settings.
+2) Go to the Lambda dashboard in the AWS Console. Find and open the `azul-indexer-…-write` lambda. Then, disable the event binding to the document queue (usually named `azul-documents-…`). This is done by clicking on the `SQS` trigger in the *Designer* box, clicking on the *Enabled* switch of `azul-documents-…` in the newly appeared *SQS* box, then finally saving your settings.
+
 3) Purge the remaining queues.
-4) Renable the event binding from step 2.
-5) If azul-documents-... and azul-documents-....fifo, isn't empty, repeat steps 2-4.
+
+4) If azul-documents-… and azul-documents-…fifo isn't empty after 5 minutes, repeat steps 3.
+
+5) Renable the event binding from step 2.
 
 ## 3. Running indexer or service locally
 
@@ -277,7 +280,7 @@ process.
 `make terraform` complains 
 
 ```
-Initializing the backend...
+Initializing the backend…
 Backend configuration changed!
 
 Terraform has detected that the configuration specified for the backend
@@ -318,17 +321,17 @@ structure in upstream is
 
 ```
 root
-├── ...
+├── …
 ├── src
 │   └── azul
 │       ├── index
-│       │   └── ...
+│       │   └── …
 │       ├── projects (empty)
 │       ├── service
-│       │   └── ...
+│       │   └── …
 │       └── util
-│       │   └── ...
-└── ...
+│       │   └── …
+└── …
 ```
 
 Note that the `projects` directory is empty. 
@@ -343,19 +346,19 @@ directory *does* contain modules in the fork's `develop` branch. In
 
 ```
 root
-├── ...
+├── …
 ├── src
 │   └── azul
 │       ├── index
-│       │   └── ...
+│       │   └── …
 │       ├── projects
 │       │   └── hca
-│       │       └── ...
+│       │       └── …
 │       ├── service
-│       │   └── ...
+│       │   └── …
 │       └── util
-│       │   └── ...
-└── ...
+│       │   └── …
+└── …
 ```
 
 The `develop` branch would only contain changes to the `azul.projects.hca`
@@ -535,3 +538,4 @@ source and target branches accordingly.
    that matches the target branch
 
 7) Run `git push origin`
+.
