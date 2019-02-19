@@ -7,8 +7,8 @@ import uuid
 from azul import config
 from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
-from azul.service.responseobjects.step_function_helper import StepFunctionHelper
-from azul.service.responseobjects.user_service import UserService, UpdateError
+from azul.service.step_function_helper import StepFunctionHelper
+from azul.service.user_service import UserService, UpdateError
 
 logger = logging.getLogger(__name__)
 
