@@ -66,6 +66,18 @@ class Config:
         return int(os.environ['AZUL_ES_TIMEOUT'])
 
     @property
+    def data_browser_domain(self):
+        # TODO: Work around for obtaining data-browser domain.
+        if self.deployment_stage not in ['dev', 'integration', 'staging', "prod"]:
+            return 'dev.data.humancellatlas.org'
+        else:
+            return f'{self.deployment_stage}.data.humancellatlas.org'
+
+    @property
+    def data_browser_name(self):
+        return f'{self._resource_prefix}-data-browser-{self.deployment_stage}'
+
+    @property
     def dss_endpoint(self) -> str:
         return os.environ['AZUL_DSS_ENDPOINT']
 
@@ -391,6 +403,18 @@ class Config:
     @property
     def fusillade_endpoint(self) -> str:
         return os.environ['AZUL_FUSILLADE_ENDPOINT']
+
+    @property
+    def grafana_user(self):
+        return os.environ['azul_grafana_user']
+
+    @property
+    def grafana_password(self):
+        return os.environ['azul_grafana_password']
+
+    @property
+    def grafana_endpoint(self):
+        return os.environ['azul_grafana_endpoint']
 
 
 config = Config()

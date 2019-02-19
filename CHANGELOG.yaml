@@ -9,10 +9,28 @@ meta:
     - terraform: (requires `make terraform`)
     - requirements: (requires `pip -Ur requirements.dev.txt`)
     - clients: the service API changed in a way that requires clients to be updated
-    - environment: an environment variable was added to the `/deployments/.example.local` deployment
-                   and needs to be copied to local deployments
+    - environment: An environment variable was renamed, added or deleted. The `environment` file in personal
+                   deployments may need to be updated
 
 changes:
+
+  - title: Migrate monitoring resources from HumanCellAtlas/dcp-monitoring to Azul
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/622
+      - https://github.com/DataBiosphere/azul/issues/623
+    upgrade:
+      - terraform
+      - environment
+    notes: Migrated monitoring resources defined in HumanCellAtlas/dcp-monitoring to Azul, enabling Azul to manage
+           them. Additions include Route53 health check endpoints for Azul and Data Browser as well as the ability to
+           generate and publish a dashboard definition to Grafana. It can only be published if the `azul_grafana_user`,
+           `azul_grafana_password` and `azul_grafana_endpoint` variables are set. Management of all monitoring
+           resources including the Grafana dashboard can be enabled globally by setting `AZUL_ENABLE_MONITORING` to 1.
+           Typically this is only the case for main deployments.
+
+           The `AZUL_ENABLE_CLOUDWATCH_ALARMS` variable was renamed to `AZUL_ENABLE_MONITORING`. If your personal
+           deployment uses `AZUL_ENABLE_CLOUDWATCH_ALARMS`, you may need to update your personal deployment's
+           `environment` file accordingly.
 
   - title: Require wheel 0.32.3 to prevent corrupted deployments
     issues:

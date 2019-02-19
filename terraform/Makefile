@@ -1,6 +1,6 @@
 include ../common.mk
 
-all: apply
+all: grafana
 
 config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
@@ -15,6 +15,9 @@ plan: validate
 
 apply: validate
 	terraform apply
+
+grafana: apply
+	python $(azul_home)/scripts/update_grafana.py
 
 destroy: validate
 	terraform destroy
