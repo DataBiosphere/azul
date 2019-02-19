@@ -13,4 +13,6 @@
 _set AZUL_DEPLOYMENT_STAGE staging
 _set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
 
+_set azul_grafana_endpoint "https://metrics.dev.data.humancellatlas.org"
+
 _set AZUL_ENABLE_MONITORING 1

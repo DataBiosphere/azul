@@ -148,6 +148,19 @@ azul_vars=(
 
     # The URL Prefix of Fusillade (Authentication Broker Service)
     AZUL_FUSILLADE_ENDPOINT
+
+    # A URL pointing at the REST API of the Grafana instance that should host
+    # the Azul dashboard. Typically only set for main deployments.
+    azul_grafana_endpoint
+
+    # The user name with which to authenticate against the Grafana instance.
+    # Typically only set for main deployments.
+    azul_grafana_user
+
+    # The password with which to authenticate against the Grafana instance.
+    # Typically only set for main deployments.
+    azul_grafana_password
+
 )
 
 unset ${azul_vars[*]}
