@@ -1,12 +1,13 @@
 from operator import itemgetter
 import sys
 from tempfile import TemporaryDirectory
-from unittest import TestCase, mock
+from unittest import mock
 
 import azul.changelog
+from azul_test_case import AzulTestCase
 
 
-class TestChangeLog(TestCase):
+class TestChangeLog(AzulTestCase):
     def test_changelog(self):
         changelog = azul.changelog.changelog()
         with TemporaryDirectory() as tmpdir:

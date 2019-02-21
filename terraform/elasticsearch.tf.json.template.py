@@ -1,103 +1,80 @@
+import json
+
 from azul import config
 from azul.template import emit
 
+logs = {
+    'index': ('INDEX_SLOW_LOGS', True),
+    'search': ('SEARCH_SLOW_LOGS', True),
+    'error': ('ES_APPLICATION_LOGS', False)
+}
+
 emit(None if config.share_es_domain else {
-    "data": [
-        {
-            "aws_iam_policy_document": {
-                "dss_es_cloudwatch_policy_document": {
-                    "statement": [
-                        {
-                            "actions": [
-                                "logs:PutLogEvents",
-                                "logs:CreateLogStream"
-                            ],
-                            "principals": {
-                                "identifiers": [
-                                    "es.amazonaws.com"
-                                ],
-                                "type": "Service"
-                            },
-                            "resources": [
-                                "${aws_cloudwatch_log_group.dss_index_log.arn}",
-                                "${aws_cloudwatch_log_group.dss_search_log.arn}"
-                            ]
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "aws_iam_policy_document": {
-                "dss_es_access_policy_document": {
-                    "statement": [
-                        {
-                            "actions": [
-                                "es:*"
-                            ],
-                            "principals": {
-                                "identifiers": [
-                                    "arn:aws:iam::${local.account_id}:root"
-                                ],
-                                "type": "AWS"
-                            },
-                            "resources": [
-                                "arn:aws:es:${local.region}:${local.account_id}:domain/" + config.es_domain + "/*"
-                            ]
-                        },
-                        {
-                            "actions": [
-                                "es:*"
-                            ],
-                            "condition": {
-                                "test": "IpAddress",
-                                "values": [],
-                                "variable": "aws:SourceIp"
-                            },
-                            "principals": {
-                                "identifiers": [
-                                    "*"
-                                ],
-                                "type": "AWS"
-                            },
-                            "resources": [
-                                "arn:aws:es:${local.region}:${local.account_id}:domain/" + config.es_domain + "/*"
-                            ]
-                        }
-                    ]
-                }
-            }
-        }
-    ],
     "resource": [
-        {
+        *({
             "aws_cloudwatch_log_group": {
-                "dss_index_log": {
-                    "name": "/aws/aes/domains/" + config.es_domain + "/index-logs",
+                f"azul_{log}_log": {
+                    "name": f"/aws/aes/domains/{config.es_domain}/{log}-logs",
                     "retention_in_days": 90
                 }
             }
-        },
-        {
-            "aws_cloudwatch_log_group": {
-                "dss_search_log": {
-                    "name": "/aws/aes/domains/" + config.es_domain + "/search-logs",
-                    "retention_in_days": 90
-                }
-            }
-        },
+        } for log in logs.keys()),
         {
             "aws_cloudwatch_log_resource_policy": {
-                "dss_es_cloudwatch_policy": {
-                    "policy_document": "${data.aws_iam_policy_document.dss_es_cloudwatch_policy_document.json}",
-                    "policy_name": config.es_domain
+                "azul_es_cloudwatch_policy": {
+                    "policy_name": config.es_domain,
+                    "policy_document": json.dumps(
+                        {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Principal": {
+                                        "Service": "es.amazonaws.com"
+                                    },
+                                    "Action": [
+                                        "logs:PutLogEvents",
+                                        "logs:CreateLogStream"
+                                    ],
+                                    "Resource": [
+                                        "${aws_cloudwatch_log_group.azul_" + log + "_log.arn}" for log in logs.keys()
+                                    ]
+                                }
+                            ]
+                        }
+                    )
                 }
             }
         },
         {
             "aws_elasticsearch_domain": {
                 "elasticsearch": {
-                    "access_policies": "${data.aws_iam_policy_document.dss_es_access_policy_document.json}",
+                    "access_policies": json.dumps({
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Principal": {
+                                    "AWS": "arn:aws:iam::${local.account_id}:root"
+                                },
+                                "Action": "es:*",
+                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/" + config.es_domain + "/*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Principal": {
+                                    "AWS": "*"
+                                },
+                                "Action": "es:*",
+                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/" + config.es_domain + "/*",
+                                "Condition": {
+                                    "IpAddress": {
+                                        "aws:SourceIp": []
+                                    }
+                                }
+                            }
+                        ]
+                    }),
                     "advanced_options": {
                         "rest.action.multi.allow_explicit_index": "true"
                     },
@@ -115,15 +92,10 @@ emit(None if config.share_es_domain else {
                     "elasticsearch_version": "5.5",
                     "log_publishing_options": [
                         {
-                            "cloudwatch_log_group_arn": "${aws_cloudwatch_log_group.dss_index_log.arn}",
-                            "enabled": "true",
-                            "log_type": "INDEX_SLOW_LOGS"
-                        },
-                        {
-                            "cloudwatch_log_group_arn": "${aws_cloudwatch_log_group.dss_search_log.arn}",
-                            "enabled": "true",
-                            "log_type": "SEARCH_SLOW_LOGS"
-                        }
+                            "cloudwatch_log_group_arn": "${aws_cloudwatch_log_group.azul_" + log + "_log.arn}",
+                            "enabled": "true" if enabled else "false",
+                            "log_type": log_type
+                        } for log, (log_type, enabled) in logs.items()
                     ],
                     "snapshot_options": {
                         "automated_snapshot_start_hour": 23

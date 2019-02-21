@@ -29,6 +29,7 @@ emit(
                     "document_queue": {
                         "name": config.document_queue_name,
                         "fifo_queue": True,
+                        "delay_seconds": config.es_refresh_interval + 9,
                         "visibility_timeout_seconds": config.lambda_timeout,
                         "message_retention_seconds": 24 * 60 * 60,
                         "redrive_policy": json.dumps({

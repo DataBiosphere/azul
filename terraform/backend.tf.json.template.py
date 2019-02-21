@@ -7,7 +7,7 @@ emit(
         "terraform": {
             "backend": {
                 "s3": {
-                    "bucket": config.terraform_backend_bucket_template.format(account_id=aws.account),
+                    "bucket": config.terraform_backend_bucket,
                     # If we break the TF config up into components, the component name goes in between the two dashes.
                     "key": "azul--" + config.deployment_stage + ".tfstate",
                     "region": aws.region_name,

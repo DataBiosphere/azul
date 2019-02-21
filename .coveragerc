@@ -4,3 +4,10 @@ source =
     src
     lambdas/indexer
     lambdas/service
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # 23 is the ASCII code for the pound sign (aka hashtag if you were born after 1990)
+    \x23 no coverage
+    raise AssertionError
+    raise NotImplementedError

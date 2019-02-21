@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import difflib
 import json
 import logging.config
@@ -8,11 +6,13 @@ import unittest
 
 from elasticsearch_dsl.utils import AttrList
 
-from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd, ElasticTransformDump
 from azul.service import service_config
+from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump, ElasticTransformDump as EsTd
 from service import WebServiceTestCase
 
-logger = logging.getLogger(__name__)
+
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
 
 
 class TestRequestBuilder(WebServiceTestCase):
@@ -421,7 +421,7 @@ class TestRequestBuilder(WebServiceTestCase):
                         "specimens": [],
                         "cell_suspensions": [],
                         "files": [],
-                        "processes": [],
+                        "protocols": [],
                         "project": {
                             "document_id": "a"
                         }
@@ -477,7 +477,7 @@ class TestRequestBuilder(WebServiceTestCase):
                             }
                         ],
                         "files": [],
-                        "processes": [],
+                        "protocols": [],
                         "project": {
                             "document_id": "b"
                         }

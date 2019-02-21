@@ -1,0 +1,13 @@
+image: python:3.6.8-stretch
+
+before_script:
+  - (cd deployments && ln -snf dev .active)
+  - source environment
+  - pip install virtualenv
+  - virtualenv .venv
+  - source .venv/bin/activate
+  - pip install -r requirements.dev.txt
+
+test:
+  script:
+    - make test

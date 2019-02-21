@@ -1,5 +1,6 @@
-[![Build Status](https://travis-ci.org/DataBiosphere/azul.svg?branch=develop)](https://travis-ci.org/DataBiosphere/azul)
-[![Coverage Status](https://coveralls.io/repos/github/DataBiosphere/azul/badge.svg?branch=develop)](https://coveralls.io/github/DataBiosphere/azul?branch=develop)
+[![travis-ci.org](https://travis-ci.org/DataBiosphere/azul.svg?branch=develop)](https://travis-ci.org/DataBiosphere/azul)
+[![coveralls.io](https://coveralls.io/repos/github/DataBiosphere/azul/badge.svg?branch=develop)](https://coveralls.io/github/DataBiosphere/azul?branch=develop)
+[![codecov.io](https://codecov.io/gh/DataBiosphere/azul/branch/develop/graph/badge.svg)](https://codecov.io/gh/DataBiosphere/azul)
 
 The Azul project contains the components that together serve as the backend to
 Boardwalk, a web application for browsing genomic data sets. 
@@ -25,11 +26,14 @@ generic with minimal need for project-specific behavior.
 
 ## 1. Getting Started
 
-### 1.1. Development Preequisites
+### 1.1. Development Prerequisites
 
-- Python 3.6 with `virtualenv` and `pip`
+- Python 3.6 (3.7 does not work) with `pip`
 
-- Make sure that you are using the `bash` shell.
+- The `bash` shell
+
+- Docker for running the tests. The minimal required version is uncertain but 
+  18.09 and 17.09 are known to work
 
 - Terraform (optional, to create new deployments):
   https://www.terraform.io/intro/getting-started/install.html On macOS with
@@ -37,7 +41,7 @@ generic with minimal need for project-specific behavior.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
-### 1.2. Runtime Preequisites (Infrastructure)
+### 1.2. Runtime Prerequisites (Infrastructure)
 
 - HCA DSS (aka Blue Box): It is required to know the URL of the HumanCellAtlas
   Data Store webservice endpoint. See here for instructions:
@@ -52,19 +56,22 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1) Create a Python 3.6 virtualenv and activate it, for example 
+1) Create a Python 3.6 virtual environment and activate it:
    
    ```
    cd azul
-   virtualenv -p python3 .venv
+   python3.6 -m venv .venv
    source .venv/bin/activate
    ```
    
-   Important: Note that Python 3's built-in virtual environment module 
-   (`python3 -m venv`) is currently not supported. See 
-   https://github.com/DataBiosphere/azul/issues/340 for details.
+2) Install the development prerequisites:
 
-2) Setup configuration for dev deployment: 
+   ```
+   pip install -U setuptools==40.1.0 wheel==0.32.3
+   pip install -r requirements.dev.txt
+   ```
+
+3) Activate the `dev` deployment: 
    
    ```
    cd deployments
@@ -72,19 +79,13 @@ end.
    cd ..
    ```
 
-3) Load the environment:
+4) Load the environment:
 
    ```
    source environment
    ```
    
    Examine the output.
-
-4) Install the development prerequisites
-
-   ```
-   pip install -r requirements.dev.txt
-   ```
 
 5) Run `make`. It should say `Looking good!` If one of the sanity checks fails,
    address the complaint and repeat. The various sanity checks are defined in
@@ -93,7 +94,7 @@ end.
 6) Confirm proper configuration, run the following:
    
    ```
-   python test/indexer/test_hca_indexer.py
+   make test
    ``` 
 
 #### 1.3.1 For personal deployment (AWS credentials available)
@@ -128,7 +129,7 @@ are deploying to.
 Running tests from PyCharm requires `environment` to be sourced. The easiest way
 to do this is to install `envhook.py`, a helper script that injects the
 environment variables from `environment` into the Python interpreter process
-started from the project's virtualenv in `.venv`:   
+started from the project's virtual environment in `.venv`:   
 
    ```
    python scripts/envhook.py install
@@ -240,7 +241,7 @@ make reindex
 
 ## 3. Running indexer or service locally
 
-1) As usual, activate the virtualenv and `source environment` if you haven't
+1) As usual, activate the virtual environment and `source environment` if you haven't
    done so already
 
 2) `cd lambdas/indexer` or `cd lambdas/service` 
@@ -293,7 +294,7 @@ Error inspecting states in the "s3" backend:
 
 … but the bucket does exist. Make sure
 `deployments/.active/.terraform/terraform.tfstate` refers to the correct
-bucket, the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET_TEMPLATE`. If it
+bucket, the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET`. If it
 doesn't, you may have to remove that file or modify it to fix the bucket name.
 
 ## 5. Branch flow & development process
@@ -477,9 +478,9 @@ fast-forward. A push to any of the deployment branches will trigger a CI/CD
 build that performs the deployment. The promotion could be automatic and/or
 gated on a condition, like tests passing.
 
-### 6. Cheat sheets
+## 6. Cheat sheets
 
-## 6.1. Deploying to `dev`, `integration`, `staging` or `prod`
+### 6.1. Deploying to `dev`, `integration`, `staging` or `prod`
 
 1) Change into the Azul project root directory: `cd azul`
 
@@ -498,10 +499,10 @@ gated on a condition, like tests passing.
 
 7) Run `deactivate; rm -rf .venv`
 
-8) Run `virtualenv -p python3 .venv && source .venv/bin/activate` followed by …
+8) Run `python3 -m venv .venv && source .venv/bin/activate` followed by …
 
-9) Run `pip install -r requirements.dev.txt` to ensure a consistent set of 
-   dependencies.
+9) Run `pip install -U setuptools==40.1.0 wheel==0.32.3 && pip install -r requirements.dev.txt` 
+   to ensure a consistent set of dependencies.
 
 10) Run `python scripts/envhook.py install` if you use envhook.py
 
@@ -515,7 +516,7 @@ gated on a condition, like tests passing.
 
 15) Run `make reindex` or `make delete_and_reindex`
 
-## 6.2 Promoting changes
+### 6.2 Promoting changes
 
 For promoting `dev` to `integration` use the steps outlined below. For higher
 promotions (`integration` to `staging`, or `staging` to `prod`) change the
@@ -538,4 +539,29 @@ source and target branches accordingly.
    that matches the target branch
 
 7) Run `git push origin`
-.
+
+## 7 Scale testing
+
+Scale testing can be done with [Locust](https://locust.io/).
+Locust is a development requirement so running it is straight-forward with your development
+environment set up.
+
+1. Make sure Locust is installed by running
+   ```
+   locust --version
+   ```
+   If it is not installed, do step 1.3 in this README.
+
+1. To scale test the Azul web service on integration run
+   ```
+   locust -f scripts/locust/service.py
+   ```
+
+   If you want to test against a different stage use the `--host` option:
+   ```
+   locust -f scripts/locust/service.py --host https://service.dev.explore.data.humancellatlas.org
+   ```
+
+1. Navigate to `http://localhost:8090` in your browser to start a test run.
+
+For more advanced usage see [the Locust documentation](https://docs.locust.io/en/stable/).

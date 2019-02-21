@@ -13,5 +13,17 @@ emit({
     'iam_role_arn': f'arn:aws:iam::{aws.account}:role/{config.service_name}',
     'environment_variables': config.lambda_env,
     'lambda_timeout': 31,
-    'lambda_memory_size': 1024
+    'lambda_memory_size': 1024,
+    'stages': {
+        config.deployment_stage: {
+            'lambda_functions': {
+                config.manifest_lambda_basename: {
+                    'lambda_timeout': 15 * 60
+                },
+                config.cart_item_write_lambda_basename: {
+                    'lambda_timeout': 15 * 60
+                }
+            }
+        }
+    }
 })
