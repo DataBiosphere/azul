@@ -100,6 +100,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
+                                "cell_suspension",
                                 "donor_organism",
                                 "specimen_from_organism"
                             ]
@@ -163,6 +164,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeUnit": ["year"],
                             "preservationMethod": None,
                             "source": [
+                                "cell_suspension",
                                 "specimen_from_organism",
                                 "donor_organism"
                             ]
@@ -254,6 +256,7 @@ class TestResponse(WebServiceTestCase):
                                 "organismAgeUnit": ["year"],
                                 "preservationMethod": [None],
                                 "source": [
+                                    "cell_suspension",
                                     "specimen_from_organism",
                                     "donor_organism"
                                 ]
@@ -327,6 +330,7 @@ class TestResponse(WebServiceTestCase):
                                 "organismAgeUnit": ["year"],
                                 "preservationMethod": [None],
                                 "source": [
+                                    "cell_suspension",
                                     "specimen_from_organism",
                                     "donor_organism"
                                 ]
@@ -670,6 +674,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
+                                "cell_suspension",
                                 "specimen_from_organism",
                                 "donor_organism"
                             ]
@@ -768,6 +773,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
+                                "cell_suspension",
                                 "donor_organism",
                                 "specimen_from_organism"
                             ]

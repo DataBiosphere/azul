@@ -3,12 +3,15 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import time
 import unittest
+from unittest import mock
 from unittest.mock import patch
 
 from elasticsearch import Elasticsearch
 from more_itertools import one
 
 from azul import config
+from azul.indexer import IndexWriter
+from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
 from indexer import IndexerTestCase
 
@@ -49,29 +52,45 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Delete a bundle and check that the index contains the appropriate flags
         """
-        manifest, metadata = self._load_canned_bundle(self.new_bundle)
-        self._index_bundle(self.new_bundle, manifest, metadata)
-        self._delete_bundle(self.new_bundle)
-
         # FIXME: there should be a test that removes a bundle contribution from an entity that has
         # contributions from other bundles (https://github.com/DataBiosphere/azul/issues/424)
 
-        hits = self._get_es_results()
-        self.assertEqual(len(hits), 8)
-        num_aggregates, num_contribs = 0, 0
-        for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
-            if aggregate:
-                doc = Aggregate.from_index(hit)
-                self.assertEqual(doc.contents, {})
-                num_aggregates += 1
-            else:
-                doc = Contribution.from_index(hit)
-                self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
-                self.assertTrue(doc.bundle_deleted)
-                num_contribs += 1
-        self.assertEqual(num_aggregates, 4)
-        self.assertEqual(num_contribs, 4)
+        manifest, metadata = self._load_canned_bundle(self.new_bundle)
+
+        # Ensure that we cover bulk deletes as well as individual ones
+        for bulk_threshold in IndexWriter.bulk_threshold, 0:
+            with self.subTest(bulk_threshold=bulk_threshold):
+                with mock.patch.object(IndexWriter, 'bulk_threshold', bulk_threshold):
+
+                    self._index_bundle(self.new_bundle, manifest, metadata)
+
+                    hits = self._get_es_results()
+                    self.assertEqual(len(hits), 8)
+                    num_aggregates, num_contribs = 0, 0
+                    for hit in hits:
+                        entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+                        if aggregate:
+                            doc = Aggregate.from_index(hit)
+                            self.assertNotEqual(doc.contents, {})
+                            num_aggregates += 1
+                        else:
+                            doc = Contribution.from_index(hit)
+                            self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
+                            self.assertFalse(doc.bundle_deleted)
+                            num_contribs += 1
+                    self.assertEqual(num_aggregates, 4)
+                    self.assertEqual(num_contribs, 4)
+
+                    self._delete_bundle(self.new_bundle)
+
+                    hits = self._get_es_results()
+                    self.assertEqual(len(hits), 4)
+                    for hit in hits:
+                        entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+                        self.assertFalse(aggregate)
+                        doc = Contribution.from_index(hit)
+                        self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
+                        self.assertTrue(doc.bundle_deleted)
 
     def test_derived_files(self):
         """
@@ -209,11 +228,12 @@ class TestHCAIndexer(IndexerTestCase):
         bundles = [("9dec1bd6-ced8-448a-8e45-1fc7846d8995", "2018-03-29T154319.834528Z"),
                    ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
         original_mget = Elasticsearch.mget
+        latch = Latch(len(bundles))
 
         def mocked_mget(self, body):
             mget_return = original_mget(self, body=body)
-            # both threads sleep after reading to force conflict while writing
-            time.sleep(0.5)
+            # all threads wait at the latch after reading to force conflict while writing
+            latch.decrement(1)
             return mget_return
 
         with patch.object(Elasticsearch, 'mget', new=mocked_mget):
@@ -395,6 +415,45 @@ class TestHCAIndexer(IndexerTestCase):
             diseases = contents['specimens'][0]['disease']
             self.assertEqual(1, len(diseases))
             self.assertEqual("atrophic vulva (specimen_from_organism)", diseases[0])
+
+    def test_organoid_priority(self):
+        '''
+        Index a bundle containing an Organoid and assert that the "organ" and "organ_part"
+        values saved are the ones from the Organoid and not the SpecimenFromOrganism
+        '''
+        self._index_canned_bundle(('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'))
+        es_results = self._get_es_results()
+        inner_specimens, inner_cell_suspensions = 0, 0
+        for index_results in es_results:
+
+            contents = index_results['_source']['contents']
+            entity_type, aggregate = config.parse_es_index_name(index_results['_index'])
+
+            if entity_type != 'files' or one(contents['files'])['file_format'] != 'pdf':
+                for cell_suspension in contents['cell_suspensions']:
+                    inner_cell_suspensions += 1
+                    self.assertEqual(['Brain'], cell_suspension['organ'])
+                    self.assertEqual([None], cell_suspension['organ_part'])
+
+            for specimen in contents['specimens']:
+                inner_specimens += 1
+                expect_list = aggregate and entity_type != 'specimens'
+                self.assertEqual(['Brain'] if expect_list else 'Brain', specimen['organ'])
+                self.assertEqual([None] if expect_list else None, specimen['organ_part'])
+
+        projects = 1
+        specimens = 4
+        cell_suspensions = 1
+        files = 16
+        inner_specimens_in_contributions = (files + projects) * specimens + specimens * 1
+        inner_specimens_in_aggregates = (files + specimens + projects) * 1
+        inner_cell_suspensions_in_contributions = (files + specimens + projects) * cell_suspensions
+        inner_cell_suspensions_in_aggregates = (files + specimens + projects) * 1
+
+        self.assertEqual(inner_specimens_in_contributions + inner_specimens_in_aggregates,
+                         inner_specimens)
+        self.assertEqual(inner_cell_suspensions_in_contributions + inner_cell_suspensions_in_aggregates,
+                         inner_cell_suspensions)
 
 
 def get(v):

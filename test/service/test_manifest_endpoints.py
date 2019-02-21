@@ -8,7 +8,7 @@ from moto import mock_s3, mock_sts
 import requests
 
 from azul import config
-from azul.service.responseobjects.step_function_helper import StateMachineError
+from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
 from service import WebServiceTestCase
 
@@ -36,7 +36,7 @@ class ManifestEndpointTest(WebServiceTestCase):
         self.assertTrue(len(manifest_response.text) > 0)
 
     @mock_sts
-    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
     @mock.patch('uuid.uuid4')
     def test_manifest_endpoint_start_execution(self, mock_uuid, current_request, step_function_helper):
@@ -62,7 +62,7 @@ class ManifestEndpointTest(WebServiceTestCase):
         step_function_helper.describe_execution.assert_called_once()
 
     @mock_sts
-    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
     @mock.patch('uuid.uuid4')
     def test_manifest_endpoint_start_execution_browser(self, mock_uuid, current_request, step_function_helper):
@@ -87,7 +87,7 @@ class ManifestEndpointTest(WebServiceTestCase):
                                                                      execution_input={'filters': filters})
         step_function_helper.describe_execution.assert_called_once()
 
-    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
     def test_manifest_endpoint_check_status(self, current_request, step_function_helper):
         """
@@ -104,7 +104,7 @@ class ManifestEndpointTest(WebServiceTestCase):
         step_function_helper.start_execution.assert_not_called()
         step_function_helper.describe_execution.assert_called_once()
 
-    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
     def test_manifest_endpoint_execution_not_found(self, current_request, step_function_helper):
         """
@@ -123,7 +123,7 @@ class ManifestEndpointTest(WebServiceTestCase):
         }, '')
         self.assertRaises(BadRequestError, handle_manifest_generation_request)
 
-    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
     def test_manifest_endpoint_boto_error(self, current_request, step_function_helper):
         """
@@ -142,7 +142,7 @@ class ManifestEndpointTest(WebServiceTestCase):
         }, '')
         self.assertRaises(ClientError, handle_manifest_generation_request)
 
-    @mock.patch('azul.service.responseobjects.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
     def test_manifest_endpoint_execution_error(self, current_request, step_function_helper):
         """

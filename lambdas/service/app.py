@@ -2,34 +2,33 @@ import ast
 import base64
 import binascii
 import json
-from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import logging.config
+import math
 import os
 import re
 import time
 import urllib.parse
-import uuid
 
-# noinspection PyPackageRequirements
 import boto3
 from botocore.exceptions import ClientError
 # noinspection PyPackageRequirements
-from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, UnauthorizedError
+from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, AuthResponse, UnauthorizedError
 from more_itertools import one
 import requests
 
 from azul import config
 from azul.health import Health
+from azul.security.authenticator import Authenticator, AuthenticationError
 from azul.service import service_config
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
-from azul.service.responseobjects.manifest_service import ManifestService
-from azul.service.responseobjects.step_function_helper import StateMachineError
+from azul.service.manifest import ManifestService
+from azul.service.repository import RepositoryService
+from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
-from azul.service.responseobjects.utilities import json_pp
 
 ENTRIES_PER_PAGE = 10
 
@@ -44,7 +43,6 @@ app.debug = True
 # FIXME: please use module logger instead (https://github.com/DataBiosphere/azul/issues/419)
 app.log.setLevel(logging.DEBUG)
 
-
 # TODO: Write the docstrings so they can support swagger.
 # Please see https://github.com/rochacbruno/flasgger
 # stackoverflow.com/questions/43911510/ \
@@ -57,18 +55,19 @@ sort_defaults = {
     'projects': ('projectTitle', 'asc'),
 }
 
+
 def _get_pagination(current_request, entity_type):
+    query_params = current_request.query_params or {}
     default_sort, default_order = sort_defaults[entity_type]
     pagination = {
-        "order": current_request.query_params.get('order', default_order),
-        "size": int(current_request.query_params.get('size', ENTRIES_PER_PAGE)),
-        "sort": current_request.query_params.get('sort', default_sort),
+        "order": query_params.get('order', default_order),
+        "size": int(query_params.get('size', ENTRIES_PER_PAGE)),
+        "sort": query_params.get('sort', default_sort),
     }
-
-    sa = current_request.query_params.get('search_after')
-    sb = current_request.query_params.get('search_before')
-    sa_uid = current_request.query_params.get('search_after_uid')
-    sb_uid = current_request.query_params.get('search_before_uid')
+    sa = query_params.get('search_after')
+    sb = query_params.get('search_before')
+    sa_uid = query_params.get('search_after_uid')
+    sb_uid = query_params.get('search_before_uid')
 
     if not sb and sa:
         pagination['search_after'] = [sa, sa_uid]
@@ -78,6 +77,38 @@ def _get_pagination(current_request, entity_type):
         raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
 
     return pagination
+
+
+@app.authorizer()
+def jwt_auth(auth_request) -> AuthResponse:
+    given_token = auth_request.token
+    authenticator = Authenticator()
+
+    try:
+        claims = authenticator.authenticate_bearer_token(given_token)
+    except AuthenticationError:
+        # By specifying no routes, the access is denied.
+        log.warning('Auth: ERROR', stack_info=True)
+        return AuthResponse(routes=[], principal_id='anonymous')
+    except Exception as e:
+        # Unknown error, block all access temporarily.
+        # Note: When the code is running on AWS, this function will become a
+        #       separate lambda function, unlike how to work on a local machine.
+        #       Due to that, this method cannot fail unexpectedly. Otherwise,
+        #       The endpoint will respond with HTTP 500 with no log messages.
+        log.error(f'Auth: AUTHENTICATE: Critical ERROR {e} {given_token}', stack_info=True, exc_info=e)
+        return AuthResponse(routes=[], principal_id='no_access')
+
+    # When this code is running on AWS, the context of the authorizer has to be
+    # a string-to-primitive-type dictionary. When the context is retrieved in
+    # the caller function, the value somehow got casted into string.
+    return AuthResponse(routes=['*'],
+                        principal_id='user',
+                        context={
+                            prop: value
+                            for prop, value in claims.items()
+                            if not isinstance(value, (list, tuple, dict))
+                        })
 
 
 @app.route('/', cors=True)
@@ -108,6 +139,19 @@ def version():
         'git': config.git_status,
         'changes': compact_changes(limit=10)
     }
+
+
+def repository_search(entity_type: str, item_id: str):
+    query_params = app.current_request.query_params or {}
+    filters = query_params.get('filters')
+    try:
+        pagination = _get_pagination(app.current_request, entity_type)
+        service = RepositoryService()
+        return service.get_data(entity_type, pagination, filters, item_id, file_url)
+    except BadArgumentException as e:
+        raise BadRequestError(msg=e.message)
+    except IndexNotFoundError as e:
+        raise NotFoundError(msg=e.message)
 
 
 @app.route('/repository/files', methods=['GET'], cors=True)
@@ -154,47 +198,7 @@ def get_data(file_id=None):
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
-    # Setup logging
-    logger = app.log
-    # Get all the parameters from the URL
-    logger.debug('Parameter file_id: {}'.format(file_id))
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
-    logger.debug("Filters string is: {}".format(filters))
-    try:
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        # Make the default pagination
-        logger.info("Creating pagination")
-        pagination = _get_pagination(app.current_request, entity_type='files')
-        logger.debug("Pagination: \n".format(json_pp(pagination)))
-        # Handle <file_id> request form
-        if file_id is not None:
-            logger.info("Handling single file id search")
-            filters['file']['fileId'] = {"is": [file_id]}
-        # Create and instance of the ElasticTransformDump
-        logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd()
-        # Get the response back
-        logger.info("Creating the API response")
-        response = es_td.transform_request(filters=filters,
-                                           pagination=pagination,
-                                           post_filter=True,
-                                           entity_type='files')
-
-        for hit in response['hits']:
-            for file in hit['files']:
-                file['url'] = file_url(file['uuid'], version=file['version'], replica='aws')
-
-    except BadArgumentException as bae:
-        raise BadRequestError(msg=bae.message)
-    except IndexNotFoundError as infe:
-        raise NotFoundError(msg=infe.message)
-    else:
-        if file_id is not None:
-            response = response['hits'][0]
-        return response
+    return repository_search('files', file_id)
 
 
 @app.route('/repository/specimens', methods=['GET'], cors=True)
@@ -241,44 +245,7 @@ def get_specimen_data(specimen_id=None):
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
-    # Setup logging
-    logger = app.log
-    # Get all the parameters from the URL
-    logger.debug('Parameter specimen_id: {}'.format(specimen_id))
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
-    logger.debug("Filters string is: {}".format(filters))
-    logger.info("Extracting the filter parameter from the request")
-    filters = ast.literal_eval(filters)
-    # Make the default pagination
-    logger.info("Creating pagination")
-    pagination = _get_pagination(app.current_request, entity_type='specimens')
-    logger.debug("Pagination: \n".format(json_pp(pagination)))
-    # Handle <file_id> request form
-    if specimen_id is not None:
-        logger.info("Handling single file id search")
-        filters['file']['fileId'] = {"is": [specimen_id]}
-    # Create and instance of the ElasticTransformDump
-    logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
-    # Get the response back
-    logger.info("Creating the API response")
-
-    try:
-        response = es_td.transform_request(filters=filters,
-                                           pagination=pagination,
-                                           post_filter=True,
-                                           entity_type='specimens')
-    except BadArgumentException as bae:
-        raise BadRequestError(msg=bae.message)
-    except IndexNotFoundError as infe:
-        raise NotFoundError(msg=infe.message)
-    else:
-        # Returning a single response if <specimen_id> request form is used
-        if specimen_id is not None:
-            response = response['hits'][0]
-        return response
+    return repository_search('specimens', specimen_id)
 
 
 @app.route('/repository/projects', methods=['GET'], cors=True)
@@ -325,48 +292,7 @@ def get_project_data(project_id=None):
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
-    # Setup logging
-    logger = app.log
-    # Get all the parameters from the URL
-    logger.debug('Parameter specimen_id: {}'.format(project_id))
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
-    logger.debug("Filters string is: {}".format(filters))
-    try:
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        # Make the default pagination
-        logger.info("Creating pagination")
-        pagination = _get_pagination(app.current_request, entity_type='projects')
-        logger.debug("Pagination: \n".format(json_pp(pagination)))
-        # Handle <file_id> request form
-        if project_id is not None:
-            logger.info("Handling single file id search")
-            filters['file']['projectId'] = {"is": [project_id]}
-        # Create and instance of the ElasticTransformDump
-        logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd()
-        # Get the response back
-        logger.info("Creating the API response")
-        response = es_td.transform_request(filters=filters,
-                                           pagination=pagination,
-                                           post_filter=True,
-                                           entity_type='projects')
-    except BadArgumentException as bae:
-        raise BadRequestError(msg=bae.message)
-    else:
-        # Return a single response if <project_id> request form is used
-        if project_id is not None:
-            return response['hits'][0]
-
-        # Filter out certain fields if getting list of projects
-        for hit in response['hits']:
-            for project in hit['projects']:
-                project.pop('contributors')
-                project.pop('projectDescription')
-                project.pop('publications')
-        return response
+    return repository_search('projects', project_id)
 
 
 @app.route('/repository/summary', methods=['GET'], cors=True)
@@ -381,44 +307,13 @@ def get_summary():
           description: Filters to be applied when calling ElasticSearch
     :return: Returns a jsonified Summary API response
     """
-    logger = logging.getLogger("dashboardService.webservice.get_summary")
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    # Get the filters from the URL
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
-    logger.debug("Filters string is: {}".format(filters))
+    query_params = app.current_request.query_params or {}
+    filters = query_params.get('filters')
+    service = RepositoryService()
     try:
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        filters = {"file": {}} if filters == {} else filters
-    except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e))
-        return "Malformed filters parameter"
-    # Create and instance of the ElasticTransformDump
-    logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
-    # Get the response back
-    logger.info("Creating the API response")
-
-    # Request a summary for each entity type and cherry-pick summary fields from the summaries for the entity
-    # that is authoritative for those fields.
-    #
-    summary_fields_by_authority = {
-        'files': ['totalFileSize', 'fileTypeSummaries', 'fileCount'],
-        'specimens': ['organCount', 'donorCount', 'labCount', 'totalCellCount', 'organSummaries', 'specimenCount'],
-        'projects': ['projectCount']
-    }
-    with ThreadPoolExecutor(max_workers=len(summary_fields_by_authority)) as executor:
-        summaries = dict(executor.map(lambda entity_type:
-                                      (entity_type, es_td.transform_summary(filters=filters, entity_type=entity_type)),
-                                      summary_fields_by_authority))
-    unified_summary = {field: summaries[entity_type][field]
-                       for entity_type, summary_fields in summary_fields_by_authority.items()
-                       for field in summary_fields}
-    assert all(len(unified_summary) == len(summary) for summary in summaries.values())
-
-    # Returning a single response if <file_id> request form is used
-    return unified_summary
+        return service.get_summary(filters)
+    except BadArgumentException as e:
+        raise BadRequestError(msg=e.message)
 
 
 @app.route('/keywords', methods=['GET'], cors=True)
@@ -468,46 +363,17 @@ def get_search():
     :return: A dictionary with entries that best match the query passed in
     to the endpoint
     """
-    # Setup logging
-    logger = logging.getLogger("dashboardService.webservice.get_search")
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    # Get all the parameters from the URL
-    # Get the query to use for searching. Forcing it to be str for now
-    _query = app.current_request.query_params.get('q', '')
-    logger.debug("String query is: {}".format(_query))
-    # Get the filters
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
+    query_params = app.current_request.query_params or {}
+    filters = query_params.get('filters')
+    _query = query_params.get('q', '')
+    entity_type = query_params.get('type', 'files')
+    field = query_params.get('field', 'fileId')
+    service = RepositoryService()
     try:
-        # Set up the default filter if it is returned as an empty dictionary
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        filters = {"file": {}} if filters == {} else filters
-    except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e))
-        return "Malformed filters parameter"
-    # Get the entry format and search field
-    _type = app.current_request.query_params.get('type', 'files')
-    # Get the field to search
-    field = app.current_request.query_params.get('field', 'fileId')
-    # HACK: Adding this small check to make sure the search bar works with
-    if _type in {'donor', 'file-donor'}:
-        field = 'donor'
-    # Generate the pagination dictionary out of the endpoint parameters
-    logger.info("Creating pagination")
-    pagination = _get_pagination(app.current_request, entity_type=_type)
-    logger.debug("Pagination: \n".format(json_pp(pagination)))
-    # Create and instance of the ElasticTransformDump
-    logger.info("Creating ElasticTransformDump object")
-    es_td = EsTd()
-    # Get the response back
-    logger.info("Creating the API response")
-    response = es_td.transform_autocomplete_request(pagination,
-                                                    filters=filters,
-                                                    _query=_query,
-                                                    search_field=field,
-                                                    entry_format=_type)
-    return response
+        pagination = _get_pagination(app.current_request, entity_type)
+    except BadArgumentException as e:
+        raise BadRequestError(msg=e.message)
+    return service.get_search(entity_type, pagination, filters, _query, field)
 
 
 @app.route('/repository/files/order', methods=['GET'], cors=True)
@@ -582,13 +448,13 @@ def start_manifest_generation():
     If the manifest generation is done and the manifest is ready to be downloaded, the response will
     have a 302 status and will redirect to the URL of the manifest.
     """
-    status_code, retry_after, location = handle_manifest_generation_request()
+    wait_time, location = handle_manifest_generation_request()
     return Response(body='',
                     headers={
-                        'Retry-After': str(retry_after),
+                        'Retry-After': str(wait_time),
                         'Location': location
                     },
-                    status_code=status_code)
+                    status_code=301 if wait_time else 302)
 
 
 @app.route('/fetch/manifest/files', methods=['GET'], cors=True)
@@ -646,13 +512,13 @@ def start_manifest_generation_fetch():
     the client should expect a response containing the actual manifest. Currently the `Location` field of the final
     response is a signed URL to an object in S3 but clients should not depend on that.
     """
-    status_code, retry_after, location = handle_manifest_generation_request()
+    wait_time, location = handle_manifest_generation_request()
     response = {
-        'Status': status_code,
+        'Status': 301 if wait_time else 302,
         'Location': location
     }
-    if status_code == 301:  # Only return Retry-After if manifest is not ready
-        response['Retry-After'] = retry_after
+    if wait_time:  # Only return Retry-After if manifest is not ready
+        response['Retry-After'] = wait_time
     return response
 
 
@@ -661,32 +527,16 @@ def handle_manifest_generation_request():
     Start a manifest generation job and return a status code, Retry-After, and a retry URL for
     the view function to handle
     """
-    logger = logging.getLogger("dashboardService.webservice.get_manifest")
 
     query_params = app.current_request.query_params or {}
-
-    filters = query_params.get('filters', '{"file": {}}')
-    logger.debug('Filters string is: {}'.format(filters))
-    try:
-        logger.info('Extracting the filter parameter from the request')
-        filters = ast.literal_eval(filters)
-        filters = {'file': {}} if filters == {} else filters
-    except Exception as e:
-        logger.error('Malformed filters parameter: {}'.format(e))
-        raise BadRequestError('Malformed filters parameter')
-
+    filters = query_params.get('filters')
     token = query_params.get('token')
-
-    manifest_service = ManifestService()
-    if token is None:
-        execution_id = str(uuid.uuid4())
-        manifest_service.start_manifest_generation(filters, execution_id)
-        token = manifest_service.encode_params({'execution_id': execution_id})
-
     retry_url = self_url()
-
+    manifest_service = ManifestService()
     try:
-        return manifest_service.get_manifest_status(token, retry_url)
+        return manifest_service.start_or_inspect_manifest_generation(retry_url,
+                                                                     token=token,
+                                                                     filters=filters)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
             raise BadRequestError('Invalid token given')
@@ -831,6 +681,52 @@ def self_url(endpoint_path=None):
     return retry_url
 
 
+@app.route('/auth', methods=['GET'], cors=True)
+def authenticate_via_fusillade():
+    request = app.current_request
+    authenticator = Authenticator()
+    query = request.query_params or {}
+    if authenticator.is_client_authenticated(request.headers):
+        return Response(body='', status_code=200)
+    else:
+        return Response(body='',
+                        status_code=302,
+                        headers=dict(Location=Authenticator.get_fusillade_login_url(query.get('redirect_uri'))))
+
+
+@app.route('/auth/callback', methods=['GET'], cors=True)
+def handle_callback_from_fusillade():
+    # For prototyping only
+    try:
+        request = app.current_request
+        query = request.query_params or {}
+        expected_params = ('access_token', 'id_token', 'expires_in', 'decoded_token', 'state')
+        response_body = {k: json.loads(query[k]) if k == 'decoded_token' else query[k] for k in expected_params}
+        response_body.update(dict(login_url=Authenticator.get_fusillade_login_url()))
+
+        return Response(body=json.dumps(response_body), status_code=200)
+    except KeyError:
+        return Response(body='', status_code=400)
+
+
+@app.route('/me', methods=['GET'], cors=True, authorizer=jwt_auth)
+def access_info():
+    request = app.current_request
+    last_updated_timestamp = time.time()
+    claims = {
+        k: int(v) if k in ('exp', 'iat') else v
+        for k, v in request.context['authorizer'].items()
+    }
+    ttl_in_seconds = math.ceil(claims['exp'] - last_updated_timestamp)
+    response_body = dict(
+        claims=claims,
+        ttl=ttl_in_seconds,
+        last_updated=last_updated_timestamp
+    )
+    return Response(body=json.dumps(response_body, sort_keys=True),
+                    status_code=200)
+
+
 @app.route('/url', methods=['POST'], cors=True)
 def shorten_query_url():
     """
@@ -949,13 +845,16 @@ def create_cart():
     }
 
 
-# TODO: implement default cart (may need to change get_all_carts() endpoint)
 @app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True)
 def get_cart(cart_id):
     """
     Get the cart of the given ID belonging to the user
 
-    Returns a 404 error if the cart does not exist or does not belong to the user
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    WILL NOT create the default one automatically.
+
+    This endpoint returns a 404 error if the cart does not exist or does not belong to the user.
 
     :return: {
         "CartName": str,
@@ -963,10 +862,16 @@ def get_cart(cart_id):
     }
     """
     user_id = get_user_id()
-    cart = CartItemManager().get_cart(user_id, cart_id)
-    if cart is None:
+    cart_item_manager = CartItemManager()
+    try:
+        if cart_id == 'default':
+            cart = cart_item_manager.get_default_cart(user_id)
+        else:
+            cart = cart_item_manager.get_cart(user_id, cart_id)
+    except ResourceAccessError:
         raise NotFoundError('Cart does not exist')
-    return transform_cart_to_response(cart)
+    else:
+        return transform_cart_to_response(cart)
 
 
 @app.route('/resources/carts', methods=['GET'], cors=True)
@@ -1045,6 +950,10 @@ def get_items_in_cart(cart_id):
     """
     Get a list of items in a cart
 
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
+
     Returns a 404 error if the cart does not exist or does not belong to the user
 
     :return: {
@@ -1062,6 +971,7 @@ def get_items_in_cart(cart_id):
         ]
     }
     """
+    cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
     try:
         return {
@@ -1076,6 +986,10 @@ def get_items_in_cart(cart_id):
 def add_item_to_cart(cart_id):
     """
     Add cart item to a cart and return the ID of the created item
+
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
 
     Returns a 404 error if the cart does not exist or does not belong to the user
     Returns a 400 error if an invalid item was given
@@ -1098,6 +1012,7 @@ def add_item_to_cart(cart_id):
         "CartItemId": str
     }
     """
+    cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
     try:
         request_body = app.current_request.json_body
@@ -1108,7 +1023,12 @@ def add_item_to_cart(cart_id):
     except KeyError:
         raise BadRequestError('EntityId, BundleUuid, BundleVersion, and EntityType must be given')
     try:
-        item_id = CartItemManager().add_cart_item(user_id, cart_id, entity_id, bundle_id, bundle_version, entity_type)
+        item_id = CartItemManager().add_cart_item(user_id,
+                                                  cart_id,
+                                                  entity_id,
+                                                  bundle_id,
+                                                  bundle_version,
+                                                  entity_type)
     except ResourceAccessError as e:
         raise NotFoundError(e.msg)
     return {
@@ -1121,6 +1041,10 @@ def delete_cart_item(cart_id, item_id):
     """
     Delete an item from the cart
 
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
+
     Returns a 404 error if the cart does not exist or does not belong to the user, or if the item does not exist
 
     :return: If an item was deleted, return:
@@ -1131,6 +1055,7 @@ def delete_cart_item(cart_id, item_id):
         ```
 
     """
+    cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
     try:
         deleted_item = CartItemManager().delete_cart_item(user_id, cart_id, item_id)
@@ -1145,6 +1070,10 @@ def delete_cart_item(cart_id, item_id):
 def add_all_results_to_cart(cart_id):
     """
     Add all entities matching the given filters to a cart
+
+    The default cart is accessible under its the actual cart UUID or by passing
+    "default" as the cart ID. If the default cart does not exist, the endpoint
+    will create one automatically.
 
     parameters:
         - name: filters
@@ -1162,6 +1091,7 @@ def add_all_results_to_cart(cart_id):
             "statusUrl": "https://status.url/resources/carts/status/{token}"
         }
     """
+    cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
     request_body = app.current_request.json_body
     try:
@@ -1180,14 +1110,7 @@ def add_all_results_to_cart(cart_id):
     hits, search_after = EsTd().transform_cart_item_request(entity_type, filters=filters, size=1)
     item_count = hits.total
 
-    write_params = {
-        'filters': filters,
-        'entity_type': entity_type,
-        'cart_id': cart_id,
-        'item_count': item_count,
-        'batch_size': 10000
-    }
-    token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, write_params)
+    token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, entity_type, filters, item_count, 10000)
     status_url = self_url(f'/resources/carts/status/{token}')
 
     return {'count': item_count, 'statusUrl': status_url}
@@ -1206,8 +1129,11 @@ def cart_item_write_batch(event, context):
     else:
         search_after = None
 
-    num_written, next_search_after = CartItemManager().write_cart_item_batch(entity_type, filters, cart_id,
-                                                                             batch_size, search_after)
+    num_written, next_search_after = CartItemManager().write_cart_item_batch(entity_type,
+                                                                             filters,
+                                                                             cart_id,
+                                                                             batch_size,
+                                                                             search_after)
     return {
         'search_after': next_search_after,
         'count': num_written
