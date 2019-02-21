@@ -182,8 +182,9 @@ class FacetNameValidationTest(WebServiceTestCase):
             # 2 because self.bundle has 2 files
             self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
             manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
-            expected_fieldnames = list(manifest_config['bundles'].keys()) + list(
-                manifest_config['contents.files'].keys())
+            sources = [source for source in manifest_config.keys() if source != 'bundles']
+            expected_fieldnames = [fieldname for fieldname in manifest_config['bundles'].keys()]
+            expected_fieldnames += [fieldname for source in sources for fieldname in manifest_config[source].keys()]
             self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
 
     @mock_sts
