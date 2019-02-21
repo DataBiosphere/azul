@@ -84,23 +84,28 @@ class Document:
         return self
 
     def to_index(self, bulk=False) -> JSON:
+        delete = self.delete
         result = {
             '_index' if bulk else 'index': self.document_index,
             '_type' if bulk else 'doc_type': self.type,
-            '_source' if bulk else 'body': self.to_source(),
+            **({} if delete else {'_source' if bulk else 'body': self.to_source()}),
             '_id' if bulk else 'id': self.document_id
         }
         if self.version_type is None:
             if bulk:
-                result['_op_type'] = 'index'
+                result['_op_type'] = 'delete' if delete else 'index'
         else:
             if bulk:
-                result['_op_type'] = 'create' if self.version is None else 'index'
-            elif self.version is None:
+                result['_op_type'] = 'delete' if delete else ('create' if self.version is None else 'index')
+            elif self.version is None and not delete:
                 result['op_type'] = 'create'
             result['_version_type' if bulk else 'version_type'] = self.version_type
             result['_version' if bulk else 'version'] = self.version
         return result
+
+    @property
+    def delete(self):
+        return False
 
 
 @dataclass
@@ -148,6 +153,11 @@ class Aggregate(Document):
         return dict(super().to_source(),
                     num_contributions=self.num_contributions,
                     bundles=self.bundles)
+
+    @property
+    def delete(self):
+        # Aggregates are deleted when their contents goes blank
+        return super().delete or not self.contents
 
 
 class Transformer(ABC):
@@ -290,6 +300,25 @@ class SetOfDictAccumulator(SetAccumulator):
         return thaw(super().get())
 
 
+class PrioritySetAccumulator(SetAccumulator):
+    """
+    An accumulator that accepts (priority, value) tuples and
+    returns a set of those values whose priority is equal to the maximum priority observed.
+    """
+
+    def __init__(self, max_size=None) -> None:
+        super().__init__()
+        self.priority = None
+
+    def accumulate(self, value) -> bool:
+        priority, value = value
+        if self.priority is None or self.priority < priority:
+            self.priority = priority
+            self.value = set()
+        if self.priority == priority:
+            super().accumulate(value)
+
+
 class LastValueAccumulator(Accumulator):
     """
     An accumulator that accepts any number of values and returns the value most recently seen.
@@ -330,6 +359,26 @@ class MandatoryValueAccumulator(OptionalValueAccumulator):
             raise ValueError('No value')
         else:
             return super().get()
+
+
+class PriorityOptionalValueAccumulator(OptionalValueAccumulator):
+    """
+    An OptionalValueAccumulator that accepts (priority, value) tuples and
+    returns the value whose priority is equal to the maximum priority observed.
+    Occurrence of more than one value per priority raises a ValueError.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.priority = None
+
+    def accumulate(self, value):
+        priority, value = value
+        if self.priority is None or self.priority < priority:
+            self.priority = priority
+            self.value = None
+        if self.priority == priority:
+            super().accumulate(value)
 
 
 class MinAccumulator(LastValueAccumulator):

@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-import importlib.util
 import logging
 import os
 from threading import Thread
@@ -14,6 +13,7 @@ import requests
 from azul import config
 from azul.modules import load_module
 from azul_test_case import AzulTestCase
+from retorts import TestKeyManager
 
 log = logging.getLogger(__name__)
 
@@ -78,10 +78,7 @@ class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
 
     def setUp(self):
         super().setUp()
-        log.debug("Setting up tests")
-        log.debug("Created Thread")
         self.server_thread = ChaliceServerThread(self.app_module.app, self.chalice_config(), 'localhost', 0)
-        log.debug("Started Thread")
         self.server_thread.start()
         deadline = time.time() + 10
         while True:
@@ -108,3 +105,10 @@ class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
         self.server_thread.join(timeout=10)
         if self.server_thread.is_alive():
             self.fail('Thread is still alive after joining')
+
+
+class AuthLocalAppTestCase(LocalAppTestCase, metaclass=ABCMeta):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        TestKeyManager.remove_test_keys()

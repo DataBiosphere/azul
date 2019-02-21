@@ -309,10 +309,12 @@ class IndexWriter:
         self.conflicts: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
         self.retries: MutableSet[DocumentCoordinates] = None
 
+    bulk_threshold = 32
+
     def write(self, documents: List[Document]):
         # documents.sort(key=attrgetter('coordinates'))
         self.retries = set()
-        if len(documents) <= 32:
+        if len(documents) < self.bulk_threshold:
             self._write_individually(documents)
         else:
             self._write_bulk(documents)
@@ -321,7 +323,8 @@ class IndexWriter:
         log.info('Writing documents individually')
         for doc in documents:
             try:
-                self.es_client.index(refresh=self.refresh, **doc.to_index())
+                method = self.es_client.delete if doc.delete else self.es_client.index
+                method(refresh=self.refresh, **doc.to_index())
             except ConflictError as e:
                 self._on_conflict(doc, e)
             except ElasticsearchException as e:
@@ -345,7 +348,7 @@ class IndexWriter:
                           max_chunk_bytes=10485760)
         for success, info in response:
             op_type, info = one(info.items())
-            assert op_type in ('index', 'create')
+            assert op_type in ('index', 'create', 'delete')
             coordinates = DocumentCoordinates(document_index=info['_index'], document_id=info['_id'])
             doc = documents[coordinates]
             if success:
