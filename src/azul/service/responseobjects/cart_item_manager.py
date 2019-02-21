@@ -1,12 +1,16 @@
 import base64
 import hashlib
 import json
+import logging
 import uuid
 
 from azul import config
 from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
-from azul.service.responseobjects.step_function_helper import StepFunctionHelper
+from azul.service.step_function_helper import StepFunctionHelper
+from azul.service.user_service import UserService, UpdateError
+
+logger = logging.getLogger(__name__)
 
 
 class CartItemManager:
@@ -17,45 +21,67 @@ class CartItemManager:
 
     def __init__(self):
         self.dynamo_accessor = DynamoDataAccessor()
+        self.user_service = UserService()
 
-    def encode_params(self, params):
+    @staticmethod
+    def encode_params(params):
         return base64.urlsafe_b64encode(bytes(json.dumps(params), encoding='utf-8')).decode('utf-8')
 
-    def decode_token(self, token):
+    @staticmethod
+    def decode_token(token):
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
-    def check_cart_permission(self, user_id, cart_id):
-        """
-        Check if the user has a cart with the given id.  Raise exception if user does not have access to the cart
-        """
-        if self.get_cart(user_id, cart_id) is None:
-            raise ResourceAccessError('Cart does not exist')
-
-    def create_cart(self, user_id, cart_name, default):
+    def create_cart(self, user_id:str, cart_name:str, default:bool) -> str:
         """
         Add a cart to the cart table and return the ID of the created cart
         An error will be raised if the user already has a cart of the same name or
-        if a default cart is being created while one already exists
+        if a default cart is being created while one already exists.
         """
         query_dict = {'UserId': user_id, 'CartName': cart_name}
         if self.dynamo_accessor.count(table_name=config.dynamo_cart_table_name,
                                       key_conditions=query_dict,
                                       index_name='UserCartNameIndex') > 0:
             raise DuplicateItemError(f'Cart `{cart_name}` already exists')
-
+        cart_id = str(uuid.uuid4())
         if default:
-            if self.dynamo_accessor.count(table_name=config.dynamo_cart_table_name,
-                                          key_conditions={'UserId': user_id},
-                                          filters={'DefaultCart': True},
-                                          index_name='UserIndex') > 0:
-                raise DuplicateItemError('Default cart already exists')
-
-        cart_id = 'default' if default else str(uuid.uuid4())
+            try:
+                self.user_service.update(user_id, default_cart_id=cart_id)
+            except UpdateError:
+                # As DynamoDB client doesn't differentiate errors caused by
+                # failing the key condition ("Key") or the condition expression
+                # ("ConditionExpression"). The method will attempt to update
+                # the user object again by ensuring that the user object exists
+                # before the update.
+                self.user_service.get_or_create(user_id)
+                try:
+                    self.user_service.update(user_id, default_cart_id=cart_id)
+                except UpdateError:
+                    # At this point, the user already has a default cart.
+                    return self.get_default_cart(user_id)['CartId']
         self.dynamo_accessor.insert_item(config.dynamo_cart_table_name,
-                                         item={'CartId': cart_id, 'DefaultCart': default, **query_dict})
+                                         item={'CartId': cart_id, **query_dict})
         return cart_id
 
     def get_cart(self, user_id, cart_id):
+        cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
+                                             keys={'UserId': user_id, 'CartId': cart_id})
+        if cart is None:
+            raise ResourceAccessError('Cart does not exist')
+        return cart
+
+    def get_default_cart(self, user_id):
+        user = self.user_service.get_or_create(user_id)
+        if user['DefaultCartId'] is None:
+            raise ResourceAccessError('Cart does not exist')
+        cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
+                                             keys={'UserId': user_id, 'CartId': user['DefaultCartId']})
+        if cart is None:
+            raise ResourceAccessError('Cart does not exist')
+        return cart
+
+    def get_or_create_default_cart(self, user_id):
+        user = self.user_service.get_or_create(user_id)
+        cart_id = user['DefaultCartId'] or self.create_cart(user_id, 'Default Cart', default=True)
         return self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
                                              keys={'UserId': user_id, 'CartId': cart_id})
 
@@ -65,6 +91,9 @@ class CartItemManager:
                                                index_name='UserIndex'))
 
     def delete_cart(self, user_id, cart_id):
+        default_cart_id = self.user_service.get_or_create(user_id)['DefaultCartId']
+        if default_cart_id == cart_id:
+            self.user_service.update(user_id, default_cart_id=None)
         self.dynamo_accessor.delete_by_key(config.dynamo_cart_item_table_name,
                                            {'CartId': cart_id})
         return self.dynamo_accessor.delete_item(config.dynamo_cart_table_name,
@@ -75,7 +104,11 @@ class CartItemManager:
         Update the attributes of a cart and return the updated item
         Only accepted attributes will be updated and any others will be ignored
         """
-        self.check_cart_permission(user_id, cart_id)
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
         if validate_attributes:
             accepted_attributes = {'CartName', 'Description'}
             for key in list(update_attributes.keys()):
@@ -90,11 +123,11 @@ class CartItemManager:
                                                              },
                                                              index_name='UserCartNameIndex'))
             # There cannot be more than one matching cart because of the index's keys
-            if len(matching_carts) > 0 and matching_carts[0]['CartId'] != cart_id:
+            if len(matching_carts) > 0 and matching_carts[0]['CartId'] != real_cart_id:
                 raise DuplicateItemError(f'Cart `{update_attributes["CartName"]}` already exists')
 
         return self.dynamo_accessor.update_item(config.dynamo_cart_table_name,
-                                                {'UserId': user_id, 'CartId': cart_id},
+                                                {'UserId': user_id, 'CartId': real_cart_id},
                                                 update_values=update_attributes)
 
     def create_cart_item_id(self, cart_id, entity_id, entity_type, bundle_uuid, bundle_version):
@@ -106,12 +139,16 @@ class CartItemManager:
         An error will be raised if the cart does not exist or does not belong to the user
         """
         # TODO: Cart item should have some user readable name
-        self.check_cart_permission(user_id, cart_id)
-        item_id = self.create_cart_item_id(cart_id, entity_id, entity_type, bundle_uuid, bundle_version)
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
+        item_id = self.create_cart_item_id(real_cart_id, entity_id, entity_type, bundle_uuid, bundle_version)
         self.dynamo_accessor.insert_item(
             config.dynamo_cart_item_table_name,
             {
-                'CartItemId': item_id, 'CartId': cart_id, 'EntityId': entity_id,
+                'CartItemId': item_id, 'CartId': real_cart_id, 'EntityId': entity_id,
                 'BundleUuid': bundle_uuid, 'BundleVersion': bundle_version, 'EntityType': entity_type
             })
         return item_id
@@ -121,19 +158,26 @@ class CartItemManager:
         Get all items in a cart
         An error will be raised if the cart does not exist or does not belong to the user
         """
-        self.check_cart_permission(user_id, cart_id)
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
         return list(self.dynamo_accessor.query(table_name=config.dynamo_cart_item_table_name,
-                                               key_conditions={'CartId': cart_id}))
+                                               key_conditions={'CartId': real_cart_id}))
 
     def delete_cart_item(self, user_id, cart_id, item_id):
         """
         Delete an item from a cart and return the deleted item if it exists, None otherwise
         An error will be raised if the cart does not exist or does not belong to the user
         """
-        if self.get_cart(user_id, cart_id) is None:
-            raise ResourceAccessError('Cart does not exist')
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
         return self.dynamo_accessor.delete_item(config.dynamo_cart_item_table_name,
-                                                keys={'CartId': cart_id, 'CartItemId': item_id})
+                                                keys={'CartId': real_cart_id, 'CartItemId': item_id})
 
     def transform_hit_to_cart_item(self, hit, entity_type, cart_id):
         """
@@ -162,24 +206,26 @@ class CartItemManager:
         cart_item['CartItemId'] = item_id
         return cart_item
 
-    def start_batch_cart_item_write(self, user_id, cart_id, write_params):
+    def start_batch_cart_item_write(self, user_id, cart_id, entity_type, filters, item_count, batch_size):
         """
         Trigger the job that will write the cart items and return a token to be used to check the job status
-
-        Write params should have the format:
-        {
-            'filters': str,
-            'entity_type': str,
-            'cart_id': str,
-            'item_count': int,
-            'batch_size': int
-        }
         """
-        self.check_cart_permission(user_id, cart_id)
+        if cart_id is None:
+            cart = self.get_or_create_default_cart(user_id)
+        else:
+            cart = self.get_cart(user_id, cart_id)
+        real_cart_id = cart['CartId']
         execution_id = str(uuid.uuid4())
+        execution_input = {
+            'filters': filters,
+            'entity_type': entity_type,
+            'cart_id': real_cart_id,
+            'item_count': item_count,
+            'batch_size': batch_size
+        }
         self.step_function_helper.start_execution(config.cart_item_state_machine_name,
                                                   execution_name=execution_id,
-                                                  execution_input=write_params)
+                                                  execution_input=execution_input)
         return self.encode_params({'execution_id': execution_id})
 
     def get_batch_cart_item_write_status(self, token):

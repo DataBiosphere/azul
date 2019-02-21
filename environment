@@ -124,9 +124,9 @@ azul_vars=(
     # redirection objects
     AZUL_URL_REDIRECT_FULL_DOMAIN_NAME
 
-    # Determine if CloudWatch alarms should be deployed (1 yes, 0 no)
-    # CloudWatch alarms should not be enabled for personal deployments
-    AZUL_ENABLE_CLOUDWATCH_ALARMS
+    # Enables deployment of monitoring resources (1 yes, 0 no).
+    # Typically only set for main deployments.
+    AZUL_ENABLE_MONITORING
 
     # Boolean value, 1 to upload a manifest in a single request to S3, 0 to
     # upload the manifest in multiple concurrent requests for equal parts of
@@ -145,6 +145,22 @@ azul_vars=(
     # string, only bundles whose UUID starts with the specified string will be
     # indexed.
     azul_dss_query_prefix
+
+    # The URL Prefix of Fusillade (Authentication Broker Service)
+    AZUL_FUSILLADE_ENDPOINT
+
+    # A URL pointing at the REST API of the Grafana instance that should host
+    # the Azul dashboard. Typically only set for main deployments.
+    azul_grafana_endpoint
+
+    # The user name with which to authenticate against the Grafana instance.
+    # Typically only set for main deployments.
+    azul_grafana_user
+
+    # The password with which to authenticate against the Grafana instance.
+    # Typically only set for main deployments.
+    azul_grafana_password
+
 )
 
 unset ${azul_vars[*]}
@@ -220,11 +236,13 @@ _set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 
 _set AZUL_TERRAFORM_BACKEND_BUCKET "org-humancellatlas-azul-dev-config"
 
-_set AZUL_ENABLE_CLOUDWATCH_ALARMS 0
+_set AZUL_ENABLE_MONITORING 0
 
 _set AZUL_CART_API_IP_WHITELIST  # TODO: Remove when authentication is added
 
 _set azul_dss_query_prefix
+
+_set AZUL_FUSILLADE_ENDPOINT "https://auth.dev.data.humancellatlas.org"
 
 unset -f _set
 

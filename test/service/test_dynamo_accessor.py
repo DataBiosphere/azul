@@ -1,8 +1,7 @@
 import logging
 
-from botocore.exceptions import ClientError
-
 from dynamo_test_case import DynamoTestCase
+from azul.service.responseobjects.dynamo_data_access import ConditionalUpdateItemError
 
 
 def setUpModule():
@@ -168,12 +167,11 @@ class TestDynamoAccessor(DynamoTestCase):
         Updating an item using a conditional test that fails should raise an exception and not update the item
         """
         self.dynamo_accessor.insert_item('Carts', item={'UserId': '123', 'CartName': 'test1', 'Val': 'value1'})
-        with self.assertRaises(ClientError) as cm:
+        with self.assertRaises(ConditionalUpdateItemError):
             self.dynamo_accessor.update_item('Carts',
                                              keys={'UserId': '123', 'CartName': 'test1'},
                                              update_values={'Val': 'value2'},
                                              conditions={'Val': 'value2'})
-        self.assertEqual('ConditionalCheckFailedException', cm.exception.response['Error']['Code'])
         updated_item = self.dynamo_accessor.get_item('Carts', keys={'UserId': '123', 'CartName': 'test1'})
         self.assertEqual('value1', updated_item['Val'])
 
