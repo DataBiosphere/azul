@@ -3,12 +3,14 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import time
 import unittest
+from unittest import mock
 from unittest.mock import patch
 
 from elasticsearch import Elasticsearch
 from more_itertools import one
 
 from azul import config
+from azul.indexer import IndexWriter
 from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
 from indexer import IndexerTestCase
@@ -50,29 +52,45 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Delete a bundle and check that the index contains the appropriate flags
         """
-        manifest, metadata = self._load_canned_bundle(self.new_bundle)
-        self._index_bundle(self.new_bundle, manifest, metadata)
-        self._delete_bundle(self.new_bundle)
-
         # FIXME: there should be a test that removes a bundle contribution from an entity that has
         # contributions from other bundles (https://github.com/DataBiosphere/azul/issues/424)
 
-        hits = self._get_es_results()
-        self.assertEqual(len(hits), 8)
-        num_aggregates, num_contribs = 0, 0
-        for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
-            if aggregate:
-                doc = Aggregate.from_index(hit)
-                self.assertEqual(doc.contents, {})
-                num_aggregates += 1
-            else:
-                doc = Contribution.from_index(hit)
-                self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
-                self.assertTrue(doc.bundle_deleted)
-                num_contribs += 1
-        self.assertEqual(num_aggregates, 4)
-        self.assertEqual(num_contribs, 4)
+        manifest, metadata = self._load_canned_bundle(self.new_bundle)
+
+        # Ensure that we cover bulk deletes as well as individual ones
+        for bulk_threshold in IndexWriter.bulk_threshold, 0:
+            with self.subTest(bulk_threshold=bulk_threshold):
+                with mock.patch.object(IndexWriter, 'bulk_threshold', bulk_threshold):
+
+                    self._index_bundle(self.new_bundle, manifest, metadata)
+
+                    hits = self._get_es_results()
+                    self.assertEqual(len(hits), 8)
+                    num_aggregates, num_contribs = 0, 0
+                    for hit in hits:
+                        entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+                        if aggregate:
+                            doc = Aggregate.from_index(hit)
+                            self.assertNotEqual(doc.contents, {})
+                            num_aggregates += 1
+                        else:
+                            doc = Contribution.from_index(hit)
+                            self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
+                            self.assertFalse(doc.bundle_deleted)
+                            num_contribs += 1
+                    self.assertEqual(num_aggregates, 4)
+                    self.assertEqual(num_contribs, 4)
+
+                    self._delete_bundle(self.new_bundle)
+
+                    hits = self._get_es_results()
+                    self.assertEqual(len(hits), 4)
+                    for hit in hits:
+                        entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+                        self.assertFalse(aggregate)
+                        doc = Contribution.from_index(hit)
+                        self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
+                        self.assertTrue(doc.bundle_deleted)
 
     def test_derived_files(self):
         """
@@ -434,10 +452,8 @@ class TestHCAIndexer(IndexerTestCase):
 
         self.assertEqual(inner_specimens_in_contributions + inner_specimens_in_aggregates,
                          inner_specimens)
-        self.assertEqual(inner_cell_suspensions_in_contributions  + inner_cell_suspensions_in_aggregates,
+        self.assertEqual(inner_cell_suspensions_in_contributions + inner_cell_suspensions_in_aggregates,
                          inner_cell_suspensions)
-
-
 
 
 def get(v):
