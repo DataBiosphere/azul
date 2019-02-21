@@ -84,23 +84,28 @@ class Document:
         return self
 
     def to_index(self, bulk=False) -> JSON:
+        delete = self.delete
         result = {
             '_index' if bulk else 'index': self.document_index,
             '_type' if bulk else 'doc_type': self.type,
-            '_source' if bulk else 'body': self.to_source(),
+            **({} if delete else {'_source' if bulk else 'body': self.to_source()}),
             '_id' if bulk else 'id': self.document_id
         }
         if self.version_type is None:
             if bulk:
-                result['_op_type'] = 'index'
+                result['_op_type'] = 'delete' if delete else 'index'
         else:
             if bulk:
-                result['_op_type'] = 'create' if self.version is None else 'index'
-            elif self.version is None:
+                result['_op_type'] = 'delete' if delete else ('create' if self.version is None else 'index')
+            elif self.version is None and not delete:
                 result['op_type'] = 'create'
             result['_version_type' if bulk else 'version_type'] = self.version_type
             result['_version' if bulk else 'version'] = self.version
         return result
+
+    @property
+    def delete(self):
+        return False
 
 
 @dataclass
@@ -148,6 +153,11 @@ class Aggregate(Document):
         return dict(super().to_source(),
                     num_contributions=self.num_contributions,
                     bundles=self.bundles)
+
+    @property
+    def delete(self):
+        # Aggregates are deleted when their contents goes blank
+        return super().delete or not self.contents
 
 
 class Transformer(ABC):
