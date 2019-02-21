@@ -1,15 +1,23 @@
 #!/usr/bin/python
+import json
+import logging
+import unittest
 
 import requests
-import json
-import unittest
-import os
+
 from service import WebServiceTestCase
 
 
-# Assumes a database initialized with >SEARCH_AFTER_THRESHOLD records, where
-# SEARCH_AFTER_THRESHOLD is defined in responseobjects/elastic_request_builder.py
+def setUpModule():
+    logging.basicConfig(level=logging.INFO)
+
+
 class PaginationTestCase(WebServiceTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._fill_index()
 
     def get_base_url(self):
         return self.base_url + '/repository/files'
@@ -104,8 +112,8 @@ class PaginationTestCase(WebServiceTestCase):
         # Fetch the second page using search_after
         search_after = json_response['pagination']['search_after']
         search_after_uid = json_response['pagination']['search_after_uid']
-        url = "{}?sort=entryId&search_after={}&search_after_uid={}".format(self.get_base_url(), search_after,
-                                                                           search_after_uid)
+        url = "{}?sort=entryId&order=desc&search_after={}&search_after_uid={}".format(self.get_base_url(),
+                                                                            search_after, search_after_uid)
         content = requests.get(url).content
         json_response_second = json.loads(content)
         self.assert_page2_correct(json_response, json_response_second, "desc")
@@ -130,8 +138,8 @@ class PaginationTestCase(WebServiceTestCase):
         search_after_uid = json_response_second['pagination']['search_before_uid']
 
         content = requests.get(
-            "{}?sort=entryId&search_after={}&search_after_uid={}&order=desc".format(self.get_base_url(), search_after,
-                                                                                    search_after_uid)).content
+            "{}?sort=entryId&order=desc&search_after={}&search_after_uid={}&order=desc".format(self.get_base_url(),
+                                                                            search_after, search_after_uid)).content
         json_response = json.loads(content)
         if 'search_before' in json_response['pagination']:
             self.assertEqual(json_response['pagination']['search_before'], search_after_lrfp,

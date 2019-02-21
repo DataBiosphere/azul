@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 
 app_name, command = sys.argv[1:]
 
-bucket_name = config.terraform_backend_bucket_template.format(account_id=aws.account)
+bucket_name = config.terraform_backend_bucket
 file_path = f'.chalice/deployed/{config.deployment_stage}.json'
 key = f'azul-{app_name}-{config.deployment_stage}/deployed.json'
 

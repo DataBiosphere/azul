@@ -1,10 +1,8 @@
 include ../common.mk
 
-templates=$(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
+all: grafana
 
-all: apply
-
-config: $(templates)
+config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
 init: config
 	terraform init
@@ -18,13 +16,13 @@ plan: validate
 apply: validate
 	terraform apply
 
+grafana: apply
+	python $(azul_home)/scripts/update_grafana.py
+
 destroy: validate
 	terraform destroy
-
-destroy_cloudwatch_alarms: validate
-	terraform destroy $(terraform state list | grep '^aws_cloudwatch_metric_alarm' | sed 's/^/-target /')
 
 clean:
 	-rm *.tf.json
 
-.PHONY: all init validate plan apply clean config
+.PHONY: all config init validate plan apply destroy clean
