@@ -27,8 +27,8 @@ tag:
 	@tag_name="$$(date '+deployed/$(AZUL_DEPLOYMENT_STAGE)/%Y-%m-%d__%H-%M')" ; \
 	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
 
-integration-test:
+integration_test:
 	python -m unittest -v local_integration_test
 
-.PHONY: all terraform deploy subscribe everything reindex clean test travis integration-test
+.PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test
 
