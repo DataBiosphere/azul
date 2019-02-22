@@ -1,6 +1,6 @@
-include ../../common.mk
-
 all: deploy
+
+include ../../common.mk
 
 config: .chalice/config.json lambda-policy.json
 
