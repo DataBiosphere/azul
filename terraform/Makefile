@@ -1,6 +1,6 @@
-include ../common.mk
-
 all: grafana
+
+include ../common.mk
 
 config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
@@ -25,4 +25,4 @@ destroy: validate
 clean:
 	-rm *.tf.json
 
-.PHONY: all config init validate plan apply destroy clean
+.PHONY: all config init validate plan apply grafana destroy clean
