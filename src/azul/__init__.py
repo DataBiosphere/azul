@@ -386,8 +386,35 @@ class Config:
         return self.qualified_resource_name('cartitems')
 
     @property
-    def cart_api_ip_whitelist(self):  # TODO: Remove when authentication is added
-        return os.environ['AZUL_CART_API_IP_WHITELIST'].split(' ')
+    def access_token_issuer(self):
+        return "https://humancellatlas.auth0.com"
+
+    @property
+    def access_token_audience_list(self):
+        return [
+            f"https://{self.deployment_stage}.data.humancellatlas.org/",
+            f"{self.access_token_issuer}/userinfo"
+        ]
+
+    @property
+    def fusillade_endpoint(self) -> str:
+        return os.environ['AZUL_FUSILLADE_ENDPOINT']
+
+    @property
+    def cart_export_max_batch_size(self):
+        return int(os.environ['AZUL_CART_EXPORT_MAX_BATCH_SIZE'])
+
+    @property
+    def cart_export_min_access_token_ttl(self):
+        return int(os.environ['AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL'])
+
+    @property
+    def cart_export_state_machine_name(self):
+        return self.qualified_resource_name('cartexport')
+
+    @property
+    def cart_export_dss_push_lambda_basename(self):
+        return 'cartexportpush'
 
     @property
     def access_token_issuer(self):

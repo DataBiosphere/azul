@@ -4,6 +4,7 @@
     "fileName": "contents.files.name",
     "fileSize": "contents.files.size",
     "fileId": "contents.files.uuid",
+    "fileVersion": "contents.files.version",
 
     "instrumentManufacturerModel": "contents.protocols.instrument_manufacturer_model",
     "libraryConstructionApproach": "contents.protocols.library_construction_approach",
@@ -63,10 +64,12 @@
   },
   "cart-item": {
     "files": [
-      "fileId"
+      "fileId",
+      "fileVersion"
     ],
     "specimens": [
-      "specimenId"
+      "specimenId",
+      "specimenDocumentId"
     ],
     "projects": [
       "project"

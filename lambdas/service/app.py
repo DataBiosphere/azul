@@ -13,7 +13,7 @@ import urllib.parse
 import boto3
 from botocore.exceptions import ClientError
 # noinspection PyPackageRequirements
-from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, AuthResponse, UnauthorizedError
+from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, AuthResponse
 from more_itertools import one
 import requests
 
@@ -21,7 +21,10 @@ from azul import config
 from azul.health import Health
 from azul.security.authenticator import Authenticator, AuthenticationError
 from azul.service import service_config
+from azul.service.responseobjects.cart_export_job_manager import CartExportJobManager, InvalidExecutionTokenError
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
+from azul.service.responseobjects.cart_export_service import CartExportService
+from azul.service.responseobjects.collection_data_access import CollectionDataAccess
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
@@ -102,13 +105,13 @@ def jwt_auth(auth_request) -> AuthResponse:
     # When this code is running on AWS, the context of the authorizer has to be
     # a string-to-primitive-type dictionary. When the context is retrieved in
     # the caller function, the value somehow got casted into string.
-    return AuthResponse(routes=['*'],
-                        principal_id='user',
-                        context={
-                            prop: value
-                            for prop, value in claims.items()
-                            if not isinstance(value, (list, tuple, dict))
-                        })
+    context = {
+        prop: value
+        for prop, value in claims.items()
+        if not isinstance(value, (list, tuple, dict))
+    }
+    context['token'] = given_token
+    return AuthResponse(routes=['*'], principal_id='user', context=context)
 
 
 @app.route('/', cors=True)
@@ -717,7 +720,7 @@ def access_info():
         k: int(v) if k in ('exp', 'iat') else v
         for k, v in request.context['authorizer'].items()
     }
-    ttl_in_seconds = math.ceil(claims['exp'] - last_updated_timestamp)
+    ttl_in_seconds = math.floor(claims['exp'] - last_updated_timestamp)
     response_body = dict(
         claims=claims,
         ttl=ttl_in_seconds,
@@ -793,12 +796,8 @@ def hash_url(url):
     return base64.urlsafe_b64encode(url_hash).decode()
 
 
-# TODO: Authentication for carts
 def get_user_id():
-    user_id = app.current_request.headers.get('Fake-Authorization', '')
-    if user_id == '' or app.current_request.context['identity']['sourceIp'] not in config.cart_api_ip_whitelist:
-        raise UnauthorizedError('Missing access key')
-    return user_id
+    return app.current_request.context['authorizer']['sub']
 
 
 def transform_cart_to_response(cart):
@@ -811,7 +810,7 @@ def transform_cart_to_response(cart):
     }
 
 
-@app.route('/resources/carts', methods=['POST'], cors=True)
+@app.route('/resources/carts', methods=['POST'], cors=True, authorizer=jwt_auth)
 def create_cart():
     """
     Create a cart with the given name for the authenticated user
@@ -845,7 +844,7 @@ def create_cart():
     }
 
 
-@app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True)
+@app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True, authorizer=jwt_auth)
 def get_cart(cart_id):
     """
     Get the cart of the given ID belonging to the user
@@ -874,7 +873,7 @@ def get_cart(cart_id):
         return transform_cart_to_response(cart)
 
 
-@app.route('/resources/carts', methods=['GET'], cors=True)
+@app.route('/resources/carts', methods=['GET'], cors=True, authorizer=jwt_auth)
 def get_all_carts():
     """
     Get a list of all carts belonging the user
@@ -894,7 +893,7 @@ def get_all_carts():
     return [transform_cart_to_response(cart) for cart in carts]
 
 
-@app.route('/resources/carts/{cart_id}', methods=['DELETE'], cors=True)
+@app.route('/resources/carts/{cart_id}', methods=['DELETE'], cors=True, authorizer=jwt_auth)
 def delete_cart(cart_id):
     """
     Delete the given cart if it exists and return the deleted cart
@@ -914,7 +913,7 @@ def delete_cart(cart_id):
     return transform_cart_to_response(deleted_cart)
 
 
-@app.route('/resources/carts/{cart_id}', methods=['PUT'], cors=True)
+@app.route('/resources/carts/{cart_id}', methods=['PUT'], cors=True, authorizer=jwt_auth)
 def update_cart(cart_id):
     """
     Update a cart's attributes.  Only the listed parameters can be updated
@@ -945,7 +944,7 @@ def update_cart(cart_id):
     return transform_cart_to_response(updated_cart)
 
 
-@app.route('/resources/carts/{cart_id}/items', methods=['GET'], cors=True)
+@app.route('/resources/carts/{cart_id}/items', methods=['GET'], cors=True, authorizer=jwt_auth)
 def get_items_in_cart(cart_id):
     """
     Get a list of items in a cart
@@ -958,13 +957,12 @@ def get_items_in_cart(cart_id):
 
     :return: {
         "CartId": str,
-        "items": [
+        "Items": [
             {
                 "CartItemId": str,
                 "CartId": str,
                 "EntityId": str,
-                "BundleUuid": str,
-                "BundleVersion": str,
+                "EntityVersion": str,
                 "EntityType": str
             },
             ...
@@ -973,16 +971,21 @@ def get_items_in_cart(cart_id):
     """
     cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
+    request_data = app.current_request.query_params or {}
+    resume_token = request_data.get('resume_token')
     try:
+        page = CartItemManager().get_paginable_cart_items(user_id, cart_id, resume_token=resume_token)
         return {
             'CartId': cart_id,
-            'items': CartItemManager().get_cart_items(user_id, cart_id)
+            'Items': page['items'],
+            'ResumeToken': page['resume_token'],
+            'PageLength': page['page_length']
         }
     except ResourceAccessError as e:
         raise NotFoundError(e.msg)
 
 
-@app.route('/resources/carts/{cart_id}/items', methods=['POST'], cors=True)
+@app.route('/resources/carts/{cart_id}/items', methods=['POST'], cors=True, authorizer=jwt_auth)
 def add_item_to_cart(cart_id):
     """
     Add cart item to a cart and return the ID of the created item
@@ -998,15 +1001,13 @@ def add_item_to_cart(cart_id):
         - name: EntityId
           in: body
           type: string
-        - name: BundleUuid
-          in: body
-          type: string
-        - name: BundleVersion
-          in: body
-          type: string
         - name: EntityType
           in: body
           type: string
+        - name: EntityVersion
+          in: body
+          type: string
+          required: false
 
     :return: {
         "CartItemId": str
@@ -1017,18 +1018,16 @@ def add_item_to_cart(cart_id):
     try:
         request_body = app.current_request.json_body
         entity_id = request_body['EntityId']
-        bundle_id = request_body['BundleUuid']
-        bundle_version = request_body['BundleVersion']
         entity_type = request_body['EntityType']
+        entity_version = request_body.get('EntityVersion') or None
     except KeyError:
-        raise BadRequestError('EntityId, BundleUuid, BundleVersion, and EntityType must be given')
+        raise BadRequestError('EntityId and EntityType must be given')
     try:
-        item_id = CartItemManager().add_cart_item(user_id,
-                                                  cart_id,
-                                                  entity_id,
-                                                  bundle_id,
-                                                  bundle_version,
-                                                  entity_type)
+        item_id = CartItemManager().add_cart_item(user_id=user_id,
+                                                  cart_id=cart_id,
+                                                  entity_id=entity_id,
+                                                  entity_type=entity_type,
+                                                  entity_version=entity_version)
     except ResourceAccessError as e:
         raise NotFoundError(e.msg)
     return {
@@ -1036,7 +1035,7 @@ def add_item_to_cart(cart_id):
     }
 
 
-@app.route('/resources/carts/{cart_id}/items/{item_id}', methods=['DELETE'], cors=True)
+@app.route('/resources/carts/{cart_id}/items/{item_id}', methods=['DELETE'], cors=True, authorizer=jwt_auth)
 def delete_cart_item(cart_id, item_id):
     """
     Delete an item from the cart
@@ -1066,7 +1065,7 @@ def delete_cart_item(cart_id, item_id):
     return {'deleted': True}
 
 
-@app.route('/resources/carts/{cart_id}/items/batch', methods=['POST'], cors=True)
+@app.route('/resources/carts/{cart_id}/items/batch', methods=['POST'], cors=True, authorizer=jwt_auth)
 def add_all_results_to_cart(cart_id):
     """
     Add all entities matching the given filters to a cart
@@ -1140,7 +1139,7 @@ def cart_item_write_batch(event, context):
     }
 
 
-@app.route('/resources/carts/status/{token}', methods=['GET'], cors=True)
+@app.route('/resources/carts/status/{token}', methods=['GET'], cors=True, authorizer=jwt_auth)
 def get_cart_item_write_progress(token):
     """
     Get the status of a batch cart item write job
@@ -1190,6 +1189,209 @@ def get_cart_item_write_progress(token):
     else:
         response['success'] = status == 'SUCCEEDED'
     return response
+
+
+def assert_jwt_ttl(expected_ttl):
+    remaining_ttl = math.floor(int(app.current_request.context['authorizer']['exp']) - time.time())
+    if remaining_ttl < expected_ttl:
+        raise BadRequestError('The TTL of the access token is too short.')
+
+
+@app.route('/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
+def export_cart_as_collection(cart_id:str):
+    """
+    Initiate and check status of a cart export job, returning a either a 301 or 302 response
+    redirecting to either the location of the manifest or a URL to re-check the status of
+    the export job.
+
+    parameters:
+        - name: cart_id
+          in: path
+          type: string
+          description: The cart ID to export
+        - name: token
+          in: query
+          type: string
+          description: An opaque string describing the cart export job job
+
+    :return: If the cart export has been started or is still ongoing, the response will have a
+    301 status and will redirect to a URL that will get a recheck the status of the export.
+
+    If the export is done, the response will have a 200 status and will be:
+
+    ```
+    {
+        "CollectionUrl": str
+    }
+    ```
+
+    The `CollectionUrl` is the URL to the collection on the DSS.
+
+    If the export is timed out or aborted, the endpoint will respond with an empty HTTP 410 response.
+    """
+    result = handle_cart_export_request(cart_id)
+    if result['status_code'] == 200:
+        return {'CollectionUrl': result['headers']['Location']}
+    else:
+        return Response(body='',
+                        status_code=result['status_code'],
+                        headers=result['headers'])
+
+
+@app.route('/fetch/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
+def export_cart_as_collection_fetch(cart_id:str):
+    """
+    Initiate and check status of a cart export job, returning a either a 301 or 302 response
+    redirecting to either the location of the manifest or a URL to re-check the status of
+    the export job.
+
+    parameters:
+        - name: cart_id
+          in: path
+          type: string
+          description: The cart ID to export
+        - name: token
+          in: query
+          type: string
+          description: An opaque string describing the cart export job job
+
+    :return: A 200 response with a JSON body describing the status of the export.
+
+    If the export generation has been started or is still ongoing, the response will look like:
+
+    ```
+    {
+        "Status": 301,
+        "Retry-After": 2,
+        "Location": "https://…"
+    }
+    ```
+
+    The `Status` field emulates HTTP status code 301 Moved Permanently.
+
+    `Retry-After` is the recommended number of seconds to wait before requesting the URL the `Location` field.
+
+    `Location` is the URL to make a GET request to in order to recheck the status.
+
+    If the client receives a response body with the `Status` field set to 301, the client should wait the number of
+    seconds specified in `Retry-After` and then request the URL given in the `Location` field. The URL will point
+    back at this endpoint so the client should expect a response of the same shape. Note that the actual HTTP
+    response is of status 200, only the `Status` field of the body will be 301. The intent is to emulate HTTP while
+    bypassing the default client behavior which, in most web browsers, is to ignore `Retry-After`. The response
+    described here is intended to be processed by client-side Javascript such that the recommended delay in
+    `Retry-After` can be handled in Javascript rather that relying on the native implementation by the web browser.
+
+    If the export is done, the response will be:
+
+    ```
+    {
+        "Status": 200,
+        "Location": "https://dss.<DEPLOYMENT>.data.humancellatlas.org/v1/collections/<CART_ID>?..."
+    }
+    ```
+
+    The `Location` is the URL to the collection on the DSS.
+
+    If the export is timed out or aborted, the response will be:
+
+    ```
+    {
+        "Status": 410
+    }
+    ```
+    """
+    result = handle_cart_export_request(cart_id)
+    return {
+        'Status': result['status_code'],
+        **result['headers']
+    }
+
+
+def handle_cart_export_request(cart_id:str=None):
+    assert_jwt_ttl(config.cart_export_min_access_token_ttl)
+    user_id = get_user_id()
+    query_params = app.current_request.query_params or {}
+    token = query_params.get('token')
+    bearer_token = app.current_request.context['authorizer']['token']
+    job_manager = CartExportJobManager()
+    headers = {}
+    if app.current_request.method == 'POST':
+        token = job_manager.initiate(user_id, cart_id, bearer_token)
+    try:
+        job = job_manager.get(token)
+    except InvalidExecutionTokenError:
+        raise BadRequestError('Invalid token given')
+    if job['user_id'] != user_id:
+        raise NotFoundError  # This implies that this execution does not exist for this user.
+    if job['status'] == 'SUCCEEDED':
+        status_code = 200
+        last_state = job['last_update']['state']
+        collection_version = last_state['collection_version']
+        collection_url = CollectionDataAccess.endpoint_url('collections', last_state['collection_uuid'])
+        headers['Location'] = f"{collection_url}?version={collection_version}&replica=aws"
+    elif job['status'] == 'FAILED':
+        raise ChaliceViewError('Export failed')
+    elif job['final']:
+        status_code = 410  # job aborted
+    else:
+        status_code = 301
+        headers['Location'] = f'{self_url()}?token={token}'
+        headers['Retry-After'] = '10'
+    return {
+        'status_code': status_code,
+        'headers': headers
+    }
+
+
+@app.lambda_function(name=config.cart_export_dss_push_lambda_basename)
+def cart_export_send_to_collection_api(event, context):
+    """
+    Export the data to DSS Collection API
+    """
+    execution_id = event['execution_id']
+    user_id = event['user_id']
+    cart_id = event['cart_id']
+    access_token = event['access_token']
+    collection_uuid = event['collection_uuid']
+    collection_version = event['collection_version']
+    job_starting_timestamp = event.get('started_at') or time.time()
+    resume_token = event.get('resume_token')
+    expected_exported_item_count = event.get('expected_exported_item_count')
+
+    if resume_token is None:
+        log.info('Export %s: Creating a new collection', execution_id)
+        expected_exported_item_count = CartItemManager().get_cart_item_count(user_id, cart_id)
+        log.info('Export %s: There are %d items to export.', execution_id, expected_exported_item_count)
+    else:
+        log.info('Export %s: Resuming', execution_id)
+
+    batch = CartExportService().export(export_id=execution_id,
+                                       user_id=user_id,
+                                       cart_id=cart_id,
+                                       access_token=access_token,
+                                       resume_token=resume_token,
+                                       collection_uuid=collection_uuid,
+                                       collection_version=collection_version)
+    last_updated_timestamp = time.time()
+    updated_collection = batch['collection']
+    next_resume_token = batch['resume_token']
+    exported_item_count = batch['exported_item_count']
+
+    return {
+        'execution_id': execution_id,
+        'access_token': access_token,
+        'user_id': user_id,
+        'cart_id': cart_id,
+        'collection_uuid': updated_collection['uuid'],
+        'collection_version': updated_collection['version'],
+        'resumable': next_resume_token is not None,
+        'resume_token': next_resume_token,
+        'started_at': job_starting_timestamp,
+        'last_updated_at': last_updated_timestamp,
+        'exported_item_count': (event.get('exported_item_count') or 0) + exported_item_count,
+        'expected_exported_item_count': expected_exported_item_count
+    }
+
 
 def azul_to_obj(result):
     """
