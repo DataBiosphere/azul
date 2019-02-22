@@ -108,7 +108,8 @@ emit({
             ],
             "Resource": [
                 f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.manifest_state_machine_name}",
-                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.cart_item_state_machine_name}"
+                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.cart_item_state_machine_name}",
+                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.cart_export_state_machine_name}"
             ]
         },
         {
@@ -118,7 +119,8 @@ emit({
             ],
             "Resource": [
                 f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.manifest_state_machine_name}:*",
-                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_item_state_machine_name}:*"
+                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_item_state_machine_name}:*",
+                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_export_state_machine_name}"
             ]
         }
     ]
