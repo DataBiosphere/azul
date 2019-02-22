@@ -4,7 +4,7 @@ include ../common.mk
 
 config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
-init: config
+init: check_branch config
 	terraform init
 
 validate: init

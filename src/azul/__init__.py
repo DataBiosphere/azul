@@ -253,6 +253,13 @@ class Config:
     def domain_name(self) -> str:
         return os.environ['AZUL_DOMAIN_NAME']
 
+    main_deployments_by_branch = {
+        'develop': 'dev',
+        'integration': 'integration',
+        'staging': 'staging',
+        'prod': 'prod'
+    }
+
     @property
     def git_status(self):
         return {
