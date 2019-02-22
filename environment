@@ -124,7 +124,8 @@ azul_vars=(
     # redirection objects
     AZUL_URL_REDIRECT_FULL_DOMAIN_NAME
 
-    # Enables deployment of monitoring resources (1 yes, 0 no).
+    # Enables deployment of monitoring resources and enables logging of all API
+    # Gateway traffic through CloudWatch (1 yes, 0 no).
     # Typically only set for main deployments.
     AZUL_ENABLE_MONITORING
 
