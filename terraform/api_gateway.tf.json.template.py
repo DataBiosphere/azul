@@ -58,7 +58,7 @@ emit({
             "aws_route53_record": {
                 lambda_name + "_domain_validation": {
                     "name": "${aws_acm_certificate.%s.domain_validation_options.0.resource_record_name}" % lambda_name,
-                    "type": "api_gateway_domain_name.tf.json.template${aws_acm_certificate.%s.domain_validation_options.0.resource_record_type}" % lambda_name,
+                    "type": "${aws_acm_certificate.%s.domain_validation_options.0.resource_record_type}" % lambda_name,
                     "zone_id": "${data.aws_route53_zone.azul.id}",
                     "records": [
                         "${aws_acm_certificate.%s.domain_validation_options.0.resource_record_value}" % lambda_name],
