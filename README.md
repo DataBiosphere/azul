@@ -496,11 +496,13 @@ gated on a condition, like tests passing.
    ```
 8) Run `python scripts/envhook.py install` if you use envhook.py
 
-9) Run `make terraform`
+9) Run `make clean`
 
-10) Run `make deploy`
+10) Run `make terraform`
 
-11) Invoke the health and version endpoints. Be sure to use the correct 
+11) Run `make deploy`
+
+12) Invoke the health and version endpoints. Be sure to use the correct 
     deployment name:
 
     ```
@@ -510,11 +512,11 @@ gated on a condition, like tests passing.
     http https://service.dev.explore.data.humancellatlas.org/health
     ```
 
-12) Run `make tag` and the `git push …` invocation that it echoes 
+13) Run `make tag` and the `git push …` invocation that it echoes 
 
-13) Run `make subscribe`
+14) Run `make subscribe`
 
-14) Run `make reindex`
+15) Run `make reindex`
 
 ### 6.2 Promoting changes
 
