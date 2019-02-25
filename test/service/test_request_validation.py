@@ -168,6 +168,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     @mock_sts
     @mock_s3
     def test_manifest(self):
+        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper:
@@ -175,17 +176,35 @@ class FacetNameValidationTest(WebServiceTestCase):
             storage_service = StorageService()
             storage_service.create_bucket()
 
-            url = self.base_url + '/repository/files/export?filters={"file":{}}'
-            response = requests.get(url)
-            self.assertEqual(200, response.status_code, 'Unable to download manifest')
-            tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
-            # 2 because self.bundle has 2 files
-            self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
-            manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
-            sources = [source for source in manifest_config.keys() if source != 'bundles']
-            expected_fieldnames = [fieldname for fieldname in manifest_config['bundles'].keys()]
-            expected_fieldnames += [fieldname for source in sources for fieldname in manifest_config[source].keys()]
-            self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
+            for single_part in "0", "1":
+                with self.subTest(is_single_part=single_part):
+                    with mock.patch.dict(os.environ, AZUL_DISABLE_MULTIPART_MANIFESTS=single_part):
+                        url = self.base_url + '/repository/files/export?filters={"file":{}}'
+                        response = requests.get(url)
+                        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                        tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
+                        rows = {r['file_uuid']: r for r in tsv_file}
+                        # 7 because self.bundle and bundle f79257a7-dfc6-46d6-ae00-ba4b25313c10 have 7 files total.
+                        self.assertEqual(len(rows.items()), 7, 'Wrong number of files were found.')
+                        # Fieldnames from the bundles entity are always the first headers in the manifest. The rest of
+                        # the fieldnames are ordered as they are mapped in request_config.json from top to bottom.
+                        expected_fieldnames = ["bundle_uuid", "bundle_version", "file_content_type", "file_name",
+                                               "file_sha256", "file_size", "file_uuid", "file_version", "file_indexed",
+                                               "file_format", "total_estimated_cells", "instrument_manufacturer_model",
+                                               "library_construction_approach", "contact_names", "document_id",
+                                               "institution", "laboratory", "biological_sex", "specimen_id",
+                                               "specimen_document_id", "disease", "donor_biomaterial_id",
+                                               "donor_document_id", "genus_species", "organ", "organ_part",
+                                               "organism_age", "organism_age_unit", "preservation_method"]
+                        self.assertEqual(expected_fieldnames, tsv_file.fieldnames,
+                                         'Manifest headers are not configured correctly')
+                        actual_joined_value = rows['f6608ce9-a570-4d5d-bd1f-407454958424']['organ']
+                        actual_values = actual_joined_value.split(' || ')
+                        self.assertCountEqual(['tumor', 'brain'], actual_values)
+                        self.assertEqual(expected_fieldnames, tsv_file.fieldnames,
+                                         "List values weren't formatted correctly")
+                        actual_value = rows['f2b6c6f0-8d25-4aae-b255-1974cc110cfe']['total_estimated_cells']
+                        self.assertEqual('9001', actual_value, "Redundant values weren't removed")
 
     @mock_sts
     @mock_s3

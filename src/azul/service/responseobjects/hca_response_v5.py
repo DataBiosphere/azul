@@ -198,24 +198,24 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
-    def _translate(self, untranslated, keyname):
-        m = self.manifest_entries[keyname]
-        translated_values = []
-        for es_name in m.values():
-            translated_value = untranslated.get(es_name, "")
+    def _extract_fields(self, entities, column_mapping):
+        def validate(s: str) -> str:
+            assert '||' not in s
+            return s
 
-            if ' || ' in str(translated_value):
-                raise Exception("Invalid value. Pipe substring (' || ') in value")
-
-            if isinstance(translated_value, list):
-                if all(_ is None for _ in translated_value):
-                    translated_value = ''
+        row_values = []
+        for field_name in column_mapping.values():
+            cell_values = []
+            for entity in entities:
+                field_value = entity.get(field_name, "")
+                if isinstance(field_value, list):
+                    cell_values += [validate(str(v)) for v in field_value if v is not None]
                 else:
-                    translated_value = ' || '.join(translated_value)
+                    cell_values.append(validate(str(field_value)))
 
-            translated_values.append(translated_value)
+            row_values.append(" || ".join(set(cell_values)))
 
-        return translated_values
+        return row_values
 
     def _push_content(self) -> str:
         """
@@ -322,22 +322,22 @@ class ManifestResponse(AbstractResponse):
             return bdbag_api.archive_bag(bag_path, 'zip')
 
     def _iterate_hit_tsv(self, es_search_hit, writer):
+        # if entity_type == 'files':
+        #     assert len(hit_dict['contents'][entity_type]) == 1
+
         hit_dict = es_search_hit.to_dict()
 
         inner_entity_fields = []
-        for inner_entity_source in self.manifest_entries.keys():
-            inner_entity_name = inner_entity_source.split('.')[-1]
-            if inner_entity_name in hit_dict['contents'].keys() and inner_entity_name != 'bundles':
-                if inner_entity_name == 'files':
-                    assert len(hit_dict['contents'][inner_entity_name]) == 1
-
-                inner_entity_data = hit_dict['contents'][inner_entity_name][0]
-                inner_entity_fields += self._translate(inner_entity_data, inner_entity_source)
+        for doc_path, column_mapping in self.manifest_entries.items():
+            if doc_path != 'bundles':
+                doc_path = doc_path.split('.')
+                entities = hit_dict
+                for key in doc_path:
+                    entities = entities.get(key, [{}])
+                inner_entity_fields += self._extract_fields(entities, column_mapping)
 
         for bundle in hit_dict['bundles']:
-            # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
-            # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-            writer.writerow(self._translate(bundle, 'bundles') + inner_entity_fields)
+            writer.writerow(self._extract_fields([bundle], self.manifest_entries['bundles']) + inner_entity_fields)
 
     def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
         hit_dict = es_search_hit.to_dict()
