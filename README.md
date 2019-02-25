@@ -157,8 +157,8 @@ make terraform
 will display a plan and ask you to confirm it. Please consult the Terraform
 documentation for details. You will need to run `make terraform` once to set up
 your deployment and every time code changes define new cloud resources. The
-resources are defined in `...tf.json` files which in turn are generated from
-`....tf.json.template.py` files which are simple Python scripts containing the
+resources are defined in `….tf.json` files which in turn are generated from
+`….tf.json.template.py` files which are simple Python scripts containing the
 desired JSON as Python dictionary and list literals and comprehensions.
 
 ### 2.2. Deploying lambda functions
@@ -230,19 +230,19 @@ make reindex
 ### 2.6 Cancelling all ongoing (re)indexing operations
 
 1) Go to the Simple Queue Service dashboard in the AWS Console. Then, find your
-target notify SQS queue (should be named azul-notify-…) and purge the queue.
+   target notify SQS queue (should be named azul-notify-…) and purge the queue.
 
 2) Go to the Lambda dashboard in the AWS Console. Find and open the
-`azul-indexer-…-write` lambda. Then, disable the event binding to the document
-queue (usually named `azul-documents-…`). This is done by clicking on the `SQS`
-trigger in the *Designer* box, clicking on the *Enabled* switch of
-`azul-documents-…` in the newly appeared *SQS* box, then finally saving your
-settings.
+   `azul-indexer-…-write` lambda. Then, disable the event binding to the
+   document queue (usually named `azul-documents-…`). This is done by clicking
+   on the `SQS` trigger in the *Designer* box, clicking on the *Enabled* switch
+   of `azul-documents-…` in the newly appeared *SQS* box, then finally saving
+   your settings.
 
 3) Purge the remaining queues.
 
 4) If azul-documents-… and azul-documents-…fifo isn't empty after 5 minutes,
-repeat steps 3.
+   repeat steps 3.
 
 5) Renable the event binding from step 2.
 
@@ -299,7 +299,7 @@ Error inspecting states in the "s3" backend:
     NoSuchBucket: The specified bucket does not exist
 ```
 
-... but the bucket does exist. Make sure
+… but the bucket does exist. Make sure
 `deployments/.active/.terraform/terraform.tfstate` refers to the correct
 bucket, the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET`. If it
 doesn't, you may have to remove that file or modify it to fix the bucket name.
@@ -506,7 +506,7 @@ gated on a condition, like tests passing.
 
 7) Run `deactivate; rm -rf .venv`
 
-8) Run `python3 -m venv .venv && source .venv/bin/activate` followed by ...
+8) Run `python3 -m venv .venv && source .venv/bin/activate` followed by …
 
 9) Run `pip install -U setuptools==40.1.0 wheel==0.32.3 && pip install -r requirements.dev.txt` 
    to ensure a consistent set of dependencies.
@@ -517,7 +517,7 @@ gated on a condition, like tests passing.
 
 12) Run `make deploy`
 
-13) Run `make tag` and the `git push ...` invocation that it echoes 
+13) Run `make tag` and the `git push …` invocation that it echoes 
 
 14) Run `make subscribe`
 
