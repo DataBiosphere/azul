@@ -256,8 +256,6 @@ class CellSuspensionAggregator(GroupingAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'total_estimated_cells':
             return SumAccumulator(0)
-        elif field == 'document_id':
-            return None
         else:
             return SetAccumulator(max_size=100)
 
