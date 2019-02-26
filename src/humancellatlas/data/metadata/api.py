@@ -395,13 +395,19 @@ class Protocol(LinkedEntity):
 
 @dataclass(init=False)
 class LibraryPreparationProtocol(Protocol):
-    library_construction_approach: str
+    library_construction_method: str
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
         content = json.get('content', json)
-        lca = content.get('library_construction_approach')
-        self.library_construction_approach = lca['text'] if isinstance(lca, dict) else lca
+        temp = lookup(content, 'library_construction_method', 'library_construction_approach')
+        self.library_construction_method = temp['text'] if isinstance(temp, dict) else temp
+
+    @property
+    def library_construction_approach(self) -> str:
+        warnings.warn(f"LibraryPreparationProtocol.library_construction_approach is deprecated. "
+                      f"Use LibraryPreparationProtocol.library_construction_method instead.", DeprecationWarning)
+        return self.library_construction_method
 
 
 @dataclass(init=False)
@@ -412,7 +418,6 @@ class SequencingProtocol(Protocol):
         super().__init__(json)
         content = json.get('content', json)
         self.instrument_manufacturer_model = content.get('instrument_manufacturer_model', {}).get('text')
-
 
 @dataclass(init=False)
 class AnalysisProtocol(Protocol):
