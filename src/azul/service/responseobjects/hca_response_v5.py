@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
+from typing import Set, MutableSet
 
 from uuid import uuid4
 
@@ -266,12 +267,14 @@ class ManifestResponse(AbstractResponse):
                                           self.manifest_entries['bundles'].keys(),
                                           self.manifest_entries['contents.files'].keys(),
                                           ['file_url'])))
+        participants = set()
+        for hit in es_search.scan():
+            self._iterate_hit_bdbag(hit, participants, sample_writer)
+
         participant_file_object = StringIO()
         participant_writer = csv.writer(participant_file_object, dialect='excel-tab')
         participant_writer.writerow(['entity:participant_id'])
-        for hit in es_search.scan():
-            self._iterate_hit_bdbag(hit, participant_file_object, participant_writer, sample_writer)
-
+        participant_writer.writerows(zip(participants))
         return self._create_zipped_bdbag(participant_file_object, sample_file_object)
 
     @staticmethod
@@ -281,20 +284,19 @@ class ManifestResponse(AbstractResponse):
         """
 
         with TemporaryDirectory() as bag_path, TemporaryDirectory() as tsv_file_dir:
-            bag = bdbag_api.make_bag(bag_path)
+            # Discard return value since we don't use it, bag is updated below
+            bdbag_api.make_bag(bag_path)
             data_path = os.path.join(bag_path, 'data')
 
             # Write participant and sample data to their respective files.
-            tsv_filenames = ['participant.tsv', 'sample.tsv']
-            for tsv_filename in tsv_filenames:
+            tsvs = [('participant.tsv', participant_file_object),
+                    ('sample.tsv', sample_file_object)]
+            for tsv_filename, file_object in tsvs:
                 with open(os.path.join(tsv_file_dir, tsv_filename), 'w') as f:
-                    if tsv_filename == 'participant.tsv':
-                        f.write(participant_file_object.getvalue())
-                    else:
-                        f.write(sample_file_object.getvalue())
+                    f.write(file_object.getvalue())
                 copy(os.path.join(tsv_file_dir, tsv_filename), data_path)
 
-            assert tsv_filenames == os.listdir(data_path)
+            assert sorted(tsv[0] for tsv in tsvs) == sorted(os.listdir(data_path))
             bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
             assert bdbag_api.is_bag(bag_path)
             bdbag_api.validate_bag(bag_path)
@@ -313,7 +315,7 @@ class ManifestResponse(AbstractResponse):
             # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
             writer.writerow(self._translate(bundle, 'bundles') + file_fields)
 
-    def _iterate_hit_bdbag(self, es_search_hit, participant_file_object, participant_writer, sample_writer):
+    def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
         hit_dict = es_search_hit.to_dict()
 
         assert len(hit_dict['contents']['specimens']) == 1
@@ -338,9 +340,8 @@ class ManifestResponse(AbstractResponse):
         for bundle in hit_dict['bundles']:
             sample_writer.writerow(chain(specimen_fields[0], specimen_fields[1], cell_suspension_fields[0],
                                          self._translate(bundle, 'bundles'), file_fields + fetch_url))
-            # Keep participant file object as a set.
-            if specimen_fields[1][0] not in participant_file_object.getvalue():
-                participant_writer.writerow(specimen_fields[1])
+            participant_id = specimen_fields[1][0]
+            participants.add(participant_id)
 
     def return_response(self):
         if config.disable_multipart_manifests or self.format == 'bdbag':
@@ -468,6 +469,7 @@ class ProjectSummaryResponse(AbstractResponse):
     """
     Build summary field for each project in projects endpoint
     """
+
     def return_response(self):
         return self.apiResponse
 
