@@ -411,7 +411,9 @@ def get_manifest():
     if app.current_request.query_params is None:
         app.current_request.query_params = {}
     filters = app.current_request.query_params.get('filters', '{"file": {}}')
+    format = app.current_request.query_params.get('format', 'tsv')
     logger.debug("Filters string is: {}".format(filters))
+    logger.debug(f'Format query parameter is: {format}')
     try:
         logger.info("Extracting the filter parameter from the request")
         filters = ast.literal_eval(filters)
@@ -424,7 +426,9 @@ def get_manifest():
     es_td = EsTd()
     # Get the response back
     logger.info("Creating the API response")
-    response = es_td.transform_manifest(filters=filters)
+
+    response = es_td.transform_manifest(filters=filters, format=format)
+
     # Return the excel file
     return response
 
@@ -533,12 +537,14 @@ def handle_manifest_generation_request():
 
     query_params = app.current_request.query_params or {}
     filters = query_params.get('filters')
+    format = query_params.get('format')
     token = query_params.get('token')
     retry_url = self_url()
     manifest_service = ManifestService()
     try:
         return manifest_service.start_or_inspect_manifest_generation(retry_url,
                                                                      token=token,
+                                                                     format=format,
                                                                      filters=filters)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
@@ -558,10 +564,13 @@ def generate_manifest(event, context):
     :param: event: dict containing function input
         Valid params:
             - filters: dict containing filters to use in ES request
+            - format: str to specify manifest output format, values are
+                      'tsv' (default) or 'bdbag'
     :return: The URL to the generated manifest
     """
     filters = event.get('filters', {'file': {}})
-    response = EsTd().transform_manifest(filters=filters)
+    format = event.get('format', 'tsv')
+    response = EsTd().transform_manifest(format, filters)
     return {'Location': response.headers['Location']}
 
 
