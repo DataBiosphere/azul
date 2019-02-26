@@ -179,7 +179,8 @@ class FacetNameValidationTest(WebServiceTestCase):
             # 2 because self.bundle has 2 files
             self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
             manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
-            expected_fieldnames = list(manifest_config['bundles'].keys()) + list(manifest_config['contents.files'].keys())
+            expected_fieldnames = list(manifest_config['bundles'].keys()) + list(
+                manifest_config['contents.files'].keys())
             self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
 
     @mock_sts
@@ -201,40 +202,34 @@ class FacetNameValidationTest(WebServiceTestCase):
                 zip_fh.extractall(zip_dir)
             zip_fname = os.path.basename(os.path.splitext(response.text)[0])
             with open(os.path.join(zip_dir, zip_fname, 'data', 'participant.tsv'), 'r') as fh:
-                participant = csv.reader(fh, delimiter='\t')
-                expected = ['entity:participant_id', '7b07b9d0-cc0e-4098-9f64-f4a569f7d746']
-                observed = []
-                for row in participant:
-                    observed.append(row[0])
-                self.assertEqual(len(observed), 2, 'participant.tsv contains duplicates.')
-                self.assertListEqual(sorted(expected), sorted(observed), 'participant.tsv contains incorrect data')
+                observed = list(csv.reader(fh, delimiter='\t'))
+                expected = [['entity:participant_id'], ['7b07b9d0-cc0e-4098-9f64-f4a569f7d746']]
+                self.assertEqual(expected, observed, 'participant.tsv contains incorrect data')
 
+            expectations = [
+                ('entity:sample_id', 'DID_scRSq06'),
+                ('participant_id', '7b07b9d0-cc0e-4098-9f64-f4a569f7d746'),
+                ('cell_suspension_id', '412898c5-5b9b-4907-b07c-e9b89666e204'),
+                ('bundle_uuid', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
+                ('bundle_version', '2018-11-02T113344.698028Z'),
+                ('file_content_type', 'application/gzip; dcp-type=data'),
+                ('file_name', 'SRR3562915_1.fastq.gz'),
+                ('file_sha256', '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a'),
+                ('file_size', '195142097'),
+                ('file_uuid', '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'),
+                ('file_version', '2018-11-02T113344.698028Z'),
+                ('file_indexed', 'False'),
+                ('file_url', config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?'
+                                                   'version=2018-11-02T113344.698028Z&replica=gcp')
+            ]
+            expected_fieldnames, expected_row = map(list, zip(*expectations))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'sample.tsv'), 'r') as fh:
-
-                expectations = [('entity:sample_id','DID_scRSq06'),
-                                ('participant_id', '7b07b9d0-cc0e-4098-9f64-f4a569f7d746'),
-                                ('cell_suspension_id', '412898c5-5b9b-4907-b07c-e9b89666e204'),
-                                ('bundle_uuid', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
-                                ('bundle_version', '2018-11-02T113344.698028Z'),
-                                ('file_content_type', 'application/gzip; dcp-type=data'),
-                                ('file_name', 'SRR3562915_1.fastq.gz'),
-                                ('file_sha256', '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a'),
-                                ('file_size', '195142097'),
-                                ('file_uuid', '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'),
-                                ('file_version', '2018-11-02T113344.698028Z'),
-                                ('file_indexed', 'False'),
-                                ('file_url', config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?'
-                                                                   'version=2018-11-02T113344.698028Z&replica=gcp')
-                ]
-
-                expected_fieldnames, expected_row = map(list, zip(*expectations))
-                samples = csv.reader(fh, delimiter='\t')
-                for row_count, row in enumerate(samples):
-                    # Assert row contains no empty strings.
-                    self.assertTrue(all(re.match(r'[^ ]', item) for item in row), 'Row has empty string.')
-                    if row_count == 0:
-                        self.assertEqual(expected_fieldnames, row, 'Manifest headers are not configured correctly')
-                    elif row_count == 1:
-                        self.assertEqual(len(row), 13, 'Incorrect number of entries in row.')
-                        self.assertEqual(row, expected_row, 'Row in sample.tsv incorrect.')
-                self.assertEqual(row_count, 2, 'Found incorrect number of files.')  # self.bundle has 2 files
+                samples = iter(csv.reader(fh, delimiter='\t'))
+                row = next(samples)
+                self.assertEqual(expected_fieldnames, row, 'Manifest headers are not configured correctly')
+                row = next(samples)
+                self.assertEqual(row, expected_row, 'Row in sample.tsv incorrect.')
+                remaining_rows = list(samples)
+                self.assertTrue(all(len(row) == len(expected_row) for row in remaining_rows),
+                                'Incorrect number of entries in a row.')
+                self.assertEqual(len(remaining_rows), 1, 'Found incorrect number of files.')  # self.bundle has 2 files
