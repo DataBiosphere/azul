@@ -197,6 +197,18 @@ class TestAccessorApi(TestCase):
                           preservation_methods={'cryopreservation, other'},
                           library_construction_methods={'Smart-seq2'})
 
+    def test_ontology_label_field(self):
+        """
+        A bundle in production containing a library_construction_approach field
+        with "text" and "ontology_label" properties that have different values
+        """
+        self._test_bundle(uuid='6b498499-c5b4-452f-9ff9-2318dbb86000',
+                          version='2019-01-03T163633.780215Z',
+                          age_range=AgeRange(1734480000.0, 1860624000.0),
+                          diseases={'normal'},
+                          project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
+                          library_construction_methods={"10X v2 sequencing"})
+
     def _test_bundle(self, uuid, deployment=None, replica='aws', version=None, **assertion_kwargs):
         client = dss_client(deployment)
         version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
