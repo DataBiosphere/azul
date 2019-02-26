@@ -53,6 +53,18 @@ changes:
     notes: Before reinstalling your requirements, delete your virtual environment. Then, use the `python -m venv`
            command instead of `virtualenv` to create your virtual environment.
 
+  - title: Add BDBag as an alternative manifest format
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/604
+    upgrade:
+      - deploy
+      - requirements
+      - clients
+    notes: The query parameter `format` has been added to the '/repository/files/export' endpoint. Possible values are
+           `tsv` (default, retains previous functionality) and `bdbag`. The latter creates a manifest containing the
+           information necessary for importing samples from a DSS instance into Broad's Terra analysis platform. The
+           manifest data will be packaged in a BDBag and persisted as a compressed ZIP file in an S3 bucket.
+
   - title: Include content disposition header in manifest responses
     issues:
       - https://github.com/DataBiosphere/azul/issues/655
