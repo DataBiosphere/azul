@@ -34,12 +34,17 @@ class BaseIndexer(ABC):
     def mapping(self) -> JSON:
         raise NotImplementedError()
 
-    def settings(self) -> JSON:
+    def settings(self, index_name) -> JSON:
+        # Setting a large number of shards for the contributions indexes (i.e. not aggregate) greatly speeds up indexing
+        # which is our biggest bottleneck, however doing the same for the aggregate index dramatically limits searching.
+        # This was because every search had to check every shard and nodes became overburdened with so many requests.
+        # Instead we try using one shard per ES node which is optimal for searching since it allows parallelization of
+        # requests (though maybe at the cost of higher contention during indexing).
+        _, aggregate = config.parse_es_index_name(index_name)
+        num_shards = config.es_instance_count if aggregate else config.indexer_concurrency
         return {
             "index": {
-                # This is important. It may slow down searches but it does increase concurrency during indexing,
-                # currently our biggest performance bottleneck.
-                "number_of_shards": config.indexer_concurrency,
+                "number_of_shards": num_shards,
                 "number_of_replicas": 1,
                 "refresh_interval": f"{config.es_refresh_interval}s"
             }
@@ -86,7 +91,7 @@ class BaseIndexer(ABC):
         for index_name in self.index_names():
             es_client.indices.create(index=index_name,
                                      ignore=[400],
-                                     body=dict(settings=self.settings(),
+                                     body=dict(settings=self.settings(index_name),
                                                mappings=dict(doc=self.mapping())))
         contributions = []
         for transformer in self.transformers():
