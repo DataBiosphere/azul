@@ -363,4 +363,5 @@ class TestAccessorApi(TestCase):
 def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.age_range'))
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.lookup'))
+    tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.api'))
     return tests

@@ -1,12 +1,15 @@
-from typing import TypeVar, Mapping
+from typing import TypeVar, Mapping, Union
+from enum import Enum
 
 K = TypeVar('K')
 V = TypeVar('V')
 
-RAISE = object()
+
+class LookupDefault(Enum):
+    RAISE = 0
 
 
-def lookup(d: Mapping[K, V], k: K, *ks: K, default=RAISE) -> V:
+def lookup(d: Mapping[K, V], k: K, *ks: K, default: Union[V, LookupDefault] = LookupDefault.RAISE) -> V:
     """
     Look up a value in the specified dictionary given one or more candidate keys.
 
@@ -56,7 +59,7 @@ def lookup(d: Mapping[K, V], k: K, *ks: K, default=RAISE) -> V:
             except KeyError:
                 pass
         else:
-            if default is RAISE:
+            if default is LookupDefault.RAISE:
                 raise
             else:
                 return default
