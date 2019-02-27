@@ -78,6 +78,10 @@ class Config:
         return f'{self._resource_prefix}-data-browser-{self.deployment_stage}'
 
     @property
+    def data_portal_name(self):
+        return f'{self._resource_prefix}-data-portal-{self.deployment_stage}'
+
+    @property
     def dss_endpoint(self) -> str:
         return os.environ['AZUL_DSS_ENDPOINT']
 
