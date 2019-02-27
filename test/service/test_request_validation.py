@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import sys
-import re
 
 from tempfile import TemporaryDirectory
 from unittest import mock
@@ -13,6 +12,7 @@ import requests
 
 import azul.changelog
 from azul import config
+from azul.json_freeze import freeze
 from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService
 from retorts import ResponsesHelper
@@ -224,12 +224,11 @@ class FacetNameValidationTest(WebServiceTestCase):
             ]
             expected_fieldnames, expected_row = map(list, zip(*expectations))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'sample.tsv'), 'r') as fh:
-                samples = iter(csv.reader(fh, delimiter='\t'))
-                row = next(samples)
-                self.assertEqual(expected_fieldnames, row, 'Manifest headers are not configured correctly')
-                row = next(samples)
-                self.assertEqual(row, expected_row, 'Row in sample.tsv incorrect.')
-                remaining_rows = list(samples)
-                self.assertTrue(all(len(row) == len(expected_row) for row in remaining_rows),
-                                'Incorrect number of entries in a row.')
-                self.assertEqual(len(remaining_rows), 1, 'Found incorrect number of files.')  # self.bundle has 2 files
+                rows = iter(csv.reader(fh, delimiter='\t'))
+                row = next(rows)
+                self.assertEqual(expected_fieldnames, row)
+                rows = freeze(list(rows))
+                self.assertEqual(len(rows), 2)  # self.bundle has 2 files
+                self.assertTrue(all(len(row) == len(expected_row) for row in rows))
+                self.assertEqual(len(set(rows)), len(rows))
+                self.assertIn(freeze(expected_row), rows)
