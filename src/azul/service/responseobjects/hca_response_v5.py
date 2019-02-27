@@ -198,6 +198,10 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
+    def _translate(self, untranslated, keyname):
+        m = self.manifest_entries[keyname]
+        return [untranslated.get(es_name, "") for es_name in m.values()]
+
     def _extract_fields(self, entities, column_mapping):
         def validate(s: str) -> str:
             assert '||' not in s
