@@ -60,6 +60,7 @@ changes:
       - deploy
       - requirements
       - clients
+      - reindex
     notes: The query parameter `format` has been added to the '/repository/files/export' endpoint. Possible values are
            `tsv` (default, retains previous functionality) and `bdbag`. The latter creates a manifest containing the
            information necessary for importing samples from a DSS instance into Broad's Terra analysis platform. The
