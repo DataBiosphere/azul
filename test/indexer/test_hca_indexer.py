@@ -170,7 +170,7 @@ class TestHCAIndexer(IndexerTestCase):
             else:
                 self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
             specimen = one(contents['specimens'])
-            self.assertIn('Homo sapiens', specimen['genus_species'])
+            self.assertIn('Australopithecus', specimen['genus_species'])
         self.assertEqual(num_expected_new_contributions, num_actual_new_contributions)
         return hits_by_id
 
@@ -204,7 +204,7 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertNotEqual(old_project["institutions"], project["institutions"])
                 else:
                     self.assertNotEqual(old_project["contributors"], project["contributors"])
-                self.assertEqual(old_contents["specimens"][0]["genus_species"],
+                self.assertNotEqual(old_contents["specimens"][0]["genus_species"],
                                     contents["specimens"][0]["genus_species"])
 
             self.assertEqual("Single cell transcriptome analysis of human pancreas reveals transcriptional "
