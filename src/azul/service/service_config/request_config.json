@@ -69,6 +69,28 @@
       "bundle_version": "version"
     }
   },
+    "bdbag": {
+    "contents.cell_suspensions": {
+      "cell_suspension_id": "document_id"
+    },
+    "contents.specimens": {
+      "entity:sample_id": "donor_biomaterial_id",
+      "participant_id": "donor_document_id"
+    },
+    "contents.files": {
+      "file_content_type": "content-type",
+      "file_name": "name",
+      "file_sha256": "sha256",
+      "file_size": "size",
+      "file_uuid": "uuid",
+      "file_version": "version",
+      "file_indexed": "indexed"
+    },
+    "bundles": {
+      "bundle_uuid": "uuid",
+      "bundle_version": "version"
+    }
+  },
   "cart-item": {
     "files": [
       "fileId",
