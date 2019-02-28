@@ -1,12 +1,12 @@
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import logging
-import time
+from typing import NamedTuple, Tuple
 import unittest
-from unittest import mock
 from unittest.mock import patch
 
 from elasticsearch import Elasticsearch
+from elasticsearch.helpers import scan
 from more_itertools import one
 
 from azul import config
@@ -25,15 +25,18 @@ def setUpModule():
 class TestHCAIndexer(IndexerTestCase):
 
     def _get_es_results(self):
-        results = self.es_client.search(index=','.join(self.get_hca_indexer().index_names()),
-                                        doc_type="doc",
-                                        size=100)
-        return results['hits']['hits']
+        results = scan(client=self.es_client,
+                       index=','.join(self.get_hca_indexer().index_names()),
+                       doc_type="doc")
+        return list(results)
 
     def tearDown(self):
+        self._delete_indices()
+        super().tearDown()
+
+    def _delete_indices(self):
         for index_name in self.get_hca_indexer().index_names():
             self.es_client.indices.delete(index=index_name, ignore=[400, 404])
-        super().tearDown()
 
     old_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")
     new_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z")
@@ -52,20 +55,29 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Delete a bundle and check that the index contains the appropriate flags
         """
+
         # FIXME: there should be a test that removes a bundle contribution from an entity that has
         # contributions from other bundles (https://github.com/DataBiosphere/azul/issues/424)
 
-        manifest, metadata = self._load_canned_bundle(self.new_bundle)
+        class BundleAndSize(NamedTuple):
+            bundle: Tuple[str, str]
+            size: int
 
-        # Ensure that we cover bulk deletes as well as individual ones
-        for bulk_threshold in IndexWriter.bulk_threshold, 0:
-            with self.subTest(bulk_threshold=bulk_threshold):
-                with mock.patch.object(IndexWriter, 'bulk_threshold', bulk_threshold):
+        # Ensure that we have a bundle whose documents are written individually and another one that's written in bulk
+        small_bundle = BundleAndSize(bundle=self.new_bundle,
+                                     size=4)
+        large_bundle = BundleAndSize(bundle=("2a87dc5c-0c3c-4d91-a348-5d784ab48b92", "2018-03-29T103945.437487Z"),
+                                     size=225)
+        self.assertTrue(small_bundle.size < IndexWriter.bulk_threshold < large_bundle.size)
 
+        for bundle, size in small_bundle, large_bundle:
+            with self.subTest(size=size):
+                manifest, metadata = self._load_canned_bundle(bundle)
+                try:
                     self._index_bundle(self.new_bundle, manifest, metadata)
 
                     hits = self._get_es_results()
-                    self.assertEqual(len(hits), 8)
+                    self.assertEqual(len(hits), size * 2)
                     num_aggregates, num_contribs = 0, 0
                     for hit in hits:
                         entity_type, aggregate = config.parse_es_index_name(hit["_index"])
@@ -78,19 +90,21 @@ class TestHCAIndexer(IndexerTestCase):
                             self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
                             self.assertFalse(doc.bundle_deleted)
                             num_contribs += 1
-                    self.assertEqual(num_aggregates, 4)
-                    self.assertEqual(num_contribs, 4)
+                    self.assertEqual(num_aggregates, size)
+                    self.assertEqual(num_contribs, size)
 
                     self._delete_bundle(self.new_bundle)
 
                     hits = self._get_es_results()
-                    self.assertEqual(len(hits), 4)
+                    self.assertEqual(len(hits), size)
                     for hit in hits:
                         entity_type, aggregate = config.parse_es_index_name(hit["_index"])
                         self.assertFalse(aggregate)
                         doc = Contribution.from_index(hit)
                         self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
                         self.assertTrue(doc.bundle_deleted)
+                finally:
+                    self._delete_indices()
 
     def test_derived_files(self):
         """
