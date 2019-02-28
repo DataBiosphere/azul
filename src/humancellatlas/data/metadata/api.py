@@ -237,7 +237,7 @@ class SpecimenFromOrganism(Biomaterial):
     preservation_method: Optional[str]
     diseases: Set[str]
     organ: Optional[str]
-    organ_part: Optional[str]
+    organ_parts: Set[str]
 
     def __init__(self, json: JSON):
         super().__init__(json)
@@ -247,13 +247,24 @@ class SpecimenFromOrganism(Biomaterial):
         self.preservation_method = preservation_storage.get('preservation_method') if preservation_storage else None
         self.diseases = {ontology_label(d) for d in lookup(content, 'diseases', 'disease', default=[]) if d}
         self.organ = ontology_label(content.get('organ'), default=None)
-        self.organ_part = ontology_label(content.get('organ_part'), default=None)
+
+        organ_parts = lookup(content, 'organ_parts', 'organ_part', default=[])
+        if not isinstance(organ_parts, list):
+            organ_parts = [organ_parts]
+        self.organ_parts = {ontology_label(d) for d in organ_parts if d}
 
     @property
     def disease(self):
         warnings.warn(f"SpecimenFromOrganism.disease is deprecated. "
                       f"Use SpecimenFromOrganism.diseases instead.", DeprecationWarning)
         return self.diseases
+
+    @property
+    def organ_part(self):
+        msg = ("SpecimenFromOrganism.organ_part has been removed. "
+               "Use SpecimenFromOrganism.organ_parts instead.")
+        warnings.warn(msg, DeprecationWarning)
+        raise AttributeError(msg)
 
 
 @dataclass(init=False)
