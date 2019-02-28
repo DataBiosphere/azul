@@ -2,6 +2,7 @@
 from copy import deepcopy
 import json
 import logging
+from more_itertools import one
 import os
 from typing import List
 
@@ -254,17 +255,17 @@ class ElasticTransformDump(object):
         return loaded_file
 
     @staticmethod
-    def apply_paging(es_search, pagination):
+    def apply_paging(es_search, pagination, sort_field_type='text'):
         """
         Applies the pagination to the ES Search object
         :param es_search: The ES Search object
         :param pagination: Dictionary with raw entries from the GET Request.
         It has: 'size', 'sort', 'order', and one of 'search_after', 'search_before', or 'from'.
+        :param sort_field_type: The elasticsearch data type of the sort field
         :return: An ES Search object where pagination has been applied
         """
         # Extract the fields for readability (and slight manipulation)
-
-        _sort = pagination['sort'] + ".keyword"
+        _sort = pagination['sort'] + ('.keyword' if sort_field_type == 'text' else '')
         _order = pagination['order']
 
         # Using search_after/search_before pagination
@@ -495,8 +496,13 @@ class ElasticTransformDump(object):
             # Translate the sort field if there is any translation available
             if pagination['sort'] in translation:
                 pagination['sort'] = translation[pagination['sort']]
+
+            index_client = elasticsearch.client.IndicesClient(self.es_client)
+            index_name = config.es_index_name(entity_type)
+            field_map = index_client.get_field_mapping(fields=[pagination['sort']], index=index_name)
+            field_type = one(one(field_map.values())['mappings']['doc'][pagination['sort']]['mapping'].values())['type']
             # Apply paging
-            es_search = self.apply_paging(es_search, pagination)
+            es_search = self.apply_paging(es_search, pagination, field_type)
             # Execute ElasticSearch request
 
             try:
