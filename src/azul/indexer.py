@@ -279,15 +279,11 @@ class BaseIndexer(ABC):
         }
         # FIXME: decide if we want to keep the contents of the contribution, or not (and use source filtering to
         # minimize the response size)
-        response = es_client.search(body=query,
-                                    doc_type="doc",
-                                    index=self.index_names(aggregate=False))
         contributions = []
-        for hit in response['hits']['hits']:
+        for hit in scan(es_client, query=query, doc_type="doc", index=self.index_names(aggregate=False)):
             contribution = Contribution.from_index(hit)
             contribution.bundle_deleted = True
             contributions.append(contribution)
-
         return contributions
 
 
