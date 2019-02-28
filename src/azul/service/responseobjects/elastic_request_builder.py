@@ -538,7 +538,10 @@ class ElasticTransformDump(object):
         if not filters:
             filters = {"file": {}}
         filters = filters['file']
-        manifest_config = request_config['manifest']
+        if format == 'bdbag':
+            manifest_config = request_config['bdbag']
+        else:
+            manifest_config = request_config['manifest']
         source_filter = [field_path_prefix + '.' + field_name
                          for field_path_prefix, field_mapping in manifest_config.items()
                          for field_name in field_mapping.values()]
