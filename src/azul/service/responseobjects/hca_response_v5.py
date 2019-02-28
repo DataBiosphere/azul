@@ -17,7 +17,8 @@ from jsonobject import (FloatProperty,
                         JsonObject,
                         ListProperty,
                         ObjectProperty,
-                        StringProperty)
+                        StringProperty,
+                        DefaultProperty)
 from bdbag import bdbag_api
 from shutil import copy
 from more_itertools import one
@@ -59,9 +60,9 @@ class PaginationObj(JsonObject):
     count = IntegerProperty()
     total = IntegerProperty()
     size = IntegerProperty()
-    search_after = StringProperty()
+    search_after = DefaultProperty()
     search_after_uid = StringProperty()
-    search_before = StringProperty()
+    search_before = DefaultProperty()
     search_before_uid = StringProperty()
     sort = StringProperty()
     order = StringProperty(choices=['asc', 'desc'])
