@@ -11,7 +11,7 @@ from humancellatlas.data.metadata.age_range import AgeRange
 
 # A few helpful type aliases
 #
-from humancellatlas.data.metadata.lookup import lookup
+from humancellatlas.data.metadata.lookup import lookup, LookupDefault
 
 UUID4 = UUID
 AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
@@ -205,10 +205,10 @@ class DonorOrganism(Biomaterial):
     def __init__(self, json: JSON):
         super().__init__(json)
         content = json.get('content', json)
-        self.genus_species = {gs['text'] for gs in content['genus_species']}
-        self.diseases = {d['text'] for d in lookup(content, 'diseases', 'disease', default=[]) if d}
+        self.genus_species = {ontology_label(gs) for gs in content['genus_species']}
+        self.diseases = {ontology_label(d) for d in lookup(content, 'diseases', 'disease', default=[]) if d}
         self.organism_age = content.get('organism_age')
-        self.organism_age_unit = content.get('organism_age_unit', {}).get('text')
+        self.organism_age_unit = ontology_label(content.get('organism_age_unit'), default=None)
         self.sex = lookup(content, 'sex', 'biological_sex')
 
     @property
@@ -237,7 +237,7 @@ class SpecimenFromOrganism(Biomaterial):
     preservation_method: Optional[str]
     diseases: Set[str]
     organ: Optional[str]
-    organ_part: Optional[str]
+    organ_parts: Set[str]
 
     def __init__(self, json: JSON):
         super().__init__(json)
@@ -245,15 +245,26 @@ class SpecimenFromOrganism(Biomaterial):
         preservation_storage = content.get('preservation_storage')
         self.storage_method = preservation_storage.get('storage_method') if preservation_storage else None
         self.preservation_method = preservation_storage.get('preservation_method') if preservation_storage else None
-        self.diseases = {d['text'] for d in lookup(content, 'diseases', 'disease', default=[]) if d}
-        self.organ = content.get('organ', {}).get('text')
-        self.organ_part = content.get('organ_part', {}).get('text')
+        self.diseases = {ontology_label(d) for d in lookup(content, 'diseases', 'disease', default=[]) if d}
+        self.organ = ontology_label(content.get('organ'), default=None)
+
+        organ_parts = lookup(content, 'organ_parts', 'organ_part', default=[])
+        if not isinstance(organ_parts, list):
+            organ_parts = [organ_parts]
+        self.organ_parts = {ontology_label(d) for d in organ_parts if d}
 
     @property
     def disease(self):
         warnings.warn(f"SpecimenFromOrganism.disease is deprecated. "
                       f"Use SpecimenFromOrganism.diseases instead.", DeprecationWarning)
         return self.diseases
+
+    @property
+    def organ_part(self):
+        msg = ("SpecimenFromOrganism.organ_part has been removed. "
+               "Use SpecimenFromOrganism.organ_parts instead.")
+        warnings.warn(msg, DeprecationWarning)
+        raise AttributeError(msg)
 
 
 @dataclass(init=False)
@@ -285,8 +296,8 @@ class Organoid(Biomaterial):
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
         content = json.get('content', json)
-        self.model_organ = lookup(content, 'model_organ', 'model_for_organ').get('text')
-        self.model_organ_part = content.get('model_organ_part', {}).get('text')
+        self.model_organ = ontology_label(lookup(content, 'model_organ', 'model_for_organ'), default=None)
+        self.model_organ_part = ontology_label(content.get('model_organ_part'), default=None)
 
 
 @dataclass(init=False)
@@ -368,7 +379,7 @@ class SequencingProcess(Process):
         warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
         super().__init__(json)
         content = json.get('content', json)
-        self.instrument_manufacturer_model = content['instrument_manufacturer_model']['text']
+        self.instrument_manufacturer_model = ontology_label(content['instrument_manufacturer_model'])
 
     def is_sequencing_process(self):
         return True
@@ -395,13 +406,19 @@ class Protocol(LinkedEntity):
 
 @dataclass(init=False)
 class LibraryPreparationProtocol(Protocol):
-    library_construction_approach: str
+    library_construction_method: str
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
         content = json.get('content', json)
-        lca = content.get('library_construction_approach')
-        self.library_construction_approach = lca['text'] if isinstance(lca, dict) else lca
+        temp = lookup(content, 'library_construction_method', 'library_construction_approach')
+        self.library_construction_method = ontology_label(temp) if isinstance(temp, dict) else temp
+
+    @property
+    def library_construction_approach(self) -> str:
+        warnings.warn(f"LibraryPreparationProtocol.library_construction_approach is deprecated. "
+                      f"Use LibraryPreparationProtocol.library_construction_method instead.", DeprecationWarning)
+        return self.library_construction_method
 
 
 @dataclass(init=False)
@@ -411,7 +428,7 @@ class SequencingProtocol(Protocol):
     def __init__(self, json: JSON):
         super().__init__(json)
         content = json.get('content', json)
-        self.instrument_manufacturer_model = content.get('instrument_manufacturer_model', {}).get('text')
+        self.instrument_manufacturer_model = ontology_label(content.get('instrument_manufacturer_model'), default=None)
 
 
 @dataclass(init=False)
@@ -716,3 +733,41 @@ core_types = {
 }
 
 assert len(entity_types) == len(schema_names), "The mapping from schema name to entity type is not bijective"
+
+
+def ontology_label(ontology: Optional[Mapping[str, str]],
+                   default: Union[str, None, LookupDefault] = LookupDefault.RAISE) -> str:
+    """
+    Return the best-suited value from the given ontology dictionary.
+
+    >>> ontology_label({'ontology_label': '1', 'text': '2', 'ontology': '3'})
+    '1'
+
+    >>> ontology_label({'text': '2', 'ontology': '3'})
+    '2'
+
+    >>> ontology_label({'ontology': '3'})
+    '3'
+
+    >>> ontology_label({}, default=None)
+    >>> ontology_label({}, default='default')
+    'default'
+
+    >>> ontology_label(None, default=None)
+    >>> ontology_label(None, default='default')
+    'default'
+
+    >>> ontology_label({})
+    Traceback (most recent call last):
+    ...
+    KeyError: 'ontology_label'
+
+    >>> ontology_label(None)
+    Traceback (most recent call last):
+    ...
+    TypeError: 'NoneType' object is not subscriptable
+    """
+    if ontology is None and default is not LookupDefault.RAISE:
+        return default
+    else:
+        return lookup(ontology, 'ontology_label', 'text', 'ontology', default=default)

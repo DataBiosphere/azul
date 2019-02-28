@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import re
-from unittest import TestCase
+from unittest import TestCase, skip
 from unittest.mock import Mock
 import warnings
 
@@ -17,6 +17,7 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               SequenceFile,
                                               SpecimenFromOrganism,
                                               CellSuspension,
+                                              LibraryPreparationProtocol,
                                               SupplementaryFile)
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -40,31 +41,36 @@ class TestAccessorApi(TestCase):
                                   diseases={'normal'},
                                   project_roles={None, 'Human Cell Atlas wrangler', 'external curator'},
                                   storage_methods={'frozen, liquid nitrogen'},
-                                  preservation_methods={'cryopreservation, other'})
+                                  preservation_methods={'cryopreservation, other'},
+                                  library_construction_methods={'Smart-seq2'})
 
     def test_diabetes_pancreas(self):
         self._test_example_bundle(directory='Healthy and type 2 diabetes pancreas',
                                   age_range=AgeRange(min=1356048000.0, max=1356048000.0),
                                   diseases={'normal'},
-                                  project_roles={None, 'Human Cell Atlas wrangler', 'external curator'})
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'external curator'},
+                                  library_construction_methods={'Smart-seq2'})
 
     def test_hpsi(self):
         self._test_example_bundle(directory='HPSI_human_cerebral_organoids',
                                   age_range=AgeRange(min=1419120000.0, max=1545264000.0),
                                   diseases={'normal'},
-                                  project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'})
+                                  project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
+                                  library_construction_methods={"Chromium 3' Single Cell v2"})
 
     def test_mouse(self):
         self._test_example_bundle(directory='Mouse Melanoma',
                                   age_range=AgeRange(3628800.0, 7257600.0),
                                   diseases={'subcutaneous melanoma'},
-                                  project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'},
+                                  library_construction_methods={'Smart-seq2'})
 
     def test_pancreas(self):
         self._test_example_bundle(directory='Single cell transcriptome analysis of human pancreas',
                                   age_range=AgeRange(662256000.0, 662256000.0),
                                   diseases={'normal'},
-                                  project_roles={None, 'external curator', 'Human Cell Atlas wrangler'})
+                                  project_roles={None, 'external curator', 'Human Cell Atlas wrangler'},
+                                  library_construction_methods={'smart-seq2'})
 
     def test_tissue_stability(self):
         self._test_example_bundle(directory='Tissue stability',
@@ -72,13 +78,15 @@ class TestAccessorApi(TestCase):
                                   diseases={'normal'},
                                   storage_methods=set(),
                                   preservation_methods=set(),
-                                  project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'},
+                                  library_construction_methods={'10X sequencing'})
 
     def test_immune_cells(self):
         self._test_example_bundle(directory='1M Immune Cells',
                                   age_range=AgeRange(1639872000.0, 1639872000.0),
                                   diseases=set(),
-                                  project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'})
+                                  project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'},
+                                  library_construction_methods={'10X sequencing'})
 
     def _test_example_bundle(self, directory, **kwargs):
         manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
@@ -133,6 +141,8 @@ class TestAccessorApi(TestCase):
                           age_range=AgeRange(3628800.0, 7257600.0),
                           diseases={'subcutaneous melanoma'}),
 
+    # TODO: Use bundle from production to fix test broken by missing bundle
+    @skip("Test bundle no longer exists on staging")
     def test_vx_primary_cs_bundle(self):
         """
         A vx primary bundle with a cell_suspension as sequencing input
@@ -141,6 +151,8 @@ class TestAccessorApi(TestCase):
                           deployment='staging',
                           diseases={'glioblastoma'}),
 
+    # TODO: Use bundle from production to fix test broken by missing bundle
+    @skip("Test bundle no longer exists on staging")
     def test_vx_analysis_cs_bundle(self):
         """
         A vx analysis bundle for the primary bundle with a cell_suspension as sequencing input
@@ -150,6 +162,8 @@ class TestAccessorApi(TestCase):
                           deployment='staging',
                           diseases={'glioblastoma'}),
 
+    # TODO: Use bundle from production to fix test broken by missing bundle
+    @skip("Test bundle no longer exists on staging")
     def test_vx_analysis_specimen_bundle(self):
         """
         A vx primary bundle with a specimen_from_organism as sequencing input
@@ -166,7 +180,8 @@ class TestAccessorApi(TestCase):
         self._test_bundle(uuid='70184761-70fc-4b80-8c48-f406a478d5ab',
                           version='2018-09-05T182535.846470Z',
                           deployment='staging',
-                          diseases={'glioblastoma'}),
+                          diseases={'glioblastoma'},
+                          library_construction_methods={'Smart-seq2'})
 
     def test_preservation_storage_bundle(self):
         """
@@ -179,7 +194,20 @@ class TestAccessorApi(TestCase):
                           diseases={'normal'},
                           project_roles={'Human Cell Atlas wrangler', None, 'external curator'},
                           storage_methods={'frozen, liquid nitrogen'},
-                          preservation_methods={'cryopreservation, other'})
+                          preservation_methods={'cryopreservation, other'},
+                          library_construction_methods={'Smart-seq2'})
+
+    def test_ontology_label_field(self):
+        """
+        A bundle in production containing a library_construction_approach field
+        with "text" and "ontology_label" properties that have different values
+        """
+        self._test_bundle(uuid='6b498499-c5b4-452f-9ff9-2318dbb86000',
+                          version='2019-01-03T163633.780215Z',
+                          age_range=AgeRange(1734480000.0, 1860624000.0),
+                          diseases={'normal'},
+                          project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
+                          library_construction_methods={"10X v2 sequencing"})
 
     def _test_bundle(self, uuid, deployment=None, replica='aws', version=None, **assertion_kwargs):
         client = dss_client(deployment)
@@ -195,7 +223,8 @@ class TestAccessorApi(TestCase):
                        diseases=frozenset({None}),
                        project_roles=frozenset({None}),
                        storage_methods=frozenset({None}),
-                       preservation_methods=frozenset({None})):
+                       preservation_methods=frozenset({None}),
+                       library_construction_methods=frozenset()):
         bundle = Bundle(uuid, version, manifest, metadata_files)
         biomaterials = bundle.biomaterials.values()
         actual_diseases = set(chain(*(bm.diseases for bm in biomaterials
@@ -264,7 +293,15 @@ class TestAccessorApi(TestCase):
         self.assertEqual(storage_methods, {s.storage_method for s in bundle.specimens})
         self.assertEqual(preservation_methods, {s.preservation_method for s in bundle.specimens})
 
-        print(json.dumps(as_json(bundle), indent=4))
+        # Prove that as_json returns a valid JSON structure (no cycles, correct types, etc.)
+        self.assertTrue(isinstance(json.dumps(as_json(bundle)), str))
+
+        library_prep_protos = [p for p in bundle.protocols.values() if isinstance(p, LibraryPreparationProtocol)]
+        library_prep_proto_types = {type(p) for p in library_prep_protos}
+        has_library_preps = library_construction_methods != set() or len(library_prep_protos) > 0
+        self.assertEqual({LibraryPreparationProtocol} if has_library_preps else set(), library_prep_proto_types)
+        self.assertEqual(library_construction_methods, {p.library_construction_method for p in library_prep_protos})
+        self.assertEqual(library_construction_methods, {p.library_construction_approach for p in library_prep_protos})
 
     dss_subscription_query = {
         "query": {
@@ -326,4 +363,5 @@ class TestAccessorApi(TestCase):
 def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.age_range'))
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.lookup'))
+    tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.api'))
     return tests
