@@ -13071,11 +13071,18 @@
             "ontology_label": "hemopoietic organ",
             "ontology": "UBERON:0004177"
         },
-        "organ_part": {
-            "text": "bone marrow",
-            "ontology_label": "bone marrow",
-            "ontology": "UBERON:0002371"
-        },
+        "organ_part": [
+            {
+                "text": "bone marrow",
+                "ontology_label": "bone marrow",
+                "ontology": "UBERON:0002371"
+            },
+            {
+                "text": "Temporal Lobe",
+                "ontology_label": "temporal lobe",
+                "ontology": "UBERON:0001871"
+            }
+        ],
         "provenance": {
             "document_id": "79682426-b813-4f69-8c9c-2764ffac5dc1",
             "submission_date": "2018-10-01T14:22:25.143Z",
