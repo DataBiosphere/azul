@@ -92,7 +92,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "biologicalSex": ["female"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
+                            "genusSpecies": ["Homo sapiens"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
@@ -156,10 +156,10 @@ class TestResponse(WebServiceTestCase):
                         {
                             "biologicalSex": ["female"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
+                            "genusSpecies": ["Homo sapiens"],
                             "id": "DID_scRSq06_pancreas",
                             "organ": "pancreas",
-                            "organPart": "islet of Langerhans",
+                            "organPart": ["islet of Langerhans"],
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "preservationMethod": None,
@@ -248,7 +248,7 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "biologicalSex": ["female"],
                                 "disease": ["normal"],
-                                "genusSpecies": ["Australopithecus"],
+                                "genusSpecies": ["Homo sapiens"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
@@ -322,7 +322,7 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "biologicalSex": ["female"],
                                 "disease": ["normal"],
-                                "genusSpecies": ["Australopithecus"],
+                                "genusSpecies": ["Homo sapiens"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
@@ -666,7 +666,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "biologicalSex": ["female"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
+                            "genusSpecies": ["Homo sapiens"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
@@ -765,7 +765,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "biologicalSex": ["female"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
+                            "genusSpecies": ["Homo sapiens"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],

@@ -26,7 +26,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
@@ -36,7 +38,7 @@
                             "DID_scRSq06"
                         ],
                         "genus_species": [
-                            "Australopithecus"
+                            "Homo sapiens"
                         ],
                         "organism_age": [
                             "38"
@@ -173,7 +175,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
@@ -183,7 +187,7 @@
                             "DID_scRSq06"
                         ],
                         "genus_species": [
-                            "Australopithecus"
+                            "Homo sapiens"
                         ],
                         "organism_age": [
                             "38"
@@ -320,7 +324,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
@@ -330,7 +336,7 @@
                             "DID_scRSq06"
                         ],
                         "genus_species": [
-                            "Australopithecus"
+                            "Homo sapiens"
                         ],
                         "organism_age": [
                             "38"
@@ -481,7 +487,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
@@ -491,7 +499,7 @@
                             "DID_scRSq06"
                         ],
                         "genus_species": [
-                            "Australopithecus"
+                            "Homo sapiens"
                         ],
                         "organism_age": [
                             "38"
@@ -661,7 +669,7 @@
                             "DID_scRSq06"
                         ],
                         "genus_species": [
-                            "Australopithecus"
+                            "Homo sapiens"
                         ],
                         "organism_age": [
                             "38"
@@ -796,7 +804,7 @@
                             "DID_scRSq06"
                         ],
                         "genus_species": [
-                            "Australopithecus"
+                            "Homo sapiens"
                         ],
                         "organism_age": [
                             "38"
@@ -909,7 +917,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
@@ -919,7 +929,7 @@
                             "DID_scRSq06"
                         ],
                         "genus_species": [
-                            "Australopithecus"
+                            "Homo sapiens"
                         ],
                         "organism_age": [
                             "38"
@@ -1043,7 +1053,7 @@
                             "DID_scRSq06"
                         ],
                         "genus_species": [
-                            "Australopithecus"
+                            "Homo sapiens"
                         ],
                         "organism_age": [
                             "38"
