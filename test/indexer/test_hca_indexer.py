@@ -325,18 +325,16 @@ class TestHCAIndexer(IndexerTestCase):
             if aggregate:
                 bundles = result_dict['_source']['bundles']
                 self.assertEqual(1, len(bundles))
-            specimens = contents['specimens']
             cell_suspensions = contents['cell_suspensions']
             if entity_type == 'files' and contents['files'][0]['file_format'] == 'pdf':
                 # The PDF files in that bundle aren't linked to a specimen
                 self.assertEqual(0, len(cell_suspensions))
             else:
+                specimens = contents['specimens']
                 for specimen in specimens:
-                    self.assertIn('bone marrow', specimen['organ_part'])
-                    self.assertIn('temporal lobe', specimen['organ_part'])
+                    self.assertEquals({'bone marrow', 'temporal lobe'}, set(specimen['organ_part']))
                 for cell_suspension in cell_suspensions:
-                    self.assertIn('bone marrow', cell_suspension['organ_part'])
-                    self.assertIn('temporal lobe', cell_suspension['organ_part'])
+                    self.assertEquals({'bone marrow', 'temporal lobe'}, set(cell_suspension['organ_part']))
                 self.assertEqual(1 if aggregate else 384, len(cell_suspensions))
                 # 384 wells in total, four of them empty, the rest with a single cell
                 self.assertEqual(380, sum(cs['total_estimated_cells'] for cs in cell_suspensions))
