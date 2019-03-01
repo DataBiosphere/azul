@@ -397,21 +397,6 @@ class Config:
         return self.qualified_resource_name('cartitems')
 
     @property
-    def access_token_issuer(self):
-        return "https://humancellatlas.auth0.com"
-
-    @property
-    def access_token_audience_list(self):
-        return [
-            f"https://{self.deployment_stage}.data.humancellatlas.org/",
-            f"{self.access_token_issuer}/userinfo"
-        ]
-
-    @property
-    def fusillade_endpoint(self) -> str:
-        return os.environ['AZUL_FUSILLADE_ENDPOINT']
-
-    @property
     def cart_export_max_batch_size(self):
         return int(os.environ['AZUL_CART_EXPORT_MAX_BATCH_SIZE'])
 
