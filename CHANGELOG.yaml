@@ -19,6 +19,7 @@ changes:
       - https://github.com/humancellatlas/metadata-api/issues/31
     upgrade:
       - requirements
+      - reindex
 
   - title: "Fix: SQS trigger initially disabled"
     issues:
