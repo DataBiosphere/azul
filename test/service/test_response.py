@@ -159,7 +159,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Australopithecus"],
                             "id": "DID_scRSq06_pancreas",
                             "organ": "pancreas",
-                            "organPart": "islet of Langerhans",
+                            "organPart": ["islet of Langerhans"],
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "preservationMethod": None,

@@ -1,10 +1,10 @@
-include ../../common.mk
-
 all: deploy
+
+include ../../common.mk
 
 config: .chalice/config.json lambda-policy.json
 
-state: config
+state: check_branch config
 	python $(azul_home)/scripts/manage_chalice_deployed.py service download
 
 deploy: state

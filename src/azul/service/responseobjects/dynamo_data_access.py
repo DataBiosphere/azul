@@ -1,3 +1,5 @@
+from typing import NamedTuple, List, Any, Optional
+
 from boto3.dynamodb.conditions import And, Attr, Key
 
 from azul.deployment import aws
@@ -14,8 +16,9 @@ class DynamoDataAccessor:
     def get_table(self, table_name):
         return self.dynamo_client.Table(table_name)
 
-    def _make_query(self, table_name, key_conditions, filters=None, index_name=None,
-                    select=None, limit=None, consistent_read:bool=False):
+    def make_query(self, table_name, key_conditions, filters=None, index_name=None,
+                   select=None, limit=None, consistent_read:bool=False,
+                   exclusive_start_key=None):
         """
         Make a query and get results one page at a time.  This method handles the pagination logic so the caller can
         process each page at a time without having to re-query
@@ -27,7 +30,10 @@ class DynamoDataAccessor:
         :param filters: Optional conditions on non-primary key attributes
             Follow the same format as key conditions
         :param index_name: Name of secondary index to use; Use None to use primary index
+        :param select: The list of selected attributes
         :param limit: Maximum number of items per query (used for testing pagination)
+        :param consistent_read: Flag for consistent read
+        :param exclusive_start_key: DynamoDB exclusive start key
         :yield: results of a single query call
         """
         query_params = dict(ConsistentRead=consistent_read)
@@ -60,10 +66,13 @@ class DynamoDataAccessor:
         if index_name is not None:
             query_params['IndexName'] = index_name
 
+        if exclusive_start_key is not None:
+            query_params['ExclusiveStartKey'] = exclusive_start_key
+
         while True:
             query_result = self.get_table(table_name).query(**query_params)
             last_evaluated_key = query_result.get('LastEvaluatedKey')
-            yield query_result.get('Items'), query_result.get('Count')
+            yield Page(query_result.get('Items'), query_result.get('Count'), last_evaluated_key)
             if last_evaluated_key is None:
                 break
             query_params['ExclusiveStartKey'] = last_evaluated_key
@@ -78,8 +87,8 @@ class DynamoDataAccessor:
 
         :yields: Results of the query
         """
-        for items, count in self._make_query(**kwargs):
-            for item in items:
+        for page in self.make_query(**kwargs):
+            for item in page.items:
                 yield item
 
     def count(self, **kwargs):
@@ -91,10 +100,7 @@ class DynamoDataAccessor:
 
         :return number of matching items in the index
         """
-        total_count = 0
-        for _, count in self._make_query(**kwargs):
-            total_count += count
-        return total_count
+        return sum([page.count for page in self.make_query(**kwargs)])
 
     def insert_item(self, table_name, item):
         """
@@ -198,6 +204,12 @@ class DynamoDataAccessor:
                 delete_count += 1
                 batch.delete_item(Key=item)
         return delete_count
+
+
+class Page(NamedTuple):
+    items: List[Any]
+    count: int
+    last_evaluated_key: Optional[str]
 
 
 class ConditionalUpdateItemError(RuntimeError):
