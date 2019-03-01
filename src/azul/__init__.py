@@ -295,10 +295,13 @@ class Config:
 
     term_re = re.compile("[a-z][a-z0-9]{2,29}")
 
-    def _term_from_env(self, env_var_name: str) -> str:
-        value = os.environ[env_var_name]
-        self._validate_term(value, name=env_var_name)
-        return value
+    def _term_from_env(self, env_var_name: str, optional=False) -> str:
+        value = os.environ.get(env_var_name, default='')
+        if value == '' and optional:
+            return value
+        else:
+            self._validate_term(value, name=env_var_name)
+            return value
 
     def _validate_term(self, term: str, name: str = 'Term'):
         require(self.term_re.fullmatch(term) is not None,
@@ -438,6 +441,10 @@ class Config:
     @property
     def grafana_endpoint(self):
         return os.environ['azul_grafana_endpoint']
+
+    @property
+    def terraform_component(self):
+        return self._term_from_env('azul_terraform_component', optional=True)
 
 
 config = Config()

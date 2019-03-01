@@ -171,7 +171,7 @@ def subnet_number(zone, public):
 #
 nlb_preserve_source_ip = True
 
-emit({} if config.deployment_stage not in ('dev', ) else {
+emit({} if config.terraform_component != 'gitlab' else {
     "data": {
         "aws_availability_zones": {
             "available": {}
