@@ -333,15 +333,13 @@ class ManifestResponse(AbstractResponse):
 
         inner_entity_fields = []
         for doc_path, column_mapping in self.manifest_entries.items():
-            if doc_path != 'bundles':
-                doc_path = doc_path.split('.')
-                entities = hit_dict
-                for key in doc_path:
-                    entities = entities.get(key, [{}])
-                inner_entity_fields += self._extract_fields(entities, column_mapping)
+            doc_path = doc_path.split('.')
+            entities = hit_dict
+            for key in doc_path:
+                entities = entities.get(key, [{}])
+            inner_entity_fields += self._extract_fields(entities, column_mapping)
 
-        for bundle in hit_dict['bundles']:
-            writer.writerow(self._extract_fields([bundle], self.manifest_entries['bundles']) + inner_entity_fields)
+        writer.writerow(inner_entity_fields)
 
     def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
         hit_dict = es_search_hit.to_dict()
@@ -397,11 +395,8 @@ class ManifestResponse(AbstractResponse):
         self.storage_service = StorageService()
         self.format = format
 
-        bundles_field_names = [field_name for field_name in self.manifest_entries['bundles']]
         sources = list(self.manifest_entries.keys())
-        sources.remove('bundles')
-        inner_entity_field_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
-        self.ordered_column_names = bundles_field_names + inner_entity_field_names
+        self.ordered_column_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
 
 
 class EntryFetcher:
