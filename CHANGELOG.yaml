@@ -14,6 +14,13 @@ meta:
 
 changes:
 
+  - title: "Use ontology terms where applicable"
+    issues:
+      - https://github.com/humancellatlas/metadata-api/issues/31
+    upgrade:
+      - requirements
+      - reindex
+
   - title: "Fix: SQS trigger initially disabled"
     issues:
       - https://github.com/DataBiosphere/azul/issues/335
