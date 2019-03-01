@@ -27,7 +27,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
@@ -175,7 +177,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
@@ -323,7 +327,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
@@ -485,7 +491,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
@@ -922,7 +930,9 @@
                             "normal"
                         ],
                         "organ": "pancreas",
-                        "organ_part": "islet of Langerhans",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
                         "preservation_method": null,
                         "_type": "specimen",
                         "donor_document_id": [
