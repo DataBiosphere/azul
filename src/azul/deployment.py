@@ -1,11 +1,12 @@
 from functools import lru_cache
 import json
-from typing import Optional, Tuple
+from typing import Mapping, Optional
 
 import boto3
 import botocore.session
 from more_itertools import one
 
+from azul import Netloc, config
 from azul.decorators import memoized_property
 
 
@@ -72,9 +73,17 @@ class AWS:
         else:
             return f"https://{api_gateway_id}.execute-api.{self.region_name}.amazonaws.com/{api_gateway_stage}/"
 
-    def es_endpoint(self, es_domain: str) -> Tuple[str, int]:
-        es_domain_status = self.es.describe_elasticsearch_domain(DomainName=es_domain)
+    @property
+    def es_endpoint(self) -> Netloc:
+        es_domain_status = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
         return es_domain_status['DomainStatus']['Endpoint'], 443
+
+    @property
+    def lambda_env(self) -> Mapping[str, str]:
+        return config.lambda_env(self.es_endpoint)
+
+    def get_lambda_arn(self, function_name, suffix):
+        return f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{function_name}-{suffix}"
 
 
 aws = AWS()

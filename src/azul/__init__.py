@@ -1,13 +1,11 @@
-import functools
 import os
 import re
-import time
-from typing import List, Mapping, Tuple
+from typing import List, Mapping, Optional, Tuple
 
 from hca.dss import DSSClient
 from urllib3 import Timeout
 
-from azul.deployment import aws
+Netloc = Tuple[str, int]
 
 
 class Config:
@@ -23,15 +21,21 @@ class Config:
         else:
             raise ValueError('Expected "0" or "1"', value)
 
+    es_endpoint_env_name = 'AZUL_ES_ENDPOINT'
+
     @property
-    def es_endpoint(self) -> Tuple[str, int]:
+    def es_endpoint(self) -> Optional[Netloc]:
         try:
-            es_endpoint = os.environ['AZUL_ES_ENDPOINT']
+            es_endpoint = os.environ[self.es_endpoint_env_name]
         except KeyError:
-            return aws.es_endpoint(self.es_domain)
+            return None
         else:
             host, _, port = es_endpoint.partition(':')
             return host, int(port)
+
+    def es_endpoint_env(self, es_endpoint: Netloc) -> Mapping[str, str]:
+        host, port = es_endpoint
+        return {self.es_endpoint_env_name: f"{host}:{port}"}
 
     @property
     def project_root(self) -> str:
@@ -265,31 +269,32 @@ class Config:
     }
 
     @property
-    def git_status(self):
+    def _git_status(self) -> Mapping[str, str]:
+        import git
+        repo = git.Repo(config.project_root)
+        return {
+            'azul_git_commit': repo.head.object.hexsha,
+            'azul_git_dirty': str(repo.is_dirty()),
+        }
+
+    @property
+    def lambda_git_status(self) -> Mapping[str, str]:
         return {
             'commit': os.environ['azul_git_commit'],
             'dirty': str_to_bool(os.environ['azul_git_dirty'])
         }
 
-    @property
-    def lambda_env(self) -> Mapping[str, str]:
+    def lambda_env(self, es_endpoint: Netloc):
         """
         A dictionary with the enviroment variables to be used by a deployed AWS Lambda function or `chalice local`
         """
-        import git
-        repo = git.Repo(self.project_root)
-        host, port = self.es_endpoint
         return {
             **{k: v for k, v in os.environ.items() if k.startswith('AZUL_')},
             # Hard-wire the ES endpoint, so we don't need to look it up at run-time, for every request/invocation
-            'AZUL_ES_ENDPOINT': f"{host}:{port}",
-            'azul_git_commit': repo.head.object.hexsha,
-            'azul_git_dirty': str(repo.is_dirty()),
+            **self.es_endpoint_env(es_endpoint),
+            **self._git_status,
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
-
-    def get_lambda_arn(self, function_name, suffix):
-        return f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{function_name}-{suffix}"
 
     lambda_timeout = 300
 
@@ -387,7 +392,7 @@ class Config:
     def dynamo_cart_item_table_name(self):
         return self.qualified_resource_name('cartitems')
 
-    cart_item_write_lambda_basename= 'cartitemwrite'
+    cart_item_write_lambda_basename = 'cartitemwrite'
 
     @property
     def cart_item_state_machine_name(self):
@@ -405,7 +410,7 @@ class Config:
     def cart_export_state_machine_name(self):
         return self.qualified_resource_name('cartexport')
 
-    cart_export_dss_push_lambda_basename= 'cartexportpush'
+    cart_export_dss_push_lambda_basename = 'cartexportpush'
 
     access_token_issuer = "https://humancellatlas.auth0.com"
 
@@ -473,46 +478,6 @@ def reject(condition: bool, *args, exception: type = RequirementError):
     """
     if condition:
         raise exception(*args)
-
-
-# Taken from
-# https://github.com/HumanCellAtlas/data-store/blob/90ffc8fccd2591dc21dab48ccfbba6e9ac29a063/tests/__init__.py
-
-# noinspection PyUnusedLocal
-# (see below)
-def eventually(timeout: float, interval: float, errors: set = frozenset((AssertionError,))):
-    """
-    Runs a test until all assertions are satisfied or a timeout is reached.
-
-    :param timeout: time until the test fails
-    :param interval: time between attempts of the test
-    :param errors: the exceptions to catch and retry on
-    :return: the result of the function or a raised assertion error
-    """
-
-    def decorate(func):
-        @functools.wraps(func)
-        def call(*args, **kwargs):
-            """
-            This timeout eliminates the retry feature of eventually.
-            The reason for this change is described here:
-            https://github.com/DataBiosphere/azul/issues/233
-            """
-            timeout = 0
-
-            timeout_time = time.time() + timeout
-            error_tuple = tuple(errors)
-            while True:
-                try:
-                    return func(*args, **kwargs)
-                except error_tuple:
-                    if time.time() >= timeout_time:
-                        raise
-                    time.sleep(interval)
-
-        return call
-
-    return decorate
 
 
 def str_to_bool(string: str):
