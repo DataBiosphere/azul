@@ -139,7 +139,7 @@ def health():
 def version():
     from azul.changelog import compact_changes
     return {
-        'git': config.git_status,
+        'git': config.lambda_git_status,
         'changes': compact_changes(limit=10)
     }
 

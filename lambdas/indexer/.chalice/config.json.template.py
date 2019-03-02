@@ -11,7 +11,7 @@ emit({
     "api_gateway_stage": config.deployment_stage,
     "manage_iam_role": False,
     "iam_role_arn": f"arn:aws:iam::{aws.account}:role/{config.indexer_name}",
-    "environment_variables": config.lambda_env,
+    "environment_variables": aws.lambda_env,
     "lambda_timeout": config.lambda_timeout,
     "lambda_memory_size": 256,
     "reserved_concurrency": config.indexer_concurrency,
