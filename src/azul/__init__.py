@@ -356,9 +356,7 @@ class Config:
         return (self.token_queue_name, self.document_queue_name, self.fail_queue_name,
                 self.fail_fifo_queue_name, self.notify_queue_name)
 
-    @property
-    def manifest_lambda_basename(self):
-        return 'manifest'
+    manifest_lambda_basename = 'manifest'
 
     @property
     def manifest_state_machine_name(self):
@@ -368,9 +366,7 @@ class Config:
     def test_mode(self) -> bool:
         return self._boolean(os.environ.get('TEST_MODE', '0'))
 
-    @property
-    def url_shortener_whitelist(self):
-        return [r'.*humancellatlas\.org']
+    url_shortener_whitelist = [r'.*humancellatlas\.org']
 
     @property
     def es_refresh_interval(self) -> int:
@@ -391,9 +387,7 @@ class Config:
     def dynamo_cart_item_table_name(self):
         return self.qualified_resource_name('cartitems')
 
-    @property
-    def cart_item_write_lambda_basename(self):
-        return 'cartitemwrite'
+    cart_item_write_lambda_basename= 'cartitemwrite'
 
     @property
     def cart_item_state_machine_name(self):
@@ -411,13 +405,9 @@ class Config:
     def cart_export_state_machine_name(self):
         return self.qualified_resource_name('cartexport')
 
-    @property
-    def cart_export_dss_push_lambda_basename(self):
-        return 'cartexportpush'
+    cart_export_dss_push_lambda_basename= 'cartexportpush'
 
-    @property
-    def access_token_issuer(self):
-        return "https://humancellatlas.auth0.com"
+    access_token_issuer = "https://humancellatlas.auth0.com"
 
     @property
     def access_token_audience_list(self):
