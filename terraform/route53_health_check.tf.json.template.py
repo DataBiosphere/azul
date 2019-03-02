@@ -1,7 +1,8 @@
+from azul.deployment import aws
 from azul.template import emit
-from azul import config, aws
+from azul import config
 
-emit({
+emit(None if not config.enable_monitoring else {
     "resource": [
         {
             "aws_route53_health_check": {
@@ -83,4 +84,4 @@ emit({
             }
         }
     ]
-} if config.enable_monitoring else None)
+})
