@@ -1,9 +1,11 @@
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import logging
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Tuple, Mapping
+import copy
 import unittest
 from unittest.mock import patch
+from uuid import uuid4
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
@@ -56,9 +58,6 @@ class TestHCAIndexer(IndexerTestCase):
         Delete a bundle and check that the index contains the appropriate flags
         """
 
-        # FIXME: there should be a test that removes a bundle contribution from an entity that has
-        # contributions from other bundles (https://github.com/DataBiosphere/azul/issues/424)
-
         class BundleAndSize(NamedTuple):
             bundle: Tuple[str, str]
             size: int
@@ -105,6 +104,69 @@ class TestHCAIndexer(IndexerTestCase):
                         self.assertTrue(doc.bundle_deleted)
                 finally:
                     self._delete_indices()
+
+    def test_multi_entity_contributing_bundles(self):
+        """
+        Delete a bundle which shares entities with another bundle and ensure shared entities
+        are not deleted. Only entity associated with deleted bundle should be marked as deleted.
+        """
+        bundle_fqid = ("8543d32f-4c01-48d5-a79f-1c5439659da3", "2018-03-29T143828.884167Z")
+        patched_bundle_fqid = ("9654e431-4c01-48d5-a79f-1c5439659da3", "2018-03-29T153828.884167Z")
+        manifest, metadata = self._load_canned_bundle(bundle_fqid)
+        old_file_uuid, patched_manifest, patched_metadata = self._patch_bundle(manifest, metadata)
+        self._index_bundle(bundle_fqid, manifest, metadata)
+        self._index_bundle(patched_bundle_fqid, patched_manifest, patched_metadata)
+
+        hits_before = self._get_es_results()
+        num_docs_by_index_before = self._num_docs_by_index(hits_before)
+
+        self._delete_bundle(bundle_fqid)
+
+        hits_after = self._get_es_results()
+        num_docs_by_index_after = self._num_docs_by_index(hits_after)
+
+        for entity_type, aggregate in num_docs_by_index_after.keys():
+            # Both bundles reference two files. They both share one file and exclusively own another one.
+            # Deleting one of the bundles removes only the file owned exclusively by that bundle.
+            difference = 1 if entity_type == 'files' and aggregate else 0
+            self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
+                             num_docs_by_index_before[entity_type, aggregate] - difference)
+
+        deleted_document_id = Contribution.make_document_id(old_file_uuid, *bundle_fqid)
+        hits = [hit['_source'] for hit in hits_after if hit['_id'] == deleted_document_id]
+        self.assertTrue(one(hits)['bundle_deleted'])
+
+    def _patch_bundle(self, manifest, metadata):
+        new_file_uuid = str(uuid4())
+        manifest = copy.deepcopy(manifest)
+        file_name = '21935_7#154_2.fastq.gz'
+        for file in manifest:
+            if file['name'] == file_name:
+                old_file_uuid = file['uuid']
+                file['uuid'] = new_file_uuid
+                break
+        else:
+            assert False, f"Unable to find file name {file_name}"
+
+        def _walkthrough(v):
+            if isinstance(v, dict):
+                return dict((k, _walkthrough(v)) for k, v in v.items())
+            elif isinstance(v, list):
+                return list(_walkthrough(i) for i in v)
+            elif isinstance(v, (str, int, bool, float)):
+                return new_file_uuid if v == old_file_uuid else v
+            else:
+                assert False, f'Cannot handle values of type {type(v)}'
+
+        metadata = _walkthrough(metadata)
+        return old_file_uuid, manifest, metadata
+
+    def _num_docs_by_index(self, hits) -> Mapping[Tuple[str, bool], int]:
+        counter = Counter()
+        for hit in hits:
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            counter[entity_type, aggregate] += 1
+        return counter
 
     def test_derived_files(self):
         """
