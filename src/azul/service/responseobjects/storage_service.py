@@ -38,12 +38,9 @@ class StorageService:
         return object_key
 
     def upload(self, file_name, object_key):
-        aws_profile = os.getenv('AWS_PROFILE')
-        session = boto3.Session(profile_name=aws_profile)
-        s3 = session.resource('s3')
-        s3.meta.client.upload_file(Filename=file_name,
-                                   Bucket=self.bucket_name,
-                                   Key=object_key)
+        self.client.upload_file(Filename=file_name,
+                                Bucket=self.bucket_name,
+                                Key=object_key)
         return object_key
 
     def get_presigned_url(self, key: str, file_name: Optional[str] = None) -> str:

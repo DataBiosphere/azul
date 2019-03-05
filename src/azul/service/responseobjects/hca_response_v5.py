@@ -237,8 +237,11 @@ class ManifestResponse(AbstractResponse):
             return self.storage_service.put(**parameters)
         elif self.format == 'bdbag':
             file_name = self._construct_bdbag()
-            object_key = f'manifests/{uuid4()}.zip'
-            return self.storage_service.upload(file_name, object_key)
+            try:
+                object_key = f'manifests/{uuid4()}.zip'
+                return self.storage_service.upload(file_name, object_key)
+            finally:
+                os.remove(file_name)
         else:
             assert False
 
