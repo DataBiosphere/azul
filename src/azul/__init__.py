@@ -66,6 +66,18 @@ class Config:
         return int(os.environ['AZUL_ES_TIMEOUT'])
 
     @property
+    def data_browser_domain(self):
+        # TODO: Work around for obtaining data-browser domain.
+        if self.deployment_stage not in ['dev', 'integration', 'staging', "prod"]:
+            return 'dev.data.humancellatlas.org'
+        else:
+            return f'{self.deployment_stage}.data.humancellatlas.org'
+
+    @property
+    def data_browser_name(self):
+        return f'{self._resource_prefix}-data-browser-{self.deployment_stage}'
+
+    @property
     def dss_endpoint(self) -> str:
         return os.environ['AZUL_DSS_ENDPOINT']
 
@@ -196,8 +208,8 @@ class Config:
         return os.environ['AZUL_TERRAFORM_BACKEND_BUCKET']
 
     @property
-    def enable_cloudwatch_alarms(self) -> bool:
-        return self._boolean(os.environ['AZUL_ENABLE_CLOUDWATCH_ALARMS'])
+    def enable_monitoring(self) -> bool:
+        return self._boolean(os.environ['AZUL_ENABLE_MONITORING'])
 
     @property
     def es_instance_type(self) -> str:
@@ -354,6 +366,10 @@ class Config:
         return 1
 
     @property
+    def dynamo_user_table_name(self):
+        return self.qualified_resource_name('users')
+
+    @property
     def dynamo_cart_table_name(self):
         return self.qualified_resource_name('carts')
 
@@ -372,6 +388,33 @@ class Config:
     @property
     def cart_api_ip_whitelist(self):  # TODO: Remove when authentication is added
         return os.environ['AZUL_CART_API_IP_WHITELIST'].split(' ')
+
+    @property
+    def access_token_issuer(self):
+        return "https://humancellatlas.auth0.com"
+
+    @property
+    def access_token_audience_list(self):
+        return [
+            f"https://{self.deployment_stage}.data.humancellatlas.org/",
+            f"{self.access_token_issuer}/userinfo"
+        ]
+
+    @property
+    def fusillade_endpoint(self) -> str:
+        return os.environ['AZUL_FUSILLADE_ENDPOINT']
+
+    @property
+    def grafana_user(self):
+        return os.environ['azul_grafana_user']
+
+    @property
+    def grafana_password(self):
+        return os.environ['azul_grafana_password']
+
+    @property
+    def grafana_endpoint(self):
+        return os.environ['azul_grafana_endpoint']
 
 
 config = Config()

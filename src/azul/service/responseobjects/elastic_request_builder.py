@@ -438,7 +438,6 @@ class ElasticTransformDump(object):
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
 
-        self.logger.info('Transforming /specimens request')
         config_folder = os.path.dirname(service_config.__file__)
         # Create the path for the mapping config file
         mapping_config_path = "{}/{}".format(
@@ -448,12 +447,8 @@ class ElasticTransformDump(object):
             config_folder, request_config_file)
 
         # Get the Json Objects from the mapping_config and the request_config
-        self.logger.debug(
-            'Getting the request_config and mapping_config file: {}'.format(
-                request_config_path,
-                mapping_config_path))
+        # FIXME: cache the json (or, even better, convert to Python module
         request_config = self.open_and_return_json(request_config_path)
-        self.logger.debug('Handling empty filters')
         if not filters:
             filters = {"file": {}}
         filters = filters['file']
@@ -486,8 +481,6 @@ class ElasticTransformDump(object):
                 request_config,
                 post_filter=post_filter,
                 entity_type=entity_type)
-        # Handle pagination
-        self.logger.debug('Handling pagination')
 
         if pagination is None:
             # It's a single file search
@@ -496,8 +489,6 @@ class ElasticTransformDump(object):
             es_response_dict = es_response.to_dict()
             hits = [x['_source']
                     for x in es_response_dict['hits']['hits']]
-            # Create a KeywordSearchResponse object
-            self.logger.info('Creating KeywordSearchResponse')
             final_response = KeywordSearchResponse(hits, entity_type)
         else:
             # It's a full file search
@@ -509,18 +500,13 @@ class ElasticTransformDump(object):
             # Execute ElasticSearch request
 
             try:
-                if self.logger.isEnabledFor(logging.INFO):
-                    logger.info("Elasticsearch request: %s", json.dumps(es_search.to_dict(), indent=4))
                 es_response = es_search.execute(ignore_cache=True)
             except elasticsearch.NotFoundError as e:
                 raise IndexNotFoundError(e.info["error"]["index"])
 
             es_response_dict = es_response.to_dict()
-            if self.logger.isEnabledFor(logging.DEBUG):
-                self.logger.debug("Elasticsearch response: %s", json.dumps(es_response_dict, indent=4))
             # Extract hits and facets (aggregations)
             es_hits = es_response_dict['hits']['hits']
-            self.logger.info("length of es_hits: " + str(len(es_response_dict['hits']['hits'])))
             # If the number of elements exceed the page size, then we fetched one too many
             # entries to determine if there is a previous or next page.  In that case,
             # return one fewer hit.
@@ -536,12 +522,8 @@ class ElasticTransformDump(object):
             # Translate the sort field back to external name
             if paging['sort'] in inverse_translation:
                 paging['sort'] = inverse_translation[paging['sort']]
-            # Creating FileSearchResponse object
-            self.logger.info('Creating FileSearchResponse')
             final_response = FileSearchResponse(hits, paging, facets, entity_type)
 
-        self.logger.info(
-            'Returning the final response for transform_request()')
         final_response = final_response.apiResponse.to_json()
 
         if entity_type == 'projects':  # Add project summaries to each project hit

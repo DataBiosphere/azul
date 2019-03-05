@@ -6,6 +6,17 @@ emit(
         "resource": [
             {
                 "aws_dynamodb_table": {
+                    "users_table": {
+                        "name": config.dynamo_user_table_name,
+                        "billing_mode": "PAY_PER_REQUEST",
+                        "hash_key": "UserId",
+                        "attribute": [
+                            {
+                                "name": "UserId",
+                                "type": "S"
+                            }
+                        ]
+                    },
                     "carts_table": {
                         "name": config.dynamo_cart_table_name,
                         "billing_mode": "PAY_PER_REQUEST",

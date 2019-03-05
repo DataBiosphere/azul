@@ -18,7 +18,9 @@ from azul.transformer import (Accumulator,
                               MaxAccumulator,
                               MinAccumulator,
                               OptionalValueAccumulator,
+                              PriorityOptionalValueAccumulator,
                               SetAccumulator,
+                              PrioritySetAccumulator,
                               SimpleAggregator,
                               SumAccumulator)
 from azul.types import JSON
@@ -61,17 +63,16 @@ def _project_dict(project: api.Project) -> JSON:
     }
 
 
-def _specimen_dict(specimen: api.SpecimenFromOrganism) -> JSON:
-    visitor = SpecimenVisitor()
-    # Visit the specimen but don't descend. Cell suspensions are handled as separate entities.
-    visitor.visit(specimen)
-    specimen.ancestors(visitor)
+def _specimen_dict(entity: api.LinkedEntity, visited_entities) -> JSON:
+    visitor = SpecimenVisitor(visited_entities)
+    entity.accept(visitor)
+    entity.ancestors(visitor)
     return visitor.merged_specimen
 
 
 def _cell_suspension_dict(cell_suspension: api.CellSuspension) -> JSON:
     visitor = CellSuspensionVisitor()
-    # Visit the cell suspension but don't descend. We're only interested in the parent specimen.
+    # Visit the cell suspension but don't descend. We're only interested in parent biomaterials
     visitor.visit(cell_suspension)
     cell_suspension.ancestors(visitor)
     return visitor.merged_cell_suspension
@@ -116,14 +117,17 @@ class TransformerVisitor(api.EntityVisitor):
     cell_suspensions: MutableMapping[api.UUID4, api.CellSuspension]
     protocols: MutableMapping[api.UUID4, api.Protocol]
     files: MutableMapping[api.UUID4, api.File]
+    visited_entities: Set[api.UUID4]
 
     def __init__(self) -> None:
         self.specimens = {}
         self.cell_suspensions = {}
         self.protocols = {}
         self.files = {}
+        self.visited_entities = set()
 
     def visit(self, entity: api.Entity) -> None:
+        self.visited_entities.add(entity.document_id)
         if isinstance(entity, api.SpecimenFromOrganism):
             self.specimens[entity.document_id] = entity
         elif isinstance(entity, api.CellSuspension):
@@ -142,7 +146,8 @@ class TransformerVisitor(api.EntityVisitor):
 
 class BiomaterialVisitor(api.EntityVisitor, metaclass=ABCMeta):
 
-    def __init__(self) -> None:
+    def __init__(self, visited_entities = None) -> None:
+        self.visited_entities = visited_entities
         self._accumulators: MutableMapping[str, Accumulator] = {}
         self._biomaterials: MutableMapping[api.UUID4, api.Biomaterial] = dict()
 
@@ -166,26 +171,30 @@ class BiomaterialVisitor(api.EntityVisitor, metaclass=ABCMeta):
 class SpecimenVisitor(BiomaterialVisitor):
 
     def _visit(self, entity: api.Biomaterial) -> None:
-        self._set('has_input_biomaterial', SetAccumulator, entity.has_input_biomaterial)
-        self._set('_source', SetAccumulator, api.schema_names[type(entity)])
-        if isinstance(entity, api.SpecimenFromOrganism):
-            self._set('document_id', MandatoryValueAccumulator, str(entity.document_id))
-            self._set('biomaterial_id', MandatoryValueAccumulator, entity.biomaterial_id)
-            self._set('disease', SetAccumulator, entity.diseases)
-            self._set('organ', OptionalValueAccumulator, entity.organ)
-            self._set('organ_part', OptionalValueAccumulator, entity.organ_part)
-            self._set('preservation_method', OptionalValueAccumulator, entity.preservation_method)
-            self._set('_type', MandatoryValueAccumulator, 'specimen')
-        elif isinstance(entity, api.DonorOrganism):
-            self._set('donor_document_id', SetAccumulator, str(entity.document_id))
-            self._set('donor_biomaterial_id', SetAccumulator, entity.biomaterial_id)
-            self._set('genus_species', SetAccumulator, entity.genus_species)
-            self._set('organism_age', ListAccumulator, entity.organism_age)
-            self._set('organism_age_unit', ListAccumulator, entity.organism_age_unit)
-            if entity.organism_age_in_seconds:
-                self._set('min_organism_age_in_seconds', MinAccumulator, entity.organism_age_in_seconds.min)
-                self._set('max_organism_age_in_seconds', MaxAccumulator, entity.organism_age_in_seconds.max)
-            self._set('biological_sex', SetAccumulator, entity.sex)
+        if entity.document_id in self.visited_entities:
+            self._set('has_input_biomaterial', SetAccumulator, entity.has_input_biomaterial)
+            self._set('_source', SetAccumulator, api.schema_names[type(entity)])
+            if isinstance(entity, api.SpecimenFromOrganism):
+                self._set('document_id', MandatoryValueAccumulator, str(entity.document_id))
+                self._set('biomaterial_id', MandatoryValueAccumulator, entity.biomaterial_id)
+                self._set('disease', SetAccumulator, entity.diseases)
+                self._set('organ', PriorityOptionalValueAccumulator, (0, entity.organ))
+                self._set('organ_part', PriorityOptionalValueAccumulator, (0, entity.organ_part))
+                self._set('preservation_method', OptionalValueAccumulator, entity.preservation_method)
+                self._set('_type', MandatoryValueAccumulator, 'specimen')
+            elif isinstance(entity, api.DonorOrganism):
+                self._set('donor_document_id', SetAccumulator, str(entity.document_id))
+                self._set('donor_biomaterial_id', SetAccumulator, entity.biomaterial_id)
+                self._set('genus_species', SetAccumulator, entity.genus_species)
+                self._set('organism_age', ListAccumulator, entity.organism_age)
+                self._set('organism_age_unit', ListAccumulator, entity.organism_age_unit)
+                if entity.organism_age_in_seconds:
+                    self._set('min_organism_age_in_seconds', MinAccumulator, entity.organism_age_in_seconds.min)
+                    self._set('max_organism_age_in_seconds', MaxAccumulator, entity.organism_age_in_seconds.max)
+                self._set('biological_sex', SetAccumulator, entity.sex)
+            elif isinstance(entity, api.Organoid):
+                self._set('organ', PriorityOptionalValueAccumulator, (1, entity.model_organ))
+                self._set('organ_part', PriorityOptionalValueAccumulator, (1, entity.model_organ_part))
 
     @property
     def merged_specimen(self) -> JSON:
@@ -197,12 +206,16 @@ class SpecimenVisitor(BiomaterialVisitor):
 class CellSuspensionVisitor(BiomaterialVisitor):
 
     def _visit(self, entity: api.Biomaterial) -> None:
+
         if isinstance(entity, api.CellSuspension):
             self._set('document_id', MandatoryValueAccumulator, str(entity.document_id))
             self._set('total_estimated_cells', OptionalValueAccumulator, entity.total_estimated_cells)
         elif isinstance(entity, api.SpecimenFromOrganism):
-            self._set('organ', SetAccumulator, entity.organ)
-            self._set('organ_part', SetAccumulator, entity.organ_part)
+            self._set('organ', PrioritySetAccumulator, (0, entity.organ))
+            self._set('organ_part', PrioritySetAccumulator, (0, entity.organ_part))
+        elif isinstance(entity, api.Organoid):
+            self._set('organ', PrioritySetAccumulator, (1, entity.model_organ))
+            self._set('organ_part', PrioritySetAccumulator, (1, entity.model_organ_part))
 
     @property
     def merged_cell_suspension(self) -> JSON:
@@ -330,7 +343,7 @@ class FileTransformer(Transformer):
             visitor = TransformerVisitor()
             file.accept(visitor)
             file.ancestors(visitor)
-            contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
+            contents = dict(specimens=[_specimen_dict(s, visitor.visited_entities) for s in visitor.specimens.values()],
                             cell_suspensions=[_cell_suspension_dict(cs) for cs in visitor.cell_suspensions.values()],
                             files=[_file_dict(file)],
                             protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
@@ -358,7 +371,7 @@ class SpecimenTransformer(Transformer):
             visitor = TransformerVisitor()
             specimen.accept(visitor)
             specimen.ancestors(visitor)
-            contents = dict(specimens=[_specimen_dict(specimen)],
+            contents = dict(specimens=[_specimen_dict(specimen, visitor.visited_entities)],
                             cell_suspensions=[_cell_suspension_dict(cs) for cs in visitor.cell_suspensions.values()],
                             files=[_file_dict(f) for f in visitor.files.values()],
                             protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
@@ -394,7 +407,7 @@ class ProjectTransformer(Transformer):
             file.ancestors(visitor)
         project = self._get_project(bundle)
 
-        contents = dict(specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
+        contents = dict(specimens=[_specimen_dict(s, visitor.visited_entities) for s in visitor.specimens.values()],
                         cell_suspensions=[_cell_suspension_dict(cs) for cs in visitor.cell_suspensions.values()],
                         files=[_file_dict(f) for f in visitor.files.values()],
                         protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],

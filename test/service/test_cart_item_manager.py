@@ -1,5 +1,6 @@
 import logging
 from unittest import mock
+from unittest.mock import patch
 
 from azul import config
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
@@ -31,6 +32,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
     def tearDown(self):
         self.dynamo_accessor.get_table(config.dynamo_cart_table_name).delete()
         self.dynamo_accessor.get_table(config.dynamo_cart_item_table_name).delete()
+        self.dynamo_accessor.get_table(config.dynamo_user_table_name).delete()
         super().tearDown()
 
     def create_tables(self):
@@ -97,8 +99,8 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
                         'ProjectionType': 'ALL'
                     },
                     'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 1,
-                        'WriteCapacityUnits': 1
+                        'ReadCapacityUnits': 5,
+                        'WriteCapacityUnits': 5
                     }
                 }
             ]
@@ -127,8 +129,28 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
                 }
             ],
             ProvisionedThroughput={
-                'ReadCapacityUnits': 1,
-                'WriteCapacityUnits': 1
+                'ReadCapacityUnits': 5,
+                'WriteCapacityUnits': 5
+            }
+        )
+
+        self.dynamo_accessor.dynamo_client.create_table(
+            TableName=config.dynamo_user_table_name,
+            KeySchema=[
+                {
+                    'AttributeName': 'UserId',
+                    'KeyType': 'HASH'
+                }
+            ],
+            AttributeDefinitions=[
+                {
+                    'AttributeName': 'UserId',
+                    'AttributeType': 'S'
+                }
+            ],
+            ProvisionedThroughput={
+                'ReadCapacityUnits': 5,
+                'WriteCapacityUnits': 5
             }
         )
 
@@ -142,20 +164,22 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name, {'UserId': user_id, 'CartId': cart_id})
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
-        self.assertEqual(cart['DefaultCart'], False)
+        self.assertEqual(self.cart_item_manager.user_service.get_or_create(user_id)['DefaultCartId'], None)
 
     def test_cart_creation_default(self):
         """
         Creating a default cart should create a cart with the ID 'default' and DefaultCart flag set to True
         """
+        mock_cart_id = 'test_default_cart'
         user_id = '123'
         cart_name = 'cart name'
-        cart_id = self.cart_item_manager.create_cart(user_id, cart_name, True)
+        with patch('uuid.uuid4', side_effect=[mock_cart_id]):
+            cart_id = self.cart_item_manager.create_cart(user_id, cart_name, True)
         cart = self.dynamo_accessor.get_item(config.dynamo_cart_table_name, {'UserId': user_id, 'CartId': cart_id})
         self.assertEqual(cart['UserId'], user_id)
         self.assertEqual(cart['CartName'], cart_name)
-        self.assertEqual(cart['DefaultCart'], True)
-        self.assertEqual(cart['CartId'], 'default')
+        self.assertEqual(self.cart_item_manager.user_service.get_or_create(user_id)['DefaultCartId'], cart['CartId'])
+        self.assertEqual(cart['CartId'], mock_cart_id)
 
     def test_cart_creation_duplicate_name(self):
         """
@@ -167,14 +191,15 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         with self.assertRaises(DuplicateItemError):
             self.cart_item_manager.create_cart('123', cart_name, False)
 
-    def test_cart_creation_duplicate_default(self):
+    def test_cart_creation_duplicate_default_will_not_create_new_cart(self):
         """
-        Trying to create a default cart when the user already has a default cart should raise an error
+        Trying to create a default cart when the user already has a default cart should not create a new default cart.
         """
-        self.cart_item_manager.create_cart('123', 'Cart1', True)
-        self.cart_item_manager.create_cart('124', 'Cart2', True)
-        with self.assertRaises(DuplicateItemError):
-            self.cart_item_manager.create_cart('123', 'Cart3', True)
+        test_user_id = '123'
+        cart_id_1 = self.cart_item_manager.create_cart(test_user_id, 'Cart1', True)
+        cart_id_2 = self.cart_item_manager.create_cart(test_user_id, 'Cart3', True)
+        self.assertEqual(cart_id_1, cart_id_2)
+        self.assertEqual(1, len(self.cart_item_manager.get_user_carts(test_user_id)))
 
     def test_get_cart(self):
         """
@@ -185,6 +210,71 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         self.assertEqual(self.cart_item_manager.get_cart(user_id, cart_id),
                          self.dynamo_accessor.get_item(config.dynamo_cart_table_name,
                                                        keys={'UserId': user_id, 'CartId': cart_id}))
+
+    def test_get_default_cart_with_existing_default_cart(self):
+        """
+        If the default cart already exists, the manager should not create a new cart.
+        """
+        mock_cart_id = 'test_default_cart'
+        user_id = '123'
+        cart_name = 'cart name'
+        with patch('uuid.uuid4', side_effect=[mock_cart_id]):
+            self.cart_item_manager.create_cart(user_id, cart_name, True)
+        cart = self.cart_item_manager.get_default_cart(user_id)
+        self.assertEqual(cart['UserId'], user_id)
+        self.assertEqual(cart['CartName'], cart_name)
+        self.assertEqual(self.cart_item_manager.user_service.get_or_create(user_id)['DefaultCartId'], mock_cart_id)
+        self.assertEqual(cart['CartId'], mock_cart_id)
+        self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
+
+    def test_get_default_cart_with_no_default_cart(self):
+        """
+        If the default cart does not exist, the manager should create a new cart and register that cart in the user
+        object as the default cart.
+        """
+        mock_cart_id = 'test_default_cart'
+        user_id = '123'
+        cart_name = 'Default Cart'
+        self.assertEqual(0, len(self.cart_item_manager.get_user_carts(user_id)))
+        with self.assertRaises(ResourceAccessError):
+            cart1 = self.cart_item_manager.get_default_cart(user_id)
+
+    def test_get_or_create_default_cart_with_existing_default_cart(self):
+        """
+        If the default cart already exists, the manager should not create a new cart.
+        """
+        mock_cart_id = 'test_default_cart'
+        user_id = '123'
+        cart_name = 'cart name'
+        with patch('uuid.uuid4', side_effect=[mock_cart_id]):
+            self.cart_item_manager.create_cart(user_id, cart_name, True)
+        cart = self.cart_item_manager.get_or_create_default_cart(user_id)
+        self.assertEqual(cart['UserId'], user_id)
+        self.assertEqual(cart['CartName'], cart_name)
+        self.assertEqual(self.cart_item_manager.user_service.get_or_create(user_id)['DefaultCartId'], mock_cart_id)
+        self.assertEqual(cart['CartId'], mock_cart_id)
+        self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
+
+    def test_get_or_create_default_cart_with_no_default_cart(self):
+        """
+        If the default cart does not exist, the manager should create a new cart and register that cart in the user
+        object as the default cart.
+        """
+        mock_cart_id = 'test_default_cart'
+        user_id = '123'
+        cart_name = 'Default Cart'
+        self.assertEqual(0, len(self.cart_item_manager.get_user_carts(user_id)))
+        with patch('uuid.uuid4', side_effect=[mock_cart_id]):
+            cart1 = self.cart_item_manager.get_or_create_default_cart(user_id)
+            self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
+            self.assertEqual(cart1['UserId'], user_id)
+            self.assertEqual(cart1['CartName'], cart_name)
+            self.assertEqual(self.cart_item_manager.user_service.get_or_create(user_id)['DefaultCartId'], mock_cart_id)
+            self.assertEqual(cart1['CartId'], mock_cart_id)
+            # The second call should return the same cart.
+            cart2 = self.cart_item_manager.get_or_create_default_cart(user_id)
+            self.assertEqual(cart1['CartId'], cart2['CartId'])
+        self.assertEqual(1, len(self.cart_item_manager.get_user_carts(user_id)))
 
     def test_get_user_carts(self):
         """
@@ -203,19 +293,27 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         user_id = '123'
         cart_id1 = self.cart_item_manager.create_cart(user_id, 'Cart1', True)
         cart_id2 = self.cart_item_manager.create_cart(user_id, 'Cart2', False)
+        cart_id3 = self.cart_item_manager.create_cart(user_id, 'Cart3', False)
         self.cart_item_manager.add_cart_item(user_id, cart_id1, '1', 'bundle_id',
                                              'bundle_version', 'entity_type')
         self.cart_item_manager.add_cart_item(user_id, cart_id1, '2', 'bundle_id',
                                              'bundle_version', 'entity_type')
         self.cart_item_manager.add_cart_item(user_id, cart_id2, '2', 'bundle_id',
                                              'bundle_version', 'entity_type')
+        # Delete the non-default cart.
+        # NOTE: The default cart should be left untouched.
+        self.cart_item_manager.delete_cart(user_id, cart_id3)
+        with self.assertRaises(ResourceAccessError):
+            self.cart_item_manager.get_cart(user_id, cart_id3)
+        self.assertEqual(self.cart_item_manager.user_service.get_or_create(user_id)['DefaultCartId'], cart_id1)
+        self.assertIsNotNone(self.cart_item_manager.get_cart(user_id, cart_id1))
+        # Delete the default cart.
+        # NOTE: At this point, the user object should have the default cart ID undefined.
         self.cart_item_manager.delete_cart(user_id, cart_id1)
-        self.assertIsNone(self.cart_item_manager.get_cart(user_id, cart_id1))
+        with self.assertRaises(ResourceAccessError):
+            self.cart_item_manager.get_cart(user_id, cart_id1)
+        self.assertIsNone(self.cart_item_manager.user_service.get_or_create(user_id)['DefaultCartId'])
         self.assertIsNotNone(self.cart_item_manager.get_cart(user_id, cart_id2))
-        self.assertEqual(0, self.dynamo_accessor.count(table_name=config.dynamo_cart_item_table_name,
-                                                       key_conditions={'CartId': cart_id1}))
-        self.assertEqual(1, self.dynamo_accessor.count(table_name=config.dynamo_cart_item_table_name,
-                                                       key_conditions={'CartId': cart_id2}))
 
     def test_update_cart_name(self):
         """
@@ -338,7 +436,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         user_id = '111'
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
         with self.assertRaises(ResourceAccessError):
-            self.cart_item_manager.start_batch_cart_item_write('112', cart_id, write_params={})
+            self.cart_item_manager.start_batch_cart_item_write('112', cart_id, 'foo', {}, 12345, 10000)
 
     def test_transform_cart_item_pagination(self):
         """

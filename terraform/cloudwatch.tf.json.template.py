@@ -86,7 +86,34 @@ emit({
                     ]
                 }
             }
+        },
+        {
+            "aws_cloudwatch_metric_alarm": {
+                "azul_health": {
+                    "alarm_name": f"azul-{config.deployment_stage}",
+                    "actions_enabled": True,
+                    "comparison_operator": "LessThanThreshold",
+                    "evaluation_periods": "1",
+                    "metric_name": "HealthCheckStatus",
+                    "namespace": "AWS/Route53",
+                    "period": "120",
+                    "statistic": "Minimum",
+                    "threshold": "1.0",
+                    "alarm_description": json.dumps({
+                        "slack_channel": "data-browser",
+                        "environment": config.deployment_stage,
+                        "description": f"azul-{config.deployment_stage} HealthCheckStatus alarm"
+                    }),
+                    "alarm_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ],
+                    "dimensions": {
+                        "HealthCheckId": "${aws_route53_health_check.composite.id}",
+                    }
+                }
+            }
         }
     ]
-} if config.enable_cloudwatch_alarms else None)
+} if config.enable_monitoring else None)
 
