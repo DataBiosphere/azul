@@ -15,10 +15,12 @@ test:
   # Run the unit tests, deploy and run integration test
   image: $CI_REGISTRY_IMAGE/build
   script:
-    - (cd deployments && ln -snf dev .active)
-    - source environment
     - source /build/.venv/bin/activate
     - pip list
+    - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print || echo sandbox)
+    - (cd deployments && ln -snf ${deployment} .active)
+    - source environment
+    - make clean
     - make test
     - make -C terraform auto_apply
     - make deploy
