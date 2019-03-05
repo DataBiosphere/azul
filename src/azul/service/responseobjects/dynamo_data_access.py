@@ -15,7 +15,7 @@ class DynamoDataAccessor:
         return self.dynamo_client.Table(table_name)
 
     def _make_query(self, table_name, key_conditions, filters=None, index_name=None,
-                    select=None, limit=None):
+                    select=None, limit=None, consistent_read:bool=False):
         """
         Make a query and get results one page at a time.  This method handles the pagination logic so the caller can
         process each page at a time without having to re-query
@@ -30,7 +30,7 @@ class DynamoDataAccessor:
         :param limit: Maximum number of items per query (used for testing pagination)
         :yield: results of a single query call
         """
-        query_params = dict()
+        query_params = dict(ConsistentRead=consistent_read)
 
         key_expression = [Key(attr).eq(value) for attr, value in key_conditions.items()]
         if len(key_conditions) == 0:
@@ -158,12 +158,15 @@ class DynamoDataAccessor:
                 expression_params['ConditionExpression'] = And(*condition_terms)
             else:
                 expression_params['ConditionExpression'] = condition_terms[0]
-        return self.get_table(table_name).update_item(
-            TableName=table_name,
-            Key=keys,
-            ReturnValues='ALL_NEW',
-            **expression_params
-        ).get('Attributes')
+        try:
+            return self.get_table(table_name).update_item(
+                TableName=table_name,
+                Key=keys,
+                ReturnValues='ALL_NEW',
+                **expression_params
+            ).get('Attributes')
+        except self.dynamo_client.meta.client.exceptions.ConditionalCheckFailedException:
+            raise ConditionalUpdateItemError(table_name, keys, update_values)
 
     def batch_write(self, table_name, items):
         """
@@ -195,3 +198,7 @@ class DynamoDataAccessor:
                 delete_count += 1
                 batch.delete_item(Key=item)
         return delete_count
+
+
+class ConditionalUpdateItemError(RuntimeError):
+    pass
