@@ -31,4 +31,3 @@ integration_test:
 	python -m unittest -v local_integration_test
 
 .PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test
-

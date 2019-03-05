@@ -165,12 +165,13 @@ azul_vars=(
     # in seconds
     AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL
 
-    # A short string (no punctuation allowed) that identifies a distinct set of
-    # Terraform rqesources to be deployed. Each component is deployed
-    # separately. They are typically defined in a subdirectory of the
-    # `terraform` directory and have their own directory under `deployments`. 
-    # The main component is identified by the empty string and its resources are
-    # defined in the `terraform` directory.
+    # A short string (no punctuation allowed) that identifies a Terraform
+    # component i.e., a distinct set of Terraform resources to be deployed
+    # together but separately from resources in other components. They are
+    # typically defined in a subdirectory of the `terraform` directory and have
+    # their own directory under `deployments`. The main component is identified
+    # by the empty string and its resources are defined in the `terraform`
+    # directory.
     azul_terraform_component
 )
 
