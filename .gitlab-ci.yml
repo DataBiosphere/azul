@@ -12,7 +12,7 @@ build-image:
     - docker push $CI_REGISTRY_IMAGE/build
 
 test:
-  # Run the unit tests
+  # Run the unit tests, deploy and run integration test
   image: $CI_REGISTRY_IMAGE/build
   script:
     - (cd deployments && ln -snf dev .active)
@@ -20,3 +20,7 @@ test:
     - source /build/.venv/bin/activate
     - pip list
     - make test
+    - make -C terraform auto_apply
+    - make deploy
+    - make -C terraform auto_apply
+    - make integration_test

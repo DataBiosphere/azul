@@ -47,7 +47,8 @@ emit({
                             "Action": "sts:AssumeRole"
                         }
                     ]
-                })
+                }),
+                **aws.permissions_boundary_tf
             }
         },
         "aws_iam_role_policy": {
