@@ -1,3 +1,5 @@
+import os
+
 import git
 
 from azul import config
@@ -34,7 +36,12 @@ def check_branch(branch, stage):
 
 
 if __name__ == "__main__":
-    repo = git.Repo(config.project_root)
-    branch = repo.active_branch.name
+    try:
+        # Gitlab checks out a specific commit which results in a detached HEAD
+        # (no active branch). Extract the branch name from the runner environment.
+        branch = os.environ['CI_COMMIT_REF_NAME']
+    except KeyError:
+        repo = git.Repo(config.project_root)
+        branch = repo.active_branch.name
     stage = config.deployment_stage
     check_branch(branch, stage)
