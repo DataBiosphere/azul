@@ -119,7 +119,7 @@ changes:
       - deploy
       - clients
     notes: >
-        Adds a Data Repository Service (DRS) endpoint at `ga4gh/dos/v1/dataobjects`. 
+        Adds a Data Repository Service (DRS) endpoint at `ga4gh/dos/v1/dataobjects`.
         Implements the `GetDataObject` method, a subset of the DRS API.
 
   - title: Add endpoint to shorten URLs
