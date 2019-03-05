@@ -45,6 +45,10 @@ class AWS:
     def stepfunctions(self):
         return boto3.client('stepfunctions')
 
+    @memoized_property
+    def iam(self):
+        return boto3.client('iam')
+
     @lru_cache(maxsize=1)
     def dynamo(self, endpoint_url, region_name):
         return boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
@@ -84,6 +88,23 @@ class AWS:
 
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{function_name}-{suffix}"
+
+    @memoized_property
+    def permissions_boundary_arn(self) -> str:
+        return f'arn:aws:iam::{self.account}:policy/{config.permissions_boundary_name}'
+
+    @memoized_property
+    def permissions_boundary(self):
+        try:
+            return self.iam.get_policy(PolicyArn=self.permissions_boundary_arn)['Policy']
+        except self.iam.exceptions.NoSuchEntityException:
+            return None
+
+    @memoized_property
+    def permissions_boundary_tf(self) -> Mapping[str, str]:
+        return {} if self.permissions_boundary is None else {
+            'permissions_boundary': self.permissions_boundary['Arn']
+        }
 
 
 aws = AWS()

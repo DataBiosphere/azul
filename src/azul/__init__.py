@@ -438,6 +438,8 @@ class Config:
     def terraform_component(self):
         return self._term_from_env('azul_terraform_component', optional=True)
 
+    permissions_boundary_name = 'azul-boundary'
+
 
 config = Config()
 
