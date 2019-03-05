@@ -105,6 +105,17 @@ class TestHCAIndexer(IndexerTestCase):
                 finally:
                     self._delete_indices()
 
+    def test_bundle_delete_downgrade(self):
+        """
+        Delete an updated version of a bundle, and ensure that the index reverts to the previous bundle.
+        """
+        self._index_canned_bundle(self.old_bundle)
+        old_hits_by_id = self._assert_old_bundle()
+        self._index_canned_bundle(self.new_bundle)
+        self._assert_new_bundle(num_expected_old_contributions=4, old_hits_by_id=old_hits_by_id)
+        self._delete_bundle(self.new_bundle)
+        self._assert_old_bundle(ignore_deletes=True)
+
     def test_multi_entity_contributing_bundles(self):
         """
         Delete a bundle which shares entities with another bundle and ensure shared entities
@@ -220,7 +231,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._assert_old_bundle(num_expected_new_contributions=4, ignore_aggregates=True)
         self._assert_new_bundle(num_expected_old_contributions=4)
 
-    def _assert_old_bundle(self, num_expected_new_contributions=0, ignore_aggregates=False):
+    def _assert_old_bundle(self, num_expected_new_contributions=0, ignore_aggregates=False, ignore_deletes=False):
         num_actual_new_contributions = 0
         hits = self._get_es_results()
         self.assertEqual(4 + 4 + num_expected_new_contributions, len(hits))
@@ -232,21 +243,24 @@ class TestHCAIndexer(IndexerTestCase):
             source = hit['_source']
             hits_by_id[source['entity_id'], aggregate] = hit
             version = one(source['bundles'])['version'] if aggregate else source['bundle_version']
-            if not aggregate and self.old_bundle[1] != version:
-                self.assertLess(self.old_bundle[1], version)
-                num_actual_new_contributions += 1
-                continue
-            contents = source['contents']
-            project = one(contents['projects'])
-            self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
-            self.assertEqual('Single of human pancreas', get(project['project_shortname']))
-            self.assertIn('John Dear', get(project['laboratory']))
-            if aggregate and entity_type != 'projects':
-                self.assertIn('Farmers Trucks', project['institutions'])
+            if aggregate or self.old_bundle[1] == version:
+                contents = source['contents']
+                project = one(contents['projects'])
+                self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
+                self.assertEqual('Single of human pancreas', get(project['project_shortname']))
+                self.assertIn('John Dear', get(project['laboratory']))
+                if aggregate and entity_type != 'projects':
+                    self.assertIn('Farmers Trucks', project['institutions'])
+                else:
+                    self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
+                specimen = one(contents['specimens'])
+                self.assertIn('Australopithecus', specimen['genus_species'])
             else:
-                self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
-            specimen = one(contents['specimens'])
-            self.assertIn('Australopithecus', specimen['genus_species'])
+                if source['bundle_deleted']:
+                    self.assertTrue(ignore_deletes, "Unexpected deleted contribution")
+                else:
+                    self.assertLess(self.old_bundle[1], version)
+                    num_actual_new_contributions += 1
         self.assertEqual(num_expected_new_contributions, num_actual_new_contributions)
         return hits_by_id
 
