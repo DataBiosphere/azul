@@ -7,18 +7,18 @@ from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-from typing import Set, MutableSet
+from typing import MutableSet
 
 from uuid import uuid4
 
 from chalice import Response
-from jsonobject import (FloatProperty,
-                        IntegerProperty,
-                        JsonObject,
-                        ListProperty,
-                        ObjectProperty,
-                        StringProperty,
-                        DefaultProperty)
+from jsonobject.api import JsonObject
+from jsonobject.properties import (FloatProperty,
+                                   IntegerProperty,
+                                   DefaultProperty,
+                                   ListProperty,
+                                   ObjectProperty,
+                                   StringProperty)
 from bdbag import bdbag_api
 from shutil import copy
 from more_itertools import one
