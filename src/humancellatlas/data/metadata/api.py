@@ -144,6 +144,10 @@ class Project(Entity):
     project_description: Optional[str]  # optional up to core/project/5.2.2/project_core
     publications: Set[ProjectPublication]
     contributors: Set[ProjectContact]
+    insdc_project_accessions: Set[str]
+    geo_series_accessions: Set[str]
+    array_express_accessions: Set[str]
+    insdc_study_accessions: Set[str]
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
@@ -155,6 +159,10 @@ class Project(Entity):
         self.publications = set(ProjectPublication.from_json(publication)
                                 for publication in content.get('publications', []))
         self.contributors = {ProjectContact.from_json(contributor) for contributor in content['contributors']}
+        self.insdc_project_accessions = set(content.get('insdc_project_accessions', []))
+        self.geo_series_accessions = set(content.get('geo_series_accessions', []))
+        self.array_express_accessions = set(content.get('array_express_accessions', []))
+        self.insdc_study_accessions = set(content.get('insdc_study_accessions', []))
 
     @property
     def laboratory_names(self) -> set:

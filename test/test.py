@@ -209,6 +209,19 @@ class TestAccessorApi(TestCase):
                           project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
                           library_construction_methods={"10X v2 sequencing"})
 
+    def test_accessions_fields(self):
+        self._test_bundle(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
+                          version='2019-02-14T192438.034764Z',
+                          deployment='staging',
+                          diseases={'H syndrome'},
+                          project_roles={'principal investigator'},
+                          age_range=AgeRange(630720000.0, 630720000.0),
+                          library_construction_methods={'10X v2 sequencing'},
+                          insdc_project_accessions={'SRP000000'},
+                          geo_series_accessions={'GSE00000'},
+                          array_express_accessions={'E-AAAA-00'},
+                          insdc_study_accessions={'PRJNA000000'})
+
     def _test_bundle(self, uuid, deployment=None, replica='aws', version=None, **assertion_kwargs):
         client = dss_client(deployment)
         version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
@@ -224,7 +237,11 @@ class TestAccessorApi(TestCase):
                        project_roles=frozenset({None}),
                        storage_methods=frozenset({None}),
                        preservation_methods=frozenset({None}),
-                       library_construction_methods=frozenset()):
+                       library_construction_methods=frozenset(),
+                       insdc_project_accessions=frozenset(),
+                       geo_series_accessions=frozenset(),
+                       array_express_accessions=frozenset(),
+                       insdc_study_accessions=frozenset()):
         bundle = Bundle(uuid, version, manifest, metadata_files)
         biomaterials = bundle.biomaterials.values()
         actual_diseases = set(chain(*(bm.diseases for bm in biomaterials
@@ -250,6 +267,11 @@ class TestAccessorApi(TestCase):
         self.assertLessEqual(len(project.laboratory_names), len(project.contributors))
         # noinspection PyDeprecation
         self.assertEqual(project.project_short_name, project.project_shortname)
+
+        self.assertEqual(insdc_project_accessions, project.insdc_project_accessions)
+        self.assertEqual(geo_series_accessions, project.geo_series_accessions)
+        self.assertEqual(array_express_accessions, project.array_express_accessions)
+        self.assertEqual(insdc_study_accessions, project.insdc_study_accessions)
 
         root_entities = bundle.root_entities().values()
         root_entity_types = {type(e) for e in root_entities}
