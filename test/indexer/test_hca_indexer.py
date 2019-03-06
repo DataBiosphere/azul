@@ -558,6 +558,17 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertEqual(inner_cell_suspensions_in_contributions + inner_cell_suspensions_in_aggregates,
                          inner_cell_suspensions)
 
+    def test_accessions_fields(self):
+        self._index_canned_bundle(('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'))
+        es_results = self._get_es_results()
+        for index_results in es_results:
+            contents = index_results['_source']['contents']
+            project = one(contents['projects'])
+            self.assertEqual(['SRP000000'], project['insdc_project_accessions'])
+            self.assertEqual(['GSE00000'], project['geo_series_accessions'])
+            self.assertEqual(['E-AAAA-00'], project['array_express_accessions'])
+            self.assertEqual(['PRJNA000000'], project['insdc_study_accessions'])
+
 
 class TestValidNotificationRequests(LocalAppTestCase):
 
