@@ -6,6 +6,8 @@ import sys
 
 from tempfile import TemporaryDirectory
 from unittest import mock
+from io import BytesIO
+from more_itertools import first
 
 from moto import mock_s3, mock_sts
 import requests
@@ -187,7 +189,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     @mock_s3
     def test_bdbag_manifest(self):
         """
-        As in test_manifest, moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit
+        moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit
         the server (see GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
         """
         logging.getLogger('test_request_validation').warning('test_manifest is invoked')
@@ -196,11 +198,11 @@ class FacetNameValidationTest(WebServiceTestCase):
             storage_service = StorageService()
             storage_service.create_bucket()
             url = self.base_url + '/repository/files/export?filters={"file":{}}&format=bdbag'
-            response = requests.get(url)
+            response = requests.get(url, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
-            with ZipFile(response.text, 'r') as zip_fh:
+            with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
-            zip_fname = os.path.basename(os.path.splitext(response.text)[0])
+                zip_fname = os.path.dirname(first(zip_fh.namelist()))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'participant.tsv'), 'r') as fh:
                 observed = list(csv.reader(fh, delimiter='\t'))
                 expected = [['entity:participant_id'], ['7b07b9d0-cc0e-4098-9f64-f4a569f7d746']]
