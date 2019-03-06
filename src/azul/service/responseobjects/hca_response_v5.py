@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-from typing import MutableSet
+from typing import MutableSet, List
 
 from uuid import uuid4
 
@@ -32,6 +32,7 @@ from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
 from azul.transformer import SetAccumulator
+from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
@@ -202,24 +203,23 @@ class ManifestResponse(AbstractResponse):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
-    def _extract_fields(self, entities, column_mapping):
+    def _extract_fields(self, entities: List[JSON], column_mapping: JSON):
         def validate(s: str) -> str:
             assert '||' not in s
             return s
 
-        row_values = []
+        cell_values = []
         for field_name in column_mapping.values():
-            cell_values = []
+            cell_value = []
             for entity in entities:
                 field_value = entity.get(field_name, "")
                 if isinstance(field_value, list):
-                    cell_values += [validate(str(v)) for v in field_value if v is not None]
+                    cell_value += [validate(str(v)) for v in field_value if v is not None]
                 else:
-                    cell_values.append(validate(str(field_value)))
+                    cell_value.append(validate(str(field_value)))
+            cell_values.append(" || ".join(sorted(set(cell_value))))
 
-            row_values.append(" || ".join(set(cell_values)))
-
-        return row_values
+        return cell_values
 
     def _push_content(self) -> str:
         """
@@ -326,17 +326,17 @@ class ManifestResponse(AbstractResponse):
             return bdbag_api.archive_bag(bag_path, 'zip')
 
     def _iterate_hit_tsv(self, es_search_hit, writer):
-        # if entity_type == 'files':
-        #     assert len(hit_dict['contents'][entity_type]) == 1
-
         hit_dict = es_search_hit.to_dict()
 
         inner_entity_fields = []
         for doc_path, column_mapping in self.manifest_entries.items():
             doc_path = doc_path.split('.')
+            assert doc_path
             entities = hit_dict
-            for key in doc_path:
-                entities = entities.get(key, [{}])
+            for key in doc_path[:-1]:
+                entities = entities.get(key, {})
+            entities = entities.get(doc_path[-1], [])
+
             inner_entity_fields += self._extract_fields(entities, column_mapping)
 
         writer.writerow(inner_entity_fields)
