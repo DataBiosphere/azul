@@ -294,12 +294,9 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         cart_id1 = self.cart_item_manager.create_cart(user_id, 'Cart1', True)
         cart_id2 = self.cart_item_manager.create_cart(user_id, 'Cart2', False)
         cart_id3 = self.cart_item_manager.create_cart(user_id, 'Cart3', False)
-        self.cart_item_manager.add_cart_item(user_id, cart_id1, '1', 'bundle_id',
-                                             'bundle_version', 'entity_type')
-        self.cart_item_manager.add_cart_item(user_id, cart_id1, '2', 'bundle_id',
-                                             'bundle_version', 'entity_type')
-        self.cart_item_manager.add_cart_item(user_id, cart_id2, '2', 'bundle_id',
-                                             'bundle_version', 'entity_type')
+        self.cart_item_manager.add_cart_item(user_id, cart_id1, '1', 'entity_type', 'entity_version')
+        self.cart_item_manager.add_cart_item(user_id, cart_id1, '2', 'entity_type', 'entity_version')
+        self.cart_item_manager.add_cart_item(user_id, cart_id2, '2', 'entity_type', 'entity_version')
         # Delete the non-default cart.
         # NOTE: The default cart should be left untouched.
         self.cart_item_manager.delete_cart(user_id, cart_id3)
@@ -357,8 +354,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         """
         user_id = '111'
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
-        item_id = self.cart_item_manager.add_cart_item(user_id, cart_id, 'entity_id', 'bundle_id',
-                                                       'bundle_version', 'entity_type')
+        item_id = self.cart_item_manager.add_cart_item(user_id, cart_id, 'entity_id', 'entity_type', 'entity_version')
         self.assertIsNotNone(self.dynamo_accessor.get_item(
             config.dynamo_cart_item_table_name,
             {'CartItemId': item_id, 'CartId': cart_id}))
@@ -369,16 +365,14 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         """
         cart_id = self.cart_item_manager.create_cart('111', 'test cart', False)
         with self.assertRaises(ResourceAccessError):
-            self.cart_item_manager.add_cart_item('112', cart_id, 'entity_id', 'bundle_id',
-                                                 'bundle_version', 'entity_type')
+            self.cart_item_manager.add_cart_item('112', cart_id, 'entity_id', 'entity_type', 'entity_version')
 
     def test_add_cart_item_nonexistent_cart(self):
         """
         Adding a cart item to a cart that does not exist should raise an error
         """
         with self.assertRaises(ResourceAccessError):
-            self.cart_item_manager.add_cart_item('111', '123', 'entity_id', 'bundle_id',
-                                                 'bundle_version', 'entity_type')
+            self.cart_item_manager.add_cart_item('111', '123', 'entity_id', 'entity_type', 'entity_version')
 
     def test_get_cart_items(self):
         """
@@ -387,10 +381,10 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         user_id = '111'
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
         item_ids = [
-            self.cart_item_manager.add_cart_item(user_id, cart_id, '1', 'bundle_id', 'bundle_version', 'entity_type'),
-            self.cart_item_manager.add_cart_item(user_id, cart_id, '2', 'bundle_id', 'bundle_version', 'entity_type'),
-            self.cart_item_manager.add_cart_item(user_id, cart_id, '3', 'bundle_id', 'bundle_version', 'entity_type'),
-            self.cart_item_manager.add_cart_item(user_id, cart_id, '4', 'bundle_id', 'bundle_version', 'entity_type')
+            self.cart_item_manager.add_cart_item(user_id, cart_id, '1', 'entity_type', 'entity_version'),
+            self.cart_item_manager.add_cart_item(user_id, cart_id, '2', 'entity_type', 'entity_version'),
+            self.cart_item_manager.add_cart_item(user_id, cart_id, '3', 'entity_type', 'entity_version'),
+            self.cart_item_manager.add_cart_item(user_id, cart_id, '4', 'entity_type', 'entity_version')
         ]
         retrieved_item_ids = [item['CartItemId'] for item in
                               self.cart_item_manager.get_cart_items(user_id, cart_id)]
@@ -409,10 +403,8 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         """
         user_id = '111'
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
-        item_id1 = self.cart_item_manager.add_cart_item(user_id, cart_id, '1', 'bundle_id',
-                                                        'bundle_version', 'entity_type')
-        item_id2 = self.cart_item_manager.add_cart_item(user_id, cart_id, '2', 'bundle_id',
-                                                        'bundle_version', 'entity_type')
+        item_id1 = self.cart_item_manager.add_cart_item(user_id, cart_id, '1', 'entity_type', 'entity_version')
+        item_id2 = self.cart_item_manager.add_cart_item(user_id, cart_id, '2', 'entity_type', 'entity_version')
         self.cart_item_manager.delete_cart_item(user_id, cart_id, item_id2)
         retrieved_item_ids = [item['CartItemId'] for item in
                               self.cart_item_manager.get_cart_items(user_id, cart_id)]
@@ -424,8 +416,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         """
         user_id = '111'
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
-        item_id1 = self.cart_item_manager.add_cart_item(user_id, cart_id, '1', 'bundle_id',
-                                                        'bundle_version', 'entity_type')
+        item_id1 = self.cart_item_manager.add_cart_item(user_id, cart_id, '1', 'entity_type', 'entity_version')
         with self.assertRaises(ResourceAccessError):
             self.cart_item_manager.delete_cart_item('112', cart_id, item_id1)
 

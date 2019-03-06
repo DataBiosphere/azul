@@ -227,6 +227,25 @@ index them run:
 make reindex
 ```
 
+### 2.6 Cancelling all ongoing (re)indexing operations
+
+1) Go to the Simple Queue Service dashboard in the AWS Console. Then, find your
+   target notify SQS queue (should be named azul-notify-…) and purge the queue.
+
+2) Go to the Lambda dashboard in the AWS Console. Find and open the
+   `azul-indexer-…-write` lambda. Then, disable the event binding to the
+   document queue (usually named `azul-documents-…`). This is done by clicking
+   on the `SQS` trigger in the *Designer* box, clicking on the *Enabled* switch
+   of `azul-documents-…` in the newly appeared *SQS* box, then finally saving
+   your settings.
+
+3) Purge the remaining queues.
+
+4) If azul-documents-… and azul-documents-…fifo isn't empty after 5 minutes,
+   repeat steps 3.
+
+5) Renable the event binding from step 2.
+
 ## 3. Running indexer or service locally
 
 1) As usual, activate the virtual environment and `source environment` if you haven't
@@ -485,30 +504,45 @@ gated on a condition, like tests passing.
 6) Run `_select dev` (alternatively `integration`, `staging` or `prod`). Except
    for `dev` and `develop`, the branch name matches the name of the deployment.
 
-7) Run `deactivate; rm -rf .venv`
+7) To ensure a consistent and up-to-date set of dependencies, run
 
-8) Run `python3 -m venv .venv && source .venv/bin/activate` followed by …
+   ```
+   deactivate; rm -rf .venv 
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -U setuptools==40.1.0 wheel==0.32.3
+   pip install -r requirements.dev.txt
+   ```
+8) Run `python scripts/envhook.py install` if you use envhook.py
 
-9) Run `pip install -U setuptools==40.1.0 wheel==0.32.3 && pip install -r requirements.dev.txt` 
-   to ensure a consistent set of dependencies.
+9) Run `make clean`
 
-10) Run `python scripts/envhook.py install` if you use envhook.py
+10) Run `make terraform`
 
-11) Run `make terraform`
+11) Run `make deploy`
 
-12) Run `make deploy`
+12) Invoke the health and version endpoints. Be sure to use the correct 
+    deployment name:
+
+    ```
+    http https://indexer.dev.explore.data.humancellatlas.org/version
+    http https://service.dev.explore.data.humancellatlas.org/version
+    http https://indexer.dev.explore.data.humancellatlas.org/health
+    http https://service.dev.explore.data.humancellatlas.org/health
+    ```
 
 13) Run `make tag` and the `git push …` invocation that it echoes 
 
 14) Run `make subscribe`
 
-15) Run `make reindex` or `make delete_and_reindex`
+15) Run `make reindex`
 
 ### 6.2 Promoting changes
 
 For promoting `dev` to `integration` use the steps outlined below. For higher
 promotions (`integration` to `staging`, or `staging` to `prod`) change the
-source and target branches accordingly.
+source and target branches accordingly. You can and should perform steps 1
+through 7 ahead of the actual promotion time.
 
 1) Change into the Azul project root directory: `cd azul`
 
@@ -520,18 +554,28 @@ source and target branches accordingly.
 4) Run `git status` and make sure that your working copy is clean and the
    branch is up-to-date.
 
-5) Merge the source branch: `git merge develop` and resolve conflicts (should
-   only be necessary if cherry-picks occured on the target branch)
+5) Merge the source branch: `git merge develop` and resolve any conflicts.
+   Conflict resolution should only be necessary if cherry-picks occured on the
+   target branch.
 
-6) Deploy, see section 6.1, starting at step 5). In step 6) use the deployment
+6) The merge may have affected the README. Make sure you're looking at the
+   right version.
+   
+7) To produce the list of changes for the DCP release notes, run 
+   `git log --pretty=oneline --topo-order --abbrev-commit`. All non-merge
+   commits from the top down to the commit labeled with the most recent
+   `deployed/…` tag represent changes to be deployed and should be mentioned in
+   the release notes.
+
+8) Deploy, see section 6.1, starting at step 5). In step 6) use the deployment
    that matches the target branch
 
-7) Run `git push origin`
+9) Run `git push origin`
 
 ## 7 Scale testing
 
-Scale testing can be done with [Locust](https://locust.io/).
-Locust is a development requirement so running it is straight-forward with your development
+Scale testing can be done with [Locust](https://locust.io/). Locust is a
+development requirement so running it is straight-forward with your development
 environment set up.
 
 1. Make sure Locust is installed by running
