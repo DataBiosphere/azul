@@ -37,7 +37,7 @@
       {
         "text": "Australopithecus",
         "ontology": "NCBITaxon:9606",
-        "ontology_label": "Homo sapiens"
+        "ontology_label": "Australopithecus"
       }
     ],
     "organ": {
@@ -76,7 +76,7 @@
       {
         "text": "Australopithecus",
         "ontology": "NCBITaxon:9606",
-        "ontology_label": "Homo sapiens"
+        "ontology_label": "Australopithecus"
       }
     ],
     "is_living": "no",
