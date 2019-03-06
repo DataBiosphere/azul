@@ -12,7 +12,9 @@ from more_itertools import one
 import requests
 
 from azul import config
+from azul.decorators import memoized_property
 from azul.reindexer import Reindexer
+from azul.requests import requests_session
 from azul.subscription import manage_subscriptions
 
 logger = logging.getLogger(__name__)
@@ -80,9 +82,13 @@ class IntegrationTest(unittest.TestCase):
             FunctionName=config.indexer_name,
             Environment=environment)
 
+    @memoized_property
+    def requests(self) -> requests.Session:
+        return requests_session()
+
     def check_endpoint_is_working(self, lambda_endpoint: str, url: str):
         url = lambda_endpoint + url
-        response = requests.get(url)
+        response = self.requests.get(url)
         response.raise_for_status()
 
     def get_number_of_messages(self, queues: Mapping[str, Any]):
@@ -143,7 +149,7 @@ class IntegrationTest(unittest.TestCase):
         found_bundle_fqids = set()
 
         while True:
-            response_json = requests.get(url).json()
+            response_json = self.requests.get(url).json()
             hits = response_json.get('hits', [])
             found_bundle_fqids.update(f"{entity['bundleUuid']}.{entity['bundleVersion']}"
                                       for bundle in hits for entity in bundle.get('bundles', [])
