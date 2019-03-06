@@ -1,18 +1,19 @@
-import boto3
 import logging
-from more_itertools import one
 import random
-import requests
 import time
-from typing import Set, Dict
+from typing import Any, Mapping, Set
 import unittest
 import urllib
+from urllib.parse import urlencode
 import uuid
 
-from azul import config
-from azul.subscription import manage_subscriptions
-from azul.reindexer import Reindexer
+import boto3
+from more_itertools import one
+import requests
 
+from azul import config
+from azul.reindexer import Reindexer
+from azul.subscription import manage_subscriptions
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +57,6 @@ class IntegrationTest(unittest.TestCase):
                                    test_name=test_name,
                                    prefix=self.bundle_uuid_prefix)
 
-        if False:
-            logger.info('Deleting all indices ...')
-            test_reindexer.delete_all_indices()
-
         logger.info('Starting test using test name, %s ...', test_name)
         logger.info('Creating indices and reindexing ...')
         selected_bundle_fqids = test_reindexer.reindex()
@@ -88,7 +85,7 @@ class IntegrationTest(unittest.TestCase):
         response = requests.get(url)
         response.raise_for_status()
 
-    def get_number_of_messages(self, queues: Dict[str, boto3.resources.base.ServiceResource]):
+    def get_number_of_messages(self, queues: Mapping[str, Any]):
         total_message_count = 0
         for queue_name, queue in queues.items():
             attributes = tuple('ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed'))
@@ -155,7 +152,7 @@ class IntegrationTest(unittest.TestCase):
             search_after_uid = response_json['pagination']['search_after_uid']
             total_entities = response_json['pagination']['total']
             logger.info('Found %i/%i bundles on try #%i/%i. There are %i total hits. Current page has %i hits in %s.',
-                        len(found_bundle_fqids), num_bundles, retries+1, max_retries, total_entities, len(hits), url)
+                        len(found_bundle_fqids), num_bundles, retries + 1, max_retries, total_entities, len(hits), url)
 
             if search_after is None:
                 assert search_after_uid is None
@@ -170,8 +167,8 @@ class IntegrationTest(unittest.TestCase):
                     retries += 1
             else:
                 assert search_after_uid is not None
-                url = base_url + '&' + urllib.parse.urlencode({'search_after': search_after,
-                                                               'search_after_uid': search_after_uid})
+                url = base_url + '&' + urlencode(dict(search_after=search_after,
+                                                      search_after_uid=search_after_uid))
 
         logger.info('Actual bundle count is %i.', len(found_bundle_fqids))
         self.assertEqual(found_bundle_fqids, indexed_bundle_fqids)
