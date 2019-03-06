@@ -209,7 +209,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                 self.assertEqual(expected, observed, 'participant.tsv contains incorrect data')
 
             expectations = [
-                ('entity:sample_id', 'DID_scRSq06'),
+                ('entity:sample_id', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
                 ('participant_id', '7b07b9d0-cc0e-4098-9f64-f4a569f7d746'),
                 ('cell_suspension_id', '412898c5-5b9b-4907-b07c-e9b89666e204'),
                 ('bundle_uuid', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
