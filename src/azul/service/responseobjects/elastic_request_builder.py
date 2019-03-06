@@ -2,7 +2,6 @@
 from copy import deepcopy
 import json
 import logging
-from more_itertools import one
 import os
 from typing import List
 
@@ -254,24 +253,18 @@ class ElasticTransformDump(object):
             file_.close()
         return loaded_file
 
-    def apply_paging(self, es_search, pagination, entity_type):
+    @staticmethod
+    def apply_paging(es_search, pagination):
         """
         Applies the pagination to the ES Search object
         :param es_search: The ES Search object
         :param pagination: Dictionary with raw entries from the GET Request.
         It has: 'size', 'sort', 'order', and one of 'search_after', 'search_before', or 'from'.
-        :param entity_type: the string referring to the entity type used to get
-        the ElasticSearch mappings
         :return: An ES Search object where pagination has been applied
         """
-        # Find the data type of the sort parameter
-        index_client = elasticsearch.client.IndicesClient(self.es_client)
-        index_name = config.es_index_name(entity_type)
-        field_map = index_client.get_field_mapping(fields=[pagination['sort']], index=index_name)
-        field_type = one(one(field_map.values())['mappings']['doc'][pagination['sort']]['mapping'].values())['type']
-
         # Extract the fields for readability (and slight manipulation)
-        _sort = pagination['sort'] + ('.keyword' if field_type == 'text' else '')
+
+        _sort = pagination['sort'] + ".keyword"
         _order = pagination['order']
 
         # Using search_after/search_before pagination
@@ -503,7 +496,7 @@ class ElasticTransformDump(object):
             if pagination['sort'] in translation:
                 pagination['sort'] = translation[pagination['sort']]
             # Apply paging
-            es_search = self.apply_paging(es_search, pagination, entity_type)
+            es_search = self.apply_paging(es_search, pagination)
             # Execute ElasticSearch request
 
             try:
@@ -630,7 +623,7 @@ class ElasticTransformDump(object):
         self.logger.info("Handling pagination")
         pagination['sort'] = '_score'
         pagination['order'] = 'desc'
-        es_search = self.apply_paging(es_search, pagination, entity_type)
+        es_search = self.apply_paging(es_search, pagination)
         # Executing ElasticSearch request
         self.logger.debug(
             "Printing ES_SEARCH request dict:\n {}".format(
