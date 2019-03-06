@@ -231,16 +231,19 @@ class ManifestResponse(AbstractResponse):
             data = self._construct_tsv_content().encode()
             content_type = 'text/tab-separated-values'
             object_key = f'manifests/{uuid4()}.tsv'
+            parameters = dict(object_key=object_key,
+                              data=data,
+                              content_type=content_type)
+            return self.storage_service.put(**parameters)
         elif self.format == 'bdbag':
-            data = self._construct_bdbag()
-            content_type = 'application/zip'
-            object_key = f'manifests/{uuid4()}.zip'
+            file_name = self._construct_bdbag()
+            try:
+                object_key = f'manifests/{uuid4()}.zip'
+                return self.storage_service.upload(file_name, object_key)
+            finally:
+                os.remove(file_name)
         else:
             assert False
-        parameters = dict(object_key=object_key,
-                          data=data,
-                          content_type=content_type)
-        return self.storage_service.put(**parameters)
 
     def _construct_tsv_content(self):
         es_search = self.es_search
