@@ -18,6 +18,10 @@
     "project": "contents.projects.project_shortname",
     "projectTitle": "contents.projects.project_title",
     "publicationTitle": "contents.projects.publication_titles",
+    "arrayExpressAccessions": "contents.projects.array_express_accessions",
+    "geoSeriesAccessions": "contents.projects.geo_series_accessions",
+    "insdcProjectAccessions":  "contents.projects.insdc_project_accessions",
+    "insdcStudyAccessions": "contents.projects.insdc_study_accessions",
 
     "biologicalSex": "contents.specimens.biological_sex",
     "specimenId": "contents.specimens.biomaterial_id",

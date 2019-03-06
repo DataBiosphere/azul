@@ -611,6 +611,10 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 for publication in translated_project['publications']:
                     for key in list(publication.keys()):
                         publication[to_camel_case(key)] = publication.pop(key)
+                translated_project['arrayExpressAccessions'] = project.get('array_express_accessions', [])
+                translated_project['geoSeriesAccessions'] = project.get('geo_series_accessions', [])
+                translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [])
+                translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [])
             projects.append(translated_project)
         return projects
 

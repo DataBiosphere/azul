@@ -59,6 +59,10 @@ def _project_dict(project: api.Project) -> JSON:
         'document_id': str(project.document_id),
         'publication_titles': list(publication_titles),
         'publications': as_json(project.publications),
+        'insdc_project_accessions': as_json(project.insdc_project_accessions),
+        'geo_series_accessions': as_json(project.geo_series_accessions),
+        'array_express_accessions': as_json(project.array_express_accessions),
+        'insdc_study_accessions': as_json(project.insdc_study_accessions),
         '_type': 'project'
     }
 
