@@ -39,11 +39,26 @@ emit({
                     "fqdn": config.data_browser_domain,
                     "port": 443,
                     "type": "HTTPS",
-                    "resource_path": "/health",
+                    "resource_path": "/explore",
                     "failure_threshold": "3",
                     "request_interval": "30",
                     "tags": {
                         "Name": config.data_browser_name
+                    }
+                }
+            }
+        },
+        {
+            "aws_route53_health_check": {
+                "data-portal": {
+                    "fqdn": config.data_browser_domain,
+                    "port": 443,
+                    "type": "HTTPS",
+                    "resource_path": "/",
+                    "failure_threshold": "3",
+                    "request_interval": "30",
+                    "tags": {
+                        "Name": config.data_portal_name
                     }
                 }
             }
@@ -57,7 +72,8 @@ emit({
                     "child_healthchecks": [
                         "${aws_route53_health_check." + "indexer" + ".id}",
                         "${aws_route53_health_check." + "service" + ".id}",
-                        "${aws_route53_health_check." + "data-browser" + ".id}"
+                        "${aws_route53_health_check." + "data-browser" + ".id}",
+                        "${aws_route53_health_check." + "data-portal" + ".id}"
                     ],
                     "cloudwatch_alarm_region": aws.region_name,
                     "tags": {

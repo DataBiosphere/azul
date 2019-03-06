@@ -531,14 +531,17 @@ class ElasticTransformDump(object):
 
         return final_response
 
-    def transform_manifest(self, request_config_file='request_config.json', filters=None):
+    def transform_manifest(self, format, filters=None, request_config_file='request_config.json'):
         config_folder = os.path.dirname(service_config.__file__)
         request_config_path = "{}/{}".format(config_folder, request_config_file)
         request_config = self.open_and_return_json(request_config_path)
         if not filters:
             filters = {"file": {}}
         filters = filters['file']
-        manifest_config = request_config['manifest']
+        if format == 'bdbag':
+            manifest_config = request_config['bdbag']
+        else:
+            manifest_config = request_config['manifest']
         source_filter = [field_path_prefix + '.' + field_name
                          for field_path_prefix, field_mapping in manifest_config.items()
                          for field_name in field_mapping.values()]
@@ -549,7 +552,7 @@ class ElasticTransformDump(object):
                                         source_filter=source_filter,
                                         enable_aggregation=False)
 
-        manifest = ManifestResponse(es_search, manifest_config, request_config['translation'])
+        manifest = ManifestResponse(es_search, manifest_config, request_config['translation'], format)
 
         return manifest.return_response()
 

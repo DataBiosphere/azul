@@ -1,10 +1,10 @@
-include ../common.mk
-
 all: grafana
+
+include ../common.mk
 
 config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
-init: config
+init: check_branch config
 	terraform init
 
 validate: init
@@ -25,4 +25,4 @@ destroy: validate
 clean:
 	-rm *.tf.json
 
-.PHONY: all config init validate plan apply destroy clean
+.PHONY: all config init validate plan apply grafana destroy clean
