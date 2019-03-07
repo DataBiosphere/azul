@@ -7,17 +7,18 @@ from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-from typing import Set, MutableSet
+from typing import MutableSet
 
 from uuid import uuid4
 
 from chalice import Response
-from jsonobject import (FloatProperty,
-                        IntegerProperty,
-                        JsonObject,
-                        ListProperty,
-                        ObjectProperty,
-                        StringProperty)
+from jsonobject.api import JsonObject
+from jsonobject.properties import (FloatProperty,
+                                   IntegerProperty,
+                                   DefaultProperty,
+                                   ListProperty,
+                                   ObjectProperty,
+                                   StringProperty)
 from bdbag import bdbag_api
 from shutil import copy
 from more_itertools import one
@@ -59,9 +60,9 @@ class PaginationObj(JsonObject):
     count = IntegerProperty()
     total = IntegerProperty()
     size = IntegerProperty()
-    search_after = StringProperty()
+    search_after = DefaultProperty()
     search_after_uid = StringProperty()
-    search_before = StringProperty()
+    search_before = DefaultProperty()
     search_before_uid = StringProperty()
     sort = StringProperty()
     order = StringProperty(choices=['asc', 'desc'])
