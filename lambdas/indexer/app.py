@@ -91,7 +91,7 @@ def post_notification():
             notify_queue = queue(config.notify_queue_name)
             notify_queue.send_message(MessageBody=json.dumps(message))
             log.info("Queued notification %r", notification)
-        return {"status": "done"}
+        return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
     else:
         test_mode_error = f'Ignored notification {notification}. This indexer is currently in TEST MODE.'
         log.error(test_mode_error)
