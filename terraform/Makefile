@@ -32,6 +32,6 @@ auto_destroy: validate
 	terraform destroy -auto-approve
 
 clean:
-	-rm *.tf.json
+	rm -f *.tf.json
 
 .PHONY: all config init validate plan apply auto_apply grafana destroy auto_destroy clean
