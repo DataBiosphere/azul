@@ -10,7 +10,7 @@ import urllib
 import uuid
 
 from azul import config
-from azul.subscription import subscribe
+from azul.subscription import manage_subscriptions
 from azul.reindexer import Reindexer
 
 
@@ -33,11 +33,11 @@ class IntegrationTest(unittest.TestCase):
     def tearDown(self):
         self.set_lambda_test_mode(False)
         if config.subscribe_to_dss:
-            subscribe(config.dss_client(), subscribe=True)
+            manage_subscriptions(config.dss_client(), subscribe=True)
 
     def test_webservice_and_indexer(self):
         if config.subscribe_to_dss:
-            subscribe(config.dss_client(), subscribe=False)
+            manage_subscriptions(config.dss_client(), subscribe=False)
             unsubscribe_waitime = 0
 
             while True:
@@ -47,8 +47,8 @@ class IntegrationTest(unittest.TestCase):
                     self.fail('Unable to unsubscribe from DSS.')
                 time.sleep(1)
                 unsubscribe_waitime += 1
-            subscribe(config.dss_client(), subscribe=False)
-            subscribe(config.dss_client(), subscribe=True)
+            manage_subscriptions(config.dss_client(), subscribe=False)
+            manage_subscriptions(config.dss_client(), subscribe=True)
 
         test_uuid = str(uuid.uuid4())
         test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
