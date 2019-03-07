@@ -1,8 +1,14 @@
+import os
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import logging
-from typing import NamedTuple, Tuple, Mapping
 import copy
+
+import boto3
+import requests
+
+from moto import mock_sqs, mock_sts
+from typing import NamedTuple, Tuple, Mapping
 import unittest
 from unittest.mock import patch
 from uuid import uuid4
@@ -11,11 +17,13 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from more_itertools import one
 
+from app_test_case import LocalAppTestCase
 from azul import config
 from azul.indexer import IndexWriter
 from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
 from indexer import IndexerTestCase
+from retorts import ResponsesHelper
 
 logger = logging.getLogger(__name__)
 
@@ -549,6 +557,93 @@ class TestHCAIndexer(IndexerTestCase):
                          inner_specimens)
         self.assertEqual(inner_cell_suspensions_in_contributions + inner_cell_suspensions_in_aggregates,
                          inner_cell_suspensions)
+
+
+class TestValidNotificationRequests(LocalAppTestCase):
+
+    @classmethod
+    def lambda_name(cls) -> str:
+        return "indexer"
+
+    @mock_sts
+    @mock_sqs
+    def test_post_notification_endpoint(self):
+        self._create_mock_notify_queue()
+        body = {
+            'match': {
+                'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
+                'bundle_version': '2018-03-28T13:55:26.044Z'
+            }
+        }
+        for endpoint in ['/', '/delete']:
+            with self.subTest(endpoint=endpoint):
+                response = self._test(body, endpoint)
+                self.assertEqual(202, response.status_code)
+                self.assertEqual('', response.text)
+
+    @mock_sts
+    @mock_sqs
+    def test_invalid_notifications(self):
+        bodies = {
+            "Missing body": {},
+            "Missing bundle_uuid":
+                {
+                    'match': {
+                        'bundle_version': '2018-03-28T13:55:26.044Z'
+                    }
+                },
+            "bundle_uuid is None":
+                {
+                    'match': {
+                        'bundle_uuid': None,
+                        'bundle_version': '2018-03-28T13:55:26.044Z'
+                    }
+                },
+            "Missing bundle_version":
+                {
+                    'match': {
+                        'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd'
+                    }
+                },
+            "bundle_version is None":
+                {
+                    'match': {
+                        'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
+                        'bundle_version': None
+                    }
+                },
+            'Malformed bundle_uuis value':
+                {
+                    'match': {
+                        'bundle_uuid': f'}}{str(uuid4())}{{',
+                        'bundle_version': "2019-12-31T00:00:00.000Z"
+                    }
+                },
+            'Malformed bundle_version':
+                {
+                    'match': {
+                        'bundle_uuid': str(uuid4()),
+                        'bundle_version': ''
+                    }
+                }
+        }
+        for endpoint in ['/', '/delete']:
+            with self.subTest(endpoint=endpoint):
+                for test, body in bodies.items():
+                    with self.subTest(test):
+                        response = self._test(body, endpoint)
+                        self.assertEqual(400, response.status_code)
+
+    def _test(self, body, endpoint):
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+                return requests.post(self.base_url + endpoint, json=body)
+
+    @staticmethod
+    def _create_mock_notify_queue():
+        sqs = boto3.resource('sqs', region_name='us-east-1')
+        sqs.create_queue(QueueName=config.notify_queue_name)
 
 
 def get(v):
