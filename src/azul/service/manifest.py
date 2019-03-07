@@ -40,7 +40,7 @@ class ManifestService(AbstractService):
                                              token: Optional[str] = None,
                                              format: Optional[str] = None,
                                              filters: Optional[str] = None
-                                             ) -> Tuple[float, str]:
+                                             ) -> Tuple[int, str]:
         """
         If token is None, start a manifest generation process and returns its status.
         Otherwise return the status of the manifest generation process represented by the token.
@@ -59,13 +59,13 @@ class ManifestService(AbstractService):
             token = self.decode_token(token)
 
         request_index = token.get('request_index', 0)
-        result = self._get_manifest_status(token['execution_id'], request_index)
-        if isinstance(result, float):
+        time_or_location = self._get_manifest_status(token['execution_id'], request_index)
+        if isinstance(time_or_location, int):
             request_index += 1
             token['request_index'] = request_index
-            return result, f'{self_url}?token={self.encode_token(token)}'
+            return time_or_location, f'{self_url}?token={self.encode_token(token)}'
         else:
-            return 0, result
+            return 0, time_or_location
 
     def _start_manifest_generation(self, format: str, filters: dict, execution_id: str) -> None:
         """
@@ -78,11 +78,11 @@ class ManifestService(AbstractService):
                                                   execution_id,
                                                   execution_input={'filters': filters})
 
-    def _get_next_wait_time(self, request_index: int) -> float:
-        wait_times = [1.0, 1.0, 4.0, 6.0, 10.0]
+    def _get_next_wait_time(self, request_index: int) -> int:
+        wait_times = [1, 1, 4, 6, 10]
         return wait_times[min(request_index, len(wait_times) - 1)]
 
-    def _get_manifest_status(self, execution_id: str, request_index: int) -> Union[float, str]:
+    def _get_manifest_status(self, execution_id: str, request_index: int) -> Union[int, str]:
         """Returns either the time to wait or the location of the result"""
         try:
             execution = self.step_function_helper.describe_execution(
