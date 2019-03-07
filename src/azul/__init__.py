@@ -196,9 +196,6 @@ class Config:
     def lambda_names(self) -> List[str]:
         return ['indexer', 'service']
 
-    def indexer_endpoint(self):
-        return "https://" + config.api_lambda_domain('indexer')
-
     @property
     def indexer_name(self) -> str:
         return self.qualified_resource_name('indexer')
