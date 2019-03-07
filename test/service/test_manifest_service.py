@@ -53,6 +53,7 @@ class ManifestServiceTest(AzulTestCase):
         manifest_service = ManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
         wait_time, location = manifest_service.start_or_inspect_manifest_generation('', token)
+        self.assertEqual(type(wait_time), int)
         self.assertEqual(wait_time, 0)
         self.assertEqual(manifest_url, location)
 
@@ -76,6 +77,7 @@ class ManifestServiceTest(AzulTestCase):
         token = manifest_service.encode_token({'execution_id': execution_id})
         retry_url = config.service_endpoint() + '/manifest/files'
         wait_time, location = manifest_service.start_or_inspect_manifest_generation(retry_url, token)
+        self.assertEqual(type(wait_time), int)
         self.assertEqual(wait_time, 1)
         expected_token = manifest_service.encode_token({'execution_id': execution_id, 'request_index': 1})
         self.assertEqual(f'{retry_url}?token={expected_token}', location)
