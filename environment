@@ -285,3 +285,6 @@ _select () {
 
 export PYTHONPATH="${azul_home}/src:${azul_home}/test"
 export TF_DATA_DIR="${azul_home}/deployments/.active/.terraform"
+
+# HCA client caches Swagger specs downloaded from the DSS endpoint here
+export XDG_CONFIG_HOME=${azul_home}/.config

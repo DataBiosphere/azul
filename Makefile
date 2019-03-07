@@ -18,6 +18,7 @@ reindex:
 	python scripts/reindex.py --delete --partition-prefix-length=2
 
 clean:
+	rm -rf .cache .config
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
 
 test:
