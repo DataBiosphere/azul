@@ -20,6 +20,6 @@ destroy: validate
 	terraform destroy
 
 clean:
-	-rm *.tf.json
+	rm -f *.tf.json
 
 .PHONY: all config init validate plan apply destroy clean

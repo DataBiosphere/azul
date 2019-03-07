@@ -47,5 +47,8 @@ __pycache__/
 !/deployments/.example.local/environment.local
 /deployments/*/.terraform/
 
-# PyTest
-.cache
+# Other caches, including for PyTest and scrape_aws_service_model.py
+.cache/
+
+# HCA client config files
+/.config
