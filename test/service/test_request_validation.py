@@ -14,6 +14,7 @@ import requests
 
 import azul.changelog
 from azul import config
+from azul.dos import dos_object_url
 from azul.json_freeze import freeze
 from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService
@@ -222,7 +223,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                 ('file_version', '2018-11-02T113344.698028Z'),
                 ('file_indexed', 'False'),
                 ('file_url', config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?'
-                                                   'version=2018-11-02T113344.698028Z&replica=gcp')
+                                                   'version=2018-11-02T113344.698028Z&replica=gcp'),
+                ('dos_url', config.dss_endpoint + dos_object_url('7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'))
             ]
             expected_fieldnames, expected_row = map(list, zip(*expectations))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'sample.tsv'), 'r') as fh:
