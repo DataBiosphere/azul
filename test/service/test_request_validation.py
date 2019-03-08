@@ -208,6 +208,11 @@ class FacetNameValidationTest(WebServiceTestCase):
                                            ' || Sarah Teichmann',
                                            'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
                                            ' || Sarah Teichmann'),
+                            ('project_description', '', ''),
+                            ('project_shortname', 'Mouse Melanoma', 'Mouse Melanoma'),
+                            ('project_title', 'Melanoma infiltration of stromal and immune cells',
+                                              'Melanoma infiltration of stromal and immune cells'),
+                            ('publication_titles', '', ''),
                             ('biological_sex', '', 'female'),
                             ('specimen_id', '', '1209_T || 1210_T'),
                             ('specimen_document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
