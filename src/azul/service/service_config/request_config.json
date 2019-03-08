@@ -73,7 +73,11 @@
       "contact_names": "contact_names",
       "document_id": "document_id",
       "institution": "institution",
-      "laboratory": "laboratory"
+      "laboratory": "laboratory",
+      "project_description": "project_description",
+      "project_shortname": "project_shortname",
+      "project_title": "project_title",
+      "publication_titles": "publication_titles"
     },
     "contents.specimens": {
       "biological_sex": "biological_sex",
