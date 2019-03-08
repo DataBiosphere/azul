@@ -15,7 +15,7 @@ from azul import config
 from azul.decorators import memoized_property
 from azul.reindexer import Reindexer
 from azul.requests import requests_session
-from azul.subscription import manage_subscriptions
+from azul.subscription import manage_subscriptions, call_client
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,10 @@ class IntegrationTest(unittest.TestCase):
     bundle_uuid_prefix = None
     prefix_length = 3
 
+    @memoized_property
+    def dss(self):
+        return config.dss_client()
+
     def setUp(self):
         super().setUp()
         self.set_lambda_test_mode(True)
@@ -36,34 +40,28 @@ class IntegrationTest(unittest.TestCase):
     def tearDown(self):
         self.set_lambda_test_mode(False)
         if config.subscribe_to_dss:
-            manage_subscriptions(config.dss_client(), subscribe=True)
+            manage_subscriptions(self.dss, subscribe=True)
+        super().tearDown()
 
     def test_webservice_and_indexer(self):
-        if config.subscribe_to_dss:
-            manage_subscriptions(config.dss_client(), subscribe=False)
-            unsubscribe_waitime = 0
-
-            while True:
-                if not config.dss_client().get_subscriptions(replica='aws')['subscriptions']:
-                    break
-                elif unsubscribe_waitime > 60:
-                    self.fail('Unable to unsubscribe from DSS.')
-                time.sleep(1)
-                unsubscribe_waitime += 1
-            manage_subscriptions(config.dss_client(), subscribe=False)
-            manage_subscriptions(config.dss_client(), subscribe=True)
-
         test_uuid = str(uuid.uuid4())
         test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
+        logger.info('Starting test using test name, %s ...', test_name)
+
+        if config.subscribe_to_dss:
+            self.unsubscribe()
+            self.unsubscribe()
+            self.subscribe()
+            self.subscribe()
+
         test_reindexer = Reindexer(indexer_url=config.indexer_endpoint(),
                                    test_name=test_name,
                                    prefix=self.bundle_uuid_prefix)
-
-        logger.info('Starting test using test name, %s ...', test_name)
         logger.info('Creating indices and reindexing ...')
         selected_bundle_fqids = test_reindexer.reindex()
         self.num_bundles = len(selected_bundle_fqids)
         self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
+
         self.check_endpoint_is_working(config.indexer_endpoint(), '/health')
         self.check_endpoint_is_working(config.service_endpoint(), '/')
         self.check_endpoint_is_working(config.service_endpoint(), '/health')
@@ -73,14 +71,32 @@ class IntegrationTest(unittest.TestCase):
         manifest_filter = {"file": {"organPart": {"is": ["temporal lobe"]}, "fileFormat": {"is": ["bai"]}}}
         self.check_endpoint_is_working(config.service_endpoint(), f'/manifest/files?filters={manifest_filter}')
 
+    def subscribe(self):
+        manage_subscriptions(self.dss, subscribe=True)
+        self.wait_for_subscriptions(2)
+
+    def unsubscribe(self):
+        manage_subscriptions(self.dss, subscribe=False)
+        self.wait_for_subscriptions(0)
+
+    def wait_for_subscriptions(self, num_expected_subscriptions):
+        deadline = time.time() + 60
+        while True:
+            actual_subscriptions = call_client(self.dss.get_subscriptions, replica='aws')['subscriptions']
+            if num_expected_subscriptions == len(actual_subscriptions):
+                break
+            else:
+                if time.time() > deadline:
+                    self.fail('Timed out waiting for subscription to disappear.')
+                else:
+                    time.sleep(1)
+
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
         indexer_lambda_config = client.get_function_configuration(FunctionName=config.indexer_name)
         environment = indexer_lambda_config['Environment']
         environment['Variables']['TEST_MODE'] = '1' if mode else '0'
-        client.update_function_configuration(
-            FunctionName=config.indexer_name,
-            Environment=environment)
+        client.update_function_configuration(FunctionName=config.indexer_name, Environment=environment)
 
     @memoized_property
     def requests(self) -> requests.Session:
@@ -181,7 +197,6 @@ class IntegrationTest(unittest.TestCase):
         for hit in response_json['hits']:
             project = one(hit['projects'])
             bundle_fqids = [bundle['bundleUuid'] + '.' + bundle['bundleVersion'] for bundle in hit['bundles']]
-
             self.assertTrue(test_name in project['projectShortname'],
                             f'There was a problem during indexing an {entity_type} entity'
                             f' {hit["entryId"]}. Bundle(s) ({",".join(bundle_fqids)})'
