@@ -70,14 +70,11 @@
       "library_construction_approach": "library_construction_approach"
     },
     "contents.projects": {
-      "contact_names": "contact_names",
       "document_id": "document_id",
-      "institution": "institution",
+      "institutions": "institutions",
       "laboratory": "laboratory",
-      "project_description": "project_description",
       "project_shortname": "project_shortname",
-      "project_title": "project_title",
-      "publication_titles": "publication_titles"
+      "project_title": "project_title"
     },
     "contents.specimens": {
       "biological_sex": "biological_sex",

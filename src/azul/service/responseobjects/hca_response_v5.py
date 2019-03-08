@@ -212,7 +212,7 @@ class ManifestResponse(AbstractResponse):
         for field_name in column_mapping.values():
             cell_value = []
             for entity in entities:
-                field_value = entity.get(field_name, "")
+                field_value = entity[field_name]
                 if isinstance(field_value, list):
                     cell_value += [validate(str(v)) for v in field_value if v is not None]
                 else:
