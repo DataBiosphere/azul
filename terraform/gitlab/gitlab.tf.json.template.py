@@ -289,6 +289,10 @@ emit({} if config.terraform_component != 'gitlab' else {
                     *allow_service('Elasticsearch Service',
                                    global_action_types={ServiceActionType.read, ServiceActionType.list},
                                    DomainName="azul-*"),
+                    {
+                        'actions': ['es:ListTags'],
+                        'resources': aws_service_arns('Elasticsearch Service', DomainName='*')
+                    },
 
                     *allow_service('STS',
                                    action_types={ServiceActionType.read, ServiceActionType.list},
@@ -312,6 +316,12 @@ emit({} if config.terraform_component != 'gitlab' else {
                                    FunctionName='azul-*',
                                    UUID='*',
                                    LayerVersion='*'),
+
+                    # CloudWatch does not describe any resource-level permissions
+                    {
+                        "actions": ["cloudwatch:*"],
+                        "resources": ["*"]
+                    },
 
                     *allow_service('CloudWatch Events',
                                    global_action_types={ServiceActionType.list, ServiceActionType.read},
@@ -342,6 +352,14 @@ emit({} if config.terraform_component != 'gitlab' else {
 
                     allow_global_actions('CloudWatch Logs'),
                     {
+                        "actions": aws_service_actions('CloudWatch Logs',
+                                                       types={ServiceActionType.list}),
+                        "resources": aws_service_arns('CloudWatch Logs',
+                                                      LogGroupName='*',
+                                                      LogStream='*',
+                                                      LogStreamName='*')
+                    },
+                    {
                         "actions": aws_service_actions('CloudWatch Logs'),
                         "resources": merge(aws_service_arns('CloudWatch Logs',
                                                             LogGroupName=log_group_name,
@@ -349,7 +367,8 @@ emit({} if config.terraform_component != 'gitlab' else {
                                                             LogStreamName='*')
                                            for log_group_name in ['/aws/apigateway/azul-*',
                                                                   '/aws/lambda/azul-*'])
-                    }]
+                    }
+                ]
             },
             "gitlab_iam": {
                 "statement": [
@@ -373,6 +392,7 @@ emit({} if config.terraform_component != 'gitlab' else {
                     },
                     {
                         "actions": [
+                            "iam:UpdateAssumeRolePolicy",
                             "iam:DeleteRole",
                             "iam:PassRole"  # FIXME: consider iam:PassedToService condition
                         ],
