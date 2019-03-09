@@ -1,7 +1,6 @@
 import requests
 import unittest
 from azul.dos import dos_object_url
-
 from service import WebServiceTestCase
 
 class DataRepositoryServiceEndpointTest(WebServiceTestCase):
@@ -43,7 +42,7 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         :return:
         """
         file_id = "NOT_A_GOOD_IDEA"
-        get_url = "{}/ga4gh/dos/v1/dataobjects/{}".format(self.base_url, file_id)
+        get_url = self.base_url + dos_object_url(file_id)
         # Should cause a 404 error
         drs_response = requests.get(get_url)
         self.assertEquals(404, drs_response.status_code)

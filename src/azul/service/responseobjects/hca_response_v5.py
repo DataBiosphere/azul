@@ -341,7 +341,7 @@ class ManifestResponse(AbstractResponse):
         replica = 'gcp'
         endpoint = f'files/{file_id}?version={version}&replica={replica}'
         fetch_url = [config.dss_endpoint + '/' + endpoint]
-        dos_url = [config.dss_endpoint + dos_object_url(file_id)]
+        dos_url = ['dos:/' + dos_object_url(file_id) + '?version=' + version + '&replica=' + replica]
 
         for bundle in hit_dict['bundles']:
             sample_writer.writerow(chain(specimen_fields[0], specimen_fields[1], cell_suspension_fields[0],
