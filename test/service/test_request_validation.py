@@ -224,7 +224,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                 ('file_indexed', 'False'),
                 ('file_url', config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?'
                                                    'version=2018-11-02T113344.698028Z&replica=gcp'),
-                ('dos_url', config.dss_endpoint + dos_object_url('7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'))
+                ('dos_url', 'dos:/' + dos_object_url('7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb')
+                 + '?version=2018-11-02T113344.698028Z&replica=gcp')
             ]
             expected_fieldnames, expected_row = map(list, zip(*expectations))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'sample.tsv'), 'r') as fh:
