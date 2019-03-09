@@ -173,6 +173,14 @@ azul_vars=(
     # by the empty string and its resources are defined in the `terraform`
     # directory.
     azul_terraform_component
+
+    # The slug of a the Github repository hosting this fork of Azul
+    azul_github_project
+
+    # An Github REST API access token with permission to post status checks to
+    # the repository defined in `azul_github_project`.
+    azul_github_access_token
+
 )
 
 unset ${azul_vars[*]}
@@ -257,6 +265,10 @@ _set AZUL_CART_EXPORT_MAX_BATCH_SIZE 100
 _set AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL 3600
 
 _set azul_terraform_component
+
+_set azul_github_project DataBiosphere/azul
+
+_set azul_github_access_token
 
 unset -f _set
 
