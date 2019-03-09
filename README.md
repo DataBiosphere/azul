@@ -710,3 +710,17 @@ Modify the Docker image tags in
 apply. The instance will be terminated (the EBS volume will survive) and a new
 instance will be launched, with fresh containers from updated images. This
 should be done periodically.
+
+8.7. The Gitlab Build Environment
+
+The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
+mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
+copies the files from the `azul` subdirectory of that directory into the Azul
+project root. Secrets and other Gitab-specific settings should be specified in
+`/mnt/gitlab/runner/config/etc/azul/environment.local` which will end up in
+`${azul_home}/environment.local` where `source environment` will find and load
+them. For secrets, we prefer this mechanism over specifying them as environment
+variables under project settings on the Gitlab web UI. Only people with push
+access can push code to intentionally or accidentally expose those variables,
+push access is tied to shell access which is what one would normally need to
+modify those files.

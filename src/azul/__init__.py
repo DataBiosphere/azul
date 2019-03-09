@@ -440,6 +440,14 @@ class Config:
 
     permissions_boundary_name = 'azul-boundary'
 
+    @property
+    def github_project(self) -> str:
+        return os.environ['azul_github_project']
+
+    @property
+    def github_access_token(self) -> str:
+        return os.environ['azul_github_access_token']
+
 
 config = Config()
 
