@@ -664,7 +664,7 @@ def files_proxy(uuid):
             if file_name is None:
                 file_name = uuid
             bucket = location.netloc.partition('.')[0]
-            assert bucket == config.dss_checkout_bucket
+            assert bucket == config.dss_checkout_bucket, bucket
             location = s3.generate_presigned_url(ClientMethod=s3.get_object.__name__,
                                                  ExpiresIn=round(expires - time.time()),
                                                  Params={
