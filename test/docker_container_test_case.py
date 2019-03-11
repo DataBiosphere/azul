@@ -1,10 +1,10 @@
 import logging
 import os
-from typing import Tuple
 
 import docker
 from more_itertools import one
 
+from azul import Netloc
 from azul_test_case import AzulTestCase
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class DockerContainerTestCase(AzulTestCase):
     _containers = []
 
     @classmethod
-    def _create_container(cls, image: str, container_port: int, **kwargs) -> Tuple[str, int]:
+    def _create_container(cls, image: str, container_port: int, **kwargs) -> Netloc:
         """
         Create a Docker container from the given image, exposing the given container port on a interface that is
         within reach of the current process.

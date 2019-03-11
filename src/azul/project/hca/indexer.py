@@ -41,18 +41,17 @@ class Indexer(BaseIndexer):
                     }
                 },
                 {
-                    "longs_with_keyword": {
-                        "match_mapping_type": "long",
+                    "other_types_with_keyword": {
+                        "match_mapping_type": "*",
                         "mapping": {
-                            "type": "long",
+                            "type": "{dynamic_type}",
                             "fields": {
                                 "keyword": {
-                                    "type": "keyword",
-                                    "ignore_above": 256
+                                    "type": "{dynamic_type}"
                                 }
                             }
                         }
-                    },
+                    }
                 }
             ]
         }
