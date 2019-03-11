@@ -1,6 +1,7 @@
 import json
 
 from azul import config
+from azul.deployment import aws
 from azul.template import emit
 
 
@@ -8,7 +9,7 @@ def cart_item_states():
     return {
         "WriteBatch": {
             "Type": "Task",
-            "Resource": config.get_lambda_arn(config.service_name, config.cart_item_write_lambda_basename),
+            "Resource": aws.get_lambda_arn(config.service_name, config.cart_item_write_lambda_basename),
             "Next": "NextBatch",
             "ResultPath": "$.write_result"
         },
@@ -18,7 +19,7 @@ def cart_item_states():
                 {
                     "Variable": "$.write_result.count",
                     "NumericEquals": 0,
-                    "Next": "SuccessState"
+                    "Next": "SuccessState",
                 }
             ],
             "Default": "WriteBatch"
@@ -46,7 +47,8 @@ emit({
                             "Action": "sts:AssumeRole"
                         }
                     ]
-                })
+                }),
+                **aws.permissions_boundary_tf
             }
         },
         "aws_iam_role_policy": {
@@ -62,9 +64,9 @@ emit({
                                 "lambda:InvokeFunction"
                             ],
                             "Resource": [
-                                config.get_lambda_arn(config.service_name, config.manifest_lambda_basename),
-                                config.get_lambda_arn(config.service_name, config.cart_item_write_lambda_basename),
-                                config.get_lambda_arn(config.service_name, config.cart_export_dss_push_lambda_basename)
+                                aws.get_lambda_arn(config.service_name, config.manifest_lambda_basename),
+                                aws.get_lambda_arn(config.service_name, config.cart_item_write_lambda_basename),
+                                aws.get_lambda_arn(config.service_name, config.cart_export_dss_push_lambda_basename)
                             ]
                         }
                     ]
@@ -80,7 +82,7 @@ emit({
                     "States": {
                         "WriteManifest": {
                             "Type": "Task",
-                            "Resource": config.get_lambda_arn(config.service_name, config.manifest_lambda_basename),
+                            "Resource": aws.get_lambda_arn(config.service_name, config.manifest_lambda_basename),
                             "End": True
                         }
                     }
@@ -102,8 +104,8 @@ emit({
                     "States": {
                         "SendToCollectionAPI": {
                             "Type": "Task",
-                            "Resource": config.get_lambda_arn(config.service_name,
-                                                              config.cart_export_dss_push_lambda_basename),
+                            "Resource": aws.get_lambda_arn(config.service_name,
+                                                           config.cart_export_dss_push_lambda_basename),
                             "Next": "NextBatch",
                             "ResultPath": "$"
                         },

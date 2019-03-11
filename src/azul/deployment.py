@@ -1,11 +1,12 @@
 from functools import lru_cache
 import json
-from typing import Optional, Tuple
+from typing import Mapping, Optional
 
 import boto3
 import botocore.session
 from more_itertools import one
 
+from azul import Netloc, config
 from azul.decorators import memoized_property
 
 
@@ -14,7 +15,7 @@ class AWS:
     def profile(self):
         session = botocore.session.Session()
         profile_name = session.get_config_variable('profile')
-        return session.full_config['profiles'][profile_name]
+        return {} if profile_name is None else session.full_config['profiles'][profile_name]
 
     @memoized_property
     def region_name(self):
@@ -44,6 +45,10 @@ class AWS:
     def stepfunctions(self):
         return boto3.client('stepfunctions')
 
+    @memoized_property
+    def iam(self):
+        return boto3.client('iam')
+
     @lru_cache(maxsize=1)
     def dynamo(self, endpoint_url, region_name):
         return boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
@@ -72,9 +77,34 @@ class AWS:
         else:
             return f"https://{api_gateway_id}.execute-api.{self.region_name}.amazonaws.com/{api_gateway_stage}/"
 
-    def es_endpoint(self, es_domain: str) -> Tuple[str, int]:
-        es_domain_status = self.es.describe_elasticsearch_domain(DomainName=es_domain)
+    @property
+    def es_endpoint(self) -> Netloc:
+        es_domain_status = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
         return es_domain_status['DomainStatus']['Endpoint'], 443
+
+    @property
+    def lambda_env(self) -> Mapping[str, str]:
+        return config.lambda_env(self.es_endpoint)
+
+    def get_lambda_arn(self, function_name, suffix):
+        return f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{function_name}-{suffix}"
+
+    @memoized_property
+    def permissions_boundary_arn(self) -> str:
+        return f'arn:aws:iam::{self.account}:policy/{config.permissions_boundary_name}'
+
+    @memoized_property
+    def permissions_boundary(self):
+        try:
+            return self.iam.get_policy(PolicyArn=self.permissions_boundary_arn)['Policy']
+        except self.iam.exceptions.NoSuchEntityException:
+            return None
+
+    @memoized_property
+    def permissions_boundary_tf(self) -> Mapping[str, str]:
+        return {} if self.permissions_boundary is None else {
+            'permissions_boundary': self.permissions_boundary['Arn']
+        }
 
 
 aws = AWS()

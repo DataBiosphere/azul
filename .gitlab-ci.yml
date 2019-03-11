@@ -1,13 +1,50 @@
-image: python:3.6.8-stretch
+stages:
+  - setup
+  - main
+  - teardown
 
-before_script:
-  - (cd deployments && ln -snf dev .active)
-  - source environment
-  - pip install virtualenv
-  - virtualenv .venv
-  - source .venv/bin/activate
-  - pip install -r requirements.dev.txt
+build-image:
+  # Build an image containing the build prerequisites (python, terraform, etc). This lets us exploit
+  # Docker's layer caching to speed up the build. The image will only be rebuilt after changes to
+  # the Dockerfile, requirements.txt or requirements.dev.txt
+  stage: setup
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
+    - docker build -t $CI_REGISTRY_IMAGE/build .
+    - docker push $CI_REGISTRY_IMAGE/build
+
+.base:
+  image: $CI_REGISTRY_IMAGE/build
+  before_script:
+    - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
+    - source /build/.venv/bin/activate
+    - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print || echo sandbox)
+    - (cd deployments && ln -snf ${deployment} .active)
+    - source environment
 
 test:
+  extends: .base
+  stage: main
+  # Run the unit tests, deploy and run integration test
   script:
+    - python scripts/github_status_check.py pending
+    - make clean
     - make test
+    - make -C terraform auto_apply
+    - make deploy
+    - make -C terraform auto_apply
+    - make integration_test
+
+on_success:
+  extends: .base
+  stage: teardown
+  when: on_success
+  script:
+    - python scripts/github_status_check.py success
+
+on_failure:
+  extends: .base
+  stage: teardown
+  when: on_failure
+  script:
+    - python scripts/github_status_check.py failure
