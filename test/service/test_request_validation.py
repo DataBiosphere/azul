@@ -176,9 +176,9 @@ class FacetNameValidationTest(WebServiceTestCase):
             storage_service = StorageService()
             storage_service.create_bucket()
 
-            for single_part in "0", "1":
+            for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
-                    with mock.patch.dict(os.environ, AZUL_DISABLE_MULTIPART_MANIFESTS=single_part):
+                    with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                         url = self.base_url + '/repository/files/export?filters={"file":{}}'
                         response = requests.get(url)
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
