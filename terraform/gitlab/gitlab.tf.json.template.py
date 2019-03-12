@@ -1,7 +1,33 @@
+from functools import lru_cache
+import gzip
+from itertools import chain
+import json
+import os
 from textwrap import dedent
+from typing import Iterable, List, Set
 
 from azul import config
+from azul.aws_service_model import ServiceActionType
+from azul.collections import dict_merge
+from azul.deployment import aws
+from azul.strings import departition
 from azul.template import emit
+# The name of an EBS volume to attach to the instance. This EBS volume must exist and be formatted with ext4. We
+# don't manage the volume in Terraform because that would require formatting it once after creation. That can only be
+# one after attaching it to an EC2 instance but before mounting it. This turns out to be difficult and risks
+# overwriting existing data on the volume. We'd also have to prevent the volume from being deleted during `terraform
+# destroy`.
+#
+# If this EBS volume does not exist you must create it with the desired size before running Terraform. To then format
+# the volume, you can then either attach it to some other Linux instance and format it there or use `make terraform`
+# to create the actual Gitlab instance and attach the volume. For the latter you would need to ssh into the Gitlab
+# instance, format `/dev/xvdf` and reboot the instance.
+#
+# The EBS volume should be backed up (EBS snapshot) periodically. Not only does it contain Gitlabs data but also its
+# config. FIXME: I wish I had tracked the changes to the config. Some of the config in the EBS volume duplicates or
+# corresponds to settings in here.
+#
+from azul.types import JSON
 
 # This Terraform config creates a single EC2 instance with a bunch of Docker containers running on it:
 #
@@ -55,17 +81,12 @@ from azul.template import emit
 #
 # The NLB's public IP is bound to ssh.gitlab.{dev,prod}.explore.data.humancellatlas.org
 # The ALB's public IP is bound to gitlab.{dev,prod}.explore.data.humancellatlas.org
-
-
 # To log into the instance run `ssh rancher@ssh.gitlab.dev.explore.data.humancellatlas.org -p 2222`. Your SSH key
 # must be mentioned in public_key or other_public_keys below.
 #
 # The Gitlab web UI is at https://gitlab.{dev,prod}.explore.data.humancellatlas.org/.
-
 # It's safe to destroy all resources in this TF config. You can always build them up again. The only golden egg is
 # the EBS volume that's attached to the instance. See below under ebs_volume_name.
-
-
 # RancherOS was chosen for the AMI because it has Docker pre installed and supports cloud-init user data.
 #
 # The container wiring is fairly complicated as it involves docker-in-docker. It is inspired by
@@ -78,31 +99,9 @@ from azul.template import emit
 # container. When the tests are run locally or on Travis, the tests run on the host. The above diagram also glosses
 # over the fact that there are multiple separate bridge networks involved. The `gitlab-dind` and `gitlab-runner`
 # containers are attached to a separate bridge network. The `gitlab` container is on the default bridge network.
-
-
-# IMPORTANT: Before running `make destroy`, the Gitlab instance needs to be stopped. Otherwise `make destroy` will
-# timeout trying to detach the volume.
-
-
 # IMPORTANT: There is a bug in the Terraform AWS provider (I think its conflating the listeners) which causes one of
 # the NLB listeners to be missing after `terraform apply`.
 
-
-# The name of an EBS volume to attach to the instance. This EBS volume must exist and be formatted with ext4. We
-# don't manage the volume in Terraform because that would require formatting it once after creation. That can only be
-# one after attaching it to an EC2 instance but before mounting it. This turns out to be difficult and risks
-# overwriting existing data on the volume. We'd also have to prevent the volume from being deleted during `terraform
-# destroy`.
-#
-# If this EBS volume does not exist you must create it with the desired size before running Terraform. To then format
-# the volume, you can then either attach it to some other Linux instance and format it there or use `make terraform`
-# to create the actual Gitlab instance and attach the volume. For the latter you would need to ssh into the Gitlab
-# instance, format `/dev/xvdf` and reboot the instance.
-#
-# The EBS volume should be backed up (EBS snapshot) periodically. Not only does it contain Gitlabs data but also its
-# config. FIXME: I wish I had tracked the changes to the config. Some of the config in the EBS volume duplicates or
-# corresponds to settings in here.
-#
 ebs_volume_name = "azul-gitlab"
 
 num_zones = 2  # An ALB needs at least two availability zones
@@ -151,6 +150,39 @@ other_public_keys = [
 ]
 
 
+@lru_cache(maxsize=1)
+def iam() -> JSON:
+    with gzip.open(os.path.join(os.path.dirname(__file__), 'aws_service_model.json.gz'), 'rt') as f:
+        return json.load(f)
+
+
+def aws_service_actions(service: str, types: Set[ServiceActionType] = None, is_global: bool = None) -> List[str]:
+    if types is None and is_global is None:
+        return [iam()['services'][service]['serviceName'] + ':*']
+    else:
+        actions = iam()['actions'][service]
+        return [name for name, action in actions.items()
+                if (types is None or ServiceActionType[action['type']] in types)
+                and (is_global is None or bool(action['resources']) == (not is_global))]
+
+
+def aws_service_arns(service: str, *resource_names: str, **arn_fields: str) -> List[str]:
+    resources = iam()['resources'].get(service, {})
+    resource_names = set(resource_names)
+    all_names = resources.keys()
+    invalid_names = resource_names.difference(all_names)
+    assert not invalid_names, f"No such resource in {service}: {invalid_names}"
+    arns = []
+    for name, arn in resources.items():
+        if not resource_names or name in resource_names:
+            arn = arn.replace('${', '{')
+            arn = arn.format_map(dict(Account=aws.account,
+                                      Region=aws.region_name,
+                                      **arn_fields))
+            arns.append(arn)
+    return arns
+
+
 def subnet_name(public):
     return 'public' if public else 'private'
 
@@ -171,7 +203,39 @@ def subnet_number(zone, public):
 #
 nlb_preserve_source_ip = True
 
-emit({} if config.deployment_stage not in ('dev', ) else {
+
+def merge(sets: Iterable[Iterable[str]]) -> Iterable[str]:
+    return sorted(set(chain(*sets)))
+
+
+def allow_global_actions(service, types: Set[ServiceActionType] = None) -> JSON:
+    return {
+        "actions": aws_service_actions(service, types=types, is_global=True),
+        "resources": ["*"]
+    }
+
+
+def allow_service(service: str,
+                  *resource_names: str,
+                  action_types: Set[ServiceActionType] = None,
+                  global_action_types: Set[ServiceActionType] = None,
+                  **arn_fields: str) -> List[JSON]:
+    if global_action_types is None:
+        global_action_types = action_types
+    return remove_inconsequential_statements([
+        allow_global_actions(service, types=global_action_types),
+        {
+            "actions": aws_service_actions(service, types=action_types),
+            "resources": aws_service_arns(service, *resource_names, **arn_fields)
+        }
+    ])
+
+
+def remove_inconsequential_statements(statements: List[JSON]) -> List[JSON]:
+    return [s for s in statements if s['actions'] and s['resources']]
+
+
+emit({} if config.terraform_component != 'gitlab' else {
     "data": {
         "aws_availability_zones": {
             "available": {}
@@ -197,7 +261,150 @@ emit({} if config.deployment_stage not in ('dev', ) else {
                 "name": config.domain_name + ".",
                 "private_zone": False
             }
-        }
+        },
+        "aws_iam_policy_document": {
+            "gitlab_boundary": {
+                "statement": [
+                    allow_global_actions('S3', types={ServiceActionType.read, ServiceActionType.list}),
+                    {
+                        "actions": aws_service_actions('S3'),
+                        "resources": merge(aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
+                                           for bucket_name in ['azul-*',
+                                                               'org-humancellatlas-azul-*',
+                                                               '*.url.data.humancellatlas.org'])
+                    },
+
+                    *allow_service('KMS',
+                                   action_types={ServiceActionType.read, ServiceActionType.list},
+                                   KeyId='*',
+                                   Alias='*'),
+
+                    *allow_service('SQS',
+                                   QueueName='azul-*'),
+
+                    # API Gateway ARNs refer to APIs by ID so so we cannot restrict to name or prefix
+                    *allow_service('API Gateway',
+                                   ApiGatewayResourcePath="*"),
+
+                    *allow_service('Elasticsearch Service',
+                                   global_action_types={ServiceActionType.read, ServiceActionType.list},
+                                   DomainName="azul-*"),
+                    {
+                        'actions': ['es:ListTags'],
+                        'resources': aws_service_arns('Elasticsearch Service', DomainName='*')
+                    },
+
+                    *allow_service('STS',
+                                   action_types={ServiceActionType.read, ServiceActionType.list},
+                                   RelativeId='*',
+                                   RoleNameWithPath='*',
+                                   UserNameWithPath='*'),
+
+                    # ACM ARNs refer to certificates by ID so so we cannot restrict to name or prefix
+                    *allow_service('Certificate Manager', CertificateId='*'),
+
+                    *allow_service('DynamoDB',
+                                   'table',
+                                   'index',
+                                   global_action_types={ServiceActionType.list, ServiceActionType.read},
+                                   TableName='azul-*',
+                                   IndexName='*'),
+
+                    # Lambda ARNs refer to event source mappings by UUID so we cannot restrict to name or prefix
+                    *allow_service('Lambda',
+                                   LayerName="azul-*",
+                                   FunctionName='azul-*',
+                                   UUID='*',
+                                   LayerVersion='*'),
+
+                    # CloudWatch does not describe any resource-level permissions
+                    {
+                        "actions": ["cloudwatch:*"],
+                        "resources": ["*"]
+                    },
+
+                    *allow_service('CloudWatch Events',
+                                   global_action_types={ServiceActionType.list, ServiceActionType.read},
+                                   RuleName='azul-*'),
+
+                    # Route 53 ARNs refer to resources by ID so we cannot restrict to name or prefix
+                    # FIXME: this is obviously problematic
+                    {
+                        "actions": ["route53:*"],
+                        "resources": ["*"]
+                    },
+
+                    # Secret Manager ARNs refer to secrets by UUID so we cannot restrict to name or prefix
+                    # FIXME: this is obviously problematic
+                    *allow_service('Secrets Manager', SecretId='*'),
+
+                    *allow_service('Step Functions',
+                                   'execution',
+                                   'statemachine',
+                                   StateMachineName='azul-*',
+                                   ExecutionId='*'),
+
+                    # CloudFront does not define any ARNs. We need it for friendly domain names for API Gateways
+                    {
+                        "actions": ["cloudfront:*"],
+                        "resources": ["*"]
+                    },
+
+                    allow_global_actions('CloudWatch Logs'),
+                    {
+                        "actions": aws_service_actions('CloudWatch Logs',
+                                                       types={ServiceActionType.list}),
+                        "resources": aws_service_arns('CloudWatch Logs',
+                                                      LogGroupName='*',
+                                                      LogStream='*',
+                                                      LogStreamName='*')
+                    },
+                    {
+                        "actions": aws_service_actions('CloudWatch Logs'),
+                        "resources": merge(aws_service_arns('CloudWatch Logs',
+                                                            LogGroupName=log_group_name,
+                                                            LogStream='*',
+                                                            LogStreamName='*')
+                                           for log_group_name in ['/aws/apigateway/azul-*',
+                                                                  '/aws/lambda/azul-*'])
+                    }
+                ]
+            },
+            "gitlab_iam": {
+                "statement": [
+                    # Let Gitlab manage roles as long as they specify the permissions boundary
+                    # This prevent privilege escalation.
+                    {
+                        "actions": [
+                            "iam:CreateRole",
+                            "iam:PutRolePolicy",
+                            "iam:DeleteRolePolicy",
+                            "iam:AttachRolePolicy",
+                            "iam:DetachRolePolicy",
+                            "iam:PutRolePermissionsBoundary"
+                        ],
+                        "resources": aws_service_arns('IAM', 'role', RoleNameWithPath='azul-*'),
+                        "condition": {
+                            "test": "StringEquals",
+                            "variable": "iam:PermissionsBoundary",
+                            "values": [aws.permissions_boundary_arn]
+                        }
+                    },
+                    {
+                        "actions": [
+                            "iam:UpdateAssumeRolePolicy",
+                            "iam:DeleteRole",
+                            "iam:PassRole"  # FIXME: consider iam:PassedToService condition
+                        ],
+                        "resources": aws_service_arns('IAM', 'role', RoleNameWithPath='azul-*')
+                    },
+                    {
+                        "actions": aws_service_actions('IAM', types={ServiceActionType.read, ServiceActionType.list}),
+                        "resources": ["*"]
+                    }
+                ]
+            }
+        },
     },
     "resource": {
         "aws_vpc": {
@@ -439,38 +646,49 @@ emit({} if config.deployment_stage not in ('dev', ) else {
         "aws_acm_certificate": {
             "gitlab": {
                 "domain_name": "${aws_route53_record.gitlab.name}",
+                "subject_alternative_names": ["${aws_route53_record.gitlab_docker.name}"],
                 "validation_method": "DNS",
                 "provider": "aws.us-east-1",
                 "tags": {
                     "Name": "azul-gitlab"
+                },
+                "lifecycle": {
+                    "create_before_destroy": True
                 }
             }
         },
         "aws_acm_certificate_validation": {
             "gitlab": {
                 "certificate_arn": "${aws_acm_certificate.gitlab.arn}",
-                "validation_record_fqdns": ["${aws_route53_record.gitlab_validation.fqdn}"],
+                "validation_record_fqdns": [
+                    "${aws_route53_record.gitlab_validation.fqdn}",
+                    "${aws_route53_record.gitlab_validation_docker.fqdn}"
+                ],
                 "provider": "aws.us-east-1"
             }
         },
         "aws_route53_record": {
-            "gitlab_validation": {
-                "name": "${aws_acm_certificate.gitlab.domain_validation_options.0.resource_record_name}",
-                "type": "${aws_acm_certificate.gitlab.domain_validation_options.0.resource_record_type}",
-                "zone_id": "${data.aws_route53_zone.gitlab.id}",
-                "records": ["${aws_acm_certificate.gitlab.domain_validation_options.0.resource_record_value}"],
-                "ttl": 60
-            },
-            "gitlab": {
-                "zone_id": "${data.aws_route53_zone.gitlab.id}",
-                "name": f"gitlab.{config.domain_name}",
-                "type": "A",
-                "alias": {
-                    "name": "${aws_lb.gitlab_alb.dns_name}",
-                    "zone_id": "${aws_lb.gitlab_alb.zone_id}",
-                    "evaluate_target_health": False
-                }
-            },
+            **dict_merge(
+                {
+                    departition('gitlab_validation', '_', subdomain): {
+                        "name": f"${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_name}}",
+                        "type": f"${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_type}}",
+                        "zone_id": f"${{data.aws_route53_zone.gitlab.id}}",
+                        "records": [
+                            f"${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_value}}"],
+                        "ttl": 60
+                    },
+                    departition('gitlab', '_', subdomain): {
+                        "zone_id": "${data.aws_route53_zone.gitlab.id}",
+                        "name": departition(subdomain, '.', f"gitlab.{config.domain_name}"),
+                        "type": "A",
+                        "alias": {
+                            "name": "${aws_lb.gitlab_alb.dns_name}",
+                            "zone_id": "${aws_lb.gitlab_alb.zone_id}",
+                            "evaluate_target_health": False
+                        }
+                    }
+                } for i, subdomain in enumerate([None, 'docker'])),
             "gitlab_ssh": {
                 "zone_id": "${data.aws_route53_zone.gitlab.id}",
                 "name": f"ssh.gitlab.{config.domain_name}",
@@ -497,20 +715,75 @@ emit({} if config.deployment_stage not in ('dev', ) else {
             "gitlab": {
                 "device_name": "/dev/sdf",
                 "volume_id": "${data.aws_ebs_volume.gitlab.id}",
-                "instance_id": "${aws_instance.gitlab.id}"
+                "instance_id": "${aws_instance.gitlab.id}",
+                "provisioner": {
+                    "local-exec": {
+                        "when": "destroy",
+                        "command": "aws ec2 stop-instances --instance-ids ${self.instance_id}"
+                                   " && aws ec2 wait instance-stopped --instance-ids ${self.instance_id}"
+                    }
+                }
             }
         },
         "aws_key_pair": {
-            "admin": {
-                "key_name": key_name,
+            "gitlab": {
+                "key_name": "azul-gitlab",
                 "public_key": public_key
+            }
+        },
+        "aws_iam_role": {
+            "gitlab": {
+                "name": "azul-gitlab",
+                "path": "/",
+                "assume_role_policy": json.dumps({
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Principal": {
+                                "Service": "ec2.amazonaws.com"
+                            },
+                            "Effect": "Allow",
+                            "Sid": ""
+                        }
+                    ]
+                })
+            }
+        },
+        "aws_iam_instance_profile": {
+            "gitlab": {
+                "name": "azul-gitlab",
+                "role": "${aws_iam_role.gitlab.name}",
+            }
+        },
+        "aws_iam_policy": {
+            "gitlab_iam": {
+                "name": "azul-gitlab-iam",
+                "path": "/",
+                "policy": "${data.aws_iam_policy_document.gitlab_iam.json}"
+            },
+            "gitlab_boundary": {
+                "name": config.permissions_boundary_name,
+                "path": "/",
+                "policy": "${data.aws_iam_policy_document.gitlab_boundary.json}"
+            }
+        },
+        "aws_iam_role_policy_attachment": {
+            "gitlab_iam": {
+                "role": "${aws_iam_role.gitlab.name}",
+                "policy_arn": "${aws_iam_policy.gitlab_iam.arn}"
+            },
+            "gitlab_boundary": {
+                "role": "${aws_iam_role.gitlab.name}",
+                "policy_arn": "${aws_iam_policy.gitlab_boundary.arn}"
             }
         },
         "aws_instance": {
             "gitlab": {
+                "iam_instance_profile": "${aws_iam_instance_profile.gitlab.name}",
                 "ami": "ami-08bb050b78c315da3",
                 "instance_type": "t2.large",
-                "key_name": "${aws_key_pair.admin.key_name}",
+                "key_name": "${aws_key_pair.gitlab.key_name}",
                 "network_interface": {
                     "network_interface_id": "${aws_network_interface.gitlab.id}",
                     "device_index": 0
@@ -520,6 +793,7 @@ emit({} if config.deployment_stage not in ('dev', ) else {
                     mounts:
                     - ["/dev/xvdf", "/mnt/gitlab", "ext4", ""]
                     rancher:
+                    ssh_authorized_keys: {other_public_keys}
                     write_files:
                     - path: /etc/rc.local
                       permissions: "0755"
@@ -535,7 +809,8 @@ emit({} if config.deployment_stage not in ('dev', ) else {
                                --privileged \
                                --restart always \
                                --network gitlab-runner-net \
-                               --volume /var/lib/docker \
+                               --volume /mnt/gitlab/docker:/var/lib/docker \
+                               --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
                                docker:18.03.1-ce-dind
                         docker run \
                                --detach \
@@ -547,7 +822,7 @@ emit({} if config.deployment_stage not in ('dev', ) else {
                                --volume /mnt/gitlab/config:/etc/gitlab \
                                --volume /mnt/gitlab/logs:/var/log/gitlab \
                                --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:latest
+                               gitlab/gitlab-ce:11.8.0-ce.0
                         docker run \
                                --detach \
                                --name gitlab-runner \
@@ -555,8 +830,7 @@ emit({} if config.deployment_stage not in ('dev', ) else {
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
                                --network gitlab-runner-net \
                                --env DOCKER_HOST=tcp://gitlab-dind:2375 \
-                               gitlab/gitlab-runner:latest
-                    ssh_authorized_keys: {other_public_keys}
+                               gitlab/gitlab-runner:v11.8.0
                     """[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 "tags": {
                     "Name": "azul-gitlab"

@@ -1,6 +1,9 @@
-# Only variables whose names start in `AZUL_` will be exported to a deployed
-# Lambda. Note that by implication, `azul_` variables will not be exported, even
-# though they are considered part of Azul.
+# Only variables whose names start in `AZUL_` will be published to a deployed
+# Lambda. Note that by implication, `azul_` variables will not be published,
+# even though they are considered part of Azul. For secret values that should
+# not be printed or logged, use a variable name containing any of the strings
+# `secret`, `password` or `token`, either upper or lower case. Think twice
+# before publishing variable containing a secret.
 
 azul_vars=(
     # The path to the root directory of the project
@@ -164,6 +167,23 @@ azul_vars=(
     # The minimum remaining lifespan of the access token (JWT) for cart export
     # in seconds
     AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL
+
+    # A short string (no punctuation allowed) that identifies a Terraform
+    # component i.e., a distinct set of Terraform resources to be deployed
+    # together but separately from resources in other components. They are
+    # typically defined in a subdirectory of the `terraform` directory and have
+    # their own directory under `deployments`. The main component is identified
+    # by the empty string and its resources are defined in the `terraform`
+    # directory.
+    azul_terraform_component
+
+    # The slug of a the Github repository hosting this fork of Azul
+    azul_github_project
+
+    # An Github REST API access token with permission to post status checks to
+    # the repository defined in `azul_github_project`.
+    azul_github_access_token
+
 )
 
 unset ${azul_vars[*]}
@@ -176,6 +196,15 @@ if [[ ! -f "${azul_home}/deployments/.active/environment" ]]; then
     return
 fi
 
+_sanitize () (
+    shopt -s nocasematch
+    if [[ $1 == *password* || $1 == *token* || $1 == *secret* ]]; then
+        echo -n "REDACTED"
+    else
+        echo -n "$2"
+    fi
+)
+
 _set () {
     for var in ${azul_vars[*]}; do
         if [[ ${var} == $1 ]]; then
@@ -183,10 +212,11 @@ _set () {
             # Only echo in interactive shells
             if [[ -n $PS1 ]]; then
                 self=${BASH_SOURCE[1]#${azul_home}/}
+                value="$(_sanitize "$1" "$2")"
                 if [[ ${!1} == $2 ]]; then
-                    echo ${self}: Set $1 to "'$2'"
+                    echo ${self}: Set $1 to "'$value'"
                 else
-                    echo ${self}: Not setting $1 to "'$2'"
+                    echo ${self}: Not setting $1 to "'$value'"
                 fi
             fi
             return
@@ -247,6 +277,12 @@ _set AZUL_FUSILLADE_ENDPOINT "https://auth.dev.data.humancellatlas.org"
 _set AZUL_CART_EXPORT_MAX_BATCH_SIZE 100
 _set AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL 3600
 
+_set azul_terraform_component
+
+_set azul_github_project "DataBiosphere/azul"
+
+_set azul_github_access_token
+
 unset -f _set
 
 export ${azul_vars[*]}
@@ -274,3 +310,6 @@ _select () {
 
 export PYTHONPATH="${azul_home}/src:${azul_home}/test"
 export TF_DATA_DIR="${azul_home}/deployments/.active/.terraform"
+
+# HCA client caches Swagger specs downloaded from the DSS endpoint here
+export XDG_CONFIG_HOME=${azul_home}/.config

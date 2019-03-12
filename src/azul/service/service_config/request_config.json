@@ -74,7 +74,7 @@
       "cell_suspension_id": "document_id"
     },
     "contents.specimens": {
-      "entity:sample_id": "donor_biomaterial_id",
+      "entity:sample_id": "document_id",
       "participant_id": "donor_document_id"
     },
     "contents.files": {
