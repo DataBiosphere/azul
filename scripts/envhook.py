@@ -66,28 +66,34 @@ def setenv():
     new = _parse(_run(f'source {environment} && env'))
     pycharm_hosted = bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
 
+    def sanitize(k, v):
+        return 'REDACTED' if any(s in k.lower() for s in ('secret', 'password', 'token')) else v
+
     for k, (o, n) in sorted(zip_dict(old, new).items()):
         if o is None:
             if pycharm_hosted:
-                _print(f"{self.name}: Setting {k} to '{n}'")
+                _print(f"{self.name}: Setting {k} to '{sanitize(k, n)}'")
                 os.environ[k] = n
             else:
-                _print(f"{self.name}: Warning: {k} is not set but should be {n}, you must run `source environment`")
+                _print(f"{self.name}: Warning: {k} is not set but should be {sanitize(k, n)}, "
+                       f"you must run `source environment`")
         elif n is None:
             if pycharm_hosted:
-                _print(f"{self.name}: Removing {k}, was set to '{o}'")
+                _print(f"{self.name}: Removing {k}, was set to '{sanitize(k, o)}'")
                 del os.environ[k]
             else:
-                _print(f"{self.name}: Warning: {k} is '{o}' but should not be set, you must run `source environment`")
+                _print(f"{self.name}: Warning: {k} is '{sanitize(k, o)}' but should not be set, "
+                       f"you must run `source environment`")
         elif n != o:
             if k.startswith('PYTHON'):
-                _print(f"{self.name}: Ignoring change in {k} from '{o}' to '{n}'")
+                _print(f"{self.name}: Ignoring change in {k} from '{sanitize(k, o)}' to '{sanitize(k, n)}'")
             else:
                 if pycharm_hosted:
-                    _print(f"{self.name}: Changing {k} from '{o}' to '{n}'")
+                    _print(f"{self.name}: Changing {k} from '{sanitize(k, o)}' to '{sanitize(k, n)}'")
                     os.environ[k] = n
                 else:
-                    _print(f"{self.name}: Warning: {k} is '{o}' but should be '{n}', you must run `source environment`")
+                    _print(f"{self.name}: Warning: {k} is '{sanitize(k, o)}' but should be '{sanitize(k, n)}', "
+                           f"you must run `source environment`")
 
 
 K = TypeVar('K')

@@ -86,7 +86,8 @@ class TestDssProxy(LocalAppTestCase):
                                      ('foo bar.txt', 'z9uI4zJgBPzF5hkkFmylSpQrYRA='),
                                      ('foo&bar.txt', 'bu8ATMDQ6qeZj9SbygF0bgK5tUU=')]:
             with self.subTest(file_name=file_name):
-                with mock.patch('time.time', new=lambda: 1547691253.07010):
+                with mock.patch('time.time', new=lambda: 1547691253.07010), \
+                     mock.patch.object(type(config), 'dss_checkout_bucket', bucket_name):
                     with ResponsesHelper() as helper:
                         helper.add_passthru(self.base_url)
                         expires = str(round(time.time() + 3600))

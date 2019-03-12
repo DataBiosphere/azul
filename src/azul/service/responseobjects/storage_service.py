@@ -4,6 +4,7 @@ from functools import lru_cache
 from logging import getLogger
 from typing import Optional
 import boto3
+import os
 from azul import config
 
 logger = getLogger(__name__)
@@ -34,6 +35,12 @@ class StorageService:
 
         self.client.put_object(**params)
 
+        return object_key
+
+    def upload(self, file_name, object_key):
+        self.client.upload_file(Filename=file_name,
+                                Bucket=self.bucket_name,
+                                Key=object_key)
         return object_key
 
     def get_presigned_url(self, key: str, file_name: Optional[str] = None) -> str:

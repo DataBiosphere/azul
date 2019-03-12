@@ -1,6 +1,13 @@
+import os
+import sys
+
 import git
 
 from azul import config
+
+"""
+Ensure that the currently checked out branch matches the selected deployemnt  
+"""
 
 
 def check_branch(branch, stage):
@@ -33,8 +40,41 @@ def check_branch(branch, stage):
             raise RuntimeError(f"Protected branch '{branch}' should be deployed to '{expected_stage}', not '{stage}'")
 
 
+def expected_stage(branch):
+    return config.main_deployments_by_branch.get(branch)
+
+
+def current_branch():
+    try:
+        # Gitlab checks out a specific commit which results in a detached HEAD
+        # (no active branch). Extract the branch name from the runner environment.
+        branch = os.environ['CI_COMMIT_REF_NAME']
+    except KeyError:
+        repo = git.Repo(config.project_root)
+        branch = repo.active_branch.name
+    return branch
+
+
+def main(argv):
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--print', '-P',
+                        default=False,
+                        action='store_true',
+                        help="Print the deployment matching the current branch or exit "
+                             "with non-zero status code if no such deployment exists.")
+    args = parser.parse_args(argv)
+    branch = current_branch()
+    if args.print:
+        stage = expected_stage(branch)
+        if stage is None:
+            sys.exit(1)
+        else:
+            print(stage)
+    else:
+        stage = config.deployment_stage
+        check_branch(branch, stage)
+
+
 if __name__ == "__main__":
-    repo = git.Repo(config.project_root)
-    branch = repo.active_branch.name
-    stage = config.deployment_stage
-    check_branch(branch, stage)
+    main(sys.argv[1:])

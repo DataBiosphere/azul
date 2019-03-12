@@ -18,6 +18,7 @@ from more_itertools import one
 import requests
 
 from azul import config
+from azul.dos import dos_object_url
 from azul.health import Health
 from azul.security.authenticator import Authenticator, AuthenticationError
 from azul.service import service_config
@@ -139,7 +140,7 @@ def health():
 def version():
     from azul.changelog import compact_changes
     return {
-        'git': config.git_status,
+        'git': config.lambda_git_status,
         'changes': compact_changes(limit=10)
     }
 
@@ -663,7 +664,7 @@ def files_proxy(uuid):
             if file_name is None:
                 file_name = uuid
             bucket = location.netloc.partition('.')[0]
-            assert bucket == config.dss_checkout_bucket
+            assert bucket == config.dss_checkout_bucket, bucket
             location = s3.generate_presigned_url(ClientMethod=s3.get_object.__name__,
                                                  ExpiresIn=round(expires - time.time()),
                                                  Params={
@@ -1424,7 +1425,7 @@ def azul_to_obj(result):
     return data_object
 
 
-@app.route('/ga4gh/dos/v1/dataobjects/{data_object_id}', methods=['GET'], cors=True)
+@app.route(dos_object_url('{data_object_id}'), methods=['GET'], cors=True)
 def get_data_object(data_object_id):
     """
     Gets a data object by file identifier by making a query against the

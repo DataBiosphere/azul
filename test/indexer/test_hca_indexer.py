@@ -1,19 +1,29 @@
+import os
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import logging
-from typing import NamedTuple, Tuple
+import copy
+
+import boto3
+import requests
+
+from moto import mock_sqs, mock_sts
+from typing import NamedTuple, Tuple, Mapping
 import unittest
 from unittest.mock import patch
+from uuid import uuid4
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from more_itertools import one
 
+from app_test_case import LocalAppTestCase
 from azul import config
 from azul.indexer import IndexWriter
 from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
 from indexer import IndexerTestCase
+from retorts import ResponsesHelper
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +65,6 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Delete a bundle and check that the index contains the appropriate flags
         """
-
-        # FIXME: there should be a test that removes a bundle contribution from an entity that has
-        # contributions from other bundles (https://github.com/DataBiosphere/azul/issues/424)
 
         class BundleAndSize(NamedTuple):
             bundle: Tuple[str, str]
@@ -105,6 +112,80 @@ class TestHCAIndexer(IndexerTestCase):
                         self.assertTrue(doc.bundle_deleted)
                 finally:
                     self._delete_indices()
+
+    def test_bundle_delete_downgrade(self):
+        """
+        Delete an updated version of a bundle, and ensure that the index reverts to the previous bundle.
+        """
+        self._index_canned_bundle(self.old_bundle)
+        old_hits_by_id = self._assert_old_bundle()
+        self._index_canned_bundle(self.new_bundle)
+        self._assert_new_bundle(num_expected_old_contributions=4, old_hits_by_id=old_hits_by_id)
+        self._delete_bundle(self.new_bundle)
+        self._assert_old_bundle(ignore_deletes=True)
+
+    def test_multi_entity_contributing_bundles(self):
+        """
+        Delete a bundle which shares entities with another bundle and ensure shared entities
+        are not deleted. Only entity associated with deleted bundle should be marked as deleted.
+        """
+        bundle_fqid = ("8543d32f-4c01-48d5-a79f-1c5439659da3", "2018-03-29T143828.884167Z")
+        patched_bundle_fqid = ("9654e431-4c01-48d5-a79f-1c5439659da3", "2018-03-29T153828.884167Z")
+        manifest, metadata = self._load_canned_bundle(bundle_fqid)
+        old_file_uuid, patched_manifest, patched_metadata = self._patch_bundle(manifest, metadata)
+        self._index_bundle(bundle_fqid, manifest, metadata)
+        self._index_bundle(patched_bundle_fqid, patched_manifest, patched_metadata)
+
+        hits_before = self._get_es_results()
+        num_docs_by_index_before = self._num_docs_by_index(hits_before)
+
+        self._delete_bundle(bundle_fqid)
+
+        hits_after = self._get_es_results()
+        num_docs_by_index_after = self._num_docs_by_index(hits_after)
+
+        for entity_type, aggregate in num_docs_by_index_after.keys():
+            # Both bundles reference two files. They both share one file and exclusively own another one.
+            # Deleting one of the bundles removes only the file owned exclusively by that bundle.
+            difference = 1 if entity_type == 'files' and aggregate else 0
+            self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
+                             num_docs_by_index_before[entity_type, aggregate] - difference)
+
+        deleted_document_id = Contribution.make_document_id(old_file_uuid, *bundle_fqid)
+        hits = [hit['_source'] for hit in hits_after if hit['_id'] == deleted_document_id]
+        self.assertTrue(one(hits)['bundle_deleted'])
+
+    def _patch_bundle(self, manifest, metadata):
+        new_file_uuid = str(uuid4())
+        manifest = copy.deepcopy(manifest)
+        file_name = '21935_7#154_2.fastq.gz'
+        for file in manifest:
+            if file['name'] == file_name:
+                old_file_uuid = file['uuid']
+                file['uuid'] = new_file_uuid
+                break
+        else:
+            assert False, f"Unable to find file name {file_name}"
+
+        def _walkthrough(v):
+            if isinstance(v, dict):
+                return dict((k, _walkthrough(v)) for k, v in v.items())
+            elif isinstance(v, list):
+                return list(_walkthrough(i) for i in v)
+            elif isinstance(v, (str, int, bool, float)):
+                return new_file_uuid if v == old_file_uuid else v
+            else:
+                assert False, f'Cannot handle values of type {type(v)}'
+
+        metadata = _walkthrough(metadata)
+        return old_file_uuid, manifest, metadata
+
+    def _num_docs_by_index(self, hits) -> Mapping[Tuple[str, bool], int]:
+        counter = Counter()
+        for hit in hits:
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            counter[entity_type, aggregate] += 1
+        return counter
 
     def test_derived_files(self):
         """
@@ -158,7 +239,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._assert_old_bundle(num_expected_new_contributions=4, ignore_aggregates=True)
         self._assert_new_bundle(num_expected_old_contributions=4)
 
-    def _assert_old_bundle(self, num_expected_new_contributions=0, ignore_aggregates=False):
+    def _assert_old_bundle(self, num_expected_new_contributions=0, ignore_aggregates=False, ignore_deletes=False):
         num_actual_new_contributions = 0
         hits = self._get_es_results()
         self.assertEqual(4 + 4 + num_expected_new_contributions, len(hits))
@@ -170,21 +251,24 @@ class TestHCAIndexer(IndexerTestCase):
             source = hit['_source']
             hits_by_id[source['entity_id'], aggregate] = hit
             version = one(source['bundles'])['version'] if aggregate else source['bundle_version']
-            if not aggregate and self.old_bundle[1] != version:
-                self.assertLess(self.old_bundle[1], version)
-                num_actual_new_contributions += 1
-                continue
-            contents = source['contents']
-            project = one(contents['projects'])
-            self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
-            self.assertEqual('Single of human pancreas', get(project['project_shortname']))
-            self.assertIn('John Dear', get(project['laboratory']))
-            if aggregate and entity_type != 'projects':
-                self.assertIn('Farmers Trucks', project['institutions'])
+            if aggregate or self.old_bundle[1] == version:
+                contents = source['contents']
+                project = one(contents['projects'])
+                self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
+                self.assertEqual('Single of human pancreas', get(project['project_shortname']))
+                self.assertIn('John Dear', get(project['laboratory']))
+                if aggregate and entity_type != 'projects':
+                    self.assertIn('Farmers Trucks', project['institutions'])
+                else:
+                    self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
+                specimen = one(contents['specimens'])
+                self.assertIn('Australopithecus', specimen['genus_species'])
             else:
-                self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
-            specimen = one(contents['specimens'])
-            self.assertIn('Australopithecus', specimen['genus_species'])
+                if source['bundle_deleted']:
+                    self.assertTrue(ignore_deletes, "Unexpected deleted contribution")
+                else:
+                    self.assertLess(self.old_bundle[1], version)
+                    num_actual_new_contributions += 1
         self.assertEqual(num_expected_new_contributions, num_actual_new_contributions)
         return hits_by_id
 
@@ -473,6 +557,93 @@ class TestHCAIndexer(IndexerTestCase):
                          inner_specimens)
         self.assertEqual(inner_cell_suspensions_in_contributions + inner_cell_suspensions_in_aggregates,
                          inner_cell_suspensions)
+
+
+class TestValidNotificationRequests(LocalAppTestCase):
+
+    @classmethod
+    def lambda_name(cls) -> str:
+        return "indexer"
+
+    @mock_sts
+    @mock_sqs
+    def test_post_notification_endpoint(self):
+        self._create_mock_notify_queue()
+        body = {
+            'match': {
+                'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
+                'bundle_version': '2018-03-28T13:55:26.044Z'
+            }
+        }
+        for endpoint in ['/', '/delete']:
+            with self.subTest(endpoint=endpoint):
+                response = self._test(body, endpoint)
+                self.assertEqual(202, response.status_code)
+                self.assertEqual('', response.text)
+
+    @mock_sts
+    @mock_sqs
+    def test_invalid_notifications(self):
+        bodies = {
+            "Missing body": {},
+            "Missing bundle_uuid":
+                {
+                    'match': {
+                        'bundle_version': '2018-03-28T13:55:26.044Z'
+                    }
+                },
+            "bundle_uuid is None":
+                {
+                    'match': {
+                        'bundle_uuid': None,
+                        'bundle_version': '2018-03-28T13:55:26.044Z'
+                    }
+                },
+            "Missing bundle_version":
+                {
+                    'match': {
+                        'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd'
+                    }
+                },
+            "bundle_version is None":
+                {
+                    'match': {
+                        'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
+                        'bundle_version': None
+                    }
+                },
+            'Malformed bundle_uuis value':
+                {
+                    'match': {
+                        'bundle_uuid': f'}}{str(uuid4())}{{',
+                        'bundle_version': "2019-12-31T00:00:00.000Z"
+                    }
+                },
+            'Malformed bundle_version':
+                {
+                    'match': {
+                        'bundle_uuid': str(uuid4()),
+                        'bundle_version': ''
+                    }
+                }
+        }
+        for endpoint in ['/', '/delete']:
+            with self.subTest(endpoint=endpoint):
+                for test, body in bodies.items():
+                    with self.subTest(test):
+                        response = self._test(body, endpoint)
+                        self.assertEqual(400, response.status_code)
+
+    def _test(self, body, endpoint):
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+                return requests.post(self.base_url + endpoint, json=body)
+
+    @staticmethod
+    def _create_mock_notify_queue():
+        sqs = boto3.resource('sqs', region_name='us-east-1')
+        sqs.create_queue(QueueName=config.notify_queue_name)
 
 
 def get(v):
