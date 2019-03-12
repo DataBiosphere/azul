@@ -7,21 +7,23 @@ from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-from typing import Set, MutableSet
+from typing import MutableSet
 
 from uuid import uuid4
 
 from chalice import Response
-from jsonobject import (FloatProperty,
-                        IntegerProperty,
-                        JsonObject,
-                        ListProperty,
-                        ObjectProperty,
-                        StringProperty)
+from jsonobject.api import JsonObject
+from jsonobject.properties import (FloatProperty,
+                                   IntegerProperty,
+                                   DefaultProperty,
+                                   ListProperty,
+                                   ObjectProperty,
+                                   StringProperty)
 from bdbag import bdbag_api
 from shutil import copy
 from more_itertools import one
 from azul import config
+from azul.dos import dos_object_url
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
                                                           AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
@@ -59,9 +61,9 @@ class PaginationObj(JsonObject):
     count = IntegerProperty()
     total = IntegerProperty()
     size = IntegerProperty()
-    search_after = StringProperty()
+    search_after = DefaultProperty()
     search_after_uid = StringProperty()
-    search_before = StringProperty()
+    search_before = DefaultProperty()
     search_before_uid = StringProperty()
     sort = StringProperty()
     order = StringProperty(choices=['asc', 'desc'])
@@ -231,16 +233,19 @@ class ManifestResponse(AbstractResponse):
             data = self._construct_tsv_content().encode()
             content_type = 'text/tab-separated-values'
             object_key = f'manifests/{uuid4()}.tsv'
+            parameters = dict(object_key=object_key,
+                              data=data,
+                              content_type=content_type)
+            return self.storage_service.put(**parameters)
         elif self.format == 'bdbag':
-            data = self._construct_bdbag()
-            content_type = 'application/zip'
-            object_key = f'manifests/{uuid4()}.zip'
+            file_name = self._construct_bdbag()
+            try:
+                object_key = f'manifests/{uuid4()}.zip'
+                return self.storage_service.upload(file_name, object_key)
+            finally:
+                os.remove(file_name)
         else:
             assert False
-        parameters = dict(object_key=object_key,
-                          data=data,
-                          content_type=content_type)
-        return self.storage_service.put(**parameters)
 
     def _construct_tsv_content(self):
         es_search = self.es_search
@@ -266,7 +271,7 @@ class ManifestResponse(AbstractResponse):
                                           self.manifest_entries['contents.cell_suspensions'].keys(),
                                           self.manifest_entries['bundles'].keys(),
                                           self.manifest_entries['contents.files'].keys(),
-                                          ['file_url'])))
+                                          ['file_url'], ['dos_url'])))
         participants = set()
         for hit in es_search.scan():
             self._iterate_hit_bdbag(hit, participants, sample_writer)
@@ -336,10 +341,11 @@ class ManifestResponse(AbstractResponse):
         replica = 'gcp'
         endpoint = f'files/{file_id}?version={version}&replica={replica}'
         fetch_url = [config.dss_endpoint + '/' + endpoint]
+        dos_url = [config.dss_endpoint + dos_object_url(file_id)]
 
         for bundle in hit_dict['bundles']:
             sample_writer.writerow(chain(specimen_fields[0], specimen_fields[1], cell_suspension_fields[0],
-                                         self._translate(bundle, 'bundles'), file_fields + fetch_url))
+                                         self._translate(bundle, 'bundles'), file_fields + fetch_url + dos_url))
             participant_id = specimen_fields[1][0]
             participants.add(participant_id)
 

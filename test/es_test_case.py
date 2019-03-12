@@ -3,9 +3,10 @@ import os
 import time
 from unittest.mock import patch
 
+from azul import config
 from azul.es import ESClientFactory
-from docker_container_test_case import DockerContainerTestCase
 from azul.json_freeze import freeze, sort_frozen
+from docker_container_test_case import DockerContainerTestCase
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +22,14 @@ class ElasticsearchTestCase(DockerContainerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        host, port = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:5.5.3',
-                                           container_port=9200,
-                                           environment=['xpack.security.enabled=false',
-                                                        'discovery.type=single-node',
-                                                        'ES_JAVA_OPTS=-Xms512m -Xmx512m'])
+        es_endpoint = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:5.5.3',
+                                            container_port=9200,
+                                            environment=['xpack.security.enabled=false',
+                                                         'discovery.type=single-node',
+                                                         'ES_JAVA_OPTS=-Xms512m -Xmx512m'])
         try:
-            cls._old_es_endpoint = os.environ.get('AZUL_ES_ENDPOINT')
-            os.environ['AZUL_ES_ENDPOINT'] = f'{host}:{port}'
+            cls._old_es_endpoint = os.environ.get(config.es_endpoint_env_name)
+            os.environ.update(config.es_endpoint_env(es_endpoint))
             cls.es_client = ESClientFactory.get()
             cls._wait_for_es()
         except:  # no coverage
@@ -60,7 +61,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
     @classmethod
     def tearDownClass(cls):
         if cls._old_es_endpoint is None:
-            del os.environ['AZUL_ES_ENDPOINT']
+            del os.environ[config.es_endpoint_env_name]
         else:
-            os.environ['AZUL_ES_ENDPOINT'] = cls._old_es_endpoint
+            os.environ[config.es_endpoint_env_name] = cls._old_es_endpoint
         super().tearDownClass()
