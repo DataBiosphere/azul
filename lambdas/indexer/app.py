@@ -21,6 +21,7 @@ from dataclasses import asdict, dataclass, replace
 from more_itertools import chunked, partition
 
 from azul import config
+from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul.indexer import IndexWriter
 from azul.plugin import Plugin
@@ -34,7 +35,7 @@ log = logging.getLogger(__name__)
 for top_level_pkg in (__name__, 'azul'):
     logging.getLogger(top_level_pkg).setLevel(logging.DEBUG)
 
-app = chalice.Chalice(app_name=config.indexer_name)
+app = AzulChaliceApp(app_name=config.indexer_name)
 app.debug = True
 app.log.setLevel(logging.DEBUG)  # please use module logger instead
 
