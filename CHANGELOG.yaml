@@ -14,6 +14,18 @@ meta:
 
 changes:
 
+  - title: Add non-fetch variant of DSS proxy; add server-side wait
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/778
+    upgrade:
+      - clients
+    notes: The added `/dss/files` endpoint has the same semantics as the corresponding `/fetch/dss/files` endpoint but
+           it sends actual 301 and 302 status codes, as opposed to tunneling them through a 200 response with a JSON
+           body. Both endpoints support a `&wait=1` parameter to enable server-side waiting. The endpoint will wait as
+           long as it can, and then return a response with Retry-After set to the remainder. This degrades much more
+           gracefully on clients that don't honor Retry-After, preventing them from quickly exhausting their maximum
+           number of redirects to follow.
+
   - title: "Use ontology terms where applicable"
     issues:
       - https://github.com/humancellatlas/metadata-api/issues/31
