@@ -168,6 +168,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     @mock_sts
     @mock_s3
     def test_manifest(self):
+        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper:
@@ -175,16 +176,70 @@ class FacetNameValidationTest(WebServiceTestCase):
             storage_service = StorageService()
             storage_service.create_bucket()
 
-            url = self.base_url + '/repository/files/export?filters={"file":{}}'
-            response = requests.get(url)
-            self.assertEqual(200, response.status_code, 'Unable to download manifest')
-            tsv_file = csv.DictReader(response.iter_lines(decode_unicode=True), delimiter='\t')
-            # 2 because self.bundle has 2 files
-            self.assertEqual(len(list(tsv_file)), 2, 'Wrong number of files were found.')
-            manifest_config = json.load(open('{}/request_config.json'.format(self.service_config_dir), 'r'))['manifest']
-            expected_fieldnames = list(manifest_config['bundles'].keys()) + list(
-                manifest_config['contents.files'].keys())
-            self.assertEqual(expected_fieldnames, tsv_file.fieldnames, 'Manifest headers are not configured correctly')
+            for single_part in False, True:
+                with self.subTest(is_single_part=single_part):
+                    with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
+                        url = self.base_url + '/repository/files/export?filters={"file":{}}'
+                        response = requests.get(url)
+                        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+
+                        expected = [
+                            ('bundle_uuid', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10',
+                                            'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
+                            ('bundle_version', '2018-09-14T133314.453337Z','2018-09-14T133314.453337Z'),
+                            ('file_content_type', 'application/pdf; dcp-type=data', 'application/gzip; dcp-type=data'),
+                            ('file_name', 'SmartSeq2_RTPCR_protocol.pdf', '22028_5#300_1.fastq.gz'),
+                            ('file_sha256', '2f6866c4ede92123f90dd15fb180fac56e33309b8fd3f4f52f263ed2f8af2f16',
+                                            '3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582'),
+                            ('file_size', '29230', '64718465'),
+                            ('file_uuid', '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
+                                          'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'),
+                            ('file_version', '2018-09-14T123347.012715Z', '2018-09-14T123343.720332Z'),
+                            ('file_indexed', 'False', 'False'),
+                            ('file_format', 'pdf', 'fastq.gz'),
+                            ('total_estimated_cells', '', '9001'),
+                            ('instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
+                            ('library_construction_approach', '', 'Smart-seq2'),
+                            ('document_id', '67bc798b-a34a-4104-8cab-cad648471f69',
+                             '67bc798b-a34a-4104-8cab-cad648471f69'),
+                            ('institutions', 'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
+                                             ' || University of Helsinki || Wellcome Trust Sanger Institute',
+                                             'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
+                                             ' || University of Helsinki || Wellcome Trust Sanger Institute'),
+                            ('laboratory', 'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
+                                           ' || Sarah Teichmann',
+                                           'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
+                                           ' || Sarah Teichmann'),
+                            ('project_shortname', 'Mouse Melanoma', 'Mouse Melanoma'),
+                            ('project_title', 'Melanoma infiltration of stromal and immune cells',
+                                              'Melanoma infiltration of stromal and immune cells'),
+                            ('biological_sex', '', 'female'),
+                            ('specimen_id', '', '1209_T || 1210_T'),
+                            ('specimen_document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
+                                                     ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
+                            ('disease', '', ''),
+                            ('donor_biomaterial_id', '', '1209'),
+                            ('donor_document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
+                            ('genus_species', '', 'Mus musculus'),
+                            ('organ', '', 'brain || tumor'),
+                            ('organ_part', '', ''),
+                            ('organism_age', '', '6-12'),
+                            ('organism_age_unit', '', 'week'),
+                            ('preservation_method', '', '')
+                        ]
+
+                        expected_fieldnames, expected_pdf_row, expected_fastq_row = map(list, zip(*expected))
+                        tsv_file = csv.reader(response.iter_lines(decode_unicode=True), delimiter='\t')
+                        actual_fieldnames = next(tsv_file)
+                        rows = freeze(list(tsv_file))
+
+                        self.assertEqual(expected_fieldnames, actual_fieldnames,
+                                         'Manifest headers are not configured correctly')
+                        self.assertEqual(len(rows), 7, 'Wrong number of files were found.')
+                        self.assertIn(freeze(expected_pdf_row), rows, 'Expected pdf contains invalid values.')
+                        self.assertIn(freeze(expected_fastq_row), rows, 'Expected fastq contains invalid values.')
+                        self.assertTrue(all(len(row) == len(expected_pdf_row) for row in rows),
+                                        'Row sizes in manifest are not consistent.')
 
     @mock_sts
     @mock_s3
