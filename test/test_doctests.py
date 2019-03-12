@@ -17,7 +17,9 @@ def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(azul.transformer))
     tests.addTests(doctest.DocTestSuite(azul.json_freeze))
     tests.addTests(doctest.DocTestSuite(azul.vendored.frozendict))
-    tests.addTests(doctest.DocTestSuite(load_module(azul.config.project_root + '/scripts/envhook.py', 'envhook')))
+    root = azul.config.project_root
+    tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/envhook.py', 'envhook')))
+    tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/check_branch.py', 'check_branch')))
     return tests
 
 

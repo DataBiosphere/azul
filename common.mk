@@ -33,6 +33,11 @@ ifneq ($(shell python -c "import wheel as w; \
 $(error Looks like the `wheel` package is outdated or missing. See README for instructions on how to fix this.)
 endif
 
+check_branch:
+	python $(azul_home)/scripts/check_branch.py
+
+.PHONY: check_branch
+
 %: %.template.py .FORCE
 	python $< $@
 .FORCE:

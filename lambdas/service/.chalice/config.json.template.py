@@ -22,6 +22,9 @@ emit({
                 },
                 config.cart_item_write_lambda_basename: {
                     'lambda_timeout': 15 * 60
+                },
+                config.cart_export_dss_push_lambda_basename: {
+                    'lambda_timeout': 15 * 60
                 }
             }
         }

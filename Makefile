@@ -1,9 +1,9 @@
+all: hello
+
 include common.mk
 
-all:
+hello:
 	@echo Looking good!
-	@echo '`make deploy`' deploys the AWS Lambda functions
-	@echo '`make terraform`' creates the necessary cloud infrastructure that the Lambda functions depend on
 
 terraform:
 	$(MAKE) -C terraform
@@ -27,8 +27,8 @@ tag:
 	@tag_name="$$(date '+deployed/$(AZUL_DEPLOYMENT_STAGE)/%Y-%m-%d__%H-%M')" ; \
 	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
 
-integration-test:
+integration_test:
 	python -m unittest -v local_integration_test
 
-.PHONY: all terraform deploy subscribe everything reindex clean test travis integration-test
+.PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test
 

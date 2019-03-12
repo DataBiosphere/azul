@@ -1,11 +1,14 @@
 #!/usr/bin/python
 import abc
 from collections import OrderedDict, defaultdict
+import os
 import csv
+from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-import os
+from typing import Set, MutableSet
+
 from uuid import uuid4
 
 from chalice import Response
@@ -15,7 +18,9 @@ from jsonobject import (FloatProperty,
                         ListProperty,
                         ObjectProperty,
                         StringProperty)
-
+from bdbag import bdbag_api
+from shutil import copy
+from more_itertools import one
 from azul import config
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
@@ -212,7 +217,7 @@ class ManifestResponse(AbstractResponse):
                 writer.writerow(list(self.manifest_entries['bundles'].keys()) +
                                 list(self.manifest_entries['contents.files'].keys()))
                 for hit in self.es_search.scan():
-                    self._iterate_hit(hit, writer)
+                    self._iterate_hit_tsv(hit, writer)
 
         return object_key
 
@@ -222,9 +227,19 @@ class ManifestResponse(AbstractResponse):
 
         :return: S3 object key
         """
-        parameters = dict(object_key=f'manifests/{uuid4()}.tsv',
-                          data=self._construct_tsv_content().encode(),
-                          content_type='text/tab-separated-values')
+        if self.format == 'tsv':
+            data = self._construct_tsv_content().encode()
+            content_type = 'text/tab-separated-values'
+            object_key = f'manifests/{uuid4()}.tsv'
+        elif self.format == 'bdbag':
+            data = self._construct_bdbag()
+            content_type = 'application/zip'
+            object_key = f'manifests/{uuid4()}.zip'
+        else:
+            assert False
+        parameters = dict(object_key=object_key,
+                          data=data,
+                          content_type=content_type)
         return self.storage_service.put(**parameters)
 
     def _construct_tsv_content(self):
@@ -232,33 +247,114 @@ class ManifestResponse(AbstractResponse):
 
         output = StringIO()
         writer = csv.writer(output, dialect='excel-tab')
-
         writer.writerow(list(self.manifest_entries['bundles'].keys()) +
                         list(self.manifest_entries['contents.files'].keys()))
         for hit in es_search.scan():
-            self._iterate_hit(hit, writer)
+            self._iterate_hit_tsv(hit, writer)
 
         return output.getvalue()
 
-    def _iterate_hit(self, es_search_hit, writer):
+    def _construct_bdbag(self) -> str:
+        """
+        Create and return a file object of the sample data.
+        """
+        es_search = self.es_search
+        sample_file_object = StringIO()
+        sample_writer = csv.writer(sample_file_object, dialect='excel-tab')
+        # Add fieldnames.
+        sample_writer.writerow(list(chain(self.manifest_entries['contents.specimens'].keys(),
+                                          self.manifest_entries['contents.cell_suspensions'].keys(),
+                                          self.manifest_entries['bundles'].keys(),
+                                          self.manifest_entries['contents.files'].keys(),
+                                          ['file_url'])))
+        participants = set()
+        for hit in es_search.scan():
+            self._iterate_hit_bdbag(hit, participants, sample_writer)
+
+        participant_file_object = StringIO()
+        participant_writer = csv.writer(participant_file_object, dialect='excel-tab')
+        participant_writer.writerow(['entity:participant_id'])
+        participant_writer.writerows(zip(participants))
+        return self._create_zipped_bdbag(participant_file_object, sample_file_object)
+
+    @staticmethod
+    def _create_zipped_bdbag(participant_file_object: StringIO, sample_file_object: StringIO) -> str:
+        """
+        Create write participant and sample data files to disk, and create and return zipped BDBag.
+        """
+
+        with TemporaryDirectory() as bag_path, TemporaryDirectory() as tsv_file_dir:
+            # Discard return value since we don't use it, bag is updated below
+            bdbag_api.make_bag(bag_path)
+            data_path = os.path.join(bag_path, 'data')
+
+            # Write participant and sample data to their respective files.
+            tsvs = [('participant.tsv', participant_file_object),
+                    ('sample.tsv', sample_file_object)]
+            for tsv_filename, file_object in tsvs:
+                with open(os.path.join(tsv_file_dir, tsv_filename), 'w') as f:
+                    f.write(file_object.getvalue())
+                copy(os.path.join(tsv_file_dir, tsv_filename), data_path)
+
+            assert sorted(tsv[0] for tsv in tsvs) == sorted(os.listdir(data_path))
+            bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
+            assert bdbag_api.is_bag(bag_path)
+            bdbag_api.validate_bag(bag_path)
+            assert bdbag_api.check_payload_consistency(bag)
+
+            return bdbag_api.archive_bag(bag_path, 'zip')
+
+    def _iterate_hit_tsv(self, es_search_hit, writer):
         hit_dict = es_search_hit.to_dict()
         assert len(hit_dict['contents']['files']) == 1
         file = hit_dict['contents']['files'][0]
         file_fields = self._translate(file, 'contents.files')
+
         for bundle in hit_dict['bundles']:
             # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
             # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
             writer.writerow(self._translate(bundle, 'bundles') + file_fields)
 
+    def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
+        hit_dict = es_search_hit.to_dict()
+
+        assert len(hit_dict['contents']['specimens']) == 1
+        assert len(hit_dict['contents']['cell_suspensions']) == 1
+        assert len(hit_dict['contents']['files']) == 1
+
+        specimen = one(hit_dict['contents']['specimens'])
+        cell_suspension = one(hit_dict['contents']['cell_suspensions'])
+        file = one(hit_dict['contents']['files'])
+
+        specimen_fields = self._translate(specimen, 'contents.specimens')
+        cell_suspension_fields = self._translate(cell_suspension, 'contents.cell_suspensions')
+        file_fields = self._translate(file, 'contents.files')
+
+        # Construct URL for file.
+        file_id = file['uuid']
+        version = file['version']
+        replica = 'gcp'
+        endpoint = f'files/{file_id}?version={version}&replica={replica}'
+        fetch_url = [config.dss_endpoint + '/' + endpoint]
+
+        for bundle in hit_dict['bundles']:
+            sample_writer.writerow(chain(specimen_fields[0], specimen_fields[1], cell_suspension_fields[0],
+                                         self._translate(bundle, 'bundles'), file_fields + fetch_url))
+            participant_id = specimen_fields[1][0]
+            participants.add(participant_id)
+
     def return_response(self):
-        object_key = self._push_content_single_part() if config.disable_multipart_manifests else self._push_content()
+        if config.disable_multipart_manifests or self.format == 'bdbag':
+            object_key = self._push_content_single_part()
+        else:
+            object_key = self._push_content()
         file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
         presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
         return Response(body='', headers=headers, status_code=302)
 
-    def __init__(self, es_search, manifest_entries, mapping):
+    def __init__(self, es_search, manifest_entries, mapping, format):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
@@ -270,6 +366,7 @@ class ManifestResponse(AbstractResponse):
         self.manifest_entries = OrderedDict(manifest_entries)
         self.mapping = mapping
         self.storage_service = StorageService()
+        self.format = format
 
 
 class EntryFetcher:
@@ -372,6 +469,7 @@ class ProjectSummaryResponse(AbstractResponse):
     """
     Build summary field for each project in projects endpoint
     """
+
     def return_response(self):
         return self.apiResponse
 
