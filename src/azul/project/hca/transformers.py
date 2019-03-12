@@ -179,7 +179,7 @@ class SpecimenVisitor(BiomaterialVisitor):
                 self._set('biomaterial_id', MandatoryValueAccumulator, entity.biomaterial_id)
                 self._set('disease', SetAccumulator, entity.diseases)
                 self._set('organ', PriorityOptionalValueAccumulator, (0, entity.organ))
-                self._set('organ_part', PriorityOptionalValueAccumulator, (0, entity.organ_part))
+                self._set('organ_part', PrioritySetAccumulator, (0, entity.organ_parts))
                 self._set('preservation_method', OptionalValueAccumulator, entity.preservation_method)
                 self._set('_type', MandatoryValueAccumulator, 'specimen')
             elif isinstance(entity, api.DonorOrganism):
@@ -194,7 +194,7 @@ class SpecimenVisitor(BiomaterialVisitor):
                 self._set('biological_sex', SetAccumulator, entity.sex)
             elif isinstance(entity, api.Organoid):
                 self._set('organ', PriorityOptionalValueAccumulator, (1, entity.model_organ))
-                self._set('organ_part', PriorityOptionalValueAccumulator, (1, entity.model_organ_part))
+                self._set('organ_part', PrioritySetAccumulator, (1, entity.model_organ_part))
 
     @property
     def merged_specimen(self) -> JSON:
@@ -212,7 +212,7 @@ class CellSuspensionVisitor(BiomaterialVisitor):
             self._set('total_estimated_cells', OptionalValueAccumulator, entity.total_estimated_cells)
         elif isinstance(entity, api.SpecimenFromOrganism):
             self._set('organ', PrioritySetAccumulator, (0, entity.organ))
-            self._set('organ_part', PrioritySetAccumulator, (0, entity.organ_part))
+            self._set('organ_part', PrioritySetAccumulator, (0, entity.organ_parts))
         elif isinstance(entity, api.Organoid):
             self._set('organ', PrioritySetAccumulator, (1, entity.model_organ))
             self._set('organ_part', PrioritySetAccumulator, (1, entity.model_organ_part))
@@ -256,8 +256,6 @@ class CellSuspensionAggregator(GroupingAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'total_estimated_cells':
             return SumAccumulator(0)
-        elif field == 'document_id':
-            return None
         else:
             return SetAccumulator(max_size=100)
 

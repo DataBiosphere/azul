@@ -1,5 +1,7 @@
 all: indexer service
 
+include ../common.mk
+
 indexer:
 	$(MAKE) -C indexer deploy
 
@@ -10,4 +12,4 @@ clean:
 	$(MAKE) -C indexer clean
 	$(MAKE) -C service clean
 
-.PHONY: indexer service clean
+.PHONY: all indexer service clean
