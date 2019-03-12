@@ -38,6 +38,7 @@ class ManifestService(AbstractService):
     def start_or_inspect_manifest_generation(self,
                                              self_url,
                                              token: Optional[str] = None,
+                                             format: Optional[str] = None,
                                              filters: Optional[str] = None
                                              ) -> Tuple[float, str]:
         """
@@ -52,7 +53,7 @@ class ManifestService(AbstractService):
 
         if token is None:
             execution_id = str(uuid.uuid4())
-            self._start_manifest_generation(filters, execution_id)
+            self._start_manifest_generation(format, filters, execution_id)
             token = {'execution_id': execution_id}
         else:
             token = self.decode_token(token)
@@ -66,7 +67,7 @@ class ManifestService(AbstractService):
         else:
             return 0, result
 
-    def _start_manifest_generation(self, filters: dict, execution_id: str):
+    def _start_manifest_generation(self, format: str, filters: dict, execution_id: str) -> None:
         """
         Start the execution of a state machine generating the manifest
 
