@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-from typing import MutableSet
+from typing import MutableSet, List
 
 from uuid import uuid4
 
@@ -32,6 +32,7 @@ from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
 from azul.transformer import SetAccumulator
+from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
@@ -202,6 +203,24 @@ class ManifestResponse(AbstractResponse):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
+    def _extract_fields(self, entities: List[JSON], column_mapping: JSON):
+        def validate(s: str) -> str:
+            assert '||' not in s
+            return s
+
+        cell_values = []
+        for field_name in column_mapping.values():
+            cell_value = []
+            for entity in entities:
+                field_value = entity[field_name]
+                if isinstance(field_value, list):
+                    cell_value += [validate(str(v)) for v in field_value if v is not None]
+                else:
+                    cell_value.append(validate(str(field_value)))
+            cell_values.append(" || ".join(sorted(set(cell_value))))
+
+        return cell_values
+
     def _push_content(self) -> str:
         """
         Push the content to S3 with multipart upload
@@ -215,9 +234,7 @@ class ManifestResponse(AbstractResponse):
             with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
                 buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
                 writer = csv.writer(buffer_wrapper, dialect='excel-tab')
-
-                writer.writerow(list(self.manifest_entries['bundles'].keys()) +
-                                list(self.manifest_entries['contents.files'].keys()))
+                writer.writerow(self.ordered_column_names)
                 for hit in self.es_search.scan():
                     self._iterate_hit_tsv(hit, writer)
 
@@ -252,8 +269,7 @@ class ManifestResponse(AbstractResponse):
 
         output = StringIO()
         writer = csv.writer(output, dialect='excel-tab')
-        writer.writerow(list(self.manifest_entries['bundles'].keys()) +
-                        list(self.manifest_entries['contents.files'].keys()))
+        writer.writerow(self.ordered_column_names)
         for hit in es_search.scan():
             self._iterate_hit_tsv(hit, writer)
 
@@ -311,14 +327,19 @@ class ManifestResponse(AbstractResponse):
 
     def _iterate_hit_tsv(self, es_search_hit, writer):
         hit_dict = es_search_hit.to_dict()
-        assert len(hit_dict['contents']['files']) == 1
-        file = hit_dict['contents']['files'][0]
-        file_fields = self._translate(file, 'contents.files')
 
-        for bundle in hit_dict['bundles']:
-            # FIXME: If a file is in multiple bundles, the manifest will list it twice. `hca dss download_manifest`
-            # would download the file twice (https://github.com/DataBiosphere/azul/issues/423).
-            writer.writerow(self._translate(bundle, 'bundles') + file_fields)
+        inner_entity_fields = []
+        for doc_path, column_mapping in self.manifest_entries.items():
+            doc_path = doc_path.split('.')
+            assert doc_path
+            entities = hit_dict
+            for key in doc_path[:-1]:
+                entities = entities.get(key, {})
+            entities = entities.get(doc_path[-1], [])
+
+            inner_entity_fields += self._extract_fields(entities, column_mapping)
+
+        writer.writerow(inner_entity_fields)
 
     def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
         hit_dict = es_search_hit.to_dict()
@@ -373,6 +394,9 @@ class ManifestResponse(AbstractResponse):
         self.mapping = mapping
         self.storage_service = StorageService()
         self.format = format
+
+        sources = list(self.manifest_entries.keys())
+        self.ordered_column_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
 
 
 class EntryFetcher:
