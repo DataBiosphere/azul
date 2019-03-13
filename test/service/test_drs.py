@@ -1,6 +1,6 @@
 import requests
 import unittest
-from azul.dos import dos_object_url
+from azul.drs import dos_object_url
 
 from service import WebServiceTestCase
 

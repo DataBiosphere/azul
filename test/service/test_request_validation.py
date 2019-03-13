@@ -14,7 +14,7 @@ import requests
 
 import azul.changelog
 from azul import config
-from azul.dos import dos_object_url
+from azul.drs import dos_object_url
 from azul.json_freeze import freeze
 from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService

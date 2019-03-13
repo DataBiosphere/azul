@@ -19,7 +19,7 @@ import requests
 
 from azul import config
 from azul.chalice import AzulChaliceApp
-from azul.dos import dos_object_url
+from azul.drs import dos_object_url
 from azul.health import Health
 from azul.security.authenticator import Authenticator, AuthenticationError
 from azul.service import service_config
