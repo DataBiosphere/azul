@@ -23,7 +23,7 @@ from bdbag import bdbag_api
 from shutil import copy
 from more_itertools import one
 from azul import config
-from azul.dos import dos_object_url
+from azul.drs import dos_object_url
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
                                                           AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
