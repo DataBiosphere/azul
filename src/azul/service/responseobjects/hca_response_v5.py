@@ -23,7 +23,7 @@ from bdbag import bdbag_api
 from shutil import copy
 from more_itertools import one
 from azul import config
-from azul.drs import dos_object_url
+from azul import drs
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
                                                           StorageService,
                                                           AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
@@ -357,16 +357,21 @@ class ManifestResponse(AbstractResponse):
         file_fields = self._translate(file, 'contents.files')
 
         # Construct URL for file.
-        file_id = file['uuid']
-        version = file['version']
+        file_uuid = file['uuid']
+        file_version = file['version']
         replica = 'gcp'
-        endpoint = f'files/{file_id}?version={version}&replica={replica}'
-        fetch_url = [config.dss_endpoint + '/' + endpoint]
-        dos_url = [config.dss_endpoint + dos_object_url(file_id)]
+        endpoint = f'files/{file_uuid}?version={file_version}&replica={replica}'
+        dss_url = config.dss_endpoint + '/' + endpoint
+        drs_url = drs.object_url(file_uuid, file_version)
 
         for bundle in hit_dict['bundles']:
-            sample_writer.writerow(chain(specimen_fields[0], specimen_fields[1], cell_suspension_fields[0],
-                                         self._translate(bundle, 'bundles'), file_fields + fetch_url + dos_url))
+            sample_writer.writerow(chain(specimen_fields[0],
+                                         specimen_fields[1],
+                                         cell_suspension_fields[0],
+                                         self._translate(bundle, 'bundles'),
+                                         file_fields,
+                                         [dss_url],
+                                         [drs_url]))
             participant_id = specimen_fields[1][0]
             participants.add(participant_id)
 
