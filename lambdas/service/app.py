@@ -19,7 +19,7 @@ import requests
 
 from azul import config
 from azul.chalice import AzulChaliceApp
-from azul.drs import dos_object_url
+from azul import drs
 from azul.health import Health
 from azul.security.authenticator import Authenticator, AuthenticationError
 from azul.service import service_config
@@ -773,8 +773,7 @@ def self_url(endpoint_path=None):
     base_url = app.current_request.headers['host']
     if endpoint_path is None:
         endpoint_path = app.current_request.context['path']
-    retry_url = f'{protocol}://{base_url}{endpoint_path}'
-    return retry_url
+    return f'{protocol}://{base_url}{endpoint_path}'
 
 
 @app.route('/auth', methods=['GET'], cors=True)
@@ -1486,60 +1485,60 @@ def cart_export_send_to_collection_api(event, context):
     }
 
 
-def azul_to_obj(result):
+def file_to_drs(doc):
     """
-    Takes an Azul ElasticSearch result and converts it to a DOS data
-    object.
-
-    :param result: the ElasticSearch result dictionary for a single file
-    :return: DataObject
+    Converts an aggregate file document to a DRS data object response.
     """
-    data_object = {}
-    data_object['id'] = result['uuid']
     replicas = ['aws']
-    urls = [{"url": file_url(result['uuid'], version=result['version'], replica=replica)} for replica in replicas]
-    data_object['urls'] = urls
-    data_object['size'] = str(result.get('size', ''))
-    data_object['checksums'] = [
-        {'checksum': result['sha256'], 'type': 'sha256'}]
-    data_object['aliases'] = [result['name']]
-    data_object['version'] = result['version']
-    data_object['name'] = result['name']
-    return data_object
+    return {
+        'id': doc['uuid'],
+        'urls': [
+            {
+                'url': file_url(uuid=doc['uuid'],
+                                version=doc['version'],
+                                replica=replica,
+                                fetch=False,
+                                wait='1')
+            }
+            for replica in replicas
+        ],
+        'size': str(doc['size']),
+        'checksums': [
+            {
+                'checksum': doc['sha256'],
+                'type': 'sha256'
+            }
+        ],
+        'aliases': [doc['name']],
+        'version': doc['version'],
+        'name': doc['name']
+    }
 
 
-@app.route(dos_object_url('{data_object_id}'), methods=['GET'], cors=True)
-def get_data_object(data_object_id):
+@app.route(drs.drs_http_object_path('{file_uuid}'), methods=['GET'], cors=True)
+def get_data_object(file_uuid):
     """
-    Gets a data object by file identifier by making a query against the
-    configured data object index and returns the first matching file.
-
-    :param data_object_id: the id of the data object
-    :raises LookupError: if no data object is found for the given query
-    :rtype: DataObject
+    Return a DRS data object dictionary for a given DSS file UUID and version.
     """
-    logger = app.log
-    filters = {"file": {"fileId": {"is": [data_object_id]}}}
-    logger.debug(f'DOS request for Data Object with uuid: {data_object_id}')
-    # We don't care about the query params, only the path
-    app.current_request.query_params = {}
-    logger.debug("Filters string is: {}".format(filters))
-    try:
-        # Create and instance of the ElasticTransformDump
-        logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd()
-        pagination = _get_pagination(app.current_request, entity_type='files')
-        # Get the response back
-        logger.info("Creating the API response")
-        response = es_td.transform_request(filters=filters,
-                                           pagination=pagination,
-                                           post_filter=True,
-                                           entity_type='files')
-        file_document = response['hits'][0]['files'][0]
-        data_obj = azul_to_obj(file_document)
-        # Double check to verify identity (since `file_id` is an analyzed field)
-        if data_obj['id'] != data_object_id:
-            raise LookupError
-    except LookupError:
-         return Response({'msg': "Data object not found."}, status_code=404)
-    return Response({'data_object': data_obj}, status_code=200)
+    params = app.current_request.query_params or {}
+    file_version = params.get('version')
+    filters = {
+        "file": {
+            "fileId": {"is": [file_uuid]},
+            **({"fileVersion": {"is": [file_version]}} if file_version else {})
+        }
+    }
+    es_td = EsTd()
+    pagination = _get_pagination(app.current_request, entity_type='files')
+    response = es_td.transform_request(filters=filters,
+                                       pagination=pagination,
+                                       post_filter=True,
+                                       entity_type='files')
+    if response['hits']:
+        doc = one(one(response['hits'])['files'])
+        data_obj = file_to_drs(doc)
+        assert data_obj['id'] == file_uuid
+        assert data_obj['version'] == file_version
+        return Response({'data_object': data_obj}, status_code=200)
+    else:
+        return Response({'msg': "Data object not found."}, status_code=404)
