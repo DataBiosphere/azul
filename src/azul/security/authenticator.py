@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class Authenticator:
-    valid_redirect_uri_pattern = compile('^(http://(127.0.0.1|localhost):\d+|https://[^/]+\.humancellatlas.org)\/')
+    valid_redirect_uri_pattern = compile(r'^(http://(127.0.0.1|localhost):\d+|https://[^/]+\.humancellatlas.org)/')
 
     def __init__(self):
         self.session = Session()
@@ -26,7 +26,7 @@ class Authenticator:
         return f'{config.fusillade_endpoint}/{request_path}'
 
     @staticmethod
-    def get_fusillade_login_url(redirect_uri:str = None) -> str:
+    def get_fusillade_login_url(redirect_uri: str = None) -> str:
         """
         Get the login URL.
 
@@ -97,7 +97,7 @@ class Authenticator:
             logger.info('Detected the use of an invalid token')
             raise AuthenticationError('invalid_token')
 
-    def verify_jwt(self, token:str):
+    def verify_jwt(self, token: str):
         """
         Verify a JWT string
 
@@ -145,7 +145,7 @@ class Authenticator:
             raise InvalidTokenError(token)
 
     @staticmethod
-    def is_valid_issuer(issuer:str):
+    def is_valid_issuer(issuer: str):
         given_issuer = urlparse(issuer)
         expected_issuer = urlparse(config.access_token_issuer)
         return given_issuer.scheme == expected_issuer.scheme and given_issuer.netloc == expected_issuer.netloc
@@ -160,7 +160,7 @@ class Authenticator:
             for key in keys
         }
 
-    def get_openid_config(self, openid_provider:str):
+    def get_openid_config(self, openid_provider: str):
         base_url = openid_provider
         if not base_url.endswith('/'):
             base_url += '/'
@@ -169,12 +169,12 @@ class Authenticator:
         return res.json()
 
     @staticmethod
-    def convert_base64_string_to_int(value:str) -> int:
+    def convert_base64_string_to_int(value: str) -> int:
         padding_length = 4 - (len(value) % 4)
         padding_characters = '=' * padding_length
         return int.from_bytes(urlsafe_b64decode(f'{value}{padding_characters}'), byteorder="big")
 
-    def get_jwks_uri(self, openid_provider:str):
+    def get_jwks_uri(self, openid_provider: str):
         if openid_provider.endswith("iam.gserviceaccount.com"):
             return f"https://www.googleapis.com/service_accounts/v1/jwk/{openid_provider}"
         else:

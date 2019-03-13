@@ -1290,7 +1290,7 @@ def assert_jwt_ttl(expected_ttl):
 
 
 @app.route('/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
-def export_cart_as_collection(cart_id:str):
+def export_cart_as_collection(cart_id: str):
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
     redirecting to either the location of the manifest or a URL to re-check the status of
@@ -1331,7 +1331,7 @@ def export_cart_as_collection(cart_id:str):
 
 
 @app.route('/fetch/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
-def export_cart_as_collection_fetch(cart_id:str):
+def export_cart_as_collection_fetch(cart_id: str):
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
     redirecting to either the location of the manifest or a URL to re-check the status of
@@ -1399,7 +1399,7 @@ def export_cart_as_collection_fetch(cart_id:str):
     }
 
 
-def handle_cart_export_request(cart_id:str=None):
+def handle_cart_export_request(cart_id: str = None):
     assert_jwt_ttl(config.cart_export_min_access_token_ttl)
     user_id = get_user_id()
     query_params = app.current_request.query_params or {}
