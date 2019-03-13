@@ -91,7 +91,7 @@ emit({
                              {
                                  "dimensions": {
                                      "HealthCheckId":
-                                         "${aws_route53_health_check.composite.id}",
+                                         "${aws_route53_health_check.composite-azul.id}",
                                  },
                                  "highResolution": False,
                                  "metricName": "HealthCheckStatus",
