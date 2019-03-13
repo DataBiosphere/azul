@@ -1,5 +1,4 @@
 import csv
-import json
 import logging
 import os
 import sys
@@ -14,7 +13,7 @@ import requests
 
 import azul.changelog
 from azul import config
-from azul.drs import dos_object_url
+from azul import drs
 from azul.json_freeze import freeze
 from azul.service import service_config
 from azul.service.responseobjects.storage_service import StorageService
@@ -185,15 +184,15 @@ class FacetNameValidationTest(WebServiceTestCase):
 
                         expected = [
                             ('bundle_uuid', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                                            'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
-                            ('bundle_version', '2018-09-14T133314.453337Z','2018-09-14T133314.453337Z'),
+                             'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
+                            ('bundle_version', '2018-09-14T133314.453337Z', '2018-09-14T133314.453337Z'),
                             ('file_content_type', 'application/pdf; dcp-type=data', 'application/gzip; dcp-type=data'),
                             ('file_name', 'SmartSeq2_RTPCR_protocol.pdf', '22028_5#300_1.fastq.gz'),
                             ('file_sha256', '2f6866c4ede92123f90dd15fb180fac56e33309b8fd3f4f52f263ed2f8af2f16',
-                                            '3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582'),
+                             '3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582'),
                             ('file_size', '29230', '64718465'),
                             ('file_uuid', '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
-                                          'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'),
+                             'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'),
                             ('file_version', '2018-09-14T123347.012715Z', '2018-09-14T123343.720332Z'),
                             ('file_indexed', 'False', 'False'),
                             ('file_format', 'pdf', 'fastq.gz'),
@@ -204,19 +203,19 @@ class FacetNameValidationTest(WebServiceTestCase):
                              '67bc798b-a34a-4104-8cab-cad648471f69'),
                             ('institutions', 'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
                                              ' || University of Helsinki || Wellcome Trust Sanger Institute',
-                                             'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
-                                             ' || University of Helsinki || Wellcome Trust Sanger Institute'),
+                             'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
+                             ' || University of Helsinki || Wellcome Trust Sanger Institute'),
                             ('laboratory', 'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
                                            ' || Sarah Teichmann',
-                                           'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
-                                           ' || Sarah Teichmann'),
+                             'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
+                             ' || Sarah Teichmann'),
                             ('project_shortname', 'Mouse Melanoma', 'Mouse Melanoma'),
                             ('project_title', 'Melanoma infiltration of stromal and immune cells',
-                                              'Melanoma infiltration of stromal and immune cells'),
+                             'Melanoma infiltration of stromal and immune cells'),
                             ('biological_sex', '', 'female'),
                             ('specimen_id', '', '1209_T || 1210_T'),
                             ('specimen_document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
-                                                     ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
+                                                         ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
                             ('disease', '', ''),
                             ('donor_biomaterial_id', '', '1209'),
                             ('donor_document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
@@ -277,9 +276,11 @@ class FacetNameValidationTest(WebServiceTestCase):
                 ('file_uuid', '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'),
                 ('file_version', '2018-11-02T113344.698028Z'),
                 ('file_indexed', 'False'),
-                ('file_url', config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?'
-                                                   'version=2018-11-02T113344.698028Z&replica=gcp'),
-                ('dos_url', config.dss_endpoint + dos_object_url('7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'))
+                ('file_url', config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
+                                                   '?version=2018-11-02T113344.698028Z'
+                                                   '&replica=gcp'),
+                ('dos_url', drs.object_url(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                                           file_version='2018-11-02T113344.698028Z'))
             ]
             expected_fieldnames, expected_row = map(list, zip(*expectations))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'sample.tsv'), 'r') as fh:
