@@ -93,7 +93,6 @@ class Plugin(azul.plugin.Plugin):
                                             {
                                                 "terms": {
                                                     "files.project_json.provenance.document_id": [
-                                                        # CBeta Release spreadsheet (Production Obsolete Datasets) as of 1/23/2019
                                                         "1630e3dc-5501-4faf-9726-2e2c0b4da6d7",  # ???
                                                         "fd1d163d-d6a7-41cd-b3bc-9d77ba9a36fe",  # peer
                                                         "2a0faf83-e342-4b1c-bb9b-cf1d1147f3bb",  # treutlein
@@ -106,7 +105,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "e79e9284-c337-4dfd-853d-66fa3facfbbd",  # 10x_prod_test_01_08_2019
                                                         "560cd061-9165-4699-bc6e-8253e164c079",  # ss2_prod_test_01_08_2019
                                                         "e83fda0e-6515-4f13-82cb-a5860ecfc2d4",  # prod/10x/2019-01-22T20:35:32Z
-                                                        "9a60e8c2-32ea-4586-bc1f-7ee58f462b07"   # prod/Smart-seq2/2019-01-22T20:35:33Z
+                                                        "9a60e8c2-32ea-4586-bc1f-7ee58f462b07",  # prod/Smart-seq2/2019-01-22T20:35:33Z
                                                         "71a6e049-4846-4c2a-8823-cc193c573efc",  # prod/Smart-seq2/2019-01-22T18:13:48Z
                                                         "4b5a2268-507c-46e6-bab0-3efb30145e85",  # prod/10x/2019-01-22T18:44:02Z
                                                         "364ebb73-652e-4d32-8938-1c922d0b2584",  # prod/Smart-seq2/2019-01-22T19:15:02Z
@@ -121,13 +120,13 @@ class Plugin(azul.plugin.Plugin):
                                                         "bb409c34-bb87-4ed2-adaf-6d1ef10610b5",  # prod/Smart-seq2/2019-01-30T05:22:07Z
                                                         "1a6b5e5d-914f-4dd6-8817-a1f9b7f364d5",  # prod/10x/2019-02-12T18:43:49Z
                                                         "dd401943-1059-4b2d-b187-7a9e11822f95",  # prod/Smart-seq2/2019-02-12T18:43:49Z
+                                                        "209e6402-d854-49ea-815f-421dae5e3f4d",  # Tissue stability, https://github.com/HumanCellAtlas/data-store/issues/1976
                                                     ]
                                                 }
                                             },
                                             {
                                                 "terms": {
                                                     "files.project_json.hca_ingest.document_id": [
-                                                        # CBeta Release spreadsheet (Production Obsolete Datasets) as of 12/17/2018
                                                         "bae45747-546a-4aed-9377-08e9115a8fb8",  # Q4_DEMO-…
                                                         "7cb4940d-7c85-43d1-b2f5-1d99813e65df",  # Q4_DEMO-…
                                                         "6ec8e247-2eb0-42d1-823f-75facd03988d",  # meyer
