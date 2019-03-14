@@ -66,7 +66,7 @@ class TestDssProxy(LocalAppTestCase):
                ".f2237ad0a776fd7057eb3d3498114c85e2f521d7"
                ".7e892bf8f6aa489ccb08a995c7f017e1."
                "847325b6")
-        bucket_name = 'org-hca-dss-checkout-staging'
+        bucket_name = 'org-humancellatlas-dss-checkout-staging'
         s3 = boto3.client('s3')
         s3.create_bucket(Bucket=bucket_name)
         s3.upload_fileobj(Bucket=bucket_name, Fileobj=io.BytesIO(b'foo'), Key=key)
@@ -84,10 +84,10 @@ class TestDssProxy(LocalAppTestCase):
         dss_url_with_token = dss_url.copy().add(args={'token': dss_token})
         for fetch in True, False:
             for wait in None, 0, 1:
-                for file_name, signature in [(None, 'lG7pb44+ruFQMJomZ234Naiw4Sk='),
-                                             ('foo.txt', '6JGr8/HuwktNSf35iJyZ8vIJdds=',),
-                                             ('foo bar.txt', 'z9uI4zJgBPzF5hkkFmylSpQrYRA='),
-                                             ('foo&bar.txt', 'bu8ATMDQ6qeZj9SbygF0bgK5tUU=')]:
+                for file_name, signature in [(None, 'gZoVAj4HD+6Nb/dgik2M+ihvkzM='),
+                                             ('foo.txt', 'Wg8AqCTzZAuHpCN8AKPKWcsFHAM=',),
+                                             ('foo bar.txt', 'grbM6udwp0n/QE/L/RYfjtQCS/U='),
+                                             ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
                     with self.subTest(fetch=fetch, file_name=file_name, wait=wait):
                         with ResponsesHelper() as helper:
                             helper.add_passthru(self.base_url)
