@@ -15,7 +15,6 @@ from azul import config
 from azul.decorators import memoized_property
 from azul.reindexer import Reindexer
 from azul.requests import requests_session
-from azul.subscription import manage_subscriptions, call_client
 
 logger = logging.getLogger(__name__)
 
@@ -39,20 +38,12 @@ class IntegrationTest(unittest.TestCase):
 
     def tearDown(self):
         self.set_lambda_test_mode(False)
-        if config.subscribe_to_dss:
-            manage_subscriptions(self.dss, subscribe=True)
         super().tearDown()
 
     def test_webservice_and_indexer(self):
         test_uuid = str(uuid.uuid4())
         test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
         logger.info('Starting test using test name, %s ...', test_name)
-
-        if config.subscribe_to_dss:
-            self.unsubscribe()
-            self.unsubscribe()
-            self.subscribe()
-            self.subscribe()
 
         test_reindexer = Reindexer(indexer_url=config.indexer_endpoint(),
                                    test_name=test_name,
@@ -70,26 +61,6 @@ class IntegrationTest(unittest.TestCase):
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
         manifest_filter = {"file": {"organPart": {"is": ["temporal lobe"]}, "fileFormat": {"is": ["bai"]}}}
         self.check_endpoint_is_working(config.service_endpoint(), f'/manifest/files?filters={manifest_filter}')
-
-    def subscribe(self):
-        manage_subscriptions(self.dss, subscribe=True)
-        self.wait_for_subscriptions(2)
-
-    def unsubscribe(self):
-        manage_subscriptions(self.dss, subscribe=False)
-        self.wait_for_subscriptions(0)
-
-    def wait_for_subscriptions(self, num_expected_subscriptions):
-        deadline = time.time() + 60
-        while True:
-            actual_subscriptions = call_client(self.dss.get_subscriptions, replica='aws')['subscriptions']
-            if num_expected_subscriptions == len(actual_subscriptions):
-                break
-            else:
-                if time.time() > deadline:
-                    self.fail('Timed out waiting for subscription to disappear.')
-                else:
-                    time.sleep(1)
 
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
