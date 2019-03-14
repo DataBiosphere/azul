@@ -106,16 +106,15 @@ class IntegrationTest(unittest.TestCase):
             total_message_count = self.get_number_of_messages(queues)
             queue_wait_time_elapsed = (time.time() - wait_start_time)
             queue_size_history.append(total_message_count)
-            average_queue_size = sum(queue_size_history) / queue_size_history.maxlen
+            cumulative_queue_size = sum(queue_size_history)
             if queue_wait_time_elapsed > timeout:
                 logger.error('The queue(s) are NOT at the desired level.')
                 return
-            elif (average_queue_size == 0) == empty:
+            elif (cumulative_queue_size == 0) == empty:
                 logger.info('The queue(s) at the desired level.')
                 break
             else:
-                logger.info('The average size of the last %i recorded queue states is %.2f.',
-                            queue_size_history.maxlen, average_queue_size)
+                logger.info('The most recently sampled queue sizes are %r.', cumulative_queue_size)
             time.sleep(5)
 
         # Hack that removes the ResourceWarning that is caused by an unclosed SQS session
