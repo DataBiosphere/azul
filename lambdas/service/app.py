@@ -1498,7 +1498,8 @@ def file_to_drs(doc):
                                 version=doc['version'],
                                 replica=replica,
                                 fetch=False,
-                                wait='1')
+                                wait='1',
+                                fileName=doc['name'])
             }
             for replica in replicas
         ],
