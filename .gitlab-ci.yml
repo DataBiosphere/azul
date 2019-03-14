@@ -33,6 +33,7 @@ test:
     - make -C terraform auto_apply
     - make deploy
     - make -C terraform auto_apply
+    - make subscribe
     - make integration_test
 
 on_success:
