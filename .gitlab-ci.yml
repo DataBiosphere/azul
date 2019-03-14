@@ -2,6 +2,7 @@ stages:
   - setup
   - main
   - teardown
+  - manual
 
 build-image:
   # Build an image containing the build prerequisites (python, terraform, etc). This lets us exploit
@@ -22,7 +23,7 @@ build-image:
     - (cd deployments && ln -snf ${deployment} .active)
     - source environment
 
-test:
+main:
   extends: .base
   stage: main
   # Run the unit tests, deploy and run integration test
@@ -49,3 +50,10 @@ on_failure:
   when: on_failure
   script:
     - python scripts/github_status_check.py failure
+
+reindex:
+  extends: .base
+  stage: manual
+  when: manual
+  script:
+    - make reindex
