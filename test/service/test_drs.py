@@ -23,7 +23,7 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         self.assertEqual({
             'id': file_uuid,
             'urls': [
-                {'url': f"{self.base_url}/dss/files/{file_uuid}?version={file_version}&replica=aws&wait=1"}
+                {'url': f"{self.base_url}/dss/files/{file_uuid}?version={file_version}&replica=aws&wait=1&fileName=SRR3562915_1.fastq.gz"}
             ],
             'size': '195142097',
             'checksums': [
