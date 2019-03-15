@@ -114,7 +114,7 @@ class IntegrationTest(unittest.TestCase):
                 logger.info('The queue(s) at the desired level.')
                 break
             else:
-                logger.info('The most recently sampled queue sizes are %r.', cumulative_queue_size)
+                logger.info('The most recently sampled queue sizes are %r.', queue_size_history)
             time.sleep(5)
 
         # Hack that removes the ResourceWarning that is caused by an unclosed SQS session
