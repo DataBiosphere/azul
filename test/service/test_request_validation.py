@@ -183,48 +183,48 @@ class FacetNameValidationTest(WebServiceTestCase):
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
                         expected = [
-                            ('bundle_uuid', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10',
+                            ('bundle.uuid', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                              'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
-                            ('bundle_version', '2018-09-14T133314.453337Z', '2018-09-14T133314.453337Z'),
-                            ('file_content_type', 'application/pdf; dcp-type=data', 'application/gzip; dcp-type=data'),
-                            ('file_name', 'SmartSeq2_RTPCR_protocol.pdf', '22028_5#300_1.fastq.gz'),
-                            ('file_sha256', '2f6866c4ede92123f90dd15fb180fac56e33309b8fd3f4f52f263ed2f8af2f16',
+                            ('bundle.version', '2018-09-14T133314.453337Z', '2018-09-14T133314.453337Z'),
+                            ('file.content_type', 'application/pdf; dcp-type=data', 'application/gzip; dcp-type=data'),
+                            ('file.name', 'SmartSeq2_RTPCR_protocol.pdf', '22028_5#300_1.fastq.gz'),
+                            ('file.sha256', '2f6866c4ede92123f90dd15fb180fac56e33309b8fd3f4f52f263ed2f8af2f16',
                              '3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582'),
-                            ('file_size', '29230', '64718465'),
-                            ('file_uuid', '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
+                            ('file.size', '29230', '64718465'),
+                            ('file.uuid', '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
                              'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'),
-                            ('file_version', '2018-09-14T123347.012715Z', '2018-09-14T123343.720332Z'),
-                            ('file_indexed', 'False', 'False'),
-                            ('file_format', 'pdf', 'fastq.gz'),
-                            ('total_estimated_cells', '', '9001'),
-                            ('instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
-                            ('library_construction_approach', '', 'Smart-seq2'),
-                            ('document_id', '67bc798b-a34a-4104-8cab-cad648471f69',
+                            ('file.version', '2018-09-14T123347.012715Z', '2018-09-14T123343.720332Z'),
+                            ('file.indexed', 'False', 'False'),
+                            ('file.format', 'pdf', 'fastq.gz'),
+                            ('cell_suspension.estimated_cell_count', '', '9001'),
+                            ('protocol.instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
+                            ('protocol.library_construction_method', '', 'Smart-seq2'),
+                            ('project.document_id', '67bc798b-a34a-4104-8cab-cad648471f69',
                              '67bc798b-a34a-4104-8cab-cad648471f69'),
-                            ('institutions', 'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
+                            ('project.institutions', 'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
                                              ' || University of Helsinki || Wellcome Trust Sanger Institute',
                              'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
                              ' || University of Helsinki || Wellcome Trust Sanger Institute'),
-                            ('laboratory', 'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
+                            ('project.laboratory', 'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
                                            ' || Sarah Teichmann',
                              'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
                              ' || Sarah Teichmann'),
-                            ('project_shortname', 'Mouse Melanoma', 'Mouse Melanoma'),
-                            ('project_title', 'Melanoma infiltration of stromal and immune cells',
+                            ('project.project_short_name', 'Mouse Melanoma', 'Mouse Melanoma'),
+                            ('project.project_title', 'Melanoma infiltration of stromal and immune cells',
                              'Melanoma infiltration of stromal and immune cells'),
-                            ('biological_sex', '', 'female'),
-                            ('specimen_id', '', '1209_T || 1210_T'),
-                            ('specimen_document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
+                            ('specimen.sex', '', 'female'),
+                            ('specimen.biomaterial_id', '', '1209_T || 1210_T'),
+                            ('specimen.document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
                                                          ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
-                            ('disease', '', ''),
-                            ('donor_biomaterial_id', '', '1209'),
-                            ('donor_document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
-                            ('genus_species', '', 'Mus musculus'),
-                            ('organ', '', 'brain || tumor'),
-                            ('organ_part', '', ''),
-                            ('organism_age', '', '6-12'),
-                            ('organism_age_unit', '', 'week'),
-                            ('preservation_method', '', '')
+                            ('specimen.diseases', '', ''),
+                            ('specimen.donor_biomaterial_id', '', '1209'),
+                            ('specimen.donor_document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
+                            ('specimen.genus_species', '', 'Mus musculus'),
+                            ('specimen.organ', '', 'brain || tumor'),
+                            ('specimen.organ_parts', '', ''),
+                            ('specimen.organism_age', '', '6-12'),
+                            ('specimen.organism_age_unit', '', 'week'),
+                            ('specimen.preservation_method', '', '')
                         ]
 
                         expected_fieldnames, expected_pdf_row, expected_fastq_row = map(list, zip(*expected))
