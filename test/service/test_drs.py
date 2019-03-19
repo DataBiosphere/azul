@@ -1,6 +1,6 @@
 import requests
 import unittest
-import sys
+from azul.dos import dos_object_url
 
 from service import WebServiceTestCase
 
@@ -17,7 +17,7 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         response.raise_for_status()
         response_json = response.json()
         file_id = response_json['hits'][0]['files'][0]['uuid']
-        get_url = f"{self.base_url}/ga4gh/dos/v1/dataobjects/{file_id}"
+        get_url = self.base_url + dos_object_url(file_id)
         drs_response = requests.get(get_url)
         drs_response.raise_for_status()
         drs_response_json = drs_response.json()
@@ -47,9 +47,6 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         # Should cause a 404 error
         drs_response = requests.get(get_url)
         self.assertEquals(404, drs_response.status_code)
-
-
-
 
 if __name__ == "__main__":
     unittest.main()

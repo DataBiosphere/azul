@@ -572,7 +572,7 @@ through 7 ahead of the actual promotion time.
 
 9) Run `git push origin`
 
-## 7 Scale testing
+## 7. Scale testing
 
 Scale testing can be done with [Locust](https://locust.io/). Locust is a
 development requirement so running it is straight-forward with your development
@@ -597,3 +597,130 @@ environment set up.
 1. Navigate to `http://localhost:8090` in your browser to start a test run.
 
 For more advanced usage see [the Locust documentation](https://docs.locust.io/en/stable/).
+
+
+## 8. Continuous deployment and integration
+
+We are currently in the process of migrating from manual deployments to
+automated deployments performed on a project-specific Gitlab EC2 instance.
+There is currently one such Gitlab instance for the `dev`, `integration` and
+`staging` deployments. The `prod` instance is soon to follow.
+
+The Gitlab instance is provisioned through Terraform but its resource
+definitions reside in a separate *Terraform component*. A *Terraform component*
+is a set of related resources. Each deployment has at least a main component
+and zero or more subcomponents. The main component is identified by the empty
+string, child components have a non-empty name. The `dev` component has a
+subcomponent `dev.gitlab`. To terraform the main component of the `dev`
+deployment, one selects the `dev` deployment and runs `make apply` from
+`${azul_home}/terraform`. To deploy the `gitlab` component of the `dev`
+deployment, one selects `dev.gitlab` and runs `make apply` from
+`${azul_home}/terraform/gitlab`.
+
+To access the web UI of the Gitlab instance for `dev`, visit
+`https://gitlab.dev.explore.…/`, authenticating yourself with your GitHub
+account. After attempting to log in for the first time, one of the
+administrators will need to approve your access.
+
+To have the Gitlab instance build a branch, one pushes that branch to the Azul
+fork hosted on the Gitlab instance. The URL of the fork can be viewed by
+visiting the GitLab web UI. One can only push via SSH and only a specific set
+of public keys are allowed to push. These keys are configured in
+[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py). A
+change to that file—and this should be obvious by now—requires running `make
+apply` in `${azul_home}/terraform/gitlab` while having `dev.gitlab` selected.
+
+An Azul build on Gitlab runs the `test`, `terraform`, `deploy` and
+`integration_test` Makefile targets, in that order. The target deployment for
+feature branches is `sandbox`, the protected branches use their respective
+deployments.
+
+8.1. The Sandbox Deployment
+
+There is only one such deployment and it should be used to validate feature
+branches (one at a time) or to run experiments. This implies that access to the
+sandbox must be coordinated externally e.g., via Slack. The build master owns
+the sandbox deployment by default.
+
+8.2. Security
+
+Gitlab has AWS write permissions for the AWS services used by Azul and the
+principle of least privilege is applied as much as IAM allows it. Some AWS
+services support restricting the creation and deletion of resource by matching
+on the name. For these services, Gitlab can only create, modify or write
+resources whose name begins with `azul-*`. Other services, such as API Gateway
+only support matching on resource IDs. This is unfortunate because API Gateway
+allocates the ID. Since it therefore impossible to know the ID of an API before
+creating it, Gitlab must be given write access to **all** API IDs. For details
+refer to the `azul-gitlab` role and the policy of the same name, both defined
+in [gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py).
+
+Gitlab does not have general write permissions to IAM, its write access is
+limited to creating roles and attaching policies to them as long as the roles
+and policies specify the `azul-gitlab` policy as a [permisions
+boundary][1]. This means that code running
+on the Gitlab instance can never escalate privileges beyond the boundary. This
+mechanism is defined in the `azul-gitlab-iam` policy.
+
+[1]: https://aws.amazon.com/blogs/security/delegate-permission-management-to-developers-using-iam-permissions-boundaries/
+
+Code running on the Gitlab instance has access to credentials of a Google Cloud
+service account that has read-only privileges to Google Cloud. This implies
+that Gitlab cannot terraform Google Cloud resources. Fortunately, there are
+only two such resources: 1) the service account that is used to subscribe Azul
+to the DSS and 2) its credentials. That resource must be deployed manually once
+before pushing a branch that would create a deployment for the first time or to
+recreate it after it was destroyed:
+
+```
+cd terraform
+make config 
+terraform apply -target google_service_account.indexer \
+                -target google_service_account_key.indexer
+```
+
+8.3. Networking
+
+The networking details are documented in
+[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py). The
+Gitlab EC2 instance uses a VPC and is fronted by an Application Load Balancer
+(ALB) and a Network Load Balancer (NLB). The ALB proxies HTTPS access to the
+Gitlab web UI, the NLB provides SSH shell access and `git+ssh` access for
+pushing to the project forks on the instance.
+
+8.4. Storage
+
+The Gitab EC2 instance is attached to an EBS volume that contains all of
+Gitlab's data and configuration. That volume is not controlled by Terraform and
+must be created manually once before terraforming the `gitlab` component.
+The details can be found in
+[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py).
+
+8.5. Gitlab
+
+The instance runs Gitlab CE running inside a rather elaborate concoction of
+Docker containers. See
+[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py) for
+details.
+
+8.6. Updating Gitlab
+
+Modify the Docker image tags in
+[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py) and
+apply. The instance will be terminated (the EBS volume will survive) and a new
+instance will be launched, with fresh containers from updated images. This
+should be done periodically.
+
+8.7. The Gitlab Build Environment
+
+The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
+mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
+copies the files from the `azul` subdirectory of that directory into the Azul
+project root. Secrets and other Gitab-specific settings should be specified in
+`/mnt/gitlab/runner/config/etc/azul/environment.local` which will end up in
+`${azul_home}/environment.local` where `source environment` will find and load
+them. For secrets, we prefer this mechanism over specifying them as environment
+variables under project settings on the Gitlab web UI. Only people with push
+access can push code to intentionally or accidentally expose those variables,
+push access is tied to shell access which is what one would normally need to
+modify those files.
