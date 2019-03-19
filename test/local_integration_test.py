@@ -17,7 +17,7 @@ from more_itertools import one, first
 
 from azul import config
 from azul.decorators import memoized_property
-from azul.reindexer import Reindexer
+from azul.azulclient import AzulClient
 from azul.requests import requests_session
 
 logger = logging.getLogger(__name__)
@@ -49,9 +49,9 @@ class IntegrationTest(unittest.TestCase):
         test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
         logger.info('Starting test using test name, %s ...', test_name)
 
-        test_reindexer = Reindexer(indexer_url=config.indexer_endpoint(),
-                                   test_name=test_name,
-                                   prefix=self.bundle_uuid_prefix)
+        test_reindexer = AzulClient(indexer_url=config.indexer_endpoint(),
+                                    test_name=test_name,
+                                    prefix=self.bundle_uuid_prefix)
         logger.info('Creating indices and reindexing ...')
         selected_bundle_fqids = test_reindexer.reindex()
         self.num_bundles = len(selected_bundle_fqids)
