@@ -25,7 +25,7 @@ from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul.indexer import IndexWriter
 from azul.plugin import Plugin
-from azul.reindexer import Reindexer
+from azul.azulclient import AzulClient
 from azul.time import RemainingLambdaContextTime
 from azul.transformer import EntityReference
 from azul.types import JSON
@@ -170,7 +170,7 @@ def index(event: chalice.app.SQSEvent):
         try:
             action = message['action']
             if action == 'reindex':
-                Reindexer.do_remote_reindex(message)
+                AzulClient.do_remote_reindex(message)
             else:
                 notification = message['notification']
                 indexer_cls = plugin.indexer_class()

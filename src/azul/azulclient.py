@@ -22,7 +22,7 @@ from azul.types import JSON
 logger = logging.getLogger(__name__)
 
 
-class Reindexer(object):
+class AzulClient(object):
 
     def __init__(self,
                  indexer_url: str = config.indexer_endpoint() + "/",
