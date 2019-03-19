@@ -45,7 +45,7 @@ plugin = Plugin.load()
 def version():
     from azul.changelog import compact_changes
     return {
-        'git': config.git_status,
+        'git': config.lambda_git_status,
         'changes': compact_changes(limit=10)
     }
 
@@ -78,6 +78,7 @@ def post_notification():
     """
     notification = app.current_request.json_body
     log.info("Received notification %r", notification)
+    validate_request_syntax(notification)
     params = app.current_request.query_params
 
     if not config.test_mode or notification.get('test_name', None):
@@ -91,11 +92,40 @@ def post_notification():
             notify_queue = queue(config.notify_queue_name)
             notify_queue.send_message(MessageBody=json.dumps(message))
             log.info("Queued notification %r", notification)
-        return {"status": "done"}
+        return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
     else:
         test_mode_error = f'Ignored notification {notification}. This indexer is currently in TEST MODE.'
         log.error(test_mode_error)
         raise chalice.ChaliceViewError(test_mode_error)
+
+
+def validate_request_syntax(notification):
+    try:
+        match = notification['match']
+    except KeyError:
+        raise chalice.BadRequestError('Missing notification entry: match')
+
+    try:
+        bundle_uuid = match['bundle_uuid']
+    except KeyError:
+        raise chalice.BadRequestError('Missing notification entry: bundle_uuid')
+
+    try:
+        bundle_version = match['bundle_version']
+    except KeyError:
+        raise chalice.BadRequestError('Missing notification entry: bundle_version')
+
+    if not isinstance(bundle_uuid, str):
+        raise chalice.BadRequestError(f'Invalid type: bundle_uuid: {type(bundle_uuid)} (should be str)')
+
+    if not isinstance(bundle_version, str):
+        raise chalice.BadRequestError(f'Invalid type: bundle_version: {type(bundle_version)} (should be str)')
+
+    if bundle_uuid.lower() != str(uuid.UUID(bundle_uuid)).lower():
+        raise chalice.BadRequestError(f'Invalid syntax: {bundle_uuid} (should be a UUID)')
+
+    if not bundle_version:
+        raise chalice.BadRequestError('Invalid syntax: bundle_version can not be empty')
 
 
 @app.route('/delete', methods=['POST'])
@@ -104,6 +134,7 @@ def delete_notification():
     Receive a deletion event and process it asynchronously
     """
     notification = app.current_request.json_body
+    validate_request_syntax(notification)
     log.info("Received deletion notification %r", notification)
     message = dict(action='delete', notification=notification)
     notify_queue = queue(config.notify_queue_name)
