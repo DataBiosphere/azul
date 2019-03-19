@@ -1,18 +1,21 @@
-import boto3
 import logging
-from more_itertools import one
 import random
-import requests
 import time
-from typing import Set, Dict
+from typing import Any, Mapping, Set
 import unittest
 import urllib
+from urllib.parse import urlencode
 import uuid
 
-from azul import config
-from azul.subscription import manage_subscriptions
-from azul.reindexer import Reindexer
+import boto3
+from more_itertools import one
+import requests
 
+from azul import config
+from azul.decorators import memoized_property
+from azul.reindexer import Reindexer
+from azul.requests import requests_session
+from azul.subscription import manage_subscriptions, call_client
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +28,10 @@ class IntegrationTest(unittest.TestCase):
     bundle_uuid_prefix = None
     prefix_length = 3
 
+    @memoized_property
+    def dss(self):
+        return config.dss_client()
+
     def setUp(self):
         super().setUp()
         self.set_lambda_test_mode(True)
@@ -33,38 +40,28 @@ class IntegrationTest(unittest.TestCase):
     def tearDown(self):
         self.set_lambda_test_mode(False)
         if config.subscribe_to_dss:
-            manage_subscriptions(config.dss_client(), subscribe=True)
+            manage_subscriptions(self.dss, subscribe=True)
+        super().tearDown()
 
     def test_webservice_and_indexer(self):
-        if config.subscribe_to_dss:
-            manage_subscriptions(config.dss_client(), subscribe=False)
-            unsubscribe_waitime = 0
-
-            while True:
-                if not config.dss_client().get_subscriptions(replica='aws')['subscriptions']:
-                    break
-                elif unsubscribe_waitime > 60:
-                    self.fail('Unable to unsubscribe from DSS.')
-                time.sleep(1)
-                unsubscribe_waitime += 1
-            manage_subscriptions(config.dss_client(), subscribe=False)
-            manage_subscriptions(config.dss_client(), subscribe=True)
-
         test_uuid = str(uuid.uuid4())
         test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
+        logger.info('Starting test using test name, %s ...', test_name)
+
+        if config.subscribe_to_dss:
+            self.unsubscribe()
+            self.unsubscribe()
+            self.subscribe()
+            self.subscribe()
+
         test_reindexer = Reindexer(indexer_url=config.indexer_endpoint(),
                                    test_name=test_name,
                                    prefix=self.bundle_uuid_prefix)
-
-        if False:
-            logger.info('Deleting all indices ...')
-            test_reindexer.delete_all_indices()
-
-        logger.info('Starting test using test name, %s ...', test_name)
         logger.info('Creating indices and reindexing ...')
         selected_bundle_fqids = test_reindexer.reindex()
         self.num_bundles = len(selected_bundle_fqids)
         self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
+
         self.check_endpoint_is_working(config.indexer_endpoint(), '/health')
         self.check_endpoint_is_working(config.service_endpoint(), '/')
         self.check_endpoint_is_working(config.service_endpoint(), '/health')
@@ -74,21 +71,43 @@ class IntegrationTest(unittest.TestCase):
         manifest_filter = {"file": {"organPart": {"is": ["temporal lobe"]}, "fileFormat": {"is": ["bai"]}}}
         self.check_endpoint_is_working(config.service_endpoint(), f'/manifest/files?filters={manifest_filter}')
 
+    def subscribe(self):
+        manage_subscriptions(self.dss, subscribe=True)
+        self.wait_for_subscriptions(2)
+
+    def unsubscribe(self):
+        manage_subscriptions(self.dss, subscribe=False)
+        self.wait_for_subscriptions(0)
+
+    def wait_for_subscriptions(self, num_expected_subscriptions):
+        deadline = time.time() + 60
+        while True:
+            actual_subscriptions = call_client(self.dss.get_subscriptions, replica='aws')['subscriptions']
+            if num_expected_subscriptions == len(actual_subscriptions):
+                break
+            else:
+                if time.time() > deadline:
+                    self.fail('Timed out waiting for subscription to disappear.')
+                else:
+                    time.sleep(1)
+
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
         indexer_lambda_config = client.get_function_configuration(FunctionName=config.indexer_name)
         environment = indexer_lambda_config['Environment']
         environment['Variables']['TEST_MODE'] = '1' if mode else '0'
-        client.update_function_configuration(
-            FunctionName=config.indexer_name,
-            Environment=environment)
+        client.update_function_configuration(FunctionName=config.indexer_name, Environment=environment)
+
+    @memoized_property
+    def requests(self) -> requests.Session:
+        return requests_session()
 
     def check_endpoint_is_working(self, lambda_endpoint: str, url: str):
         url = lambda_endpoint + url
-        response = requests.get(url)
+        response = self.requests.get(url)
         response.raise_for_status()
 
-    def get_number_of_messages(self, queues: Dict[str, boto3.resources.base.ServiceResource]):
+    def get_number_of_messages(self, queues: Mapping[str, Any]):
         total_message_count = 0
         for queue_name, queue in queues.items():
             attributes = tuple('ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed'))
@@ -146,7 +165,7 @@ class IntegrationTest(unittest.TestCase):
         found_bundle_fqids = set()
 
         while True:
-            response_json = requests.get(url).json()
+            response_json = self.requests.get(url).json()
             hits = response_json.get('hits', [])
             found_bundle_fqids.update(f"{entity['bundleUuid']}.{entity['bundleVersion']}"
                                       for bundle in hits for entity in bundle.get('bundles', [])
@@ -155,7 +174,7 @@ class IntegrationTest(unittest.TestCase):
             search_after_uid = response_json['pagination']['search_after_uid']
             total_entities = response_json['pagination']['total']
             logger.info('Found %i/%i bundles on try #%i/%i. There are %i total hits. Current page has %i hits in %s.',
-                        len(found_bundle_fqids), num_bundles, retries+1, max_retries, total_entities, len(hits), url)
+                        len(found_bundle_fqids), num_bundles, retries + 1, max_retries, total_entities, len(hits), url)
 
             if search_after is None:
                 assert search_after_uid is None
@@ -170,15 +189,14 @@ class IntegrationTest(unittest.TestCase):
                     retries += 1
             else:
                 assert search_after_uid is not None
-                url = base_url + '&' + urllib.parse.urlencode({'search_after': search_after,
-                                                               'search_after_uid': search_after_uid})
+                url = base_url + '&' + urlencode(dict(search_after=search_after,
+                                                      search_after_uid=search_after_uid))
 
         logger.info('Actual bundle count is %i.', len(found_bundle_fqids))
         self.assertEqual(found_bundle_fqids, indexed_bundle_fqids)
         for hit in response_json['hits']:
             project = one(hit['projects'])
             bundle_fqids = [bundle['bundleUuid'] + '.' + bundle['bundleVersion'] for bundle in hit['bundles']]
-
             self.assertTrue(test_name in project['projectShortname'],
                             f'There was a problem during indexing an {entity_type} entity'
                             f' {hit["entryId"]}. Bundle(s) ({",".join(bundle_fqids)})'

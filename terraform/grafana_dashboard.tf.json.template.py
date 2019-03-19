@@ -1,6 +1,7 @@
 import json
 
-from azul import config, aws
+from azul import config
+from azul.deployment import aws
 from azul.template import emit
 
 emit({

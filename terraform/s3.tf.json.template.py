@@ -8,6 +8,7 @@ emit({
                 "bucket": {
                     "bucket": config.s3_bucket,
                     "acl": "private",
+                    "force_destroy": True,
                     "lifecycle_rule": {
                         "id": "manifests",
                         "enabled": True,
@@ -19,6 +20,7 @@ emit({
                 },
                 "url_bucket": {
                     "bucket": config.url_redirect_full_domain_name,
+                    "force_destroy": config.deployment_stage not in config.main_deployments_by_branch.values(),
                     "acl": "public-read",
                     "website": {
                         # index_document is required; pointing to a non-existent file to return a 404

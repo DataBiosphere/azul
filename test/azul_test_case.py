@@ -1,22 +1,22 @@
 import os
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import boto3.session
 
 
 class AzulTestCase(TestCase):
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.aws_profile = os.environ.pop('AWS_PROFILE', None)
-        assert boto3.session.Session().get_credentials() is None, (
-            "This test does not work while there are configured AWS credentials available. Make sure "
-            "that neither AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY or AWS_SESSION_TOKEN are set. If you "
-            "have credentials configured in ~/.aws/config or ~/.aws/credentials, make sure that they are "
-            "configured in a separate [profile] so they are not active by default.")
+        cls.get_credentials_orig = boto3.session.Session.get_credentials
+        # This ensures that we don't accidentally use actual cloud resources in unit tests. Furthermore,
+        # Boto3/botocore cache credentials which can lead to credentials from an unmocked use of boto3 in one test to
+        # leak into a mocked use of boto3. The latter was the reason for #668.
+        boto3.session.Session.get_credentials = lambda self: None
+        assert boto3.session.Session().get_credentials() is None
 
     @classmethod
     def tearDownClass(cls) -> None:
-        if cls.aws_profile is not None:
-            os.environ['AWS_PROFILE'] = cls.aws_profile
+        boto3.session.Session.get_credentials = cls.get_credentials_orig
         super().tearDownClass()
