@@ -1,52 +1,50 @@
-import requests
 import unittest
-from azul.dos import dos_object_url
 
+import requests
+
+from azul import drs
 from service import WebServiceTestCase
+
 
 class DataRepositoryServiceEndpointTest(WebServiceTestCase):
 
-    def get_data_object(self):
-        """
-        Helper function to get a data object using the
-        repository/files list feature.
-        :return:
-        """
-        url = self.base_url + "/repository/files"
-        response = requests.get(url)
-        response.raise_for_status()
-        response_json = response.json()
-        file_id = response_json['hits'][0]['files'][0]['uuid']
-        get_url = self.base_url + dos_object_url(file_id)
-        drs_response = requests.get(get_url)
+    def _get_data_object(self, file_uuid, file_version):
+        drs_url = drs.http_object_url(file_uuid, file_version, base_url=self.base_url)
+        drs_response = requests.get(drs_url)
         drs_response.raise_for_status()
         drs_response_json = drs_response.json()
         data_object = drs_response_json['data_object']
-        return data_object, file_id
+        return data_object
 
     def test_get_data_object(self):
-        """
-        Ensures that a file requested via repository can also
-        be found via DRS and that the returned document shares
-        the same identifier.
-        :return:
-        """
-        data_object, file_id = self.get_data_object()
-        self.assertEqual(file_id, data_object['id'], "The IDs should match")
-        azul_response = requests.get(f"{self.base_url}/repository/files/{file_id}").json()
-        self.assertEqual(azul_response['files'][0]['url'], data_object['urls'][0]['url'])
+        file_uuid = '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
+        file_version = '2018-11-02T113344.698028Z'
+        data_object = self._get_data_object(file_uuid, file_version)
+        self.assertEqual({
+            'id': file_uuid,
+            'urls': [
+                {'url': f"{self.base_url}/dss/files/{file_uuid}?version={file_version}&replica=aws&wait=1&fileName=SRR3562915_1.fastq.gz"}
+            ],
+            'size': '195142097',
+            'checksums': [
+                {
+                    'checksum': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
+                    'type': 'sha256'
+                }
+            ],
+            'aliases': ['SRR3562915_1.fastq.gz'],
+            'version': file_version,
+            'name': 'SRR3562915_1.fastq.gz'
+        }, data_object)
 
     def test_data_object_not_found(self):
-        """
-        Ensures that when an unused identifier is requested a 404 status
-        code is returned.
-        :return:
-        """
-        file_id = "NOT_A_GOOD_IDEA"
-        get_url = "{}/ga4gh/dos/v1/dataobjects/{}".format(self.base_url, file_id)
-        # Should cause a 404 error
-        drs_response = requests.get(get_url)
-        self.assertEquals(404, drs_response.status_code)
+        try:
+            self._get_data_object("NOT_A_GOOD_IDEA", None)
+        except requests.exceptions.HTTPError as e:
+            self.assertEqual(e.response.status_code, 404)
+        else:
+            self.fail()
+
 
 if __name__ == "__main__":
     unittest.main()
