@@ -49,11 +49,11 @@ class IntegrationTest(unittest.TestCase):
         test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
         logger.info('Starting test using test name, %s ...', test_name)
 
-        test_reindexer = AzulClient(indexer_url=config.indexer_endpoint(),
+        azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
                                     test_name=test_name,
                                     prefix=self.bundle_uuid_prefix)
         logger.info('Creating indices and reindexing ...')
-        selected_bundle_fqids = test_reindexer.reindex()
+        selected_bundle_fqids = azul_client.reindex()
         self.num_bundles = len(selected_bundle_fqids)
         self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
 
