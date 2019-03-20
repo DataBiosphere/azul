@@ -44,7 +44,7 @@ try:
 except iam.exceptions.NoSuchEntityException:
     current_role_policy = None
 
-permissions_boundary = aws.permissions_boundary['Arn']
+permissions_boundary = aws.permissions_boundary['Arn'] if aws.permissions_boundary else None
 
 if (
     role_policy == current_role_policy
