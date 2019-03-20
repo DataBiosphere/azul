@@ -14,7 +14,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     Although it seems weird for the webservice to inherit the testing mechanisms for the indexer,
     we need them in order to send live indexer output to the webservice.
     """
-    bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")
+    bundles = [("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")]
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -23,7 +23,8 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls._index_canned_bundle(cls.bundle)
+        for bundle in cls.bundles:
+            cls._index_canned_bundle(bundle)
 
     @classmethod
     def tearDownClass(cls):
