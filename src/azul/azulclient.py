@@ -6,6 +6,8 @@ from itertools import product
 import json
 import logging
 from pprint import PrettyPrinter
+
+import requests
 from typing import List, Optional
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
@@ -14,7 +16,7 @@ from uuid import uuid4
 
 from more_itertools import chunked
 
-from azul import config
+from azul import config, hmac
 from azul.es import ESClientFactory
 from azul.plugin import Plugin
 from azul.types import JSON
@@ -56,11 +58,9 @@ class AzulClient(object):
         Send a mock DSS notification to the indexer
         """
         simulated_event = self._make_notification(bundle_fqid)
-        body = json.dumps(simulated_event).encode('utf-8')
-        request = Request(indexer_url, body)
-        request.add_header("content-type", "application/json")
-        with urlopen(request) as f:
-            return f.read()
+        response = requests.post(indexer_url, json=simulated_event, auth=hmac.prepare())
+        response.raise_for_status()
+        return response.content
 
     def _make_notification(self, bundle_fqid):
         bundle_uuid, _, bundle_version = bundle_fqid.partition('.')

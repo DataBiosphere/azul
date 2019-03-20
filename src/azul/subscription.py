@@ -19,7 +19,9 @@ def manage_subscriptions(dss_client, subscribe=True):
         prefix = config.dss_query_prefix
         new_subscriptions = [freeze(dict(replica='aws',
                                          es_query=query,
-                                         callback_url=base_url + path))
+                                         callback_url=base_url + path,
+                                         hmac_key_id=config.hmac_key_id,
+                                         hmac_secret_key=config.hmac_key))
                              for query, path in [(plugin.dss_subscription_query(prefix), '/'),
                                                  (plugin.dss_deletion_subscription_query(prefix), '/delete')]]
     else:
