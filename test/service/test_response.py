@@ -20,7 +20,9 @@ def setUpModule():
 
 
 class TestResponse(WebServiceTestCase):
+
     maxDiff = None
+    bundles = WebServiceTestCase.bundles + [('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z')]
 
     def get_hits(self, entity_type: str, entity_id: str):
         """Fetches hits from es instance searching for a particular entity ID"""
@@ -618,6 +620,10 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
+                            "arrayExpressAccessions": [],
+                            "geoSeriesAccessions": [],
+                            "insdcProjectAccessions": [],
+                            "insdcStudyAccessions": [],
                             "contributors": [
                                 {
                                     "contactName": "Martin, Enge",
@@ -717,6 +723,10 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
+                            "arrayExpressAccessions": [],
+                            "geoSeriesAccessions": [],
+                            "insdcProjectAccessions": [],
+                            "insdcStudyAccessions": [],
                             "contributors": [
                                 {
                                     "contactName": "Matthew,,Green",
@@ -1018,6 +1028,126 @@ class TestResponse(WebServiceTestCase):
         ]
         self.assertEqual(json.dumps(expected_organ_summary3, sort_keys=True),
                          json.dumps(project_summary3['organSummaries'], sort_keys=True))
+
+
+    def test_project_accessions_response(self):
+        """
+        This method tests the KeywordSearchResponse object for the projects entity type,
+        specifically making sure the accessions fields are present in the response.
+        """
+        keyword_response = KeywordSearchResponse(
+            hits=self.get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
+            entity_type='projects'
+        ).return_response().to_json()
+        expected_response = {
+            "hits": [
+                {
+                    "cellSuspensions": [
+                        {
+                            "organ": ["brain"],
+                            "organPart": ["amygdala"],
+                            "totalCells": 10000
+                        }
+                    ],
+                    "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
+                    "fileTypeSummaries": [
+                        {
+                            "count": 1,
+                            "fileType": "bai",
+                            "totalSize": 2395616
+                        },
+                        {
+                            "count": 1,
+                            "fileType": "bam",
+                            "totalSize": 55840108
+                        },
+                        {
+                            "count": 1,
+                            "fileType": "csv",
+                            "totalSize": 665
+                        },
+                        {
+                            "count": 1,
+                            "fileType": "unknown",
+                            "totalSize": 2645006
+                        },
+                        {
+                            "count": 2,
+                            "fileType": "mtx",
+                            "totalSize": 6561141
+                        },
+                        {
+                            "count": 3,
+                            "fileType": "fastq.gz",
+                            "totalSize": 44668092
+                        },
+                        {
+                            "count": 3,
+                            "fileType": "h5",
+                            "totalSize": 5573714
+                        },
+                        {
+                            "count": 4,
+                            "fileType": "tsv",
+                            "totalSize": 15872628
+                        }
+                    ],
+                    "projects": [
+                        {
+                            "contributors": [
+                                {
+                                    "contactName": "John,D,Doe. ",
+                                    "correspondingContributor": False,
+                                    "email": "dummy@email.com",
+                                    "institution": "EMBL-EBI",
+                                    "laboratory": "Department of Biology",
+                                    "projectRole": "principal investigator"
+                                }
+                            ],
+                            "arrayExpressAccessions": ["E-AAAA-00"],
+                            "geoSeriesAccessions": ["GSE00000"],
+                            "insdcProjectAccessions": ["SRP000000"],
+                            "insdcStudyAccessions": ["PRJNA000000"],
+                            "laboratory": ["Department of Biology"],
+                            "projectDescription": "Contains a small file set from the dataset: 4k PBMCs from a Healthy Donor, a Single Cell Gene Expression Dataset by Cell Ranger 2.1.0. Peripheral blood mononuclear cells (PBMCs) were taken from a healthy donor (same donor as pbmc8k). PBMCs are primary cells with relatively small amounts of RNA (~1pg RNA/cell). Data/Analysis can be found here https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc4k and all data is licensed under the creative commons attribution license (https://creativecommons.org/licenses/by/4.0/). This test also contains extensive metadata for browser testing. Metadata is fabricated.",
+                            "projectShortname": "staging/10x/2019-02-14T18:29:38Z",
+                            "projectTitle": "10x 1 Run Integration Test",
+                            "publications": [
+                                {
+                                    "publicationTitle": "A title of a publication goes here.",
+                                    "publicationUrl": "https://europepmc.org"
+                                }
+                            ]
+                        }
+                    ],
+                    "protocols": [
+                        {
+                            "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
+                            "libraryConstructionApproach": ["10X v2 sequencing"]
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "biologicalSex": ["male"],
+                            "disease": ["H syndrome"],
+                            "genusSpecies": ["Homo sapiens"],
+                            "id": ["specimen_ID_1"],
+                            "organ": ["brain"],
+                            "organPart": ["amygdala"],
+                            "organismAge": ["20"],
+                            "organismAgeUnit": ["year"],
+                            "preservationMethod": [None],
+                            "source": [
+                                "cell_suspension",
+                                "donor_organism",
+                                "specimen_from_organism"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
 
 if __name__ == '__main__':
