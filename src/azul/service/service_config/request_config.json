@@ -18,6 +18,10 @@
     "project": "contents.projects.project_shortname",
     "projectTitle": "contents.projects.project_title",
     "publicationTitle": "contents.projects.publication_titles",
+    "arrayExpressAccessions": "contents.projects.array_express_accessions",
+    "geoSeriesAccessions": "contents.projects.geo_series_accessions",
+    "insdcProjectAccessions":  "contents.projects.insdc_project_accessions",
+    "insdcStudyAccessions": "contents.projects.insdc_study_accessions",
 
     "biologicalSex": "contents.specimens.biological_sex",
     "specimenId": "contents.specimens.biomaterial_id",
@@ -48,12 +52,9 @@
     }
   },
   "manifest": {
-    "contents.cell_suspensions": {
-      "cell_suspension_id": "document_id"
-    },
-    "contents.specimens": {
-      "entity:sample_id": "donor_biomaterial_id",
-      "participant_id": "donor_document_id"
+    "bundles": {
+      "bundle_uuid": "uuid",
+      "bundle_version": "version"
     },
     "contents.files": {
       "file_content_type": "content-type",
@@ -62,11 +63,36 @@
       "file_size": "size",
       "file_uuid": "uuid",
       "file_version": "version",
-      "file_indexed": "indexed"
+      "file_indexed": "indexed",
+      "file_format": "file_format"
     },
-    "bundles": {
-      "bundle_uuid": "uuid",
-      "bundle_version": "version"
+    "contents.cell_suspensions": {
+      "total_estimated_cells": "total_estimated_cells"
+    },
+    "contents.protocols": {
+      "instrument_manufacturer_model": "instrument_manufacturer_model",
+      "library_construction_approach": "library_construction_approach"
+    },
+    "contents.projects": {
+      "document_id": "document_id",
+      "institutions": "institutions",
+      "laboratory": "laboratory",
+      "project_shortname": "project_shortname",
+      "project_title": "project_title"
+    },
+    "contents.specimens": {
+      "biological_sex": "biological_sex",
+      "specimen_id": "biomaterial_id",
+      "specimen_document_id": "document_id",
+      "disease": "disease",
+      "donor_biomaterial_id": "donor_biomaterial_id",
+      "donor_document_id": "donor_document_id",
+      "genus_species": "genus_species",
+      "organ": "organ",
+      "organ_part": "organ_part",
+      "organism_age": "organism_age",
+      "organism_age_unit": "organism_age_unit",
+      "preservation_method": "preservation_method"
     }
   },
     "bdbag": {

@@ -13,12 +13,13 @@ import urllib.parse
 import boto3
 from botocore.exceptions import ClientError
 # noinspection PyPackageRequirements
-from chalice import BadRequestError, Chalice, ChaliceViewError, NotFoundError, Response, AuthResponse
+from chalice import BadRequestError, ChaliceViewError, NotFoundError, Response, AuthResponse
 from more_itertools import one
 import requests
 
 from azul import config
-from azul.dos import dos_object_url
+from azul.chalice import AzulChaliceApp
+from azul import drs
 from azul.health import Health
 from azul.security.authenticator import Authenticator, AuthenticationError
 from azul.service import service_config
@@ -41,7 +42,7 @@ log = logging.getLogger(__name__)
 for top_level_pkg in (__name__, 'azul'):
     logging.getLogger(top_level_pkg).setLevel(logging.INFO)
 
-app = Chalice(app_name=config.service_name, configure_logs=False)
+app = AzulChaliceApp(app_name=config.service_name, configure_logs=False)
 # FIXME: this should be configurable via environment variable (https://github.com/DataBiosphere/azul/issues/419)
 app.debug = True
 # FIXME: please use module logger instead (https://github.com/DataBiosphere/azul/issues/419)
@@ -575,13 +576,10 @@ def generate_manifest(event, context):
     return {'Location': response.headers['Location']}
 
 
-proxy_endpoint_path = "/fetch/dss/files"
-
-
-@app.route(proxy_endpoint_path + '/{uuid}', methods=['GET'], cors=True)
-def files_proxy(uuid):
+@app.route('/dss/files/{uuid}', methods=['GET'], cors=True)
+def dss_files(uuid):
     """
-    Initiate checking out a file for download from the data store
+    Initiate checking out a file for download from the HCA data store (DSS)
 
     parameters:
         - name: uuid
@@ -592,11 +590,74 @@ def files_proxy(uuid):
           in: query
           type: string
           description: The desired name of the file. If absent, the UUID of the file will be used.
+        - name: wait
+          in: query
+          type: int
+          description: If this parameter is 1 and the checkout is still in process, the server will wait before
+          returning a response. This parameter should only be set to 1 by clients who don't honor the Retry-After
+          header, preventing them from quickly exhausting the maximum number of redirects. If the server cannot wait
+          the full amount, any amount of wait time left will still be returned in the Retry-After header of the
+          response.
+
+    :return: A 301 or 302 response describing the status of the checkout performed by DSS.
+
+    All query parameters not mentioned above are forwarded to DSS in order to initiate checkout process for the
+    correct file. For more information refer to https://dss.data.humancellatlas.org under GET `/files/{uuid}`.
+
+    If the file checkout has been started or is still ongoing, the response will be a 301 redirect to this very
+    endpoint. The response MAY carry a Retry-After header, even if server-side waiting was requested via `wait=1`.
+
+    `Retry-After` is the recommended number of seconds to wait before requesting the URL specified in the `Location`
+    header.
+
+    If the client receives a 301 response, the client should wait the number of seconds specified in `Retry-After`
+    and then request the URL given in the `Location` header. The URL in the `Location` header will point back at this
+    endpoint so the client should expect a response of the same kind.
+
+    If the file checkout is done and the file is ready to be downloaded, the response will be a 302 redirect with the
+    `Location` header set to a signed URL. Requesting that URL will yield the actual content of the file.
+
+    The client should request the URL given in the `Location` field. The URL will point to an entirely different
+    service and when requesting the URL, the client should expect a response containing the actual file. Currently
+    the `Location` header of the 302 response is a signed URL to an object in S3 but clients should not depend on
+    that. The response will also include a `Content-Disposition` header set to `attachment; filename=` followed by
+    the value of the `fileName` parameter specified in the initial request or the UUID of the file if that parameter
+    was omitted.
+    """
+    body = _dss_files(uuid, fetch=False)
+    status_code = body.pop('Status')
+    return Response(body='',
+                    headers={k: str(v) for k, v in body.items()},
+                    status_code=status_code)
+
+
+@app.route('/fetch/dss/files/{uuid}', methods=['GET'], cors=True)
+def fetch_dss_files(uuid):
+    """
+    Initiate checking out a file for download from the HCA data store (DSS)
+
+    parameters:
+        - name: uuid
+          in: path
+          type: string
+          description: UUID of the file to be checked out
+        - name: fileName
+          in: query
+          type: string
+          description: The desired name of the file. If absent, the UUID of the file will be used.
+        - name: wait
+          in: query
+          type: int
+          description: If this parameter is 1 and the checkout is still in process, the server will wait before
+          returning a response. This parameter should only be set to 1 by clients who don't honor the Retry-After
+          header, preventing them from quickly exhausting the maximum number of redirects. If the server cannot wait
+          the full amount, any amount of wait time left will still be returned in the Retry-After header of the
+          response.
 
     :return: A 200 response with a JSON body describing the status of the checkout performed by DSS.
 
-    All other query parameters are forwarded to DSS in order to initiate checkout process for the correct file. For
-    more information refer to https://dss.data.humancellatlas.org under GET `/files/{uuid}`.
+    All query parameters not mentioned above are forwarded to DSS in order to initiate checkout process for the
+    correct file. For more information refer to https://dss.data.humancellatlas.org under GET `/files/{uuid}`.
 
     If the file checkout has been started or is still ongoing, the response will look like:
 
@@ -615,7 +676,7 @@ def files_proxy(uuid):
 
     `Location` is the URL to make a GET request to in order to recheck the status of the checkout process.
 
-    If the client receives a response body with the `Status` field set to 301, the client should wait the number of
+    If the client receives a response body with the `Status` field set to 301, the client must wait the number of
     seconds specified in `Retry-After` and then request the URL given in the `Location` field. The URL will point
     back at this endpoint so the client should expect a response of the same shape. Note that the actual HTTP
     response is of status 200, only the `Status` field of the body will be 301. The intent is to emulate HTTP while
@@ -633,15 +694,21 @@ def files_proxy(uuid):
     ```
 
     The client should request the URL given in the `Location` field. The URL will point to an entirely different
-    service and when requesting the URL, the client should expect a response containing the actual manifest.
-    Currently the `Location` field of the final response is a signed URL to an object in S3 but clients should not
-    depend on that. The response will also include a `Content-Disposition` header set to `attachment; filename=`
-    followed by the value of the fileName parameter specified in the initial request or the UUID of the file if that
-    parameter was omitted.
+    service and when requesting the URL, the client should expect a response containing the actual file. Currently
+    the `Location` field of the final response is a signed URL to an object in S3 but clients should not depend on
+    that. The response will also include a `Content-Disposition` header set to `attachment; filename=` followed by
+    the value of the fileName parameter specified in the initial request or the UUID of the file if that parameter
+    was omitted.
     """
+    body = _dss_files(uuid, fetch=True)
+    return Response(body=json.dumps(body), status_code=200)
+
+
+def _dss_files(uuid, fetch=True):
     params = app.current_request.query_params
     url = config.dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
     file_name = params.pop('fileName', None)
+    wait = params.pop('wait', None)
     dss_response = requests.get(url, params=params, allow_redirects=False)
     if dss_response.status_code == 301:
         retry_after = int(dss_response.headers.get('Retry-After'))
@@ -651,8 +718,22 @@ def files_proxy(uuid):
         params = {k: one(v) for k, v in query.items()}
         if file_name is not None:
             params['fileName'] = file_name
-        body = {"Status": 301, "Retry-After": retry_after, "Location": file_url(uuid, **params)}
-        return Response(body=json.dumps(body), status_code=200)
+        if wait is not None:
+            if wait == '0':
+                pass
+            elif wait == '1':
+                server_side_sleep = min(float(retry_after),
+                                        app.lambda_context.get_remaining_time_in_millis() / 1000 - 5)
+                time.sleep(server_side_sleep)
+                retry_after = round(retry_after - server_side_sleep)
+            else:
+                raise BadRequestError(f"Invalid value '{wait}' for 'wait' parameter")
+            params['wait'] = wait
+        response = {
+            "Status": 301,
+            **({"Retry-After": retry_after} if retry_after else {}),
+            "Location": file_url(uuid, fetch=fetch, **params)
+        }
     elif dss_response.status_code == 302:
         location = dss_response.headers['Location']
         # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
@@ -672,15 +753,17 @@ def files_proxy(uuid):
                                                      'Key': location.path[1:],
                                                      'ResponseContentDisposition': 'attachment;filename=' + file_name,
                                                  })
-        body = {"Status": 302, "Location": location}
-        return Response(body=json.dumps(body), status_code=200)
+        response = {"Status": 302, "Location": location}
     else:
         dss_response.raise_for_status()
+        assert False
+    return response
 
 
-def file_url(uuid, **params):
+def file_url(uuid, fetch=True, **params):
     uuid = urllib.parse.quote(uuid, safe="")
-    url = self_url(endpoint_path=f'{proxy_endpoint_path}/{uuid}')
+    view_function = fetch_dss_files if fetch else dss_files
+    url = self_url(endpoint_path=view_function.path.format(uuid=uuid))
     params = urllib.parse.urlencode(params)
     return f'{url}?{params}'
 
@@ -690,8 +773,7 @@ def self_url(endpoint_path=None):
     base_url = app.current_request.headers['host']
     if endpoint_path is None:
         endpoint_path = app.current_request.context['path']
-    retry_url = f'{protocol}://{base_url}{endpoint_path}'
-    return retry_url
+    return f'{protocol}://{base_url}{endpoint_path}'
 
 
 @app.route('/auth', methods=['GET'], cors=True)
@@ -1208,7 +1290,7 @@ def assert_jwt_ttl(expected_ttl):
 
 
 @app.route('/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
-def export_cart_as_collection(cart_id:str):
+def export_cart_as_collection(cart_id: str):
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
     redirecting to either the location of the manifest or a URL to re-check the status of
@@ -1249,7 +1331,7 @@ def export_cart_as_collection(cart_id:str):
 
 
 @app.route('/fetch/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
-def export_cart_as_collection_fetch(cart_id:str):
+def export_cart_as_collection_fetch(cart_id: str):
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
     redirecting to either the location of the manifest or a URL to re-check the status of
@@ -1317,7 +1399,7 @@ def export_cart_as_collection_fetch(cart_id:str):
     }
 
 
-def handle_cart_export_request(cart_id:str=None):
+def handle_cart_export_request(cart_id: str = None):
     assert_jwt_ttl(config.cart_export_min_access_token_ttl)
     user_id = get_user_id()
     query_params = app.current_request.query_params or {}
@@ -1403,60 +1485,61 @@ def cart_export_send_to_collection_api(event, context):
     }
 
 
-def azul_to_obj(result):
+def file_to_drs(doc):
     """
-    Takes an Azul ElasticSearch result and converts it to a DOS data
-    object.
-
-    :param result: the ElasticSearch result dictionary for a single file
-    :return: DataObject
+    Converts an aggregate file document to a DRS data object response.
     """
-    data_object = {}
-    data_object['id'] = result['uuid']
     replicas = ['aws']
-    urls = [{"url": file_url(result['uuid'], version=result['version'], replica=replica)} for replica in replicas]
-    data_object['urls'] = urls
-    data_object['size'] = str(result.get('size', ''))
-    data_object['checksums'] = [
-        {'checksum': result['sha256'], 'type': 'sha256'}]
-    data_object['aliases'] = [result['name']]
-    data_object['version'] = result['version']
-    data_object['name'] = result['name']
-    return data_object
+    return {
+        'id': doc['uuid'],
+        'urls': [
+            {
+                'url': file_url(uuid=doc['uuid'],
+                                version=doc['version'],
+                                replica=replica,
+                                fetch=False,
+                                wait='1',
+                                fileName=doc['name'])
+            }
+            for replica in replicas
+        ],
+        'size': str(doc['size']),
+        'checksums': [
+            {
+                'checksum': doc['sha256'],
+                'type': 'sha256'
+            }
+        ],
+        'aliases': [doc['name']],
+        'version': doc['version'],
+        'name': doc['name']
+    }
 
 
-@app.route(dos_object_url('{data_object_id}'), methods=['GET'], cors=True)
-def get_data_object(data_object_id):
+@app.route(drs.drs_http_object_path('{file_uuid}'), methods=['GET'], cors=True)
+def get_data_object(file_uuid):
     """
-    Gets a data object by file identifier by making a query against the
-    configured data object index and returns the first matching file.
-
-    :param data_object_id: the id of the data object
-    :raises LookupError: if no data object is found for the given query
-    :rtype: DataObject
+    Return a DRS data object dictionary for a given DSS file UUID and version.
     """
-    logger = app.log
-    filters = {"file": {"fileId": {"is": [data_object_id]}}}
-    logger.debug(f'DOS request for Data Object with uuid: {data_object_id}')
-    # We don't care about the query params, only the path
-    app.current_request.query_params = {}
-    logger.debug("Filters string is: {}".format(filters))
-    try:
-        # Create and instance of the ElasticTransformDump
-        logger.info("Creating ElasticTransformDump object")
-        es_td = EsTd()
-        pagination = _get_pagination(app.current_request, entity_type='files')
-        # Get the response back
-        logger.info("Creating the API response")
-        response = es_td.transform_request(filters=filters,
-                                           pagination=pagination,
-                                           post_filter=True,
-                                           entity_type='files')
-        file_document = response['hits'][0]['files'][0]
-        data_obj = azul_to_obj(file_document)
-        # Double check to verify identity (since `file_id` is an analyzed field)
-        if data_obj['id'] != data_object_id:
-            raise LookupError
-    except LookupError:
-         return Response({'msg': "Data object not found."}, status_code=404)
-    return Response({'data_object': data_obj}, status_code=200)
+    params = app.current_request.query_params or {}
+    file_version = params.get('version')
+    filters = {
+        "file": {
+            "fileId": {"is": [file_uuid]},
+            **({"fileVersion": {"is": [file_version]}} if file_version else {})
+        }
+    }
+    es_td = EsTd()
+    pagination = _get_pagination(app.current_request, entity_type='files')
+    response = es_td.transform_request(filters=filters,
+                                       pagination=pagination,
+                                       post_filter=True,
+                                       entity_type='files')
+    if response['hits']:
+        doc = one(one(response['hits'])['files'])
+        data_obj = file_to_drs(doc)
+        assert data_obj['id'] == file_uuid
+        assert data_obj['version'] == file_version
+        return Response({'data_object': data_obj}, status_code=200)
+    else:
+        return Response({'msg': "Data object not found."}, status_code=404)
