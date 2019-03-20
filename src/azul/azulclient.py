@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class AzulClient(object):
 
     def __init__(self,
-                 indexer_url: str = config.indexer_endpoint() + "/",
+                 indexer_url: str = config.indexer_endpoint(),
                  dss_url: str = config.dss_endpoint,
                  query: Optional[JSON] = None,
                  prefix: str = config.dss_query_prefix,
