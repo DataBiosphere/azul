@@ -1,0 +1,541 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "22028_5#300",
+            "ncbi_taxon_id": [
+                10090
+            ],
+            "supplementary_files": [
+                "FACS_sorting_markers.pdf"
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090"
+            }
+        ],
+        "selected_cell_type": [
+            {
+                "text": "CAFs"
+            }
+        ],
+        "total_estimated_cells": 1,
+        "plate_based_sequencing": {
+            "plate_id": "827",
+            "well_id": "G06"
+        },
+        "provenance": {
+            "document_id": "0037c9eb-8038-432f-8d9d-13ee094e54ab",
+            "submission_date": "2018-09-13T18:01:10.054Z",
+            "update_date": "2018-09-13T18:24:16.328Z"
+        }
+    },
+    "cell_suspension_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "22030_5#300",
+            "ncbi_taxon_id": [
+                10091
+            ],
+            "supplementary_files": [
+                "FACS_sorting_markers.pdf"
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090"
+            }
+        ],
+        "selected_cell_type": [
+            {
+                "text": "CAFs"
+            }
+        ],
+        "total_estimated_cells": 9000,
+        "plate_based_sequencing": {
+            "plate_id": "827",
+            "well_id": "G06"
+        },
+        "provenance": {
+            "document_id": "aaaaaaaa-8038-432f-8d9d-13ee094e54ab",
+            "submission_date": "2018-09-13T18:01:10.054Z",
+            "update_date": "2018-09-13T18:24:16.328Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "1209_T",
+            "biomaterial_name": "Mouse_day8_T_rep12",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090"
+            }
+        ],
+        "organ": {
+            "text": "tumor"
+        },
+        "provenance": {
+            "document_id": "b4e55fe1-7bab-44ba-a81d-3d8cb3873244",
+            "submission_date": "2018-09-13T17:59:50.293Z",
+            "update_date": "2018-09-13T18:18:32.288Z"
+        }
+    },
+    "specimen_from_organism_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "1210_T",
+            "biomaterial_name": "Mouse_day10_T_rep12",
+            "ncbi_taxon_id": [
+                10091
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "heart",
+                "ontology": "NCBITaxon:10091"
+            }
+        ],
+        "organ": {
+            "text": "brain"
+        },
+        "provenance": {
+            "document_id": "aaaaaaaa-7bab-44ba-a81d-3d8cb3873244",
+            "submission_date": "2018-09-13T17:59:50.293Z",
+            "update_date": "2018-09-13T18:18:32.288Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.1/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "1209",
+            "biomaterial_name": "Mouse_day8_rep12",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "mouse_specific": {
+            "strain": [
+                {
+                    "text": "C57BL/6",
+                    "ontology": "EFO:0004472"
+                }
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090"
+            }
+        ],
+        "organism_age": "6-12",
+        "organism_age_unit": {
+            "text": "week",
+            "ontology": "UO:0000034"
+        },
+        "diseases": [
+            {
+                "text": "subcutaneous melanoma",
+                "ontology": "MONDO:0005105"
+            }
+        ],
+        "is_living": "no",
+        "sex": "female",
+        "provenance": {
+            "document_id": "89b50434-f831-4e15-a8c0-0d57e6baa94c",
+            "submission_date": "2018-09-13T17:59:49.762Z",
+            "update_date": "2018-09-13T18:10:58.580Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "22028_5#300_1.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "read1",
+        "lane_index": 5,
+        "provenance": {
+            "document_id": "6c946b6c-040e-45cc-9114-a8b1454c8d20",
+            "submission_date": "2018-09-13T17:57:39.967Z",
+            "update_date": "2018-09-14T09:10:48.771Z"
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "22028_5#300_2.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "read2",
+        "lane_index": 5,
+        "provenance": {
+            "document_id": "c86e42d7-854a-479b-a627-6be1b49c980c",
+            "submission_date": "2018-09-13T17:57:39.979Z",
+            "update_date": "2018-09-14T09:10:48.630Z"
+        }
+    },
+    "supplementary_file_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "TissueDissociationProtocol.pdf",
+            "file_format": "pdf"
+        },
+        "file_description": "Extracting cells from lymph nodes",
+        "provenance": {
+            "document_id": "eeea6514-bfdc-473b-a9ae-82b00ab30c38",
+            "submission_date": "2018-09-13T17:55:24.492Z",
+            "update_date": "2018-09-13T19:20:05.725Z"
+        }
+    },
+    "supplementary_file_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SmartSeq2_RTPCR_protocol.pdf",
+            "file_format": "pdf"
+        },
+        "file_description": "Make/amplify cDNA for each cell",
+        "provenance": {
+            "document_id": "89e313db-4423-4d53-b17e-164949acfa8f",
+            "submission_date": "2018-09-13T17:55:24.503Z",
+            "update_date": "2018-09-13T19:20:05.505Z"
+        }
+    },
+    "supplementary_file_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SmartSeq2_sequencing_protocol.pdf",
+            "file_format": "pdf"
+        },
+        "file_description": "Sequencing SmartSeq2 cells",
+        "provenance": {
+            "document_id": "bf7df45c-c2d5-49a8-8110-7e1f17ed0094",
+            "submission_date": "2018-09-13T17:55:24.517Z",
+            "update_date": "2018-09-13T19:20:06.395Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/project/9.0.2/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "Mouse Melanoma",
+            "project_title": "Melanoma infiltration of stromal and immune cells",
+            "project_description": "The cancer microenvironment is a complex ecosystem characterized by dynamic interactions between diverse cell types, including malignant, immune and stromal cells. Here, we performed single-cell RNA sequencing on CD45+ and CD45- cells isolated from tumour and lymph nodes during a mouse model of melanoma. The transcriptional profiles of these individual cells taken at different time points coupled with assembled T cell receptor sequences, allowed us to identify distinct immune subpopulations and delineate their developmental trajectory. Our study provides insights into the complex interplay among cells within the tumour microenvironment and presents a valuable resource for future translational applications."
+        },
+        "contributors": [
+            {
+                "contact_name": "Sarah,A,Teichmann",
+                "email": "st9@sanger.ac.uk",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Sarah Teichmann",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Mirjana,,Efremova",
+                "email": "me5@sanger.ac.uk",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Sarah Teichmann",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Bidesh,,Mahata",
+                "email": "bm11@sanger.ac.uk",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Sarah Teichmann",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Jacqueline,D,Shields",
+                "email": "JS970@MRCCU.cam.ac.uk",
+                "institution": "University of Cambridge",
+                "laboratory": "MRC Cancer Unit",
+                "address": "Box 197, Cambridge Biomedical Campus, Cambridge, CB2 0XZ",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Sarah,,Davidson",
+                "email": "SED49@MRCCU.cam.ac.uk",
+                "institution": "University of Cambridge",
+                "laboratory": "MRC Cancer Unit",
+                "address": "Box 197, Cambridge Biomedical Campus, Cambridge, CB2 0XZ",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Angela,,Riedel",
+                "email": "a.riedel@dkfz-heidelberg.de",
+                "institution": "DKFZ German Cancer Research Center",
+                "country": "Germany"
+            },
+            {
+                "contact_name": "Roser,,Vento-Tormo",
+                "email": "rv4@sanger.ac.uk",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Sarah Teichmann",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Jhuma,,Pramanik",
+                "email": "jp19@sanger.ac.uk",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Sarah Teichmann",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Gozde,,Kar",
+                "email": "gkar@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Sarah Teichmann",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Jani,,Huuhtanen",
+                "email": "jani.huuhtanen@helsinki.fi",
+                "institution": "University of Helsinki",
+                "country": "Finland"
+            },
+            {
+                "contact_name": "Mallory,Ann,Freeberg",
+                "email": "mfreeberg@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-2949-3921",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Danielle,,Welter",
+                "email": "dwelter@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Cambridge",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-1058-2668",
+                "corresponding_contributor": false
+            }
+        ],
+        "provenance": {
+            "document_id": "67bc798b-a34a-4104-8cab-cad648471f69",
+            "submission_date": "2018-09-13T17:55:24.481Z",
+            "update_date": "2018-09-13T18:07:50.370Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/4.3.2/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "SmartSeq2_RTPCR_protocol",
+            "protocol_name": "Make/amplify cDNA for each cell",
+            "document": "SmartSeq2_RTPCR_protocol.pdf"
+        },
+        "nucleic_acid_source": "single cell",
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869"
+        },
+        "library_construction_approach": {
+            "text": "Smart-seq2",
+            "ontology": "EFO:0008931"
+        },
+        "end_bias": "full length",
+        "primer": "poly-dT",
+        "strand": "unstranded",
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16
+        },
+        "provenance": {
+            "document_id": "0076f0aa-14c6-4cb9-93f8-97229787be21",
+            "submission_date": "2018-09-13T18:02:23.532Z",
+            "update_date": "2018-09-13T18:02:29.834Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "SmartSeq2_sequencing_protocol",
+            "protocol_name": "Sequencing SmartSeq2 cells",
+            "document": "SmartSeq2_sequencing_protocol.pdf"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2500",
+            "ontology": "EFO:0008567"
+        },
+        "paired_end": true,
+        "sequencing_approach": {
+            "text": "Smart-seq2",
+            "ontology": "EFO:0008931"
+        },
+        "provenance": {
+            "document_id": "362d9c34-f5c0-4906-955b-61ba0aac58cc",
+            "submission_date": "2018-09-13T18:02:23.541Z",
+            "update_date": "2018-09-13T18:02:29.857Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "tissue_dissociation_protocol",
+            "protocol_name": "Extracting cells from lymph nodes",
+            "document": "TissueDissociationProtocol.pdf"
+        },
+        "dissociation_method": {
+            "text": "mechanical dissociation",
+            "ontology": "EFO:0009129"
+        },
+        "provenance": {
+            "document_id": "40056e47-131d-4c6e-a884-a927bfccf8ce",
+            "submission_date": "2018-09-13T18:02:23.415Z",
+            "update_date": "2018-09-13T18:02:29.781Z"
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.2.5/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "FACS9",
+            "protocol_name": "FACS sorting cells by surface markers"
+        },
+        "enrichment_method": {
+            "text": "fluorescence-activated cell sorting",
+            "ontology": "EFO:0009108"
+        },
+        "markers": "CD45- GFP+ CD31-",
+        "provenance": {
+            "document_id": "d3287615-b97a-4984-a8cf-30a1c30e4773",
+            "submission_date": "2018-09-13T18:02:23.503Z",
+            "update_date": "2018-09-13T18:02:30.081Z"
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "proc_22028_5#300"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "72732ed3-7b71-47df-bcec-c765ef7ea758",
+            "submission_date": "2018-09-13T18:03:51.357Z",
+            "update_date": "2018-09-13T18:34:58.206Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_3550"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "6d77eef9-96cf-410e-8bbc-a83430267b61",
+            "submission_date": "2018-09-13T18:06:35.064Z",
+            "update_date": "2018-09-13T18:44:31.057Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_47"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "c0f05fdb-8375-4c39-adba-24a63c004b9d",
+            "submission_date": "2018-09-13T18:05:04.998Z",
+            "update_date": "2018-09-13T18:41:19.322Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/system/1.1.1/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.1",
+        "links": [
+            {
+                "process": "72732ed3-7b71-47df-bcec-c765ef7ea758",
+                "inputs": [
+                    "0037c9eb-8038-432f-8d9d-13ee094e54ab",
+                    "aaaaaaaa-8038-432f-8d9d-13ee094e54ab"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "6c946b6c-040e-45cc-9114-a8b1454c8d20",
+                    "c86e42d7-854a-479b-a627-6be1b49c980c"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "0076f0aa-14c6-4cb9-93f8-97229787be21"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "362d9c34-f5c0-4906-955b-61ba0aac58cc"
+                    }
+                ]
+            },
+            {
+                "process": "6d77eef9-96cf-410e-8bbc-a83430267b61",
+                "inputs": [
+                    "b4e55fe1-7bab-44ba-a81d-3d8cb3873244",
+                    "aaaaaaaa-7bab-44ba-a81d-3d8cb3873244"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "0037c9eb-8038-432f-8d9d-13ee094e54ab",
+                    "aaaaaaaa-8038-432f-8d9d-13ee094e54ab"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "40056e47-131d-4c6e-a884-a927bfccf8ce"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "d3287615-b97a-4984-a8cf-30a1c30e4773"
+                    }
+                ]
+            },
+            {
+                "process": "c0f05fdb-8375-4c39-adba-24a63c004b9d",
+                "inputs": [
+                    "89b50434-f831-4e15-a8c0-0d57e6baa94c"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "b4e55fe1-7bab-44ba-a81d-3d8cb3873244",
+                    "aaaaaaaa-7bab-44ba-a81d-3d8cb3873244"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            }
+        ]
+    }
+}
