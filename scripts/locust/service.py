@@ -90,37 +90,37 @@ class ServiceTaskSet(TaskSet):
             self.interrupt()
 
     @task
-    class SpecimensTaskSet(TaskSet):
+    class SamplesTaskSet(TaskSet):
         def on_start(self):
-            self.specimens_page()
+            self.samples_page()
 
-        def specimens_page(self):
+        def samples_page(self):
             with parallel_requests() as group:
                 group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%7D'))
-                group.spawn(lambda: self.client.get('/repository/specimens?filters=%7B%7D&size=15'))
+                group.spawn(lambda: self.client.get('/repository/samples?filters=%7B%7D&size=15'))
 
         @seq_task(1)
         def select_brain(self):
             with parallel_requests() as group:
                 group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22organ%22'
                                                     '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D'))
-                group.spawn(lambda: self.client.get('/repository/specimens?filters=%7B%22file%22%3A%7B%22organ%22'
+                group.spawn(lambda: self.client.get('/repository/samples?filters=%7B%22file%22%3A%7B%22organ%22'
                                                     '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D'
-                                                    '&size=15&sort=specimenId&order=desc'))
+                                                    '&size=15&sort=sampleId&order=desc'))
 
         @seq_task(2)
         def next_page_1(self):
-            self.client.get('/repository/specimens?filters=%7B%22file%22%3A%7B%22organ%22'
+            self.client.get('/repository/samples?filters=%7B%22file%22%3A%7B%22organ%22'
                             '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D&size=15'
-                            '&sort=specimenId&order=desc&search_after=Q4_DEMO-'
+                            '&sort=sampleId&order=desc&search_after=Q4_DEMO-'
                             'sample_SAMN02797092&search_after_uid=doc'
                             '%23e8dcd716-03d2-4244-a196-b7269b5e5e6f')
 
         @seq_task(3)
         def next_page_2(self):
-            self.client.get('/repository/specimens?filters=%7B%22file%22%3A%7B%22organ%22%'
+            self.client.get('/repository/samples?filters=%7B%22file%22%3A%7B%22organ%22%'
                             '3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D&size=15'
-                            '&sort=specimenId&order=desc&search_after=Q4_DEMO-'
+                            '&sort=sampleId&order=desc&search_after=Q4_DEMO-'
                             'sample_SAMN02797092&search_after_uid=doc'
                             '%23da9bd051-9ce7-4a38-99c1-284112f0f483')
 

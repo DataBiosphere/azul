@@ -11,16 +11,11 @@
             "bundle_version": "2018-11-02T113344.698028Z",
             "bundle_deleted": false,
             "contents": {
-                "specimens": [
+                "samples": [
                     {
-                        "has_input_biomaterial": [
-                            null
-                        ],
-                        "_source": [
-                            "cell_suspension",
-                            "donor_organism",
-                            "specimen_from_organism"
-                        ],
+                        "entity_type": "specimens",
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
                         "disease": [
@@ -30,28 +25,46 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
+                        "storage_method": null,
                         "preservation_method": null,
-                        "_type": "specimen",
-                        "donor_document_id": [
-                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        "_type": "specimen"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
                         ],
-                        "donor_biomaterial_id": [
-                            "DID_scRSq06"
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
                         ],
+                        "storage_method": null,
+                        "preservation_method": null,
+                        "_type": "specimen"
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
                         "genus_species": [
                             "Australopithecus"
                         ],
-                        "organism_age": [
-                            "38"
+                        "diseases": [
+                            "normal"
                         ],
-                        "organism_age_unit": [
-                            "year"
-                        ],
+                        "organism_age": "38",
+                        "organism_age_unit": "year",
                         "min_organism_age_in_seconds": 1198368000.0,
                         "max_organism_age_in_seconds": 1198368000.0,
-                        "biological_sex": [
-                            "female"
-                        ]
+                        "biological_sex": "female"
                     }
                 ],
                 "cell_suspensions": [
@@ -167,16 +180,11 @@
             "bundle_version": "2018-11-02T113344.698028Z",
             "bundle_deleted": false,
             "contents": {
-                "specimens": [
+                "samples": [
                     {
-                        "has_input_biomaterial": [
-                            null
-                        ],
-                        "_source": [
-                            "cell_suspension",
-                            "donor_organism",
-                            "specimen_from_organism"
-                        ],
+                        "entity_type": "specimens",
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
                         "disease": [
@@ -186,28 +194,46 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
+                        "storage_method": null,
                         "preservation_method": null,
-                        "_type": "specimen",
-                        "donor_document_id": [
-                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        "_type": "specimen"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
                         ],
-                        "donor_biomaterial_id": [
-                            "DID_scRSq06"
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
                         ],
+                        "storage_method": null,
+                        "preservation_method": null,
+                        "_type": "specimen"
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
                         "genus_species": [
                             "Australopithecus"
                         ],
-                        "organism_age": [
-                            "38"
+                        "diseases": [
+                            "normal"
                         ],
-                        "organism_age_unit": [
-                            "year"
-                        ],
+                        "organism_age": "38",
+                        "organism_age_unit": "year",
                         "min_organism_age_in_seconds": 1198368000.0,
                         "max_organism_age_in_seconds": 1198368000.0,
-                        "biological_sex": [
-                            "female"
-                        ]
+                        "biological_sex": "female"
                     }
                 ],
                 "cell_suspensions": [
@@ -312,7 +338,7 @@
         }
     },
     {
-        "_index": "azul_specimens_dev",
+        "_index": "azul_samples_dev",
         "_type": "doc",
         "sort": [0],
         "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z",
@@ -323,16 +349,11 @@
             "bundle_version": "2018-11-02T113344.698028Z",
             "bundle_deleted": false,
             "contents": {
-                "specimens": [
+                "samples": [
                     {
-                        "has_input_biomaterial": [
-                            null
-                        ],
-                        "_source": [
-                            "cell_suspension",
-                            "donor_organism",
-                            "specimen_from_organism"
-                        ],
+                        "entity_type": "specimens",
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
                         "disease": [
@@ -342,28 +363,46 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
+                        "storage_method": null,
                         "preservation_method": null,
-                        "_type": "specimen",
-                        "donor_document_id": [
-                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        "_type": "specimen"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
                         ],
-                        "donor_biomaterial_id": [
-                            "DID_scRSq06"
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
                         ],
+                        "storage_method": null,
+                        "preservation_method": null,
+                        "_type": "specimen"
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
                         "genus_species": [
                             "Australopithecus"
                         ],
-                        "organism_age": [
-                            "38"
+                        "diseases": [
+                            "normal"
                         ],
-                        "organism_age_unit": [
-                            "year"
-                        ],
+                        "organism_age": "38",
+                        "organism_age_unit": "year",
                         "min_organism_age_in_seconds": 1198368000.0,
                         "max_organism_age_in_seconds": 1198368000.0,
-                        "biological_sex": [
-                            "female"
-                        ]
+                        "biological_sex": "female"
                     }
                 ],
                 "cell_suspensions": [
@@ -493,16 +532,11 @@
             "bundle_version": "2018-11-02T113344.698028Z",
             "bundle_deleted": false,
             "contents": {
-                "specimens": [
+                "samples": [
                     {
-                        "has_input_biomaterial": [
-                            null
-                        ],
-                        "_source": [
-                            "cell_suspension",
-                            "donor_organism",
-                            "specimen_from_organism"
-                        ],
+                        "entity_type": "specimens",
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
                         "disease": [
@@ -512,28 +546,46 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
+                        "storage_method": null,
                         "preservation_method": null,
-                        "_type": "specimen",
-                        "donor_document_id": [
-                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        "_type": "specimen"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
                         ],
-                        "donor_biomaterial_id": [
-                            "DID_scRSq06"
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
                         ],
+                        "storage_method": null,
+                        "preservation_method": null,
+                        "_type": "specimen"
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
                         "genus_species": [
                             "Australopithecus"
                         ],
-                        "organism_age": [
-                            "38"
+                        "diseases": [
+                            "normal"
                         ],
-                        "organism_age_unit": [
-                            "year"
-                        ],
+                        "organism_age": "38",
+                        "organism_age_unit": "year",
                         "min_organism_age_in_seconds": 1198368000.0,
                         "max_organism_age_in_seconds": 1198368000.0,
-                        "biological_sex": [
-                            "female"
-                        ]
+                        "biological_sex": "female"
                     }
                 ],
                 "cell_suspensions": [
@@ -660,14 +712,15 @@
         "_source": {
             "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
             "contents": {
-                "specimens": [
+                "samples": [
                     {
+                        "entity_type": [
+                            "specimens"
+                        ],
                         "has_input_biomaterial": [
                             null
                         ],
                         "_source": [
-                            "cell_suspension",
-                            "donor_organism",
                             "specimen_from_organism"
                         ],
                         "document_id": [
@@ -685,20 +738,66 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
+                        "storage_method": [
+                            null
+                        ],
                         "preservation_method": [
                             null
                         ],
                         "_type": [
                             "specimen"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            null
                         ],
-                        "donor_document_id": [
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            null
+                        ],
+                        "preservation_method": [
+                            null
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
                         ],
-                        "donor_biomaterial_id": [
+                        "biomaterial_id": [
                             "DID_scRSq06"
                         ],
                         "genus_species": [
                             "Australopithecus"
+                        ],
+                        "diseases": [
+                            "normal"
                         ],
                         "organism_age": [
                             "38"
@@ -807,14 +906,15 @@
         "_source": {
             "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
             "contents": {
-                "specimens": [
+                "samples": [
                     {
+                        "entity_type": [
+                            "specimens"
+                        ],
                         "has_input_biomaterial": [
                             null
                         ],
                         "_source": [
-                            "cell_suspension",
-                            "donor_organism",
                             "specimen_from_organism"
                         ],
                         "document_id": [
@@ -832,20 +932,66 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
+                        "storage_method": [
+                            null
+                        ],
                         "preservation_method": [
                             null
                         ],
                         "_type": [
                             "specimen"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            null
                         ],
-                        "donor_document_id": [
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            null
+                        ],
+                        "preservation_method": [
+                            null
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
                         ],
-                        "donor_biomaterial_id": [
+                        "biomaterial_id": [
                             "DID_scRSq06"
                         ],
                         "genus_species": [
                             "Australopithecus"
+                        ],
+                        "diseases": [
+                            "normal"
                         ],
                         "organism_age": [
                             "38"
@@ -946,7 +1092,7 @@
         }
     },
     {
-        "_index": "azul_specimens_aggregate_dev",
+        "_index": "azul_samples_aggregate_dev",
         "_type": "doc",
         "sort": [0],
         "_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
@@ -954,16 +1100,11 @@
         "_source": {
             "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
             "contents": {
-                "specimens": [
+                "samples": [
                     {
-                        "has_input_biomaterial": [
-                            null
-                        ],
-                        "_source": [
-                            "cell_suspension",
-                            "donor_organism",
-                            "specimen_from_organism"
-                        ],
+                        "entity_type": "specimens",
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
                         "disease": [
@@ -973,16 +1114,60 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
+                        "storage_method": null,
                         "preservation_method": null,
-                        "_type": "specimen",
-                        "donor_document_id": [
+                        "_type": "specimen"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            null
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            null
+                        ],
+                        "preservation_method": [
+                            null
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
                         ],
-                        "donor_biomaterial_id": [
+                        "biomaterial_id": [
                             "DID_scRSq06"
                         ],
                         "genus_species": [
                             "Australopithecus"
+                        ],
+                        "diseases": [
+                            "normal"
                         ],
                         "organism_age": [
                             "38"
@@ -990,8 +1175,12 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0,
+                        "min_organism_age_in_seconds": [
+                            1198368000.0
+                        ],
+                        "max_organism_age_in_seconds": [
+                            1198368000.0
+                        ],
                         "biological_sex": [
                             "female"
                         ]
@@ -1080,14 +1269,15 @@
         "_source": {
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
             "contents": {
-                "specimens": [
+                "samples": [
                     {
+                        "entity_type": [
+                            "specimens"
+                        ],
                         "has_input_biomaterial": [
                             null
                         ],
                         "_source": [
-                            "cell_suspension",
-                            "donor_organism",
                             "specimen_from_organism"
                         ],
                         "document_id": [
@@ -1105,20 +1295,66 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
+                        "storage_method": [
+                            null
+                        ],
                         "preservation_method": [
                             null
                         ],
                         "_type": [
                             "specimen"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            null
                         ],
-                        "donor_document_id": [
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            null
+                        ],
+                        "preservation_method": [
+                            null
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
                         ],
-                        "donor_biomaterial_id": [
+                        "biomaterial_id": [
                             "DID_scRSq06"
                         ],
                         "genus_species": [
                             "Australopithecus"
+                        ],
+                        "diseases": [
+                            "normal"
                         ],
                         "organism_age": [
                             "38"
