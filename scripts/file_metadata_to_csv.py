@@ -48,6 +48,9 @@ class Flatten:
         ]
 
         self.default_format_filter = format_filter if format_filter else ["fastq.gz"]
+        self.default_blocked_file_ext = ['zarr!cell_id!0', '0', 'zarray', 'zarr!gene_id!0',
+                                         'zarr!cell_metadata_string_name!0', 'zarr!cell_metadata_numeric_name!0',
+                                         'zgroup']
 
 
     def _get_file_uuids_from_objects(self, list_of_metadata_objects):
@@ -148,14 +151,19 @@ class Flatten:
             obj["file_name"] = self._deep_get(content, ["file_core", "file_name"])
             obj["file_format"] = self._deep_get(content, ["file_core", "file_format"])
 
+            file_segments = obj["file_name"].split('.')
+
+            if len(file_segments) > 1 and file_segments[-1] in self.default_blocked_file_ext:
+                continue
+
             if  not (obj["file_name"] or obj["file_format"]):
                 raise MissingFileNameError("expecting file_core.file_name")
 
             if dir_name:
                 obj["path"] = dir_name + os.sep + obj["file_name"]
 
-            if self.default_format_filter and obj["file_format"] not in self.default_format_filter:
-                continue
+            # if self.default_format_filter and obj["file_format"] not in self.default_format_filter:
+            #     continue
 
             schema_name = self._get_schema_name_from_object(content)
             self._flatten(obj, content, schema_name)
@@ -205,7 +213,7 @@ def convert_bundle_dirs():
     parser.add_argument("-s", "--seperator", dest="seperator",
                         help="seperator/delimiter for csv", default=',')
     parser.add_argument("-f", "--filter", dest="filter",
-                        help="only get metadata for files with this file extension", default='fastq.gz')
+                        help="only get metadata for files with this file extension", default=None)
     parser.add_argument('--project', dest='project', help="splits csv files by project and into separate folders",
                         action='store_true')
 
