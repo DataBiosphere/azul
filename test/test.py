@@ -42,7 +42,8 @@ class TestAccessorApi(TestCase):
                                   project_roles={None, 'Human Cell Atlas wrangler', 'external curator'},
                                   storage_methods={'frozen, liquid nitrogen'},
                                   preservation_methods={'cryopreservation, other'},
-                                  library_construction_methods={'Smart-seq2'})
+                                  library_construction_methods={'Smart-seq2'},
+                                  selected_cell_type={'TEMRA'})
 
     def test_diabetes_pancreas(self):
         self._test_example_bundle(directory='Healthy and type 2 diabetes pancreas',
@@ -56,21 +57,24 @@ class TestAccessorApi(TestCase):
                                   age_range=AgeRange(min=1419120000.0, max=1545264000.0),
                                   diseases={'normal'},
                                   project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
-                                  library_construction_methods={"Chromium 3' Single Cell v2"})
+                                  library_construction_methods={"Chromium 3' Single Cell v2"},
+                                  selected_cell_type={"neural cell"})
 
     def test_mouse(self):
         self._test_example_bundle(directory='Mouse Melanoma',
                                   age_range=AgeRange(3628800.0, 7257600.0),
                                   diseases={'subcutaneous melanoma'},
                                   project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'},
-                                  library_construction_methods={'Smart-seq2'})
+                                  library_construction_methods={'Smart-seq2'},
+                                  selected_cell_type={'CD11b+ Macrophages/monocytes'})
 
     def test_pancreas(self):
         self._test_example_bundle(directory='Single cell transcriptome analysis of human pancreas',
                                   age_range=AgeRange(662256000.0, 662256000.0),
                                   diseases={'normal'},
                                   project_roles={None, 'external curator', 'Human Cell Atlas wrangler'},
-                                  library_construction_methods={'smart-seq2'})
+                                  library_construction_methods={'smart-seq2'},
+                                  selected_cell_type={'pancreatic A cell'})
 
     def test_tissue_stability(self):
         self._test_example_bundle(directory='Tissue stability',
@@ -86,7 +90,8 @@ class TestAccessorApi(TestCase):
                                   age_range=AgeRange(1639872000.0, 1639872000.0),
                                   diseases=set(),
                                   project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'},
-                                  library_construction_methods={'10X sequencing'})
+                                  library_construction_methods={'10X sequencing'},
+                                  selected_cell_type={'bone marrow hematopoietic cell'})
 
     def _test_example_bundle(self, directory, **kwargs):
         manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
@@ -195,7 +200,8 @@ class TestAccessorApi(TestCase):
                           project_roles={'Human Cell Atlas wrangler', None, 'external curator'},
                           storage_methods={'frozen, liquid nitrogen'},
                           preservation_methods={'cryopreservation, other'},
-                          library_construction_methods={'Smart-seq2'})
+                          library_construction_methods={'Smart-seq2'},
+                          selected_cell_type={'TEMRA'})
 
     def test_ontology_label_field(self):
         """
@@ -207,11 +213,12 @@ class TestAccessorApi(TestCase):
                           age_range=AgeRange(1734480000.0, 1860624000.0),
                           diseases={'normal'},
                           project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
-                          library_construction_methods={"10X v2 sequencing"})
+                          library_construction_methods={"10X v2 sequencing"},
+                          selected_cell_type={'neural cell'})
 
     def test_accessions_fields(self):
-        self._test_bundle(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
-                          version='2019-02-14T192438.034764Z',
+        self._test_bundle(uuid='eca05046-3dad-4e45-b86c-8720f33a5dde',
+                          version='2019-03-17T220646.332108Z',
                           deployment='staging',
                           diseases={'H syndrome'},
                           project_roles={'principal investigator'},
@@ -238,6 +245,7 @@ class TestAccessorApi(TestCase):
                        storage_methods=frozenset({None}),
                        preservation_methods=frozenset({None}),
                        library_construction_methods=frozenset(),
+                       selected_cell_type=frozenset(),
                        insdc_project_accessions=frozenset(),
                        geo_series_accessions=frozenset(),
                        array_express_accessions=frozenset(),
@@ -257,6 +265,7 @@ class TestAccessorApi(TestCase):
 
         cell_suspension = next(x for x in bundle.biomaterials.values() if isinstance(x, CellSuspension))
         self.assertEqual(CellSuspension, type(cell_suspension))
+        self.assertEqual(selected_cell_type, cell_suspension.selected_cell_type)
         # noinspection PyDeprecation
         self.assertEqual(cell_suspension.estimated_cell_count, cell_suspension.total_estimated_cells)
 
