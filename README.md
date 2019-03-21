@@ -487,91 +487,144 @@ gated on a condition, like tests passing.
 
 ## 6. Cheat sheets
 
-### 6.1. Deploying to `dev`, `integration`, `staging` or `prod`
+### 6.1. Main deployments and promotions
 
-1) Change into the Azul project root directory: `cd azul`
+We will refer to the branch of the stage to which you are deploying as the
+**`TARGET`** branch. The branch of the stage just below will be referred to as
+the **`SOURCE`** branch.
 
-2) Run `git checkout develop` (alternatively `integration`, `staging` or `prod`)
+This cheat sheet may differ from branch to branch. Be sure to follow the cheat
+sheet in the README on the branch currently checked out.
 
-3) This cheat sheet may differ from branch to branch. Be sure to follow the
-   cheat sheet in the README on the branch currently checked out.
+#### 6.1.1 Initial setup
+_NOTE: You can skip this step if you've deployed or promoted with Gitlab at least once already._
 
-4) Run `git status` and make sure that your working copy is clean and the
-   branch is up-to-date.
-
-5) Run `source environment`
-
-6) Run `_select dev` (alternatively `integration`, `staging` or `prod`). Except
-   for `dev` and `develop`, the branch name matches the name of the deployment.
-
-7) To ensure a consistent and up-to-date set of dependencies, run
-
+1) For promotion, we recommend keeping a separate clone of Azul that is never in
+   a dirty state. To create this if it doesn't yet exist run
    ```
-   deactivate; rm -rf .venv 
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -U setuptools==40.1.0 wheel==0.32.3
-   pip install -r requirements.dev.txt
+   git clone git@github.com:DataBiosphere/azul.git azul.stable
    ```
-8) Run `python scripts/envhook.py install` if you use envhook.py
-
-9) Run `make clean`
-
-10) Run `make terraform`
-
-11) Run `make deploy`
-
-12) Invoke the health and version endpoints. Be sure to use the correct 
-    deployment name:
-
-    ```
-    http https://indexer.dev.explore.data.humancellatlas.org/version
-    http https://service.dev.explore.data.humancellatlas.org/version
-    http https://indexer.dev.explore.data.humancellatlas.org/health
-    http https://service.dev.explore.data.humancellatlas.org/health
-    ```
-
-13) Run `make tag` and the `git push …` invocation that it echoes 
-
-14) Run `make subscribe`
-
-15) Run `make reindex`
-
-### 6.2 Promoting changes
-
-For promoting `dev` to `integration` use the steps outlined below. For higher
-promotions (`integration` to `staging`, or `staging` to `prod`) change the
-source and target branches accordingly. You can and should perform steps 1
-through 7 ahead of the actual promotion time.
-
-1) Change into the Azul project root directory: `cd azul`
-
-2) Checkout the target branch: `git checkout integration`
-
-3) This cheat sheet may differ from branch to branch. Be sure to follow the
-   cheat sheet in the README on the branch currently checked out.
-
-4) Run `git status` and make sure that your working copy is clean and the
-   branch is up-to-date.
-
-5) Merge the source branch: `git merge develop` and resolve any conflicts.
-   Conflict resolution should only be necessary if cherry-picks occured on the
-   target branch.
-
-6) The merge may have affected the README. Make sure you're looking at the
-   right version.
    
-7) To produce the list of changes for the DCP release notes, run 
-   `git log --pretty=oneline --topo-order --abbrev-commit`. All non-merge
-   commits from the top down to the commit labeled with the most recent
-   `deployed/…` tag represent changes to be deployed and should be mentioned in
-   the release notes.
+2) Next you will need to login to our 
+   [Gitlab instance](https://gitlab.dev.explore.data.humancellatlas.org/)
+   in order to be able to push to Gitlab which automatically takes care of most
+   of the deployment process. If you haven't signed on yet, sign on with Github. You
+   will need at least `developer` permissions in order to be able to `push` to
+   Gitlab. Contact the team lead if you have problems signing on or have
+   insufficient permissions. 
+   
+3) [set up your ssh key](https://gitlab.dev.explore.data.humancellatlas.org/profile/keys)
+   So that you can push to Gitlab.
+   
+4) Now that your ssh key is set up, you will need to add Gitlab as a remote. Run
+   ```
+   git remote add gitlab git@ssh.gitlab.dev.explore.data.humancellatlas.org:azul/azul.git
+   ```
+   Run
+   ```
+   git fetch gitlab
+   ```
+   to ensure that your connection is working.
+ 
+#### 6.1.2 Prepare for promotion
 
-8) Deploy, see section 6.1, starting at step 5). In step 6) use the deployment
-   that matches the target branch
+_NOTE: Skip these step if you are deploying without promoting._
 
-9) Run `git push origin`
+1) If promoting to `staging` or `prod` you will need to prepare release notes. 
+   Make sure you do this **at least 24 hours in advance**. A link to the release
+   notes document can be found either in the #dcp-ops channel in HCA Slack or in
+   the Google Drive folder mentioned in the
+   [release guide document](https://allspark.dev.data.humancellatlas.org/dcp-ops/docs/wikis/SOP:%20Releasing%20new%20Versions%20of%20DCP%20Software).
+   
+   To produce the list of changes for the DCP release notes, run 
+   ```
+   git log --pretty=oneline --topo-order --abbrev-commit
+   ```
+   All non-merge commits from the top down to the commit labeled with the
+   most recent `deployed/…` tag represent changes to be deployed and should
+   be mentioned in the release notes. Copy them over, but remember to remove
+   commit hashes and tag / branch names.
+   
+   You will also need to add the release tag and commit hash which are
+   generated later in this guide.
+   
+2) From the `azul.stable` clone make sure all of the relevant branches are up to date
+   ```
+   cd azul.stable
+   git checkout SOURCE
+   git pull
+   git checkout TARGET
+   git pull
+   ```
 
+3) You should be on the `TARGET` branch. Run
+   ```
+   git merge SOURCE
+   ```
+   and resolve conflicts in necessary. Conflict resolution should only be
+   necessary if cherry-picks occured on the target branch.
+
+4) The merge may have affected the README. Make sure you're looking at the
+   right version.
+
+#### 6.1.3 Finishing up deployment / promotion
+
+1) Now you need to push to Github. If the build on Gitlab fails, you may need to
+   revert this step.
+   ```
+   git push origin
+   ```
+
+2) Finally, push to Gitlab
+   ```
+   git push gitlab
+   ```
+   The build should start immediately. You can monitor its progress from the
+   [Gitlab Pipelines page](https://gitlab.dev.explore.data.humancellatlas.org/azul/azul/pipelines).
+
+3) Assuming the build is successful run
+   ```
+   make tag
+   ```
+   and then also run the
+   ```
+   git push ...
+   ```
+   invocation that it echoes.
+   
+   Copy this tag and add it to the release notes (if applicable).
+
+4) Invoke the health and version endpoints. Be sure to use the correct 
+   deployment name:
+   
+   * **develop:**
+     ```
+     http https://indexer.dev.explore.data.humancellatlas.org/version
+     http https://service.dev.explore.data.humancellatlas.org/version
+     http https://indexer.dev.explore.data.humancellatlas.org/health
+     http https://service.dev.explore.data.humancellatlas.org/health
+     ```
+     
+   * **integration:**
+     ```
+     http https://indexer.integration.explore.data.humancellatlas.org/version
+     http https://service.integration.explore.data.humancellatlas.org/version
+     http https://indexer.integration.explore.data.humancellatlas.org/health
+     http https://service.integration.explore.data.humancellatlas.org/health
+     ```
+     
+   * **staging:**
+     ```
+     http https://indexer.staging.explore.data.humancellatlas.org/version
+     http https://service.staging.explore.data.humancellatlas.org/version
+     http https://indexer.staging.explore.data.humancellatlas.org/health
+     http https://service.staging.explore.data.humancellatlas.org/health
+     ```
+
+5) Look at the history of `CHANGELOG.yml` since the last release to determine
+   when reindexing is necessary. When in doubt assume yes. In that case run the
+   manual job on the Gitlab pipeline labeled `reindex`.
+   
 ## 7. Scale testing
 
 Scale testing can be done with [Locust](https://locust.io/). Locust is a
