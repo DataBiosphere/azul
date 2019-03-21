@@ -99,8 +99,7 @@ from azul.types import JSON
 # instance, format `/dev/xvdf` and reboot the instance.
 #
 # The EBS volume should be backed up (EBS snapshot) periodically. Not only does it contain Gitlabs data but also its
-# config. FIXME: I wish I had tracked the changes to the config. Some of the config in the EBS volume duplicates or
-# corresponds to settings in here.
+# config.
 #
 ebs_volume_name = "azul-gitlab"
 
