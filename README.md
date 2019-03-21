@@ -771,25 +771,29 @@ For more advanced usage refer to the official [Locust documentation].
 # 8. Continuous deployment and integration
 
 We are currently in the process of migrating from manual deployments to
-automated deployments performed on a project-specific Gitlab EC2 instance. There
-is currently one such Gitlab instance for the `dev`, `integration` and `staging`
-deployments. The `prod` instance is soon to follow.
+automated deployments performed on a project-specific EC2 instance running Gitlab.
+There is currently one such instance for the `dev`, `integration` and
+`staging` deployments and another one for `prod`.
 
-The Gitlab instance is provisioned through Terraform but its resource
+The Gitlab instances are provisioned through Terraform but its resource
 definitions reside in a separate *Terraform component*. A *Terraform component*
-is a set of related resources. Each deployment has at least a main component and
-zero or more subcomponents. The main component is identified by the empty
-string, child components have a non-empty name. The `dev` component has a
-subcomponent `dev.gitlab`. To terraform the main component of the `dev`
+is a set of related resources. Each deployment has at least a main component
+and zero or more subcomponents. The main component is identified by the empty
+string for a name, child components have a non-empty name. The `dev` component
+has a subcomponent `dev.gitlab`. To terraform the main component of the `dev`
 deployment, one selects the `dev` deployment and runs `make apply` from
-`${azul_home}/terraform`. To deploy the `gitlab` component of the `dev`
+`${azul_home}/terraform`. To deploy the `gitlab` subcomponent of the `dev`
 deployment, one selects `dev.gitlab` and runs `make apply` from
-`${azul_home}/terraform/gitlab`.
+`${azul_home}/terraform/gitlab`. The `dev.gitlab` subcomponent provides a
+single Gitlab EC2 instance that serves our CI/CD needs not only for `dev` but
+for `integration` and `staging` as well. The `prod.gitlab` subcomponent
+provides the Gitlab EC2 instance for `prod`.
 
 To access the web UI of the Gitlab instance for `dev`, visit
 `https://gitlab.dev.explore.…/`, authenticating yourself with your GitHub
 account. After attempting to log in for the first time, one of the
-administrators will need to approve your access.
+administrators will need to approve your access. For `prod` use
+`https://gitlab.explore.…/`.
 
 [gitlab.tf.json.template.py]: /terraform/gitlab/gitlab.tf.json.template.py
 
@@ -801,7 +805,7 @@ public keys are allowed to push. These keys are configured in
 by now—requires running `make apply` in `${azul_home}/terraform/gitlab` while
 having `dev.gitlab` selected.
 
-An Azul build on Gitlab runs the `test`, `terraform`, `deploy` and
+An Azul build on Gitlab runs the `test`, `terraform`, `deploy`, `subscribe` and
 `integration_test` Makefile targets, in that order. The target deployment for
 feature branches is `sandbox`, the protected branches use their respective
 deployments.
@@ -810,8 +814,8 @@ deployments.
 
 There is only one such deployment and it should be used to validate feature
 branches (one at a time) or to run experiments. This implies that access to the
-sandbox must be coordinated externally e.g., via Slack. The build master owns
-the sandbox deployment by default.
+sandbox must be coordinated externally e.g., via Slack. The project lead owns
+the sandbox deployment and coordinates access to it.
 
 ## 8.2 Security
 
@@ -835,12 +839,17 @@ means that code running on the Gitlab instance can never escalate privileges
 beyond the boundary. This mechanism is defined in the `azul-gitlab-iam` policy.
 
 Code running on the Gitlab instance has access to credentials of a Google Cloud
-service account that has read-only privileges to Google Cloud. This implies that
-Gitlab cannot terraform Google Cloud resources. Fortunately, there are only two
-such resources: 1) the service account that is used to subscribe Azul to the DSS
-and 2) its credentials. That resource must be deployed manually once before
-pushing a branch that would create a deployment for the first time or to
-recreate it after it was destroyed:
+service account that has read-only privileges to Google Cloud. This read-only
+service account for Gitab needs to be created manually and its credentials need
+to be dropped on the instance at `/mnt/gitlab/runner/config/etc`. See section
+8.7. for details.
+
+Having only read access implies that the Gitlab instance cannot terraform
+Google Cloud resources. Fortunately, there are only two such resources: 1) the
+service account that is used to subscribe Azul to the DSS and 2) its
+credentials. Those two resources must be terraformed manually once before
+pushing a branch that would create a deployment for the very first time (or
+recreate it after it was destroyed):
 
 ```
 cd terraform
@@ -859,22 +868,30 @@ pushing to the project forks on the instance.
 
 ## 8.4 Storage
 
-The Gitab EC2 instance is attached to an EBS volume that contains all of
+The Gitlab EC2 instance is attached to an EBS volume that contains all of
 Gitlab's data and configuration. That volume is not controlled by Terraform and
-must be created manually once before terraforming the `gitlab` component. The
-details can be found in [gitlab.tf.json.template.py].
+must be created manually before terraforming the `gitlab` component for the
+first time. Details about creating and formatting the volume can be found in
+[gitlab.tf.json.template.py]. The volume is mounted at `/mnt/gitlab`. On the
+`prod` instance I had the wherewithal to track the configuration changes in a
+Git repository under `/mnt/gitlab/.git`. Since Git isn't installed natively on
+RancherOS, you must use a Docker image for it. I've used `alias git='docker run
+-ti --rm -v ${HOME}:/root -v $(pwd):/git alpine/git'` for that purpose.
 
 ## 8.5 Gitlab
 
 The instance runs Gitlab CE running inside a rather elaborate concoction of
-Docker containers. See [gitlab.tf.json.template.py] for details.
+Docker containers. See [gitlab.tf.json.template.py] for details. Administrative
+tasks within a container should be performed with `docker exec`. To reconfigure
+Gitlab, for example, one would run `docker exec -it gitlab gitlab-ctl
+reconfigure`.
 
 ## 8.6 Updating Gitlab
 
-Modify the Docker image tags in [gitlab.tf.json.template.py] and apply. The
-instance will be terminated (the EBS volume will survive) and a new instance
-will be launched, with fresh containers from updated images. This should be done
-periodically.
+Modify the Docker image tags in [gitlab.tf.json.template.py] and run `make
+apply` in `terraform/gitlab`. The instance will be terminated (the EBS volume
+will survive) and a new instance will be launched, with fresh containers from
+updated images. This should be done periodically.
 
 ## 8.7 The Gitlab Build Environment
 
