@@ -56,7 +56,7 @@ app.log.setLevel(logging.DEBUG)
 
 sort_defaults = {
     'files': ('fileName', 'asc'),
-    'specimens': ('specimenId', 'asc'),
+    'samples': ('sampleId', 'asc'),
     'projects': ('projectTitle', 'asc'),
 }
 
@@ -206,9 +206,9 @@ def get_data(file_id=None):
     return repository_search('files', file_id)
 
 
-@app.route('/repository/specimens', methods=['GET'], cors=True)
-@app.route('/repository/specimens/{specimen_id}', methods=['GET'], cors=True)
-def get_specimen_data(specimen_id=None):
+@app.route('/repository/samples', methods=['GET'], cors=True)
+@app.route('/repository/samples/{sample_id}', methods=['GET'], cors=True)
+def get_sample_data(sample_id=None):
     """
     Returns a dictionary with entries that can be used by the browser
     to display the data and facets
@@ -250,7 +250,7 @@ def get_specimen_data(specimen_id=None):
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
-    return repository_search('specimens', specimen_id)
+    return repository_search('samples', sample_id)
 
 
 @app.route('/repository/projects', methods=['GET'], cors=True)
@@ -1205,8 +1205,8 @@ def add_all_results_to_cart(cart_id):
     except KeyError:
         raise BadRequestError('entityType and filters must be given')
 
-    if entity_type not in {'files', 'specimens', 'projects'}:
-        raise BadRequestError('entityType must be one of files, specimens, or projects')
+    if entity_type not in {'files', 'samples', 'projects'}:
+        raise BadRequestError('entityType must be one of files, samples, or projects')
 
     try:
         filters = json.loads(filters)

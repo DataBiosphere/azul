@@ -24,7 +24,8 @@ class TestResponse(WebServiceTestCase):
     maxDiff = None
     bundles = WebServiceTestCase.bundles + [
         ('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
-        ('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z')
+        ('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'),
+        ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
     ]
 
     def get_hits(self, entity_type: str, entity_id: str):
@@ -62,12 +63,25 @@ class TestResponse(WebServiceTestCase):
                             "bundleVersion": "2018-11-02T113344.698028Z"
                         }
                     ],
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [],
                             "totalCells": 1
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["female"],
+                            "disease": None,
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
                         }
                     ],
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -81,6 +95,8 @@ class TestResponse(WebServiceTestCase):
                             "version": "2018-11-02T113344.698028Z"
                         }
                     ],
+                    "organoids": [
+                    ],
                     "projects": [
                         {
                             "laboratory": ["John Dear"],
@@ -95,20 +111,27 @@ class TestResponse(WebServiceTestCase):
                             "pairedEnd": [True]
                         }
                     ],
-                    "specimens": [
+                    "samples": [
                         {
-                            "biologicalSex": ["female"],
+                            "sampleEntityType": ["specimens"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
-                                "donor_organism",
+                                "specimen_from_organism"
+                            ]
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "disease": ["normal"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "preservationMethod": [None],
+                            "source": [
                                 "specimen_from_organism"
                             ]
                         }
@@ -118,25 +141,38 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
-    def test_key_search_specimens_response(self):
+    def test_key_search_samples_response(self):
         """
         KeywordSearchResponse for the specimens endpoint should return file type summaries instead of files
         """
         keyword_response = KeywordSearchResponse(
             # the entity_id is hardcoded, but corresponds to the bundle above
-            hits=self.get_hits('specimens', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-            entity_type='specimens'
+            hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
+            entity_type='samples'
         ).return_response().to_json()
 
         expected_response = {
             "hits": [
                 {
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [],
                             "totalCells": 1
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["female"],
+                            "disease": None,
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
                         }
                     ],
                     "entryId": "a21dc760-a500-4236-bcff-da34a0e873d2",
@@ -147,6 +183,8 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 385472253
                         }
                     ],
+                    "organoids": [
+                    ],
                     "projects": [
                         {
                             "laboratory": ["John Dear"],
@@ -161,21 +199,26 @@ class TestResponse(WebServiceTestCase):
                             "pairedEnd": [True]
                         }
                     ],
-                    "specimens": [
+                    "samples": [
                         {
-                            "biologicalSex": ["female"],
-                            "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
+                            "sampleEntityType": "specimens",
                             "id": "DID_scRSq06_pancreas",
+                            "disease": ["normal"],
                             "organ": "pancreas",
                             "organPart": ["islet of Langerhans"],
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
                             "preservationMethod": None,
+                            "source": "specimen_from_organism",
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "disease": ["normal"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
                                 "specimen_from_organism",
-                                "donor_organism"
                             ]
                         }
                     ]
@@ -222,12 +265,25 @@ class TestResponse(WebServiceTestCase):
                                 "bundleVersion": "2018-11-02T113344.698028Z"
                             }
                         ],
+                        "cellLines": [
+
+                        ],
                         "cellSuspensions": [
                             {
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
                                 "selectedCellType": [],
                                 "totalCells": 1
+                            }
+                        ],
+                        "donorOrganisms": [
+                            {
+                                "biologicalSex": ["female"],
+                                "disease": None,
+                                "genusSpecies": ["Australopithecus"],
+                                "id": ["DID_scRSq06"],
+                                "organismAge": ["38"],
+                                "organismAgeUnit": ["year"],
                             }
                         ],
                         "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -240,6 +296,9 @@ class TestResponse(WebServiceTestCase):
                                 "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                                 "version": "2018-11-02T113344.698028Z"
                             }
+                        ],
+                        "organoids": [
+
                         ],
                         "projects": [
                             {
@@ -255,21 +314,28 @@ class TestResponse(WebServiceTestCase):
                                 "pairedEnd": [True]
                             }
                         ],
-                        "specimens": [
+                        "samples": [
                             {
-                                "biologicalSex": ["female"],
+                                "sampleEntityType": ["specimens"],
                                 "disease": ["normal"],
-                                "genusSpecies": ["Australopithecus"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
-                                "organismAge": ["38"],
-                                "organismAgeUnit": ["year"],
                                 "preservationMethod": [None],
                                 "source": [
-                                    "cell_suspension",
                                     "specimen_from_organism",
-                                    "donor_organism"
+                                ]
+                            }
+                        ],
+                        "specimens": [
+                            {
+                                "disease": ["normal"],
+                                "id": ["DID_scRSq06_pancreas"],
+                                "organ": ["pancreas"],
+                                "organPart": ["islet of Langerhans"],
+                                "preservationMethod": [None],
+                                "source": [
+                                    "specimen_from_organism",
                                 ]
                             }
                         ]
@@ -298,12 +364,25 @@ class TestResponse(WebServiceTestCase):
                                 "bundleVersion": "2018-11-02T113344.698028Z"
                             }
                         ],
+                        "cellLines": [
+
+                        ],
                         "cellSuspensions": [
                             {
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
                                 "selectedCellType": [],
                                 "totalCells": 1
+                            }
+                        ],
+                        "donorOrganisms": [
+                            {
+                                "biologicalSex": ["female"],
+                                "disease": None,
+                                "genusSpecies": ["Australopithecus"],
+                                "id": ["DID_scRSq06"],
+                                "organismAge": ["38"],
+                                "organismAgeUnit": ["year"],
                             }
                         ],
                         "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -316,6 +395,8 @@ class TestResponse(WebServiceTestCase):
                                 "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                                 "version": "2018-11-02T113344.698028Z"
                             }
+                        ],
+                        "organoids": [
                         ],
                         "projects": [
                             {
@@ -331,21 +412,28 @@ class TestResponse(WebServiceTestCase):
                                 "pairedEnd": [True]
                             }
                         ],
-                        "specimens": [
+                        "samples": [
                             {
-                                "biologicalSex": ["female"],
+                                "sampleEntityType": ["specimens"],
                                 "disease": ["normal"],
-                                "genusSpecies": ["Australopithecus"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
-                                "organismAge": ["38"],
-                                "organismAgeUnit": ["year"],
                                 "preservationMethod": [None],
                                 "source": [
-                                    "cell_suspension",
                                     "specimen_from_organism",
-                                    "donor_organism"
+                                ]
+                            }
+                        ],
+                        "specimens": [
+                            {
+                                "disease": ["normal"],
+                                "id": ["DID_scRSq06_pancreas"],
+                                "organ": ["pancreas"],
+                                "organPart": ["islet of Langerhans"],
+                                "preservationMethod": [None],
+                                "source": [
+                                    "specimen_from_organism",
                                 ]
                             }
                         ]
@@ -381,10 +469,10 @@ class TestResponse(WebServiceTestCase):
         Test non-'files' entity type passed to FileSearchResponse will give file summaries
         """
         filesearch_response = FileSearchResponse(
-            hits=self.get_hits('specimens', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
+            hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
             pagination=self.paginations[0],
             facets={},
-            entity_type="specimens"
+            entity_type="samples"
         ).return_response().to_json()
 
         for hit in filesearch_response['hits']:
@@ -485,7 +573,7 @@ class TestResponse(WebServiceTestCase):
         # FIXME: local import for now to delay side effects of the import like logging being configured
         # https://github.com/DataBiosphere/azul/issues/637
         from lambdas.service.app import sort_defaults
-        for entity_type in 'files', 'specimens', 'projects':
+        for entity_type in 'files', 'samples', 'projects':
             with self.subTest(entity_type=entity_type):
                 base_url = self.base_url
                 url = base_url + "/repository/" + entity_type
@@ -614,12 +702,25 @@ class TestResponse(WebServiceTestCase):
         expected_response = {
             "hits": [
                 {
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [],
                             "totalCells": 1
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["female"],
+                            "disease": None,
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -629,6 +730,8 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "fastq.gz",
                             "totalSize": 385472253
                         }
+                    ],
+                    "organoids": [
                     ],
                     "projects": [
                         {
@@ -681,21 +784,28 @@ class TestResponse(WebServiceTestCase):
                             "pairedEnd": [True]
                         }
                     ],
-                    "specimens": [
+                    "samples": [
                         {
-                            "biologicalSex": ["female"],
+                            "sampleEntityType": ["specimens"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
-                                "specimen_from_organism",
-                                "donor_organism"
+                                "specimen_from_organism"
+                            ]
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "disease": ["normal"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "preservationMethod": [None],
+                            "source": [
+                                "specimen_from_organism"
                             ]
                         }
                     ]
@@ -719,12 +829,25 @@ class TestResponse(WebServiceTestCase):
         expected_response = {
             "hits": [
                 {
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [],
                             "totalCells": 1
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["female"],
+                            "disease": None,
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -734,6 +857,8 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "fastq.gz",
                             "totalSize": 385472253
                         }
+                    ],
+                    "organoids": [
                     ],
                     "projects": [
                         {
@@ -786,20 +911,27 @@ class TestResponse(WebServiceTestCase):
                             "pairedEnd": [True]
                         }
                     ],
-                    "specimens": [
+                    "samples": [
                         {
-                            "biologicalSex": ["female"],
+                            "sampleEntityType": ["specimens"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
-                                "donor_organism",
+                                "specimen_from_organism"
+                            ]
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "disease": ["normal"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "preservationMethod": [None],
+                            "source": [
                                 "specimen_from_organism"
                             ]
                         }
@@ -1056,12 +1188,25 @@ class TestResponse(WebServiceTestCase):
         expected_response = {
             "hits": [
                 {
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["brain"],
                             "organPart": ["amygdala"],
                             "selectedCellType": [],
                             "totalCells": 10000
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["male"],
+                            "disease": None,
+                            "genusSpecies": ["Homo sapiens"],
+                            "id": ["donor_ID_1"],
+                            "organismAge": ["20"],
+                            "organismAgeUnit": ["year"]
                         }
                     ],
                     "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
@@ -1107,6 +1252,9 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 15872628
                         }
                     ],
+                    "organoids": [
+
+                    ],
                     "projects": [
                         {
                             "contributors": [
@@ -1142,20 +1290,27 @@ class TestResponse(WebServiceTestCase):
                             "pairedEnd": [False]
                         }
                     ],
-                    "specimens": [
+                    "samples": [
                         {
-                            "biologicalSex": ["male"],
+                            "sampleEntityType": ["specimens"],
                             "disease": ["H syndrome"],
-                            "genusSpecies": ["Homo sapiens"],
                             "id": ["specimen_ID_1"],
                             "organ": ["brain"],
                             "organPart": ["amygdala"],
-                            "organismAge": ["20"],
-                            "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
-                                "donor_organism",
+                                "specimen_from_organism"
+                            ]
+                        }
+                    ],
+                    "specimens": [
+                        {
+                            "disease": ["H syndrome"],
+                            "id": ["specimen_ID_1"],
+                            "organ": ["brain"],
+                            "organPart": ["amygdala"],
+                            "preservationMethod": [None],
+                            "source": [
                                 "specimen_from_organism"
                             ]
                         }
@@ -1192,7 +1347,7 @@ class TestResponse(WebServiceTestCase):
             }
         ]
         for test_data in test_data_sets:
-            for entity_type in 'files', 'specimens', 'projects':
+            for entity_type in 'files', 'samples', 'projects':
                 with self.subTest(entity_type=entity_type):
                     url = self.base_url + "/repository/" + entity_type + "?size=2" \
                                           "&filters={'file':{'projectId':{'is':['" + test_data['id'] + "']}}}"
@@ -1205,6 +1360,28 @@ class TestResponse(WebServiceTestCase):
                                 self.assertEqual(test_data['title'], project['projectTitle'])
                             else:
                                 self.assertIn(test_data['title'], project['projectTitle'])
+
+    def test_sample(self):
+        """
+        Test that sample(s) in the response contain values matching values in the source cellLine/organoid/specimen
+        """
+        for entity_type in 'projects', 'samples', 'files':
+            with self.subTest(entity_type=entity_type):
+                url = self.base_url + "/repository/" + entity_type
+                response = requests.get(url)
+                response.raise_for_status()
+                response_json = response.json()
+                if entity_type == 'samples':
+                    for hit in response_json['hits']:
+                        for sample in hit['samples']:
+                            sample_entity_type = sample['sampleEntityType']
+                            for key, val in sample.items():
+                                if key != 'sampleEntityType':
+                                    if isinstance(val, list):
+                                        for one_val in val:
+                                            self.assertIn(one_val, hit[sample_entity_type][0][key])
+                                    else:
+                                        self.assertIn(val, hit[sample_entity_type][0][key])
 
 
 if __name__ == '__main__':

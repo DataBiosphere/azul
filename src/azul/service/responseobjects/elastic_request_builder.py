@@ -383,14 +383,13 @@ class ElasticTransformDump(object):
             field=request_config['translation']['cellCount']
         )
 
-        for field, agg_name in (
-            ('specimenDocumentId', 'specimenCount'),
-            ('fileId', 'fileCount'),
-            ('organ', 'organCount'),
-            ('donorDocumentId', 'donorCount'),
-            ('lab', 'labCount'),
-            ('projectId', 'projectCount')):
-            cardinality = request_config['translation'][field]
+        for cardinality, agg_name in (
+            ('contents.specimens.document_id', 'specimenCount'),
+            ('contents.files.uuid', 'fileCount'),
+            ('contents.specimens.organ', 'organCount'),
+            ('contents.donors.document_id', 'donorCount'),
+            ('contents.projects.laboratory', 'labCount'),
+            ('contents.projects.document_id', 'projectCount')):
             es_search.aggs.metric(
                 agg_name, 'cardinality',
                 field='{}.keyword'.format(cardinality),

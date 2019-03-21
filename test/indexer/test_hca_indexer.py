@@ -219,7 +219,7 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(1 if entity_type == 'files' else num_files, len(contents['files']))
             self.assertEqual(1, len(contents['specimens']))
             self.assertEqual(1, len(contents['projects']))
-        num_expected = dict(files=num_files, specimens=1, projects=1)
+        num_expected = dict(files=num_files, samples=1, projects=1)
         self.assertEqual(num_contribs, num_expected)
         self.assertEqual(num_aggregates, num_expected)
 
@@ -264,8 +264,8 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertIn('Farmers Trucks', project['institutions'])
                 else:
                     self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
-                specimen = one(contents['specimens'])
-                self.assertIn('Australopithecus', specimen['genus_species'])
+                donor = one(contents['donors'])
+                self.assertIn('Australopithecus', donor['genus_species'])
             else:
                 if source['bundle_deleted']:
                     self.assertTrue(ignore_deletes, "Unexpected deleted contribution")
@@ -305,8 +305,8 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertNotEqual(old_project["institutions"], project["institutions"])
                 else:
                     self.assertNotEqual(old_project["contributors"], project["contributors"])
-                self.assertNotEqual(old_contents["specimens"][0]["genus_species"],
-                                    contents["specimens"][0]["genus_species"])
+                self.assertNotEqual(old_contents["donors"][0]["genus_species"],
+                                    contents["donors"][0]["genus_species"])
 
             self.assertEqual("Single cell transcriptome analysis of human pancreas reveals transcriptional "
                              "signatures of aging and somatic mutation patterns.",
@@ -347,7 +347,7 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertIsNotNone(cm.records)
                 num_hits = sum(1 for log_msg in cm.output
                                if "There was a conflict with document" in log_msg
-                               and ("azul_specimens" in log_msg or "azul_projects" in log_msg))
+                               and ("azul_samples" in log_msg or "azul_projects" in log_msg))
                 # One conflict for the specimen and one for the project
                 self.assertEqual(num_hits, 2)
 
@@ -367,7 +367,7 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(1, len(contents['files']))
                 if aggregate:
                     file_uuids.add(contents['files'][0]['uuid'])
-            elif entity_type in ('specimens', 'projects'):
+            elif entity_type in ('samples', 'projects'):
                 if aggregate:
                     self.assertEqual(2, len(hit['_source']['bundles']))
                     # All four files are fastqs so the are grouped together
@@ -510,8 +510,8 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_diseases_field(self):
         """
-        Index a bundle with a specimen `diseases` value that is differs from its donor `diseases` value
-        and assert that only the specimen's `diseases` value is in the indexed document.
+        Index a bundle with a specimen `diseases` value that differs from the donor `diseases` value
+        and assert that both values are represented in the indexed document.
         """
         self._index_canned_bundle(("3db604da-940e-49b1-9bcc-25699a55b295", "2018-11-02T184048.983513Z"))
 
@@ -519,15 +519,18 @@ class TestHCAIndexer(IndexerTestCase):
         for hit in hits:
             source = hit['_source']
             contents = source['contents']
-            diseases = contents['specimens'][0]['disease']
-            self.assertEqual(1, len(diseases))
-            self.assertEqual("atrophic vulva (specimen_from_organism)", diseases[0])
+            specimen_diseases = contents['specimens'][0]['disease']
+            donor_diseases = contents['donors'][0]['diseases']
+            self.assertEqual(1, len(specimen_diseases))
+            self.assertEqual("atrophic vulva (specimen_from_organism)", specimen_diseases[0])
+            self.assertEqual(1, len(donor_diseases))
+            self.assertEqual("atrophic vulva (donor_organism)", donor_diseases[0])
 
     def test_organoid_priority(self):
-        '''
+        """
         Index a bundle containing an Organoid and assert that the "organ" and "organ_part"
         values saved are the ones from the Organoid and not the SpecimenFromOrganism
-        '''
+        """
         self._index_canned_bundle(('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'))
         hits = self._get_hits()
         inner_specimens, inner_cell_suspensions = 0, 0
@@ -539,14 +542,16 @@ class TestHCAIndexer(IndexerTestCase):
             if entity_type != 'files' or one(contents['files'])['file_format'] != 'pdf':
                 for cell_suspension in contents['cell_suspensions']:
                     inner_cell_suspensions += 1
-                    self.assertEqual(['Brain'], cell_suspension['organ'])
-                    self.assertEqual([None], cell_suspension['organ_part'])
 
             for specimen in contents['specimens']:
                 inner_specimens += 1
                 expect_list = aggregate and entity_type != 'specimens'
-                self.assertEqual(['Brain'] if expect_list else 'Brain', specimen['organ'])
-                self.assertEqual([None], specimen['organ_part'])
+                self.assertEqual(['skin of body'] if expect_list else 'skin of body', specimen['organ'])
+                self.assertEqual(['skin epidermis'], specimen['organ_part'])
+
+            for organoid in contents['organoids']:
+                self.assertEqual(['Brain'] if aggregate else 'Brain', organoid['model_organ'])
+                self.assertEqual([None] if aggregate else None, organoid['model_organ_part'])
 
         projects = 1
         specimens = 4
@@ -586,7 +591,7 @@ class TestHCAIndexer(IndexerTestCase):
                     {
                         'files': 227,
                         'projects': 1,
-                        'specimens': 1,
+                        'samples': 1,
                     },
                     {
                         entity_type: len(sources)
@@ -619,6 +624,28 @@ class TestHCAIndexer(IndexerTestCase):
                 else:
                     values = [p['paired_end'] for p in contents['protocols'] if 'paired_end' in p]
                     self.assertEqual(set(values), set([True]))
+
+    def test_cell_line_sample(self):
+        """
+        Index a bundle with the following structure:
+        donor -> specimen -> cell_line -> cell_line -> cell_suspension -> sequence_files
+        and assert the singleton sample matches the first cell_line up from the sequence_files
+        """
+        self._index_canned_bundle(('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'))
+        hits = self._get_hits()
+        for hit in hits:
+            contents = hit['_source']['contents']
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            if entity_type == 'samples':
+                sample = one(contents['samples'])
+                sample_entity_type = sample['entity_type']
+                if aggregate:
+                    document_ids = one(contents[sample_entity_type])['document_id']
+                else:
+                    document_ids = [d['document_id'] for d in contents[sample_entity_type]]
+                    entity = one([d for d in contents[sample_entity_type] if d['document_id'] == sample['document_id']])
+                    self.assertEqual('cell_line_Day7_hiPSC-CM_BioRep2', entity['biomaterial_id'])
+                self.assertTrue(sample['document_id'] in document_ids)
 
 
 class TestValidNotificationRequests(LocalAppTestCase):

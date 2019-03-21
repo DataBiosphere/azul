@@ -86,7 +86,7 @@ class RepositoryService(AbstractService):
         summary_fields_by_authority = {
             'files':
                 ['totalFileSize', 'fileTypeSummaries', 'fileCount'],
-            'specimens':
+            'samples':
                 ['organCount', 'donorCount', 'labCount', 'totalCellCount', 'organSummaries', 'specimenCount'],
             'projects':
                 ['projectCount']
