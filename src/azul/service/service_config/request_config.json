@@ -14,7 +14,6 @@
     "projectId": "contents.projects.document_id",
     "institution": "contents.projects.institutions",
     "laboratory": "contents.projects.laboratory",
-    "lab": "contents.projects.laboratory",
     "projectDescription": "contents.projects.project_description",
     "project": "contents.projects.project_shortname",
     "projectTitle": "contents.projects.project_title",
@@ -24,18 +23,20 @@
     "insdcProjectAccessions":  "contents.projects.insdc_project_accessions",
     "insdcStudyAccessions": "contents.projects.insdc_study_accessions",
 
-    "biologicalSex": "contents.specimens.biological_sex",
-    "specimenId": "contents.specimens.biomaterial_id",
-    "specimenDocumentId": "contents.specimens.document_id",
-    "disease": "contents.specimens.disease",
-    "donorId": "contents.specimens.donor_biomaterial_id",
-    "donorDocumentId": "contents.specimens.donor_document_id",
-    "genusSpecies": "contents.specimens.genus_species",
-    "organ": "contents.specimens.organ",
-    "organPart": "contents.specimens.organ_part",
-    "organismAge": "contents.specimens.organism_age",
-    "organismAgeUnit": "contents.specimens.organism_age_unit",
+    "biologicalSex": "contents.donors.biological_sex",
+    "sampleId": "contents.samples.biomaterial_id",
+    "sampleEntityType": "contents.samples.entity_type",
+    "disease": "contents.samples.disease",
+    "genusSpecies": "contents.donors.genus_species",
+    "donorDisease": "contents.donors.disease",
+    "organ": "contents.samples.organ",
+    "organPart": "contents.samples.organ_part",
+    "modelOrgan" : "contents.samples.model_organ",
+    "modelOrganPart": "contents.samples.model_organ_part",
+    "organismAge": "contents.donors.organism_age",
+    "organismAgeUnit": "contents.donors.organism_age_unit",
     "preservationMethod": "contents.specimens.preservation_method",
+
     "cellCount": "contents.cell_suspensions.total_estimated_cells",
     "selectedCellType": "contents.cell_suspensions.selected_cell_type",
 
@@ -86,18 +87,35 @@
       "project.project_core.project_title": "project_title"
     },
     "contents.specimens": {
-      "donor_organism.sex": "biological_sex",
-      "donor_organism.biomaterial_core.biomaterial_id": "biomaterial_id",
       "specimen_from_organism.provenance.document_id": "document_id",
       "specimen_from_organism.diseases": "disease",
-      "specimen_from_organism.biomaterial_core.biomaterial_id": "donor_biomaterial_id",
-      "donor_organism.provenance.document_id": "donor_document_id",
-      "donor_organism.genus_species": "genus_species",
       "specimen_from_organism.organ": "organ",
       "specimen_from_organism.organ_part": "organ_part",
-      "donor_organism.organism_age": "organism_age",
-      "donor_organism.organism_age_unit": "organism_age_unit",
       "specimen_from_organism.preservation_storage.preservation_method": "preservation_method"
+    },
+    "contents.donors": {
+      "donor_organism.sex": "biological_sex",
+      "donor_organism.biomaterial_core.biomaterial_id": "biomaterial_id",
+      "donor_organism.provenance.document_id": "document_id",
+      "donor_organism.genus_species": "genus_species",
+      "donor_organism.diseases": "diseases",
+      "donor_organism.organism_age": "organism_age",
+      "donor_organism.organism_age_unit": "organism_age_unit"
+    },
+    "contents.cell_lines": {
+      "cell_line.provenance.document_id": "document_id",
+      "cell_line.biomaterial_core.biomaterial_id": "biomaterial_id"
+    },
+    "contents.organoids": {
+      "organoid.provenance.document_id": "document_id",
+      "organoid.biomaterial_core.biomaterial_id": "biomaterial_id",
+      "organoid.model_organ": "model_organ",
+      "organoid.model_organ_part": "model_organ_part"
+    },
+    "contents.samples": {
+      "_entity_type": "entity_type",
+      "*.provenance.document_id": "document_id",
+      "*.biomaterial_core.biomaterial_id": "biomaterial_id"
     }
   },
   "bdbag": {
@@ -132,18 +150,21 @@
       "project.project_core.project_title": "project_title"
     },
     "contents.specimens": {
-      "donor_organism.sex": "biological_sex",
-      "donor_organism.biomaterial_core.biomaterial_id": "biomaterial_id",
       "specimen_from_organism.provenance.document_id": "document_id",
       "specimen_from_organism.diseases": "disease",
-      "specimen_from_organism.biomaterial_core.biomaterial_id": "donor_biomaterial_id",
-      "donor_organism.provenance.document_id": "donor_document_id",
-      "donor_organism.genus_species": "genus_species",
+      "specimen_from_organism.biomaterial_core.biomaterial_id": "biomaterial_id",
       "specimen_from_organism.organ": "organ",
       "specimen_from_organism.organ_part": "organ_part",
-      "donor_organism.organism_age": "organism_age",
-      "donor_organism.organism_age_unit": "organism_age_unit",
       "specimen_from_organism.preservation_storage.preservation_method": "preservation_method"
+    },
+    "contents.donors": {
+      "donor_organism.sex": "biological_sex",
+      "donor_organism.biomaterial_core.biomaterial_id": "biomaterial_id",
+      "donor_organism.provenance.document_id": "document_id",
+      "donor_organism.genus_species": "genus_species",
+      "donor_organism.diseases": "diseases",
+      "donor_organism.organism_age": "organism_age",
+      "donor_organism.organism_age_unit": "organism_age_unit"
     }
   },
   "cart-item": {
@@ -151,9 +172,9 @@
       "contents.files.uuid",
       "contents.files.version"
     ],
-    "specimens": [
-      "contents.specimens.biomaterial_id",
-      "contents.specimens.document_id"
+    "samples": [
+      "contents.samples.document_id",
+      "contents.samples.entity_type"
     ],
     "projects": [
       "contents.projects.project_shortname"
@@ -166,12 +187,16 @@
   "facets": [
     "organ",
     "organPart",
+    "modelOrgan",
+    "modelOrganPart",
+    "sampleEntityType",
     "libraryConstructionApproach",
     "genusSpecies",
     "organismAge",
     "organismAgeUnit",
     "biologicalSex",
     "disease",
+    "donorDisease",
     "instrumentManufacturerModel",
     "pairedEnd",
     "project",

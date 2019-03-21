@@ -459,7 +459,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
 
         cart_id = '123'
         write_params = {
-            'entity_type': 'specimens',
+            'entity_type': 'samples',
             'filters': {'file': {}},
             'cart_id': cart_id,
             'batch_size': 1000
