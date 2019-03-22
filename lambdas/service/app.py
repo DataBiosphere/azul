@@ -1539,7 +1539,7 @@ def get_data_object(file_uuid):
         doc = one(one(response['hits'])['files'])
         data_obj = file_to_drs(doc)
         assert data_obj['id'] == file_uuid
-        assert data_obj['version'] == file_version
+        assert file_version is None or data_obj['version'] == file_version
         return Response({'data_object': data_obj}, status_code=200)
     else:
         return Response({'msg': "Data object not found."}, status_code=404)
