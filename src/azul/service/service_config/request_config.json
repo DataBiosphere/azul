@@ -53,46 +53,46 @@
   },
   "manifest": {
     "bundles": {
-      "bundle.uuid": "uuid",
-      "bundle.version": "version"
+      "bundle_uuid": "uuid",
+      "bundle_version": "version"
     },
     "contents.files": {
-      "file.content_type": "content-type",
-      "file.name": "name",
-      "file.sha256": "sha256",
-      "file.size": "size",
-      "file.uuid": "uuid",
-      "file.version": "version",
-      "file.indexed": "indexed",
-      "file.format": "file_format"
+      "file_content_type": "content-type",
+      "file_name": "name",
+      "file_sha256": "sha256",
+      "file_size": "size",
+      "file_uuid": "uuid",
+      "file_version": "version",
+      "file_indexed": "indexed",
+      "file_format": "file_format"
     },
     "contents.cell_suspensions": {
       "cell_suspension.estimated_cell_count": "total_estimated_cells"
     },
     "contents.protocols": {
-      "protocol.instrument_manufacturer_model": "instrument_manufacturer_model",
-      "protocol.library_construction_method": "library_construction_approach"
+      "sequencing_protocol.instrument_manufacturer_model": "instrument_manufacturer_model",
+      "library_preparation_protocol.library_construction_approach": "library_construction_approach"
     },
     "contents.projects": {
-      "project.document_id": "document_id",
-      "project.institutions": "institutions",
-      "project.laboratory": "laboratory",
-      "project.project_short_name": "project_shortname",
-      "project.project_title": "project_title"
+      "project.provenance.document_id": "document_id",
+      "project.contributors.institution": "institutions",
+      "project.contributors.laboratory": "laboratory",
+      "project.project_core.project_short_name": "project_shortname",
+      "project.project_core.project_title": "project_title"
     },
     "contents.specimens": {
-      "specimen.sex": "biological_sex",
-      "specimen.biomaterial_id": "biomaterial_id",
-      "specimen.document_id": "document_id",
-      "specimen.diseases": "disease",
-      "specimen.donor_biomaterial_id": "donor_biomaterial_id",
-      "specimen.donor_document_id": "donor_document_id",
-      "specimen.genus_species": "genus_species",
-      "specimen.organ": "organ",
-      "specimen.organ_parts": "organ_part",
-      "specimen.organism_age": "organism_age",
-      "specimen.organism_age_unit": "organism_age_unit",
-      "specimen.preservation_method": "preservation_method"
+      "donor_organism.sex": "biological_sex",
+      "donor_organism.biomaterial_core.biomaterial_id": "biomaterial_id",
+      "specimen_from_organism.provenance.document_id": "document_id",
+      "specimen_from_organism.diseases": "disease",
+      "specimen_from_organism.biomaterial_core.biomaterial_id": "donor_biomaterial_id",
+      "donor_organism.provenance.document_id": "donor_document_id",
+      "specimen_from_organism.genus_species": "genus_species",
+      "specimen_from_organism.organ": "organ",
+      "specimen_from_organism.organ_part": "organ_part",
+      "donor_organism.organism_age": "organism_age",
+      "donor_organism.organism_age_unit": "organism_age_unit",
+      "specimen_from_organism.preservation_storage.preservation_method": "preservation_method"
     }
   },
     "bdbag": {
