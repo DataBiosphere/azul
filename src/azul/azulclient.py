@@ -233,3 +233,16 @@ class AzulClient(object):
                     logger.info("Would delete index '%s'", index_name)
                 else:
                     es_client.indices.delete(index=index_name)
+
+    def delete_bundle(self, bundle_uuid, bundle_version):
+        logger.info('Deleting bundle %s.%s', bundle_uuid, bundle_version)
+        notification = {
+            'match': {
+                'bundle_uuid': bundle_uuid,
+                'bundle_version': bundle_version
+            }
+        }
+        response = requests.post(url=self.indexer_url + '/delete',
+                                 json=notification,
+                                 auth=hmac.prepare())
+        response.raise_for_status()
