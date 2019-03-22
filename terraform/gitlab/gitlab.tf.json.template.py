@@ -367,7 +367,8 @@ emit({} if config.terraform_component != 'gitlab' else {
                                                             LogStream='*',
                                                             LogStreamName='*')
                                            for log_group_name in ['/aws/apigateway/azul-*',
-                                                                  '/aws/lambda/azul-*'])
+                                                                  '/aws/lambda/azul-*',
+                                                                  '/aws/aes/domains/azul-*'])
                     }
                 ]
             },
