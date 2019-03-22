@@ -324,6 +324,10 @@ class TestAccessorApi(TestCase):
         self.assertEqual(storage_methods, {s.storage_method for s in bundle.specimens})
         self.assertEqual(preservation_methods, {s.preservation_method for s in bundle.specimens})
 
+        if has_specimens:
+            # noinspection PyDeprecation
+            self.assertRaises(AttributeError, lambda: bundle.specimens[0].organ_part)
+
         # Prove that as_json returns a valid JSON structure (no cycles, correct types, etc.)
         self.assertTrue(isinstance(json.dumps(as_json(bundle)), str))
 
