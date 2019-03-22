@@ -1,7 +1,6 @@
 import boto3
 from collections import deque
 import logging
-from more_itertools import one
 import random
 import requests
 import time
@@ -10,6 +9,11 @@ import unittest
 import urllib
 from urllib.parse import urlencode
 import uuid
+from io import BytesIO, TextIOWrapper
+from zipfile import ZipFile
+import os
+import csv
+from more_itertools import one, first
 
 from azul import config
 from azul.decorators import memoized_property
@@ -59,8 +63,17 @@ class IntegrationTest(unittest.TestCase):
         self.check_endpoint_is_working(config.service_endpoint(), '/version')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
-        manifest_filter = {"file": {"organPart": {"is": ["temporal lobe"]}, "fileFormat": {"is": ["bai"]}}}
-        self.check_endpoint_is_working(config.service_endpoint(), f'/manifest/files?filters={manifest_filter}')
+        if config.dss_query_prefix:  # only subset of indexed metadata, use less stringent filter
+            manifest_filter = {"file": {}}
+        else:
+            manifest_filter = {"file": {"organ": {"is": ["Brain"]}, "fileFormat": {"is": ["bai"]}}}
+        self.check_manifest(self.check_endpoint_is_working(config.service_endpoint(),
+                                                           f'/repository/files/export?filters={manifest_filter}'))
+        self.check_manifest(self.check_endpoint_is_working(config.service_endpoint(),
+                                                           f'/manifest/files?filters={manifest_filter}'))
+
+        self.check_bdbag_endpoint(config.service_endpoint(),
+                                  f'/repository/files/export?filters={manifest_filter}&format=bdbag')
 
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -77,6 +90,28 @@ class IntegrationTest(unittest.TestCase):
         url = lambda_endpoint + url
         response = self.requests.get(url)
         response.raise_for_status()
+        return response
+
+    def check_manifest(self, response):
+        """Assert that manifest contains at least one row of metadata."""
+        wrapper = TextIOWrapper(BytesIO(response.content))
+        num_rows = len(list(csv.reader(wrapper, delimiter='\t')))
+        self.assertTrue(num_rows > 1)
+        logger.info(f'Manifest contains {num_rows} rows.')
+
+    def check_bdbag_endpoint(self, lambda_endpoint: str, url: str):
+        url = lambda_endpoint + url
+        response = self.requests.get(url)
+        response.raise_for_status()
+        with ZipFile(BytesIO(response.content)) as zip_fh:
+            data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
+            tsv_files = {filename: os.path.join(data_path, filename) for filename in ['participant.tsv', 'sample.tsv']}
+            for file_name, file_path in tsv_files.items():
+                with zip_fh.open(file_path) as bytesfile:
+                    text = TextIOWrapper(bytesfile, encoding='utf-8')
+                    num_rows = len(list(csv.reader(text, delimiter='\t')))
+                    self.assertTrue(num_rows > 1)
+                    logger.info(f'BDBag file {file_name} contains {num_rows} rows.')
 
     def get_number_of_messages(self, queues: Mapping[str, Any]):
         total_message_count = 0
