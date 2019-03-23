@@ -278,11 +278,13 @@ class SpecimenFromOrganism(Biomaterial):
 @dataclass(init=False)
 class CellSuspension(Biomaterial):
     estimated_cell_count: Optional[int]
+    selected_cell_type: Set[str]
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
         content = json.get('content', json)
         self.estimated_cell_count = lookup(content, 'estimated_cell_count', 'total_estimated_cells', default=None)
+        self.selected_cell_type = {ontology_label(sct) for sct in content.get('selected_cell_type', [])}
 
     @property
     def total_estimated_cells(self) -> int:
