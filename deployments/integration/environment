@@ -16,3 +16,7 @@ _set AZUL_DSS_ENDPOINT "https://dss.integration.data.humancellatlas.org/v1"
 _set azul_grafana_endpoint "https://metrics.dev.data.humancellatlas.org"
 
 _set AZUL_ENABLE_MONITORING 1
+
+# Lesser main deployments share an ES domain with `dev`
+_set AZUL_SHARE_ES_DOMAIN 1
+_set AZUL_ES_DOMAIN "azul-index-dev"
