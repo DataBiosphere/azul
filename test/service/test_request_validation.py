@@ -219,7 +219,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                             ('specimen_from_organism.diseases', '', ''),
                             ('specimen_from_organism.biomaterial_core.biomaterial_id', '', '1209'),
                             ('donor_organism.provenance.document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
-                            ('specimen_from_organism.genus_species', '', 'Mus musculus'),
+                            ('donor_organism.genus_species', '', 'Mus musculus'),
                             ('specimen_from_organism.organ', '', 'brain || tumor'),
                             ('specimen_from_organism.organ_part', '', ''),
                             ('donor_organism.organism_age', '', '6-12'),
