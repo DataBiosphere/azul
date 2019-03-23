@@ -196,35 +196,35 @@ class FacetNameValidationTest(WebServiceTestCase):
                             ('file_version', '2018-09-14T123347.012715Z', '2018-09-14T123343.720332Z'),
                             ('file_indexed', 'False', 'False'),
                             ('file_format', 'pdf', 'fastq.gz'),
-                            ('total_estimated_cells', '', '9001'),
-                            ('instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
-                            ('library_construction_approach', '', 'Smart-seq2'),
-                            ('document_id', '67bc798b-a34a-4104-8cab-cad648471f69',
+                            ('cell_suspension.estimated_cell_count', '', '9001'),
+                            ('sequencing_protocol.instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
+                            ('library_preparation_protocol.library_construction_approach', '', 'Smart-seq2'),
+                            ('project.provenance.document_id', '67bc798b-a34a-4104-8cab-cad648471f69',
                              '67bc798b-a34a-4104-8cab-cad648471f69'),
-                            ('institutions', 'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
+                            ('project.contributors.institution', 'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
                                              ' || University of Helsinki || Wellcome Trust Sanger Institute',
                              'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
                              ' || University of Helsinki || Wellcome Trust Sanger Institute'),
-                            ('laboratory', 'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
+                            ('project.contributors.laboratory', 'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
                                            ' || Sarah Teichmann',
                              'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
                              ' || Sarah Teichmann'),
-                            ('project_shortname', 'Mouse Melanoma', 'Mouse Melanoma'),
-                            ('project_title', 'Melanoma infiltration of stromal and immune cells',
+                            ('project.project_core.project_short_name', 'Mouse Melanoma', 'Mouse Melanoma'),
+                            ('project.project_core.project_title', 'Melanoma infiltration of stromal and immune cells',
                              'Melanoma infiltration of stromal and immune cells'),
-                            ('biological_sex', '', 'female'),
-                            ('specimen_id', '', '1209_T || 1210_T'),
-                            ('specimen_document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
+                            ('donor_organism.sex', '', 'female'),
+                            ('donor_organism.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
+                            ('specimen_from_organism.provenance.document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
                                                          ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
-                            ('disease', '', ''),
-                            ('donor_biomaterial_id', '', '1209'),
-                            ('donor_document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
-                            ('genus_species', '', 'Mus musculus'),
-                            ('organ', '', 'brain || tumor'),
-                            ('organ_part', '', ''),
-                            ('organism_age', '', '6-12'),
-                            ('organism_age_unit', '', 'week'),
-                            ('preservation_method', '', '')
+                            ('specimen_from_organism.diseases', '', ''),
+                            ('specimen_from_organism.biomaterial_core.biomaterial_id', '', '1209'),
+                            ('donor_organism.provenance.document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
+                            ('donor_organism.genus_species', '', 'Mus musculus'),
+                            ('specimen_from_organism.organ', '', 'brain || tumor'),
+                            ('specimen_from_organism.organ_part', '', ''),
+                            ('donor_organism.organism_age', '', '6-12'),
+                            ('donor_organism.organism_age_unit', '', 'week'),
+                            ('specimen_from_organism.preservation_storage.preservation_method', '', '')
                         ]
 
                         expected_fieldnames, expected_pdf_row, expected_fastq_row = map(list, zip(*expected))
