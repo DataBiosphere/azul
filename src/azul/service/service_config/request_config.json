@@ -87,7 +87,7 @@
       "specimen_from_organism.diseases": "disease",
       "specimen_from_organism.biomaterial_core.biomaterial_id": "donor_biomaterial_id",
       "donor_organism.provenance.document_id": "donor_document_id",
-      "specimen_from_organism.genus_species": "genus_species",
+      "donor_organism.genus_species": "genus_species",
       "specimen_from_organism.organ": "organ",
       "specimen_from_organism.organ_part": "organ_part",
       "donor_organism.organism_age": "organism_age",
