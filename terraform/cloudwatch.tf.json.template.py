@@ -6,7 +6,7 @@ from azul.deployment import aws
 
 emit({
     "resource": [
-        {
+        *([] if config.share_es_domain else [{
             "aws_cloudwatch_metric_alarm": {
                 "CPUUtilization": {
                     "alarm_name": config.es_domain+"-CPUUtilization",
@@ -86,7 +86,7 @@ emit({
                     ]
                 }
             }
-        },
+        }]),
         {
             "aws_cloudwatch_metric_alarm": {
                 "azul_health": {
