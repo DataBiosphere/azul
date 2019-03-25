@@ -271,7 +271,9 @@ emit({} if config.terraform_component != 'gitlab' else {
                         "resources": merge(aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
                                            for bucket_name in ['azul-*',
                                                                'org-humancellatlas-azul-*',
-                                                               '*.url.data.humancellatlas.org'])
+                                                               '*.url.data.humancellatlas.org',
+                                                               "org-humancellatlas-dss-checkout-*",
+                                                               "org-hca-dss-checkout-*"])
                     },
 
                     *allow_service('KMS',

@@ -1,5 +1,9 @@
+import boto3
+from collections import deque
 import logging
+from more_itertools import one
 import random
+import requests
 import time
 from typing import Any, Mapping, Set
 import unittest
@@ -7,15 +11,10 @@ import urllib
 from urllib.parse import urlencode
 import uuid
 
-import boto3
-from more_itertools import one
-import requests
-
 from azul import config
 from azul.decorators import memoized_property
 from azul.reindexer import Reindexer
 from azul.requests import requests_session
-from azul.subscription import manage_subscriptions, call_client
 
 logger = logging.getLogger(__name__)
 
@@ -39,20 +38,12 @@ class IntegrationTest(unittest.TestCase):
 
     def tearDown(self):
         self.set_lambda_test_mode(False)
-        if config.subscribe_to_dss:
-            manage_subscriptions(self.dss, subscribe=True)
         super().tearDown()
 
     def test_webservice_and_indexer(self):
         test_uuid = str(uuid.uuid4())
         test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
         logger.info('Starting test using test name, %s ...', test_name)
-
-        if config.subscribe_to_dss:
-            self.unsubscribe()
-            self.unsubscribe()
-            self.subscribe()
-            self.subscribe()
 
         test_reindexer = Reindexer(indexer_url=config.indexer_endpoint(),
                                    test_name=test_name,
@@ -70,26 +61,6 @@ class IntegrationTest(unittest.TestCase):
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
         manifest_filter = {"file": {"organPart": {"is": ["temporal lobe"]}, "fileFormat": {"is": ["bai"]}}}
         self.check_endpoint_is_working(config.service_endpoint(), f'/manifest/files?filters={manifest_filter}')
-
-    def subscribe(self):
-        manage_subscriptions(self.dss, subscribe=True)
-        self.wait_for_subscriptions(2)
-
-    def unsubscribe(self):
-        manage_subscriptions(self.dss, subscribe=False)
-        self.wait_for_subscriptions(0)
-
-    def wait_for_subscriptions(self, num_expected_subscriptions):
-        deadline = time.time() + 60
-        while True:
-            actual_subscriptions = call_client(self.dss.get_subscriptions, replica='aws')['subscriptions']
-            if num_expected_subscriptions == len(actual_subscriptions):
-                break
-            else:
-                if time.time() > deadline:
-                    self.fail('Timed out waiting for subscription to disappear.')
-                else:
-                    time.sleep(1)
 
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -129,16 +100,21 @@ class IntegrationTest(unittest.TestCase):
         queues = {queue_name: boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
                   for queue_name in queue_names}
         wait_start_time = time.time()
+        queue_size_history = deque(maxlen=10)
 
         while True:
             total_message_count = self.get_number_of_messages(queues)
             queue_wait_time_elapsed = (time.time() - wait_start_time)
+            queue_size_history.append(total_message_count)
+            cumulative_queue_size = sum(queue_size_history)
             if queue_wait_time_elapsed > timeout:
                 logger.error('The queue(s) are NOT at the desired level.')
                 return
-            elif (total_message_count <= 0) == empty:
+            elif (cumulative_queue_size == 0) == empty:
                 logger.info('The queue(s) at the desired level.')
                 break
+            else:
+                logger.info('The most recently sampled queue sizes are %r.', queue_size_history)
             time.sleep(5)
 
         # Hack that removes the ResourceWarning that is caused by an unclosed SQS session
@@ -146,7 +122,7 @@ class IntegrationTest(unittest.TestCase):
             queue.meta.client._endpoint.http_session.close()
 
     def check_bundles_are_indexed(self, test_name: str, entity_type: str, indexed_bundle_fqids: Set[str]):
-        max_retries = 5
+        service_check_timeout = 600
         delay_between_retries = 5
         page_size = 100
 
@@ -163,6 +139,7 @@ class IntegrationTest(unittest.TestCase):
         logger.info('Checking if bundles are referenced by the service response ...')
         retries = 0
         found_bundle_fqids = set()
+        deadline = time.time() + service_check_timeout
 
         while True:
             response_json = self.requests.get(url).json()
@@ -173,16 +150,17 @@ class IntegrationTest(unittest.TestCase):
             search_after = response_json['pagination']['search_after']
             search_after_uid = response_json['pagination']['search_after_uid']
             total_entities = response_json['pagination']['total']
-            logger.info('Found %i/%i bundles on try #%i/%i. There are %i total hits. Current page has %i hits in %s.',
-                        len(found_bundle_fqids), num_bundles, retries + 1, max_retries, total_entities, len(hits), url)
+            logger.info('Found %i/%i bundles on try #%i. There are %i files with the project name.'
+                        ' Current page has %i hits in %s.', len(found_bundle_fqids), num_bundles, retries + 1,
+                        total_entities, len(hits), url)
 
             if search_after is None:
                 assert search_after_uid is None
                 if indexed_bundle_fqids == found_bundle_fqids:
                     logger.info('Found all bundles.')
                     break
-                elif retries >= max_retries:
-                    logger.error('Unable to find all the bundles. Retried too many (%i) times.', retries)
+                elif time.time() > deadline:
+                    logger.error('Unable to find all the bundles in under %i seconds.', service_check_timeout)
                     break
                 else:
                     time.sleep(delay_between_retries)

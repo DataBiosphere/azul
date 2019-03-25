@@ -122,7 +122,7 @@ class Config:
         stage = self.dss_deployment_stage
         # For domain_part, DSS went from `humancellatlas` to `hca` in 9/2018 and started reverting back to
         # `humancellatlas` in 12/2018. As I write this, only `dev` is back on `humancellatlas`
-        domain_part = 'humancellatlas' if stage == 'dev' else 'hca'
+        domain_part = 'hca' if stage == 'prod' else 'humancellatlas'
         return f'org-{domain_part}-dss-checkout-{stage}'
 
     @property
