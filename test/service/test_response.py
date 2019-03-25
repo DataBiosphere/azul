@@ -63,6 +63,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
+                            "selectedCellType": [],
                             "totalCells": 1
                         }
                     ],
@@ -130,6 +131,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
+                            "selectedCellType": [],
                             "totalCells": 1
                         }
                     ],
@@ -219,6 +221,7 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
+                                "selectedCellType": [],
                                 "totalCells": 1
                             }
                         ],
@@ -293,6 +296,7 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
+                                "selectedCellType": [],
                                 "totalCells": 1
                             }
                         ],
@@ -607,6 +611,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
+                            "selectedCellType": [],
                             "totalCells": 1
                         }
                     ],
@@ -710,6 +715,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
+                            "selectedCellType": [],
                             "totalCells": 1
                         }
                     ],
@@ -1046,6 +1052,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["brain"],
                             "organPart": ["amygdala"],
+                            "selectedCellType": [],
                             "totalCells": 10000
                         }
                     ],
