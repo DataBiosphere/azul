@@ -1,11 +1,26 @@
 from concurrent.futures import ThreadPoolExecutor
 
+from more_itertools import one
 from typing import Callable, Mapping, Any
+import uuid
 
 from azul.service import AbstractService
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 
 FileUrlFunc = Callable[[str, Mapping[str, Any]], str]
+
+
+class UUIDNotFoundError(Exception):
+    def __init__(self, entity_type: str, item_id: str):
+        Exception.__init__(self)
+        self.message = f"Can't find an entity in {entity_type} with an uuid, {item_id}."
+
+
+class InvalidUUIDError(Exception):
+    def __init__(self, item_id: str):
+        Exception.__init__(self)
+        self.message = f'{item_id} is not a valid uuid.'
+
 
 class RepositoryService(AbstractService):
 
@@ -28,10 +43,18 @@ class RepositoryService(AbstractService):
     def _get_item(self, entity_type, item_id, pagination, filters, file_url_func):
         if entity_type == 'projects':
             filters['file']['projectId'] = {"is": [item_id]}
+        elif entity_type == 'specimens':
+            filters['file']['specimenDocumentId'] = {"is": [item_id]}
         else:
             filters['file']['fileId'] = {"is": [item_id]}
+
+        try:
+            if item_id != str(uuid.UUID(item_id)):
+                raise InvalidUUIDError(item_id)
+        except ValueError:
+            raise InvalidUUIDError(item_id)
         response = self._get_data(entity_type, pagination, filters, file_url_func)
-        return response['hits'][0]
+        return one(response['hits'], too_short=UUIDNotFoundError(entity_type, item_id))
 
     def _get_items(self, entity_type, pagination, filters, file_url_func):
         response = self._get_data(entity_type, pagination, filters, file_url_func)
