@@ -47,11 +47,9 @@ class Flatten:
             "file_name"
         ]
 
-        self.default_format_filter = format_filter if format_filter else ["fastq.gz"]
-        self.default_blocked_file_ext = ['zarr!cell_id!0', '0', 'zarray', 'zarr!gene_id!0',
-                                         'zarr!cell_metadata_string_name!0', 'zarr!cell_metadata_numeric_name!0',
-                                         'zgroup']
-
+        self.default_format_filter = format_filter
+        # TODO temp until block filetype is needed
+        self.default_blocked_file_ext = {'csv', 'txt', 'pdf'}
 
     def _get_file_uuids_from_objects(self, list_of_metadata_objects):
         file_uuids = {}
@@ -156,14 +154,17 @@ class Flatten:
             if len(file_segments) > 1 and file_segments[-1] in self.default_blocked_file_ext:
                 continue
 
+            if '.zarr!' in obj["file_name"] and not '.zarr!.zattrs' in obj['file_name']:
+                continue
+
             if  not (obj["file_name"] or obj["file_format"]):
                 raise MissingFileNameError("expecting file_core.file_name")
 
             if dir_name:
                 obj["path"] = dir_name + os.sep + obj["file_name"]
 
-            # if self.default_format_filter and obj["file_format"] not in self.default_format_filter:
-            #     continue
+            if self.default_format_filter and obj["file_format"] not in self.default_format_filter:
+                continue
 
             schema_name = self._get_schema_name_from_object(content)
             self._flatten(obj, content, schema_name)
@@ -221,7 +222,7 @@ def convert_bundle_dirs():
 
     bundle_dir = args.dirname
 
-    flattener = Flatten(format_filter=[ args.filter ])
+    flattener = Flatten(format_filter=args.filter)
 
     uuid4hex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.I)
 
