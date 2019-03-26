@@ -12,14 +12,15 @@ logger = logging.getLogger(__name__)
 def main():
     if config.enable_monitoring:
         base_url = f'{config.grafana_endpoint}/api'
-        dashboard = get_dashboard_json_from_terraform()
-        update_dashboard(base_url, dashboard)
+        for dashboard in ['azul', 'data_portal']:
+            update_dashboard(base_url, get_dashboard_json_from_terraform(dashboard))
     else:
         logging.info('Skipping publishing of Grafana dashboard')
 
 
-def get_dashboard_json_from_terraform():
-    cmd = 'terraform output grafana_dashboard'
+def get_dashboard_json_from_terraform(dashboard):
+    logging.info('Extracting dashboard definition for %s', dashboard)
+    cmd = f'terraform output grafana_dashboard_{dashboard}'
     completed_process = subprocess.run(cmd,
                                        stdout=subprocess.PIPE,
                                        shell=True,
