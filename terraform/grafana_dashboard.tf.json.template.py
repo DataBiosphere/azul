@@ -1249,5 +1249,166 @@ emit({
                  "version": 1
              })
          },
+         "grafana_dashboard_data_portal": {
+             "sensitive": True,
+             "value": json.dumps({
+                 "annotations": {
+                     "list": [
+                         {
+                             "builtIn": 1,
+                             "datasource": "-- Grafana --",
+                             "enable": True,
+                             "hide": True,
+                             "iconColor": "rgba(0, 211, 255, 1)",
+                             "name": "Annotations & Alerts",
+                             "type": "dashboard"
+                         }
+                     ]
+                 },
+                 "editable": True,
+                 "gnetId": None,
+                 "graphTooltip": 0,
+                 "id": None,
+                 "links": [],
+                 "panels": [
+                     {
+                         "cacheTimeout": None,
+                         "colorBackground": True,
+                         "colorValue": False,
+                         "colors": [
+                             "#d44a3a",
+                             "#629e51",
+                             "#c15c17"
+                         ],
+                         "datasource": "account-cloudwatch",
+                         "format": "none",
+                         "gauge": {
+                             "maxValue": 100,
+                             "minValue": 0,
+                             "show": False,
+                             "thresholdLabels": False,
+                             "thresholdMarkers": True
+                         },
+                         "gridPos": {
+                             "h": 9,
+                             "w": 24,
+                             "x": 0,
+                             "y": 0
+                         },
+                         "id": 2,
+                         "interval": None,
+                         "links": [],
+                         "mappingType": 1,
+                         "mappingTypes": [
+                             {
+                                 "name": "value to text",
+                                 "value": 1
+                             },
+                             {
+                                 "name": "range to text",
+                                 "value": 2
+                             }
+                         ],
+                         "maxDataPoints": 100,
+                         "nullPointMode": "connected",
+                         "nullText": None,
+                         "postfix": "",
+                         "postfixFontSize": "50%",
+                         "prefix": "DATA BROWSER & PORTAL",
+                         "prefixFontSize": "120%",
+                         "rangeMaps": [
+                             {
+                                 "from": "null",
+                                 "text": "N/A",
+                                 "to": "null"
+                             }
+                         ],
+                         "sparkline": {
+                             "fillColor": "rgba(31, 118, 189, 0.18)",
+                             "full": False,
+                             "lineColor": "rgb(31, 120, 193)",
+                             "show": True
+                         },
+                         "tableColumn": "",
+                         "targets": [
+                             {
+                                 "dimensions": {
+                                     "HealthCheckId":
+                                         "${aws_route53_health_check.composite-portal.id}"
+                                 },
+                                 "expression": "",
+                                 "highResolution": False,
+                                 "id": "",
+                                 "metricName": "HealthCheckStatus",
+                                 "namespace": "AWS/Route53",
+                                 "period": "",
+                                 "refId": "A",
+                                 "region": "us-east-1",
+                                 "returnData": False,
+                                 "statistics": [
+                                     "Minimum"
+                                 ]
+                             }
+                         ],
+                         "thresholds": "0.5",
+                         "title": "Data Browser & Portal Health",
+                         "type": "singlestat",
+                         "valueFontSize": "120%",
+                         "valueMaps": [
+                             {
+                                 "op": "=",
+                                 "text": "OK",
+                                 "value": "1"
+                             },
+                             {
+                                 "op": "=",
+                                 "text": "ERR",
+                                 "value": "0"
+                             }
+                         ],
+                         "valueName": "current"
+                     }
+                 ],
+                 "schemaVersion": 16,
+                 "style": "dark",
+                 "tags": [],
+                 "templating": {
+                     "list": []
+                 },
+                 "time": {
+                     "from": "now-6h",
+                     "to": "now"
+                 },
+                 "timepicker": {
+                     "refresh_intervals": [
+                         "5s",
+                         "10s",
+                         "30s",
+                         "1m",
+                         "5m",
+                         "15m",
+                         "30m",
+                         "1h",
+                         "2h",
+                         "1d"
+                     ],
+                     "time_options": [
+                         "5m",
+                         "15m",
+                         "1h",
+                         "6h",
+                         "12h",
+                         "24h",
+                         "2d",
+                         "7d",
+                         "30d"
+                     ]
+                 },
+                 "timezone": "",
+                 "title": f"Data Browser & Portal [{config.deployment_stage.upper()}]",
+                 "uid": f"data-portal-{config.deployment_stage}",
+                 "version": 1
+             })
+        }
      }
 } if config.enable_monitoring else None)
