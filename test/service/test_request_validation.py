@@ -154,16 +154,13 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_single_entity_error_responses(self):
-        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
-        entities = ['specimens', 'files', 'projects']
-        expected_values = [('2b7959bb-acd1-4aa3-9557-345f9b3c6327', 404),
-                           ('-0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb-', 400),
-                           ('FOO', 400)]
-
-        for uuid, expected_error_code in expected_values:
-            for entity_name in entities:
-                with self.subTest(entity_name, entity_name=entity_name, error_code=expected_error_code, uuid=uuid):
-                    url = self.base_url + f'/repository/{entity_name}/{uuid}'
+        entity_types = ['files', 'projects']
+        for uuid, expected_error_code in [('2b7959bb-acd1-4aa3-9557-345f9b3c6327', 404),
+                                          ('-0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb-', 400),
+                                          ('FOO', 400)]:
+            for entity_type in entity_types:
+                with self.subTest(entity_name=entity_type, error_code=expected_error_code, uuid=uuid):
+                    url = self.base_url + f'/repository/{entity_type}/{uuid}'
                     response = requests.get(url)
                     self.assertEqual(expected_error_code, response.status_code)
 
