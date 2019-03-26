@@ -47,17 +47,18 @@ class IntegrationTest(unittest.TestCase):
         super().tearDown()
 
     def test_webservice_and_indexer(self):
-        test_uuid = str(uuid.uuid4())
-        test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
-        logger.info('Starting test using test name, %s ...', test_name)
+        if config.deployment_stage != 'prod':
+            test_uuid = str(uuid.uuid4())
+            test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
+            logger.info('Starting test using test name, %s ...', test_name)
 
-        azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
-                                 test_name=test_name,
-                                 prefix=self.bundle_uuid_prefix)
-        logger.info('Creating indices and reindexing ...')
-        selected_bundle_fqids = azul_client.reindex()
-        self.num_bundles = len(selected_bundle_fqids)
-        self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
+            azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
+                                     test_name=test_name,
+                                     prefix=self.bundle_uuid_prefix)
+            logger.info('Creating indices and reindexing ...')
+            selected_bundle_fqids = azul_client.reindex()
+            self.num_bundles = len(selected_bundle_fqids)
+            self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
 
         self.check_endpoint_is_working(config.indexer_endpoint(), '/health')
         self.check_endpoint_is_working(config.service_endpoint(), '/')
