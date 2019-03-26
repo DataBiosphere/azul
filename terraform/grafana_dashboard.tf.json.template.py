@@ -6,7 +6,7 @@ from azul.template import emit
 
 emit({
      "output": {
-         "grafana_dashboard": {
+         "grafana_dashboard_azul": {
              "sensitive": True,
              "value": json.dumps({
                  "annotations": {
@@ -34,7 +34,7 @@ emit({
                          "colorValue": False,
                          "colors": [
                              "#bf1b00",
-                             "#299c46",
+                             "#629e51",
                              "rgba(237, 129, 40, 0.89)"
                          ],
                          "datasource": "account-cloudwatch",
@@ -71,7 +71,7 @@ emit({
                          "NoneText": None,
                          "postfix": "",
                          "postfixFontSize": "50%",
-                         "prefix": "DATA BROWSER",
+                         "prefix": "AZUL",
                          "prefixFontSize": "120%",
                          "rangeMaps": [
                              {
@@ -105,7 +105,7 @@ emit({
                              }
                          ],
                          "thresholds": "0.5",
-                         "title": "Data Browser Health",
+                         "title": "Azul Health",
                          "type": "singlestat",
                          "valueFontSize": "120%",
                          "valueMaps": [
@@ -1244,8 +1244,8 @@ emit({
                      ]
                  },
                  "timezone": "utc",
-                 "title": f"Data Browser[{config.deployment_stage.upper()}]",
-                 "uid": None,
+                 "title": f"Azul [{config.deployment_stage.upper()}]",
+                 "uid": f'azul-{config.deployment_stage}',
                  "version": 1
              })
          },
