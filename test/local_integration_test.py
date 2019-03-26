@@ -2,9 +2,11 @@ import boto3
 from collections import deque
 import logging
 import random
+
+from furl import furl
 import requests
 import time
-from typing import Any, Mapping, Set
+from typing import Any, Mapping, Set, Optional
 import unittest
 import urllib
 from urllib.parse import urlencode
@@ -50,8 +52,8 @@ class IntegrationTest(unittest.TestCase):
         logger.info('Starting test using test name, %s ...', test_name)
 
         azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
-                                    test_name=test_name,
-                                    prefix=self.bundle_uuid_prefix)
+                                 test_name=test_name,
+                                 prefix=self.bundle_uuid_prefix)
         logger.info('Creating indices and reindexing ...')
         selected_bundle_fqids = azul_client.reindex()
         self.num_bundles = len(selected_bundle_fqids)
@@ -63,17 +65,25 @@ class IntegrationTest(unittest.TestCase):
         self.check_endpoint_is_working(config.service_endpoint(), '/version')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
-        if config.dss_query_prefix:  # only subset of indexed metadata, use less stringent filter
+
+        if config.dss_query_prefix:
+            # only subset of indexed metadata, use unrestricted filter
             manifest_filter = {"file": {}}
         else:
             manifest_filter = {"file": {"organ": {"is": ["Brain"]}, "fileFormat": {"is": ["bai"]}}}
-        self.check_manifest(self.check_endpoint_is_working(config.service_endpoint(),
-                                                           f'/repository/files/export?filters={manifest_filter}'))
-        self.check_manifest(self.check_endpoint_is_working(config.service_endpoint(),
-                                                           f'/manifest/files?filters={manifest_filter}'))
 
-        self.check_bdbag_endpoint(config.service_endpoint(),
-                                  f'/repository/files/export?filters={manifest_filter}&format=bdbag')
+        for format_, validator in [
+            (None, self.check_manifest),
+            ('tsv', self.check_manifest),
+            ('bdbag', self.check_bdbag)
+        ]:
+            for path in '/repository/files/export', '/manifest/files':
+                with self.subTest(format=format_, filter=manifest_filter, path=path):
+                    query = {'filters': manifest_filter}
+                    if format_ is not None:
+                        query['format'] = format_
+                    response = self.check_endpoint_is_working(config.service_endpoint(), path, query)
+                    validator(response)
 
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -86,24 +96,25 @@ class IntegrationTest(unittest.TestCase):
     def requests(self) -> requests.Session:
         return requests_session()
 
-    def check_endpoint_is_working(self, lambda_endpoint: str, url: str):
-        url = lambda_endpoint + url
-        response = self.requests.get(url)
+    def check_endpoint_is_working(self, endpoint: str, path: str, query: Optional[Mapping[str, str]] = None) -> bytes:
+        url = furl(endpoint)
+        url.path.add(path)
+        if query is not None:
+            url.query.set({k: str(v) for k, v in query.items()})
+        logger.info('Requesting %s', url)
+        response = self.requests.get(url.url)
         response.raise_for_status()
-        return response
+        return response.content
 
-    def check_manifest(self, response):
+    def check_manifest(self, response: bytes):
         """Assert that manifest contains at least one row of metadata."""
-        wrapper = TextIOWrapper(BytesIO(response.content))
+        wrapper = TextIOWrapper(BytesIO(response))
         num_rows = len(list(csv.reader(wrapper, delimiter='\t')))
         self.assertTrue(num_rows > 1)
         logger.info(f'Manifest contains {num_rows} rows.')
 
-    def check_bdbag_endpoint(self, lambda_endpoint: str, url: str):
-        url = lambda_endpoint + url
-        response = self.requests.get(url)
-        response.raise_for_status()
-        with ZipFile(BytesIO(response.content)) as zip_fh:
+    def check_bdbag(self, response: bytes):
+        with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             tsv_files = {filename: os.path.join(data_path, filename) for filename in ['participant.tsv', 'sample.tsv']}
             for file_name, file_path in tsv_files.items():
