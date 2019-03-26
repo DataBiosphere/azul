@@ -258,10 +258,10 @@ class FacetNameValidationTest(WebServiceTestCase):
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
-            with open(os.path.join(zip_dir, zip_fname, 'data', 'participant.tsv'), 'r') as fh:
+            with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
                 observed = list(csv.reader(fh, delimiter='\t'))
                 expected = [['entity:participant_id'], ['7b07b9d0-cc0e-4098-9f64-f4a569f7d746']]
-                self.assertEqual(expected, observed, 'participant.tsv contains incorrect data')
+                self.assertEqual(expected, observed, 'participants.tsv contains incorrect data')
 
             expectations = [
                 ('entity:sample_id', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
@@ -283,7 +283,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                                            file_version='2018-11-02T113344.698028Z'))
             ]
             expected_fieldnames, expected_row = map(list, zip(*expectations))
-            with open(os.path.join(zip_dir, zip_fname, 'data', 'sample.tsv'), 'r') as fh:
+            with open(os.path.join(zip_dir, zip_fname, 'data', 'samples.tsv'), 'r') as fh:
                 rows = iter(csv.reader(fh, delimiter='\t'))
                 row = next(rows)
                 self.assertEqual(expected_fieldnames, row)
