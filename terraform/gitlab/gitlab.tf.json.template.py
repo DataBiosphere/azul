@@ -271,6 +271,7 @@ emit({} if config.terraform_component != 'gitlab' else {
                                            for bucket_name in ['azul-*',
                                                                'org-humancellatlas-azul-*',
                                                                '*.url.data.humancellatlas.org',
+                                                               'url.data.humancellatlas.org',
                                                                "org-humancellatlas-dss-checkout-*",
                                                                "org-hca-dss-checkout-*"])
                     },
