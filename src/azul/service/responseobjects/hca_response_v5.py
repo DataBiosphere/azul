@@ -314,8 +314,8 @@ class ManifestResponse(AbstractResponse):
             data_path = os.path.join(bag_path, 'data')
 
             # Write participant and sample data to their respective files.
-            tsvs = [('participant.tsv', participant_file_object),
-                    ('sample.tsv', sample_file_object)]
+            tsvs = [('participants.tsv', participant_file_object),
+                    ('samples.tsv', sample_file_object)]
             for tsv_filename, file_object in tsvs:
                 with open(os.path.join(tsv_file_dir, tsv_filename), 'w') as f:
                     f.write(file_object.getvalue())
