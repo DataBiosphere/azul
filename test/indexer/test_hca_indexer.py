@@ -2,6 +2,9 @@ import os
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import logging
+
+from requests_http_signature import HTTPSignatureAuth
+
 import copy
 
 import boto3
@@ -18,7 +21,7 @@ from elasticsearch.helpers import scan
 from more_itertools import one
 
 from app_test_case import LocalAppTestCase
-from azul import config
+from azul import config, hmac
 from azul.indexer import IndexWriter
 from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
@@ -578,7 +581,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
 
     @mock_sts
     @mock_sqs
-    def test_post_notification_endpoint(self):
+    def test_succesful_notifications(self):
         self._create_mock_notify_queue()
         body = {
             'match': {
@@ -588,7 +591,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
         }
         for endpoint in ['/', '/delete']:
             with self.subTest(endpoint=endpoint):
-                response = self._test(body, endpoint)
+                response = self._test(body, endpoint, auth=hmac.prepare())
                 self.assertEqual(202, response.status_code)
                 self.assertEqual('', response.text)
 
@@ -642,14 +645,30 @@ class TestValidNotificationRequests(LocalAppTestCase):
             with self.subTest(endpoint=endpoint):
                 for test, body in bodies.items():
                     with self.subTest(test):
-                        response = self._test(body, endpoint)
+                        response = self._test(body, endpoint, auth=hmac.prepare())
                         self.assertEqual(400, response.status_code)
 
-    def _test(self, body, endpoint):
+    @mock_sts
+    @mock_sqs
+    def test_invalid_auth_for_notification_request(self):
+        self._create_mock_notify_queue()
+        body = {
+            "match": {
+                'bundle_uuid': str(uuid4()),
+                'bundle_version': 'SomeBundleVersion'
+            }
+        }
+        auth = HTTPSignatureAuth(key='Not a good key!!'.encode(), key_id=config.hmac_key_id)
+        for endpoint in ['/', '/delete']:
+            with self.subTest(endpoint=endpoint):
+                response = self._test(body, endpoint='/', auth=auth)
+                self.assertEqual(401, response.status_code)
+
+    def _test(self, body, endpoint, auth=None):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
-                return requests.post(self.base_url + endpoint, json=body)
+                return requests.post(self.base_url + endpoint, json=body, auth=auth)
 
     @staticmethod
     def _create_mock_notify_queue():

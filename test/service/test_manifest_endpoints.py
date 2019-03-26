@@ -30,7 +30,7 @@ class ManifestEndpointTest(WebServiceTestCase):
         from lambdas.service.app import generate_manifest
         storage_service = StorageService()
         storage_service.create_bucket()
-        manifest_url = generate_manifest(event={}, context=None)['Location']
+        manifest_url = generate_manifest(event={'format': 'tsv', 'filters': {'file': {}}}, context=None)['Location']
         manifest_response = requests.get(manifest_url)
         self.assertEqual(200, manifest_response.status_code)
         self.assertTrue(len(manifest_response.text) > 0)
@@ -50,6 +50,7 @@ class ManifestEndpointTest(WebServiceTestCase):
         execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
         mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
+        format = 'tsv'
         filters = {'file': {'organ': {'is': ['lymph node']}}}
         current_request.query_params = {'filters': json.dumps(filters), 'format': format}
         response = start_manifest_generation()
@@ -58,7 +59,8 @@ class ManifestEndpointTest(WebServiceTestCase):
         self.assertIn('Location', response.headers)
         step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
                                                                      execution_name,
-                                                                     execution_input={'filters': filters})
+                                                                     execution_input=dict(format=format,
+                                                                                          filters=filters))
         step_function_helper.describe_execution.assert_called_once()
 
     @mock_sts
@@ -76,6 +78,7 @@ class ManifestEndpointTest(WebServiceTestCase):
         execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
         mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
+        format = 'tsv'
         filters = {'file': {'organ': {'is': ['lymph node']}}}
         current_request.query_params = {'filters': json.dumps(filters), 'format': format}
         response = start_manifest_generation_fetch()
@@ -84,7 +87,8 @@ class ManifestEndpointTest(WebServiceTestCase):
         self.assertIn('Location', response)
         step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
                                                                      execution_name,
-                                                                     execution_input={'filters': filters})
+                                                                     execution_input=dict(format=format,
+                                                                                          filters=filters))
         step_function_helper.describe_execution.assert_called_once()
 
     @mock.patch('azul.service.manifest.ManifestService.step_function_helper')

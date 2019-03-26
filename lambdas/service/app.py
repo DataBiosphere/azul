@@ -406,32 +406,24 @@ def get_manifest():
           in: query
           type: string
           description: Filters to be applied when generating the manifest
+        - name: format
+          in: query
+          type: string
+          description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
+          manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
+          latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
+          samples (aka specimens). The format of the manifests inside the BDBag is documented here:
+          https://software.broadinstitute.org/firecloud/documentation/article?id=10954
     :return: A manifest that the user can use to download the files in there
     """
-    # Setup logging
-    logger = logging.getLogger("dashboardService.webservice.get_manifest")
-    if app.current_request.query_params is None:
+    params = app.current_request.query_params
+    if params is None:  # FIXME: is this necessary?
         app.current_request.query_params = {}
-    filters = app.current_request.query_params.get('filters', '{"file": {}}')
-    format = app.current_request.query_params.get('format', 'tsv')
-    logger.debug("Filters string is: {}".format(filters))
-    logger.debug(f'Format query parameter is: {format}')
-    try:
-        logger.info("Extracting the filter parameter from the request")
-        filters = ast.literal_eval(filters)
-        filters = {"file": {}} if filters == {} else filters
-    except Exception as e:
-        logger.error("Malformed filters parameter: {}".format(e))
-        return "Malformed filters parameter"
-    # Create and instance of the ElasticTransformDump
-    logger.info("Creating ElasticTransformDump object")
+    from azul.service import AbstractService
+    filters = AbstractService.parse_filters(params.get('filters'))
+    format = params.get('format', 'tsv')
     es_td = EsTd()
-    # Get the response back
-    logger.info("Creating the API response")
-
-    response = es_td.transform_manifest(filters=filters, format=format)
-
-    # Return the excel file
+    response = es_td.transform_manifest(format, filters)
     return response
 
 
@@ -446,10 +438,18 @@ def start_manifest_generation():
           in: query
           type: string
           description: Filters to be applied when generating the manifest
+        - name: format
+          in: query
+          type: string
+          description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
+          manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
+          latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
+          samples (aka specimens). The format of the manifests inside the BDBag is documented here:
+          https://software.broadinstitute.org/firecloud/documentation/article?id=10954
         - name: token
           in: query
           type: string
-          description: An opaque string describing the manifest generation job
+          description: Reserved. Do not pass explicitly.
 
     :return: If the manifest generation has been started or is still ongoing, the response will have a
     301 status and will redirect to a URL that will get a recheck the status of the manifest.
@@ -477,10 +477,18 @@ def start_manifest_generation_fetch():
           in: query
           type: string
           description: Filters to be applied when generating the manifest
+        - name: format
+          in: query
+          type: string
+          description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
+          manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
+          latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
+          samples (aka specimens). The format of the manifests inside the BDBag is documented here:
+          https://software.broadinstitute.org/firecloud/documentation/article?id=10954
         - name: token
           in: query
           type: string
-          description: An opaque string describing the manifest generation job
+          description: Reserved. Do not pass explicitly.
 
     :return:  A 200 response with a JSON body describing the status of the manifest.
 
@@ -513,7 +521,7 @@ def start_manifest_generation_fetch():
     ```
     {
         "Status": 302,
-        "Location": "https://manifest.url"
+        "Location": "https://…"
     }
     ```
 
@@ -536,7 +544,6 @@ def handle_manifest_generation_request():
     Start a manifest generation job and return a status code, Retry-After, and a retry URL for
     the view function to handle
     """
-
     query_params = app.current_request.query_params or {}
     filters = query_params.get('filters')
     format = query_params.get('format')
@@ -570,9 +577,7 @@ def generate_manifest(event, context):
                       'tsv' (default) or 'bdbag'
     :return: The URL to the generated manifest
     """
-    filters = event.get('filters', {'file': {}})
-    format = event.get('format', 'tsv')
-    response = EsTd().transform_manifest(format, filters)
+    response = EsTd().transform_manifest(event['format'], event['filters'])
     return {'Location': response.headers['Location']}
 
 
@@ -1539,7 +1544,7 @@ def get_data_object(file_uuid):
         doc = one(one(response['hits'])['files'])
         data_obj = file_to_drs(doc)
         assert data_obj['id'] == file_uuid
-        assert data_obj['version'] == file_version
+        assert file_version is None or data_obj['version'] == file_version
         return Response({'data_object': data_obj}, status_code=200)
     else:
         return Response({'msg': "Data object not found."}, status_code=404)
