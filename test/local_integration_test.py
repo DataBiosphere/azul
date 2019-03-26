@@ -117,7 +117,7 @@ class IntegrationTest(unittest.TestCase):
     def check_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
-            tsv_files = {filename: os.path.join(data_path, filename) for filename in ['participant.tsv', 'sample.tsv']}
+            tsv_files = {filename: os.path.join(data_path, filename) for filename in ['participants.tsv', 'samples.tsv']}
             for file_name, file_path in tsv_files.items():
                 with zip_fh.open(file_path) as bytesfile:
                     text = TextIOWrapper(bytesfile, encoding='utf-8')
