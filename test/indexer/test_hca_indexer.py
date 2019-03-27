@@ -7,7 +7,6 @@ from requests_http_signature import HTTPSignatureAuth
 
 import copy
 
-import boto3
 import requests
 
 from moto import mock_sqs, mock_sts
@@ -22,6 +21,7 @@ from more_itertools import one
 
 from app_test_case import LocalAppTestCase
 from azul import config, hmac
+from azul.deployment import aws
 from azul.indexer import IndexWriter
 from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
@@ -672,8 +672,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
 
     @staticmethod
     def _create_mock_notify_queue():
-        sqs = boto3.resource('sqs', region_name='us-east-1')
-        sqs.create_queue(QueueName=config.notify_queue_name)
+        aws.sqs_resource.create_queue(QueueName=config.notify_queue_name)
 
 
 def get(v):

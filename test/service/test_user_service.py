@@ -1,5 +1,4 @@
 import logging
-from unittest import mock
 
 from azul import config
 from azul.service.user_service import UserService, UpdateError
@@ -15,9 +14,7 @@ class TestUserService(DynamoTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        with mock.patch('azul.deployment.aws.dynamo') as dynamo:
-            dynamo.return_value = cls.dynamo_accessor.dynamo_client
-            cls.user_service = UserService()
+        cls.user_service = UserService()
 
     def setUp(self):
         super().setUp()
@@ -30,7 +27,7 @@ class TestUserService(DynamoTestCase):
     def create_tables(self):
         # Table definitions here must match definitions in Terraform
 
-        self.dynamo_accessor.dynamo_client.create_table(
+        self.dynamo_accessor.dynamodb.create_table(
             TableName=config.dynamo_user_table_name,
             KeySchema=[
                 {

@@ -1,4 +1,3 @@
-import ast
 import base64
 import binascii
 import json
@@ -10,7 +9,6 @@ import re
 import time
 import urllib.parse
 
-import boto3
 from botocore.exceptions import ClientError
 # noinspection PyPackageRequirements
 from chalice import BadRequestError, ChaliceViewError, NotFoundError, Response, AuthResponse
@@ -20,6 +18,7 @@ import requests
 from azul import config
 from azul.chalice import AzulChaliceApp
 from azul import drs
+from azul.deployment import aws
 from azul.health import Health
 from azul.security.authenticator import Authenticator, AuthenticationError
 from azul.service import service_config
@@ -746,7 +745,7 @@ def _dss_files(uuid, fetch=True):
             location = urllib.parse.urlparse(location)
             query = urllib.parse.parse_qs(location.query, strict_parsing=True)
             expires = int(one(query['Expires']))
-            s3 = boto3.client('s3')
+            s3 = aws.s3
             if file_name is None:
                 file_name = uuid
             bucket = location.netloc.partition('.')[0]

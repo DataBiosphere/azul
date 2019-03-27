@@ -6,9 +6,8 @@ import sys
 import tempfile
 from unittest.mock import patch
 
-import boto3
-
 from azul import config, subscription
+from azul.deployment import aws
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ def main(argv):
     dss_client = config.dss_client()
 
     if options.shared:
-        sm = boto3.client('secretsmanager')
+        sm = aws.secretsmanager
         creds = sm.get_secret_value(SecretId=config.google_service_account('indexer'))
         with tempfile.NamedTemporaryFile(mode='w+') as f:
             f.write(creds['SecretString'])

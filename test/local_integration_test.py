@@ -1,4 +1,3 @@
-import boto3
 from collections import deque
 import logging
 import random
@@ -20,6 +19,7 @@ from more_itertools import one, first
 from azul import config
 from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
+from azul.deployment import aws
 from azul.requests import requests_session
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ class IntegrationTest(unittest.TestCase):
                     validator(response)
 
     def set_lambda_test_mode(self, mode: bool):
-        client = boto3.client('lambda')
+        client = aws.lambda_
         indexer_lambda_config = client.get_function_configuration(FunctionName=config.indexer_name)
         environment = indexer_lambda_config['Environment']
         environment['Variables']['TEST_MODE'] = '1' if mode else '0'
@@ -144,7 +144,7 @@ class IntegrationTest(unittest.TestCase):
 
     def wait_for_queue_level(self, empty: bool = True, timeout: int = 60):
         queue_names = [config.notify_queue_name, config.document_queue_name]
-        queues = {queue_name: boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
+        queues = {queue_name: aws.sqs_resource.get_queue_by_name(QueueName=queue_name)
                   for queue_name in queue_names}
         wait_start_time = time.time()
         queue_size_history = deque(maxlen=10)

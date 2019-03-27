@@ -1,13 +1,14 @@
 import sys
 
 import argparse
-import boto3
 import json
 import more_itertools
 from azul import config
 import logging
 
 from urllib.parse import urlparse
+
+from azul.deployment import aws
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ def main(argv):
 
 
 def list_queues():
-    sqs = boto3.resource('sqs')
+    sqs = aws.sqs_resource
     logging.info('Listing queues')
     all_queues = sqs.queues.all()
     print('\n{:<35s}{:^20s}{:^20s}{:^18s}\n'.format('Queue Name',
@@ -54,7 +55,7 @@ def list_queues():
 
 
 def get_messages_from_queue(options):
-    sqs = boto3.resource('sqs')
+    sqs = aws.sqs_resource
     queue = sqs.get_queue_by_name(QueueName=options.queue_name)
     logging.info('Writing messages from queue "%s" to file "%s"', queue.url, options.file_name)
 

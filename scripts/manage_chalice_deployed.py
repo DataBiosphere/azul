@@ -4,8 +4,6 @@ import logging
 import os
 import sys
 
-import boto3
-
 from azul import config
 from azul.deployment import aws
 
@@ -19,7 +17,7 @@ bucket_name = config.terraform_backend_bucket
 file_path = f'.chalice/deployed/{config.deployment_stage}.json'
 key = f'azul-{app_name}-{config.deployment_stage}/deployed.json'
 
-s3 = boto3.client('s3')
+s3 = aws.s3
 
 if command == 'download':
     logger.info(f"Downloading s3://{bucket_name}/{key} to {file_path}")

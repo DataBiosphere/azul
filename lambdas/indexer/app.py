@@ -14,7 +14,6 @@ from chalice import Response
 from typing import List, MutableMapping
 import uuid
 
-import boto3
 # noinspection PyPackageRequirements
 import chalice
 from dataclasses import asdict, dataclass, replace
@@ -22,6 +21,7 @@ from more_itertools import chunked, partition
 
 from azul import config
 from azul.chalice import AzulChaliceApp
+from azul.deployment import aws
 from azul.health import Health
 from azul import hmac
 from azul.indexer import IndexWriter
@@ -160,7 +160,7 @@ chalice.app.EventSourceHandler.__call__ = new_handler
 
 
 def queue(queue_name):
-    return boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
+    return aws.sqs_resource.get_queue_by_name(QueueName=queue_name)
 
 
 @app.on_sqs_message(queue=config.notify_queue_name, batch_size=1)

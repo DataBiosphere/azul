@@ -1,5 +1,4 @@
 import sys
-import boto3
 import json
 
 # This script should only be called by Terraform.
@@ -8,6 +7,8 @@ import json
 
 # Converted to a string that expresses the structure of API log entries
 # For more info see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html
+from azul.deployment import aws
+
 JSON_LOG_FORMAT = {
     "requestId": "$context.requestId",
     "ip": "$context.identity.sourceIp",
@@ -41,11 +42,10 @@ def add_field(client, path: str, value: str, api_id: str, stage_name: str):
 
 
 def add_logging(api_id: str, stage_name: str, destination_arn: str):
-    client = boto3.client('apigateway')
     destination_arn = clean_arn(destination_arn)
     for path, value in [('/accessLogSettings/destinationArn', destination_arn),
                         ('/accessLogSettings/format', json.dumps(JSON_LOG_FORMAT))]:
-        add_field(client, path, value, api_id, stage_name)
+        add_field(aws.apigateway, path, value, api_id, stage_name)
 
 
 if __name__ == "__main__":

@@ -14,16 +14,13 @@ def setUpModule():
 
 
 class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
-
     number_of_documents = 1500
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls._fill_index(cls.number_of_documents)
-        with mock.patch('azul.deployment.aws.dynamo') as dynamo:
-            dynamo.return_value = cls.dynamo_accessor.dynamo_client
-            cls.cart_item_manager = CartItemManager()
+        cls.cart_item_manager = CartItemManager()
 
     def setUp(self):
         super().setUp()
@@ -38,7 +35,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
     def create_tables(self):
         # Table definitions here must match definitions in Terraform
 
-        self.dynamo_accessor.dynamo_client.create_table(
+        self.dynamo_accessor.dynamodb.create_table(
             TableName=config.dynamo_cart_table_name,
             KeySchema=[
                 {
@@ -106,7 +103,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
             ]
         )
 
-        self.dynamo_accessor.dynamo_client.create_table(
+        self.dynamo_accessor.dynamodb.create_table(
             TableName=config.dynamo_cart_item_table_name,
             KeySchema=[
                 {
@@ -134,7 +131,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
             }
         )
 
-        self.dynamo_accessor.dynamo_client.create_table(
+        self.dynamo_accessor.dynamodb.create_table(
             TableName=config.dynamo_user_table_name,
             KeySchema=[
                 {
@@ -447,15 +444,13 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
                                                                 search_after=search_after)
         self.assertEqual(100, len(hits))
 
-    @mock.patch('azul.deployment.aws.dynamo')
-    def test_cart_item_write_batch_lambda(self, dynamo):
+    def test_cart_item_write_batch_lambda(self):
         """
         One call to the cart item batch write function should write one batch of the given batch size to Dynamo
         """
         # FIXME: local import for now to delay side effects of the import like logging being configured
         # https://github.com/DataBiosphere/azul/issues/637
         from lambdas.service.app import cart_item_write_batch
-        dynamo.return_value = self.dynamo_accessor.dynamo_client
 
         cart_id = '123'
         write_params = {
@@ -473,8 +468,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
     @mock.patch('lambdas.service.app.get_user_id')
     @mock.patch('lambdas.service.app.app')
     @mock.patch('azul.service.responseobjects.cart_item_manager.CartItemManager.step_function_helper')
-    @mock.patch('azul.deployment.aws.dynamo')
-    def test_add_all_results_to_cart_endpoint(self, dynamo, step_function_helper, mock_app, get_user_id):
+    def test_add_all_results_to_cart_endpoint(self, step_function_helper, mock_app, get_user_id):
         """
         Write all results endpoint should start an execution of the cart item write state machine and
         return the name of the execution and the number items that will be written
@@ -482,7 +476,6 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         # FIXME: local import for now to delay side effects of the import like logging being configured
         # https://github.com/DataBiosphere/azul/issues/637
         from lambdas.service.app import add_all_results_to_cart
-        dynamo.return_value = self.dynamo_accessor.dynamo_client
 
         execution_id = '89a68f98-48cb-43d0-88ad-5ffd8aa26b9d'
         step_function_helper.start_execution.return_value = {

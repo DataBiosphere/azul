@@ -1,6 +1,5 @@
 from collections import defaultdict
 from concurrent.futures import Future, ThreadPoolExecutor
-from copy import deepcopy
 from functools import partial, lru_cache
 from itertools import product
 import json
@@ -11,12 +10,12 @@ import requests
 from typing import List, Optional
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
-from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from more_itertools import chunked
 
 from azul import config, hmac
+from azul.deployment import aws
 from azul.es import ESClientFactory
 from azul.plugin import Plugin
 from azul.types import JSON
@@ -172,15 +171,9 @@ class AzulClient(object):
     def dss_client(self):
         return config.dss_client(dss_endpoint=self.dss_url)
 
-    @property
-    @lru_cache(maxsize=1)
-    def sqs(self):
-        import boto3
-        return boto3.resource('sqs')
-
     @lru_cache(maxsize=10)
     def queue(self, queue_name):
-        return self.sqs.get_queue_by_name(QueueName=queue_name)
+        return aws.sqs_resource.get_queue_by_name(QueueName=queue_name)
 
     def remote_reindex(self, partition_prefix_length):
         partition_prefixes = map(''.join, product('0123456789abcdef', repeat=partition_prefix_length))

@@ -1,9 +1,9 @@
-from functools import lru_cache
 import json
 from typing import Mapping, Optional
 
 import boto3
 import botocore.session
+import botocore.client
 from more_itertools import one
 
 from azul import Netloc, config
@@ -11,6 +11,11 @@ from azul.decorators import memoized_property
 
 
 class AWS:
+
+    @memoized_property
+    def config(self):
+        return botocore.client.Config()
+
     @memoized_property
     def profile(self):
         session = botocore.session.Session()
@@ -23,15 +28,15 @@ class AWS:
 
     @memoized_property
     def sts(self):
-        return boto3.client('sts')
+        return boto3.client('sts', config=self.config)
 
     @memoized_property
     def lambda_(self):
-        return boto3.client('lambda')
+        return boto3.client('lambda', config=self.config)
 
     @memoized_property
     def apigateway(self):
-        return boto3.client('apigateway')
+        return boto3.client('apigateway', config=self.config)
 
     @memoized_property
     def account(self):
@@ -39,19 +44,35 @@ class AWS:
 
     @memoized_property
     def es(self):
-        return boto3.client('es')
+        return boto3.client('es', config=self.config)
+
+    @memoized_property
+    def secretsmanager(self):
+        return boto3.client('secretsmanager', config=self.config)
 
     @memoized_property
     def stepfunctions(self):
-        return boto3.client('stepfunctions')
+        return boto3.client('stepfunctions', config=self.config)
 
     @memoized_property
     def iam(self):
-        return boto3.client('iam')
+        return boto3.client('iam', config=self.config)
 
-    @lru_cache(maxsize=1)
-    def dynamo(self, endpoint_url, region_name):
-        return boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
+    @memoized_property
+    def dynamodb_resource(self):
+        return boto3.resource('dynamodb', config=self.config)
+
+    @memoized_property
+    def sqs_resource(self):
+        return boto3.resource('sqs', config=self.config)
+
+    @memoized_property
+    def s3(self):
+        return boto3.client('s3', config=self.config)
+
+    @memoized_property
+    def s3_resource(self):
+        return boto3.resource('s3', config=aws.config)
 
     def api_gateway_id(self, function_name: str, validate=True) -> Optional[str]:
         try:

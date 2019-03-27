@@ -10,14 +10,14 @@ class DynamoDataAccessor:
     Data access abstraction layer between the webservice and DynamoDB
     """
 
-    def __init__(self, endpoint_url=None, region_name=None):
-        self.dynamo_client = aws.dynamo(endpoint_url, region_name)
+    def __init__(self):
+        self.dynamodb = aws.dynamodb_resource
 
     def get_table(self, table_name):
-        return self.dynamo_client.Table(table_name)
+        return self.dynamodb.Table(table_name)
 
     def make_query(self, table_name, key_conditions, filters=None, index_name=None,
-                   select=None, limit=None, consistent_read:bool=False,
+                   select=None, limit=None, consistent_read: bool = False,
                    exclusive_start_key=None):
         """
         Make a query and get results one page at a time.  This method handles the pagination logic so the caller can
@@ -171,7 +171,7 @@ class DynamoDataAccessor:
                 ReturnValues='ALL_NEW',
                 **expression_params
             ).get('Attributes')
-        except self.dynamo_client.meta.client.exceptions.ConditionalCheckFailedException:
+        except self.dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
             raise ConditionalUpdateItemError(table_name, keys, update_values)
 
     def batch_write(self, table_name, items):

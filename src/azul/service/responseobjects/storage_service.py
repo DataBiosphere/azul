@@ -1,11 +1,10 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from functools import lru_cache
 from logging import getLogger
 from typing import Optional
 import boto3
-import os
 from azul import config
+from azul.deployment import aws
 
 logger = getLogger(__name__)
 AWS_S3_DEFAULT_MINIMUM_PART_SIZE = 5242880  # 5 MB; see https://docs.aws.amazon.com/AmazonS3/latest/dev/qfacts.html
@@ -17,12 +16,9 @@ class StorageService:
     def __init__(self, bucket_name=config.s3_bucket):
         self.bucket_name = bucket_name
 
-    # FIXME: Use @memoized_property from azul.decorators
-
     @property
-    @lru_cache(maxsize=1)
     def client(self):
-        return boto3.client('s3')
+        return aws.s3
 
     def get(self, object_key: str) -> bytes:
         return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read()
@@ -87,7 +83,6 @@ class MultipartUploadHandler:
     def __init__(self, object_key, content_type: str):
         self.bucket_name = config.s3_bucket
         self.object_key = object_key
-        self.upload_id = None
         self.mp_upload = None
         self.next_part_number = 1
         self.content_type = content_type
@@ -95,12 +90,13 @@ class MultipartUploadHandler:
         self.futures = []
         self.thread_pool = None
 
+    @property
+    def upload_id(self):
+        return self.mp_upload.id
+
     def __enter__(self):
-        api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,
-                                                                  Key=self.object_key,
-                                                                  ContentType=self.content_type)
-        self.upload_id = api_response['UploadId']
-        self.mp_upload = boto3.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
+        s3_object = aws.s3_resource.ObjectSummary(self.bucket_name, self.object_key)
+        self.mp_upload = s3_object.initiate_multipart_upload(ContentType=self.content_type)
         self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
         return self
 
@@ -175,5 +171,6 @@ class Part:
 
 
 class MultipartUploadError(RuntimeError):
+
     def __init__(self, bucket_name, object_key):
         super(MultipartUploadError, self).__init__(f'{bucket_name}/{object_key}')

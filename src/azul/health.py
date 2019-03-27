@@ -1,11 +1,11 @@
 from functools import lru_cache
 
-import boto3
 import requests
 from botocore.exceptions import ClientError
 
 from azul import config
 from azul.decorators import memoized_property
+from azul.deployment import aws
 from azul.es import ESClientFactory
 from azul.types import JSON
 
@@ -33,11 +33,10 @@ class Health:
 
     @memoized_property
     def queues(self):
-        sqs = boto3.resource('sqs')
         response = {'up': True}
         for queue in config.all_queue_names:
             try:
-                queue_instance = sqs.get_queue_by_name(QueueName=queue).attributes
+                queue_instance = aws.sqs_resource.get_queue_by_name(QueueName=queue).attributes
             except ClientError as ex:
                 response[queue] = {
                     'up': False,

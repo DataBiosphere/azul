@@ -3,13 +3,13 @@ import os
 from typing import List
 from unittest import TestSuite, mock
 
-import boto3
 from moto import mock_sqs, mock_sts
 import requests
 import responses
 
 from app_test_case import LocalAppTestCase
 from azul import config
+from azul.deployment import aws
 from es_test_case import ElasticsearchTestCase
 from retorts import ResponsesHelper
 
@@ -152,6 +152,5 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                 return requests.get(self.base_url + '/health')
 
     def _create_mock_queues(self):
-        sqs = boto3.resource('sqs', region_name='us-east-1')
         for queue_name in config.all_queue_names:
-            sqs.create_queue(QueueName=queue_name)
+            aws.sqs_resource.create_queue(QueueName=queue_name)

@@ -13,7 +13,7 @@ class TestDynamoAccessor(DynamoTestCase):
     table_name = 'Carts'
 
     def create_tables(self):
-        self.dynamo_accessor.dynamo_client.create_table(
+        self.dynamo_accessor.dynamodb.create_table(
             TableName=self.table_name,
             KeySchema=[
                 {

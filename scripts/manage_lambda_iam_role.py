@@ -3,8 +3,6 @@
 import json
 import sys
 
-import boto3
-
 from azul import config
 from azul.deployment import aws
 
@@ -27,21 +25,19 @@ assume_role_policy = {
     ]
 }
 
-iam = boto3.client('iam')
-
 try:
-    response = iam.get_role(RoleName=role_name)
+    response = aws.iam.get_role(RoleName=role_name)
     role = response['Role']
     current_assume_role_policy = role['AssumeRolePolicyDocument']
     current_permissions_boundary = role.get('PermissionsBoundary', {}).get('PermissionsBoundaryArn')
-except iam.exceptions.NoSuchEntityException:
+except aws.iam.exceptions.NoSuchEntityException:
     current_assume_role_policy = None
     current_permissions_boundary = None
 
 try:
-    response = iam.get_role_policy(RoleName=role_name, PolicyName=role_name)
+    response = aws.iam.get_role_policy(RoleName=role_name, PolicyName=role_name)
     current_role_policy = response['PolicyDocument']
-except iam.exceptions.NoSuchEntityException:
+except aws.iam.exceptions.NoSuchEntityException:
     current_role_policy = None
 
 permissions_boundary = aws.permissions_boundary['Arn'] if aws.permissions_boundary else None
@@ -55,14 +51,14 @@ if (
 else:
     assume_role_policy = json.dumps(assume_role_policy)
     try:
-        iam.create_role(RoleName=role_name,
-                        AssumeRolePolicyDocument=assume_role_policy,
-                        PermissionsBoundary=permissions_boundary)
-    except iam.exceptions.EntityAlreadyExistsException:
-        iam.update_assume_role_policy(RoleName=role_name,
-                                      PolicyDocument=assume_role_policy)
-        iam.put_role_permissions_boundary(RoleName=role_name,
-                                          PermissionsBoundary=permissions_boundary)
-    iam.put_role_policy(RoleName=role_name,
-                        PolicyName=role_name,
-                        PolicyDocument=json.dumps(role_policy))
+        aws.iam.create_role(RoleName=role_name,
+                            AssumeRolePolicyDocument=assume_role_policy,
+                            PermissionsBoundary=permissions_boundary)
+    except aws.iam.exceptions.EntityAlreadyExistsException:
+        aws.iam.update_assume_role_policy(RoleName=role_name,
+                                          PolicyDocument=assume_role_policy)
+        aws.iam.put_role_permissions_boundary(RoleName=role_name,
+                                              PermissionsBoundary=permissions_boundary)
+    aws.iam.put_role_policy(RoleName=role_name,
+                            PolicyName=role_name,
+                            PolicyDocument=json.dumps(role_policy))
