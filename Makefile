@@ -24,9 +24,17 @@ clean:
 test:
 	PYTHONWARNINGS=ignore:ResourceWarning coverage run -m unittest discover test --verbose
 
+tag_name=$$(date '+deployed/$(AZUL_DEPLOYMENT_STAGE)/%Y-%m-%d__%H-%M')
+
 tag:
-	@tag_name="$$(date '+deployed/$(AZUL_DEPLOYMENT_STAGE)/%Y-%m-%d__%H-%M')" ; \
-	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
+	@tag_name=$(tag_name) \
+	    ; git tag $$tag_name \
+	    && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
+
+push_tag:
+	@tag_name=$(tag_name) \
+	    ; git tag $$tag_name \
+	    && git push origin tag $$tag_name
 
 integration_test:
 	python -m unittest -v local_integration_test
