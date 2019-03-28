@@ -889,3 +889,28 @@ variables under project settings on the Gitlab web UI. Only people with push
 access can push code to intentionally or accidentally expose those variables,
 push access is tied to shell access which is what one would normally need to
 modify those files.
+
+# 9. Kibana
+
+Kibana is a web UI for interactively querying and managing an Elasticsearch
+instance. To use Kibana with Azul's AWS Elasticsearch instance, you have two
+options:
+
+* For one, you can add your local IP to the policy of Azul's AWS Elasticsearch
+  instance and access its Kibana directly. This can take 10 minutes and you
+  might have to do it repeatedly because the policy is reset periodically,
+  potentially multiple times a day.
+
+* Alternatively, you can use `scripts/kibana-proxy.pl` to run Kibana locally and
+  have it point at Azul's AWS Elasticsearch instance. The script also starts a
+  signing proxy which eliminates the need to add your local IP to the
+  Elasticsearch policy, using your local AWS credentials instead for
+  authentication.
+
+  For the script to work, you need to
+
+  * have Docker installed,
+
+  * a deployment selected and
+
+  * `environment` sourced.
