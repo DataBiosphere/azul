@@ -14,28 +14,21 @@ class DynamoTestCase(DockerContainerTestCase):
     _aws_dynamodb_resource = None
 
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def _setUpClassPatches(cls):
+        super()._setUpClassPatches()
         host, port = cls._create_container('amazon/dynamodb-local', container_port=8000)
         try:
             with mock_sts():
                 dynamodb_resource = boto3.resource('dynamodb',
                                                    endpoint_url=f'http://{host}:{port}',
                                                    region_name='us-east-1')
-                cls._aws_dynamodb_resource = mock.patch.object(target=aws.__class__,
-                                                               attribute='dynamodb_resource',
-                                                               new_callable=PropertyMock,
-                                                               return_value=dynamodb_resource)
-                cls._aws_dynamodb_resource.__enter__()
-                try:
-                    cls.dynamo_accessor = DynamoDataAccessor()
-                except:
-                    cls._aws_dynamodb_resource.__exit__()
+                cls._addClassPatch(mock.patch.object(target=aws.__class__,
+                                                     attribute='dynamodb_resource',
+                                                     new_callable=PropertyMock,
+                                                     return_value=dynamodb_resource))
+                cls.dynamo_accessor = DynamoDataAccessor()
         except:  # no coverage
             cls._kill_containers()
             raise
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._aws_dynamodb_resource.__exit__()
-        super().tearDownClass()
+
