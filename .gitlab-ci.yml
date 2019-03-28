@@ -9,12 +9,16 @@ build-image:
   # Docker's layer caching to speed up the build. The image will only be rebuilt after changes to
   # the Dockerfile, requirements.txt or requirements.dev.txt
   stage: setup
+  except:
+    - tags
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
     - docker build -t $CI_REGISTRY_IMAGE/build .
     - docker push $CI_REGISTRY_IMAGE/build
 
 .base:
+  except:
+    - tags
   image: $CI_REGISTRY_IMAGE/build
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
@@ -42,6 +46,7 @@ on_success:
   stage: teardown
   when: on_success
   script:
+    - make push_tag
     - python scripts/github_status_check.py success
 
 on_failure:
