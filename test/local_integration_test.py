@@ -47,17 +47,18 @@ class IntegrationTest(unittest.TestCase):
         super().tearDown()
 
     def test_webservice_and_indexer(self):
-        test_uuid = str(uuid.uuid4())
-        test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
-        logger.info('Starting test using test name, %s ...', test_name)
+        if config.deployment_stage != 'prod':
+            test_uuid = str(uuid.uuid4())
+            test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
+            logger.info('Starting test using test name, %s ...', test_name)
 
-        azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
-                                 test_name=test_name,
-                                 prefix=self.bundle_uuid_prefix)
-        logger.info('Creating indices and reindexing ...')
-        selected_bundle_fqids = azul_client.reindex()
-        self.num_bundles = len(selected_bundle_fqids)
-        self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
+            azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
+                                     test_name=test_name,
+                                     prefix=self.bundle_uuid_prefix)
+            logger.info('Creating indices and reindexing ...')
+            selected_bundle_fqids = azul_client.reindex()
+            self.num_bundles = len(selected_bundle_fqids)
+            self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
 
         self.check_endpoint_is_working(config.indexer_endpoint(), '/health')
         self.check_endpoint_is_working(config.service_endpoint(), '/')
@@ -70,7 +71,7 @@ class IntegrationTest(unittest.TestCase):
             # only subset of indexed metadata, use unrestricted filter
             manifest_filter = {"file": {}}
         else:
-            manifest_filter = {"file": {"organ": {"is": ["Brain"]}, "fileFormat": {"is": ["bai"]}}}
+            manifest_filter = {"file": {"organ": {"is": ["brain"]}, "fileFormat": {"is": ["bai"]}}}
 
         for format_, validator in [
             (None, self.check_manifest),
@@ -116,7 +117,7 @@ class IntegrationTest(unittest.TestCase):
     def check_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
-            tsv_files = {filename: os.path.join(data_path, filename) for filename in ['participant.tsv', 'sample.tsv']}
+            tsv_files = {filename: os.path.join(data_path, filename) for filename in ['participants.tsv', 'samples.tsv']}
             for file_name, file_path in tsv_files.items():
                 with zip_fh.open(file_path) as bytesfile:
                     text = TextIOWrapper(bytesfile, encoding='utf-8')
