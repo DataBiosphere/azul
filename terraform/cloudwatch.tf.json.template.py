@@ -6,7 +6,7 @@ from azul.deployment import aws
 
 emit({
     "resource": [
-        {
+        *([] if config.share_es_domain else [{
             "aws_cloudwatch_metric_alarm": {
                 "CPUUtilization": {
                     "alarm_name": config.es_domain+"-CPUUtilization",
@@ -86,7 +86,7 @@ emit({
                     ]
                 }
             }
-        },
+        }]),
         {
             "aws_cloudwatch_metric_alarm": {
                 "azul_health": {
@@ -100,7 +100,7 @@ emit({
                     "statistic": "Minimum",
                     "threshold": "1.0",
                     "alarm_description": json.dumps({
-                        "slack_channel": "data-browser",
+                        "slack_channel": "azul-dev",
                         "environment": config.deployment_stage,
                         "description": f"azul-{config.deployment_stage} HealthCheckStatus alarm"
                     }),
@@ -109,7 +109,30 @@ emit({
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
                     ],
                     "dimensions": {
-                        "HealthCheckId": "${aws_route53_health_check.composite.id}",
+                        "HealthCheckId": "${aws_route53_health_check.composite-azul.id}",
+                    }
+                },
+                "data_portal_health": {
+                    "alarm_name": f"data-browser-{config.deployment_stage}",
+                    "actions_enabled": True,
+                    "comparison_operator": "LessThanThreshold",
+                    "evaluation_periods": "1",
+                    "metric_name": "HealthCheckStatus",
+                    "namespace": "AWS/Route53",
+                    "period": "120",
+                    "statistic": "Minimum",
+                    "threshold": "1.0",
+                    "alarm_description": json.dumps({
+                        "slack_channel": "data-browser",
+                        "environment": config.deployment_stage,
+                        "description": f"data-browser-{config.deployment_stage} HealthCheckStatus alarm"
+                    }),
+                    "alarm_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ],
+                    "dimensions": {
+                        "HealthCheckId": "${aws_route53_health_check.composite-portal.id}",
                     }
                 }
             }
