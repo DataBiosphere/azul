@@ -1,11 +1,24 @@
 from concurrent.futures import ThreadPoolExecutor
 
+from more_itertools import one
 from typing import Callable, Mapping, Any
+import uuid
 
 from azul.service import AbstractService
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 
 FileUrlFunc = Callable[[str, Mapping[str, Any]], str]
+
+
+class EntityNotFoundError(Exception):
+    def __init__(self, entity_type: str, entity_id: str):
+        super().__init__(f"Can't find an entity in {entity_type} with an uuid, {entity_id}.")
+
+
+class InvalidUUIDError(Exception):
+    def __init__(self, entity_id: str):
+        super().__init__(f'{entity_id} is not a valid uuid.')
+
 
 class RepositoryService(AbstractService):
 
@@ -30,8 +43,16 @@ class RepositoryService(AbstractService):
             filters['file']['projectId'] = {"is": [item_id]}
         else:
             filters['file']['fileId'] = {"is": [item_id]}
+
+        try:
+            formatted_uuid = uuid.UUID(item_id)
+        except ValueError:
+            raise InvalidUUIDError(item_id)
+        else:
+            if item_id != str(formatted_uuid):
+                raise InvalidUUIDError(item_id)
         response = self._get_data(entity_type, pagination, filters, file_url_func)
-        return response['hits'][0]
+        return one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
 
     def _get_items(self, entity_type, pagination, filters, file_url_func):
         response = self._get_data(entity_type, pagination, filters, file_url_func)
