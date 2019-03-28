@@ -11,11 +11,11 @@ import shutil
 import sys
 from typing import List
 
-from azul.reindexer import Reindexer
+from azul.azulclient import AzulClient
 
 logger = logging.getLogger(__name__)
 
-defaults = Reindexer()
+defaults = AzulClient()
 
 
 class MyFormatter(argparse.ArgumentDefaultsHelpFormatter):
@@ -91,18 +91,18 @@ def main(argv: List[str]):
     logging.getLogger().setLevel(logging.INFO)
     logging.getLogger('azul').setLevel(level)
 
-    reindexer = Reindexer(indexer_url=args.indexer_url,
-                          dss_url=args.dss_url,
-                          query=args.query,
-                          prefix=args.prefix,
-                          num_workers=args.num_workers,
-                          dryrun=args.dryrun)
+    azul_client = AzulClient(indexer_url=args.indexer_url,
+                             dss_url=args.dss_url,
+                             query=args.query,
+                             prefix=args.prefix,
+                             num_workers=args.num_workers,
+                             dryrun=args.dryrun)
     if args.delete:
-        reindexer.delete_all_indices()
+        azul_client.delete_all_indices()
     if args.partition_prefix_length:
-        reindexer.remote_reindex(args.partition_prefix_length)
+        azul_client.remote_reindex(args.partition_prefix_length)
     else:
-        reindexer.reindex(args.sync)
+        azul_client.reindex(args.sync)
 
 
 if __name__ == "__main__":

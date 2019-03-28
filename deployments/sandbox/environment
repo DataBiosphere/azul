@@ -23,9 +23,14 @@ _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}.$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.data.humancellatlas.org"
 _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
 
+_set azul_grafana_endpoint "https://metrics.dev.data.humancellatlas.org"
+
 # Personal deployments and the `sandbox` share an ES domain with `dev`
 #
 _set AZUL_SHARE_ES_DOMAIN 1
 _set AZUL_ES_DOMAIN "azul-index-dev"
 
 _set azul_dss_query_prefix '42'
+
+# Ensure that monitoring and pushing to Grafana is enabled
+_set AZUL_ENABLE_MONITORING 1

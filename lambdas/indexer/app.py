@@ -23,9 +23,10 @@ from more_itertools import chunked, partition
 from azul import config
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
+from azul import hmac
 from azul.indexer import IndexWriter
 from azul.plugin import Plugin
-from azul.reindexer import Reindexer
+from azul.azulclient import AzulClient
 from azul.time import RemainingLambdaContextTime
 from azul.transformer import EntityReference
 from azul.types import JSON
@@ -77,6 +78,7 @@ def post_notification():
     """
     Receive a notification event and either queue it for asynchronous indexing or process it synchronously.
     """
+    hmac.verify(current_request=app.current_request)
     notification = app.current_request.json_body
     log.info("Received notification %r", notification)
     validate_request_syntax(notification)
@@ -134,6 +136,7 @@ def delete_notification():
     """
     Receive a deletion event and process it asynchronously
     """
+    hmac.verify(current_request=app.current_request)
     notification = app.current_request.json_body
     validate_request_syntax(notification)
     log.info("Received deletion notification %r", notification)
@@ -170,7 +173,7 @@ def index(event: chalice.app.SQSEvent):
         try:
             action = message['action']
             if action == 'reindex':
-                Reindexer.do_remote_reindex(message)
+                AzulClient.do_remote_reindex(message)
             else:
                 notification = message['notification']
                 indexer_cls = plugin.indexer_class()

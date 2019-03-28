@@ -418,6 +418,11 @@ class Config:
             f"{self.access_token_issuer}/userinfo"
         ]
 
+    # TODO: Generate subscription HMAC key dynamically and store it securely
+    #  https://github.com/DataBiosphere/azul/issues/794
+    hmac_key = 'São Paulo number Juan among all the numbers'
+    hmac_key_id = 'Mueto bem'
+
     @property
     def fusillade_endpoint(self) -> str:
         return os.environ['AZUL_FUSILLADE_ENDPOINT']
