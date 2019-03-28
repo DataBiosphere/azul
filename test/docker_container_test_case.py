@@ -1,7 +1,9 @@
 import logging
 import os
+from typing import List
 
 import docker
+from docker.models.containers import Container
 from more_itertools import one
 
 from azul import Netloc
@@ -16,7 +18,12 @@ class DockerContainerTestCase(AzulTestCase):
     """
     _docker = docker.from_env()
 
-    _containers = []
+    _containers: List[Container]
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls._containers = []
 
     @classmethod
     def _create_container(cls, image: str, container_port: int, **kwargs) -> Netloc:
