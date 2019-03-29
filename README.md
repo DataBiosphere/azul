@@ -3,20 +3,21 @@
 [![codecov.io](https://codecov.io/gh/DataBiosphere/azul/branch/develop/graph/badge.svg)](https://codecov.io/gh/DataBiosphere/azul)
 
 The Azul project contains the components that together serve as the backend to
-Boardwalk, a web application for browsing genomic data sets. 
+Boardwalk, a web application for browsing genomic data sets.
+
+[Data Store]: https://github.com/HumanCellAtlas/data-store
 
 Azul consists of two components: an indexer and a web service. The Azul indexer
 is an AWS Lambda function that responds to web-hook notifications about bundle
-addition and deletion events occurring in a [data
-store](https://github.com/HumanCellAtlas/data-store) instance. The indexer
+addition and deletion events occurring in a [Data Store] instance. The indexer
 responds to those notifications by retrieving the bundle's metadata from said
 data store, transforming it and writing the transformed metadata into an
 Elasticsearch index. The transformation extracts selected entities and
 denormalizes the relations between them into a document shape that facilitates
 efficient queries on a number of customizable metadata facets.
 
-The Azul web service, another AWS Lambda function fronted by API Gateway,
-serves as a thin translation layer between Elasticsearch and the Boardwalk UI,
+The Azul web service, another AWS Lambda function fronted by API Gateway, serves
+as a thin translation layer between Elasticsearch and the Boardwalk UI,
 providing features like pluggable authentication, field name translation and
 introspective capabilities such as facet and entity type discovery.
 
@@ -24,131 +25,192 @@ Both the indexer and the web service allow for project-specific customizations
 via a plug-in mechanism, allowing the Boardwalk UI codebase to be functionally
 generic with minimal need for project-specific behavior.
 
-## 1. Getting Started
+[TOC levels=1-4]: # "# Table of Contents"
 
-### 1.1. Development Prerequisites
+# Table of Contents
+- [1. Getting Started](#1-getting-started)
+    - [1.1 Development Prerequisites](#11-development-prerequisites)
+    - [1.2 Runtime Prerequisites (Infrastructure)](#12-runtime-prerequisites-infrastructure)
+    - [1.3 Project configuration](#13-project-configuration)
+        - [1.3.1 For personal deployment (AWS credentials available)](#131-for-personal-deployment-aws-credentials-available)
+    - [1.4 PyCharm](#14-pycharm)
+- [2. Deployment](#2-deployment)
+    - [2.1 Provisioning cloud infrastructure](#21-provisioning-cloud-infrastructure)
+    - [2.2 Deploying lambda functions](#22-deploying-lambda-functions)
+    - [2.3 Provisioning stable API domain names](#23-provisioning-stable-api-domain-names)
+    - [2.4 Subscribing to DSS](#24-subscribing-to-dss)
+    - [2.5 Reindexing](#25-reindexing)
+    - [2.6 Cancelling all ongoing (re)indexing operations](#26-cancelling-all-ongoing-reindexing-operations)
+- [3. Running indexer or service locally](#3-running-indexer-or-service-locally)
+- [4. Troubleshooting](#4-troubleshooting)
+- [5. Branch flow & development process](#5-branch-flow--development-process)
+    - [5.1 Deployment branches](#51-deployment-branches)
+- [6. Operational Procedures](#6-operational-procedures)
+    - [6.1 Main deployments and promotions](#61-main-deployments-and-promotions)
+        - [6.1.1 Initial setup](#611-initial-setup)
+        - [6.1.2 Prepare for promotion](#612-prepare-for-promotion)
+        - [6.1.3 Finishing up deployment / promotion](#613-finishing-up-deployment--promotion)
+- [7. Scale testing](#7-scale-testing)
+- [8. Continuous deployment and integration](#8-continuous-deployment-and-integration)
+    - [8.1 The Sandbox Deployment](#81-the-sandbox-deployment)
+    - [8.2 Security](#82-security)
+    - [8.3 Networking](#83-networking)
+    - [8.4 Storage](#84-storage)
+    - [8.5 Gitlab](#85-gitlab)
+    - [8.6 Updating Gitlab](#86-updating-gitlab)
+    - [8.7 The Gitlab Build Environment](#87-the-gitlab-build-environment)
+- [9. Kibana](#9-kibana)
+
+
+The Azul project contains the components that together serve as the backend to
+Boardwalk, a web application for browsing genomic data sets.
+
+Azul consists of two components: an indexer and a web service. The Azul indexer
+is an AWS Lambda function that responds to web-hook notifications about bundle
+addition and deletion events occurring in a [Data Store] instance. The indexer
+responds to those notifications by retrieving the bundle's metadata from said
+data store, transforming it and writing the transformed metadata into an
+Elasticsearch index. The transformation extracts selected entities and
+denormalizes the relations between them into a document shape that facilitates
+efficient queries on a number of customizable metadata facets.
+
+The Azul web service, another AWS Lambda function fronted by API Gateway, serves
+as a thin translation layer between Elasticsearch and the Boardwalk UI,
+providing features like pluggable authentication, field name translation and
+introspective capabilities such as facet and entity type discovery.
+
+Both the indexer and the web service allow for project-specific customizations
+via a plug-in mechanism, allowing the Boardwalk UI codebase to be functionally
+generic with minimal need for project-specific behavior.
+
+# 1. Getting Started
+
+## 1.1 Development Prerequisites
 
 - Python 3.6 (3.7 does not work) with `pip`
 
 - The `bash` shell
 
-- Docker for running the tests. The minimal required version is uncertain but 
+- Docker for running the tests. The minimal required version is uncertain but
   18.09 and 17.09 are known to work
 
-- Terraform (optional, to create new deployments):
-  https://www.terraform.io/intro/getting-started/install.html On macOS with
-  Homebrew installed, 'brew install terraform' works, too.
+- Terraform (optional, to create new deployments). Refer the official
+  documentation on how to [install terraform]. On macOS with Homebrew installed,
+  'brew install terraform' works, too.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
-### 1.2. Runtime Prerequisites (Infrastructure)
+[install terraform]: https://www.terraform.io/intro/getting-started/install.html
 
-- HCA DSS (aka Blue Box): It is required to know the URL of the HumanCellAtlas
-  Data Store webservice endpoint. See here for instructions:
-  https://github.com/HumanCellAtlas/data-store/tree/master
+## 1.2 Runtime Prerequisites (Infrastructure)
 
-The remaining infrastructure is managed internally with TerraForm.
+An instance of the HCA [Data Store] aka DSS. The URL of that instance can be
+configured in `environment` or `deployments/*/environment`.
 
-### 1.3. Project configuration
+The remaining infrastructure is managed internally using TerraForm.
 
-Getting started without attempting to make contributions does not require AWS 
-credentials. A subset of the test suite passes without configured AWS 
+## 1.3 Project configuration
+
+Getting started without attempting to make contributions does not require AWS
+credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1) Create a Python 3.6 virtual environment and activate it:
-   
+1. Create a Python 3.6 virtual environment and activate it:
+
    ```
    cd azul
    python3.6 -m venv .venv
    source .venv/bin/activate
    ```
-   
-2) Install the development prerequisites:
+
+2. Install the development prerequisites:
 
    ```
    pip install -U setuptools==40.1.0 wheel==0.32.3
    pip install -r requirements.dev.txt
    ```
 
-3) Activate the `dev` deployment: 
-   
+3. Activate the `dev` deployment:
+
    ```
    cd deployments
    ln -snf dev .active
    cd ..
    ```
 
-4) Load the environment:
+4. Load the environment:
 
    ```
    source environment
    ```
-   
+
    Examine the output.
 
-5) Run `make`. It should say `Looking good!` If one of the sanity checks fails,
+5. Run `make`. It should say `Looking good!` If one of the sanity checks fails,
    address the complaint and repeat. The various sanity checks are defined in
    `common.mk`.
-   
-6) Confirm proper configuration, run the following:
-   
+
+6. Confirm proper configuration, run the following:
+
    ```
    make test
-   ``` 
+   ```
 
-#### 1.3.1 For personal deployment (AWS credentials available)
+### 1.3.1 For personal deployment (AWS credentials available)
 
 Creating a personal deployment of Azul allows you test changes on a live system
 in complete isolation from other users. If you intend to make contributions,
-this is preferred. You will need IAM user credentials to the AWS account you
-are deploying to.
+this is preferred. You will need IAM user credentials to the AWS account you are
+deploying to.
 
 
-1) Choose a name for your personal deployment. The name should be a short
-   handle that is unique within the AWS account you are deploying to. It should
-   also be informative enough to let others know whose deployment this is. We'll
-   be using `foo` as an example here. The handle must only consist of alphabetic 
+1. Choose a name for your personal deployment. The name should be a short handle
+   that is unique within the AWS account you are deploying to. It should also be
+   informative enough to let others know whose deployment this is. We'll be
+   using `foo` as an example here. The handle must only consist of alphabetic
    characters.
 
-2) Create a new directory for the configuration of your personal deployment: 
+2. Create a new directory for the configuration of your personal deployment:
 
    ```
    cd deployments
    cp -r .example.local yourname.local
    ln -snf yourname.local .active
    cd ..
-   ```  
+   ```
 
-3) Edit `deployments/.active/environment` and
+3. Edit `deployments/.active/environment` and
    `deployments/.active/environment.local` according to the comments in there.
 
 
-### 1.4. PyCharm configuration specifics
+## 1.4 PyCharm
 
 Running tests from PyCharm requires `environment` to be sourced. The easiest way
 to do this is to install `envhook.py`, a helper script that injects the
 environment variables from `environment` into the Python interpreter process
-started from the project's virtual environment in `.venv`:   
+started from the project's virtual environment in `.venv`:
 
-   ```
-   python scripts/envhook.py install
-   ```
+```
+python scripts/envhook.py install
+```
 
-- Under *Settings* -> *Project—Interpreter* select the virtual environment created
-above.
-   * Under show all, select `.venv/bin/python` if not already selected.
+Whether you installed `envook.py` or not, a couple more steps are necessary to
+configure PyCharm for Azul:
+
+1. Under *Settings* -> *Project—Interpreter* select the virtual environment
+   created above.
+
+2. Set the `src` & `test` folder as a source root by right-clicking the folder
+   name and selecting *Mark Directory as* → *Source Root*.
 
 
-- Set `src` & `test` folder as Source Root.
-   * Right click the folder name and select `Mark Directory as` `->` `Source Root`
-   
-## 2. Deployment
+# 2. Deployment
 
-### 2.1. Provisioning cloud infrastructure
+## 2.1 Provisioning cloud infrastructure
 
-Once you've successfully configured the project and your personal deployment,
-it is time to provision the cloud infrastructure for your deployment. Running
+Once you've successfully configured the project and your personal deployment, it
+is time to provision the cloud infrastructure for your deployment. Running
 
 ```
 make terraform
@@ -161,7 +223,7 @@ resources are defined in `….tf.json` files which in turn are generated from
 `….tf.json.template.py` files which are simple Python scripts containing the
 desired JSON as Python dictionary and list literals and comprehensions.
 
-### 2.2. Deploying lambda functions
+## 2.2 Deploying lambda functions
 
 Once the cloud infrastructure for your deployment has been provisioned, you can
 deploy the project code into AWS Lambda. Running
@@ -174,7 +236,7 @@ Will create or update AWS Lambda functions for each lambda defined in the
 `lambdas` directory. It will also create or update an AWS API Gateway to proxy
 the functions that act as web services. We call those functions *API lambdas*.
 
-### 2.3. Provisioning stable API domain names
+## 2.3 Provisioning stable API domain names
 
 The HTTP endpoint offered by API Gateway have somewhat cryptic and hard to
 remember domain names:
@@ -183,11 +245,11 @@ https://klm8yi31z7.execute-api.us-east-1.amazonaws.com/hannes/
 
 Furthermore, the API ID at the beginning of the above URL is likely to change
 when you accidentally delete the REST API and then recreate it. To provide
-stable and user-friendly URLs for the API lambdas, we provision a *custom
-domain name* object in API Gateway along with an ACM certificate and a CNAME
-record in Route 53. Running `make terraform` again after `make deploy` will
-detect the newly deployed API lambdas and create those resources for you. What
-the user-friendly domain names look like depends on project configuration. The
+stable and user-friendly URLs for the API lambdas, we provision a *custom domain
+name* object in API Gateway along with an ACM certificate and a CNAME record in
+Route 53. Running `make terraform` again after `make deploy` will detect the
+newly deployed API lambdas and create those resources for you. What the
+user-friendly domain names look like depends on project configuration. The
 default for HCA is currently
 
 http://indexer.${AZUL_DEPLOYMENT_STAGE}.azul.data.humancellatlas.org/
@@ -196,11 +258,11 @@ http://service.${AZUL_DEPLOYMENT_STAGE}.azul.data.humancellatlas.org/
 Note that while the native API Gateway URL refers to the stage in the URL path,
 the stable URL mentions it in the domain name.
 
-### 2.4. Subscribing to DSS
+## 2.4 Subscribing to DSS
 
 Once the Lambda functions have been deployed, and the custom domain names
 provisioned, the indexer can be registered to receive notifications about new
-bundles from the configured DSS instance. 
+bundles from the configured DSS instance.
 
 ```
 make subscribe
@@ -218,7 +280,7 @@ indexer service account must belong to a GCP project that is whitelisted in the
 DSS instance to which the indexer is subscribed to. The credentials of the
 indexer service account are stored in Amazon Secrets Manager.
 
-### 2.5. Reindexing
+## 2.5 Reindexing
 
 The DSS instance used by a deployment is likely to contain existing bundles. To
 index them run:
@@ -227,39 +289,39 @@ index them run:
 make reindex
 ```
 
-### 2.6 Cancelling all ongoing (re)indexing operations
+## 2.6 Cancelling all ongoing (re)indexing operations
 
-1) Go to the Simple Queue Service dashboard in the AWS Console. Then, find your
+1. Go to the Simple Queue Service dashboard in the AWS Console. Then, find your
    target notify SQS queue (should be named azul-notify-…) and purge the queue.
 
-2) Go to the Lambda dashboard in the AWS Console. Find and open the
+2. Go to the Lambda dashboard in the AWS Console. Find and open the
    `azul-indexer-…-write` lambda. Then, disable the event binding to the
    document queue (usually named `azul-documents-…`). This is done by clicking
    on the `SQS` trigger in the *Designer* box, clicking on the *Enabled* switch
    of `azul-documents-…` in the newly appeared *SQS* box, then finally saving
    your settings.
 
-3) Purge the remaining queues.
+3. Purge the remaining queues.
 
-4) If azul-documents-… and azul-documents-…fifo isn't empty after 5 minutes,
+4. If azul-documents-… and azul-documents-…fifo isn't empty after 5 minutes,
    repeat steps 3.
 
-5) Renable the event binding from step 2.
+5. Renable the event binding from step 2.
 
-## 3. Running indexer or service locally
+# 3. Running indexer or service locally
 
-1) As usual, activate the virtual environment and `source environment` if you haven't
-   done so already
+1. As usual, activate the virtual environment and `source environment` if you
+   haven't done so already
 
-2) `cd lambdas/indexer` or `cd lambdas/service` 
+2. `cd lambdas/indexer` or `cd lambdas/service`
 
-3) Run
+3. Run
 
    ```
    make local
-   ````
+   ```
 
-4) You can now hit the app under `http://127.0.0.1:8000/`
+4. You can now hit the app under `http://127.0.0.1:8000/`
 
    To hit the indexer (not the service) with multiple notification requests, run
 
@@ -283,9 +345,9 @@ PyCharm recently added a feature that allows you to attach a debugger: From the
 main menu choose *Run*, *Attach to local process* and select the `chalice`
 process.
 
-## 4. Troubleshooting
+# 4. Troubleshooting
 
-`make terraform` complains 
+`make terraform` complains
 
 ```
 Initializing the backend...
@@ -300,11 +362,11 @@ Error inspecting states in the "s3" backend:
 ```
 
 … but the bucket does exist. Make sure
-`deployments/.active/.terraform/terraform.tfstate` refers to the correct
-bucket, the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET`. If it
-doesn't, you may have to remove that file or modify it to fix the bucket name.
+`deployments/.active/.terraform/terraform.tfstate` refers to the correct bucket,
+the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET`. If it doesn't, you may
+have to remove that file or modify it to fix the bucket name.
 
-## 5. Branch flow & development process
+# 5. Branch flow & development process
 
 The section below describes the flow we want to get to eventually, not the one
 we are currently using while this repository recovers from the aftermath of its
@@ -312,20 +374,20 @@ inception.
 
 The declared goal here is a process that prevents diverging forks yet allows
 each project to operate independently as far as release schedule, deployment
-cadence, project management and issue tracking is concerned. The main
-challenges are 1) preventing contention on a single `develop` or `master`
-branch, 2) isolating project-specific changes from generic ones, 3) maintaining
-a reasonably linear and clean history and 4) ensuring code reuse.
+cadence, project management and issue tracking is concerned. The main challenges
+are 1) preventing contention on a single `develop` or `master` branch, 2)
+isolating project-specific changes from generic ones, 3) maintaining a
+reasonably linear and clean history and 4) ensuring code reuse.
 
 The [original repository](https://github.com/DataBiosphere/azul), also known as
 *upstream*, should only contain generic functionality and infrastructure code.
-Project-specific functionality should be maintained in separate
-project-specific forks of that repository. The upstream repository will only
-contain a `master` branch and the occasional PR branch.
+Project-specific functionality should be maintained in separate project-specific
+forks of that repository. The upstream repository will only contain a `master`
+branch and the occasional PR branch.
 
-Azul dynamically imports project-specific plugin modules from a special
-location in the Python package hierarchy: `azul.projects`. The package
-structure in upstream is
+Azul dynamically imports project-specific plugin modules from a special location
+in the Python package hierarchy: `azul.projects`. The package structure in
+upstream is
 
 ```
 root
@@ -342,11 +404,11 @@ root
 └── ...
 ```
 
-Note that the `projects` directory is empty. 
+Note that the `projects` directory is empty.
 
 The directory structure in forked repositories is generally the same with one
-important difference. While a fork's `master` branch is an approximate mirror
-of upstream's `master` and therefore also lacks content in `projects`, that
+important difference. While a fork's `master` branch is an approximate mirror of
+upstream's `master` and therefore also lacks content in `projects`, that
 directory *does* contain modules in the fork's `develop` branch. In
 `HumanCellAtlas/azul-hca`, the fork of Azul for the HumanCellAtlas project, the
 `develop` branch would look like this:
@@ -372,43 +434,43 @@ root
 The `develop` branch would only contain changes to the `azul.projects.hca`
 package. All other changes would have to be considered generic—they would occur
 on the fork's `master` branch and eventually be merged into upstream's `master`
-branch. The `master` branches in each fork should not be divergent for
-sustained periods of time while the project-specific branches can and will be.
+branch. The `master` branches in each fork should not be divergent for sustained
+periods of time while the project-specific branches can and will be.
 
 The reason why each fork maintains a copy of the `master` branch is that forks
-generally need to have a place to test and evaluate generic features before
-they are promoted upstream. If there wasn't a `master` branch in a fork, the
+generally need to have a place to test and evaluate generic features before they
+are promoted upstream. If there wasn't a `master` branch in a fork, the
 project-specific `develop` branch in that fork would inevitably conflate
-project-specific changes with generic ones. It would be very hard to
-selectively promote generic changes upstream, even if the generic changes were
-separate commits. 
+project-specific changes with generic ones. It would be very hard to selectively
+promote generic changes upstream, even if the generic changes were separate
+commits.
 
 The flow presented here establishes an easy-to-follow rule: If you're modifying
 `azul.projects.hca`, you need to do so in a PR against `develop`. If you're
 modifying anything else, you need to do so in a PR against `master`. The figure
 below illustrates that.
 
-```                                                                                 
+```
                                                       ●────● feature/generic-foo
-                                                     ╱                          
-                                              4     ╱                           
+                                                     ╱
+                                              4     ╱
     ─────●────────────────────────────────────●────●──────────────        master
-          ╲                                  ╱                                  
- azul      ╲                                ╱                                   
+          ╲                                  ╱
+ azul      ╲                                ╱
  ─ ─ ─ ─ ─ ─╲─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ╱ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
- azul-hca    ╲                            ╱                                     
-              ╲                          ╱                                      
+ azul-hca    ╲                            ╱
+              ╲                          ╱
     ──────●────●────●────●────●────●────●──────────────────────────       master
-           ╲   1     ╲    ╲   A'   B'                                           
-            ╲         ╲    ╲                                                    
-             ╲         ╲    ●────● feature/master/generic-stuff                
-              ╲         ╲   A    B                                              
-               ╲         ╲                                                      
+           ╲   1     ╲    ╲   A'   B'
+            ╲         ╲    ╲
+             ╲         ╲    ●────● feature/master/generic-stuff
+              ╲         ╲   A    B
+               ╲         ╲
                 ●─────────●─────────────●────●────●─────────────────     develop
-                2         3              ╲   C'   D'                        
-                                          ╲                                 
+                2         3              ╲   C'   D'
+                                          ╲
                                            ●────● feature/develop/specific-stuff
-                                                C    D                           
+                                                C    D
 ```
 
 Merge commit 1 from the upstream `master` branch integrates upstream changes
@@ -422,9 +484,9 @@ Another important rule is that collaborative branches like `develop` and
 commits instead. Individual branches however, like feature branches, are always
 rebased onto the base branch. In the above example,
 `feature/master/generic-stuff` is first rebased onto `master`, creating commits
-A' and B'. Later those changes are merged upstream via commit 4. Both the
-rebase and the merge happen via a pull request, but the landing action will be
-"Rebase and merge" for the first PR and "Create a merge commit" for the second.
+A' and B'. Later those changes are merged upstream via commit 4. Both the rebase
+and the merge happen via a pull request, but the landing action will be "Rebase
+and merge" for the first PR and "Create a merge commit" for the second.
 
 The reason for this distinction is that rebasing usually triggers more rebasing
 of branches that were based on the rebased branch. It also rewrites the commit
@@ -448,8 +510,8 @@ changes occurring on `develop` are never merged upstream.
 As mentioned before, merge commit 4 is done via a pull request against the
 upstream repository. It is possible and perfectly acceptable that such upstream
 PRs combine multiple unrelated changes. They should be requested by the team
-lead for the forking project and reviewed by an upstream lead. Shortly after
-the PR lands, the requesting lead should perform a fast-forward merge of the
+lead for the forking project and reviewed by an upstream lead. Shortly after the
+PR lands, the requesting lead should perform a fast-forward merge of the
 upstream `master` branch into the fork's `master` branch. This will propagate
 the merge commit downstream before any subsequent commits occurring on fork's
 `master` have a chance to complicate the history by introducing the infamous
@@ -469,25 +531,25 @@ two remotes: `origin` (the forked repository) and `upstream` (the upstream
 repository). Other team members can usually get by with just one remote,
 `origin`.
 
-### 5.1. Deployment branches
+## 5.1 Deployment branches
 
-The code in the upstream repository should never be deployed anywhere because
-it does not contain any concrete modules to be loaded at runtime. The code in a
+The code in the upstream repository should never be deployed anywhere because it
+does not contain any concrete modules to be loaded at runtime. The code in a
 fork, however, is typically active in a number of deployments. The specifics
 should be left to each project but the rule of thumb should be that each
-deployment corresponds to a separate branch in the fork. The `azul-hca` fork
-has four deployments: development, integration, staging and production. The
+deployment corresponds to a separate branch in the fork. The `azul-hca` fork has
+four deployments: development, integration, staging and production. The
 development deployment, or `dev`, is done from the `develop` branch. Whenever a
-commit is pushed to that branch, a continuous deployment script deploys the
-code to AWS. The other deployment branches are named accordingly. Changes are
+commit is pushed to that branch, a continuous deployment script deploys the code
+to AWS. The other deployment branches are named accordingly. Changes are
 promoted between deployments via a merge. The merge is likely going to be a
 fast-forward. A push to any of the deployment branches will trigger a CI/CD
 build that performs the deployment. The promotion could be automatic and/or
 gated on a condition, like tests passing.
 
-## 6. Cheat sheets
+# 6. Operational Procedures
 
-### 6.1. Main deployments and promotions
+## 6.1 Main deployments and promotions
 
 We will refer to the branch of the stage to which you are deploying as the
 **`TARGET`** branch. The branch of the stage just below will be referred to as
@@ -496,59 +558,81 @@ the **`SOURCE`** branch.
 This cheat sheet may differ from branch to branch. Be sure to follow the cheat
 sheet in the README on the branch currently checked out.
 
-#### 6.1.1 Initial setup
-_NOTE: You can skip this step if you've deployed or promoted with Gitlab at least once already._
+### 6.1.1 Initial setup
 
-1) For promotion, we recommend keeping a separate clone of Azul that is never in
+[Gitlab instance]: https://gitlab.dev.explore.data.humancellatlas.org/
+
+_Note: You can skip this step if you've deployed or promoted with Gitlab at
+least once already._
+
+[SSH keys]: https://gitlab.dev.explore.data.humancellatlas.org/profile/keys
+
+1. For promotion, we recommend keeping a separate clone of Azul that is never in
    a dirty state. To create this if it doesn't yet exist run
+
    ```
    git clone git@github.com:DataBiosphere/azul.git azul.stable
    ```
-   
-2) Next you will need to login to our 
-   [Gitlab instance](https://gitlab.dev.explore.data.humancellatlas.org/)
-   in order to be able to push to Gitlab which automatically takes care of most
-   of the deployment process. If you haven't signed on yet, sign on with Github. You
-   will need at least `developer` permissions in order to be able to `push` to
-   Gitlab. Contact the team lead if you have problems signing on or have
-   insufficient permissions. 
-   
-3) [set up your ssh key](https://gitlab.dev.explore.data.humancellatlas.org/profile/keys)
-   So that you can push to Gitlab.
-   
-4) Now that your ssh key is set up, you will need to add Gitlab as a remote. Run
+
+2. Next you will need to login to our [Gitlab instance] in order to be able to
+   push to Gitlab which automatically takes care of most of the deployment
+   process. If you haven't signed on yet, sign on with Github. You will need at
+   least `developer` permissions in order to be able to `push` to Gitlab.
+   Contact the team lead if you have problems signing on or have insufficient
+   permissions.
+
+3. Deposit you public SSH key into the [SSH keys] section of your profile so
+   that you can push to Git repositories hosted on that Gitlab instance.
+
+4. Now that your SSH key is set up, you will need to add Gitlab as a remote. Run
+
    ```
-   git remote add gitlab git@ssh.gitlab.dev.explore.data.humancellatlas.org:azul/azul.git
+   git remote add gitlab.dev git@ssh.gitlab.dev.explore.data.humancellatlas.org:azul/azul.git
    ```
+
    Run
+
    ```
-   git fetch gitlab
+   git fetch gitlab.dev
    ```
+
    to ensure that your connection is working.
- 
-#### 6.1.2 Prepare for promotion
 
-_NOTE: Skip these step if you are deploying without promoting._
+If you have been given write access the `prod` deployment, you need to repeat
+these steps for our production Gitlab instance. For the name of the `git` remote
+use `gitlab.prod` instead of `gitlab.dev` in step 4 above. The hostname of that
+instance is the same as that of the Gitlab instance for the lesser deployments,
+without `.dev`.
 
-1) If promoting to `staging` or `prod` you will need to prepare release notes. 
+
+### 6.1.2 Prepare for promotion
+
+_NOTE: Skip these steps if you are deploying without promoting changes._
+
+[DCP release SOP]: https://allspark.dev.data.humancellatlas.org/dcp-ops/docs/wikis/SOP:%20Releasing%20new%20Versions%20of%20DCP%20Software
+
+1. If promoting to `staging` or `prod` you will need to prepare release notes.
    Make sure you do this **at least 24 hours in advance**. A link to the release
-   notes document can be found either in the #dcp-ops channel in HCA Slack or in
-   the Google Drive folder mentioned in the
-   [release guide document](https://allspark.dev.data.humancellatlas.org/dcp-ops/docs/wikis/SOP:%20Releasing%20new%20Versions%20of%20DCP%20Software).
-   
-   To produce the list of changes for the DCP release notes, run 
+   notes document can be found either in the #dcp-ops channel on HCA Slack or in
+   the Google Drive folder mentioned in the [DCP release SOP].
+
+   To produce the list of changes for the DCP release notes, run
+
    ```
    git log --pretty=oneline --topo-order --abbrev-commit
    ```
-   All non-merge commits from the top down to the commit labeled with the
-   most recent `deployed/…` tag represent changes to be deployed and should
-   be mentioned in the release notes. Copy them over, but remember to remove
-   commit hashes and tag / branch names.
-   
-   You will also need to add the release tag and commit hash which are
-   generated later in this guide.
-   
-2) From the `azul.stable` clone make sure all of the relevant branches are up to date
+
+   All non-merge commits from the top down to the commit labeled with the most
+   recent `deployed/…` tag represent changes to be deployed and should be
+   mentioned in the release notes. Copy them over, but remember to remove commit
+   hashes and tag / branch names.
+
+   You will also need to add the release tag and commit hash which are generated
+   later in this guide.
+
+2. From the `azul.stable` clone make sure all of the relevant branches are up to
+   date
+
    ```
    cd azul.stable
    git checkout SOURCE
@@ -557,63 +641,78 @@ _NOTE: Skip these step if you are deploying without promoting._
    git pull
    ```
 
-3) You should be on the `TARGET` branch. Run
+3. You should be on the `TARGET` branch. Run
+
    ```
    git merge SOURCE
    ```
+
    and resolve conflicts in necessary. Conflict resolution should only be
    necessary if cherry-picks occured on the target branch.
 
-4) The merge may have affected the README. Make sure you're looking at the
-   right version.
+4. The merge may have affected `README.md`, the file you are looking at right
+   now. Reopen the file now to ensure you are following the updated version.
 
-#### 6.1.3 Finishing up deployment / promotion
+### 6.1.3 Finishing up deployment / promotion
 
-1) Now you need to push to Github. If the build on Gitlab fails, you may need to
-   revert this step.
+1. Now you need to push the current branch to Github. This is needed because the
+   Gitlab build performs a status check update on Github. This would fail if
+   Github doesn't know the commit.
+
    ```
    git push origin
    ```
 
-2) Finally, push to Gitlab
+2. Finally, push to Gitlab.
+
    ```
-   git push gitlab
+   git push gitlab.dev
    ```
+
    The build should start immediately. You can monitor its progress from the
    [Gitlab Pipelines page](https://gitlab.dev.explore.data.humancellatlas.org/azul/azul/pipelines).
 
-3) Assuming the build is successful run
+3. Assuming the build is successful, run
+
    ```
    make tag
    ```
-   and then also run the
+
+   and the
+
    ```
    git push ...
    ```
+
    invocation that it echoes.
-   
+
    Copy this tag and add it to the release notes (if applicable).
 
-4) Invoke the health and version endpoints. Be sure to use the correct 
-   deployment name:
-   
-   * **develop:**
+   If the build fails, you may need to revert the offending commits and push
+   again.
+
+4. Invoke the health and version endpoints.
+
+   * For the `develop` branch and the corresponding `dev` deployment use
+
      ```
      http https://indexer.dev.explore.data.humancellatlas.org/version
      http https://service.dev.explore.data.humancellatlas.org/version
      http https://indexer.dev.explore.data.humancellatlas.org/health
      http https://service.dev.explore.data.humancellatlas.org/health
      ```
-     
-   * **integration:**
+
+   * For the `integration` branch/deployment use
+
      ```
      http https://indexer.integration.explore.data.humancellatlas.org/version
      http https://service.integration.explore.data.humancellatlas.org/version
      http https://indexer.integration.explore.data.humancellatlas.org/health
      http https://service.integration.explore.data.humancellatlas.org/health
      ```
-     
-   * **staging:**
+
+   * For the `staging` branch/deployment use
+
      ```
      http https://indexer.staging.explore.data.humancellatlas.org/version
      http https://service.staging.explore.data.humancellatlas.org/version
@@ -621,48 +720,65 @@ _NOTE: Skip these step if you are deploying without promoting._
      http https://service.staging.explore.data.humancellatlas.org/health
      ```
 
-5) Look at the history of `CHANGELOG.yml` since the last release to determine
-   when reindexing is necessary. When in doubt assume yes. In that case run the
-   manual job on the Gitlab pipeline labeled `reindex`.
-   
-## 7. Scale testing
+   * For the `prod` branch/deployment use
 
-Scale testing can be done with [Locust](https://locust.io/). Locust is a
-development requirement so running it is straight-forward with your development
-environment set up.
+     ```
+     http https://indexer.explore.data.humancellatlas.org/version
+     http https://service.explore.data.humancellatlas.org/version
+     http https://indexer.explore.data.humancellatlas.org/health
+     http https://service.explore.data.humancellatlas.org/health
+     ```
+
+5. Look at the history of `CHANGELOG.yml` since the last release to determine
+   when reindexing is necessary. When in doubt assume yes. In that case run the
+   manual `reindex` job on the Gitlab pipeline representing the most recent
+   build on the current branch.
+
+# 7. Scale testing
+
+[Locust]: https://locust.io/
+
+Scale testing can be done with [Locust]. Locust is a development requirement so
+running it is straight-forward with your development environment set up.
 
 1. Make sure Locust is installed by running
+
    ```
    locust --version
    ```
+
    If it is not installed, do step 1.3 in this README.
 
-1. To scale test the Azul web service on integration run
+2. To scale test the Azul web service on integration run
+
    ```
    locust -f scripts/locust/service.py
    ```
 
    If you want to test against a different stage use the `--host` option:
+
    ```
    locust -f scripts/locust/service.py --host https://service.dev.explore.data.humancellatlas.org
    ```
 
-1. Navigate to `http://localhost:8090` in your browser to start a test run.
+3. Navigate to `http://localhost:8090` in your browser to start a test run.
 
-For more advanced usage see [the Locust documentation](https://docs.locust.io/en/stable/).
+[Locust documentation]: https://docs.locust.io/en/stable/
+
+For more advanced usage refer to the official [Locust documentation].
 
 
-## 8. Continuous deployment and integration
+# 8. Continuous deployment and integration
 
 We are currently in the process of migrating from manual deployments to
-automated deployments performed on a project-specific Gitlab EC2 instance.
-There is currently one such Gitlab instance for the `dev`, `integration` and
-`staging` deployments. The `prod` instance is soon to follow.
+automated deployments performed on a project-specific Gitlab EC2 instance. There
+is currently one such Gitlab instance for the `dev`, `integration` and `staging`
+deployments. The `prod` instance is soon to follow.
 
 The Gitlab instance is provisioned through Terraform but its resource
 definitions reside in a separate *Terraform component*. A *Terraform component*
-is a set of related resources. Each deployment has at least a main component
-and zero or more subcomponents. The main component is identified by the empty
+is a set of related resources. Each deployment has at least a main component and
+zero or more subcomponents. The main component is identified by the empty
 string, child components have a non-empty name. The `dev` component has a
 subcomponent `dev.gitlab`. To terraform the main component of the `dev`
 deployment, one selects the `dev` deployment and runs `make apply` from
@@ -675,27 +791,29 @@ To access the web UI of the Gitlab instance for `dev`, visit
 account. After attempting to log in for the first time, one of the
 administrators will need to approve your access.
 
+[gitlab.tf.json.template.py]: /terraform/gitlab/gitlab.tf.json.template.py
+
 To have the Gitlab instance build a branch, one pushes that branch to the Azul
 fork hosted on the Gitlab instance. The URL of the fork can be viewed by
-visiting the GitLab web UI. One can only push via SSH and only a specific set
-of public keys are allowed to push. These keys are configured in
-[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py). A
-change to that file—and this should be obvious by now—requires running `make
-apply` in `${azul_home}/terraform/gitlab` while having `dev.gitlab` selected.
+visiting the GitLab web UI. One can only push via SSH and only a specific set of
+public keys are allowed to push. These keys are configured in
+[gitlab.tf.json.template.py]. A change to that file—and this should be obvious
+by now—requires running `make apply` in `${azul_home}/terraform/gitlab` while
+having `dev.gitlab` selected.
 
 An Azul build on Gitlab runs the `test`, `terraform`, `deploy` and
 `integration_test` Makefile targets, in that order. The target deployment for
 feature branches is `sandbox`, the protected branches use their respective
 deployments.
 
-8.1. The Sandbox Deployment
+## 8.1 The Sandbox Deployment
 
 There is only one such deployment and it should be used to validate feature
 branches (one at a time) or to run experiments. This implies that access to the
 sandbox must be coordinated externally e.g., via Slack. The build master owns
 the sandbox deployment by default.
 
-8.2. Security
+## 8.2 Security
 
 Gitlab has AWS write permissions for the AWS services used by Azul and the
 principle of least privilege is applied as much as IAM allows it. Some AWS
@@ -705,66 +823,60 @@ resources whose name begins with `azul-*`. Other services, such as API Gateway
 only support matching on resource IDs. This is unfortunate because API Gateway
 allocates the ID. Since it therefore impossible to know the ID of an API before
 creating it, Gitlab must be given write access to **all** API IDs. For details
-refer to the `azul-gitlab` role and the policy of the same name, both defined
-in [gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py).
+refer to the `azul-gitlab` role and the policy of the same name, both defined in
+[gitlab.tf.json.template.py].
+
+[permisions boundary]: https://aws.amazon.com/blogs/security/delegate-permission-management-to-developers-using-iam-permissions-boundaries/
 
 Gitlab does not have general write permissions to IAM, its write access is
 limited to creating roles and attaching policies to them as long as the roles
-and policies specify the `azul-gitlab` policy as a [permisions
-boundary][1]. This means that code running
-on the Gitlab instance can never escalate privileges beyond the boundary. This
-mechanism is defined in the `azul-gitlab-iam` policy.
-
-[1]: https://aws.amazon.com/blogs/security/delegate-permission-management-to-developers-using-iam-permissions-boundaries/
+and policies specify the `azul-gitlab` policy as a [permisions boundary]. This
+means that code running on the Gitlab instance can never escalate privileges
+beyond the boundary. This mechanism is defined in the `azul-gitlab-iam` policy.
 
 Code running on the Gitlab instance has access to credentials of a Google Cloud
-service account that has read-only privileges to Google Cloud. This implies
-that Gitlab cannot terraform Google Cloud resources. Fortunately, there are
-only two such resources: 1) the service account that is used to subscribe Azul
-to the DSS and 2) its credentials. That resource must be deployed manually once
-before pushing a branch that would create a deployment for the first time or to
+service account that has read-only privileges to Google Cloud. This implies that
+Gitlab cannot terraform Google Cloud resources. Fortunately, there are only two
+such resources: 1) the service account that is used to subscribe Azul to the DSS
+and 2) its credentials. That resource must be deployed manually once before
+pushing a branch that would create a deployment for the first time or to
 recreate it after it was destroyed:
 
 ```
 cd terraform
-make config 
+make config
 terraform apply -target google_service_account.indexer \
                 -target google_service_account_key.indexer
 ```
 
-8.3. Networking
+## 8.3 Networking
 
-The networking details are documented in
-[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py). The
+The networking details are documented in [gitlab.tf.json.template.py]. The
 Gitlab EC2 instance uses a VPC and is fronted by an Application Load Balancer
 (ALB) and a Network Load Balancer (NLB). The ALB proxies HTTPS access to the
 Gitlab web UI, the NLB provides SSH shell access and `git+ssh` access for
 pushing to the project forks on the instance.
 
-8.4. Storage
+## 8.4 Storage
 
 The Gitab EC2 instance is attached to an EBS volume that contains all of
 Gitlab's data and configuration. That volume is not controlled by Terraform and
-must be created manually once before terraforming the `gitlab` component.
-The details can be found in
-[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py).
+must be created manually once before terraforming the `gitlab` component. The
+details can be found in [gitlab.tf.json.template.py].
 
-8.5. Gitlab
+## 8.5 Gitlab
 
 The instance runs Gitlab CE running inside a rather elaborate concoction of
-Docker containers. See
-[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py) for
-details.
+Docker containers. See [gitlab.tf.json.template.py] for details.
 
-8.6. Updating Gitlab
+## 8.6 Updating Gitlab
 
-Modify the Docker image tags in
-[gitlab.tf.json.template.py](terraform/gitlab/gitlab.tf.json.template.py) and
-apply. The instance will be terminated (the EBS volume will survive) and a new
-instance will be launched, with fresh containers from updated images. This
-should be done periodically.
+Modify the Docker image tags in [gitlab.tf.json.template.py] and apply. The
+instance will be terminated (the EBS volume will survive) and a new instance
+will be launched, with fresh containers from updated images. This should be done
+periodically.
 
-8.7. The Gitlab Build Environment
+## 8.7 The Gitlab Build Environment
 
 The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
 mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
