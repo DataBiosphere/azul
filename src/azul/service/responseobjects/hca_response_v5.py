@@ -212,11 +212,15 @@ class ManifestResponse(AbstractResponse):
         for field_name in column_mapping.values():
             cell_value = []
             for entity in entities:
-                field_value = entity[field_name]
-                if isinstance(field_value, list):
-                    cell_value += [validate(str(v)) for v in field_value if v is not None]
+                try:
+                    field_value = entity[field_name]
+                except KeyError:
+                    pass
                 else:
-                    cell_value.append(validate(str(field_value)))
+                    if isinstance(field_value, list):
+                        cell_value += [validate(str(v)) for v in field_value if v is not None]
+                    else:
+                        cell_value.append(validate(str(field_value)))
             cell_values.append(" || ".join(sorted(set(cell_value))))
 
         return cell_values
@@ -310,8 +314,8 @@ class ManifestResponse(AbstractResponse):
             data_path = os.path.join(bag_path, 'data')
 
             # Write participant and sample data to their respective files.
-            tsvs = [('participant.tsv', participant_file_object),
-                    ('sample.tsv', sample_file_object)]
+            tsvs = [('participants.tsv', participant_file_object),
+                    ('samples.tsv', sample_file_object)]
             for tsv_filename, file_object in tsvs:
                 with open(os.path.join(tsv_file_dir, tsv_filename), 'w') as f:
                     f.write(file_object.getvalue())
@@ -343,44 +347,42 @@ class ManifestResponse(AbstractResponse):
 
     def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
         hit_dict = es_search_hit.to_dict()
+        # Some files are not associated with specimens or cell suspensions (e.g., PDFs, JPEGs) - skip them.
+        if 'specimens' in hit_dict['contents'].keys() and 'cell_suspensions' in hit_dict['contents'].keys():
+            specimen = one(hit_dict['contents']['specimens'])
+            cell_suspension = one(hit_dict['contents']['cell_suspensions'])
+            file = one(hit_dict['contents']['files'])
 
-        assert len(hit_dict['contents']['specimens']) == 1
-        assert len(hit_dict['contents']['cell_suspensions']) == 1
-        assert len(hit_dict['contents']['files']) == 1
+            specimen_fields = self._translate(specimen, 'contents.specimens')
+            cell_suspension_fields = self._translate(cell_suspension, 'contents.cell_suspensions')
+            file_fields = self._translate(file, 'contents.files')
 
-        specimen = one(hit_dict['contents']['specimens'])
-        cell_suspension = one(hit_dict['contents']['cell_suspensions'])
-        file = one(hit_dict['contents']['files'])
+            # Construct URL for file.
+            file_uuid = file['uuid']
+            file_version = file['version']
+            replica = 'gcp'
+            endpoint = f'files/{file_uuid}?version={file_version}&replica={replica}'
+            dss_url = config.dss_endpoint + '/' + endpoint
+            drs_url = drs.object_url(file_uuid, file_version)
 
-        specimen_fields = self._translate(specimen, 'contents.specimens')
-        cell_suspension_fields = self._translate(cell_suspension, 'contents.cell_suspensions')
-        file_fields = self._translate(file, 'contents.files')
-
-        # Construct URL for file.
-        file_uuid = file['uuid']
-        file_version = file['version']
-        replica = 'gcp'
-        endpoint = f'files/{file_uuid}?version={file_version}&replica={replica}'
-        dss_url = config.dss_endpoint + '/' + endpoint
-        drs_url = drs.object_url(file_uuid, file_version)
-
-        for bundle in hit_dict['bundles']:
-            sample_writer.writerow(chain(specimen_fields[0],
-                                         specimen_fields[1],
-                                         cell_suspension_fields[0],
-                                         self._translate(bundle, 'bundles'),
-                                         file_fields,
-                                         [dss_url],
-                                         [drs_url]))
-            participant_id = specimen_fields[1][0]
-            participants.add(participant_id)
+            for bundle in hit_dict['bundles']:
+                sample_writer.writerow(chain(specimen_fields[0],
+                                             specimen_fields[1],
+                                             cell_suspension_fields[0],
+                                             self._translate(bundle, 'bundles'),
+                                             file_fields,
+                                             [dss_url],
+                                             [drs_url]))
+                participant_id = specimen_fields[1][0]
+                participants.add(participant_id)
 
     def return_response(self):
         if config.disable_multipart_manifests or self.format == 'bdbag':
             object_key = self._push_content_single_part()
+            file_name = None
         else:
             object_key = self._push_content()
-        file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
+            file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
         presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 

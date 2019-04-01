@@ -10,6 +10,7 @@ from typing import Tuple, Optional, Union
 from azul import config
 from azul.service import AbstractService
 from azul.service.step_function_helper import StateMachineError, StepFunctionHelper
+from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ class ManifestService(AbstractService):
         else:
             return 0, time_or_location
 
-    def _start_manifest_generation(self, format: str, filters: dict, execution_id: str) -> None:
+    def _start_manifest_generation(self, format: str, filters: JSON, execution_id: str) -> None:
         """
         Start the execution of a state machine generating the manifest
 
@@ -76,7 +77,8 @@ class ManifestService(AbstractService):
         """
         self.step_function_helper.start_execution(config.manifest_state_machine_name,
                                                   execution_id,
-                                                  execution_input={'filters': filters})
+                                                  execution_input=dict(format=format,
+                                                                       filters=filters))
 
     def _get_next_wait_time(self, request_index: int) -> int:
         wait_times = [1, 1, 4, 6, 10]
