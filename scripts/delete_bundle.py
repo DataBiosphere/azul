@@ -2,8 +2,7 @@ import sys
 import argparse
 
 import logging
-import requests
-from azul import config
+from azul.azulclient import AzulClient
 
 logger = logging.getLogger(__name__)
 
@@ -17,28 +16,14 @@ def main(argv):
                         help='One or more references of the bundles to be deleted.')
     args = parser.parse_args(argv)
     bundles = args.bundles
+    azul_client = AzulClient()
     for bundle in bundles:
         try:
             bundle_uuid, bundle_version = bundle
         except ValueError:
             parser.parse_args(['--help'])
         else:
-            delete_bundle(bundle_uuid, bundle_version)
-
-
-def delete_bundle(bundle_uuid, bundle_version):
-    logging.info('Deleting bundle %s.%s', bundle_uuid, bundle_version)
-    base_url = config.indexer_endpoint()
-    deletion_endpoint = f'{base_url}/delete'
-    notification = {
-        'match': {
-            'bundle_uuid': bundle_uuid,
-            'bundle_version': bundle_version
-        }
-    }
-    response = requests.post(url=deletion_endpoint,
-                             json=notification)
-    response.raise_for_status()
+            azul_client.delete_bundle(bundle_uuid, bundle_version)
 
 
 def parse_fqid(s: str):
