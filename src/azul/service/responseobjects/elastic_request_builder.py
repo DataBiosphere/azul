@@ -15,18 +15,21 @@ from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse, 
                                                           KeywordSearchResponse, ManifestResponse,
                                                           ProjectSummaryResponse, SummaryResponse)
 from azul.service.responseobjects.utilities import json_pp
+from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
 
 
 class BadArgumentException(Exception):
+
     def __init__(self, message):
         Exception.__init__(self)
         self.message = message
 
 
 class IndexNotFoundError(Exception):
+
     def __init__(self, missing_index: str):
         Exception.__init__(self)
         self.message = f'Could not find the Elasticsearch index: {missing_index}.'
@@ -531,17 +534,12 @@ class ElasticTransformDump(object):
 
         return final_response
 
-    def transform_manifest(self, format, filters=None, request_config_file='request_config.json'):
+    def transform_manifest(self, format: str, filters: JSON):
         config_folder = os.path.dirname(service_config.__file__)
-        request_config_path = "{}/{}".format(config_folder, request_config_file)
+        request_config_path = "{}/{}".format(config_folder, 'request_config.json')
         request_config = self.open_and_return_json(request_config_path)
-        if not filters:
-            filters = {"file": {}}
         filters = filters['file']
-        if format == 'bdbag':
-            manifest_config = request_config['bdbag']
-        else:
-            manifest_config = request_config['manifest']
+        manifest_config = request_config['bdbag' if format == 'bdbag' else 'manifest']
         source_filter = [field_path_prefix + '.' + field_name
                          for field_path_prefix, field_mapping in manifest_config.items()
                          for field_name in field_mapping.values()]
