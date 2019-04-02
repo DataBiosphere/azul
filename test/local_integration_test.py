@@ -129,13 +129,13 @@ class IntegrationTest(unittest.TestCase):
     def check_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
-            tsv_files = {filename: os.path.join(data_path, filename) for filename in ['participants.tsv', 'samples.tsv']}
-            for file_name, file_path in tsv_files.items():
-                with zip_fh.open(file_path) as bytesfile:
-                    text = TextIOWrapper(bytesfile, encoding='utf-8')
-                    num_rows = len(list(csv.reader(text, delimiter='\t')))
-                    self.assertTrue(num_rows > 1)
-                    logger.info(f'BDBag file {file_name} contains {num_rows} rows.')
+            file_name = 'bundle.tsv'
+            file_path = os.path.join(data_path, file_name)
+            with zip_fh.open(file_path) as bytesfile:
+                text = TextIOWrapper(bytesfile, encoding='utf-8')
+                num_rows = len(list(csv.reader(text, delimiter='\t')))
+                self.assertTrue(num_rows > 1)
+                logger.info(f'BDBag file {file_name} contains {num_rows} rows.')
 
     def download_file_from_drs_response(self, response: bytes):
         json_data = json.loads(response)['data_object']

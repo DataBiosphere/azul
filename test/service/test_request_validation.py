@@ -2,6 +2,7 @@ import csv
 import logging
 import os
 import sys
+import unittest
 
 from tempfile import TemporaryDirectory
 from unittest import mock
@@ -259,7 +260,8 @@ class FacetNameValidationTest(WebServiceTestCase):
         moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit
         the server (see GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
         """
-        logging.getLogger('test_request_validation').warning('test_manifest is invoked')
+        # Bundle'dcccb551-4766-4210-966c-f9ee25d19190' contains FASTQs and BAMs.
+        logging.getLogger('test_request_validation').warning('test_bdbag_manifest is invoked')
         with ResponsesHelper() as helper, TemporaryDirectory() as zip_dir:
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
@@ -270,37 +272,50 @@ class FacetNameValidationTest(WebServiceTestCase):
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
-            with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
-                observed = list(csv.reader(fh, delimiter='\t'))
-                expected = [['entity:participant_id'], ['7b07b9d0-cc0e-4098-9f64-f4a569f7d746']]
-                self.assertEqual(expected, observed, 'participants.tsv contains incorrect data')
 
-            expectations = [
-                ('entity:sample_id', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-                ('participant_id', '7b07b9d0-cc0e-4098-9f64-f4a569f7d746'),
-                ('cell_suspension_id', '412898c5-5b9b-4907-b07c-e9b89666e204'),
-                ('bundle_uuid', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
-                ('bundle_version', '2018-11-02T113344.698028Z'),
-                ('file_content_type', 'application/gzip; dcp-type=data'),
-                ('file_name', 'SRR3562915_1.fastq.gz'),
-                ('file_sha256', '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a'),
-                ('file_size', '195142097'),
-                ('file_uuid', '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'),
-                ('file_version', '2018-11-02T113344.698028Z'),
-                ('file_indexed', 'False'),
-                ('file_url', config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
-                                                   '?version=2018-11-02T113344.698028Z'
-                                                   '&replica=gcp'),
-                ('dos_url', drs.object_url(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                                           file_version='2018-11-02T113344.698028Z'))
-            ]
-            expected_fieldnames, expected_row = map(list, zip(*expectations))
-            with open(os.path.join(zip_dir, zip_fname, 'data', 'samples.tsv'), 'r') as fh:
-                rows = iter(csv.reader(fh, delimiter='\t'))
-                row = next(rows)
-                self.assertEqual(expected_fieldnames, row)
-                rows = freeze(list(rows))
-                self.assertEqual(len(rows), 2)  # self.bundle has 2 files
-                self.assertTrue(all(len(row) == len(expected_row) for row in rows))
-                self.assertEqual(len(set(rows)), len(rows))
-                self.assertIn(freeze(expected_row), rows)
+                expectations = [
+                    ('entity:bundle_id', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
+                    ('fastq_read2_sha256',
+                    '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d'),
+                    ('fastq_read2_size', '190330156'),
+                    ('fastq_read2_indexed', 'False'),
+                    ('fastq_read2_read_index', 'read2'),
+                    ('fastq_read2_name', 'SRR3562915_2.fastq.gz'),
+                    ('fastq_read2_content-type', 'application/gzip; dcp-type=data'),
+                    ('fastq_read2_uuid', '74897eb7-0701-4e4f-9e6b-8b9521b2816b'),
+                    ('fastq_read2_version', '2018-11-02T113344.450442Z'),
+                    ('fastq_read2_file_format', 'fastq.gz'),
+                    ('fastq_read2_file_url', config.dss_endpoint +
+                     '/files/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z&replica=gcp'),
+                    ('fastq_read2_dos_url',
+                     drs.object_url('74897eb7-0701-4e4f-9e6b-8b9521b2816b', '2018-11-02T113344.450442Z')),
+                    ('specimens_donor_document_id', '7b07b9d0-cc0e-4098-9f64-f4a569f7d746'),
+                    ('specimens_document_id', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
+                    ('cell_suspensions_document_id', '412898c5-5b9b-4907-b07c-e9b89666e204'),
+                    ('bundle_version', '2018-11-02T113344.698028Z'),
+                    ('fastq_read1_sha256',
+                    '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a'),
+                    ('fastq_read1_size', '195142097'),
+                    ('fastq_read1_indexed', 'False'),
+                    ('fastq_read1_read_index', 'read1'),
+                    ('fastq_read1_name', 'SRR3562915_1.fastq.gz'),
+                    ('fastq_read1_content-type', 'application/gzip; dcp-type=data'),
+                    ('fastq_read1_uuid', '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'),
+                    ('fastq_read1_version', '2018-11-02T113344.698028Z'),
+                    ('fastq_read1_file_format', 'fastq.gz'),
+                    ('fastq_read1_file_url', config.dss_endpoint +
+                    '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z&replica=gcp'),
+                    ('fastq_read1_dos_url',
+                     drs.object_url('7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb', '2018-11-02T113344.698028Z'))
+                ]
+
+                expected_fieldnames, expected_row = map(list, zip(*expectations))
+                with open(os.path.join(zip_dir, zip_fname, 'data', 'bundle.tsv'), 'r') as fh:
+                    rows = iter(csv.reader(fh, delimiter='\t'))
+                    row = next(rows)
+                    self.assertEqual(expected_fieldnames, row)
+                    rows = freeze(list(rows))
+                    self.assertEqual(len(rows), 1)  # self.bundle has 2 files, both originate from same bundle
+                    self.assertTrue(all(len(row) == len(expected_row) for row in rows))
+                    self.assertEqual(len(set(rows)), len(rows))
+                    self.assertIn(freeze(expected_row), rows)
