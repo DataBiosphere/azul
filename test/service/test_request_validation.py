@@ -208,6 +208,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                             ('file_indexed', 'False', 'False'),
                             ('file_format', 'pdf', 'fastq.gz'),
                             ('cell_suspension.estimated_cell_count', '', '9001'),
+                            ('cell_suspension.selected_cell_type', '', 'CAFs'),
                             ('sequencing_protocol.instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
                             ('library_preparation_protocol.library_construction_approach', '', 'Smart-seq2'),
                             ('project.provenance.document_id', '67bc798b-a34a-4104-8cab-cad648471f69',
