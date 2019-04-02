@@ -443,8 +443,8 @@ def start_manifest_generation():
           type: string
           description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
           manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
-          latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
-          samples (aka specimens). The format of the manifests inside the BDBag is documented here:
+          latter is essentially a ZIP file containing a manifest where one row represents all metadata files in one
+          bundle. The format of the manifests inside the BDBag is documented here:
           https://software.broadinstitute.org/firecloud/documentation/article?id=10954
         - name: token
           in: query
@@ -482,8 +482,8 @@ def start_manifest_generation_fetch():
           type: string
           description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
           manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
-          latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
-          samples (aka specimens). The format of the manifests inside the BDBag is documented here:
+          latter is essentially a ZIP file containing a manifest where one row represents all metadata files in one
+          bundle. The format of the manifests inside the BDBag is documented here:
           https://software.broadinstitute.org/firecloud/documentation/article?id=10954
         - name: token
           in: query

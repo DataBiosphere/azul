@@ -13,6 +13,13 @@ meta:
                    deployments may need to be updated
 
 changes:
+  - title: Add support for multiple file columns in BDBag TSV row
+    issues:
+      - https://github.com/DataBiosphere/azul/issues/866
+    upgrade:
+      - reindex
+    notes: BDBag payload contains one file, `bundle.tsv`, with the bundle UUID as primary key. The attributes
+           `read_index` and `file_format` were added to the BDBag section of `request_config.json`.
 
   - title: Add non-fetch variant of DSS proxy; add server-side wait
     issues:

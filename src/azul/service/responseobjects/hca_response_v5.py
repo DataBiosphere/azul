@@ -21,7 +21,8 @@ from jsonobject.properties import (FloatProperty,
                                    StringProperty)
 from bdbag import bdbag_api
 from shutil import copy
-from more_itertools import one
+from copy import deepcopy
+from more_itertools import one, first
 from azul import config
 from azul import drs
 from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
@@ -194,6 +195,16 @@ class AbstractResponse(object):
             'users must define return_response to use this base class')
 
 
+class BDBagOrderedDict(OrderedDict):
+    """
+    Enable OrderedDict to be nested.
+    (https://stackoverflow.com/questions/18809482/python-nesting-dictionary-ordereddict-from-collections)
+    """
+    def __missing__(self, key):
+        val = self[key] = BDBagOrderedDict()
+        return val
+
+
 class ManifestResponse(AbstractResponse):
     """
     Class for the Manifest response. Based on the AbstractionResponse class
@@ -281,47 +292,139 @@ class ManifestResponse(AbstractResponse):
 
     def _construct_bdbag(self) -> str:
         """
-        Create and return a file object of the sample data.
+        Create and return a file object of the metadata coming out of ES search.
         """
         es_search = self.es_search
-        sample_file_object = StringIO()
-        sample_writer = csv.writer(sample_file_object, dialect='excel-tab')
-        # Add fieldnames.
-        sample_writer.writerow(list(chain(self.manifest_entries['contents.specimens'].keys(),
-                                          self.manifest_entries['contents.cell_suspensions'].keys(),
-                                          self.manifest_entries['bundles'].keys(),
-                                          self.manifest_entries['contents.files'].keys(),
-                                          ['file_url'], ['dos_url'])))
-        participants = set()
-        for hit in es_search.scan():
-            self._iterate_hit_bdbag(hit, participants, sample_writer)
+        bundles = BDBagOrderedDict()
+        for hit_obj in es_search.scan():
+            hit = hit_obj.to_dict()
+            bundles = self._collect_bdbag_tsv_file_headers(hit, bundles)
+        header_row = self._create_bdbag_tsv_file_header_row(bundles)
+        tsv_file_object = StringIO()
+        tsv_writer = csv.writer(tsv_file_object, dialect='excel-tab')
+        # The following change in the header is needed to satisfy Terra's entity relationship data model requirements.
+        first_col_idx = header_row.index('bundles_uuid')
+        header_row[first_col_idx] = 'entity:bundle_id'  # first column headers needs to have that format
+        header_row = self._set_as_first_col(first_col_idx, header_row)
+        col_idx = header_row.index('bundles_version')
+        header_row[col_idx] = 'bundle_version'
+        tsv_writer.writerow(header_row)
+        all_bundles = defaultdict()
+        for hit_obj in es_search.scan():
+            hit = hit_obj.to_dict()
+            data_template = deepcopy(bundles)
+            bundle_key = first(hit['bundles'])['uuid']
+            if bundle_key in all_bundles.keys():
+                all_bundles[bundle_key] = self._put_bdbag_tsv_file_data_in_dict(hit, all_bundles[bundle_key])
+            else:
+                all_bundles[bundle_key] = self._put_bdbag_tsv_file_data_in_dict(hit, data_template)
+        for data in all_bundles.values():
+            data_row = self._construct_bdbag_tsv_file_data_row(data)
+            data_row = self._set_as_first_col(first_col_idx, data_row)
+            tsv_writer.writerow(data_row)
 
-        participant_file_object = StringIO()
-        participant_writer = csv.writer(participant_file_object, dialect='excel-tab')
-        participant_writer.writerow(['entity:participant_id'])
-        participant_writer.writerows(zip(participants))
-        return self._create_zipped_bdbag(participant_file_object, sample_file_object)
+        return self._create_zipped_bdbag(tsv_file_object)
 
     @staticmethod
-    def _create_zipped_bdbag(participant_file_object: StringIO, sample_file_object: StringIO) -> str:
-        """
-        Create write participant and sample data files to disk, and create and return zipped BDBag.
-        """
+    def _set_as_first_col(first_col_idx: int, row: list) -> list:
+        row[0], row[first_col_idx] = row[first_col_idx], first(row)
 
+        return row
+
+    @staticmethod
+    def _create_bdbag_tsv_file_header_row(data: BDBagOrderedDict) -> list:
+        row = []
+        for entity, value_dict in data.items():
+            for value_key in value_dict.keys():
+                row.append(entity + '_' + value_key)
+
+        return row
+
+    @staticmethod
+    def _collect_bdbag_tsv_file_headers(hit: dict, data: BDBagOrderedDict) -> BDBagOrderedDict:
+        for contents in hit.keys():
+            # Bundle ID and version.
+            if isinstance(hit[contents], list):
+                if len(hit[contents]) > 1:
+                    bundles_containing_file = {'bundle_uuid': bundle['uuid'] for bundle in hit[contents]}
+                    logger.info(f'File found in more than one bundle ID: '
+                                   f'{bundles_containing_file} - processing first encountered.')
+                data[contents] = {key: '' for key in first(hit[contents]).keys()}
+            # File and metadata attributes.
+            elif isinstance(hit[contents], dict):
+                for entity in hit[contents].keys():
+                    if entity == 'files':
+                        file_type = first(first(hit[contents][entity])['file_format'].split('.'))
+                        first(hit[contents][entity])['file_url'] = ''
+                        first(hit[contents][entity])['dos_url'] = ''
+                        if file_type == 'fastq':
+                            suffix = first(hit[contents][entity])['read_index']
+                            file_type = file_type + '_' + suffix
+                        data[file_type] = {key: '' for key in one(hit[contents][entity]).keys()}
+                    else:
+                        data[entity] = {key: '' for key in one(hit[contents][entity]).keys()}
+            else:
+                assert False
+
+        return data
+
+    @staticmethod
+    def _get_file_url(file_uuid: str, file_version: str, replica: str, dss_endpoint: str) -> str:
+        return f'{dss_endpoint}/files/{file_uuid}?version={file_version}&replica={replica}'
+
+    def _put_bdbag_tsv_file_data_in_dict(self, hit: dict, data: BDBagOrderedDict) -> BDBagOrderedDict:
+        for contents in hit.keys():
+            # Bundle ID and version.
+            if isinstance(hit[contents], list):
+                data[contents].update(first(hit[contents]))
+            # Collect file and metadata attributes.
+            elif isinstance(hit[contents], dict):
+                for entity in hit[contents].keys():
+                    if entity == 'files':
+                        file_type = first(first(hit[contents][entity])['file_format'].split('.'))
+                        if file_type == 'fastq':
+                            suffix = first(hit[contents][entity])['read_index']
+                            file_type = file_type + '_' + suffix
+                        data[file_type].update(one(hit[contents][entity]))
+                        data[file_type]['file_url'] = self._get_file_url(file_uuid=data[file_type]['uuid'],
+                                                                         file_version=data[file_type]['version'],
+                                                                         replica='gcp',
+                                                                         dss_endpoint=config.dss_endpoint)
+                        data[file_type]['dos_url'] = drs.object_url(file_uuid=data[file_type]['uuid'],
+                                                                    file_version=data[file_type]['version'])
+                    else:  # put remaining metadata
+                        for vals in hit[contents][entity]:
+                            for key, data_val in vals.items():
+                                data[entity][key] = first(data_val)
+            else:
+                assert False
+
+        return data
+
+    @staticmethod
+    def _construct_bdbag_tsv_file_data_row(data: BDBagOrderedDict) -> list:
+        row = []
+        for key, vals in data.items():
+            for val in vals.values():
+                row.append(val)
+
+        return row
+
+    @staticmethod
+    def _create_zipped_bdbag(tsv_file_object: StringIO) -> str:
+        """
+        Write TSV data file to disk and create and return zipped BDBag.
+        """
         with TemporaryDirectory() as bag_path, TemporaryDirectory() as tsv_file_dir:
             # Discard return value since we don't use it, bag is updated below
             bdbag_api.make_bag(bag_path)
             data_path = os.path.join(bag_path, 'data')
-
-            # Write participant and sample data to their respective files.
-            tsvs = [('participants.tsv', participant_file_object),
-                    ('samples.tsv', sample_file_object)]
-            for tsv_filename, file_object in tsvs:
-                with open(os.path.join(tsv_file_dir, tsv_filename), 'w') as f:
-                    f.write(file_object.getvalue())
-                copy(os.path.join(tsv_file_dir, tsv_filename), data_path)
-
-            assert sorted(tsv[0] for tsv in tsvs) == sorted(os.listdir(data_path))
+            # Write TSV data to their respective files.
+            tsv_filename = 'bundle.tsv'
+            with open(os.path.join(tsv_file_dir, tsv_filename), 'w') as f:
+                    f.write(tsv_file_object.getvalue())
+            copy(os.path.join(tsv_file_dir, tsv_filename), data_path)
+            assert tsv_filename == one(os.listdir(data_path))
             bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
             assert bdbag_api.is_bag(bag_path)
             bdbag_api.validate_bag(bag_path)
@@ -344,37 +447,6 @@ class ManifestResponse(AbstractResponse):
             inner_entity_fields += self._extract_fields(entities, column_mapping)
 
         writer.writerow(inner_entity_fields)
-
-    def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
-        hit_dict = es_search_hit.to_dict()
-        # Some files are not associated with specimens or cell suspensions (e.g., PDFs, JPEGs) - skip them.
-        if 'specimens' in hit_dict['contents'].keys() and 'cell_suspensions' in hit_dict['contents'].keys():
-            specimen = one(hit_dict['contents']['specimens'])
-            cell_suspension = one(hit_dict['contents']['cell_suspensions'])
-            file = one(hit_dict['contents']['files'])
-
-            specimen_fields = self._translate(specimen, 'contents.specimens')
-            cell_suspension_fields = self._translate(cell_suspension, 'contents.cell_suspensions')
-            file_fields = self._translate(file, 'contents.files')
-
-            # Construct URL for file.
-            file_uuid = file['uuid']
-            file_version = file['version']
-            replica = 'gcp'
-            endpoint = f'files/{file_uuid}?version={file_version}&replica={replica}'
-            dss_url = config.dss_endpoint + '/' + endpoint
-            drs_url = drs.object_url(file_uuid, file_version)
-
-            for bundle in hit_dict['bundles']:
-                sample_writer.writerow(chain(specimen_fields[0],
-                                             specimen_fields[1],
-                                             cell_suspension_fields[0],
-                                             self._translate(bundle, 'bundles'),
-                                             file_fields,
-                                             [dss_url],
-                                             [drs_url]))
-                participant_id = specimen_fields[1][0]
-                participants.add(participant_id)
 
     def return_response(self):
         if config.disable_multipart_manifests or self.format == 'bdbag':
