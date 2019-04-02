@@ -655,6 +655,8 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
 
 ### 6.1.3 Finishing up deployment / promotion
 
+0. FIXME: Mention _select TARGET here
+
 1. Now you need to push the current branch to Github. This is needed because the
    Gitlab build performs a status check update on Github. This would fail if
    Github doesn't know the commit.
