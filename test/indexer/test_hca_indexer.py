@@ -433,9 +433,10 @@ class TestHCAIndexer(IndexerTestCase):
             else:
                 specimens = contents['specimens']
                 for specimen in specimens:
-                    self.assertEquals({'bone marrow', 'temporal lobe'}, set(specimen['organ_part']))
+                    self.assertEqual({'bone marrow', 'temporal lobe'}, set(specimen['organ_part']))
                 for cell_suspension in cell_suspensions:
-                    self.assertEquals({'bone marrow', 'temporal lobe'}, set(cell_suspension['organ_part']))
+                    self.assertEqual({'bone marrow', 'temporal lobe'}, set(cell_suspension['organ_part']))
+                    self.assertEqual({'Plasma cells'}, set(cell_suspension['selected_cell_type']))
                 self.assertEqual(1 if aggregate else 384, len(cell_suspensions))
                 # 384 wells in total, four of them empty, the rest with a single cell
                 self.assertEqual(380, sum(cs['total_estimated_cells'] for cs in cell_suspensions))
