@@ -1,6 +1,5 @@
 from collections import defaultdict
 from concurrent.futures import Future, ThreadPoolExecutor
-from copy import deepcopy
 from functools import partial, lru_cache
 from itertools import product
 import json
@@ -11,8 +10,6 @@ import requests
 from typing import List, Optional
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
-from urllib.request import Request, urlopen
-from uuid import uuid4
 
 from more_itertools import chunked
 
@@ -66,8 +63,8 @@ class AzulClient(object):
         bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
         return {
             "query": self.query(),
-            "subscription_id": str(uuid4()),
-            "transaction_id": str(uuid4()),
+            "subscription_id": 'feeb0f2b-c16f-48f8-bac0-e6fd09b92320',
+            "transaction_id": 'feeb0f2b-c16f-48f8-bac0-e6fd09b92320',
             "match": {
                 "bundle_uuid": bundle_uuid,
                 "bundle_version": bundle_version

@@ -31,7 +31,7 @@ from azul.service.responseobjects.elastic_request_builder import (BadArgumentExc
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
 from azul.service.manifest import ManifestService
-from azul.service.repository import RepositoryService
+from azul.service.repository import EntityNotFoundError, InvalidUUIDError, RepositoryService
 from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
 
@@ -153,10 +153,10 @@ def repository_search(entity_type: str, item_id: str):
         pagination = _get_pagination(app.current_request, entity_type)
         service = RepositoryService()
         return service.get_data(entity_type, pagination, filters, item_id, file_url)
-    except BadArgumentException as e:
-        raise BadRequestError(msg=e.message)
-    except IndexNotFoundError as e:
-        raise NotFoundError(msg=e.message)
+    except (BadArgumentException, InvalidUUIDError) as e:
+        raise BadRequestError(msg=e)
+    except (EntityNotFoundError, IndexNotFoundError) as e:
+        raise NotFoundError(msg=e)
 
 
 @app.route('/repository/files', methods=['GET'], cors=True)
@@ -318,7 +318,7 @@ def get_summary():
     try:
         return service.get_summary(filters)
     except BadArgumentException as e:
-        raise BadRequestError(msg=e.message)
+        raise BadRequestError(msg=e)
 
 
 @app.route('/keywords', methods=['GET'], cors=True)
@@ -377,7 +377,7 @@ def get_search():
     try:
         pagination = _get_pagination(app.current_request, entity_type)
     except BadArgumentException as e:
-        raise BadRequestError(msg=e.message)
+        raise BadRequestError(msg=e)
     return service.get_search(entity_type, pagination, filters, _query, field)
 
 
