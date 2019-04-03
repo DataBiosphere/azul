@@ -31,9 +31,9 @@ main:
     - python scripts/github_status_check.py pending
     - make clean
     - make test
-    - make -C terraform auto_apply
+    - make -C terraform plan auto_apply
     - make deploy
-    - make -C terraform auto_apply
+    - make -C terraform plan auto_apply
     - make subscribe
     - make integration_test
 
