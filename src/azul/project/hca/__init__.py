@@ -66,21 +66,12 @@ class Plugin(azul.plugin.Plugin):
                                                 }
                                             },
                                             {
-                                                "bool": {
-                                                    "must": [
-                                                        {
-                                                            "prefix": {
-                                                                "files.project_json.project_core.project_short_name": "staging/"
-                                                            }
-                                                        },
-                                                        {
-                                                            "range": {
-                                                                "manifest.version": {
-                                                                    "gte": "2018-11-27"
-                                                                }
-                                                            }
+                                                {
+                                                    "range": {
+                                                        "manifest.version": {
+                                                            "gte": "2019-04-03"
                                                         }
-                                                    ]
+                                                    }
                                                 }
                                             }
                                         ]
