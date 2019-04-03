@@ -2,13 +2,13 @@ from collections import defaultdict
 from concurrent.futures import Future, ThreadPoolExecutor
 from copy import deepcopy
 from functools import partial, lru_cache
-from itertools import product
+from itertools import product, groupby
 import json
 import logging
 from pprint import PrettyPrinter
 
 import requests
-from typing import List, Optional
+from typing import List, Optional, Iterable
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -211,6 +211,12 @@ class AzulClient(object):
         # Render list of bundle FQIDs before moving on, reducing probability of duplicate notifications on retries
         bundle_fqids = self._post_dss_search()
         logger.info("DSS returned %i bundles for prefix %s", len(bundle_fqids), prefix)
+
+        # FIXME: Make this more efficient by splitting the FQID into a tuple once.
+        #        Right now, I favor a surgical change that cherry picks easily over one that's efficient.
+        bundle_fqids = cls._filter_obsolete_bundle_versions(bundle_fqids)
+        logger.info("After filtering obsolete versions, %i bundles remain for prefix %s", len(bundle_fqids), prefix)
+
         messages = (dict(action='add', notification=self._make_notification(bundle_fqid))
                     for bundle_fqid in bundle_fqids)
         notify_queue = self.queue(config.notify_queue_name)
@@ -221,6 +227,31 @@ class AzulClient(object):
                                                     for i, message in enumerate(batch)])
             num_messages += len(batch)
         logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, prefix)
+
+    @classmethod
+    def _filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[str]) -> List[str]:
+        """
+        Suppress obsolete bundle versions by only taking the latest version for each bundle UUID.
+
+        >>> AzulClient._filter_obsolete_bundle_versions([])
+        []
+
+        >>> AzulClient._filter_obsolete_bundle_versions(['c.0', 'a.1', 'b.3'])
+        ['c.0', 'b.3', 'a.1']
+
+        >>> AzulClient._filter_obsolete_bundle_versions(['C.0', 'a.1', 'a.0', 'a.2', 'b.1', 'c.2'])
+        ['c.2', 'b.1', 'a.2']
+
+        >>> AzulClient._filter_obsolete_bundle_versions(['a.0', 'A.1'])
+        ['A.1']
+        """
+        # Sort lexicographically by FQID. I've observed the DSS response to already be in this order
+        bundle_fqids = sorted(bundle_fqids, key=str.lower, reverse=True)
+        # Group by bundle UUID
+        bundle_fqids = groupby(bundle_fqids, key=lambda bundle_fqid: bundle_fqid.partition('.')[0].lower())
+        # Take the first item in each group. Because the oder is reversed, this is the latest version
+        bundle_fqids = [next(group) for _, group in bundle_fqids]
+        return bundle_fqids
 
     def delete_all_indices(self):
         es_client = ESClientFactory.get()
