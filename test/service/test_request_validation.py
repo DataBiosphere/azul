@@ -153,6 +153,17 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
+    def test_single_entity_error_responses(self):
+        entity_types = ['files', 'projects']
+        for uuid, expected_error_code in [('2b7959bb-acd1-4aa3-9557-345f9b3c6327', 404),
+                                          ('-0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb-', 400),
+                                          ('FOO', 400)]:
+            for entity_type in entity_types:
+                with self.subTest(entity_name=entity_type, error_code=expected_error_code, uuid=uuid):
+                    url = self.base_url + f'/repository/{entity_type}/{uuid}'
+                    response = requests.get(url)
+                    self.assertEqual(expected_error_code, response.status_code)
+
     def test_file_order(self):
         url = self.base_url + '/repository/files/order'
         response = requests.get(url)
@@ -197,6 +208,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                             ('file_indexed', 'False', 'False'),
                             ('file_format', 'pdf', 'fastq.gz'),
                             ('cell_suspension.estimated_cell_count', '', '9001'),
+                            ('cell_suspension.selected_cell_type', '', 'CAFs'),
                             ('sequencing_protocol.instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
                             ('library_preparation_protocol.library_construction_approach', '', 'Smart-seq2'),
                             ('project.provenance.document_id', '67bc798b-a34a-4104-8cab-cad648471f69',
