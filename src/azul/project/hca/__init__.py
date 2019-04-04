@@ -66,11 +66,9 @@ class Plugin(azul.plugin.Plugin):
                                                 }
                                             },
                                             {
-                                                {
-                                                    "range": {
-                                                        "manifest.version": {
-                                                            "gte": "2019-04-03"
-                                                        }
+                                                "range": {
+                                                    "manifest.version": {
+                                                        "gte": "2019-04-03"
                                                     }
                                                 }
                                             }
