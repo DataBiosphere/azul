@@ -161,7 +161,7 @@ class Project(Entity):
         self.project_description = core.get('project_description')
         self.publications = set(ProjectPublication.from_json(publication)
                                 for publication in content.get('publications', []))
-        self.contributors = {ProjectContact.from_json(contributor) for contributor in content['contributors']}
+        self.contributors = {ProjectContact.from_json(contributor) for contributor in content.get('contributors', [])}
         self.insdc_project_accessions = set(content.get('insdc_project_accessions', []))
         self.geo_series_accessions = set(content.get('geo_series_accessions', []))
         self.array_express_accessions = set(content.get('array_express_accessions', []))
