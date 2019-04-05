@@ -389,12 +389,18 @@ class TestAccessorApi(TestCase):
                 "must": [
                     {
                         "exists": {
-                            "field": "files.biomaterial_json"
+                            "field": "files.project_json"
                         }
                     },
                     {
                         "prefix": {
-                            "uuid": "ab"
+                            "uuid": "abc"
+                        }
+                    }, {
+                        "range": {
+                            "manifest.version": {
+                                "gte": "2018-11-27"
+                            }
                         }
                     }
                 ]
