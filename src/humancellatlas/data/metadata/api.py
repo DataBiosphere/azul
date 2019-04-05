@@ -279,6 +279,15 @@ class SpecimenFromOrganism(Biomaterial):
 
 
 @dataclass(init=False)
+class ImagedSpecimen(Biomaterial):
+    slice_thickness: Union[float, int]
+
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
+        self.slice_thickness = json['slice_thickness']
+
+
+@dataclass(init=False)
 class CellSuspension(Biomaterial):
     estimated_cell_count: Optional[int]
     selected_cell_type: Set[str]
@@ -486,6 +495,11 @@ class ImagingProtocol(Protocol):
     pass
 
 
+@dataclass(init=False)
+class ImagingPreparationProtocol(Protocol):
+    pass
+
+
 @dataclass
 class ManifestEntry:
     content_type: str
@@ -559,6 +573,11 @@ class AnalysisFile(File):
 
 @dataclass(init=False)
 class ReferenceFile(File):
+    pass
+
+
+@dataclass(init=False)
+class ImageFile(File):
     pass
 
 
@@ -637,7 +656,7 @@ class Bundle:
                 assert file_name.endswith('.json')
                 schema_name, _, suffix = file_name[:-5].rpartition('_')
                 if schema_name and suffix.isdigit():
-                    entity_cls = entity_types.get(schema_name)
+                    entity_cls = entity_types[schema_name]
                     core_cls = core_types[entity_cls]
                     json_by_core_cls[core_cls].append(json)
 
@@ -706,12 +725,14 @@ entity_types = {
     'cell_suspension': CellSuspension,
     'cell_line': CellLine,
     'organoid': Organoid,
+    'imaged_specimen': ImagedSpecimen,
 
     # Files
     'analysis_file': AnalysisFile,
     'reference_file': ReferenceFile,
     'sequence_file': SequenceFile,
     'supplementary_file': SupplementaryFile,
+    'image_file': ImageFile,
 
     # Protocols
     'protocol': Protocol,
@@ -725,6 +746,7 @@ entity_types = {
     'imaging_protocol': ImagingProtocol,
     'library_preparation_protocol': LibraryPreparationProtocol,
     'sequencing_protocol': SequencingProtocol,
+    'imaging_preparation_protocol': ImagingPreparationProtocol,
 
     'project': Project,
 

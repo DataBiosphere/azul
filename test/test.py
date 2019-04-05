@@ -20,7 +20,8 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               SpecimenFromOrganism,
                                               CellSuspension,
                                               LibraryPreparationProtocol,
-                                              SupplementaryFile)
+                                              SupplementaryFile,
+                                              ImagedSpecimen)
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
 from humancellatlas.data.metadata.helpers.json import as_json
 from humancellatlas.data.metadata.helpers.schema_examples import download_example_bundle
@@ -260,6 +261,19 @@ class TestAccessorApi(TestCase):
                           array_express_accessions={'E-AAAA-00'},
                           insdc_study_accessions={'PRJNA000000'})
 
+    def test_imaging_bundle(self):
+        self._test_bundle(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c',
+                          version='2019-04-03T103426.471000Z',
+                          deployment='staging',
+                          diseases=set(),
+                          selected_cell_type=None,
+                          project_roles=set(),
+                          age_range=AgeRange(min=4838400.0, max=4838400.0),
+                          is_sequencing_bundle=False,
+                          storage_methods={'fresh'},
+                          preservation_methods={'fresh'},
+                          slice_thickness=[20.0])
+
     def _test_bundle(self, uuid, version, replica='aws', deployment=None, **assertion_kwargs):
         canning_directory = deployment or 'prod'
         manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
@@ -287,7 +301,9 @@ class TestAccessorApi(TestCase):
                        insdc_project_accessions=frozenset(),
                        geo_series_accessions=frozenset(),
                        array_express_accessions=frozenset(),
-                       insdc_study_accessions=frozenset()):
+                       insdc_study_accessions=frozenset(),
+                       is_sequencing_bundle=True,
+                       slice_thickness=None):
         bundle = Bundle(uuid, version, manifest, metadata_files)
         biomaterials = bundle.biomaterials.values()
         actual_diseases = set(chain(*(bm.diseases for bm in biomaterials
@@ -301,11 +317,12 @@ class TestAccessorApi(TestCase):
         self.assertEqual(bundle.version, version)
         self.assertEqual(1, len(bundle.projects))
 
-        cell_suspension = next(x for x in bundle.biomaterials.values() if isinstance(x, CellSuspension))
-        self.assertEqual(CellSuspension, type(cell_suspension))
-        self.assertEqual(selected_cell_type, cell_suspension.selected_cell_type)
-        # noinspection PyDeprecation
-        self.assertEqual(cell_suspension.estimated_cell_count, cell_suspension.total_estimated_cells)
+        if selected_cell_type is not None:
+            cell_suspension = next(x for x in bundle.biomaterials.values() if isinstance(x, CellSuspension))
+            self.assertEqual(CellSuspension, type(cell_suspension))
+            self.assertEqual(selected_cell_type, cell_suspension.selected_cell_type)
+            # noinspection PyDeprecation
+            self.assertEqual(cell_suspension.estimated_cell_count, cell_suspension.total_estimated_cells)
 
         project = list(bundle.projects.values())[0]
         self.assertEqual(Project, type(project))
@@ -332,28 +349,29 @@ class TestAccessorApi(TestCase):
         # noinspection PyDeprecation
         self.assertEqual(root_entity.sex, root_entity.biological_sex)
 
-        sequencing_input = bundle.sequencing_input
-        self.assertGreater(len(sequencing_input), 0,
-                           "There should be at least one sequencing input")
-        self.assertEqual(len(set(si.document_id for si in sequencing_input)), len(sequencing_input),
-                         "Sequencing inputs should be distinct entities")
-        self.assertEqual(len(set(si.biomaterial_id for si in sequencing_input)), len(sequencing_input),
-                         "Sequencing inputs should have distinct biomaterial IDs")
-        self.assertTrue(all(isinstance(si, Biomaterial) for si in sequencing_input),
-                        "All sequencing inputs should be instances of Biomaterial")
-        sequencing_input_schema_names = set(si.schema_name for si in sequencing_input)
-        self.assertTrue({'cell_suspension', 'specimen_from_organism'}.issuperset(sequencing_input_schema_names),
-                        "The sequencing inputs in the test bundle are of specific schemas")
+        if is_sequencing_bundle:
+            sequencing_input = bundle.sequencing_input
+            self.assertGreater(len(sequencing_input), 0,
+                               "There should be at least one sequencing input")
+            self.assertEqual(len(set(si.document_id for si in sequencing_input)), len(sequencing_input),
+                             "Sequencing inputs should be distinct entities")
+            self.assertEqual(len(set(si.biomaterial_id for si in sequencing_input)), len(sequencing_input),
+                             "Sequencing inputs should have distinct biomaterial IDs")
+            self.assertTrue(all(isinstance(si, Biomaterial) for si in sequencing_input),
+                            "All sequencing inputs should be instances of Biomaterial")
+            sequencing_input_schema_names = set(si.schema_name for si in sequencing_input)
+            self.assertTrue({'cell_suspension', 'specimen_from_organism'}.issuperset(sequencing_input_schema_names),
+                            "The sequencing inputs in the test bundle are of specific schemas")
 
-        sequencing_output = bundle.sequencing_output
-        self.assertGreater(len(sequencing_output), 0,
-                           "There should be at least one sequencing output")
-        self.assertEqual(len(set(so.document_id for so in sequencing_output)), len(sequencing_output),
-                         "Sequencing outputs should be distinct entities")
-        self.assertTrue(all(isinstance(so, SequenceFile) for so in sequencing_output),
-                        "All sequencing outputs should be instances of SequenceFile")
-        self.assertTrue(all(so.manifest_entry.name.endswith('.fastq.gz') for so in sequencing_output),
-                        "All sequencing outputs in the test bundle are fastq files.")
+            sequencing_output = bundle.sequencing_output
+            self.assertGreater(len(sequencing_output), 0,
+                               "There should be at least one sequencing output")
+            self.assertEqual(len(set(so.document_id for so in sequencing_output)), len(sequencing_output),
+                             "Sequencing outputs should be distinct entities")
+            self.assertTrue(all(isinstance(so, SequenceFile) for so in sequencing_output),
+                            "All sequencing outputs should be instances of SequenceFile")
+            self.assertTrue(all(so.manifest_entry.name.endswith('.fastq.gz') for so in sequencing_output),
+                            "All sequencing outputs in the test bundle are fastq files.")
 
         has_specimens = storage_methods or preservation_methods
         specimen_types = {type(s) for s in bundle.specimens}
@@ -375,6 +393,10 @@ class TestAccessorApi(TestCase):
         self.assertEqual({LibraryPreparationProtocol} if has_library_preps else set(), library_prep_proto_types)
         self.assertEqual(library_construction_methods, {p.library_construction_method for p in library_prep_protos})
         self.assertEqual(library_construction_methods, {p.library_construction_approach for p in library_prep_protos})
+
+        if slice_thickness is not None:
+            self.assertEqual(slice_thickness,
+                             [s.slice_thickness for s in bundle.entities.values() if isinstance(s, ImagedSpecimen)])
 
     dss_subscription_query = {
         "query": {
