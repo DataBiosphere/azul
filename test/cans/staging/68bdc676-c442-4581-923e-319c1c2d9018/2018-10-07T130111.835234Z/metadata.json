@@ -1,0 +1,476 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Single-cell_RNA-seq_Subject9_TEMRA_Cell030",
+            "biomaterial_name": "Single-cell_RNA-seq_Subject9_TEMRA_Cell030",
+            "biomaterial_description": "Single-cell_RNA-seq_Subject9_TEMRA_Cell030",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "insdc_biomaterial": "SRS2664188"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "selected_cell_type": [
+            {
+                "text": "TEMRA",
+                "ontology": "CL:0000625"
+            }
+        ],
+        "total_estimated_cells": 1,
+        "plate_based_sequencing": {
+            "plate_id": "subject9-10_batch1",
+            "cell_quality": "OK"
+        },
+        "provenance": {
+            "document_id": "ef97eef1-a436-4462-a152-1a2b86ee8831",
+            "submission_date": "2018-10-07T11:57:52.282Z",
+            "update_date": "2018-10-07T12:04:46.292Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Subject9_DENV negative_PBMC_TEMRA",
+            "biomaterial_name": "Subject9_DENV negative_PBMC_TEMRA",
+            "biomaterial_description": "Subject9_DENV negative_PBMC_TEMRA",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "organ": {
+            "text": "blood",
+            "ontology": "UBERON:0000178"
+        },
+        "organ_part": {
+            "text": "peripheral blood mononuclear cell",
+            "ontology": "CL:2000001"
+        },
+        "preservation_storage": {
+            "preservation_method": "cryopreservation, other",
+            "storage_method": "frozen, liquid nitrogen"
+        },
+        "provenance": {
+            "document_id": "80cb479b-dcb4-4dbb-a75d-0249a964bb70",
+            "submission_date": "2018-10-07T11:56:59.350Z",
+            "update_date": "2018-10-07T12:01:39.672Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Subject9",
+            "biomaterial_name": "Subject9",
+            "biomaterial_description": "Subject9",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "genotype": "not provided"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "is_living": "yes",
+        "sex": "unknown",
+        "medical_history": {
+            "test_results": "dengue virus negative"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "development_stage": {
+            "text": "adult",
+            "ontology": "EFO:0001272"
+        },
+        "organism_age": "18-60",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036"
+        },
+        "provenance": {
+            "document_id": "6c992ba4-c132-4dd3-840e-13cf3f38243e",
+            "submission_date": "2018-10-07T11:56:59.023Z",
+            "update_date": "2018-10-07T12:00:40.749Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SRR6260013.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "read1",
+        "read_length": 50,
+        "insdc_run": [
+            "SRR6260013"
+        ],
+        "provenance": {
+            "document_id": "f3d5c7cb-7ab4-4903-8e0e-dc942121fe27",
+            "submission_date": "2018-10-07T11:58:46.814Z",
+            "update_date": "2018-10-07T12:08:49.204Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/project/9.0.3/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "CD4+ cytotoxic T lymphocytes",
+            "project_title": "Precursors of human CD4+ cytotoxic T lymphocytes identified by single-cell transcriptome analysis",
+            "project_description": "CD4+ cytotoxic T lymphocytes (CD4-CTLs) have been reported to play a protective role in several viral infections. However, little is known in humans about the biology of CD4-CTL generation, their functional properties, heterogeneity and clonal diversity, especially in relation to other well-described CD4+ memory T cell subsets. We performed single-cell RNA-seq in over 9000 cells to unravel CD4-CTL heterogeneity, transcriptional profile and clonality in humans. The single-cell differential gene expression analysis, revealed a spectrum of known transcripts, including several linked to cytotoxic and co-stimulatory function, and transcripts of unknown cytotoxicity-related function that are expressed at higher levels in the TEMRA subset, which is highly enriched for CD4-CTLs, compared to cells in the central and effector memory subsets (TCM, TEM). Simultaneous T cells antigen receptor (TCR) analysis in single-cells and bulk subsets revealed that CD4-TEMRA cells show marked clonal expansion compared to TCM and TEM cells and that the majority of CD4-TEMRA were dengue virus (DENV)-specific in subjects with previous DENV infection. The profile of CD4-TEMRA was highly heterogeneous across subjects, with four distinct clusters identified by the single-cell analysis. Most importantly, we identified distinct clusters of CD4-CTL effector and precursor cells in the TEMRA subset; the precursor cells shared TCR clonotypes with CD4-CTL effectors and were distinguished by high expression of the interleukin-7 receptor. Our identification of a CD4-CTL precursor population may allow further investigation of how CD4-CTLs arise in humans and thus could provide insights into the mechanisms that may be utilized to generate durable and effective CD4-CTL immunity."
+        },
+        "insdc_project": "SRP124157",
+        "geo_series": "GSE106540",
+        "insdc_study": "PRJNA417191",
+        "supplementary_links": [
+            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-106540/Results"
+        ],
+        "contributors": [
+            {
+                "contact_name": "Pandurangan,,Vijayanand",
+                "email": "vijay@lji.org",
+                "institution": "La Jolla Institute for Allergy and Immunology",
+                "laboratory": "Division of Vaccine Discovery",
+                "address": "La Jolla, CA 92037",
+                "country": "USA",
+                "corresponding_contributor": true
+            },
+            {
+                "contact_name": "Mallory,Ann,Freeberg",
+                "email": "mfreeberg@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-2949-3921",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Laura,,Huerta",
+                "email": "lauhuema@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Molecular Atlas",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK",
+                "project_role": "external curator",
+                "orcid_id": "0000-0002-8748-599X",
+                "corresponding_contributor": false
+            }
+        ],
+        "funders": [
+            {
+                "grant_id": "U19AI118626",
+                "funder_name": "National Institutes of Health (NIH)"
+            },
+            {
+                "grant_id": "U19AI118610",
+                "funder_name": "National Institutes of Health (NIH)"
+            },
+            {
+                "grant_id": "R01HL114093",
+                "funder_name": "National Institutes of Health (NIH)"
+            },
+            {
+                "grant_id": "R24AI108564",
+                "funder_name": "National Institutes of Health (NIH)"
+            },
+            {
+                "funder_name": "William K. Bowes Jr. Foundation"
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Patil VS",
+                    "Madrigal A",
+                    "Schmiedel BJ",
+                    "Clarke J",
+                    "ORourke P",
+                    "Harris E",
+                    "de Silva AD",
+                    "Harris E",
+                    "Peters B",
+                    "Seumois G",
+                    "Weiskopf D",
+                    "Sette A",
+                    "Vijayanand P"
+                ],
+                "publication_title": "Precursors of human CD4+ cytotoxic T lymphocytes identified by single-cell transcriptome analysis.",
+                "doi": "10.1126/sciimmunol.aan8664",
+                "pmid": 29352091,
+                "publication_url": "http://immunology.sciencemag.org/content/3/19/eaan8664.long"
+            }
+        ],
+        "provenance": {
+            "document_id": "519b58ef-6462-4ed3-8c0d-375b54f53c31",
+            "submission_date": "2018-10-07T11:56:58.869Z",
+            "update_date": "2018-10-07T12:00:40.290Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "library_preparation_protocol_1",
+            "protocol_name": "Preparation of mRNAs for single cell SmartSeq2 sequencing",
+            "protocol_description": "Single cell RNAseq was performed as described in Picelli et al.Nat Protoc. 2014, PMID:24385147. We performed 23 cycles of amplification. Barcoded Illumina sequencing libraries (Nextera XT library preparation kit, Illumina) were prepared as following manufacturers protocol.",
+            "publication_doi": "10.1038/nprot.2014.006"
+        },
+        "library_construction_approach": {
+            "text": "Smart-seq2",
+            "ontology": "EFO:0008931"
+        },
+        "nucleic_acid_source": "single cell",
+        "end_bias": "full length",
+        "primer": "poly-dT",
+        "strand": "unstranded",
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869"
+        },
+        "library_construction_kit": {
+            "retail_name": "Nextera XT library preparation kit",
+            "manufacturer": "Illumina"
+        },
+        "library_preamplification_method": {
+            "text": "PCR",
+            "ontology": "OBI:0000415"
+        },
+        "provenance": {
+            "document_id": "5f82b9c4-f3d7-410c-b843-0e5cdec9efa5",
+            "submission_date": "2018-10-07T11:58:47.200Z",
+            "update_date": "2018-10-07T11:58:50.532Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_protocol_1",
+            "protocol_name": "SmartSeq 2 single cell sequencing",
+            "protocol_description": "Libraries were sequenced on the Illumina HiSeq 2500 platform to obtain 50-bp single end reads (barcoded Illumina sequencing libraries (Nextera XT library preparation kit, Illumina))."
+        },
+        "sequencing_approach": {
+            "text": "full length single cell RNA sequencing",
+            "ontology": "EFO:0008441"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2500",
+            "ontology": "EFO:0008565"
+        },
+        "paired_end": false,
+        "provenance": {
+            "document_id": "d678165b-2753-4393-bf3b-5e2a09ba892c",
+            "submission_date": "2018-10-07T11:58:47.211Z",
+            "update_date": "2018-10-07T11:58:50.511Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_protocol_1",
+            "protocol_name": "Dissociation by FACS into single cells",
+            "protocol_description": "Dissociation by FACS into single cells",
+            "publication_doi": "10.1126/sciimmunol.aan8664"
+        },
+        "dissociation_method": {
+            "text": "fluorescence-activated cell sorting",
+            "ontology": "EFO:0009108"
+        },
+        "provenance": {
+            "document_id": "920078d0-b17e-4f23-8cf6-0674b19e7bec",
+            "submission_date": "2018-10-07T11:58:47.100Z",
+            "update_date": "2018-10-07T11:58:50.432Z"
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.2.5/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "enrichment_protocol_2",
+            "protocol_name": "TEMRA Enrichment",
+            "protocol_description": "For single-cell RNA-seq experiments, live and singlet gated cells were further gated to sort 1) TCM; CD3+CD4+CD8\u03b1/CD14/CD19-CD45RA-CCR7+, 2) TEM; CD3+CD4+CD8\u03b1/CD14/CD19-CD45RA-CCR7-, 3) TEMRA; CD3+CD4+CD8\u03b1/CD14/CD19-CD45RA+CCR7-, 4) IL-7Rhigh TEMRA (CD4-CTL precursors); CD3+CD4+CD8\u03b1/CD14/CD19-CD45RA+CCR7-CD127high, 5) IL-7R- TEMRA (CD4-CTL effectors); CD3+CD4+CD8\u03b1/CD14/CD19-CD45RA+CCR7- CD127-. Single cells were directly sorted into 96 well plate with lysis buffer for downstream processing using Smart-seq2 method",
+            "publication_doi": "10.1126/sciimmunol.aan8664"
+        },
+        "enrichment_method": {
+            "text": "fluorescence-activated cell sorting",
+            "ontology": "EFO:0009108"
+        },
+        "markers": "CD3+ CD4+ CD8alpha/CD14/CD19- CD45RA+ CCR7-",
+        "provenance": {
+            "document_id": "644c5f2d-33c8-4bf4-b411-b2dbec8b8227",
+            "submission_date": "2018-10-07T11:58:47.120Z",
+            "update_date": "2018-10-07T11:58:50.413Z"
+        }
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/8.2.6/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "collection_protocol_2",
+            "protocol_name": "Blood sample collection",
+            "protocol_description": "Blood sample collection by blood draw",
+            "publication_doi": "10.1126/sciimmunol.aan8664"
+        },
+        "collection_method": {
+            "text": "blood draw",
+            "ontology": "EFO:0009121"
+        },
+        "provenance": {
+            "document_id": "403b586f-fd8d-45f2-a431-4bb6cc33d7d4",
+            "submission_date": "2018-10-07T11:58:47.087Z",
+            "update_date": "2018-10-07T11:58:50.563Z"
+        }
+    },
+    "enrichment_protocol_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.2.5/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "enrichment_protocol_1",
+            "protocol_name": "PBMC Enrichment",
+            "protocol_description": "Enrichment for peripheral blood mononuclear cells",
+            "publication_doi": "10.1073/pnas.1305227110"
+        },
+        "enrichment_method": {
+            "text": "Ficoll-Hypaque method",
+            "ontology": "EFO:0009110"
+        },
+        "provenance": {
+            "document_id": "9ab53e6a-464e-44b1-aa24-12daca989969",
+            "submission_date": "2018-10-07T11:58:47.110Z",
+            "update_date": "2018-10-07T11:58:50.474Z"
+        }
+    },
+    "process_0.json": {
+        "insdc_experiment": {
+            "insdc_experiment": "SRX3366459"
+        },
+        "process_core": {
+            "process_id": "process_id_4499"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "18d49b08-d095-4371-bb34-151037f9f461",
+            "submission_date": "2018-10-07T12:00:39.740Z",
+            "update_date": "2018-10-07T12:08:28.754Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_2255"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "d13a5a85-b8c7-4a07-9c0c-9180bd0a78eb",
+            "submission_date": "2018-10-07T11:59:45.914Z",
+            "update_date": "2018-10-07T12:06:52.636Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_location": "Sri Lanka",
+            "process_id": "process_id_15"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "5a15ed38-5e37-44ff-ba35-0d17bb8564bd",
+            "submission_date": "2018-10-07T11:58:47.999Z",
+            "update_date": "2018-10-07T12:05:17.018Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/system/1.1.3/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.3",
+        "links": [
+            {
+                "process": "18d49b08-d095-4371-bb34-151037f9f461",
+                "inputs": [
+                    "ef97eef1-a436-4462-a152-1a2b86ee8831"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "f3d5c7cb-7ab4-4903-8e0e-dc942121fe27"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "5f82b9c4-f3d7-410c-b843-0e5cdec9efa5"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "d678165b-2753-4393-bf3b-5e2a09ba892c"
+                    }
+                ]
+            },
+            {
+                "process": "d13a5a85-b8c7-4a07-9c0c-9180bd0a78eb",
+                "inputs": [
+                    "80cb479b-dcb4-4dbb-a75d-0249a964bb70"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "ef97eef1-a436-4462-a152-1a2b86ee8831"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "920078d0-b17e-4f23-8cf6-0674b19e7bec"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "644c5f2d-33c8-4bf4-b411-b2dbec8b8227"
+                    }
+                ]
+            },
+            {
+                "process": "5a15ed38-5e37-44ff-ba35-0d17bb8564bd",
+                "inputs": [
+                    "6c992ba4-c132-4dd3-840e-13cf3f38243e"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "80cb479b-dcb4-4dbb-a75d-0249a964bb70"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "403b586f-fd8d-45f2-a431-4bb6cc33d7d4"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "9ab53e6a-464e-44b1-aa24-12daca989969"
+                    }
+                ]
+            }
+        ]
+    }
+}

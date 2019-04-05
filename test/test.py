@@ -9,6 +9,8 @@ from unittest import TestCase, skip
 from unittest.mock import Mock
 import warnings
 
+from atomicwrites import atomic_write
+
 from humancellatlas.data.metadata.api import (AgeRange,
                                               Biomaterial,
                                               Bundle,
@@ -95,16 +97,43 @@ class TestAccessorApi(TestCase):
                                   selected_cell_type={'bone marrow hematopoietic cell'})
 
     def _test_example_bundle(self, directory, **kwargs):
-        manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
-                                                           branch='develop',
-                                                           path=f'examples/bundles/public-beta/{directory}/')
         uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
         version = '2018-08-03T082009.272868Z'
+        canning_directory = os.path.join('examples', directory)
+        manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+        if manifest is None:  # pragma: no cover
+            manifest, metadata_files = download_example_bundle(repo='HumanCellAtlas/metadata-schema',
+                                                               branch='develop',
+                                                               path=f'examples/bundles/public-beta/{directory}/')
+            self._can_bundle(canning_directory, uuid, version, manifest, metadata_files)
+            manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
         self._assert_bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
                             metadata_files=metadata_files,
                             **kwargs)
+
+    def _canned_bundle_path(self, directory, uuid, version):
+        return os.path.join(os.path.dirname(__file__), 'cans', directory, uuid, version)
+
+    def _can_bundle(self, directory, uuid, version, manifest, metadata_files):  # pragma: no cover
+        dir_path = self._canned_bundle_path(directory, uuid, version)
+        os.makedirs(dir_path, exist_ok=True)
+        with atomic_write(os.path.join(dir_path, 'manifest.json'), overwrite=True) as f:
+            json.dump(manifest, f)
+        with atomic_write(os.path.join(dir_path, 'metadata.json'), overwrite=True) as f:
+            json.dump(metadata_files, f)
+
+    def _canned_bundle(self, directory, uuid, version):
+        dir_path = self._canned_bundle_path(directory, uuid, version)
+        if os.path.isdir(dir_path):
+            with open(os.path.join(dir_path, 'manifest.json')) as f:
+                manifest = json.load(f)
+            with open(os.path.join(dir_path, 'metadata.json')) as f:
+                metadata_files = json.load(f)
+            return manifest, metadata_files
+        else:
+            return None, None
 
     def test_bad_content(self):
         deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
@@ -144,6 +173,7 @@ class TestAccessorApi(TestCase):
         A v5 bundle in production
         """
         self._test_bundle(uuid='b2216048-7eaa-45f4-8077-5a3fb4204953',
+                          version='2018-03-29T142048.835519Z',
                           age_range=AgeRange(3628800.0, 7257600.0),
                           diseases={'subcutaneous melanoma'}),
 
@@ -230,9 +260,16 @@ class TestAccessorApi(TestCase):
                           array_express_accessions={'E-AAAA-00'},
                           insdc_study_accessions={'PRJNA000000'})
 
-    def _test_bundle(self, uuid, deployment=None, replica='aws', version=None, **assertion_kwargs):
-        client = dss_client(deployment)
-        version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
+    def _test_bundle(self, uuid, version, replica='aws', deployment=None, **assertion_kwargs):
+        canning_directory = deployment or 'prod'
+        manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+        if manifest is None:  # pragma: no cover
+            client = dss_client(deployment)
+            _version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
+            assert _version == version
+            self._can_bundle(os.path.join(canning_directory), uuid, version, manifest, metadata_files)
+            manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+
         self._assert_bundle(uuid=uuid,
                             version=version,
                             manifest=manifest,
