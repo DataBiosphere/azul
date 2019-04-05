@@ -31,6 +31,7 @@ def setUpModule():
 
 
 class TestAccessorApi(TestCase):
+
     def setUp(self):
         # Suppress `sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=6, family=AddressFamily.AF_INET, ...`
         warnings.simplefilter("ignore", ResourceWarning)

@@ -60,11 +60,13 @@ E = TypeVar('E', bound=Entity)
 
 
 class TypeLookupError(Exception):
+
     def __init__(self, described_by: str) -> None:
         super().__init__(f"No entity type for schema URL '{described_by}'")
 
 
 class EntityVisitor(ABC):
+
     @abstractmethod
     def visit(self, entity: 'Entity') -> None:
         raise NotImplementedError()
@@ -101,6 +103,7 @@ class LinkedEntity(Entity, ABC):
 
 
 class LinkError(RuntimeError):
+
     def __init__(self, entity: LinkedEntity, other_entity: Entity, forward: bool) -> None:
         super().__init__(entity.address +
                          ' cannot ' + ('reference ' if forward else 'be referenced by ') +
@@ -358,6 +361,7 @@ class AnalysisProcess(Process):
 
 @dataclass(init=False)
 class DissociationProcess(Process):
+
     def __init__(self, json: JSON) -> None:
         warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
         super().__init__(json)
@@ -365,6 +369,7 @@ class DissociationProcess(Process):
 
 @dataclass(init=False)
 class EnrichmentProcess(Process):
+
     def __init__(self, json: JSON) -> None:
         warnings.warn(f"{type(self)} is deprecated", DeprecationWarning)
         super().__init__(json)
@@ -667,6 +672,7 @@ class Bundle:
         roots = {}
 
         class RootFinder(EntityVisitor):
+
             def visit(self, entity: Entity) -> None:
                 if isinstance(entity, LinkedEntity) and not entity.parents:
                     roots[entity.document_id] = entity
