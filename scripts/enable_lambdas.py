@@ -27,29 +27,29 @@ def enable_lambda_concurrency(enabled: bool):
                         logging.warning(f'{lambda_name} is already enabled.')
                         continue
 
-                    old_limit = tags.get('original-concurrency-limit')
+                    old_concurrency_limit = tags.get('old-concurrency-limit')
 
-                    if old_limit is not None:
-                        logging.info(f'Setting concurrency limit for {lambda_name} back to {old_limit}.')
+                    if old_concurrency_limit is not None:
+                        logging.info(f'Setting concurrency limit for {lambda_name} back to {old_concurrency_limit}.')
                         client.put_function_concurrency(FunctionName=lambda_name,
-                                                        ReservedConcurrentExecutions=int(old_limit))
+                                                        ReservedConcurrentExecutions=int(old_concurrency_limit))
                     else:
                         logging.info(f'Removed concurrency limit for {lambda_name}.')
                         client.delete_function_concurrency(FunctionName=lambda_name)
 
                     client.untag_resource(Resource=lambda_arn,
-                                          TagKeys=['original-concurrency-limit', 'disabled-by-red-button'])
+                                          TagKeys=['old-concurrency-limit', 'disabled-by-red-button'])
                 else:
                     try:
                         concurrency_settings = lambda_settings['Concurrency']
                     except KeyError:
-                        # if a lambda doesn't have a limit for concurrency executions hen Lambda.Client.get_function()
-                        # doesn't return a response with the key `Concurrency`
+                        # If a lambda doesn't have a limit for concurrency executions, Lambda.Client.get_function()
+                        # doesn't return a response with the key, `Concurrency`.
                         concurrency_limit = None
                     else:
                         concurrency_limit = concurrency_settings['ReservedConcurrentExecutions']
 
-                    if concurrency_limit == 0 and str_to_bool(disabled_by_red_button):
+                    if str_to_bool(disabled_by_red_button):
                         logging.warning(f'{lambda_name} is already disabled.')
                         continue
 
@@ -57,7 +57,7 @@ def enable_lambda_concurrency(enabled: bool):
                     new_tag = {'disabled-by-red-button': 'True'}
 
                     if concurrency_limit is not None:
-                        new_tag.update({'original-concurrency-limit': str(concurrency_limit)})
+                        new_tag.update({'old-concurrency-limit': str(concurrency_limit)})
 
                     client.tag_resource(Resource=lambda_arn, Tags=new_tag)
                     client.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
