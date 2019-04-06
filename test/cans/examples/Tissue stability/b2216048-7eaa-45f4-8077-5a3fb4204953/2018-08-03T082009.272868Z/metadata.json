@@ -1,0 +1,538 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "A1-Spl-0-TL5_cells",
+            "biomaterial_name": "cells from fresh spleen",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosd_biomaterial": "SAMEA1098924",
+            "insdc_biomaterial": "ERS2392443"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "total_estimated_cells": 1970,
+        "provenance": {
+            "document_id": "932dae75-ba79-42a6-915a-c6a67b39835c",
+            "submission_date": "2018-09-05T09:14:54.798Z",
+            "update_date": "2018-09-05T09:15:05.597Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_protocol_1",
+            "protocol_name": "Dissociation of spleen tissue sample into cell suspension",
+            "document": "Human_spleen_dissociation_protocol.pdf"
+        },
+        "dissociation_method": {
+            "text": "mechanical",
+            "ontology": "EFO:0009129"
+        },
+        "provenance": {
+            "document_id": "f1f2f791-f5f0-4eaa-8a4d-d6de9cf6807b",
+            "submission_date": "2018-09-05T09:14:54.916Z",
+            "update_date": "2018-09-05T09:15:02.163Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/10.1.1/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "284C-A1",
+            "biomaterial_name": "284C-spleen",
+            "biomaterial_description": "Spleen",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "death": {
+            "cause_of_death": "Hypoxic brain damage",
+            "cold_perfused": true,
+            "organ_donation_death_type": "Donation after circulatory death (DCD)"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "is_living": "no",
+        "sex": "male",
+        "organism_age": "55-60",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036"
+        },
+        "development_stage": {
+            "text": "adult",
+            "ontology": "EFO:0001272"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "height": "1.75-1.8",
+        "height_unit": {
+            "text": "meter",
+            "ontology": "UO:0000008"
+        },
+        "weight": "80-85",
+        "weight_unit": {
+            "text": "kilogram",
+            "ontology": "UO:0000009"
+        },
+        "medical_history": {
+            "alcohol_history": "3-6 units/day",
+            "smoking_history": "Smoker, 20/day for 25 years, stopped 2000"
+        },
+        "normothermic_regional_perfusion": "yes",
+        "provenance": {
+            "document_id": "8909e260-7472-4c95-a96e-05d53d3c9221",
+            "submission_date": "2018-09-05T09:14:54.658Z",
+            "update_date": "2018-09-05T09:15:03.935Z"
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/biomaterial_collection/2.2.5/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "enrichment_protocol_1",
+            "protocol_name": "Enrichment for live cells",
+            "document": "Human_spleen_dissociation_protocol.pdf"
+        },
+        "enrichment_method": {
+            "text": "magnetic affinity cell sorting",
+            "ontology": "EFO:0009109"
+        },
+        "markers": "LiveCells",
+        "provenance": {
+            "document_id": "e8c1f3fe-d694-467c-a823-01426f44ed71",
+            "submission_date": "2018-09-05T09:14:54.896Z",
+            "update_date": "2018-09-05T09:15:02.160Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/sequencing/4.3.2/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "library_preparation_protocol_1",
+            "protocol_name": "Library preparation for 10x_v2 sequencing",
+            "protocol_description": "ChromiumTM Single Cell 3' Library & Gel Bead Kit v2",
+            "document": "10x_sequencing_protocol.pdf"
+        },
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869"
+        },
+        "library_construction_approach": {
+            "text": "10X sequencing",
+            "ontology": "EFO:0008995"
+        },
+        "nucleic_acid_source": "single cell",
+        "end_bias": "3 prime tag",
+        "strand": "second",
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 16,
+            "barcode_length": 10
+        },
+        "provenance": {
+            "document_id": "cc50851b-4c12-463b-b527-60d1c8d5ef60",
+            "submission_date": "2018-09-05T09:14:54.945Z",
+            "update_date": "2018-09-05T09:15:02.223Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.1/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.1",
+        "links": [
+            {
+                "process": "8b006d76-80c0-4e2c-866a-01fa5e900ab5",
+                "inputs": [
+                    "932dae75-ba79-42a6-915a-c6a67b39835c"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "4d3839bf-e39f-4136-92a4-6f7009e88567"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "cc50851b-4c12-463b-b527-60d1c8d5ef60"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "29150a65-718c-46bc-8a7f-11ac585bf959"
+                    }
+                ]
+            },
+            {
+                "process": "a85a679d-38f0-4eb2-bfce-ed0e621769c8",
+                "inputs": [
+                    "8909e260-7472-4c95-a96e-05d53d3c9221"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "932dae75-ba79-42a6-915a-c6a67b39835c"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "f1f2f791-f5f0-4eaa-8a4d-d6de9cf6807b"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "e8c1f3fe-d694-467c-a823-01426f44ed71"
+                    }
+                ]
+            }
+        ]
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "process_id_1"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "8b006d76-80c0-4e2c-866a-01fa5e900ab5",
+            "submission_date": "2018-09-05T09:14:54.996Z",
+            "update_date": "2018-09-05T09:15:03.169Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_29"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "a85a679d-38f0-4eb2-bfce-ed0e621769c8",
+            "submission_date": "2018-09-05T09:14:55.295Z",
+            "update_date": "2018-09-05T09:15:05.629Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/project/9.0.2/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "Tissue stability",
+            "project_title": "Ischaemic sensitivity of human tissue by single cell RNA seq",
+            "project_description": "Assessment of ischaemic sensitivity of human tissues using 10x 3' single cell RNA sequencing. Currently, this project contains data for spleen and oesophagus. Ultimately we aim to collect data from three tissues expected to have different sensitivity to ischaemia: spleen (expected least sensitive), oesophagus (in the middle), and lung. Samples will be collected fresh (i.e. as soon as possible) and at 12h, 24h, and 72h post onset of ischaemia in the donor. Single cell RNA sequencing data will be generated at each time point using the 10x genomics single cell 3' method."
+        },
+        "insdc_project": "ERP107913",
+        "insdc_study": "PRJEB25946",
+        "contributors": [
+            {
+                "contact_name": "Mike,,Stubbington",
+                "email": "ms31@sanger.ac.uk",
+                "phone": "44 (0)1223 834244",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Human Cell Atlas (Mike Stubbington)",
+                "address": "Wellcome Trust Sanger Institute, Wellcome Genome Campus, Hinxton, Cambridge. CB10 1SA.",
+                "country": "UK",
+                "orcid_id": "0000-0001-5924-3566"
+            },
+            {
+                "contact_name": "Phillipa,,Harding",
+                "email": "ph11@sanger.ac.uk",
+                "phone": "44 (0)1223 834244",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Human Cell Atlas (Mike Stubbington)",
+                "address": "Wellcome Trust Sanger Institute, Wellcome Genome Campus, Hinxton, Cambridge. CB10 1SA.",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Anna,,Wilbrey-Clark",
+                "email": "aw24@sanger.ac.uk",
+                "phone": "44 (0)1223 834244",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Human Cell Atlas (Mike Stubbington)",
+                "address": "Wellcome Trust Sanger Institute, Wellcome Genome Campus, Hinxton, Cambridge. CB10 1SA.",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Krzysztof,,Polanski",
+                "email": "kp9@sanger.ac.uk",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Human Cell Atlas (Mike Stubbington)",
+                "address": "Wellcome Trust Sanger Institute, Wellcome Genome Campus, Hinxton, Cambridge. CB10 1SA.",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Kevin,,Loudon",
+                "email": "kevinloudon@doctors.org.uk",
+                "institution": "University of Cambridge",
+                "laboratory": "Molecular Immunity Unit, Department of Medicine",
+                "address": "Cambridge CB2 0QQ",
+                "country": "UK"
+            },
+            {
+                "contact_name": "John,R,Ferdinand",
+                "email": "jrf58@cam.ac.uk",
+                "institution": "University of Cambridge",
+                "laboratory": "Molecular Immunity Unit, Department of Medicine",
+                "address": "Cambridge CB2 0QQ",
+                "country": "UK",
+                "orcid_id": "0000-0003-0936-0128"
+            },
+            {
+                "contact_name": "Krishnaa,,Mahbubani",
+                "email": "ktam2@cam.ac.uk",
+                "institution": "University of Cambridge",
+                "laboratory": "Cambridge Biorepository for Translational Medicine",
+                "address": "Cambridge CB2 0QQ",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Nikitas,,Georgakopoulos",
+                "email": "ng395@cam.ac.uk",
+                "institution": "University of Cambridge",
+                "laboratory": "Cambridge Biorepository for Translational Medicine",
+                "address": "Cambridge CB2 0QQ",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Kerstin,B,Meyer",
+                "email": "km16@sanger.ac.uk",
+                "institution": "Wellcome Trust Sanger Institute",
+                "address": "Wellcome Trust Sanger Institute, Wellcome Genome Campus, Hinxton, Cambridge. CB10 1SA.",
+                "country": "UK",
+                "corresponding_contributor": true
+            },
+            {
+                "contact_name": "Kourosh,,Saeb-Parsy",
+                "email": "ks10014@cam.ac.uk",
+                "institution": "University of Cambridge",
+                "address": "Cambridge CB2 0QQ",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Karol,,Nowicki-Osuch",
+                "email": "kpn25@mrc-cu.cam.ac.uk",
+                "institution": "MRC Cancer Unit",
+                "laboratory": "Rebecca Fitzgerald",
+                "address": "MRC Cancer Unit, Hutchison-MRC Research Centre, University of Cambridge, Cambridge CB2 0XZ.",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Rebecca,,Fitzgerald",
+                "email": "rcf29@mrc-cu.cam.ac.uk",
+                "institution": "MRC Cancer Unit",
+                "laboratory": "Rebecca Fitzgerald",
+                "address": "MRC Cancer Unit, Hutchison-MRC Research Centre, University of Cambridge, Cambridge CB2 0XZ.",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Ricardo,J,Miragaia",
+                "email": "rm13@sanger.ac.uk",
+                "institution": "Wellcome Trust Sanger Institute",
+                "laboratory": "Human Cell Atlas (Sarah Teichmann)",
+                "address": "Wellcome Trust Sanger Institute, Wellcome Genome Campus, Hinxton, Cambridge. CB10 1SA.",
+                "country": "UK"
+            },
+            {
+                "contact_name": "Mallory,Ann,Freeberg",
+                "email": "mfreeberg@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-2949-3921",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Danielle,,Welter",
+                "email": "dwelter@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Cambridge",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-1058-2668",
+                "corresponding_contributor": false
+            }
+        ],
+        "provenance": {
+            "document_id": "e7043342-977a-4f43-b382-d2a4f0932b56",
+            "submission_date": "2018-09-05T09:14:54.288Z",
+            "update_date": "2018-09-05T09:15:01.681Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "HCATisStabAug177078016_S1_L001_I1_001.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "index1",
+        "lane_index": 1,
+        "insdc_run": [
+            "ERR2508319"
+        ],
+        "provenance": {
+            "document_id": "4d3839bf-e39f-4136-92a4-6f7009e88567",
+            "submission_date": "2018-09-05T09:14:54.400Z",
+            "update_date": "2018-09-05T09:14:56.841Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_protocol_1",
+            "protocol_name": "10x_v2 sequencing",
+            "protocol_description": "ChromiumTM Single Cell 3' Library & Gel Bead Kit v2",
+            "document": "10x_sequencing_protocol.pdf"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 4000",
+            "ontology": "EFO:0008563"
+        },
+        "paired_end": true,
+        "sequencing_approach": {
+            "text": "tag based single cell RNA sequencing",
+            "ontology": "EFO:0008440"
+        },
+        "provenance": {
+            "document_id": "29150a65-718c-46bc-8a7f-11ac585bf959",
+            "submission_date": "2018-09-05T09:14:54.986Z",
+            "update_date": "2018-09-05T09:15:02.167Z"
+        }
+    },
+    "supplementary_file_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/1.1.3/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SOP_MACS Live Dead Separation V3.pdf",
+            "file_format": "pdf",
+            "checksum": "NEED"
+        },
+        "file_description": "Enrichment for live cells",
+        "provenance": {
+            "document_id": "c3ce4634-ba98-45a7-a546-a2e3f4873d4c",
+            "submission_date": "2018-09-05T09:14:54.357Z",
+            "update_date": "2018-09-05T09:14:56.869Z"
+        }
+    },
+    "supplementary_file_1.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/1.1.3/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Human_spleen_dissociation_protocol.pdf",
+            "file_format": "pdf"
+        },
+        "file_description": "Dissociation of spleen tissue sample into cell suspension.",
+        "provenance": {
+            "document_id": "f973157b-0dfa-48aa-b790-faef283a513d",
+            "submission_date": "2018-09-05T09:14:54.313Z",
+            "update_date": "2018-09-05T09:14:56.831Z"
+        }
+    },
+    "supplementary_file_2.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/1.1.3/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SOP - Human Oesophagus Dissociation 19.02.18.pdf",
+            "file_format": "pdf",
+            "checksum": "NEED"
+        },
+        "file_description": "Dissociation of human oesophagus epithelium into single cell suspension",
+        "provenance": {
+            "document_id": "339458c4-c7ab-4ee1-9071-999af6d16d47",
+            "submission_date": "2018-09-05T09:14:54.382Z",
+            "update_date": "2018-09-05T09:14:56.806Z"
+        }
+    },
+    "supplementary_file_3.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/1.1.3/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Clinical_metadata.xlsx",
+            "file_format": "xlsx",
+            "checksum": "NEED"
+        },
+        "file_description": "Clinical metadata about donors.",
+        "provenance": {
+            "document_id": "903bc97d-addf-45fa-ae35-cf7e31d0c20b",
+            "submission_date": "2018-09-05T09:14:54.333Z",
+            "update_date": "2018-09-05T09:14:56.827Z"
+        }
+    },
+    "supplementary_file_4.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/1.1.3/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "10x_sequencing_protocol.pdf",
+            "file_format": "pdf"
+        },
+        "file_description": "Sequencing and library preparation protocol.",
+        "provenance": {
+            "document_id": "e9000e63-4ead-468d-826a-9bea0a1c68ab",
+            "submission_date": "2018-09-05T09:14:54.301Z",
+            "update_date": "2018-09-05T09:14:56.827Z"
+        }
+    },
+    "supplementary_file_5.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/1.1.3/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Experimental_report.pdf",
+            "file_format": "pdf"
+        },
+        "provenance": {
+            "document_id": "529fd903-f4b9-44a9-b32f-047d359ad541",
+            "submission_date": "2018-09-05T09:14:54.323Z",
+            "update_date": "2018-09-05T09:14:56.872Z"
+        }
+    },
+    "supplementary_file_6.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/1.1.3/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SOP-Mechanical Human Spleen Dissociation 19.02.17.pdf",
+            "file_format": "pdf",
+            "checksum": "NEED"
+        },
+        "file_description": "Dissociation of spleen tissue sample into cell suspension",
+        "provenance": {
+            "document_id": "9904d58a-4a23-4099-b885-3bdefac39b20",
+            "submission_date": "2018-09-05T09:14:54.367Z",
+            "update_date": "2018-09-05T09:14:56.865Z"
+        }
+    },
+    "supplementary_file_7.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/1.1.3/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "284C_IMAGE_spleen_annotated.jpeg",
+            "file_format": "jpeg"
+        },
+        "file_description": "Gross image of specimen location in spleen.",
+        "provenance": {
+            "document_id": "f863f044-f904-4bf2-8535-fa45f123f237",
+            "submission_date": "2018-09-05T09:14:54.346Z",
+            "update_date": "2018-09-05T09:14:55.825Z"
+        }
+    }
+}

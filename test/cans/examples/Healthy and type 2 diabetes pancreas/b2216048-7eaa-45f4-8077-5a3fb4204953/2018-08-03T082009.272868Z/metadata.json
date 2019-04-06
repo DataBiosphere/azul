@@ -1,0 +1,403 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "AZ_B8",
+            "biomaterial_name": "AZ_B8 cell",
+            "biomaterial_description": "AZ_B8 cell",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "insdc_biomaterial": "ERS1348492",
+            "biosd_biomaterial": "SAMEA4437043"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "total_estimated_cells": 1,
+        "plate_based_sequencing": {
+            "plate_id": "AZ",
+            "well_id": "B8",
+            "cell_quality": "OK"
+        },
+        "provenance": {
+            "document_id": "1200f5bf-7d45-4f26-865e-b560797f1808",
+            "submission_date": "2018-09-05T12:09:41.946Z",
+            "update_date": "2018-09-05T12:21:55.818Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_protocol_1",
+            "protocol_name": "Single cell dissociation",
+            "protocol_description": "Islets were dissociated into single-cell suspension and viable individual cells were distributed by FACS into 384-well plates containing lysis buffer.",
+            "publication_doi": "10.1016/j.cmet.2016.08.020"
+        },
+        "dissociation_method": {
+            "text": "fluorescence-activated cell sorting",
+            "ontology": "EFO:0009108"
+        },
+        "provenance": {
+            "document_id": "6029a289-861c-4349-9614-4c244103be21",
+            "submission_date": "2018-09-05T12:11:53.063Z",
+            "update_date": "2018-09-05T12:17:49.721Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/10.1.1/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "H1",
+            "biomaterial_name": "Normal Donor 1",
+            "biomaterial_description": "Normal Donor 1",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "is_living": "no",
+        "sex": "male",
+        "medical_history": {
+            "test_results": "HbA1c 5.0%"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "development_stage": {
+            "text": "adult",
+            "ontology": "EFO:0001272"
+        },
+        "organism_age": "43",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036"
+        },
+        "human_specific": {
+            "body_mass_index": 30.8
+        },
+        "provenance": {
+            "document_id": "8bb4258a-90c7-4af6-8a1b-c4ab6c5483e2",
+            "submission_date": "2018-09-05T12:09:41.702Z",
+            "update_date": "2018-09-05T12:14:26.204Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/sequencing/4.3.2/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "library_preparation_protocol_1",
+            "protocol_name": "Library preparation for sequencing",
+            "protocol_description": "Single-cell RNA-seq libraries were generated as described in Picelli et al., 2014, Full-length RNA-seq from single cells using Smart-seq2, Nature Protocols.",
+            "publication_doi": "10.1038/nprot.2014.006"
+        },
+        "library_construction_approach": {
+            "text": "Smart-seq2",
+            "ontology": "EFO:0008931"
+        },
+        "nucleic_acid_source": "single cell",
+        "end_bias": "full length",
+        "primer": "poly-dT",
+        "strand": "unstranded",
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869"
+        },
+        "spike_in_dilution": 40000,
+        "spike_in_kit": {
+            "retail_name": "External RNA Controls Consortium (ERCC)",
+            "manufacturer": "Ambion, Life Technologies"
+        },
+        "provenance": {
+            "document_id": "079bc155-71c9-45ab-bd12-cab025890d82",
+            "submission_date": "2018-09-05T12:11:53.080Z",
+            "update_date": "2018-09-05T12:17:48.051Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.1/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.1",
+        "links": [
+            {
+                "process": "aa67d2ed-e4ea-4cdf-92ed-7d5e6dc1f6fa",
+                "inputs": [
+                    "1200f5bf-7d45-4f26-865e-b560797f1808"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "60471337-a47b-4b9c-95e7-4a19349a5e05"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "079bc155-71c9-45ab-bd12-cab025890d82"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "3aece946-4be6-4a0c-af23-ac884a87bcbb"
+                    }
+                ]
+            },
+            {
+                "process": "443b4672-3f14-4f1e-b7be-862ae02493dc",
+                "inputs": [
+                    "38002d8f-eac5-4ee4-8290-03d323bf780e"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "1200f5bf-7d45-4f26-865e-b560797f1808"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "6029a289-861c-4349-9614-4c244103be21"
+                    }
+                ]
+            },
+            {
+                "process": "738243c5-e336-4c55-a8b6-b192b6f98fe7",
+                "inputs": [
+                    "8bb4258a-90c7-4af6-8a1b-c4ab6c5483e2"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "38002d8f-eac5-4ee4-8290-03d323bf780e"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            }
+        ]
+    },
+    "process_0.json": {
+        "insdc_experiment": {
+            "insdc_experiment": "ERX1700368"
+        },
+        "process_core": {
+            "process_id": "process_id_3526"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "aa67d2ed-e4ea-4cdf-92ed-7d5e6dc1f6fa",
+            "submission_date": "2018-09-05T12:13:16.786Z",
+            "update_date": "2018-09-05T12:26:35.419Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_12"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "443b4672-3f14-4f1e-b7be-862ae02493dc",
+            "submission_date": "2018-09-05T12:11:53.403Z",
+            "update_date": "2018-09-05T12:25:01.078Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_1"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "738243c5-e336-4c55-a8b6-b192b6f98fe7",
+            "submission_date": "2018-09-05T12:11:53.128Z",
+            "update_date": "2018-09-05T12:25:00.908Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/project/9.0.2/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "Healthy and type 2 diabetes pancreas",
+            "project_title": "Single-cell RNA-seq analysis of human pancreas from healthy individuals and type 2 diabetes patients",
+            "project_description": "We used single-cell RNA-sequencing to generate transcriptional profiles of endocrine and exocrine cell types of the human pancreas. Pancreatic tissue and islets were obtained from six healthy and four T2D cadaveric donors. Islets were cultured and dissociated into single-cell suspension. Viable individual cells were distributed via fluorescence-activated cell sorted (FACS) into 384-well plates containing lysis buffer. Single-cell cDNA libraries were generated using the Smart-seq2 protocol. Gene expression was quantified as reads per kilobase transcript and per million mapped reads (RPKM) using rpkmforgenes. Bioinformatics analysis was used to classify cells into cell types without knowledge of cell types or prior purification of cell populations. We revealed subpopulations in endocrine and exocrine cell types, identified genes with interesting correlations to body mass index (BMI) in specific cell types and found transcriptional alterations in T2D.  Complementary whole-islet RNA-seq data have also been deposited at ArrayExpress under accession number E-MTAB-5060 (http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-5060)."
+        },
+        "insdc_project": "ERP017126",
+        "array_express_investigation": "E-MTAB-5061",
+        "insdc_study": "PRJEB15401",
+        "supplementary_links": [
+            "https://www.ebi.ac.uk/gxa/sc/experiments/E-MTAB-5061/Results"
+        ],
+        "contributors": [
+            {
+                "contact_name": "Athanasia,,Palasantza",
+                "email": "Athanasia.Palasantza@ki.se",
+                "institution": "Karolinska Institutet",
+                "laboratory": "Department of Cell and Molecular Biology (CMB)",
+                "address": "Nobels vag 3, 171 77, Stockholm",
+                "country": "Sweden",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Rickard,,Sandberg",
+                "email": "Rickard.Sandberg@ki.se",
+                "institution": "Karolinska Institutet",
+                "laboratory": "Department of Cell and Molecular Biology (CMB)",
+                "address": "Nobels vag 3, 171 77, Stockholm",
+                "country": "Sweden",
+                "orcid_id": "0000-0001-6473-1740",
+                "corresponding_contributor": true
+            },
+            {
+                "contact_name": "Asa,,Segerstolpe",
+                "email": "Asa.Segerstolpe@ki.se",
+                "institution": "Karolinska Institutet",
+                "laboratory": "Department of Cell and Molecular Biology (CMB)",
+                "address": "Nobels vag 3, 171 77, Stockholm",
+                "country": "Sweden",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Mallory,Ann,Freeberg",
+                "email": "mfreeberg@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Cambridge",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-2949-3921",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Laura,,Huerta",
+                "email": "lauhuema@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Molecular Atlas",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK",
+                "project_role": "external curator",
+                "orcid_id": "0000-0002-8748-599X",
+                "corresponding_contributor": false
+            }
+        ],
+        "funders": [
+            {
+                "grant_id": "648842",
+                "funder_name": "European Research Council"
+            },
+            {
+                "funder_name": "Swedish Research Council"
+            },
+            {
+                "funder_name": "Swedish Foundation for Strategic Research"
+            },
+            {
+                "funder_name": "Swedish Cancer Society"
+            },
+            {
+                "funder_name": "Center for Innovative Medicine"
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Segerstolpe A, Palasantza A, Eliasson P, Andersson EM, Andreasson AC, Sun X, Picelli S, Sabirsh A, Clausen M, Bjursell MK, Smith DM, Kasper M, Ammala C, Sandberg R"
+                ],
+                "publication_title": "Single-Cell Transcriptome Profiling of Human Pancreatic Islets in Health and Type 2 Diabetes",
+                "doi": "10.1016/j.cmet.2016.08.020",
+                "pmid": 27667667,
+                "publication_url": "https://europepmc.org/abstract/MED/27667667"
+            }
+        ],
+        "provenance": {
+            "document_id": "6751cc10-8cc3-452f-929c-4dcb98ee1435",
+            "submission_date": "2018-09-05T12:09:41.693Z",
+            "update_date": "2018-09-05T12:14:26.167Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "AZ_B8.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "read1",
+        "read_length": 43,
+        "insdc_run": [
+            "ERR1630035"
+        ],
+        "provenance": {
+            "document_id": "60471337-a47b-4b9c-95e7-4a19349a5e05",
+            "submission_date": "2018-09-05T12:10:45.476Z",
+            "update_date": "2018-09-05T12:27:42.525Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_protocol_1",
+            "protocol_name": "SmartSeq2 single cell sequencing",
+            "protocol_description": "Libraries were sequenced on an Illumina HiSeq 2000, generating 43 bp single-end reads.",
+            "publication_doi": "10.1038/nprot.2014.006"
+        },
+        "sequencing_approach": {
+            "text": "full length single cell RNA sequencing",
+            "ontology": "EFO:0008441"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2000",
+            "ontology": "EFO:0004203"
+        },
+        "paired_end": false,
+        "provenance": {
+            "document_id": "3aece946-4be6-4a0c-af23-ac884a87bcbb",
+            "submission_date": "2018-09-05T12:11:53.105Z",
+            "update_date": "2018-09-05T12:16:50.390Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "H1_pancreas",
+            "biomaterial_name": "Pancreas from donor H1",
+            "biomaterial_description": "Pancreas from normal donor H1",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "organ": {
+            "text": "pancreas",
+            "ontology": "UBERON:0001264"
+        },
+        "organ_part": {
+            "text": "islet of Langerhans",
+            "ontology": "UBERON:0000006"
+        },
+        "purchased_specimen": {
+            "manufacturer": "Prodo Laboratories Inc (Irvine, CA, USA) "
+        },
+        "provenance": {
+            "document_id": "38002d8f-eac5-4ee4-8290-03d323bf780e",
+            "submission_date": "2018-09-05T12:09:41.800Z",
+            "update_date": "2018-09-05T12:14:29.994Z"
+        }
+    }
+}

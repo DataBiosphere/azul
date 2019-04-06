@@ -1,0 +1,447 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "1_BM1_cells",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "selected_cell_type": [
+            {
+                "text": "bone marrow hematopoietic cell",
+                "ontology": "CL:1001610"
+            }
+        ],
+        "total_estimated_cells": 4294,
+        "provenance": {
+            "document_id": "7b53bae2-2424-44c0-9d80-ad72e8bca136",
+            "submission_date": "2018-09-04T12:26:41.629Z",
+            "update_date": "2018-09-04T12:27:19.625Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_protocol_1",
+            "protocol_name": "mononuclear cell isolation",
+            "protocol_description": "We isolated mononuclear cells for all samples in preparation for 10x sequencing."
+        },
+        "dissociation_method": {
+            "text": "10x sequencing",
+            "ontology": "EFO:0008995"
+        },
+        "provenance": {
+            "document_id": "eebf404f-4fbb-41b0-a9c6-81586f729599",
+            "submission_date": "2018-09-04T12:26:54.982Z",
+            "update_date": "2018-09-04T12:26:56.433Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/10.1.1/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "BM1",
+            "biomaterial_name": "Bone Marrow donor 1",
+            "biomaterial_description": "Bone Marrow donor 1",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "organism_age": "52",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036"
+        },
+        "development_stage": {
+            "text": "adult",
+            "ontology": "EFO:0001272"
+        },
+        "is_living": "yes",
+        "sex": "female",
+        "medical_history": {
+            "smoking_history": "no"
+        },
+        "human_specific": {
+            "ethnicity": [
+                {
+                    "text": "Caucasian"
+                }
+            ]
+        },
+        "weight": "69",
+        "weight_unit": {
+            "text": "kilogram",
+            "ontology": "UO:0000009"
+        },
+        "height": "165",
+        "height_unit": {
+            "text": "centimeter",
+            "ontology": "UO:0000015"
+        },
+        "provenance": {
+            "document_id": "628e8b1d-a1ce-4dee-b15a-3fd33290eafe",
+            "submission_date": "2018-09-04T12:26:40.051Z",
+            "update_date": "2018-09-04T12:27:10.175Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/sequencing/4.3.2/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "library_preparation_protocol_1",
+            "protocol_name": "Preparing RNA for sequencing by 10x"
+        },
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869"
+        },
+        "library_construction_approach": {
+            "text": "10X sequencing",
+            "ontology": "EFO:0008995"
+        },
+        "nucleic_acid_source": "single cell",
+        "end_bias": "3 prime tag",
+        "primer": "poly-dT",
+        "strand": "second",
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 16,
+            "barcode_length": 10
+        },
+        "provenance": {
+            "document_id": "e4024c4a-dbce-4bda-bed8-21414091e7ce",
+            "submission_date": "2018-09-04T12:26:54.992Z",
+            "update_date": "2018-09-04T12:27:50.909Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.1/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.1",
+        "links": [
+            {
+                "process": "d691bda4-ed01-48b6-a4ea-65b70f6a3946",
+                "inputs": [
+                    "7b53bae2-2424-44c0-9d80-ad72e8bca136"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "36d7f891-8a43-4ae4-8472-a34dcb2be643"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "e4024c4a-dbce-4bda-bed8-21414091e7ce"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "aaa08845-5150-4a4f-9c44-5ea22add1fc3"
+                    }
+                ]
+            },
+            {
+                "process": "98442f49-9afb-491e-8347-f891f39d8d70",
+                "inputs": [
+                    "6228558b-436a-46c9-9cd3-ea9b5c123070"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "7b53bae2-2424-44c0-9d80-ad72e8bca136"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "eebf404f-4fbb-41b0-a9c6-81586f729599"
+                    }
+                ]
+            },
+            {
+                "process": "5aa4645b-2802-4140-9b15-d1008338b1c9",
+                "inputs": [
+                    "628e8b1d-a1ce-4dee-b15a-3fd33290eafe"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "6228558b-436a-46c9-9cd3-ea9b5c123070"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            }
+        ]
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "process_id_128"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "98442f49-9afb-491e-8347-f891f39d8d70",
+            "submission_date": "2018-09-04T12:26:57.064Z",
+            "update_date": "2018-09-04T12:28:00.426Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_255"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "d691bda4-ed01-48b6-a4ea-65b70f6a3946",
+            "submission_date": "2018-09-04T12:26:58.574Z",
+            "update_date": "2018-09-04T12:28:06.541Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_1"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "5aa4645b-2802-4140-9b15-d1008338b1c9",
+            "submission_date": "2018-09-04T12:26:55.041Z",
+            "update_date": "2018-09-04T12:27:51.508Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/project/9.0.2/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "1M Immune Cells",
+            "project_title": "Census of Immune Cells",
+            "project_description": "Diverse cells of the immune system maintain and protect tissue function, integrity, and homeostasis upon changes in functional demands and diverse perturbations. Recent advances such as massively parallel single-cell RNA-sequencing and sophisticated computational methods help shed new light on this complexity. This immune cell census aims to profile up to 2M immunocytes, the first tranche of this is currently available. With computational methods optimized to a massive scale, we can readily identify cell types and markers, as well as the process of hematopoietic differentiation. The high quality and comprehensive reference map is provided as an open community resource for understanding human health and disease."
+        },
+        "contributors": [
+            {
+                "contact_name": "Aviv,,Regev",
+                "email": "aregev@broadinstitute.org",
+                "phone": "(617) 714-7020",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Bo,,Li",
+                "email": "libo@broadinstitute.org",
+                "phone": "(617) 714-8681",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Monika,S,Kowalczyk",
+                "email": "msk.kowalczyk@gmail.com",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Danielle,,Dionne",
+                "email": "dionne@broadinstitute.org",
+                "phone": "(617) 714-8147",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Timothy,,Tickle",
+                "email": "ttickle@broadinstitute.org",
+                "phone": "(617) 714-7084",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Jane,,Lee",
+                "email": "janelee@broadinstitute.org",
+                "phone": "(617) 714-7448",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Orit,,Rozenblatt-Rosen",
+                "email": "orit@broadinstitute.org",
+                "phone": "(617) 714-7789",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Orr,,Ashenberg",
+                "email": "orr@broadinstitute.org",
+                "phone": "(617) 714-8681",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Marcin,,Tabaka",
+                "email": "mtabaka@broadinstitute.org",
+                "phone": "(617) 714-7470",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Karthik,,Shekhar",
+                "email": "karthik@broadinstitute.org",
+                "phone": "(617) 714-8067",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Michal,,Slyper",
+                "email": "mslyper@broadinstitute.org",
+                "phone": "(617) 714-7199",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Julia,,Waldman",
+                "email": "jwaldman@broadinstitute.org",
+                "institution": "Broad Institute",
+                "laboratory": "Regev Lab",
+                "address": "415 Main Street, Cambridge, MA",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Mallory,Ann,Freeberg",
+                "email": "mfreeberg@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Cambridge",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-2949-3921",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Danielle,,Welter",
+                "email": "dwelter@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Cambridge",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-1058-2668",
+                "corresponding_contributor": false
+            }
+        ],
+        "provenance": {
+            "document_id": "617eb7c1-a3bc-4dd3-9a2a-50a77c998e22",
+            "submission_date": "2018-09-04T12:26:40.041Z",
+            "update_date": "2018-09-04T12:27:09.930Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "MantonBM1_HiSeq_1_S1_L007_I1_001.fastq.gz",
+            "file_format": "fastq.gz"
+        },
+        "read_index": "index1",
+        "lane_index": 7,
+        "read_length": 8,
+        "technical_replicate_group": "1_BM1_cells_r1",
+        "provenance": {
+            "document_id": "36d7f891-8a43-4ae4-8472-a34dcb2be643",
+            "submission_date": "2018-09-04T12:26:43.089Z",
+            "update_date": "2018-09-04T12:27:39.827Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "10x_v2_sequencing_protocol_1",
+            "protocol_name": "Sequencing bone marrow donor 1-4",
+            "protocol_description": "Single cell sequencing of cDNAs by 10x"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina Hiseq X 10",
+            "ontology": "EFO:0008567"
+        },
+        "local_machine_name": "HXE",
+        "paired_end": true,
+        "sequencing_approach": {
+            "text": "tag based single cell RNA sequencing",
+            "ontology": "EFO:0008440"
+        },
+        "provenance": {
+            "document_id": "aaa08845-5150-4a4f-9c44-5ea22add1fc3",
+            "submission_date": "2018-09-04T12:26:55.003Z",
+            "update_date": "2018-09-04T12:27:50.911Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "http://schema.dev.data.humancellatlas.org/type/biomaterial/6.3.1/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "1_BM1",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "organ": {
+            "text": "bone",
+            "ontology": "UBERON:0001474"
+        },
+        "organ_part": {
+            "text": "bone marrow",
+            "ontology": "UBERON:0002371"
+        },
+        "purchased_specimen": {
+            "manufacturer": "Stem Cell Technologies"
+        },
+        "provenance": {
+            "document_id": "6228558b-436a-46c9-9cd3-ea9b5c123070",
+            "submission_date": "2018-09-04T12:26:40.206Z",
+            "update_date": "2018-09-04T12:27:13.378Z"
+        }
+    }
+}
