@@ -573,6 +573,34 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertEqual(['E-AAAA-00'], project['array_express_accessions'])
             self.assertEqual(['PRJNA000000'], project['insdc_study_accessions'])
 
+    def test_imaging_bundle(self):
+        self._index_canned_bundle(('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z'))
+        hits = self._get_hits()
+        sources = defaultdict(list)
+        for hit in hits:
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            sources[entity_type, aggregate].append(hit['_source'])
+        for aggregate in True, False:
+            with self.subTest(aggregate=aggregate):
+                self.assertEqual(
+                    {
+                        'files': 227,
+                        'projects': 1,
+                        'specimens': 1,
+                    },
+                    {
+                        entity_type: len(sources)
+                        for (entity_type, _aggregate), sources in sources.items()
+                        if _aggregate is aggregate
+                    }
+                )
+                # This imaging bundle contains 6 data files in JSON format
+                self.assertEqual(
+                    Counter({'tiff': 221, 'json': 6}),
+                    Counter(one(source['contents']['files'])['file_format']
+                            for source in sources['files', aggregate])
+                )
+
 
 class TestValidNotificationRequests(LocalAppTestCase):
 
