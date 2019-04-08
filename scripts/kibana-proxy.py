@@ -4,35 +4,22 @@
 Runs Kibana and aws-signing-proxy locally. The latter is used to sign requests by the former and forward them to an
 Amazon Elasticsearch instance. The default instance is the main ES instance for the current DSS stage.
 
-To install Kibana and aws-signing-proxy follow these steps (macOS only):
+Requires docker to be installed.
 
-1) Run
+Before using this script, make sure that
 
-   brew install golang
+ * the Azul virtualenv is active,
 
-2) As instructed by brew, set GOPATH. Then set PATH to include $GOPATH/bin
+ * the desired deployment selected
 
-3) Run
+ * and `source environment` has been run.
 
-   go get github.com/cllunsford/aws-signing-proxy
-
-4) Install a matching version of Kibana (currently 5.5). Finding the homebrew-core commit for that version is the
-   trickiest part of the setup. It is possible that you don't need to do this as you might already have a matching
-   version of Kibana installed locally. I used the following command to install Kibana 5.5.2
-
-   brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/eb26ed9e7a4b3a35c62a40fa4fec89bf0361781f/Formula/kibana.rb
-
-To use this program, set `AWS_PROFILE` and `source environment`. Then run
+Then run
 
    kibana-proxy.py
 
 and open `http://localhost:5601` in your browser while leaving the script running. Hitting Ctrl-C terminates it and
 its child processes.
-
-If multiple versions of Kibana are installed, you may want to select the one to be run by this program by setting
-AZUL_KIBANA_BIN (in environment.local) to point at the Kibana executable. For example, I have
-
-   export AZUL_KIBANA_BIN=/usr/local/Cellar/kibana/5.5.2/bin/kibana
 """
 
 import logging
@@ -41,6 +28,7 @@ import shlex
 import signal
 import sys
 from itertools import chain
+import time
 
 import boto3
 
@@ -54,16 +42,31 @@ class KibanaProxy:
         self.pids = {}
 
     def run(self):
+        # aws-signing-proxy doesn't support credentials
+        creds = boto3.Session().get_credentials().get_frozen_credentials()
         kibana_port = self.options.kibana_port
         proxy_port = self.options.proxy_port or kibana_port + 10
         try:
-            self.spawn('aws-signing-proxy',
+            self.spawn('docker', 'run', '--rm', '-t',
+                       '--name', f'aws-signing-proxy-{kibana_port}',
+                       '-p', f'127.0.0.1:{proxy_port}:{proxy_port}',
+                       '-p', f'127.0.0.1:{kibana_port}:{kibana_port}',
+                       '-e', f'AWS_ACCESS_KEY_ID={creds.access_key}',
+                       '-e', f'AWS_SECRET_ACCESS_KEY={creds.secret_key}',
+                       '-e', f'AWS_SESSION_TOKEN={creds.token}',
+                       '-e', 'AWS_REGION',
+                       'cllunsford/aws-signing-proxy',
                        '-target', self.dss_end_point,
                        '-port', str(proxy_port),
                        AWS_REGION=os.environ['AWS_DEFAULT_REGION'])
-            self.spawn(os.environ.get('AZUL_KIBANA_BIN', 'kibana'),
+            time.sleep(3)
+            self.spawn('docker', 'run', '--rm', '-t',
+                       '--network', f'container:aws-signing-proxy-{kibana_port}',
+                       'kibana:5.5.2',
                        '--port', str(kibana_port),
                        '--elasticsearch', f'http://localhost:{proxy_port}')
+            time.sleep(3)
+            print(f'Now open https://localhost:{kibana_port}/')
             self.wait()
         finally:
             self.kill()
