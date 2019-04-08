@@ -22,7 +22,10 @@ def setUpModule():
 class TestResponse(WebServiceTestCase):
 
     maxDiff = None
-    bundles = WebServiceTestCase.bundles + [('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z')]
+    bundles = WebServiceTestCase.bundles + [
+        ('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
+        ('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z')
+    ]
 
     def get_hits(self, entity_type: str, entity_id: str):
         """Fetches hits from es instance searching for a particular entity ID"""
@@ -63,6 +66,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
+                            "selectedCellType": [],
                             "totalCells": 1
                         }
                     ],
@@ -130,6 +134,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
+                            "selectedCellType": [],
                             "totalCells": 1
                         }
                     ],
@@ -219,6 +224,7 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
+                                "selectedCellType": [],
                                 "totalCells": 1
                             }
                         ],
@@ -293,6 +299,7 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
+                                "selectedCellType": [],
                                 "totalCells": 1
                             }
                         ],
@@ -607,6 +614,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
+                            "selectedCellType": [],
                             "totalCells": 1
                         }
                     ],
@@ -710,6 +718,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
+                            "selectedCellType": [],
                             "totalCells": 1
                         }
                     ],
@@ -1029,7 +1038,6 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(json.dumps(expected_organ_summary3, sort_keys=True),
                          json.dumps(project_summary3['organSummaries'], sort_keys=True))
 
-
     def test_project_accessions_response(self):
         """
         This method tests the KeywordSearchResponse object for the projects entity type,
@@ -1046,6 +1054,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["brain"],
                             "organPart": ["amygdala"],
+                            "selectedCellType": [],
                             "totalCells": 10000
                         }
                     ],
@@ -1148,6 +1157,18 @@ class TestResponse(WebServiceTestCase):
             ]
         }
         self.assertElasticsearchResultsEqual(keyword_response, expected_response)
+
+    def test_cell_suspension_response(self):
+        """
+        Test KeywordSearchResponse contains the correct selectedCellType value
+        """
+        keyword_response = KeywordSearchResponse(
+            hits=self.get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
+            entity_type='projects'
+        ).return_response().to_json()
+
+        cell_suspension = one(keyword_response['hits'][0]['cellSuspensions'])
+        self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
 
 
 if __name__ == '__main__':

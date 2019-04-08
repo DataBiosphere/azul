@@ -22,17 +22,13 @@ module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/i
 
 
 class BadArgumentException(Exception):
-
     def __init__(self, message):
-        Exception.__init__(self)
-        self.message = message
+        super().__init__(message)
 
 
 class IndexNotFoundError(Exception):
-
     def __init__(self, missing_index: str):
-        Exception.__init__(self)
-        self.message = f'Could not find the Elasticsearch index: {missing_index}.'
+        super().__init__(f'{missing_index} is not a valid uuid.')
 
 
 class ElasticTransformDump(object):

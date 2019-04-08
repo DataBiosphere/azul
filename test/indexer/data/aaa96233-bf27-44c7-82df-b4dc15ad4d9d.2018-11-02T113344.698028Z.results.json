@@ -57,6 +57,7 @@
                 "cell_suspensions": [
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "selected_cell_type": [],
                         "total_estimated_cells": 1,
                         "organ": [
                             "pancreas"
@@ -211,6 +212,7 @@
                 "cell_suspensions": [
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "selected_cell_type": [],
                         "total_estimated_cells": 1,
                         "organ": [
                             "pancreas"
@@ -365,6 +367,7 @@
                 "cell_suspensions": [
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "selected_cell_type": [],
                         "total_estimated_cells": 1,
                         "organ": [
                             "pancreas"
@@ -533,6 +536,7 @@
                 "cell_suspensions": [
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "selected_cell_type": [],
                         "total_estimated_cells": 1,
                         "organ": [
                             "pancreas"
@@ -714,6 +718,7 @@
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
+                        "selected_cell_type": [],
                         "total_estimated_cells": 1,
                         "organ": [
                             "pancreas"
@@ -857,6 +862,7 @@
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
+                        "selected_cell_type": [],
                         "total_estimated_cells": 1,
                         "organ": [
                             "pancreas"
@@ -986,6 +992,7 @@
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
+                        "selected_cell_type": [],
                         "total_estimated_cells": 1,
                         "organ": [
                             "pancreas"
@@ -1122,6 +1129,7 @@
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
+                        "selected_cell_type": [],
                         "total_estimated_cells": 1,
                         "organ": [
                             "pancreas"
