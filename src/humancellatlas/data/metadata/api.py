@@ -448,11 +448,13 @@ class LibraryPreparationProtocol(Protocol):
 @dataclass(init=False)
 class SequencingProtocol(Protocol):
     instrument_manufacturer_model: str
+    paired_end: Optional[bool]
 
     def __init__(self, json: JSON):
         super().__init__(json)
         content = json.get('content', json)
         self.instrument_manufacturer_model = ontology_label(content.get('instrument_manufacturer_model'), default=None)
+        self.paired_end = lookup(content, 'paired_end', 'paired_ends', default=None)
 
 
 @dataclass(init=False)
