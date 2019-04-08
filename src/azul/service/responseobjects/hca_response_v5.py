@@ -663,6 +663,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             translated_specimen = {
                 "organ": cell_suspension.get("organ", None),
                 "organPart": cell_suspension.get("organ_part", None),
+                "selectedCellType": cell_suspension.get("selected_cell_type", None),
                 "totalCells": cell_suspension.get("total_estimated_cells", None)
             }
             specimens.append(translated_specimen)

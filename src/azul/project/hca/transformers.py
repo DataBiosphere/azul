@@ -214,6 +214,7 @@ class CellSuspensionVisitor(BiomaterialVisitor):
         if isinstance(entity, api.CellSuspension):
             self._set('document_id', MandatoryValueAccumulator, str(entity.document_id))
             self._set('total_estimated_cells', OptionalValueAccumulator, entity.total_estimated_cells)
+            self._set('selected_cell_type', SetAccumulator, entity.selected_cell_type)
         elif isinstance(entity, api.SpecimenFromOrganism):
             self._set('organ', PrioritySetAccumulator, (0, entity.organ))
             self._set('organ_part', PrioritySetAccumulator, (0, entity.organ_parts))
