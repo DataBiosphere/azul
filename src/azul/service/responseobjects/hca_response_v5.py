@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-from typing import MutableSet, List
+from typing import MutableSet, List, MutableMapping, IO
 
 from uuid import uuid4
 
@@ -198,19 +198,36 @@ class ManifestResponse(AbstractResponse):
     """
     Class for the Manifest response. Based on the AbstractionResponse class
     """
+    def __init__(self, es_search, manifest_entries, mapping, format):
+        """
+        The constructor takes the raw response from ElasticSearch and creates
+        a csv file based on the columns from the manifest_entries
+        :param es_search: The Elasticsearch DSL Search object
+        :param mapping: The mapping between the columns to values within ES
+        :param manifest_entries: The columns that will be present in the tsv
+        """
+        self.es_search = es_search
+        self.manifest_entries = OrderedDict(manifest_entries)
+        self.mapping = mapping
+        self.storage_service = StorageService()
+        self.format = format
+
+        sources = list(self.manifest_entries.keys())
+        self.ordered_column_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
+
 
     def _translate(self, untranslated, keyname):
         m = self.manifest_entries[keyname]
         return [untranslated.get(es_name, "") for es_name in m.values()]
 
-    def _extract_fields(self, entities: List[JSON], column_mapping: JSON):
+    def _extract_fields(self, entities: List[JSON], column_mapping: JSON, row: MutableMapping[str, str]):
         def validate(s: str) -> str:
             assert '||' not in s
             return s
 
-        cell_values = []
-        for field_name in column_mapping.values():
-            cell_value = []
+        for column_name, field_name in column_mapping.items():
+            assert column_name not in row, f'Column mapping defines {column_name} twice'
+            column_value = []
             for entity in entities:
                 try:
                     field_value = entity[field_name]
@@ -218,12 +235,11 @@ class ManifestResponse(AbstractResponse):
                     pass
                 else:
                     if isinstance(field_value, list):
-                        cell_value += [validate(str(v)) for v in field_value if v is not None]
+                        column_value += [validate(str(v)) for v in field_value if v is not None]
                     else:
-                        cell_value.append(validate(str(field_value)))
-            cell_values.append(" || ".join(sorted(set(cell_value))))
-
-        return cell_values
+                        column_value.append(validate(str(field_value)))
+            column_value = ' || '.join(sorted(set(column_value)))
+            row[column_name] = column_value
 
     def _push_content(self) -> str:
         """
@@ -236,11 +252,8 @@ class ManifestResponse(AbstractResponse):
 
         with MultipartUploadHandler(object_key, content_type) as multipart_upload:
             with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
-                buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
-                writer = csv.writer(buffer_wrapper, dialect='excel-tab')
-                writer.writerow(self.ordered_column_names)
-                for hit in self.es_search.scan():
-                    self._iterate_hit_tsv(hit, writer)
+                text_buffer = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
+                self._write_tsv(text_buffer)
 
         return object_key
 
@@ -251,13 +264,11 @@ class ManifestResponse(AbstractResponse):
         :return: S3 object key
         """
         if self.format == 'tsv':
-            data = self._construct_tsv_content().encode()
-            content_type = 'text/tab-separated-values'
-            object_key = f'manifests/{uuid4()}.tsv'
-            parameters = dict(object_key=object_key,
-                              data=data,
-                              content_type=content_type)
-            return self.storage_service.put(**parameters)
+            output = StringIO()
+            self._write_tsv(output)
+            return self.storage_service.put(object_key=f'manifests/{uuid4()}.tsv',
+                                            data=output.getvalue().encode(),
+                                            content_type='text/tab-separated-values')
         elif self.format == 'bdbag':
             file_name = self._construct_bdbag()
             try:
@@ -268,16 +279,16 @@ class ManifestResponse(AbstractResponse):
         else:
             assert False
 
-    def _construct_tsv_content(self):
-        es_search = self.es_search
-
-        output = StringIO()
-        writer = csv.writer(output, dialect='excel-tab')
-        writer.writerow(self.ordered_column_names)
-        for hit in es_search.scan():
-            self._iterate_hit_tsv(hit, writer)
-
-        return output.getvalue()
+    def _write_tsv(self, output: IO[str]) -> None:
+        writer = csv.DictWriter(output, self.ordered_column_names, dialect='excel-tab')
+        writer.writeheader()
+        for hit in self.es_search.scan():
+            doc = hit.to_dict()
+            row = {}
+            for doc_path, column_mapping in self.manifest_entries.items():
+                entities = self._get_entities(doc_path, doc)
+                self._extract_fields(entities, column_mapping, row)
+            writer.writerow(row)
 
     def _construct_bdbag(self) -> str:
         """
@@ -329,21 +340,17 @@ class ManifestResponse(AbstractResponse):
 
             return bdbag_api.archive_bag(bag_path, 'zip')
 
-    def _iterate_hit_tsv(self, es_search_hit, writer):
-        hit_dict = es_search_hit.to_dict()
-
-        inner_entity_fields = []
-        for doc_path, column_mapping in self.manifest_entries.items():
-            doc_path = doc_path.split('.')
-            assert doc_path
-            entities = hit_dict
-            for key in doc_path[:-1]:
-                entities = entities.get(key, {})
-            entities = entities.get(doc_path[-1], [])
-
-            inner_entity_fields += self._extract_fields(entities, column_mapping)
-
-        writer.writerow(inner_entity_fields)
+    def _get_entities(self, path: str, doc: JSON) -> List[JSON]:
+        """
+        Given a document and a dotted path into that document, return the list of entities designated by that path.
+        """
+        path = path.split('.')
+        assert path
+        d = doc
+        for key in path[:-1]:
+            d = d.get(key, {})
+        entities = d.get(path[-1], [])
+        return entities
 
     def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
         hit_dict = es_search_hit.to_dict()
@@ -387,23 +394,6 @@ class ManifestResponse(AbstractResponse):
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
 
         return Response(body='', headers=headers, status_code=302)
-
-    def __init__(self, es_search, manifest_entries, mapping, format):
-        """
-        The constructor takes the raw response from ElasticSearch and creates
-        a csv file based on the columns from the manifest_entries
-        :param es_search: The Elasticsearch DSL Search object
-        :param mapping: The mapping between the columns to values within ES
-        :param manifest_entries: The columns that will be present in the tsv
-        """
-        self.es_search = es_search
-        self.manifest_entries = OrderedDict(manifest_entries)
-        self.mapping = mapping
-        self.storage_service = StorageService()
-        self.format = format
-
-        sources = list(self.manifest_entries.keys())
-        self.ordered_column_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
 
 
 class EntryFetcher:
