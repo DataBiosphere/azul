@@ -1,5 +1,5 @@
 _set AZUL_DEPLOYMENT_STAGE samples
-_set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
+_set AZUL_DSS_ENDPOINT "https://dss.data.humancellatlas.org/v1"
 _set AZUL_SUBSCRIBE_TO_DSS 0
 
 _set AZUL_DOMAIN_NAME "dev.explore.data.humancellatlas.org"
