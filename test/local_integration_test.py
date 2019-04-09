@@ -11,16 +11,19 @@ import unittest
 import urllib
 from urllib.parse import urlencode
 import uuid
-from io import BytesIO, TextIOWrapper
-from zipfile import ZipFile
 import os
 import csv
+import gzip
+import json
 from more_itertools import one, first
+from io import BytesIO, TextIOWrapper
+from zipfile import ZipFile
 
 from azul import config
 from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
 from azul.requests import requests_session
+from azul import drs
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +89,15 @@ class IntegrationTest(unittest.TestCase):
                     response = self.check_endpoint_is_working(config.service_endpoint(), path, query)
                     validator(response)
 
+        filters = {"file":{"organ":{"is":["brain"]},"fileFormat":{"is":["fastq.gz"]}}}
+        response_with_file_uuid = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
+                                                                 path='/repository/files',
+                                                                 query={'filters': filters, 'size': 15,
+                                                                        'order': 'asc', 'sort': 'fileSize'})
+        file_uuid = self._get_file_uuid(response_with_file_uuid)
+        drs_endpoint = drs.drs_http_object_path(file_uuid)
+        self.download_file_from_drs_response(self.check_endpoint_is_working(config.service_endpoint(), drs_endpoint))
+
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
         indexer_lambda_config = client.get_function_configuration(FunctionName=config.indexer_name)
@@ -124,6 +136,20 @@ class IntegrationTest(unittest.TestCase):
                     num_rows = len(list(csv.reader(text, delimiter='\t')))
                     self.assertTrue(num_rows > 1)
                     logger.info(f'BDBag file {file_name} contains {num_rows} rows.')
+
+    def download_file_from_drs_response(self, response: bytes):
+        json_data = json.loads(response)['data_object']
+        file_url = first(json_data['urls'])['url']
+        file_name = json_data['name']
+        response = self.check_endpoint_is_working(file_url, '')
+        # Check signature of FASTQ file.
+        with gzip.open(BytesIO(response)) as buf:
+            fastq = buf.read()
+        lines = fastq.splitlines()
+        # Assert first character of first and third line of file (see https://en.wikipedia.org/wiki/FASTQ_format).
+        logger.info(f'Unzipped file {file_name} and verified it to be a FASTQ file.')
+        self.assertTrue(lines[0].startswith(b'@'))
+        self.assertTrue(lines[2].startswith(b'+'))
 
     def get_number_of_messages(self, queues: Mapping[str, Any]):
         total_message_count = 0
@@ -226,3 +252,9 @@ class IntegrationTest(unittest.TestCase):
                             f'There was a problem during indexing an {entity_type} entity'
                             f' {hit["entryId"]}. Bundle(s) ({",".join(bundle_fqids)})'
                             f' have been indexed without the debug project name. Contains {project}')
+
+    @classmethod
+    def _get_file_uuid(cls, response: bytes) -> str:
+        """Returns file UUID of first FASTQ file."""
+        hits = json.loads(response)
+        return first(first(hits['hits'])['files'])['uuid']

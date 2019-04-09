@@ -1170,6 +1170,35 @@ class TestResponse(WebServiceTestCase):
         cell_suspension = one(keyword_response['hits'][0]['cellSuspensions'])
         self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
 
+    def test_filter_by_projectId(self):
+        """
+        Test response when using a projectId filter
+        """
+        test_data_sets = [
+            {
+                'id': '627cb0ba-b8a1-405a-b58f-0add82c3d635',
+                'title': '10x 1 Run Integration Test'
+            },
+            {
+                'id': '250aef61-a15b-4d97-b8b4-54bb997c1d7d',
+                'title': 'Bone marrow plasma cells from hip replacement surgeries'
+            }
+        ]
+        for test_data in test_data_sets:
+            for entity_type in 'files', 'specimens', 'projects':
+                with self.subTest(entity_type=entity_type):
+                    url = self.base_url + "/repository/" + entity_type + "?size=2" \
+                                          "&filters={'file':{'projectId':{'is':['" + test_data['id'] + "']}}}"
+                    response = requests.get(url)
+                    response.raise_for_status()
+                    response_json = response.json()
+                    for hit in response_json['hits']:
+                        for project in hit['projects']:
+                            if entity_type == 'projects':
+                                self.assertEqual(test_data['title'], project['projectTitle'])
+                            else:
+                                self.assertIn(test_data['title'], project['projectTitle'])
+
 
 if __name__ == '__main__':
     unittest.main()
