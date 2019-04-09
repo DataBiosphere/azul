@@ -95,8 +95,12 @@ class ManifestService(AbstractService):
             raise
 
         if execution['status'] == 'SUCCEEDED':
-            execution_output = json.loads(execution['output'])
-            return execution_output['Location']
+            # Because describe_execution is eventually consistent output may not yet be present
+            if 'output' in execution:
+                execution_output = json.loads(execution['output'])
+                return execution_output['Location']
+            else:
+                return 1
         elif execution['status'] == 'RUNNING':
             return self._get_next_wait_time(request_index)
         raise StateMachineError('Failed to generate manifest')
