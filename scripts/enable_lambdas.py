@@ -5,7 +5,7 @@ from azul.types import JSON
 import boto3
 import logging
 
-logger = logging.getLogger(__name__)\
+logger = logging.getLogger(__name__)
 
 
 class RedButton:
@@ -69,8 +69,8 @@ class RedButton:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Enables or disables all the lambdas in Azul.')
     group = parser.add_mutually_exclusive_group()
-    parser.add_argument('--enable', dest='enabled', action='store_true', default=True)
-    parser.add_argument('--disable', dest='enabled', action='store_false')
+    group.add_argument('--enable', dest='enabled', action='store_true', default=True)
+    group.add_argument('--disable', dest='enabled', action='store_false')
     args = parser.parse_args()
 
     RedButton().enable_azul_lambdas(args.enabled)
