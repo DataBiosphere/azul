@@ -50,13 +50,13 @@ class RedButton:
         lambda_name = lambda_settings['Configuration']['FunctionName']
         if self.tag_name not in lambda_tags.keys():
             try:
-                concurrency_settings = lambda_settings['Concurrency']
+                concurrency = lambda_settings['Concurrency']
             except KeyError:
                 # If a lambda doesn't have a limit for concurrency executions, Lambda.Client.get_function()
                 # doesn't return a response with the key, `Concurrency`.
                 concurrency_limit = None
             else:
-                concurrency_limit = concurrency_settings['ReservedConcurrentExecutions']
+                concurrency_limit = concurrency['ReservedConcurrentExecutions']
 
             logging.info(f'Setting concurrency limit for {lambda_name} to zero.')
             new_tag = {self.tag_name: repr(concurrency_limit)}
@@ -67,10 +67,10 @@ class RedButton:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Enables or disables all the lambdas in Azul.')
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--enable', dest='enabled', action='store_true', default=True)
+    parser = argparse.ArgumentParser(description='Enables or disables the lambdas in the current deployment.')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--enable', dest='enabled', action='store_true', default=None)
     group.add_argument('--disable', dest='enabled', action='store_false')
     args = parser.parse_args()
-
+    assert args.enabled is not None
     RedButton().enable_azul_lambdas(args.enabled)
