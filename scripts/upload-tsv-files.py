@@ -9,7 +9,7 @@ import unicodedata
 import sys
 
 
-class ProjectTSVUploader():
+class ProjectTSVUploader:
     def __init__(self, deployment):
         deployments = {
             'dev':
@@ -49,8 +49,8 @@ class ProjectTSVUploader():
                 project_name = self._get_project_name(project_uuid)
                 file_name = unicodedata.normalize('NFKD', project_name)
                 file_name = re.sub('[^\w ,.@%&-_()\\[\]/{}]', '_', file_name).strip()
-                timestamp = datetime.now().strftime("%Y-%m-%dT%H%M%S")
-                content_disposition = f'attachment;filename=\"{file_name}__{timestamp}.tsv\"'
+                timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
+                content_disposition = f'attachment;filename="{file_name} {timestamp}.tsv"'
                 assert '\\' not in file_name
 
                 with open(filepath, 'rb') as tsv_file:
