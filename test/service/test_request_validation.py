@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import csv
 import logging
 import os
@@ -29,6 +30,7 @@ def setUpModule():
 
 
 class FacetNameValidationTest(WebServiceTestCase):
+
     @classmethod
     def lambda_name(cls) -> str:
         return "service"
@@ -215,12 +217,14 @@ class FacetNameValidationTest(WebServiceTestCase):
                             ('library_preparation_protocol.library_construction_approach', '', 'Smart-seq2'),
                             ('project.provenance.document_id', '67bc798b-a34a-4104-8cab-cad648471f69',
                              '67bc798b-a34a-4104-8cab-cad648471f69'),
-                            ('project.contributors.institution', 'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
-                                             ' || University of Helsinki || Wellcome Trust Sanger Institute',
+                            ('project.contributors.institution',
+                             'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
+                             ' || University of Helsinki || Wellcome Trust Sanger Institute',
                              'DKFZ German Cancer Research Center || EMBL-EBI || University of Cambridge'
                              ' || University of Helsinki || Wellcome Trust Sanger Institute'),
-                            ('project.contributors.laboratory', 'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
-                                           ' || Sarah Teichmann',
+                            ('project.contributors.laboratory',
+                             'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
+                             ' || Sarah Teichmann',
                              'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit'
                              ' || Sarah Teichmann'),
                             ('project.project_core.project_short_name', 'Mouse Melanoma', 'Mouse Melanoma'),
@@ -229,7 +233,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                             ('donor_organism.sex', '', 'female'),
                             ('donor_organism.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
                             ('specimen_from_organism.provenance.document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
-                                                         ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
+                                                                                  ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
                             ('specimen_from_organism.diseases', '', ''),
                             ('specimen_from_organism.biomaterial_core.biomaterial_id', '', '1209'),
                             ('donor_organism.provenance.document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
@@ -257,48 +261,228 @@ class FacetNameValidationTest(WebServiceTestCase):
         moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit
         the server (see GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
         """
+        self.maxDiff = None
+        self._index_canned_bundle(("587d74b4-1075-4bbf-b96a-4d1ede0481b2", "2018-09-14T133314.453337Z"))
         logging.getLogger('test_request_validation').warning('test_manifest is invoked')
         with ResponsesHelper() as helper, TemporaryDirectory() as zip_dir:
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            url = self.base_url + '/repository/files/export?filters={"file":{}}&format=bdbag'
+            url = self.base_url + '/repository/files/export?filters={"file":{"fileFormat":{"is":["bam", "fastq.gz", "fastq"]}}}&format=bdbag'
             response = requests.get(url, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
-            with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
-                observed = list(csv.reader(fh, delimiter='\t'))
-                expected = [['entity:participant_id'], ['7b07b9d0-cc0e-4098-9f64-f4a569f7d746']]
-                self.assertEqual(expected, observed, 'participants.tsv contains incorrect data')
-
-            expectations = [
-                ('entity:sample_id', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-                ('participant_id', '7b07b9d0-cc0e-4098-9f64-f4a569f7d746'),
-                ('cell_suspension_id', '412898c5-5b9b-4907-b07c-e9b89666e204'),
-                ('bundle_uuid', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
-                ('bundle_version', '2018-11-02T113344.698028Z'),
-                ('file_content_type', 'application/gzip; dcp-type=data'),
-                ('file_name', 'SRR3562915_1.fastq.gz'),
-                ('file_sha256', '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a'),
-                ('file_size', '195142097'),
-                ('file_uuid', '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'),
-                ('file_version', '2018-11-02T113344.698028Z'),
-                ('file_indexed', 'False'),
-                ('file_url', config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
-                                                   '?version=2018-11-02T113344.698028Z'
-                                                   '&replica=gcp'),
-                ('dos_url', drs.object_url(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                                           file_version='2018-11-02T113344.698028Z'))
-            ]
-            expected_fieldnames, expected_row = map(list, zip(*expectations))
-            with open(os.path.join(zip_dir, zip_fname, 'data', 'samples.tsv'), 'r') as fh:
-                rows = iter(csv.reader(fh, delimiter='\t'))
-                row = next(rows)
-                self.assertEqual(expected_fieldnames, row)
-                rows = freeze(list(rows))
-                self.assertEqual(len(rows), 2)  # self.bundle has 2 files
-                self.assertTrue(all(len(row) == len(expected_row) for row in rows))
-                self.assertEqual(len(set(rows)), len(rows))
-                self.assertIn(freeze(expected_row), rows)
+            service = config.api_lambda_domain('service')
+            dss = config.dss_endpoint
+            with open(os.path.join(zip_dir, zip_fname, 'data', 'bundles.tsv'), 'r') as fh:
+                reader = csv.DictReader(fh, delimiter='\t')
+                # The order in which the rows appear in the TSV is ultimately
+                # driven by the order in which the documents are coming back
+                # from the `files` index in Elasticsearch. To get a consistent
+                # ordering of the ES response, we could apply a sort but doing
+                # so slows down the scroll API which we use for manifests,
+                # because manifest responses need exhaust the index. Instead,
+                # we do comparison here that's insensitive of the row ordering.
+                # We'll assert the column ordering independently below.
+                self.assertEqual({
+                    freeze({
+                        'entity:bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                        'bundle_version': '2018-09-14T133314.453337Z',
+                        'cell_suspension.provenance.document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
+                        'cell_suspension.estimated_cell_count': '0',
+                        'cell_suspension.selected_cell_type': '',
+                        'sequencing_protocol.instrument_manufacturer_model': 'Illumina HiSeq 2500',
+                        'library_preparation_protocol.library_construction_approach': 'Smart-seq2',
+                        'project.provenance.document_id': '6615efae-fca8-4dd2-a223-9cfcf30fe94d',
+                        'project.contributors.institution': 'Fake Institution',
+                        'project.contributors.laboratory': '',
+                        'project.project_core.project_short_name': 'integration/Smart-seq2/2018-10-10T02:23:36Z',
+                        'project.project_core.project_title': 'Q4_DEMO-Single cell RNA-seq of primary human glioblastomas',
+                        'donor_organism.sex': 'unknown',
+                        'donor_organism.biomaterial_core.biomaterial_id': 'Q4_DEMO-sample_SAMN02797092',
+                        'specimen_from_organism.provenance.document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
+                        'specimen_from_organism.diseases': 'glioblastoma',
+                        'specimen_from_organism.biomaterial_core.biomaterial_id': 'Q4_DEMO-donor_MGH30',
+                        'donor_organism.provenance.document_id': '242e38d2-c975-47ee-800a-6645b47e92d2',
+                        'donor_organism.genus_species': 'Homo sapiens',
+                        'specimen_from_organism.organ': 'brain',
+                        'specimen_from_organism.organ_part': 'temporal lobe',
+                        'donor_organism.organism_age': '',
+                        'donor_organism.organism_age_unit': '',
+                        'specimen_from_organism.preservation_storage.preservation_method': '',
+                        'bam[0].file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_qc.bam',
+                        'bam[0].file_format': 'bam',
+                        'bam[0].read_index': '',
+                        'bam[0].file_size': '550597',
+                        'bam[0].file_uuid': '51c9ad31-5888-47eb-9e0c-02f042373c4e',
+                        'bam[0].file_version': '2018-10-10T031035.284782Z',
+                        'bam[0].file_sha256': 'e3cd90d79f520c0806dddb1ca0c5a11fbe26ac0c0be983ba5098d6769f78294c',
+                        'bam[0].file_content_type': 'application/gzip; dcp-type=data',
+                        'bam[0].file_url': f'{dss}/files/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z&replica=gcp',
+                        'bam[0].dos_url': f'dos://{service}/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z',
+                        'bam[1].file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_rsem.bam',
+                        'bam[1].file_format': 'bam',
+                        'bam[1].read_index': '',
+                        'bam[1].file_size': '3752733',
+                        'bam[1].file_uuid': 'b1c167da-0825-4c63-9cbc-2aada1ab367c',
+                        'bam[1].file_version': '2018-10-10T031035.971561Z',
+                        'bam[1].file_sha256': 'f25053412d65429cefc0157c0d18ae12d4bf4c4113a6af7a1820b62246c075a4',
+                        'bam[1].file_content_type': 'application/gzip; dcp-type=data',
+                        'bam[1].file_url': f'{dss}/files/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z&replica=gcp',
+                        'bam[1].dos_url': f'dos://{service}/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z',
+                        'fastq[read1].file_url': f'{dss}/files/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z&replica=gcp',
+                        'fastq[read1].dos_url': f'dos://{service}/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z',
+                        'fastq[read1].file_name': 'R1.fastq.gz',
+                        'fastq[read1].file_format': 'fastq.gz',
+                        'fastq[read1].read_index': 'read1',
+                        'fastq[read1].file_size': '125191',
+                        'fastq[read1].file_uuid': 'c005f647-b3fb-45a8-857a-8f5e6a878ccf',
+                        'fastq[read1].file_version': '2018-10-10T023811.612423Z',
+                        'fastq[read1].file_sha256': 'fe6d4fdfea2ff1df97500dcfe7085ac3abfb760026bff75a34c20fb97a4b2b29',
+                        'fastq[read1].file_content_type': 'application/gzip; dcp-type=data',
+                        'fastq[read2].file_url': f'{dss}/files/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z&replica=gcp',
+                        'fastq[read2].dos_url': f'dos://{service}/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z',
+                        'fastq[read2].file_name': 'R2.fastq.gz',
+                        'fastq[read2].file_format': 'fastq.gz',
+                        'fastq[read2].read_index': 'read2',
+                        'fastq[read2].file_size': '130024',
+                        'fastq[read2].file_uuid': 'b764ce7d-3938-4451-b68c-678feebc8f2a',
+                        'fastq[read2].file_version': '2018-10-10T023811.851483Z',
+                        'fastq[read2].file_sha256': 'c305bee37b3c3735585e11306272b6ab085f04cd22ea8703957b4503488cfeba',
+                        'fastq[read2].file_content_type': 'application/gzip; dcp-type=data'
+                    }),
+                    freeze({
+                        'entity:bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
+                        'bundle_version': '2018-11-02T113344.698028Z',
+                        'cell_suspension.provenance.document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
+                        'cell_suspension.estimated_cell_count': '1',
+                        'cell_suspension.selected_cell_type': '',
+                        'sequencing_protocol.instrument_manufacturer_model': 'Illumina NextSeq 500',
+                        'library_preparation_protocol.library_construction_approach': 'Smart-seq2',
+                        'project.provenance.document_id': 'e8642221-4c2c-4fd7-b926-a68bce363c88',
+                        'project.contributors.institution': 'Farmers Trucks || University',
+                        'project.contributors.laboratory': 'John Dear',
+                        'project.project_core.project_short_name': 'Single of human pancreas',
+                        'project.project_core.project_title': 'Single cell transcriptome patterns.',
+                        'donor_organism.sex': 'female',
+                        'donor_organism.biomaterial_core.biomaterial_id': 'DID_scRSq06_pancreas',
+                        'specimen_from_organism.provenance.document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
+                        'specimen_from_organism.diseases': 'normal',
+                        'specimen_from_organism.biomaterial_core.biomaterial_id': 'DID_scRSq06',
+                        'donor_organism.provenance.document_id': '7b07b9d0-cc0e-4098-9f64-f4a569f7d746',
+                        'donor_organism.genus_species': 'Australopithecus',
+                        'specimen_from_organism.organ': 'pancreas',
+                        'specimen_from_organism.organ_part': 'islet of Langerhans',
+                        'donor_organism.organism_age': '38',
+                        'donor_organism.organism_age_unit': 'year',
+                        'specimen_from_organism.preservation_storage.preservation_method': '',
+                        'bam[0].file_name': '',
+                        'bam[0].file_format': '',
+                        'bam[0].read_index': '',
+                        'bam[0].file_size': '',
+                        'bam[0].file_uuid': '',
+                        'bam[0].file_version': '',
+                        'bam[0].file_sha256': '',
+                        'bam[0].file_content_type': '',
+                        'bam[0].dos_url': '',
+                        'bam[0].file_url': '',
+                        'bam[1].file_name': '',
+                        'bam[1].file_format': '',
+                        'bam[1].read_index': '',
+                        'bam[1].file_size': '',
+                        'bam[1].file_uuid': '',
+                        'bam[1].file_version': '',
+                        'bam[1].file_sha256': '',
+                        'bam[1].file_content_type': '',
+                        'bam[1].dos_url': '',
+                        'bam[1].file_url': '',
+                        'fastq[read1].file_name': 'SRR3562915_1.fastq.gz',
+                        'fastq[read1].file_format': 'fastq.gz',
+                        'fastq[read1].read_index': 'read1',
+                        'fastq[read1].file_size': '195142097',
+                        'fastq[read1].file_uuid': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                        'fastq[read1].file_version': '2018-11-02T113344.698028Z',
+                        'fastq[read1].file_sha256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
+                        'fastq[read1].file_content_type': 'application/gzip; dcp-type=data',
+                        'fastq[read1].file_url': f'{dss}/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z&replica=gcp',
+                        'fastq[read1].dos_url': f'dos://{service}/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z',
+                        'fastq[read2].file_name': 'SRR3562915_2.fastq.gz',
+                        'fastq[read2].file_format': 'fastq.gz',
+                        'fastq[read2].read_index': 'read2',
+                        'fastq[read2].file_size': '190330156',
+                        'fastq[read2].file_uuid': '74897eb7-0701-4e4f-9e6b-8b9521b2816b',
+                        'fastq[read2].file_version': '2018-11-02T113344.450442Z',
+                        'fastq[read2].file_sha256': '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
+                        'fastq[read2].file_content_type': 'application/gzip; dcp-type=data',
+                        'fastq[read2].file_url': f'{dss}/files/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z&replica=gcp',
+                        'fastq[read2].dos_url': f'dos://{service}/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z',
+                    })
+                }, set(freeze(row) for row in reader))
+                self.assertEqual([
+                    'entity:bundle_uuid',
+                    'bundle_version',
+                    'cell_suspension.provenance.document_id',
+                    'cell_suspension.estimated_cell_count',
+                    'cell_suspension.selected_cell_type',
+                    'sequencing_protocol.instrument_manufacturer_model',
+                    'library_preparation_protocol.library_construction_approach',
+                    'project.provenance.document_id',
+                    'project.contributors.institution',
+                    'project.contributors.laboratory',
+                    'project.project_core.project_short_name',
+                    'project.project_core.project_title',
+                    'donor_organism.sex',
+                    'donor_organism.biomaterial_core.biomaterial_id',
+                    'specimen_from_organism.provenance.document_id',
+                    'specimen_from_organism.diseases',
+                    'specimen_from_organism.biomaterial_core.biomaterial_id',
+                    'donor_organism.provenance.document_id',
+                    'donor_organism.genus_species',
+                    'specimen_from_organism.organ',
+                    'specimen_from_organism.organ_part',
+                    'donor_organism.organism_age',
+                    'donor_organism.organism_age_unit',
+                    'specimen_from_organism.preservation_storage.preservation_method',
+                    'bam[0].file_name',
+                    'bam[0].file_format',
+                    'bam[0].read_index',
+                    'bam[0].file_size',
+                    'bam[0].file_uuid',
+                    'bam[0].file_version',
+                    'bam[0].file_sha256',
+                    'bam[0].file_content_type',
+                    'bam[0].dos_url',
+                    'bam[0].file_url',
+                    'bam[1].file_name',
+                    'bam[1].file_format',
+                    'bam[1].read_index',
+                    'bam[1].file_size',
+                    'bam[1].file_uuid',
+                    'bam[1].file_version',
+                    'bam[1].file_sha256',
+                    'bam[1].file_content_type',
+                    'bam[1].dos_url',
+                    'bam[1].file_url',
+                    'fastq[read1].file_name',
+                    'fastq[read1].file_format',
+                    'fastq[read1].read_index',
+                    'fastq[read1].file_size',
+                    'fastq[read1].file_uuid',
+                    'fastq[read1].file_version',
+                    'fastq[read1].file_sha256',
+                    'fastq[read1].file_content_type',
+                    'fastq[read1].dos_url',
+                    'fastq[read1].file_url',
+                    'fastq[read2].file_name',
+                    'fastq[read2].file_format',
+                    'fastq[read2].read_index',
+                    'fastq[read2].file_size',
+                    'fastq[read2].file_uuid',
+                    'fastq[read2].file_version',
+                    'fastq[read2].file_sha256',
+                    'fastq[read2].file_content_type',
+                    'fastq[read2].dos_url',
+                    'fastq[read2].file_url',
+                ], reader.fieldnames)
