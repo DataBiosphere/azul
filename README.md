@@ -709,7 +709,7 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
 3. You should be on the `TARGET` branch. Run
 
    ```
-   git merge SOURCE
+   git merge --no-ff SOURCE
    ```
 
    and resolve conflicts in necessary. Conflict resolution should only be
