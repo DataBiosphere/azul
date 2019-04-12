@@ -8,6 +8,7 @@
 
     "instrumentManufacturerModel": "contents.protocols.instrument_manufacturer_model",
     "libraryConstructionApproach": "contents.protocols.library_construction_approach",
+    "pairedEnd": "contents.protocols.paired_end",
 
     "contactName": "contents.projects.contact_names",
     "projectId": "contents.projects.document_id",
@@ -74,6 +75,7 @@
     },
     "contents.protocols": {
       "sequencing_protocol.instrument_manufacturer_model": "instrument_manufacturer_model",
+      "sequencing_protocol.paired_end": "paired_end",
       "library_preparation_protocol.library_construction_approach": "library_construction_approach"
     },
     "contents.projects": {
@@ -171,6 +173,7 @@
     "biologicalSex",
     "disease",
     "instrumentManufacturerModel",
+    "pairedEnd",
     "project",
     "fileFormat",
     "laboratory",
