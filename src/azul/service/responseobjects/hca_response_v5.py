@@ -646,7 +646,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for protocol in entry["contents"]["protocols"]:
             translated_process = {
                 "libraryConstructionApproach": protocol.get("library_construction_approach", []),
-                "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", [])
+                "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", []),
+                "pairedEnd": protocol.get("paired_end", []),
             }
             protocols.append(translated_process)
         return protocols

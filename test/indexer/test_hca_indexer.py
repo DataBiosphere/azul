@@ -601,6 +601,25 @@ class TestHCAIndexer(IndexerTestCase):
                             for source in sources['files', aggregate])
                 )
 
+    def test_paired_end_field(self):
+        """
+        Index a bundle with a sequencing protocol and assert the value of the paired_end field
+        """
+        self._index_canned_bundle(('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'))
+        hits = self._get_hits()
+        for hit in hits:
+            contents = hit['_source']['contents']
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            if entity_type == 'files' and contents['files'][0]['file_format'] == 'pdf':
+                # The PDF files in that bundle aren't linked to a protocol
+                self.assertEqual(0, len(contents['protocols']))
+            else:
+                if aggregate:
+                    self.assertEqual(one(contents['protocols'])['paired_end'], [True])
+                else:
+                    values = [p['paired_end'] for p in contents['protocols'] if 'paired_end' in p]
+                    self.assertEqual(set(values), set([True]))
+
 
 class TestValidNotificationRequests(LocalAppTestCase):
 
