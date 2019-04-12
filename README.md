@@ -799,6 +799,26 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
    manual `reindex` job on the Gitlab pipeline representing the most recent
    build on the current branch.
 
+## 6.2 Emergency Shutdown (Big Red Button)
+
+In the event, when Azul needs to be shutdown down as soon as possible.  
+
+Activate your python virtual environment and `source environment` if you
+   haven't done so already. Then, run 
+
+```
+python scripts/enable_lambdas.py --enable
+```
+
+Resuming Azul's services may be done by running:
+
+```
+python scripts/enable_lambdas.py --disable
+```
+
+
+
+
 # 7. Scale testing
 
 [Locust]: https://locust.io/
