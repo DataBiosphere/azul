@@ -22,6 +22,7 @@ from more_itertools import one
 
 from app_test_case import LocalAppTestCase
 from azul import config, hmac
+from azul.deployment import aws
 from azul.indexer import IndexWriter
 from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
@@ -666,7 +667,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
         }
         for endpoint in ['/', '/delete']:
             with self.subTest(endpoint=endpoint):
-                response = self._test(body, endpoint, auth=hmac.prepare())
+                response = self._test(body, endpoint, valid_auth=True)
                 self.assertEqual(202, response.status_code)
                 self.assertEqual('', response.text)
 
@@ -720,7 +721,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
             with self.subTest(endpoint=endpoint):
                 for test, body in bodies.items():
                     with self.subTest(test):
-                        response = self._test(body, endpoint, auth=hmac.prepare())
+                        response = self._test(body, endpoint, valid_auth=True)
                         self.assertEqual(400, response.status_code)
 
     @mock_sts
@@ -733,17 +734,23 @@ class TestValidNotificationRequests(LocalAppTestCase):
                 'bundle_version': 'SomeBundleVersion'
             }
         }
-        auth = HTTPSignatureAuth(key='Not a good key!!'.encode(), key_id=config.hmac_key_id)
         for endpoint in ['/', '/delete']:
             with self.subTest(endpoint=endpoint):
-                response = self._test(body, endpoint='/', auth=auth)
+                response = self._test(body, endpoint='/', valid_auth=False)
                 self.assertEqual(401, response.status_code)
 
-    def _test(self, body, endpoint, auth=None):
+    def _test(self, body, endpoint, valid_auth):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
-            with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
-                return requests.post(self.base_url + endpoint, json=body, auth=auth)
+            hmac_creds = {'key': b'good key', 'key_id': 'the id'}
+            with patch('azul.deployment.aws.get_hmac_key_and_id',
+                       return_value=hmac_creds) as mock:
+                with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+                    if valid_auth:
+                        auth = hmac.prepare()
+                    else:
+                        auth = HTTPSignatureAuth(key=b'bad key', key_id='the id')
+                    return requests.post(self.base_url + endpoint, json=body, auth=auth)
 
     @staticmethod
     def _create_mock_notify_queue():
