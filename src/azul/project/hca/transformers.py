@@ -110,6 +110,7 @@ def _protocol_dict(protocol: api.Protocol) -> JSON:
         protocol_dict['library_construction_approach'] = protocol.library_construction_approach
     elif isinstance(protocol, api.SequencingProtocol):
         protocol_dict['instrument_manufacturer_model'] = protocol.instrument_manufacturer_model
+        protocol_dict['paired_end'] = protocol.paired_end
     else:
         assert False
     return protocol_dict
