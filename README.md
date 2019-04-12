@@ -52,6 +52,7 @@ generic with minimal need for project-specific behavior.
         - [6.1.1 Initial setup](#611-initial-setup)
         - [6.1.2 Prepare for promotion](#612-prepare-for-promotion)
         - [6.1.3 Finishing up deployment / promotion](#613-finishing-up-deployment--promotion)
+    - [6.2 Big Red Button](#62-big-red-button)
 - [7. Scale testing](#7-scale-testing)
 - [8. Continuous deployment and integration](#8-continuous-deployment-and-integration)
     - [8.1 The Sandbox Deployment](#81-the-sandbox-deployment)
@@ -799,29 +800,23 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
    manual `reindex` job on the Gitlab pipeline representing the most recent
    build on the current branch.
 
-## 6.2 Big Red Button
+## 6.2 Big red button
 
-In the event of an emergency, Azul can be shutdown immediately.
+In the event of an emergency, Azul can be shut down immediately using the 
+`enable_lambdas.py` script. When using this script, make sure that your 
+deployment is selected and your python environment is activated.
 
-##6.2.1 Shutting Down Azul
+Shut down Azul by running
 
-1. Activate your python virtual environment and `source environment`.
-
-2. Shutdown all Azul lambda functions by running
-
-   ```
-   python scripts/enable_lambdas.py --disable
-   ```
+```
+python scripts/enable_lambdas.py --disable
+```
    
-##6.2.2 Resuming Azul
+Once your issue has been resolved, you can resume Azul's services by running
 
-1. If your dev environment is not setup, activate your python virtual 
-   environment and `source environment` again.
-
-2. Resume Azul's Services by running
-   ```
-   python scripts/enable_lambdas.py --enable
-   ```
+```
+python scripts/enable_lambdas.py --enable
+```
 
 # 7. Scale testing
 
