@@ -2,7 +2,7 @@
 
 import logging
 
-from azul import config
+from azul import config, deployment
 from azul.json_freeze import freeze, thaw
 from azul.plugin import Plugin
 
@@ -17,11 +17,12 @@ def manage_subscriptions(dss_client, subscribe=True):
         plugin = Plugin.load()
         base_url = config.indexer_endpoint()
         prefix = config.dss_query_prefix
+        key, key_id = deployment.aws.get_hmac_key_and_id()
         new_subscriptions = [freeze(dict(replica='aws',
                                          es_query=query,
                                          callback_url=base_url + path,
-                                         hmac_key_id=config.hmac_key_id,
-                                         hmac_secret_key=config.hmac_key))
+                                         hmac_key_id=key_id,
+                                         hmac_secret_key=key))
                              for query, path in [(plugin.dss_subscription_query(prefix), '/'),
                                                  (plugin.dss_deletion_subscription_query(prefix), '/delete')]]
     else:
