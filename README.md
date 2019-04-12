@@ -799,25 +799,29 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
    manual `reindex` job on the Gitlab pipeline representing the most recent
    build on the current branch.
 
-## 6.2 Emergency Shutdown (Big Red Button)
+## 6.2 Big Red Button
 
-In the event, when Azul needs to be shutdown down as soon as possible.  
+In the event of an emergency, Azul can be shutdown immediately.
 
-Activate your python virtual environment and `source environment` if you
-   haven't done so already. Then, run 
+##6.2.1 Shutting Down Azul
 
-```
-python scripts/enable_lambdas.py --enable
-```
+1. Activate your python virtual environment and `source environment`.
 
-Resuming Azul's services may be done by running:
+2. Shutdown all Azul lambda functions by running
 
-```
-python scripts/enable_lambdas.py --disable
-```
+   ```
+   python scripts/enable_lambdas.py --disable
+   ```
+   
+##6.2.2 Resuming Azul
 
+1. If your dev environment is not setup, activate your python virtual 
+   environment and `source environment` again.
 
-
+2. Resume Azul's Services by running
+   ```
+   python scripts/enable_lambdas.py --enable
+   ```
 
 # 7. Scale testing
 
