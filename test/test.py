@@ -20,6 +20,7 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               SpecimenFromOrganism,
                                               CellSuspension,
                                               LibraryPreparationProtocol,
+                                              SequencingProtocol,
                                               SupplementaryFile,
                                               ImagedSpecimen)
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
@@ -118,6 +119,9 @@ class TestAccessorApi(TestCase):
         return os.path.join(os.path.dirname(__file__), 'cans', directory, uuid, version)
 
     def _can_bundle(self, directory, uuid, version, manifest, metadata_files):  # pragma: no cover
+        """
+        Save a bundle's manifest & metadata files to a local directory
+        """
         dir_path = self._canned_bundle_path(directory, uuid, version)
         os.makedirs(dir_path, exist_ok=True)
         with atomic_write(os.path.join(dir_path, 'manifest.json'), overwrite=True) as f:
@@ -126,6 +130,9 @@ class TestAccessorApi(TestCase):
             json.dump(metadata_files, f)
 
     def _canned_bundle(self, directory, uuid, version):
+        """
+        Load a previously canned bundle
+        """
         dir_path = self._canned_bundle_path(directory, uuid, version)
         if os.path.isdir(dir_path):
             with open(os.path.join(dir_path, 'manifest.json')) as f:
@@ -135,6 +142,20 @@ class TestAccessorApi(TestCase):
             return manifest, metadata_files
         else:
             return None, None
+
+    def _load_bundle(self, uuid, version, replica='aws', deployment=None):
+        """
+        Load the specified canned bundle, downloading it first if not previously canned
+        """
+        canning_directory = deployment or 'prod'
+        manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+        if manifest is None:  # pragma: no cover
+            client = dss_client(deployment)
+            _version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
+            assert _version == version
+            self._can_bundle(os.path.join(canning_directory), uuid, version, manifest, metadata_files)
+            manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+        return manifest, metadata_files
 
     def test_bad_content(self):
         deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
@@ -274,15 +295,20 @@ class TestAccessorApi(TestCase):
                           preservation_methods={'fresh'},
                           slice_thickness=[20.0])
 
+    def test_sequencing_process_paired_end(self):
+        uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
+        version = '2019-01-03T163633.780215Z'
+        replica = 'aws'
+        deployment = 'prod'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
+        bundle = Bundle(uuid, version, manifest, metadata_files)
+        sequencing_protocols = [p for p in bundle.protocols.values() if isinstance(p, SequencingProtocol)]
+        self.assertEqual(len(sequencing_protocols), 1)
+        self.assertEqual(sequencing_protocols[0].paired_end, True)
+
     def _test_bundle(self, uuid, version, replica='aws', deployment=None, **assertion_kwargs):
-        canning_directory = deployment or 'prod'
-        manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
-        if manifest is None:  # pragma: no cover
-            client = dss_client(deployment)
-            _version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
-            assert _version == version
-            self._can_bundle(os.path.join(canning_directory), uuid, version, manifest, metadata_files)
-            manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+
+        manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
 
         self._assert_bundle(uuid=uuid,
                             version=version,
