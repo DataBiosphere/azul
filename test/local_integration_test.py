@@ -89,7 +89,7 @@ class IntegrationTest(unittest.TestCase):
                     response = self.check_endpoint_is_working(config.service_endpoint(), path, query)
                     validator(response)
 
-        filters = {"file":{"organ":{"is":["brain"]},"fileFormat":{"is":["fastq.gz"]}}}
+        filters = {"file": {"organ": {"is": ["brain", "Brain"]}, "fileFormat": {"is": ["fastq.gz"]}}}
         response_with_file_uuid = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
                                                                  path='/repository/files',
                                                                  query={'filters': filters, 'size': 15,
