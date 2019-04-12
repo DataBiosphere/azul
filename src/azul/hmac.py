@@ -3,6 +3,7 @@ import requests
 from requests_http_signature import HTTPSignatureAuth
 
 from azul import config
+from azul.deployment import aws
 
 
 def verify(current_request):
@@ -16,13 +17,17 @@ def verify(current_request):
     endpoint = f'{base_url}{path}'
     method = current_request.context['httpMethod']
     headers = current_request.headers
-    hmac_secret_key = config.hmac_key.encode()
+
+    def key_resolver(key_id, algorithm):
+        key, _ = aws.get_hmac_key_and_id_cached(key_id)
+        return key.encode()
     try:
         HTTPSignatureAuth.verify(requests.Request(method, endpoint, headers),
-                                 key_resolver=lambda key_id, algorithm: hmac_secret_key)
+                                 key_resolver=key_resolver)
     except BaseException:
         raise chalice.UnauthorizedError('Invalid authorization credentials')
 
 
 def prepare():
-    return HTTPSignatureAuth(key=config.hmac_key.encode(), key_id=config.hmac_key_id)
+    key, key_id = aws.get_hmac_key_and_id()
+    return HTTPSignatureAuth(key=key.encode(), key_id=key_id)
