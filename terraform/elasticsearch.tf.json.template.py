@@ -15,7 +15,7 @@ emit(None if config.share_es_domain else {
             "aws_cloudwatch_log_group": {
                 f"azul_{log}_log": {
                     "name": f"/aws/aes/domains/{config.es_domain}/{log}-logs",
-                    "retention_in_days": 90
+                    "retention_in_days": 1827
                 }
             }
         } for log in logs.keys()),
