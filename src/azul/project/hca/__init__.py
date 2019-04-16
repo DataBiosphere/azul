@@ -111,6 +111,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "dd401943-1059-4b2d-b187-7a9e11822f95",  # prod/Smart-seq2/2019-02-12T18:43:49Z
                                                         "209e6402-d854-49ea-815f-421dae5e3f4d",  # Tissue stability, https://github.com/HumanCellAtlas/data-store/issues/1976
                                                         "6ac9d7b5-f86d-4c23-82a9-485a6642b278",  # Tissue Sensitivity, https://github.com/DataBiosphere/azul/issues/870
+                                                        "f396fa53-2a2d-4b8a-ad18-03bf4bd46833",  # Mouse Melanoma
                                                     ]
                                                 }
                                             },
