@@ -277,7 +277,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
             service = config.api_lambda_domain('service')
             dss = config.dss_endpoint
-            with open(os.path.join(zip_dir, zip_fname, 'data', 'bundles.tsv'), 'r') as fh:
+            with open(os.path.join(zip_dir, zip_fname, 'data', 'samples.tsv'), 'r') as fh:
                 reader = csv.DictReader(fh, delimiter='\t')
                 # The order in which the rows appear in the TSV is ultimately
                 # driven by the order in which the documents are coming back
