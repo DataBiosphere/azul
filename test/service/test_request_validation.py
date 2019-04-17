@@ -289,7 +289,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                 # We'll assert the column ordering independently below.
                 self.assertEqual({
                     freeze({
-                        'entity:bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                        'entity:bundle_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                         'bundle_version': '2018-09-14T133314.453337Z',
                         'cell_suspension-provenance-document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
                         'cell_suspension-estimated_cell_count': '0',
@@ -355,7 +355,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'fastq[read2]-file_content_type': 'application/gzip; dcp-type=data'
                     }),
                     freeze({
-                        'entity:bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
+                        'entity:bundle_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                         'bundle_version': '2018-11-02T113344.698028Z',
                         'cell_suspension-provenance-document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
                         'cell_suspension-estimated_cell_count': '1',
@@ -422,7 +422,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                     })
                 }, set(freeze(row) for row in reader))
                 self.assertEqual([
-                    'entity:bundle_uuid',
+                    'entity:bundle_id',
                     'bundle_version',
                     'cell_suspension-provenance-document_id',
                     'cell_suspension-estimated_cell_count',
