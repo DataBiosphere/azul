@@ -763,11 +763,34 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     }
 
     def make_sample(self, sample):
-        entity_type = one(sample['entity_type']) if isinstance(sample['entity_type'], list) else sample['entity_type']
-        return {
-            "sampleEntityType": self.sample_entity_types[entity_type],
-            **self.sample_entity_make_functions[entity_type](self, sample)
-        }
+        if isinstance(sample['entity_type'], list):
+            # Run make_<type>() for each sample['entity_type'] and merge result into sample_dict
+            sample_dict = {'sampleEntityType': []}
+            for entity_type in sample['entity_type']:
+                sample_entity_type = self.sample_entity_types[entity_type]
+                sample_dict['sampleEntityType'].append(sample_entity_type)
+                entity_make_function = self.sample_entity_make_functions[entity_type]
+                entity_dict = entity_make_function(self, sample)
+                for key, val in entity_dict.items():
+                    if key not in sample_dict:
+                        sample_dict[key] = val if isinstance(val, list) else [val]
+                    else:
+                        if not isinstance(sample_dict[key], list):
+                            sample_dict[key] = [sample_dict[key]]
+                        if isinstance(val, list):
+                            sample_dict[key].extend(val)
+                        else:
+                            sample_dict[key].append(val)
+        else:
+            # Create sample_dict using make_<type>() for type sample['entity_type']
+            entity_type = sample['entity_type']
+            entity_make_function = self.sample_entity_make_functions[entity_type]
+            sample_dict = {
+                "sampleEntityType": self.sample_entity_types[entity_type],
+                **entity_make_function(self, sample)
+            }
+        del(sample_dict['id'])
+        return sample_dict
 
     def make_samples(self, entry):
         return [self.make_sample(sample) for sample in entry["contents"]["samples"]]

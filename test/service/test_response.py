@@ -113,9 +113,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "samples": [
                         {
-                            "sampleEntityType": "specimens",
+                            "sampleEntityType": ["specimens"],
                             "disease": ["normal"],
-                            "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "preservationMethod": [None],
@@ -203,7 +202,6 @@ class TestResponse(WebServiceTestCase):
                         {
                             "sampleEntityType": "specimens",
                             "disease": ["normal"],
-                            "id": "DID_scRSq06_pancreas",
                             "organ": "pancreas",
                             "organPart": ["islet of Langerhans"],
                             "preservationMethod": None,
@@ -316,9 +314,8 @@ class TestResponse(WebServiceTestCase):
                         ],
                         "samples": [
                             {
-                                "sampleEntityType": "specimens",
+                                "sampleEntityType": ["specimens"],
                                 "disease": ["normal"],
-                                "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
                                 "preservationMethod": [None],
@@ -414,9 +411,8 @@ class TestResponse(WebServiceTestCase):
                         ],
                         "samples": [
                             {
-                                "sampleEntityType": "specimens",
+                                "sampleEntityType": ["specimens"],
                                 "disease": ["normal"],
-                                "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
                                 "preservationMethod": [None],
@@ -786,9 +782,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "samples": [
                         {
-                            "sampleEntityType": "specimens",
+                            "sampleEntityType": ["specimens"],
                             "disease": ["normal"],
-                            "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "preservationMethod": [None],
@@ -913,9 +908,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "samples": [
                         {
-                            "sampleEntityType": "specimens",
+                            "sampleEntityType": ["specimens"],
                             "disease": ["normal"],
-                            "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "preservationMethod": [None],
@@ -1292,9 +1286,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "samples": [
                         {
-                            "sampleEntityType": "specimens",
+                            "sampleEntityType": ["specimens"],
                             "disease": ["H syndrome"],
-                            "id": ["specimen_ID_1"],
                             "organ": ["brain"],
                             "organPart": ["amygdala"],
                             "preservationMethod": [None],
@@ -1363,7 +1356,7 @@ class TestResponse(WebServiceTestCase):
 
     def test_sample(self):
         """
-        Test that samples listed in the response match id with a cellLines/organoids/specimens also in the response
+        Test that sample(s) in the response contain values matching values in the source cellLine/organoid/specimen
         """
         for entity_type in 'projects', 'samples', 'files':
             with self.subTest(entity_type=entity_type):
@@ -1371,15 +1364,17 @@ class TestResponse(WebServiceTestCase):
                 response = requests.get(url)
                 response.raise_for_status()
                 response_json = response.json()
-                for hit in response_json['hits']:
-                    for sample in hit['samples']:
-                        sample_entity_type = sample['sampleEntityType']
-                        if entity_type == 'samples':
-                            sample_id = sample['id']
-                            self.assertIn(sample_id, one(hit[sample_entity_type])['id'])
-                        else:
-                            for sample_id in sample['id']:
-                                self.assertIn(sample_id, one(hit[sample_entity_type])['id'])
+                if entity_type == 'samples':
+                    for hit in response_json['hits']:
+                        for sample in hit['samples']:
+                            sample_entity_type = sample['sampleEntityType']
+                            for key, val in sample.items():
+                                if key != 'sampleEntityType':
+                                    if isinstance(val, list):
+                                        for one_val in val:
+                                            self.assertIn(one_val, hit[sample_entity_type][0][key])
+                                    else:
+                                        self.assertIn(val, hit[sample_entity_type][0][key])
 
 
 if __name__ == '__main__':
