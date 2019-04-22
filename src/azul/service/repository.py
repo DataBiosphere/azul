@@ -39,11 +39,7 @@ class RepositoryService(AbstractService):
         return response
 
     def _get_item(self, entity_type, item_id, pagination, filters, file_url_func):
-        if entity_type == 'projects':
-            filters['file']['projectId'] = {"is": [item_id]}
-        else:
-            filters['file']['fileId'] = {"is": [item_id]}
-
+        filters['file']['entryId'] = {"is": [item_id]}
         try:
             formatted_uuid = uuid.UUID(item_id)
         except ValueError:

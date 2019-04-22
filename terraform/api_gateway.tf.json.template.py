@@ -79,7 +79,7 @@ emit({
                 "aws_cloudwatch_log_group": {
                     lambda_name: {
                         "name": "/aws/apigateway/" + config.qualified_resource_name(lambda_name),
-                        "retention_in_days": 90,
+                        "retention_in_days": 1827,
                         "provisioner": {
                             "local-exec": {
                                 "command": ' '.join(map(shlex.quote, [

@@ -32,7 +32,9 @@ generic with minimal need for project-specific behavior.
     - [1.1 Development Prerequisites](#11-development-prerequisites)
     - [1.2 Runtime Prerequisites (Infrastructure)](#12-runtime-prerequisites-infrastructure)
     - [1.3 Project configuration](#13-project-configuration)
-        - [1.3.1 For personal deployment (AWS credentials available)](#131-for-personal-deployment-aws-credentials-available)
+        - [1.3.1 AWS credentials](#131-aws-credentials)
+        - [1.3.2 Google credentials](#132-google-credentials)
+        - [1.3.3 For personal deployment (AWS credentials available)](#133-for-personal-deployment-aws-credentials-available)
     - [1.4 PyCharm](#14-pycharm)
 - [2. Deployment](#2-deployment)
     - [2.1 Provisioning cloud infrastructure](#21-provisioning-cloud-infrastructure)
@@ -157,7 +159,70 @@ end.
    make test
    ```
 
-### 1.3.1 For personal deployment (AWS credentials available)
+### 1.3.1 AWS credentials
+
+```
+TBD
+```
+
+### 1.3.2 Google credentials
+
+1. Ask to be invited to the Google Cloud project `human-cell-atlas-travis-test`
+
+2. Log into `console.cloud.google.com`, select the `human-cell-atlas-travis-test` project
+
+3. Navigate to `IAM & admin`, locate your account in list, take note of the email address found
+   in the `Member` column (eg. alice@example.com)
+
+   ```
+   Google Cloud Platform -> Navigation menu -> IAM & admin
+   ```
+
+4. Create a service account for project `human-cell-atlas-travis-test`
+
+    ```
+    IAM & admin -> Service Accounts -> [Create Service Account]
+    ```
+    
+    * Step 1:
+        1. Service Account Name: (use username part of email address noted in step 3 eg. alice)
+        2. Service Account ID: (use auto-generated value eg. alice-42@human-cell-atlas-travis-test.iam.gserviceaccount.com)
+        3. Create
+        
+    * Step 2:
+        1. Role: Project -> Owner
+        2. Continue
+        
+    * Step 3:
+        1. Create Key -> JSON -> Create -> (Download file) -> Done
+
+5. Move the downloaded JSON file to a location that you can reference in a config file
+
+    ```
+    $ mkdir /Users/alice/.gcp
+    $ mv /Users/alice/Downloads/human-cell-atlas-travis-test-180b575fe2e6.json /Users/alice/.gcp/
+    ```
+    
+6. Edit your deployment's `environment.local` file, uncomment and modify the `GOOGLE_…` variables
+
+    ```
+    $ vim /Users/alice/azul/deployments/alice.local/environment.local
+    
+    export GOOGLE_APPLICATION_CREDENTIALS="/Users/alice/.gcp/human-cell-atlas-travis-test-180b575fe2e6.json"
+    export GOOGLE_PROJECT="human-cell-atlas-travis-test"
+    ```
+
+7. Repeat the previous step for other deployments as needed or alternatively create a symlink to your
+   deployment's `environment.local` file
+
+    ```
+    $ cd /Users/alice/azul/deployments/samples/
+    $ vim environment.local
+      (or)
+    $ ln -snf ../alice.local/environment.local environment.local 
+    ```
+    
+### 1.3.3 For personal deployment (AWS credentials available)
 
 Creating a personal deployment of Azul allows you test changes on a live system
 in complete isolation from other users. If you intend to make contributions,
@@ -644,7 +709,7 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
 3. You should be on the `TARGET` branch. Run
 
    ```
-   git merge SOURCE
+   git merge --no-ff SOURCE
    ```
 
    and resolve conflicts in necessary. Conflict resolution should only be

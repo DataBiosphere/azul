@@ -24,7 +24,7 @@ clean:
 test:
 	PYTHONWARNINGS=ignore:ResourceWarning coverage run -m unittest discover test --verbose
 
-tag:
+tag: check_branch
 	@tag_name="$$(date '+deployed/$(AZUL_DEPLOYMENT_STAGE)/%Y-%m-%d__%H-%M')" ; \
 	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
 

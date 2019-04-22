@@ -6,7 +6,7 @@ import random
 from furl import furl
 import requests
 import time
-from typing import Any, Mapping, Set, Optional
+from typing import Any, Mapping, Set, Optional, IO
 import unittest
 import urllib
 from urllib.parse import urlencode
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class IntegrationTest(unittest.TestCase):
@@ -74,7 +74,7 @@ class IntegrationTest(unittest.TestCase):
             # only subset of indexed metadata, use unrestricted filter
             manifest_filter = {"file": {}}
         else:
-            manifest_filter = {"file": {"organ": {"is": ["brain"]}, "fileFormat": {"is": ["bai"]}}}
+            manifest_filter = {"file": {"organ": {"is": ["brain", "Brain"]}, "fileFormat": {"is": ["bai"]}}}
 
         for format_, validator in [
             (None, self.check_manifest),
@@ -89,7 +89,7 @@ class IntegrationTest(unittest.TestCase):
                     response = self.check_endpoint_is_working(config.service_endpoint(), path, query)
                     validator(response)
 
-        filters = {"file":{"organ":{"is":["brain"]},"fileFormat":{"is":["fastq.gz"]}}}
+        filters = {"file": {"organ": {"is": ["brain", "Brain"]}, "fileFormat": {"is": ["fastq.gz"]}}}
         response_with_file_uuid = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
                                                                  path='/repository/files',
                                                                  query={'filters': filters, 'size': 15,
@@ -120,22 +120,24 @@ class IntegrationTest(unittest.TestCase):
         return response.content
 
     def check_manifest(self, response: bytes):
-        """Assert that manifest contains at least one row of metadata."""
-        wrapper = TextIOWrapper(BytesIO(response))
-        num_rows = len(list(csv.reader(wrapper, delimiter='\t')))
-        self.assertTrue(num_rows > 1)
-        logger.info(f'Manifest contains {num_rows} rows.')
+        self._check_manifest(BytesIO(response), 'bundle_uuid')
 
     def check_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
-            tsv_files = {filename: os.path.join(data_path, filename) for filename in ['participants.tsv', 'samples.tsv']}
-            for file_name, file_path in tsv_files.items():
-                with zip_fh.open(file_path) as bytesfile:
-                    text = TextIOWrapper(bytesfile, encoding='utf-8')
-                    num_rows = len(list(csv.reader(text, delimiter='\t')))
-                    self.assertTrue(num_rows > 1)
-                    logger.info(f'BDBag file {file_name} contains {num_rows} rows.')
+            file_path = os.path.join(data_path, 'bundles.tsv')
+            with zip_fh.open(file_path) as file:
+                self._check_manifest(file, 'entity:bundle_uuid')
+
+    def _check_manifest(self, file: IO[bytes], uuid_field_name: str):
+        text = TextIOWrapper(file)
+        reader = csv.DictReader(text, delimiter='\t')
+        rows = list(reader)
+        logger.info(f'Manifest contains {len(rows)} rows.')
+        self.assertGreater(len(rows), 0)
+        self.assertIn(uuid_field_name, reader.fieldnames)
+        bundle_uuid = rows[0][uuid_field_name]
+        self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
 
     def download_file_from_drs_response(self, response: bytes):
         json_data = json.loads(response)['data_object']

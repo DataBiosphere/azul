@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 import logging
 from operator import attrgetter
+import time
 from typing import Iterable, List, Mapping, MutableMapping, MutableSet, Union
 
 from elasticsearch import ConflictError, ElasticsearchException
@@ -82,7 +83,6 @@ class BaseIndexer(ABC):
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
         manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
-
         self._add_test_modifications(manifest, metadata_files, dss_notification)
 
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
@@ -93,6 +93,7 @@ class BaseIndexer(ABC):
                                      ignore=[400],
                                      body=dict(settings=self.settings(index_name),
                                                mappings=dict(doc=self.mapping())))
+        log.info("Transforming metadata for bundle %s.%s", bundle_uuid, bundle_version)
         contributions = []
         for transformer in self.transformers():
             contributions.extend(transformer.transform(uuid=bundle_uuid,
@@ -102,11 +103,13 @@ class BaseIndexer(ABC):
         return contributions
 
     def _get_bundle(self, bundle_uuid, bundle_version):
+        now = time.time()
         _, manifest, metadata_files = download_bundle_metadata(client=config.dss_client(),
                                                                replica='aws',
                                                                uuid=bundle_uuid,
                                                                version=bundle_version,
                                                                num_workers=config.num_dss_workers)
+        log.info("It took %.003fs to download bundle %s.%s", time.time() - now, bundle_uuid, bundle_version)
         assert _ == bundle_version
         return manifest, metadata_files
 

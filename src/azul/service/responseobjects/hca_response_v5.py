@@ -1,13 +1,13 @@
-#!/usr/bin/python
 import abc
 from collections import OrderedDict, defaultdict
+from copy import deepcopy
 import os
 import csv
 from tempfile import TemporaryDirectory
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
-from typing import MutableSet, List
+from typing import List, MutableMapping, IO
 
 from uuid import uuid4
 
@@ -20,7 +20,6 @@ from jsonobject.properties import (FloatProperty,
                                    ObjectProperty,
                                    StringProperty)
 from bdbag import bdbag_api
-from shutil import copy
 from more_itertools import one
 from azul import config
 from azul import drs
@@ -199,195 +198,6 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
-    def _translate(self, untranslated, keyname):
-        m = self.manifest_entries[keyname]
-        return [untranslated.get(es_name, "") for es_name in m.values()]
-
-    def _extract_fields(self, entities: List[JSON], column_mapping: JSON):
-        def validate(s: str) -> str:
-            assert '||' not in s
-            return s
-
-        cell_values = []
-        for field_name in column_mapping.values():
-            cell_value = []
-            for entity in entities:
-                try:
-                    field_value = entity[field_name]
-                except KeyError:
-                    pass
-                else:
-                    if isinstance(field_value, list):
-                        cell_value += [validate(str(v)) for v in field_value if v is not None]
-                    else:
-                        cell_value.append(validate(str(field_value)))
-            cell_values.append(" || ".join(sorted(set(cell_value))))
-
-        return cell_values
-
-    def _push_content(self) -> str:
-        """
-        Push the content to S3 with multipart upload
-
-        :return: S3 object key
-        """
-        object_key = f'manifests/{uuid4()}.tsv'
-        content_type = 'text/tab-separated-values'
-
-        with MultipartUploadHandler(object_key, content_type) as multipart_upload:
-            with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
-                buffer_wrapper = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
-                writer = csv.writer(buffer_wrapper, dialect='excel-tab')
-                writer.writerow(self.ordered_column_names)
-                for hit in self.es_search.scan():
-                    self._iterate_hit_tsv(hit, writer)
-
-        return object_key
-
-    def _push_content_single_part(self) -> str:
-        """
-        Push the content to S3 in a single object put
-
-        :return: S3 object key
-        """
-        if self.format == 'tsv':
-            data = self._construct_tsv_content().encode()
-            content_type = 'text/tab-separated-values'
-            object_key = f'manifests/{uuid4()}.tsv'
-            parameters = dict(object_key=object_key,
-                              data=data,
-                              content_type=content_type)
-            return self.storage_service.put(**parameters)
-        elif self.format == 'bdbag':
-            file_name = self._construct_bdbag()
-            try:
-                object_key = f'manifests/{uuid4()}.zip'
-                return self.storage_service.upload(file_name, object_key)
-            finally:
-                os.remove(file_name)
-        else:
-            assert False
-
-    def _construct_tsv_content(self):
-        es_search = self.es_search
-
-        output = StringIO()
-        writer = csv.writer(output, dialect='excel-tab')
-        writer.writerow(self.ordered_column_names)
-        for hit in es_search.scan():
-            self._iterate_hit_tsv(hit, writer)
-
-        return output.getvalue()
-
-    def _construct_bdbag(self) -> str:
-        """
-        Create and return a file object of the sample data.
-        """
-        es_search = self.es_search
-        sample_file_object = StringIO()
-        sample_writer = csv.writer(sample_file_object, dialect='excel-tab')
-        # Add fieldnames.
-        sample_writer.writerow(list(chain(self.manifest_entries['contents.specimens'].keys(),
-                                          self.manifest_entries['contents.cell_suspensions'].keys(),
-                                          self.manifest_entries['bundles'].keys(),
-                                          self.manifest_entries['contents.files'].keys(),
-                                          ['file_url'], ['dos_url'])))
-        participants = set()
-        for hit in es_search.scan():
-            self._iterate_hit_bdbag(hit, participants, sample_writer)
-
-        participant_file_object = StringIO()
-        participant_writer = csv.writer(participant_file_object, dialect='excel-tab')
-        participant_writer.writerow(['entity:participant_id'])
-        participant_writer.writerows(zip(participants))
-        return self._create_zipped_bdbag(participant_file_object, sample_file_object)
-
-    @staticmethod
-    def _create_zipped_bdbag(participant_file_object: StringIO, sample_file_object: StringIO) -> str:
-        """
-        Create write participant and sample data files to disk, and create and return zipped BDBag.
-        """
-
-        with TemporaryDirectory() as bag_path, TemporaryDirectory() as tsv_file_dir:
-            # Discard return value since we don't use it, bag is updated below
-            bdbag_api.make_bag(bag_path)
-            data_path = os.path.join(bag_path, 'data')
-
-            # Write participant and sample data to their respective files.
-            tsvs = [('participants.tsv', participant_file_object),
-                    ('samples.tsv', sample_file_object)]
-            for tsv_filename, file_object in tsvs:
-                with open(os.path.join(tsv_file_dir, tsv_filename), 'w') as f:
-                    f.write(file_object.getvalue())
-                copy(os.path.join(tsv_file_dir, tsv_filename), data_path)
-
-            assert sorted(tsv[0] for tsv in tsvs) == sorted(os.listdir(data_path))
-            bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
-            assert bdbag_api.is_bag(bag_path)
-            bdbag_api.validate_bag(bag_path)
-            assert bdbag_api.check_payload_consistency(bag)
-
-            return bdbag_api.archive_bag(bag_path, 'zip')
-
-    def _iterate_hit_tsv(self, es_search_hit, writer):
-        hit_dict = es_search_hit.to_dict()
-
-        inner_entity_fields = []
-        for doc_path, column_mapping in self.manifest_entries.items():
-            doc_path = doc_path.split('.')
-            assert doc_path
-            entities = hit_dict
-            for key in doc_path[:-1]:
-                entities = entities.get(key, {})
-            entities = entities.get(doc_path[-1], [])
-
-            inner_entity_fields += self._extract_fields(entities, column_mapping)
-
-        writer.writerow(inner_entity_fields)
-
-    def _iterate_hit_bdbag(self, es_search_hit, participants: MutableSet[str], sample_writer):
-        hit_dict = es_search_hit.to_dict()
-        # Some files are not associated with specimens or cell suspensions (e.g., PDFs, JPEGs) - skip them.
-        if 'specimens' in hit_dict['contents'].keys() and 'cell_suspensions' in hit_dict['contents'].keys():
-            specimen = one(hit_dict['contents']['specimens'])
-            cell_suspension = one(hit_dict['contents']['cell_suspensions'])
-            file = one(hit_dict['contents']['files'])
-
-            specimen_fields = self._translate(specimen, 'contents.specimens')
-            cell_suspension_fields = self._translate(cell_suspension, 'contents.cell_suspensions')
-            file_fields = self._translate(file, 'contents.files')
-
-            # Construct URL for file.
-            file_uuid = file['uuid']
-            file_version = file['version']
-            replica = 'gcp'
-            endpoint = f'files/{file_uuid}?version={file_version}&replica={replica}'
-            dss_url = config.dss_endpoint + '/' + endpoint
-            drs_url = drs.object_url(file_uuid, file_version)
-
-            for bundle in hit_dict['bundles']:
-                sample_writer.writerow(chain(specimen_fields[0],
-                                             specimen_fields[1],
-                                             cell_suspension_fields[0],
-                                             self._translate(bundle, 'bundles'),
-                                             file_fields,
-                                             [dss_url],
-                                             [drs_url]))
-                participant_id = specimen_fields[1][0]
-                participants.add(participant_id)
-
-    def return_response(self):
-        if config.disable_multipart_manifests or self.format == 'bdbag':
-            object_key = self._push_content_single_part()
-            file_name = None
-        else:
-            object_key = self._push_content()
-            file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
-        presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
-        headers = {'Content-Type': 'application/json', 'Location': presigned_url}
-
-        return Response(body='', headers=headers, status_code=302)
-
     def __init__(self, es_search, manifest_entries, mapping, format):
         """
         The constructor takes the raw response from ElasticSearch and creates
@@ -404,6 +214,246 @@ class ManifestResponse(AbstractResponse):
 
         sources = list(self.manifest_entries.keys())
         self.ordered_column_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
+
+    column_joiner = ' || '
+
+    def _extract_fields(self, entities: List[JSON], column_mapping: JSON, row: MutableMapping[str, str]):
+        stripped_joiner = self.column_joiner.strip()
+
+        def validate(s: str) -> str:
+            assert stripped_joiner not in s
+            return s
+
+        for column_name, field_name in column_mapping.items():
+            assert column_name not in row, f'Column mapping defines {column_name} twice'
+            column_value = []
+            for entity in entities:
+                try:
+                    field_value = entity[field_name]
+                except KeyError:
+                    pass
+                else:
+                    if isinstance(field_value, list):
+                        column_value += [validate(str(v)) for v in field_value if v is not None]
+                    else:
+                        column_value.append(validate(str(field_value)))
+            column_value = self.column_joiner.join(sorted(set(column_value)))
+            row[column_name] = column_value
+
+    def _push_content(self) -> str:
+        """
+        Push the content to S3 with multipart upload
+
+        :return: S3 object key
+        """
+        object_key = f'manifests/{uuid4()}.tsv'
+        content_type = 'text/tab-separated-values'
+
+        with MultipartUploadHandler(object_key, content_type) as multipart_upload:
+            with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
+                text_buffer = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
+                self._write_tsv(text_buffer)
+
+        return object_key
+
+    def _push_content_single_part(self) -> str:
+        """
+        Push the content to S3 in a single object put
+
+        :return: S3 object key
+        """
+        if self.format == 'tsv':
+            output = StringIO()
+            self._write_tsv(output)
+            return self.storage_service.put(object_key=f'manifests/{uuid4()}.tsv',
+                                            data=output.getvalue().encode(),
+                                            content_type='text/tab-separated-values')
+        elif self.format == 'bdbag':
+            bdbag_path = self._create_bdbag_archive()
+            try:
+                object_key = f'manifests/{uuid4()}.zip'
+                return self.storage_service.upload(bdbag_path, object_key)
+            finally:
+                os.remove(bdbag_path)
+        else:
+            assert False
+
+    def _write_tsv(self, output: IO[str]) -> None:
+        writer = csv.DictWriter(output, self.ordered_column_names, dialect='excel-tab')
+        writer.writeheader()
+        for hit in self.es_search.scan():
+            doc = hit.to_dict()
+            row = {}
+            for doc_path, column_mapping in self.manifest_entries.items():
+                entities = self._get_entities(doc_path, doc)
+                self._extract_fields(entities, column_mapping, row)
+            writer.writerow(row)
+
+    def _create_bdbag_archive(self) -> str:
+        with TemporaryDirectory() as bag_path:
+            bdbag_api.make_bag(bag_path)
+            with open(os.path.join(bag_path, 'data', 'bundles.tsv'), 'w') as bundle_tsv:
+                self._write_bdbag_bundles_tsv(bundle_tsv)
+            bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
+            assert bdbag_api.is_bag(bag_path)
+            bdbag_api.validate_bag(bag_path)
+            assert bdbag_api.check_payload_consistency(bag)
+            return bdbag_api.archive_bag(bag_path, 'zip')
+
+    def _write_bdbag_bundles_tsv(self, bundle_tsv: IO[str]) -> None:
+        """
+        Write the BDBag as a local temporary file and return the path to that file.
+        """
+        other_column_mappings = deepcopy(self.manifest_entries)
+        bundle_column_mapping = other_column_mappings.pop('bundles')
+        file_column_mapping = other_column_mappings.pop('contents.files')
+
+        bundles = defaultdict(lambda: defaultdict(list))
+
+        # For each outer file entity_type in the response …
+        for hit in self.es_search.scan():
+            doc = hit.to_dict()
+
+            # Extract fields from inner entities other than bundles or files
+            other_cells = {}
+            for doc_path, column_mapping in other_column_mappings.items():
+                entities = self._get_entities(doc_path, doc)
+                self._extract_fields(entities, column_mapping, other_cells)
+
+            # Extract fields from the sole inner file entity_type
+            file = one(doc['contents']['files'])
+            file_cells = dict(file_url=self._dss_url(file),
+                              dos_url=self._drs_url(file))
+            self._extract_fields([file], file_column_mapping, file_cells)
+
+            # Determine the column qualifier. The qualifier will be used to
+            # prefix the names of file-specific columns in the TSV
+            qualifier = file['file_format']
+            if qualifier in ('fastq.gz', 'fastq'):
+                qualifier = f"fastq[{file['read_index']}]"
+
+            # For each bundle containing the current file …
+            for bundle in doc['bundles']:
+                bundle_fqid = bundle['uuid'], bundle['version']
+
+                # Extract fields from the bundle
+                bundle_cells = {}
+                self._extract_fields([bundle], bundle_column_mapping, bundle_cells)
+
+                # Register the three extracted sets of fields as a group for this bundle and qualifier
+                group = {
+                    'file': file_cells,
+                    'bundle': bundle_cells,
+                    'other': other_cells
+                }
+                bundles[bundle_fqid][qualifier].append(group)
+
+        # Return a complete column name by adding a qualifier and optionally a
+        # numeric index. The index is necessary to distinguish between more than
+        # one file per file format
+        def qualify(qualifier, column_name, index=None):
+            if index is not None:
+                qualifier = f"{qualifier}[{index}]"
+            return f"{qualifier}.{column_name}"
+
+        num_groups_per_qualifier = defaultdict(int)
+
+        # Track the max number of groups for each qualifier in any bundle
+        for bundle in bundles.values():
+            for qualifier, groups in bundle.items():
+                # Sort the groups by reversed file name. This essentially sorts
+                # by file extension and any other more general suffixes
+                # preceding the extension. It ensure that `patient1_qc.bam` and
+                # `patient2_qc.bam` always end up in qualifier `bam[0]` while
+                # `patient1_metric.bam` and `patient2_metric.bam` end up in
+                # qualifier `bam[1]`.
+                groups.sort(key=lambda group: group['file']['file_name'][::-1])
+                if len(groups) > num_groups_per_qualifier[qualifier]:
+                    num_groups_per_qualifier[qualifier] = len(groups)
+
+        # Compute the column names in deterministic order, bundle_columns first
+        # followed by other columns
+        column_names = dict.fromkeys(chain(
+            bundle_column_mapping.keys(),
+            *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
+
+        # Add file columns for each qualifier and group
+        for qualifier, num_groups in sorted(num_groups_per_qualifier.items()):
+            for index in range(num_groups):
+                for column_name in chain(file_column_mapping.keys(), ('dos_url', 'file_url')):
+                    index = None if num_groups == 1 else index
+                    column_names[qualify(qualifier, column_name, index=index)] = None
+
+        # Write the TSV header
+        bundle_tsv_writer = csv.DictWriter(bundle_tsv, column_names, dialect='excel-tab')
+        bundle_tsv_writer.writeheader()
+
+        # Write the actual rows of the TSV
+        for bundle in bundles.values():
+            row = {}
+            for qualifier, groups in bundle.items():
+                for i, group in enumerate(groups):
+                    for entity, cells in group.items():
+                        if entity == 'bundle':
+                            # The bundle-specific cells should be consistent accross all files in a bundle
+                            if row:
+                                row.update(cells)
+                            else:
+                                assert cells.items() <= row.items()
+                        elif entity == 'other':
+                            # Cells from other entities need to be concatenated. Note that for fields that differ
+                            # between the files in a bundle this algorithm retains the values but loses the
+                            # association between each individual value and the respective file.
+                            for column_name, cell_value in cells.items():
+                                row.setdefault(column_name, set()).update(cell_value.split(self.column_joiner))
+                        elif entity == 'file':
+                            # Since file-specfic cells are placed into qualified columns, no concatenation is necessary
+                            index = None if num_groups_per_qualifier[qualifier] == 1 else i
+                            row.update((qualify(qualifier, column_name, index=index), cell)
+                                       for column_name, cell in cells.items())
+                        else:
+                            assert False
+            # Join concatenated values using the joiner
+            row = {k: self.column_joiner.join(sorted(v)) if isinstance(v, set) else v for k, v in row.items()}
+            bundle_tsv_writer.writerow(row)
+
+    def _get_entities(self, path: str, doc: JSON) -> List[JSON]:
+        """
+        Given a document and a dotted path into that document, return the list of entities designated by that path.
+        """
+        path = path.split('.')
+        assert path
+        d = doc
+        for key in path[:-1]:
+            d = d.get(key, {})
+        entities = d.get(path[-1], [])
+        return entities
+
+    def _drs_url(self, file):
+        file_uuid = file['uuid']
+        file_version = file['version']
+        drs_url = drs.object_url(file_uuid, file_version)
+        return drs_url
+
+    def _dss_url(self, file):
+        file_uuid = file['uuid']
+        file_version = file['version']
+        replica = 'gcp'
+        path = f'files/{file_uuid}?version={file_version}&replica={replica}'
+        dss_url = config.dss_endpoint + '/' + path
+        return dss_url
+
+    def return_response(self):
+        if config.disable_multipart_manifests or self.format == 'bdbag':
+            object_key = self._push_content_single_part()
+            file_name = None
+        else:
+            object_key = self._push_content()
+            file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
+        presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
+        headers = {'Content-Type': 'application/json', 'Location': presigned_url}
+
+        return Response(body='', headers=headers, status_code=302)
 
 
 class EntryFetcher:
@@ -444,6 +494,7 @@ class EntryFetcher:
 
 
 class BaseSummaryResponse(AbstractResponse):
+
     def return_response(self):
         return self.apiResponse
 
@@ -595,7 +646,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for protocol in entry["contents"]["protocols"]:
             translated_process = {
                 "libraryConstructionApproach": protocol.get("library_construction_approach", []),
-                "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", [])
+                "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", []),
+                "pairedEnd": protocol.get("paired_end", []),
             }
             protocols.append(translated_process)
         return protocols
