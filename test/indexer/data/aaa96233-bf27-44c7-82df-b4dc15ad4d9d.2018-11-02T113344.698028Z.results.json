@@ -90,7 +90,8 @@
                     },
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
-                        "instrument_manufacturer_model": "Illumina NextSeq 500"
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": true
                     }
                 ],
                 "projects": [
@@ -245,7 +246,8 @@
                     },
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
-                        "instrument_manufacturer_model": "Illumina NextSeq 500"
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": true
                     }
                 ],
                 "projects": [
@@ -414,7 +416,8 @@
                     },
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
-                        "instrument_manufacturer_model": "Illumina NextSeq 500"
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": true
                     }
                 ],
                 "projects": [
@@ -583,7 +586,8 @@
                     },
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
-                        "instrument_manufacturer_model": "Illumina NextSeq 500"
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": true
                     }
                 ],
                 "projects": [
@@ -751,6 +755,9 @@
                         ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            true
                         ]
                     }
                 ],
@@ -895,6 +902,9 @@
                         ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            true
                         ]
                     }
                 ],
@@ -1018,6 +1028,9 @@
                         ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            true
                         ]
                     }
                 ],
@@ -1155,6 +1168,9 @@
                         ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            true
                         ]
                     }
                 ],
