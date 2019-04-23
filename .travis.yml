@@ -25,7 +25,7 @@ script:
   # Setting BOTO_CONFIG seems to override that.
   - export BOTO_CONFIG=/dev/null
   - make test
-  - trufflehog --regex --rules rules.json --entropy=False file:///home/travis/build/DataBiosphere/azul
+  - trufflehog --regex --rules trufflehog-rules.json --entropy=False file:///home/travis/build/DataBiosphere/azul
 
 after_success:
   - coveralls
