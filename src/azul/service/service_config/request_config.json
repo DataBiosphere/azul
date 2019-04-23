@@ -14,7 +14,6 @@
     "projectId": "contents.projects.document_id",
     "institution": "contents.projects.institutions",
     "laboratory": "contents.projects.laboratory",
-    "lab": "contents.projects.laboratory",
     "projectDescription": "contents.projects.project_description",
     "project": "contents.projects.project_shortname",
     "projectTitle": "contents.projects.project_title",
@@ -25,21 +24,18 @@
     "insdcStudyAccessions": "contents.projects.insdc_study_accessions",
 
     "biologicalSex": "contents.donors.biological_sex",
-    "specimenId": "contents.specimens.biomaterial_id",
-    "specimenDocumentId": "contents.specimens.document_id",
-    "sampleId": "contents.samples.document_id",
     "sampleEntityType": "contents.samples.entity_type",
-    "disease": "contents.specimens.disease",
-    "donorId": "contents.specimens.donor_biomaterial_id",
-    "donorDocumentId": "contents.donors.document_id",
+    "disease": "contents.samples.disease",
     "genusSpecies": "contents.donors.genus_species",
-    "organ": "contents.specimens.organ",
-    "organPart": "contents.specimens.organ_part",
-    "modelOrgan" : "contents.organoids.model_organ",
-    "modelOrganPart": "contents.organoids.model_organ_part",
+    "donorDisease": "contents.donors.disease",
+    "organ": "contents.samples.organ",
+    "organPart": "contents.samples.organ_part",
+    "modelOrgan" : "contents.samples.model_organ",
+    "modelOrganPart": "contents.samples.model_organ_part",
     "organismAge": "contents.donors.organism_age",
     "organismAgeUnit": "contents.donors.organism_age_unit",
     "preservationMethod": "contents.specimens.preservation_method",
+
     "cellCount": "contents.cell_suspensions.total_estimated_cells",
     "selectedCellType": "contents.cell_suspensions.selected_cell_type",
 
@@ -176,11 +172,8 @@
       "contents.files.version"
     ],
     "samples": [
-      "sampleId"
-    ],
-    "specimens": [
-      "contents.specimens.biomaterial_id",
-      "contents.specimens.document_id"
+      "contents.samples.document_id",
+      "contents.samples.entity_type"
     ],
     "projects": [
       "contents.projects.project_shortname"
@@ -202,6 +195,7 @@
     "organismAgeUnit",
     "biologicalSex",
     "disease",
+    "donorDisease",
     "instrumentManufacturerModel",
     "pairedEnd",
     "project",
