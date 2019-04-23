@@ -102,7 +102,7 @@
   },
   "bdbag": {
     "bundles": {
-      "entity:bundle_uuid": "uuid",
+      "entity:bundle_id": "uuid",
       "bundle_version": "version"
     },
     "contents.files": {
