@@ -680,9 +680,7 @@ class ElasticTransformDump(object):
 
         field_mappings = request_config['translation']
         cart_item_config = request_config['cart-item']
-        fields = cart_item_config['bundles'] + cart_item_config[entity_type]
-
-        source_filter = [field_mappings[field] for field in fields]
+        source_filter = cart_item_config['bundles'] + cart_item_config[entity_type]
 
         es_search = self.create_request(filters,
                                         self.es_client,
