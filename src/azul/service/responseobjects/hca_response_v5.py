@@ -292,15 +292,17 @@ class ManifestResponse(AbstractResponse):
     def _create_bdbag_archive(self) -> str:
         with TemporaryDirectory() as bag_path:
             bdbag_api.make_bag(bag_path)
-            with open(os.path.join(bag_path, 'data', 'bundles.tsv'), 'w') as bundle_tsv:
-                self._write_bdbag_bundles_tsv(bundle_tsv)
+            with open(os.path.join(bag_path, 'data', 'samples.tsv'), 'w') as samples_tsv:
+                self._write_bdbag_samples_tsv(samples_tsv)
             bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
             assert bdbag_api.is_bag(bag_path)
             bdbag_api.validate_bag(bag_path)
             assert bdbag_api.check_payload_consistency(bag)
             return bdbag_api.archive_bag(bag_path, 'zip')
 
-    def _write_bdbag_bundles_tsv(self, bundle_tsv: IO[str]) -> None:
+    column_path_separator = '-'
+
+    def _write_bdbag_samples_tsv(self, bundle_tsv: IO[str]) -> None:
         """
         Write the BDBag as a local temporary file and return the path to that file.
         """
@@ -354,7 +356,7 @@ class ManifestResponse(AbstractResponse):
         def qualify(qualifier, column_name, index=None):
             if index is not None:
                 qualifier = f"{qualifier}[{index}]"
-            return f"{qualifier}.{column_name}"
+            return f"{qualifier}{self.column_path_separator}{column_name}"
 
         num_groups_per_qualifier = defaultdict(int)
 
