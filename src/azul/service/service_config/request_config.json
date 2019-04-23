@@ -148,19 +148,19 @@
   },
   "cart-item": {
     "files": [
-      "fileId",
-      "fileVersion"
+      "contents.files.uuid",
+      "contents.files.version"
     ],
     "specimens": [
-      "specimenId",
-      "specimenDocumentId"
+      "contents.specimens.biomaterial_id",
+      "contents.specimens.document_id"
     ],
     "projects": [
-      "project"
+      "contents.projects.project_shortname"
     ],
     "bundles": [
-      "bundleUuid",
-      "bundleVersion"
+      "bundles.uuid",
+      "bundles.version"
     ]
   },
   "facets": [
