@@ -569,7 +569,7 @@ class TestResponse(WebServiceTestCase):
         # FIXME: local import for now to delay side effects of the import like logging being configured
         # https://github.com/DataBiosphere/azul/issues/637
         from lambdas.service.app import sort_defaults
-        for entity_type in 'files', 'samples', 'projects':
+        for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
                 base_url = self.base_url
                 url = base_url + "/repository/" + entity_type
@@ -1340,7 +1340,7 @@ class TestResponse(WebServiceTestCase):
             }
         ]
         for test_data in test_data_sets:
-            for entity_type in 'files', 'samples', 'projects':
+            for entity_type in 'files', 'samples', 'projects', 'bundles':
                 with self.subTest(entity_type=entity_type):
                     url = self.base_url + "/repository/" + entity_type + "?size=2" \
                                           "&filters={'file':{'projectId':{'is':['" + test_data['id'] + "']}}}"
@@ -1358,7 +1358,7 @@ class TestResponse(WebServiceTestCase):
         """
         Test that sample(s) in the response contain values matching values in the source cellLine/organoid/specimen
         """
-        for entity_type in 'projects', 'samples', 'files':
+        for entity_type in 'projects', 'samples', 'files', 'bundles':
             with self.subTest(entity_type=entity_type):
                 url = self.base_url + "/repository/" + entity_type
                 response = requests.get(url)
@@ -1375,6 +1375,17 @@ class TestResponse(WebServiceTestCase):
                                             self.assertIn(one_val, hit[sample_entity_type][0][key])
                                     else:
                                         self.assertIn(val, hit[sample_entity_type][0][key])
+
+    def test_bundles_outer_entity(self):
+        entity_type = 'bundles'
+        url = self.base_url + "/repository/" + entity_type
+        response = requests.get(url)
+        response.raise_for_status()
+        self.assertEqual(200, response.status_code)
+        bundles = response.json()
+        indexed_uuids = [uuid for uuid, version in self.bundles]
+        for bundle in bundles['hits']:
+            self.assertTrue(bundle['entryId'] in indexed_uuids)
 
 
 if __name__ == '__main__':
