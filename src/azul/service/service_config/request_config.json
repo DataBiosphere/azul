@@ -24,6 +24,7 @@
     "insdcStudyAccessions": "contents.projects.insdc_study_accessions",
 
     "biologicalSex": "contents.donors.biological_sex",
+    "sampleId": "contents.samples.biomaterial_id",
     "sampleEntityType": "contents.samples.entity_type",
     "disease": "contents.samples.disease",
     "genusSpecies": "contents.donors.genus_species",

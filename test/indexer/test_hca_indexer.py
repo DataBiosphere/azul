@@ -510,8 +510,8 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_diseases_field(self):
         """
-        Index a bundle with a specimen `diseases` value that is differs from its donor `diseases` value
-        and assert that only the specimen's `diseases` value is in the indexed document.
+        Index a bundle with a specimen `diseases` value that differs from the donor `diseases` value
+        and assert that both values are represented in the indexed document.
         """
         self._index_canned_bundle(("3db604da-940e-49b1-9bcc-25699a55b295", "2018-11-02T184048.983513Z"))
 
@@ -519,9 +519,12 @@ class TestHCAIndexer(IndexerTestCase):
         for hit in hits:
             source = hit['_source']
             contents = source['contents']
-            diseases = contents['specimens'][0]['disease']
-            self.assertEqual(1, len(diseases))
-            self.assertEqual("atrophic vulva (specimen_from_organism)", diseases[0])
+            specimen_diseases = contents['specimens'][0]['disease']
+            donor_diseases = contents['donors'][0]['diseases']
+            self.assertEqual(1, len(specimen_diseases))
+            self.assertEqual("atrophic vulva (specimen_from_organism)", specimen_diseases[0])
+            self.assertEqual(1, len(donor_diseases))
+            self.assertEqual("atrophic vulva (donor_organism)", donor_diseases[0])
 
     def test_organoid_priority(self):
         """
