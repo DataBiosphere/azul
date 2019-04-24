@@ -487,3 +487,10 @@ class FacetNameValidationTest(WebServiceTestCase):
                     'fastq[read2]-dos_url',
                     'fastq[read2]-file_url',
                 ], reader.fieldnames)
+
+    def test_manifest_format_validation(self):
+        for manifest_endpoint in '/manifest/files', '/repository/files/export':
+            with self.subTest(manifest_endpoint=manifest_endpoint):
+                url = self.base_url + f'{manifest_endpoint}?format=invalid-type'
+                response = requests.get(url)
+                self.assertEqual(400, response.status_code, response.content)

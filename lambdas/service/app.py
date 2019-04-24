@@ -421,10 +421,17 @@ def get_manifest():
         app.current_request.query_params = {}
     from azul.service import AbstractService
     filters = AbstractService.parse_filters(params.get('filters'))
-    format = params.get('format', 'tsv')
     es_td = EsTd()
-    response = es_td.transform_manifest(format, filters)
+    response = es_td.transform_manifest(get_format(params), filters)
     return response
+
+
+def get_format(params):
+    format_ = params.get('format', 'tsv')
+    if format_ in ('tsv', 'bdbag'):
+        return format_
+    else:
+        raise BadRequestError(f'{format_} is not a valid manifest format.')
 
 
 @app.route('/manifest/files', methods=['GET'], cors=True)
@@ -457,6 +464,8 @@ def start_manifest_generation():
     If the manifest generation is done and the manifest is ready to be downloaded, the response will
     have a 302 status and will redirect to the URL of the manifest.
     """
+    get_format(app.current_request.query_params)
+
     wait_time, location = handle_manifest_generation_request()
     return Response(body='',
                     headers={
