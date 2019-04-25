@@ -76,7 +76,13 @@ def download_bundle_metadata(client: DSSClient,
         file_version = manifest_entry['version']
         logger.debug("Getting file '%s' (%s.%s) from DSS.", file_name, file_uuid, file_version)
         # noinspection PyUnresolvedReferences
-        file_contents = client.get_file(uuid=file_uuid, version=file_version, replica='aws')
+        file_contents = client.get_file(uuid=file_uuid, version=file_version, replica=replica)
+
+        # Work around https://github.com/HumanCellAtlas/data-store/issues/2073
+        if replica == 'gcp' and isinstance(file_contents, bytes):  # pragma: no cover
+            import json
+            file_contents = json.loads(file_contents)
+
         if not isinstance(file_contents, dict):
             raise TypeError(f'Expecting file {file_uuid}.{file_version} '
                             f'to contain a JSON object ({dict}), '
