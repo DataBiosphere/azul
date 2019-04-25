@@ -119,11 +119,19 @@ class Config:
 
     @property
     def dss_checkout_bucket(self):
+        return self._dss_bucket('checkout')
+
+    def _dss_bucket(self, qualifier=None):
         stage = self.dss_deployment_stage
         # For domain_part, DSS went from `humancellatlas` to `hca` in 9/2018 and started reverting back to
         # `humancellatlas` in 12/2018. As I write this, only `dev` is back on `humancellatlas`
         domain_part = 'hca' if stage == 'prod' else 'humancellatlas'
-        return f'org-{domain_part}-dss-checkout-{stage}'
+        qualifier = [qualifier] if qualifier else []
+        return '-'.join(['org', domain_part, 'dss', *qualifier, stage])
+
+    @property
+    def dss_main_bucket(self):
+        return self._dss_bucket()
 
     @property
     def num_dss_workers(self) -> int:
