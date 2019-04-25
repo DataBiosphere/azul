@@ -299,9 +299,7 @@ class TestAccessorApi(TestCase):
     def test_sequencing_process_paired_end(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        replica = 'aws'
-        deployment = 'prod'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
         bundle = Bundle(uuid, version, manifest, metadata_files)
         sequencing_protocols = [p for p in bundle.protocols.values() if isinstance(p, SequencingProtocol)]
         self.assertEqual(len(sequencing_protocols), 1)
@@ -309,7 +307,7 @@ class TestAccessorApi(TestCase):
 
     def _test_bundle(self, uuid, version, replica='aws', deployment='prod', **assertion_kwargs):
 
-        manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
+        manifest, metadata_files = self._load_bundle(uuid, version, replica=replica, deployment=deployment)
 
         self._assert_bundle(uuid=uuid,
                             version=version,
@@ -489,9 +487,7 @@ class TestAccessorApi(TestCase):
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
         version = '2019-02-02T065454.662896Z'
-        replica = 'aws'
-        deployment = 'prod'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
         bundle = Bundle(uuid, version, manifest, metadata_files)
         analysis_protocols = [p for p in bundle.protocols.values() if isinstance(p, AnalysisProtocol)]
         self.assertEqual(len(analysis_protocols), 1)
