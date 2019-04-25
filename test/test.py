@@ -19,6 +19,7 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               SequenceFile,
                                               SpecimenFromOrganism,
                                               CellSuspension,
+                                              AnalysisProtocol,
                                               LibraryPreparationProtocol,
                                               SequencingProtocol,
                                               SupplementaryFile,
@@ -143,18 +144,17 @@ class TestAccessorApi(TestCase):
         else:
             return None, None
 
-    def _load_bundle(self, uuid, version, replica='aws', deployment=None):
+    def _load_bundle(self, uuid, version, replica='aws', deployment='prod'):
         """
         Load the specified canned bundle, downloading it first if not previously canned
         """
-        canning_directory = deployment or 'prod'
-        manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+        manifest, metadata_files = self._canned_bundle(deployment, uuid, version)
         if manifest is None:  # pragma: no cover
             client = dss_client(deployment)
             _version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
             assert _version == version
-            self._can_bundle(os.path.join(canning_directory), uuid, version, manifest, metadata_files)
-            manifest, metadata_files = self._canned_bundle(canning_directory, uuid, version)
+            self._can_bundle(os.path.join(deployment), uuid, version, manifest, metadata_files)
+            manifest, metadata_files = self._canned_bundle(deployment, uuid, version)
         return manifest, metadata_files
 
     def test_bad_content(self):
@@ -306,7 +306,7 @@ class TestAccessorApi(TestCase):
         self.assertEqual(len(sequencing_protocols), 1)
         self.assertEqual(sequencing_protocols[0].paired_end, True)
 
-    def _test_bundle(self, uuid, version, replica='aws', deployment=None, **assertion_kwargs):
+    def _test_bundle(self, uuid, version, replica='aws', deployment='prod', **assertion_kwargs):
 
         manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
 
@@ -484,6 +484,19 @@ class TestAccessorApi(TestCase):
         # FIXME: Assert JSON output?
 
         self.assertEqual({}, errors)
+
+    def test_analysis_protocol(self):
+        uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
+        version = '2019-02-02T065454.662896Z'
+        replica = 'aws'
+        deployment = 'prod'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
+        bundle = Bundle(uuid, version, manifest, metadata_files)
+        analysis_protocols = [p for p in bundle.protocols.values() if isinstance(p, AnalysisProtocol)]
+        self.assertEqual(len(analysis_protocols), 1)
+        self.assertEqual(str(analysis_protocols[0].document_id), 'bb17ee61-193e-4ae1-a014-4f1b1c19b8b7')
+        self.assertEqual(analysis_protocols[0].protocol_id, 'smartseq2_v2.2.0')
+        self.assertEqual(analysis_protocols[0].protocol_name, None)
 
 
 # noinspection PyUnusedLocal

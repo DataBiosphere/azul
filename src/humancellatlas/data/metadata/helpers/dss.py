@@ -92,14 +92,13 @@ def download_bundle_metadata(client: DSSClient,
     return bundle['version'], manifest, dict(metadata_files)
 
 
-def dss_client(deployment: Optional[str] = None) -> DSSClient:
+def dss_client(deployment: str = 'prod') -> DSSClient:
     """
     Return a DSS client to DSS production or the specified DSS deployment.
 
-    :param deployment: The name of a DSS deployment like `dev`, `integration` or `staging`. If None, the production
-                       deployment (`prod`) will be used.
+    :param deployment: The name of a DSS deployment like `dev`, `integration`, `staging` or `prod`.
     """
-    deployment = deployment + "." if deployment else ""
+    deployment = "" if deployment == "prod" else deployment + "."
     swagger_url = f'https://dss.{deployment}data.humancellatlas.org/v1/swagger.json'
     client = DSSClient(swagger_url=swagger_url)
     client.timeout_policy = Timeout(connect=10, read=40)
