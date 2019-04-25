@@ -36,10 +36,6 @@ class IntegrationTest(unittest.TestCase):
     bundle_uuid_prefix = None
     prefix_length = 3
 
-    @memoized_property
-    def dss(self):
-        return config.dss_client()
-
     def setUp(self):
         super().setUp()
         self.set_lambda_test_mode(True)
