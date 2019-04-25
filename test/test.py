@@ -18,6 +18,7 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               Project,
                                               SequenceFile,
                                               SpecimenFromOrganism,
+                                              CellLine,
                                               CellSuspension,
                                               AnalysisProtocol,
                                               LibraryPreparationProtocol,
@@ -497,6 +498,19 @@ class TestAccessorApi(TestCase):
         self.assertEqual(str(analysis_protocols[0].document_id), 'bb17ee61-193e-4ae1-a014-4f1b1c19b8b7')
         self.assertEqual(analysis_protocols[0].protocol_id, 'smartseq2_v2.2.0')
         self.assertEqual(analysis_protocols[0].protocol_name, None)
+
+    def test_cell_line(self):
+        uuid = 'ffee3a9b-14de-4dda-980f-c08092b2dabe'
+        version = '2019-04-17T175706.867000Z'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        bundle = Bundle(uuid, version, manifest, metadata_files)
+        cell_lines = [cl for cl in bundle.biomaterials.values() if isinstance(cl, CellLine)]
+        self.assertEqual(len(cell_lines), 1)
+        self.assertEqual(str(cell_lines[0].document_id), '961092cd-dcff-4b59-a0d2-ceeef0aece74')
+        self.assertEqual(cell_lines[0].biomaterial_id, 'cell_line_at_day_54')
+        self.assertEqual(cell_lines[0].has_input_biomaterial, None)
+        self.assertEqual(cell_lines[0].cell_line_type, 'stem cell-derived')
+        self.assertEqual(cell_lines[0].model_organ, 'brain')
 
 
 # noinspection PyUnusedLocal

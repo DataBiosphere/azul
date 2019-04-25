@@ -307,7 +307,14 @@ class CellSuspension(Biomaterial):
 
 @dataclass(init=False)
 class CellLine(Biomaterial):
-    pass
+    cell_line_type: str
+    model_organ: Optional[str]
+
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
+        content = json.get('content', json)
+        self.cell_line_type = content['cell_line_type']
+        self.model_organ = ontology_label(content.get('model_organ'), default=None)
 
 
 @dataclass(init=False)
