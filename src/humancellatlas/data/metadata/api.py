@@ -112,13 +112,26 @@ class LinkError(RuntimeError):
 
 @dataclass(frozen=True)
 class ProjectPublication:
-    publication_title: str
-    publication_url: Optional[str]
+    title: str
+    url: Optional[str]
 
     @classmethod
     def from_json(cls, json: JSON) -> 'ProjectPublication':
-        return cls(publication_title=json['publication_title'],
-                   publication_url=json.get('publication_url'))
+        title = lookup(json, 'title', 'publication_title')
+        url = lookup(json, 'url', 'publication_url', default=None)
+        return cls(title=title, url=url)
+
+    @property
+    def publication_title(self):
+        warnings.warn(f"ProjectPublication.publication_title is deprecated. "
+                      f"Use ProjectPublication.title instead.", DeprecationWarning)
+        return self.title
+
+    @property
+    def publication_url(self):
+        warnings.warn(f"ProjectPublication.publication_url is deprecated. "
+                      f"Use ProjectPublication.url instead.", DeprecationWarning)
+        return self.url
 
 
 @dataclass(frozen=True)
@@ -132,12 +145,14 @@ class ProjectContact:
 
     @classmethod
     def from_json(cls, json: JSON) -> 'ProjectContact':
+        project_role = json.get('project_role')
+        project_role = ontology_label(project_role) if isinstance(project_role, dict) else project_role
         return cls(contact_name=json['contact_name'],
                    email=json.get('email'),
                    institution=json.get('institution'),
                    laboratory=json.get('laboratory'),
                    corresponding_contributor=json.get('corresponding_contributor'),
-                   project_role=json.get('project_role'))
+                   project_role=project_role)
 
 
 @dataclass(init=False)
@@ -290,19 +305,26 @@ class ImagedSpecimen(Biomaterial):
 @dataclass(init=False)
 class CellSuspension(Biomaterial):
     estimated_cell_count: Optional[int]
-    selected_cell_type: Set[str]
+    selected_cell_types: Set[str]
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
         content = json.get('content', json)
         self.estimated_cell_count = lookup(content, 'estimated_cell_count', 'total_estimated_cells', default=None)
-        self.selected_cell_type = {ontology_label(sct) for sct in content.get('selected_cell_type', [])}
+        self.selected_cell_types = {ontology_label(sct) for sct in
+                                    lookup(content, 'selected_cell_types', 'selected_cell_type', default=[])}
 
     @property
     def total_estimated_cells(self) -> int:
         warnings.warn(f"CellSuspension.total_estimated_cells is deprecated. "
                       f"Use CellSuspension.estimated_cell_count instead.", DeprecationWarning)
         return self.estimated_cell_count
+
+    @property
+    def selected_cell_type(self) -> Set[str]:
+        warnings.warn(f"CellSuspension.selected_cell_type is deprecated. "
+                      f"Use CellSuspension.selected_cell_types instead.", DeprecationWarning)
+        return self.selected_cell_types
 
 
 @dataclass(init=False)

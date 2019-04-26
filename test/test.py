@@ -7,6 +7,7 @@ import os
 import re
 from unittest import TestCase, skip
 from unittest.mock import Mock
+from uuid import UUID
 import warnings
 
 from atomicwrites import atomic_write
@@ -42,6 +43,13 @@ class TestAccessorApi(TestCase):
         # Suppress `sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=6, family=AddressFamily.AF_INET, ...`
         warnings.simplefilter("ignore", ResourceWarning)
 
+    def _rename_keys(self, d, **kwargs):
+        for new_name, old_name in kwargs.items():
+            assert new_name != old_name
+            if old_name in d:
+                d[new_name] = d[old_name]
+                del d[old_name]
+
     def test_lymphocytes(self):
         self._test_example_bundle(directory='CD4+ cytotoxic T lymphocytes',
                                   age_range=AgeRange(min=567648000.0, max=1892160000.0),
@@ -50,7 +58,7 @@ class TestAccessorApi(TestCase):
                                   storage_methods={'frozen, liquid nitrogen'},
                                   preservation_methods={'cryopreservation, other'},
                                   library_construction_methods={'Smart-seq2'},
-                                  selected_cell_type={'TEMRA'})
+                                  selected_cell_types={'TEMRA'})
 
     def test_diabetes_pancreas(self):
         self._test_example_bundle(directory='Healthy and type 2 diabetes pancreas',
@@ -65,7 +73,7 @@ class TestAccessorApi(TestCase):
                                   diseases={'normal'},
                                   project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
                                   library_construction_methods={"Chromium 3' Single Cell v2"},
-                                  selected_cell_type={"neural cell"})
+                                  selected_cell_types={"neural cell"})
 
     def test_mouse(self):
         self._test_example_bundle(directory='Mouse Melanoma',
@@ -73,7 +81,7 @@ class TestAccessorApi(TestCase):
                                   diseases={'subcutaneous melanoma'},
                                   project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'},
                                   library_construction_methods={'Smart-seq2'},
-                                  selected_cell_type={'CD11b+ Macrophages/monocytes'})
+                                  selected_cell_types={'CD11b+ Macrophages/monocytes'})
 
     def test_pancreas(self):
         self._test_example_bundle(directory='Single cell transcriptome analysis of human pancreas',
@@ -81,7 +89,7 @@ class TestAccessorApi(TestCase):
                                   diseases={'normal'},
                                   project_roles={None, 'external curator', 'Human Cell Atlas wrangler'},
                                   library_construction_methods={'smart-seq2'},
-                                  selected_cell_type={'pancreatic A cell'})
+                                  selected_cell_types={'pancreatic A cell'})
 
     def test_tissue_stability(self):
         self._test_example_bundle(directory='Tissue stability',
@@ -98,7 +106,7 @@ class TestAccessorApi(TestCase):
                                   diseases=set(),
                                   project_roles={None, 'Human Cell Atlas wrangler', 'Human Cell Atlas wrangler'},
                                   library_construction_methods={'10X sequencing'},
-                                  selected_cell_type={'bone marrow hematopoietic cell'})
+                                  selected_cell_types={'bone marrow hematopoietic cell'})
 
     def _test_example_bundle(self, directory, **kwargs):
         uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
@@ -255,7 +263,7 @@ class TestAccessorApi(TestCase):
                           storage_methods={'frozen, liquid nitrogen'},
                           preservation_methods={'cryopreservation, other'},
                           library_construction_methods={'Smart-seq2'},
-                          selected_cell_type={'TEMRA'})
+                          selected_cell_types={'TEMRA'})
 
     def test_ontology_label_field(self):
         """
@@ -268,7 +276,7 @@ class TestAccessorApi(TestCase):
                           diseases={'normal'},
                           project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
                           library_construction_methods={"10X v2 sequencing"},
-                          selected_cell_type={'neural cell'})
+                          selected_cell_types={'neural cell'})
 
     def test_accessions_fields(self):
         self._test_bundle(uuid='eca05046-3dad-4e45-b86c-8720f33a5dde',
@@ -288,7 +296,7 @@ class TestAccessorApi(TestCase):
                           version='2019-04-03T103426.471000Z',
                           deployment='staging',
                           diseases=set(),
-                          selected_cell_type=None,
+                          selected_cell_types=None,
                           project_roles=set(),
                           age_range=AgeRange(min=4838400.0, max=4838400.0),
                           is_sequencing_bundle=False,
@@ -322,7 +330,7 @@ class TestAccessorApi(TestCase):
                        storage_methods=frozenset({None}),
                        preservation_methods=frozenset({None}),
                        library_construction_methods=frozenset(),
-                       selected_cell_type=frozenset(),
+                       selected_cell_types=frozenset(),
                        insdc_project_accessions=frozenset(),
                        geo_series_accessions=frozenset(),
                        array_express_accessions=frozenset(),
@@ -342,10 +350,12 @@ class TestAccessorApi(TestCase):
         self.assertEqual(bundle.version, version)
         self.assertEqual(1, len(bundle.projects))
 
-        if selected_cell_type is not None:
+        if selected_cell_types is not None:
             cell_suspension = next(x for x in bundle.biomaterials.values() if isinstance(x, CellSuspension))
             self.assertEqual(CellSuspension, type(cell_suspension))
-            self.assertEqual(selected_cell_type, cell_suspension.selected_cell_type)
+            self.assertEqual(selected_cell_types, cell_suspension.selected_cell_types)
+            # noinspection PyDeprecation
+            self.assertEqual(cell_suspension.selected_cell_types, cell_suspension.selected_cell_type)
             # noinspection PyDeprecation
             self.assertEqual(cell_suspension.estimated_cell_count, cell_suspension.total_estimated_cells)
 
@@ -507,6 +517,34 @@ class TestAccessorApi(TestCase):
         self.assertEqual(cell_lines[0].has_input_biomaterial, None)
         self.assertEqual(cell_lines[0].cell_line_type, 'stem cell-derived')
         self.assertEqual(cell_lines[0].model_organ, 'brain')
+
+    def test_project_fields(self):
+        uuid = '68bdc676-c442-4581-923e-319c1c2d9018'
+        version = '2018-10-07T130111.835234Z'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='staging')
+
+        def assert_bundle():
+            bundle = Bundle(uuid, version, manifest, metadata_files)
+            project = bundle.projects[UUID('519b58ef-6462-4ed3-8c0d-375b54f53c31')]
+            self.assertEqual(len(project.publications), 1)
+            publication = project.publications.pop()
+            title = 'Precursors of human CD4+ cytotoxic T lymphocytes identified by single-cell transcriptome analysis.'
+            self.assertEqual(publication.title, title)
+            self.assertEqual(publication.title, publication.publication_title)
+            self.assertEqual(publication.url, 'http://immunology.sciencemag.org/content/3/19/eaan8664.long')
+            self.assertEqual(publication.url, publication.publication_url)
+            project_roles = {c.project_role for c in project.contributors}
+            self.assertEqual(project_roles, {None, 'external curator', 'Human Cell Atlas wrangler'})
+
+        assert_bundle()
+
+        for publication in metadata_files['project_0.json']['publications']:
+            self._rename_keys(publication, title='publication_title', url='publication_url')
+        for contributor in metadata_files['project_0.json']['contributors']:
+            if 'project_role' in contributor:
+                contributor['project_role'] = dict(text=contributor['project_role'])
+
+        assert_bundle()
 
 
 # noinspection PyUnusedLocal
