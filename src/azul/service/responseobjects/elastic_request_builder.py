@@ -120,11 +120,12 @@ class ElasticTransformDump(object):
             _field = '{}.keyword'.format(facet_config[agg])
         else:
             _field = facet_config[agg]
-        aggregate.bucket(
-            'myTerms',
-            'terms',
-            field=_field,
-            size=99999)
+        if agg == 'project':
+            _sub_field = request_config['translation']['projectId'] + '.keyword'
+            aggregate.bucket('myTerms', 'terms', field=_field, size=99999).bucket(
+                             'myProjectIds', 'terms', field=_sub_field, size=99999)
+        else:
+            aggregate.bucket('myTerms', 'terms', field=_field, size=99999)
         aggregate.bucket('untagged', 'missing', field=_field)
         if agg == "fileFormat":
             fileSizeField = request_config['translation']['fileSize']
