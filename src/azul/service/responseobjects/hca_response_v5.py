@@ -864,9 +864,12 @@ class FileSearchResponse(KeywordSearchResponse):
             else:
                 return _term['key']
 
-        term_list = [TermObj(**{'term': choose_entry(term),
-                                'count': term['doc_count']})
-                     for term in contents['myTerms']['buckets']]
+        term_list = []
+        for term in contents['myTerms']['buckets']:
+            term_object_params = {'term': choose_entry(term), 'count': term['doc_count']}
+            if 'myProjectIds' in term:
+                term_object_params['projectId'] = [bucket['key'] for bucket in term['myProjectIds']['buckets']]
+            term_list.append(TermObj(**term_object_params))
 
         # Add 'unspecified' term if there is at least one unlabelled document
         untagged_count = contents['untagged']['doc_count']

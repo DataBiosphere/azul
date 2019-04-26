@@ -1360,6 +1360,8 @@ class TestResponse(WebServiceTestCase):
                                 self.assertEqual(test_data['title'], project['projectTitle'])
                             else:
                                 self.assertIn(test_data['title'], project['projectTitle'])
+                    for term in response_json['termFacets']['project']['terms']:
+                        self.assertEqual(term['projectId'], [test_data['id']])
 
     def test_sample(self):
         """
