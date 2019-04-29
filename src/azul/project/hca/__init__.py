@@ -112,6 +112,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "209e6402-d854-49ea-815f-421dae5e3f4d",  # Tissue stability, https://github.com/HumanCellAtlas/data-store/issues/1976
                                                         "6ac9d7b5-f86d-4c23-82a9-485a6642b278",  # Tissue Sensitivity, https://github.com/DataBiosphere/azul/issues/870
                                                         "f396fa53-2a2d-4b8a-ad18-03bf4bd46833",  # Mouse Melanoma
+                                                        "f8880be0-210c-4aa3-9348-f5a423e07421",  # Old neuron_diff
                                                     ]
                                                 }
                                             },
