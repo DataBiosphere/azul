@@ -52,6 +52,7 @@ generic with minimal need for project-specific behavior.
         - [6.1.1 Initial setup](#611-initial-setup)
         - [6.1.2 Prepare for promotion](#612-prepare-for-promotion)
         - [6.1.3 Finishing up deployment / promotion](#613-finishing-up-deployment--promotion)
+    - [6.2 Big red button](#62-big-red-button)
 - [7. Scale testing](#7-scale-testing)
 - [8. Continuous deployment and integration](#8-continuous-deployment-and-integration)
     - [8.1 The Sandbox Deployment](#81-the-sandbox-deployment)
@@ -798,6 +799,24 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
    when reindexing is necessary. When in doubt assume yes. In that case run the
    manual `reindex` job on the Gitlab pipeline representing the most recent
    build on the current branch.
+
+## 6.2 Big red button
+
+In the event of an emergency, Azul can be shut down immediately using the 
+`enable_lambdas.py` script. Before using this script, make sure that the desired 
+deployment is selected and your Python virtual environment is activated.
+
+Shut down Azul by running
+
+```
+python scripts/enable_lambdas.py --disable
+```
+   
+Once your issue has been resolved, you can resume Azul's services by running
+
+```
+python scripts/enable_lambdas.py --enable
+```
 
 # 7. Scale testing
 
