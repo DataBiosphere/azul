@@ -113,6 +113,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "6ac9d7b5-f86d-4c23-82a9-485a6642b278",  # Tissue Sensitivity, https://github.com/DataBiosphere/azul/issues/870
                                                         "f396fa53-2a2d-4b8a-ad18-03bf4bd46833",  # Mouse Melanoma
                                                         "f8880be0-210c-4aa3-9348-f5a423e07421",  # Old neuron_diff
+                                                        "0c7bbbce-3c70-4d6b-a443-1b92c1f205c8",  # BM_PC
                                                     ]
                                                 }
                                             },
