@@ -573,7 +573,7 @@ class TestResponse(WebServiceTestCase):
         # FIXME: local import for now to delay side effects of the import like logging being configured
         # https://github.com/DataBiosphere/azul/issues/637
         from lambdas.service.app import sort_defaults
-        for entity_type in 'files', 'samples', 'projects':
+        for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
                 base_url = self.base_url
                 url = base_url + "/repository/" + entity_type
@@ -584,21 +584,27 @@ class TestResponse(WebServiceTestCase):
 
     def test_transform_request_with_file_url(self):
         base_url = self.base_url
-        url = base_url + "/repository/files"
-        response = requests.get(url)
-        response.raise_for_status()
-        response_json = response.json()
-        bundle_files = [file_data for hit in response_json['hits'] for file_data in hit['files']]
-        for file_data in bundle_files:
-            self.assertIn('url', file_data.keys())
-            actual_url = urllib.parse.urlparse(file_data['url'])
-            actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
-            expected_base_url = urllib.parse.urlparse(base_url)
-            self.assertEqual(expected_base_url.netloc, actual_url.netloc)
-            self.assertEqual(expected_base_url.scheme, actual_url.scheme)
-            self.assertIsNotNone(actual_url.path)
-            self.assertEqual('aws', actual_query_vars['replica'])
-            self.assertIsNotNone(actual_query_vars['version'])
+        for entity_type in ('files', 'bundles'):
+            with self.subTest(entity_type=entity_type):
+                url = base_url + f"/repository/{entity_type}"
+                response = requests.get(url)
+                response.raise_for_status()
+                response_json = response.json()
+                for hit in response_json['hits']:
+                    if entity_type == 'files':
+                        self.assertEqual(len(hit['files']), 1)
+                    else:
+                        self.assertGreater(len(hit['files']), 0)
+                    for file in hit['files']:
+                        self.assertIn('url', file.keys())
+                        actual_url = urllib.parse.urlparse(file['url'])
+                        actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
+                        expected_base_url = urllib.parse.urlparse(base_url)
+                        self.assertEqual(expected_base_url.netloc, actual_url.netloc)
+                        self.assertEqual(expected_base_url.scheme, actual_url.scheme)
+                        self.assertIsNotNone(actual_url.path)
+                        self.assertEqual('aws', actual_query_vars['replica'])
+                        self.assertIsNotNone(actual_query_vars['version'])
 
     def test_project_summary_cell_count(self):
         """
@@ -1347,7 +1353,7 @@ class TestResponse(WebServiceTestCase):
             }
         ]
         for test_data in test_data_sets:
-            for entity_type in 'files', 'samples', 'projects':
+            for entity_type in 'files', 'samples', 'projects', 'bundles':
                 with self.subTest(entity_type=entity_type):
                     url = self.base_url + "/repository/" + entity_type + "?size=2" \
                                           "&filters={'file':{'projectId':{'is':['" + test_data['id'] + "']}}}"
@@ -1367,7 +1373,7 @@ class TestResponse(WebServiceTestCase):
         """
         Test that sample(s) in the response contain values matching values in the source cellLine/organoid/specimen
         """
-        for entity_type in 'projects', 'samples', 'files':
+        for entity_type in 'projects', 'samples', 'files', 'bundles':
             with self.subTest(entity_type=entity_type):
                 url = self.base_url + "/repository/" + entity_type
                 response = requests.get(url)
@@ -1384,6 +1390,22 @@ class TestResponse(WebServiceTestCase):
                                             self.assertIn(one_val, hit[sample_entity_type][0][key])
                                     else:
                                         self.assertIn(val, hit[sample_entity_type][0][key])
+
+    def test_bundles_outer_entity(self):
+        entity_type = 'bundles'
+        url = self.base_url + "/repository/" + entity_type
+        response = requests.get(url)
+        response.raise_for_status()
+        response = response.json()
+        indexed_uuids = set(self.bundles)
+        self.assertEqual(len(self.bundles), len(indexed_uuids))
+        hits_uuids = {
+            (one(hit['bundles'])['bundleUuid'], one(hit['bundles'])['bundleVersion'])
+            for hit in response['hits']
+        }
+        self.assertEqual(len(response['hits']), len(hits_uuids))
+        self.assertSetEqual(indexed_uuids, hits_uuids)
+
 
 
 if __name__ == '__main__':
