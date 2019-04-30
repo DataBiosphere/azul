@@ -74,7 +74,7 @@ class IntegrationTest(unittest.TestCase):
             # only subset of indexed metadata, use unrestricted filter
             manifest_filter = {"file": {}}
         else:
-            manifest_filter = {"file": {"organ": {"is": ["brain", "Brain"]}, "fileFormat": {"is": ["bai"]}}}
+            manifest_filter = {"file": {"modelOrgan": {"is": ["brain", "Brain"]}, "fileFormat": {"is": ["bai"]}}}
 
         for format_, validator in [
             (None, self.check_manifest),
