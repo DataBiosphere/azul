@@ -12,7 +12,7 @@ def setUpModule():
 class RepositorySpecimenEndpointTest(WebServiceTestCase):
 
     def test_basic_response(self):
-        url = self.base_url + "/repository/specimens"
+        url = self.base_url + "/repository/samples"
         response = requests.get(url)
         response.raise_for_status()
         response_json = response.json()
@@ -30,7 +30,12 @@ class RepositorySpecimenEndpointTest(WebServiceTestCase):
             self.assertTrue('entryId' in hit)
             assert_file_type_summaries(hit)
             self.assertTrue('projects' in hit)
+            self.assertTrue('samples' in hit)
             self.assertTrue('specimens' in hit)
+            self.assertTrue('cellLines' in hit)
+            self.assertTrue('donorOrganisms' in hit)
+            self.assertTrue('organoids' in hit)
+            self.assertTrue('cellSuspensions' in hit)
             self.assertFalse('projectSummary' in hit)
             self.assertFalse('files' in hit)
         self.assertTrue('pagination' in response_json)
