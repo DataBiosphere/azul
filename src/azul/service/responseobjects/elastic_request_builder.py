@@ -120,11 +120,12 @@ class ElasticTransformDump(object):
             _field = '{}.keyword'.format(facet_config[agg])
         else:
             _field = facet_config[agg]
-        aggregate.bucket(
-            'myTerms',
-            'terms',
-            field=_field,
-            size=99999)
+        if agg == 'project':
+            _sub_field = request_config['translation']['projectId'] + '.keyword'
+            aggregate.bucket('myTerms', 'terms', field=_field, size=99999).bucket(
+                             'myProjectIds', 'terms', field=_sub_field, size=99999)
+        else:
+            aggregate.bucket('myTerms', 'terms', field=_field, size=99999)
         aggregate.bucket('untagged', 'missing', field=_field)
         if agg == "fileFormat":
             fileSizeField = request_config['translation']['fileSize']
@@ -383,14 +384,13 @@ class ElasticTransformDump(object):
             field=request_config['translation']['cellCount']
         )
 
-        for field, agg_name in (
-            ('specimenDocumentId', 'specimenCount'),
-            ('fileId', 'fileCount'),
-            ('organ', 'organCount'),
-            ('donorDocumentId', 'donorCount'),
-            ('lab', 'labCount'),
-            ('projectId', 'projectCount')):
-            cardinality = request_config['translation'][field]
+        for cardinality, agg_name in (
+            ('contents.specimens.document_id', 'specimenCount'),
+            ('contents.files.uuid', 'fileCount'),
+            ('contents.specimens.organ', 'organCount'),
+            ('contents.donors.document_id', 'donorCount'),
+            ('contents.projects.laboratory', 'labCount'),
+            ('contents.projects.document_id', 'projectCount')):
             es_search.aggs.metric(
                 agg_name, 'cardinality',
                 field='{}.keyword'.format(cardinality),
@@ -680,9 +680,7 @@ class ElasticTransformDump(object):
 
         field_mappings = request_config['translation']
         cart_item_config = request_config['cart-item']
-        fields = cart_item_config['bundles'] + cart_item_config[entity_type]
-
-        source_filter = [field_mappings[field] for field in fields]
+        source_filter = cart_item_config['bundles'] + cart_item_config[entity_type]
 
         es_search = self.create_request(filters,
                                         self.es_client,

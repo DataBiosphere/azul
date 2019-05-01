@@ -58,49 +58,49 @@ class FacetNameValidationTest(WebServiceTestCase):
                             }
                             self.assertEqual(response.json()['git'], expected_json)
 
-    def test_bad_single_filter_facet_of_specimen(self):
-        url = self.base_url + "/repository/specimens?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
+    def test_bad_single_filter_facet_of_sample(self):
+        url = self.base_url + "/repository/samples?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
-    def test_bad_multiple_filter_facet_of_specimen(self):
-        url = self.base_url + "/repository/specimens?from=1&size=1" \
+    def test_bad_multiple_filter_facet_of_sample(self):
+        url = self.base_url + "/repository/samples?from=1&size=1" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val']},'bad-facet2':{'is':['fake-val2']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
-    def test_mixed_multiple_filter_facet_of_specimen(self):
-        url = self.base_url + "/repository/specimens?from=1&size=1" \
+    def test_mixed_multiple_filter_facet_of_sample(self):
+        url = self.base_url + "/repository/samples?from=1&size=1" \
                               "&filters={'file':{'organPart':{'is':['fake-val']},'bad-facet':{'is':['fake-val']}}}"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
-    def test_bad_sort_facet_of_specimen(self):
-        url = self.base_url + "/repository/specimens?size=15&filters={}&sort=bad-facet&order=asc"
+    def test_bad_sort_facet_of_sample(self):
+        url = self.base_url + "/repository/samples?size=15&filters={}&sort=bad-facet&order=asc"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
 
-    def test_bad_sort_facet_and_filter_facet_of_specimen(self):
-        url = self.base_url + "/repository/specimens?size=15" \
+    def test_bad_sort_facet_and_filter_facet_of_sample(self):
+        url = self.base_url + "/repository/samples?size=15" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val']}}}&sort=bad-facet&order=asc"
 
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertTrue(response.json() in [self.sort_facet_message, self.filter_facet_message])
 
-    def test_valid_sort_facet_but_bad_filter_facet_of_specimen(self):
-        url = self.base_url + "/repository/specimens?size=15" \
+    def test_valid_sort_facet_but_bad_filter_facet_of_sample(self):
+        url = self.base_url + "/repository/samples?size=15" \
                               "&filters={'file':{'bad-facet':{'is':['fake-val']}}}&sort=organPart&order=asc"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
-    def test_bad_sort_facet_but_valid_filter_facet_of_specimen(self):
-        url = self.base_url + "/repository/specimens?size=15" \
+    def test_bad_sort_facet_but_valid_filter_facet_of_sample(self):
+        url = self.base_url + "/repository/samples?size=15" \
                               "&filters={'file':{'organPart':{'is':['fake-val2']}}}&sort=bad-facet&order=asc"
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.json())
@@ -231,19 +231,29 @@ class FacetNameValidationTest(WebServiceTestCase):
                             ('project.project_core.project_short_name', 'Mouse Melanoma', 'Mouse Melanoma'),
                             ('project.project_core.project_title', 'Melanoma infiltration of stromal and immune cells',
                              'Melanoma infiltration of stromal and immune cells'),
-                            ('donor_organism.sex', '', 'female'),
-                            ('donor_organism.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
                             ('specimen_from_organism.provenance.document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
-                                                                                  ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
+                             ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
                             ('specimen_from_organism.diseases', '', ''),
-                            ('specimen_from_organism.biomaterial_core.biomaterial_id', '', '1209'),
-                            ('donor_organism.provenance.document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
-                            ('donor_organism.genus_species', '', 'Mus musculus'),
                             ('specimen_from_organism.organ', '', 'brain || tumor'),
                             ('specimen_from_organism.organ_part', '', ''),
+                            ('specimen_from_organism.preservation_storage.preservation_method', '', ''),
+                            ('donor_organism.sex', '', 'female'),
+                            ('donor_organism.biomaterial_core.biomaterial_id', '', '1209'),
+                            ('donor_organism.provenance.document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
+                            ('donor_organism.genus_species', '', 'Mus musculus'),
+                            ('donor_organism.diseases', '', 'subcutaneous melanoma'),
                             ('donor_organism.organism_age', '', '6-12'),
                             ('donor_organism.organism_age_unit', '', 'week'),
-                            ('specimen_from_organism.preservation_storage.preservation_method', '', '')
+                            ('cell_line.provenance.document_id', '', ''),
+                            ('cell_line.biomaterial_core.biomaterial_id', '', ''),
+                            ('organoid.provenance.document_id', '', ''),
+                            ('organoid.biomaterial_core.biomaterial_id', '', ''),
+                            ('organoid.model_organ', '', ''),
+                            ('organoid.model_organ_part', '', ''),
+                            ('_entity_type', '', 'specimens'),
+                            ('*.provenance.document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
+                             ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
+                            ('*.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
                         ]
 
                         expected_fieldnames, expected_pdf_row, expected_fastq_row = map(list, zip(*expected))
@@ -301,18 +311,19 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'project-contributors-laboratory': '',
                         'project-project_core-project_short_name': 'integration/Smart-seq2/2018-10-10T02:23:36Z',
                         'project-project_core-project_title': 'Q4_DEMO-Single cell RNA-seq of primary human glioblastomas',
-                        'donor_organism-sex': 'unknown',
-                        'donor_organism-biomaterial_core-biomaterial_id': 'Q4_DEMO-sample_SAMN02797092',
                         'specimen_from_organism-provenance-document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
                         'specimen_from_organism-diseases': 'glioblastoma',
-                        'specimen_from_organism-biomaterial_core-biomaterial_id': 'Q4_DEMO-donor_MGH30',
-                        'donor_organism-provenance-document_id': '242e38d2-c975-47ee-800a-6645b47e92d2',
-                        'donor_organism-genus_species': 'Homo sapiens',
+                        'specimen_from_organism-biomaterial_core-biomaterial_id': 'Q4_DEMO-sample_SAMN02797092',
                         'specimen_from_organism-organ': 'brain',
                         'specimen_from_organism-organ_part': 'temporal lobe',
+                        'specimen_from_organism-preservation_storage-preservation_method': '',
+                        'donor_organism-sex': 'unknown',
+                        'donor_organism-biomaterial_core-biomaterial_id': 'Q4_DEMO-donor_MGH30',
+                        'donor_organism-provenance-document_id': '242e38d2-c975-47ee-800a-6645b47e92d2',
+                        'donor_organism-genus_species': 'Homo sapiens',
+                        'donor_organism-diseases': '',
                         'donor_organism-organism_age': '',
                         'donor_organism-organism_age_unit': '',
-                        'specimen_from_organism-preservation_storage-preservation_method': '',
                         'bam[0]-file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_qc.bam',
                         'bam[0]-file_format': 'bam',
                         'bam[0]-read_index': '',
@@ -321,8 +332,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'bam[0]-file_version': '2018-10-10T031035.284782Z',
                         'bam[0]-file_sha256': 'e3cd90d79f520c0806dddb1ca0c5a11fbe26ac0c0be983ba5098d6769f78294c',
                         'bam[0]-file_content_type': 'application/gzip; dcp-type=data',
-                        'bam[0]-file_url': f'{dss}/files/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z&replica=gcp',
                         'bam[0]-dos_url': f'dos://{service}/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z',
+                        'bam[0]-file_url': f'{dss}/files/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z&replica=gcp',
                         'bam[1]-file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_rsem.bam',
                         'bam[1]-file_format': 'bam',
                         'bam[1]-read_index': '',
@@ -331,10 +342,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'bam[1]-file_version': '2018-10-10T031035.971561Z',
                         'bam[1]-file_sha256': 'f25053412d65429cefc0157c0d18ae12d4bf4c4113a6af7a1820b62246c075a4',
                         'bam[1]-file_content_type': 'application/gzip; dcp-type=data',
-                        'bam[1]-file_url': f'{dss}/files/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z&replica=gcp',
                         'bam[1]-dos_url': f'dos://{service}/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z',
-                        'fastq[read1]-file_url': f'{dss}/files/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z&replica=gcp',
-                        'fastq[read1]-dos_url': f'dos://{service}/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z',
+                        'bam[1]-file_url': f'{dss}/files/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z&replica=gcp',
                         'fastq[read1]-file_name': 'R1.fastq.gz',
                         'fastq[read1]-file_format': 'fastq.gz',
                         'fastq[read1]-read_index': 'read1',
@@ -343,8 +352,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'fastq[read1]-file_version': '2018-10-10T023811.612423Z',
                         'fastq[read1]-file_sha256': 'fe6d4fdfea2ff1df97500dcfe7085ac3abfb760026bff75a34c20fb97a4b2b29',
                         'fastq[read1]-file_content_type': 'application/gzip; dcp-type=data',
-                        'fastq[read2]-file_url': f'{dss}/files/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z&replica=gcp',
-                        'fastq[read2]-dos_url': f'dos://{service}/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z',
+                        'fastq[read1]-file_url': f'{dss}/files/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z&replica=gcp',
+                        'fastq[read1]-dos_url': f'dos://{service}/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z',
                         'fastq[read2]-file_name': 'R2.fastq.gz',
                         'fastq[read2]-file_format': 'fastq.gz',
                         'fastq[read2]-read_index': 'read2',
@@ -352,7 +361,9 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'fastq[read2]-file_uuid': 'b764ce7d-3938-4451-b68c-678feebc8f2a',
                         'fastq[read2]-file_version': '2018-10-10T023811.851483Z',
                         'fastq[read2]-file_sha256': 'c305bee37b3c3735585e11306272b6ab085f04cd22ea8703957b4503488cfeba',
-                        'fastq[read2]-file_content_type': 'application/gzip; dcp-type=data'
+                        'fastq[read2]-file_content_type': 'application/gzip; dcp-type=data',
+                        'fastq[read2]-file_url': f'{dss}/files/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z&replica=gcp',
+                        'fastq[read2]-dos_url': f'dos://{service}/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z',
                     }),
                     freeze({
                         'entity:bundle_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
@@ -367,18 +378,19 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'project-contributors-laboratory': 'John Dear',
                         'project-project_core-project_short_name': 'Single of human pancreas',
                         'project-project_core-project_title': 'Single cell transcriptome patterns.',
-                        'donor_organism-sex': 'female',
-                        'donor_organism-biomaterial_core-biomaterial_id': 'DID_scRSq06_pancreas',
                         'specimen_from_organism-provenance-document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
                         'specimen_from_organism-diseases': 'normal',
-                        'specimen_from_organism-biomaterial_core-biomaterial_id': 'DID_scRSq06',
-                        'donor_organism-provenance-document_id': '7b07b9d0-cc0e-4098-9f64-f4a569f7d746',
-                        'donor_organism-genus_species': 'Australopithecus',
+                        'specimen_from_organism-biomaterial_core-biomaterial_id': 'DID_scRSq06_pancreas',
                         'specimen_from_organism-organ': 'pancreas',
                         'specimen_from_organism-organ_part': 'islet of Langerhans',
+                        'specimen_from_organism-preservation_storage-preservation_method': '',
+                        'donor_organism-sex': 'female',
+                        'donor_organism-biomaterial_core-biomaterial_id': 'DID_scRSq06',
+                        'donor_organism-provenance-document_id': '7b07b9d0-cc0e-4098-9f64-f4a569f7d746',
+                        'donor_organism-genus_species': 'Australopithecus',
+                        'donor_organism-diseases': 'normal',
                         'donor_organism-organism_age': '38',
                         'donor_organism-organism_age_unit': 'year',
-                        'specimen_from_organism-preservation_storage-preservation_method': '',
                         'bam[0]-file_name': '',
                         'bam[0]-file_format': '',
                         'bam[0]-read_index': '',
@@ -407,8 +419,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'fastq[read1]-file_version': '2018-11-02T113344.698028Z',
                         'fastq[read1]-file_sha256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
                         'fastq[read1]-file_content_type': 'application/gzip; dcp-type=data',
-                        'fastq[read1]-file_url': f'{dss}/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z&replica=gcp',
                         'fastq[read1]-dos_url': f'dos://{service}/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z',
+                        'fastq[read1]-file_url': f'{dss}/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z&replica=gcp',
                         'fastq[read2]-file_name': 'SRR3562915_2.fastq.gz',
                         'fastq[read2]-file_format': 'fastq.gz',
                         'fastq[read2]-read_index': 'read2',
@@ -417,8 +429,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'fastq[read2]-file_version': '2018-11-02T113344.450442Z',
                         'fastq[read2]-file_sha256': '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
                         'fastq[read2]-file_content_type': 'application/gzip; dcp-type=data',
-                        'fastq[read2]-file_url': f'{dss}/files/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z&replica=gcp',
                         'fastq[read2]-dos_url': f'dos://{service}/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z',
+                        'fastq[read2]-file_url': f'{dss}/files/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z&replica=gcp',
                     })
                 }, set(freeze(row) for row in reader))
                 self.assertEqual([
@@ -434,18 +446,19 @@ class FacetNameValidationTest(WebServiceTestCase):
                     'project-contributors-laboratory',
                     'project-project_core-project_short_name',
                     'project-project_core-project_title',
-                    'donor_organism-sex',
-                    'donor_organism-biomaterial_core-biomaterial_id',
                     'specimen_from_organism-provenance-document_id',
                     'specimen_from_organism-diseases',
                     'specimen_from_organism-biomaterial_core-biomaterial_id',
-                    'donor_organism-provenance-document_id',
-                    'donor_organism-genus_species',
                     'specimen_from_organism-organ',
                     'specimen_from_organism-organ_part',
+                    'specimen_from_organism-preservation_storage-preservation_method',
+                    'donor_organism-sex',
+                    'donor_organism-biomaterial_core-biomaterial_id',
+                    'donor_organism-provenance-document_id',
+                    'donor_organism-genus_species',
+                    'donor_organism-diseases',
                     'donor_organism-organism_age',
                     'donor_organism-organism_age_unit',
-                    'specimen_from_organism-preservation_storage-preservation_method',
                     'bam[0]-file_name',
                     'bam[0]-file_format',
                     'bam[0]-read_index',
@@ -487,3 +500,10 @@ class FacetNameValidationTest(WebServiceTestCase):
                     'fastq[read2]-dos_url',
                     'fastq[read2]-file_url',
                 ], reader.fieldnames)
+
+    def test_manifest_format_validation(self):
+        for manifest_endpoint in '/manifest/files', '/repository/files/export':
+            with self.subTest(manifest_endpoint=manifest_endpoint):
+                url = self.base_url + f'{manifest_endpoint}?format=invalid-type'
+                response = requests.get(url)
+                self.assertEqual(400, response.status_code, response.content)

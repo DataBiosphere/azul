@@ -46,8 +46,8 @@ class TestDataExtractorTestCase(IndexerTestCase):
                 self.assertEqual(3 if aggregate else 6, total_projects["count"])
                 total_files = self.es_client.count(index=index_name('files'), doc_type='doc')
                 self.assertEqual(776, total_files["count"])
-                total_specimens = self.es_client.count(index=index_name('specimens'), doc_type='doc')
-                self.assertEqual(129, total_specimens["count"])
+                total_samples = self.es_client.count(index=index_name('samples'), doc_type='doc')
+                self.assertEqual(129, total_samples["count"])
 
     # When two processes point at a file (this is the case for most files in production)
     # there was a bug where the files index contains duplicate dictionaries for the file.
@@ -59,7 +59,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
             with self.subTest(aggregate=aggregate):
                 entity_id = 'b3623b88-c369-46c9-a2e9-a16042d2c589'
                 document_id = entity_id if aggregate else Contribution.make_document_id(entity_id, *bundle_fqid)
-                result = self.es_client.get(index=config.es_index_name('specimens', aggregate=aggregate),
+                result = self.es_client.get(index=config.es_index_name('samples', aggregate=aggregate),
                                             id=document_id)
                 files = result['_source']['contents']['files']
                 num_files = 2  # fastqs

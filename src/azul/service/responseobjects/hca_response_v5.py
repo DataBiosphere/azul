@@ -693,35 +693,96 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             files.append(translated_file)
         return files
 
+    def make_specimen(self, specimen):
+        return {
+            "id": specimen["biomaterial_id"],
+            "organ": specimen.get("organ", None),
+            "organPart": specimen.get("organ_part", None),
+            "disease": specimen.get("disease", None),
+            "preservationMethod": specimen.get("preservation_method", None),
+            "source": specimen.get("_source", None)
+        }
+
     def make_specimens(self, entry):
-        specimens = []
-        for specimen in entry["contents"]["specimens"]:
-            translated_specimen = {
-                "id": (specimen["biomaterial_id"]),
-                "genusSpecies": specimen.get("genus_species", None),
-                "organ": specimen.get("organ", None),
-                "organPart": specimen.get("organ_part", None),
-                "organismAge": specimen.get("organism_age", None),
-                "organismAgeUnit": specimen.get("organism_age_unit", None),
-                "biologicalSex": specimen.get("biological_sex", None),
-                "disease": specimen.get("disease", None),
-                "preservationMethod": specimen.get("preservation_method", None),
-                "source": specimen.get("_source", None)
-            }
-            specimens.append(translated_specimen)
-        return specimens
+        return [self.make_specimen(specimen) for specimen in entry["contents"]["specimens"]]
+
+    def make_cell_suspension(self, cell_suspension):
+        return {
+            "organ": cell_suspension.get("organ", None),
+            "organPart": cell_suspension.get("organ_part", None),
+            "selectedCellType": cell_suspension.get("selected_cell_type", None),
+            "totalCells": cell_suspension.get("total_estimated_cells", None)
+        }
 
     def make_cell_suspensions(self, entry):
-        specimens = []
-        for cell_suspension in entry["contents"]["cell_suspensions"]:
-            translated_specimen = {
-                "organ": cell_suspension.get("organ", None),
-                "organPart": cell_suspension.get("organ_part", None),
-                "selectedCellType": cell_suspension.get("selected_cell_type", None),
-                "totalCells": cell_suspension.get("total_estimated_cells", None)
+        return [self.make_cell_suspension(cs) for cs in entry["contents"]["cell_suspensions"]]
+
+    def make_cell_line(self, cell_line):
+        return {
+            "id": cell_line["biomaterial_id"],
+        }
+
+    def make_cell_lines(self, entry):
+        return [self.make_cell_line(cell_line) for cell_line in entry["contents"]["cell_lines"]]
+
+    def make_donor(self, donor):
+        return {
+            "id": donor["biomaterial_id"],
+            "genusSpecies": donor.get("genus_species", None),
+            "organismAge": donor.get("organism_age", None),
+            "organismAgeUnit": donor.get("organism_age_unit", None),
+            "biologicalSex": donor.get("biological_sex", None),
+            "disease": donor.get("disease", None)
+        }
+
+    def make_donors(self, entry):
+        return [self.make_donor(donor) for donor in entry["contents"]["donors"]]
+
+    def make_organoid(self, organoid):
+        return {
+            "id": organoid["biomaterial_id"],
+            "modelOrgan": organoid.get("model_organ", None),
+            "modelOrganPart": organoid.get("model_organ_part", None)
+        }
+
+    def make_organoids(self, entry):
+        return [self.make_organoid(organoid) for organoid in entry["contents"]["organoids"]]
+
+    # Map keys in the contents dict to keys in the response HitEntry
+    sample_entity_types = {
+        'cell_lines': 'cellLines',
+        'organoids': 'organoids',
+        'specimens': 'specimens',
+    }
+
+    # Map keys in the contents dict to the related make_... function
+    sample_entity_make_functions = {
+        'cell_lines': make_cell_line,
+        'organoids': make_organoid,
+        'specimens': make_specimen,
+    }
+
+    def make_sample(self, sample):
+        if isinstance(sample['entity_type'], list):
+            sample_dict = {'sampleEntityType': []}
+            for entity_type in sample['entity_type']:
+                sample_entity_type = self.sample_entity_types[entity_type]
+                sample_dict['sampleEntityType'].append(sample_entity_type)
+                entity_make_function = self.sample_entity_make_functions[entity_type]
+                entity_dict = entity_make_function(self, sample)
+                sample_dict.update(entity_dict)
+        else:
+            entity_type = sample['entity_type']
+            sample_entity_type = self.sample_entity_types[entity_type]
+            entity_make_function = self.sample_entity_make_functions[entity_type]
+            sample_dict = {
+                "sampleEntityType": sample_entity_type,
+                **entity_make_function(self, sample)
             }
-            specimens.append(translated_specimen)
-        return specimens
+        return sample_dict
+
+    def make_samples(self, entry):
+        return [self.make_sample(sample) for sample in entry["contents"]["samples"]]
 
     def map_entries(self, entry):
         """
@@ -740,7 +801,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         return HitEntry(protocols=self.make_protocols(entry),
                         entryId=entry["entity_id"],
                         projects=self.make_projects(entry),
+                        samples=self.make_samples(entry),
                         specimens=self.make_specimens(entry),
+                        cellLines=self.make_cell_lines(entry),
+                        donorOrganisms=self.make_donors(entry),
+                        organoids=self.make_organoids(entry),
                         cellSuspensions=self.make_cell_suspensions(entry),
                         **kwargs)
 
@@ -799,9 +864,12 @@ class FileSearchResponse(KeywordSearchResponse):
             else:
                 return _term['key']
 
-        term_list = [TermObj(**{'term': choose_entry(term),
-                                'count': term['doc_count']})
-                     for term in contents['myTerms']['buckets']]
+        term_list = []
+        for term in contents['myTerms']['buckets']:
+            term_object_params = {'term': choose_entry(term), 'count': term['doc_count']}
+            if 'myProjectIds' in term:
+                term_object_params['projectId'] = [bucket['key'] for bucket in term['myProjectIds']['buckets']]
+            term_list.append(TermObj(**term_object_params))
 
         # Add 'unspecified' term if there is at least one unlabelled document
         untagged_count = contents['untagged']['doc_count']
