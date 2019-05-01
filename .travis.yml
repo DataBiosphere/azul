@@ -17,15 +17,14 @@ before_install:
 install:
   - pip install -U setuptools==40.1.0 wheel==0.32.3
   - pip install -r requirements.dev.txt
-  - pip install coveralls codecov
-  - pip install trufflehog
+  - pip install coveralls codecov trufflehog
 
 script:
   # Travis VM images contain a /etc/boto.cfg which ultimately causes moto to look for the Python bindings for GCE.
   # Setting BOTO_CONFIG seems to override that.
   - export BOTO_CONFIG=/dev/null
+  - make trufflehog
   - make test
-  - trufflehog --regex --rules trufflehog-rules.json --entropy=False file:///home/travis/build/DataBiosphere/azul
 
 after_success:
   - coveralls
