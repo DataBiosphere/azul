@@ -165,7 +165,7 @@ class CartItemManager:
                                                _source_include=['contents.files.uuid',  # data file UUID
                                                                 'contents.files.version',  # data file version
                                                                 'contents.projects.document_id',  # metadata file UUID
-                                                                'contents.specimens.document_id',  # metadata file UUID
+                                                                'contents.samples.document_id',   # metadata file UUID
                                                                 ]
                                                )['_source']
             normalized_entity = self.extract_entity_info(entity_type, entity)
@@ -181,11 +181,11 @@ class CartItemManager:
         if entity_type == 'files':
             normalized_entity.update(dict(uuid=content['uuid'],
                                           version=content['version']))
-        elif entity_type in ('specimens', 'projects'):
+        elif entity_type in ('samples', 'projects'):
             print(content)
             normalized_entity['uuid'] = content['document_id']
         else:
-            raise ValueError('entity_type must be one of files, specimens, or projects')
+            raise ValueError('entity_type must be one of files, samples, or projects')
         return normalized_entity
 
     @staticmethod
