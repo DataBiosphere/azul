@@ -639,6 +639,8 @@ least once already._
    ```
    git clone git@github.com:DataBiosphere/azul.git azul.stable
    ```
+   
+   Then follow the setup instructions in [1.3 Project configuration](#13-project-configuration).
 
 2. Next you will need to login to our [Gitlab instance] in order to be able to
    push to Gitlab which automatically takes care of most of the deployment
@@ -677,26 +679,10 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
 
 [DCP release SOP]: https://allspark.dev.data.humancellatlas.org/dcp-ops/docs/wikis/SOP:%20Releasing%20new%20Versions%20of%20DCP%20Software
 
-1. If promoting to `staging` or `prod` you will need to prepare release notes.
-   Make sure you do this **at least 24 hours in advance**. A link to the release
-   notes document can be found either in the #dcp-ops channel on HCA Slack or in
-   the Google Drive folder mentioned in the [DCP release SOP].
+_NOTE: If promoting to `staging` or `prod` you will need to do these steps **at least
+24 hours in advance** so that the release notes are ready in time._
 
-   To produce the list of changes for the DCP release notes, run
-
-   ```
-   git log --pretty=oneline --topo-order --abbrev-commit
-   ```
-
-   All non-merge commits from the top down to the commit labeled with the most
-   recent `deployed/…` tag represent changes to be deployed and should be
-   mentioned in the release notes. Copy them over, but remember to remove commit
-   hashes and tag / branch names.
-
-   You will also need to add the release tag and commit hash which are generated
-   later in this guide.
-
-2. From the `azul.stable` clone make sure all of the relevant branches are up to
+1. From the `azul.stable` clone make sure all of the relevant branches are up to
    date
 
    ```
@@ -707,7 +693,7 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
    git pull
    ```
 
-3. You should be on the `TARGET` branch. Run
+2. You should be on the `TARGET` branch. Run
 
    ```
    git merge --no-ff SOURCE
@@ -716,10 +702,43 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
    and resolve conflicts in necessary. Conflict resolution should only be
    necessary if cherry-picks occured on the target branch.
 
-4. The merge may have affected `README.md`, the file you are looking at right
+3. The merge may have affected `README.md`, the file you are looking at right
    now. Reopen the file now to ensure you are following the updated version.
 
+4. Now you need to create the release notes. (Skip this step if no link to the release
+   notes document can be found either in the #dcp-ops channel on HCA Slack or in
+   the Google Drive folder mentioned in the [DCP release SOP].
+
+   To produce the list of changes for the DCP release notes, first find the
+   previous release tag for the TARGET branch. Then run:
+
+   ```
+   git LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --no-merges
+   ```
+
+   You will also need to add the release tag and commit hash which are generated
+   later in this guide.
+
+5. At this point you should determine whether or not you will need to reindex.
+   The `CHANGELOG.yml` _should_ contain this information but is notoriously
+   unreliable. Try running
+
+   ```
+   git diff LAST_RELEASE_TAG..HEAD src/azul/project/ src/azul/indexer.py src/azul/plugin.py
+   ```
+
+   where `LAST_RELEASE_TAG` is the previous release of the target branch. If the diff
+   contains non-trivial changes reindexing is probably necessary. When in doubt
+   assume yes. Announce your conclusion in the 
+   [#data-wrangling](https://humancellatlas.slack.com/messages/C9ENBPVNW)
+   (this should be done before 5pm Pacific, Monday for staging and Tuesday for
+   production).
+
 ### 6.1.3 Finishing up deployment / promotion
+
+If promoting to staging or production this part of the process should be
+coordinated on the [#dcp-ops](https://humancellatlas.slack.com/messages/G9XD6L0AD)
+Slack channel. 
 
 1. Now you need to push the current branch to Github. This is needed because the
    Gitlab build performs a status check update on Github. This would fail if
@@ -737,25 +756,19 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
 
    The build should start immediately. You can monitor its progress from the
    [Gitlab Pipelines page](https://gitlab.dev.explore.data.humancellatlas.org/azul/azul/pipelines).
+   
+   If reindexing and promoting to staging or production, send a second 
+   warning about reindexing to the #data-wrangling channel at this point.
 
-3. Assuming the build is successful, run
-
+3. Activate your virtual environment and run
    ```
-   make tag
+   source environment
    ```
-
-   and the
-
+   and then select the correct deployment stage with
    ```
-   git push ...
+   _select STAGE
    ```
-
-   invocation that it echoes.
-
-   Copy this tag and add it to the release notes (if applicable).
-
-   If the build fails, you may need to revert the offending commits and push
-   again.
+   where stage is one of `dev`, `integration`, `staging`, or `prod`
 
 4. Invoke the health and version endpoints.
 
@@ -795,10 +808,32 @@ _NOTE: Skip these steps if you are deploying without promoting changes._
      http https://service.explore.data.humancellatlas.org/health
      ```
 
-5. Look at the history of `CHANGELOG.yml` since the last release to determine
-   when reindexing is necessary. When in doubt assume yes. In that case run the
-   manual `reindex` job on the Gitlab pipeline representing the most recent
-   build on the current branch.
+5. Assuming everything is successful, run
+
+   ```
+   make tag
+   ```
+
+   and the
+
+   ```
+   git push ...
+   ```
+
+   invocation that it echoes.
+
+   Copy this tag and add it to the release notes (if applicable).
+
+   If the build fails, you may need to revert the offending commits and push
+   again.
+
+6. In the case that you need to reindex run the manual `reindex` job on the 
+   Gitlab pipeline representing the most recent build on the current branch.
+
+7. Once reindexing is complete announce this in the #data-wranging Slack
+   channel. Reindexing is complete when the health endpoint has shown that
+   the number of `unindexed_bundles` and `unindexed_documents` is zero and
+   has remained zero for at least five minutes.
 
 ## 6.2 Big red button
 
