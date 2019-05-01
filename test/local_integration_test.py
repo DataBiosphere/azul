@@ -24,6 +24,7 @@ from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
 from azul.requests import requests_session
 from azul import drs
+from azul.service.responseobjects.hca_response_v5 import ManifestResponse
 
 logger = logging.getLogger(__name__)
 
@@ -51,18 +52,25 @@ class IntegrationTest(unittest.TestCase):
 
     def test_webservice_and_indexer(self):
         if config.deployment_stage != 'prod':
-            test_uuid = str(uuid.uuid4())
-            test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
-            logger.info('Starting test using test name, %s ...', test_name)
+            test_name = self._test_indexing()
+            self._test_manifest(test_name)
+            self._test_drs(test_name)
+        self._test_other_endpoints()
 
-            azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
-                                     test_name=test_name,
-                                     prefix=self.bundle_uuid_prefix)
-            logger.info('Creating indices and reindexing ...')
-            selected_bundle_fqids = azul_client.reindex()
-            self.num_bundles = len(selected_bundle_fqids)
-            self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
+    def _test_indexing(self) -> str:
+        test_uuid = str(uuid.uuid4())
+        test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
+        logger.info('Starting test using test name, %s ...', test_name)
+        azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
+                                 test_name=test_name,
+                                 prefix=self.bundle_uuid_prefix)
+        logger.info('Creating indices and reindexing ...')
+        selected_bundle_fqids = azul_client.reindex()
+        self.num_bundles = len(selected_bundle_fqids)
+        self.check_bundles_are_indexed(test_name, 'files', set(selected_bundle_fqids))
+        return test_name
 
+    def _test_other_endpoints(self):
         self.check_endpoint_is_working(config.indexer_endpoint(), '/health')
         self.check_endpoint_is_working(config.service_endpoint(), '/')
         self.check_endpoint_is_working(config.service_endpoint(), '/health')
@@ -70,12 +78,8 @@ class IntegrationTest(unittest.TestCase):
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
 
-        if config.dss_query_prefix:
-            # only subset of indexed metadata, use unrestricted filter
-            manifest_filter = {"file": {}}
-        else:
-            manifest_filter = {"file": {"modelOrgan": {"is": ["brain", "Brain"]}, "fileFormat": {"is": ["bai"]}}}
-
+    def _test_manifest(self, test_name: str):
+        manifest_filter = {"file": {"project": {"is": [test_name]}}}
         for format_, validator in [
             (None, self.check_manifest),
             ('tsv', self.check_manifest),
@@ -89,12 +93,18 @@ class IntegrationTest(unittest.TestCase):
                     response = self.check_endpoint_is_working(config.service_endpoint(), path, query)
                     validator(response)
 
-        filters = {"file": {"organ": {"is": ["brain", "Brain"]}, "fileFormat": {"is": ["fastq.gz"]}}}
-        response_with_file_uuid = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
-                                                                 path='/repository/files',
-                                                                 query={'filters': filters, 'size': 15,
-                                                                        'order': 'asc', 'sort': 'fileSize'})
-        file_uuid = self._get_file_uuid(response_with_file_uuid)
+    def _test_drs(self, test_name):
+        filters = {"file": {"project": {"is": [test_name]}, "fileFormat": {"is": ["fastq.gz", "fastq"]}}}
+        response = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
+                                                  path='/repository/files',
+                                                  query={
+                                                      'filters': filters,
+                                                      'size': 1,
+                                                      'order': 'asc',
+                                                      'sort': 'fileSize'
+                                                  })
+        hits = json.loads(response)
+        file_uuid = one(one(hits['hits'])['files'])['uuid']
         drs_endpoint = drs.drs_http_object_path(file_uuid)
         self.download_file_from_drs_response(self.check_endpoint_is_working(config.service_endpoint(), drs_endpoint))
 
@@ -120,24 +130,29 @@ class IntegrationTest(unittest.TestCase):
         return response.content
 
     def check_manifest(self, response: bytes):
-        self._check_manifest(BytesIO(response), 'bundle_uuid')
+        self._check_manifest(BytesIO(response), 'bundle_uuid', allow_multiple_uuid=True)
 
     def check_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'samples.tsv')
             with zip_fh.open(file_path) as file:
-                self._check_manifest(file, 'entity:bundle_id')
+                self._check_manifest(file, 'entity:bundle_id', allow_multiple_uuid=False)
 
-    def _check_manifest(self, file: IO[bytes], uuid_field_name: str):
+    def _check_manifest(self, file: IO[bytes], uuid_field_name: str, allow_multiple_uuid: bool):
         text = TextIOWrapper(file)
         reader = csv.DictReader(text, delimiter='\t')
         rows = list(reader)
         logger.info(f'Manifest contains {len(rows)} rows.')
         self.assertGreater(len(rows), 0)
         self.assertIn(uuid_field_name, reader.fieldnames)
-        bundle_uuid = rows[0][uuid_field_name]
-        self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
+        if allow_multiple_uuid:
+            bundle_uuids = rows[0][uuid_field_name].split(ManifestResponse.column_joiner)
+            self.assertGreater(len(bundle_uuids), 0)
+        else:
+            bundle_uuids = [rows[0][uuid_field_name]]
+        for bundle_uuid in bundle_uuids:
+            self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
 
     def download_file_from_drs_response(self, response: bytes):
         json_data = json.loads(response)['data_object']
@@ -258,5 +273,4 @@ class IntegrationTest(unittest.TestCase):
     @classmethod
     def _get_file_uuid(cls, response: bytes) -> str:
         """Returns file UUID of first FASTQ file."""
-        hits = json.loads(response)
-        return first(first(hits['hits'])['files'])['uuid']
+
