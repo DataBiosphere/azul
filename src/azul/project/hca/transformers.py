@@ -3,7 +3,6 @@ import logging
 from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
 
 from humancellatlas.data.metadata import api
-from humancellatlas.data.metadata.helpers.json import as_json
 
 from azul import reject
 from azul.transformer import (Accumulator,
@@ -25,6 +24,24 @@ from azul.types import JSON
 log = logging.getLogger(__name__)
 
 Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
+
+
+def _contact_dict(p: api.ProjectContact):
+    return {
+        "contact_name": p.contact_name,
+        "corresponding_contributor": p.corresponding_contributor,
+        "email": p.email,
+        "institution": p.institution,
+        "laboratory": p.laboratory,
+        "project_role": p.project_role
+    }
+
+
+def _publication_dict(p: api.ProjectPublication):
+    return {
+        "publication_title": p.publication_title,
+        "publication_url": p.publication_url
+    }
 
 
 def _project_dict(project: api.Project) -> JSON:
@@ -54,14 +71,14 @@ def _project_dict(project: api.Project) -> JSON:
         'laboratory': list(laboratories),
         'institutions': list(institutions),
         'contact_names': list(contact_names),
-        'contributors': as_json(project.contributors),
+        'contributors': [_contact_dict(c) for c in project.contributors],
         'document_id': str(project.document_id),
         'publication_titles': list(publication_titles),
-        'publications': as_json(project.publications),
-        'insdc_project_accessions': as_json(project.insdc_project_accessions),
-        'geo_series_accessions': as_json(project.geo_series_accessions),
-        'array_express_accessions': as_json(project.array_express_accessions),
-        'insdc_study_accessions': as_json(project.insdc_study_accessions),
+        'publications': [_publication_dict(p) for p in project.publications],
+        'insdc_project_accessions': list(project.insdc_project_accessions),
+        'geo_series_accessions': list(project.geo_series_accessions),
+        'array_express_accessions': list(project.array_express_accessions),
+        'insdc_study_accessions': list(project.insdc_study_accessions),
         '_type': 'project'
     }
 
@@ -72,9 +89,9 @@ def _specimen_dict(specimen: api.SpecimenFromOrganism) -> JSON:
         '_source': api.schema_names[type(specimen)],
         'document_id': str(specimen.document_id),
         'biomaterial_id': specimen.biomaterial_id,
-        'disease': as_json(specimen.diseases),
+        'disease': list(specimen.diseases),
         'organ': specimen.organ,
-        'organ_part': as_json(specimen.organ_parts),
+        'organ_part': list(specimen.organ_parts),
         'storage_method': specimen.storage_method,
         'preservation_method': specimen.preservation_method,
         '_type': 'specimen',
@@ -101,8 +118,8 @@ def _donor_dict(donor: api.DonorOrganism) -> JSON:
         'document_id': str(donor.document_id),
         'biomaterial_id': donor.biomaterial_id,
         'biological_sex': donor.sex,
-        'genus_species': as_json(donor.genus_species),
-        'diseases': as_json(donor.diseases),
+        'genus_species': list(donor.genus_species),
+        'diseases': list(donor.diseases),
         'organism_age': donor.organism_age,
         'organism_age_unit': donor.organism_age_unit,
         **(
