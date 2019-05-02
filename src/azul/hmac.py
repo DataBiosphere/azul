@@ -1,15 +1,18 @@
+import logging
+
 import chalice
 import requests
 from requests_http_signature import HTTPSignatureAuth
 
-from azul import config
 from azul.deployment import aws
 
+logger = logging.getLogger(__name__)
 
 def verify(current_request):
     try:
         current_request.headers['authorization']
-    except KeyError:
+    except KeyError as e:
+        logger.warning('Missing authorization header: ', exc_info=e)
         chalice.UnauthorizedError('Not Authorized')
 
     base_url = current_request.headers['host']
@@ -24,7 +27,8 @@ def verify(current_request):
     try:
         HTTPSignatureAuth.verify(requests.Request(method, endpoint, headers),
                                  key_resolver=key_resolver)
-    except BaseException:
+    except BaseException as e:
+        logger.warning('Exception while validating HMAC: ', exc_info=e)
         raise chalice.UnauthorizedError('Invalid authorization credentials')
 
 
