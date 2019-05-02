@@ -584,15 +584,16 @@ class ProjectSummaryResponse(AbstractResponse):
         return total_cell_count, organ_cell_count
 
     def __init__(self, es_hit_contents):
-        specimen_accumulators = {
-            'donor_biomaterial_id': SetAccumulator(),
-            'genus_species': SetAccumulator(),
-            'disease': SetAccumulator()
-        }
+
+        disease_accumulator = SetAccumulator()
         for specimen in es_hit_contents['specimens']:
-            for property_name, accumulator in specimen_accumulators.items():
-                if property_name in specimen:
-                    accumulator.accumulate(specimen[property_name])
+            disease_accumulator.accumulate(specimen['disease'])
+
+        donor_accumulator = SetAccumulator()
+        genus_species_accumulator = SetAccumulator()
+        for donor in es_hit_contents['donors']:
+            donor_accumulator.accumulate(donor['biomaterial_id'])
+            genus_species_accumulator.accumulate(donor['genus_species'])
 
         library_accumulator = SetAccumulator()
         for protocol in es_hit_contents['protocols']:
@@ -602,13 +603,13 @@ class ProjectSummaryResponse(AbstractResponse):
         total_cell_count, organ_cell_count = self.get_cell_count(es_hit_contents)
 
         self.apiResponse = ProjectSummaryRepresentation(
-            donorCount=len(specimen_accumulators['donor_biomaterial_id'].get()),
+            donorCount=len(donor_accumulator.get()),
             totalCellCount=total_cell_count,
             organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
                             for count in organ_cell_count],
-            genusSpecies=specimen_accumulators['genus_species'].get(),
+            genusSpecies=genus_species_accumulator.get(),
             libraryConstructionApproach=library_accumulator.get(),
-            disease=specimen_accumulators['disease'].get()
+            disease=disease_accumulator.get()
         )
 
 
