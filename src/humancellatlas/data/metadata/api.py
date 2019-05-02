@@ -643,14 +643,20 @@ class Link:
             # vx
             process_id = UUID4(json['process'])
             for source_id in json['inputs']:
-                yield cls(source_id=UUID4(source_id), source_type=json['input_type'],
-                          destination_id=process_id, destination_type='process')
+                yield cls(source_id=UUID4(source_id),
+                          source_type=json['input_type'],
+                          destination_id=process_id,
+                          destination_type='process')
             for destination_id in json['outputs']:
-                yield cls(source_id=process_id, source_type='process',
-                          destination_id=UUID4(destination_id), destination_type=json['output_type'])
+                yield cls(source_id=process_id,
+                          source_type='process',
+                          destination_id=UUID4(destination_id),
+                          destination_type=json['output_type'])
             for protocol in json['protocols']:
-                yield cls(source_id=process_id, source_type='process',
-                          destination_id=UUID4(protocol['protocol_id']), destination_type=protocol['protocol_type'])
+                yield cls(source_id=process_id,
+                          source_type='process',
+                          destination_id=UUID4(protocol['protocol_id']),
+                          destination_type=lookup(protocol, 'type', 'protocol_type'))
 
 
 @dataclass(init=False)

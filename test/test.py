@@ -565,6 +565,7 @@ class TestAccessorApi(TestCase):
             self._rename_keys(contributor, name='contact_name')
 
         assert_bundle()
+
     def test_file_format(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
@@ -588,6 +589,27 @@ class TestAccessorApi(TestCase):
 
         assert_bundle()
 
+    def test_link_destination_type(self):
+        uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
+        version = '2019-01-03T163633.780215Z'
+        replica = 'aws'
+        deployment = 'prod'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
+
+        def assert_bundle():
+            bundle = Bundle(uuid, version, manifest, metadata_files)
+            destination_types = {link.destination_type for link in bundle.links}
+            expected_types = {'library_preparation_protocol', 'sequencing_protocol', 'dissociation_protocol',
+                              'differentiation_protocol', 'ipsc_induction_protocol', 'biomaterial', 'process', 'file'}
+            self.assertEqual(destination_types, expected_types)
+
+        assert_bundle()
+
+        for link in metadata_files['links.json']['links']:
+            for protocol in link['protocols']:
+                self._rename_keys(protocol, type='protocol_type')
+
+        assert_bundle()
 
 # noinspection PyUnusedLocal
 def load_tests(loader, tests, ignore):
