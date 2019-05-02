@@ -67,6 +67,15 @@ emit({
             "Resource": [
                 f"arn:aws:sqs:{aws.region_name}:{aws.account}:*"
             ]
-        }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:GetSecretValue"
+            ],
+            "Resource": [
+                f"arn:aws:secretsmanager:{aws.region_name}:{aws.account}:secret:*"
+            ]
+        },
     ]
 })
