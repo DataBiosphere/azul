@@ -283,11 +283,13 @@ class ManifestResponse(AbstractResponse):
         writer.writeheader()
         for hit in self.es_search.scan():
             doc = hit.to_dict()
-            row = {}
-            for doc_path, column_mapping in self.manifest_entries.items():
-                entities = self._get_entities(doc_path, doc)
-                self._extract_fields(entities, column_mapping, row)
-            writer.writerow(row)
+            for bundle in list(doc['bundles']):
+                doc['bundles'] = [bundle]
+                row = {}
+                for doc_path, column_mapping in self.manifest_entries.items():
+                    entities = self._get_entities(doc_path, doc)
+                    self._extract_fields(entities, column_mapping, row)
+                writer.writerow(row)
 
     def _create_bdbag_archive(self) -> str:
         with TemporaryDirectory() as bag_path:
