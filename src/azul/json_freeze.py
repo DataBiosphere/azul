@@ -1,13 +1,12 @@
 from typing import Any, Mapping, Union, Tuple
 
-from azul.types import AnyJSON, JSON
+from azul.types import AnyJSON
 from azul.vendored.frozendict import frozendict
 
 AnyFrozenJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], Tuple[Any, ...]]
 AnyFrozenJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyFrozenJSON2], Tuple[AnyFrozenJSON2, ...]]
 AnyFrozenJSON = Union[str, int, float, bool, None, Mapping[str, AnyFrozenJSON1], Tuple[AnyFrozenJSON1, ...]]
 FrozenJSON = Mapping[str, AnyFrozenJSON]
-from itertools import chain
 
 
 def freeze(x: Union[AnyJSON, AnyFrozenJSON]) -> AnyFrozenJSON:
@@ -29,9 +28,9 @@ def freeze(x: Union[AnyJSON, AnyFrozenJSON]) -> AnyFrozenJSON:
     >>> thaw(freeze(freeze({"1":[2,3]})))
     {'1': [2, 3]}
     """
-    if isinstance(x, (dict,frozendict)):
+    if isinstance(x, (dict, frozendict)):
         return frozendict((k, freeze(v)) for k, v in x.items())
-    elif isinstance(x, (list,tuple)):
+    elif isinstance(x, (list, tuple)):
         return tuple(freeze(v) for v in x)
     elif isinstance(x, (bool, str, int, float)) or x is None:
         return x
@@ -87,14 +86,50 @@ def sort_frozen(x: AnyFrozenJSON) -> AnyFrozenJSON:
 
         >>> sort_frozen(freeze([1, 0, False]))
         (0, False, 1)
+
+    >>> sort_frozen(freeze([{'x':True}, {'x': None}]))
+    ((('x', None),), (('x', True),))
     """
     if isinstance(x, frozendict):
         # Note that each key occurs exactly once, so there will be no ties that have to be broken by comparing the
         # values. The values may of heterogeneous types and therefore can't be compared.
         return tuple(sorted((k, sort_frozen(v)) for k, v in x.items()))
     elif isinstance(x, tuple):
-        return tuple(chain((v for v in x if v is None), sorted(sort_frozen(v) for v in x if v is not None)))
+        return tuple(sorted((sort_frozen(v) for v in x), key=K))
     elif isinstance(x, (bool, str, int, float)) or x is None:
         return x
     else:
         assert False, f'Cannot handle values of type {type(x)}'
+
+
+class K(object):
+    __slots__ = ['obj']
+
+    def __init__(self, obj):
+        # Tuples are compared element-wise so (None,) < (True,) will involve
+        # None < True which would fail. To solve this, we wrap all tuple
+        # elements. Note that this recursively wraps tuple elements that are
+        # tuples themselves.
+        if isinstance(obj, tuple):
+            obj = tuple(K(e) for e in obj)
+        self.obj = obj
+
+    def __lt__(self, other):
+        if self.obj is None:
+            return other.obj is not None
+        else:
+            return other.obj is not None and self.obj < other.obj
+
+    def __gt__(self, other):
+        raise NotImplementedError()
+
+    def __eq__(self, other):
+        return self.obj == other.obj
+
+    def __le__(self, other):
+        raise NotImplementedError()
+
+    def __ge__(self, other):
+        raise NotImplementedError()
+
+    __hash__ = None
