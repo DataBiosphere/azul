@@ -112,18 +112,31 @@ class LinkError(RuntimeError):
 
 @dataclass(frozen=True)
 class ProjectPublication:
-    publication_title: str
-    publication_url: Optional[str]
+    title: str
+    url: Optional[str]
 
     @classmethod
     def from_json(cls, json: JSON) -> 'ProjectPublication':
-        return cls(publication_title=json['publication_title'],
-                   publication_url=json.get('publication_url'))
+        title = lookup(json, 'title', 'publication_title')
+        url = lookup(json, 'url', 'publication_url', default=None)
+        return cls(title=title, url=url)
+
+    @property
+    def publication_title(self):
+        warnings.warn(f"ProjectPublication.publication_title is deprecated. "
+                      f"Use ProjectPublication.title instead.", DeprecationWarning)
+        return self.title
+
+    @property
+    def publication_url(self):
+        warnings.warn(f"ProjectPublication.publication_url is deprecated. "
+                      f"Use ProjectPublication.url instead.", DeprecationWarning)
+        return self.url
 
 
 @dataclass(frozen=True)
 class ProjectContact:
-    contact_name: str
+    name: str
     email: Optional[str]
     institution: Optional[str]  # optional up to project/5.3.0/contact
     laboratory: Optional[str]
@@ -132,12 +145,20 @@ class ProjectContact:
 
     @classmethod
     def from_json(cls, json: JSON) -> 'ProjectContact':
-        return cls(contact_name=json['contact_name'],
+        project_role = json.get('project_role')
+        project_role = ontology_label(project_role) if isinstance(project_role, dict) else project_role
+        return cls(name=lookup(json, 'name', 'contact_name'),
                    email=json.get('email'),
                    institution=json.get('institution'),
                    laboratory=json.get('laboratory'),
                    corresponding_contributor=json.get('corresponding_contributor'),
-                   project_role=json.get('project_role'))
+                   project_role=project_role)
+
+    @property
+    def contact_name(self) -> str:
+        warnings.warn(f"ProjectContact.contact_name is deprecated. "
+                      f"Use ProjectContact.name instead.", DeprecationWarning)
+        return self.name
 
 
 @dataclass(init=False)
@@ -290,13 +311,14 @@ class ImagedSpecimen(Biomaterial):
 @dataclass(init=False)
 class CellSuspension(Biomaterial):
     estimated_cell_count: Optional[int]
-    selected_cell_type: Set[str]
+    selected_cell_types: Set[str]
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
         content = json.get('content', json)
         self.estimated_cell_count = lookup(content, 'estimated_cell_count', 'total_estimated_cells', default=None)
-        self.selected_cell_type = {ontology_label(sct) for sct in content.get('selected_cell_type', [])}
+        self.selected_cell_types = {ontology_label(sct) for sct in
+                                    lookup(content, 'selected_cell_types', 'selected_cell_type', default=[])}
 
     @property
     def total_estimated_cells(self) -> int:
@@ -304,10 +326,23 @@ class CellSuspension(Biomaterial):
                       f"Use CellSuspension.estimated_cell_count instead.", DeprecationWarning)
         return self.estimated_cell_count
 
+    @property
+    def selected_cell_type(self) -> Set[str]:
+        warnings.warn(f"CellSuspension.selected_cell_type is deprecated. "
+                      f"Use CellSuspension.selected_cell_types instead.", DeprecationWarning)
+        return self.selected_cell_types
+
 
 @dataclass(init=False)
 class CellLine(Biomaterial):
-    pass
+    cell_line_type: str
+    model_organ: Optional[str]
+
+    def __init__(self, json: JSON) -> None:
+        super().__init__(json)
+        content = json.get('content', json)
+        self.cell_line_type = content['cell_line_type']
+        self.model_organ = ontology_label(content.get('model_organ'), default=None)
 
 
 @dataclass(init=False)
@@ -527,7 +562,7 @@ class ManifestEntry:
 
 @dataclass(init=False)
 class File(LinkedEntity):
-    file_format: str
+    format: str
     from_processes: MutableMapping[UUID4, Process] = field(repr=False)
     to_processes: MutableMapping[UUID4, Process]
     manifest_entry: ManifestEntry
@@ -536,7 +571,7 @@ class File(LinkedEntity):
         super().__init__(json)
         content = json.get('content', json)
         core = content['file_core']
-        self.file_format = core['file_format']
+        self.format = lookup(core, 'format', 'file_format')
         self.manifest_entry = manifest[core['file_name']]
         self.from_processes = {}
         self.to_processes = {}
@@ -549,6 +584,12 @@ class File(LinkedEntity):
                 self.from_processes[other.document_id] = other
         else:
             raise LinkError(self, other, forward)
+
+    @property
+    def file_format(self) -> str:
+        warnings.warn(f"File.file_format is deprecated. "
+                      f"Use File.format instead.", DeprecationWarning)
+        return self.format
 
 
 @dataclass(init=False)
@@ -602,14 +643,20 @@ class Link:
             # vx
             process_id = UUID4(json['process'])
             for source_id in json['inputs']:
-                yield cls(source_id=UUID4(source_id), source_type=json['input_type'],
-                          destination_id=process_id, destination_type='process')
+                yield cls(source_id=UUID4(source_id),
+                          source_type=json['input_type'],
+                          destination_id=process_id,
+                          destination_type='process')
             for destination_id in json['outputs']:
-                yield cls(source_id=process_id, source_type='process',
-                          destination_id=UUID4(destination_id), destination_type=json['output_type'])
+                yield cls(source_id=process_id,
+                          source_type='process',
+                          destination_id=UUID4(destination_id),
+                          destination_type=json['output_type'])
             for protocol in json['protocols']:
-                yield cls(source_id=process_id, source_type='process',
-                          destination_id=UUID4(protocol['protocol_id']), destination_type=protocol['protocol_type'])
+                yield cls(source_id=process_id,
+                          source_type='process',
+                          destination_id=UUID4(protocol['protocol_id']),
+                          destination_type=lookup(protocol, 'type', 'protocol_type'))
 
 
 @dataclass(init=False)
