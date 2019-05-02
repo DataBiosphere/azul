@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import logging
-from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Tuple, Union
-from more_itertools import one
+from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
 
 from humancellatlas.data.metadata import api
 from humancellatlas.data.metadata.helpers.json import as_json
@@ -386,9 +385,9 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         assert isinstance(project, api.Project)
         return project
 
-    def _contribution(self, bundle, contents, entity):
+    def _contribution(self, bundle: api.Bundle, contents: JSON, entity_id: api.UUID4) -> Contribution:
         entity_reference = EntityReference(entity_type=self.entity_type(),
-                                           entity_id=str(entity.document_id))
+                                           entity_id=str(entity_id))
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
         return Contribution(entity=entity_reference,
@@ -433,7 +432,7 @@ class FileTransformer(Transformer):
                             files=[_file_dict(file)],
                             protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
                             projects=[_project_dict(project)])
-            yield self._contribution(bundle, contents, file)
+            yield self._contribution(bundle, contents, file.document_id)
 
 
 class SampleTransformer(Transformer):
@@ -479,13 +478,14 @@ class SampleTransformer(Transformer):
                             files=[_file_dict(f) for f in visitor.files.values()],
                             protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
                             projects=[_project_dict(project)])
-            yield self._contribution(bundle, contents, sample)
+            yield self._contribution(bundle, contents, sample.document_id)
 
 
-class ProjectTransformer(Transformer):
+class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
 
-    def entity_type(self) -> str:
-        return 'projects'
+    @abstractmethod
+    def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
+        raise NotImplementedError()
 
     def transform(self,
                   uuid: str,
@@ -521,4 +521,29 @@ class ProjectTransformer(Transformer):
                         files=[_file_dict(f) for f in visitor.files.values()],
                         protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
                         projects=[_project_dict(project)])
-        yield self._contribution(bundle, contents, project)
+
+        yield self._contribution(bundle, contents, self._get_entity_id(bundle, project))
+
+
+class ProjectTransformer(BundleProjectTransformer):
+
+    def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
+        return project.document_id
+
+    def entity_type(self) -> str:
+        return 'projects'
+
+
+class BundleTransformer(BundleProjectTransformer):
+
+    def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
+        return bundle.uuid
+
+    def get_aggregator(self, entity_type):
+        if entity_type == 'files':
+            return None
+        else:
+            return super().get_aggregator(entity_type)
+
+    def entity_type(self) -> str:
+        return 'bundles'

@@ -31,7 +31,7 @@ class RepositoryService(AbstractService):
                                                 pagination=pagination,
                                                 post_filter=True,
                                                 entity_type=entity_type)
-        if entity_type == 'files':
+        if entity_type in ('files', 'bundles'):
             # Compose URL to contents of file so clients can download easily
             for hit in response['hits']:
                 for file in hit['files']:

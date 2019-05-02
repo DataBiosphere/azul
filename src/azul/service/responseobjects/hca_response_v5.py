@@ -794,7 +794,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         kwargs = {
             'bundles': self.make_bundles(entry),
             'files': self.make_files(entry)
-        } if self.entity_type == 'files' else {
+        } if self.entity_type in ('files', 'bundles') else {
             'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json()
                                   for aggregate_file in entry["contents"]["files"]]
         }
