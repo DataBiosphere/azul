@@ -990,198 +990,6 @@ class TestResponse(WebServiceTestCase):
 
         self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
-    def test_project_summary_response(self):
-        """
-        Test that ProjectSummaryResponse will correctly do the per-project aggregations
-
-        Should only return values associated with the given project id
-        Should sum cell counts per-organ per-project and return an organ summary
-        Should correctly get distinct values for diseases, species, library construction approaches for each project
-        Should correctly count donor ids within a project
-        """
-        # Stripped down response from ES partially based on real data
-        hits = [
-            {
-                "_id": "bae45747-546a-4aed-9377-08e9115a8fb8",
-                "_source": {
-                    "entity_id": "bae45747-546a-4aed-9377-08e9115a8fb8",
-                    "contents": {
-                        "entryId": "bae45747-546a-4aed-9377-08e9115a8fb8",
-                        "specimens": [
-                            {
-                                "disease": ["glioblastoma"],
-                                "_type": ["specimen"],
-                                "donor_biomaterial_id": ["Q4_DEMO-donor_MGH30"],
-                                "genus_species": ["Homo sapiens"]
-                            }
-                        ],
-                        "cell_suspensions": [
-                            {
-                                "organ": ["brain"],
-                                "total_estimated_cells": 0
-                            }
-                        ],
-                        "protocols": [
-                            {
-                                "library_construction_approach": ["Smart-seq2"],
-                                "instrument_manufacturer_model": ["Illumina NextSeq 500"]
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                "_id": "6ec8e247-2eb0-42d1-823f-75facd03988d",
-                "_source": {
-                    "entity_id": "6ec8e247-2eb0-42d1-823f-75facd03988d",
-                    "contents": {
-                        "entryId": "6ec8e247-2eb0-42d1-823f-75facd03988d",
-                        "specimens": [
-                            {
-                                "disease": ["normal"],
-                                "_type": ["specimen"],
-                                "donor_biomaterial_id": ["284C-A1"],
-                                "genus_species": ["Homo sapiens"]
-                            },
-                            {
-                                "disease": ["normal"],
-                                "_type": ["specimen"],
-                                "donor_biomaterial_id": ["284C-A1"],
-                                "genus_species": ["Homo sapiens"]
-                            },
-                            {
-                                "disease": ["not normal"],
-                                "organ": ["brain"],
-                                "_type": ["specimen"],
-                                "total_estimated_cells": 10,
-                                "donor_biomaterial_id": ["284C-A2"],
-                                "genus_species": ["Homo sapiens"]
-                            }
-                        ],
-                        "cell_suspensions": [
-                            {
-                                "organ": ["spleen"],
-                                "total_estimated_cells": 39300000
-                            },
-                            {
-                                "organ": ["spleen"],
-                                "total_estimated_cells": 1
-                            },
-                            {
-                                "organ": ["brain"],
-                                "total_estimated_cells": 10
-                            }
-                        ],
-                        "protocols": [
-                            {
-                                "library_construction_approach": ["Illumina NextSeq 500"],
-                                "instrument_manufacturer_model": ["Smart-seq2"]
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                "_id": "6504d48c-1610-43aa-8cf8-214a960e110c",
-                "_source": {
-                    "entity_id": "6504d48c-1610-43aa-8cf8-214a960e110c",
-                    "contents": {
-                        "entryId": "6504d48c-1610-43aa-8cf8-214a960e110c",
-                        "specimens": [
-                            {
-                                "disease": [],
-                                "_type": ["specimen"],
-                                "donor_biomaterial_id": [
-                                    "CB8",
-                                    "CB6",
-                                    "CB2",
-                                    "BM8",
-                                    "BM6",
-                                    "BM5",
-                                    "BM4",
-                                    "CB1",
-                                    "CB5",
-                                    "CB7",
-                                    "BM2",
-                                    "BM3",
-                                    "BM7",
-                                    "CB4",
-                                    "CB3",
-                                    "BM1"
-                                ],
-                                "genus_species": ["Homo sapiens"]
-                            }
-                        ],
-                        "cell_suspensions": [
-                            {
-                                "organ": ["hematopoietic system"],
-                                "total_estimated_cells": 528092
-                            }
-                        ],
-                        "protocols": [
-                            {
-                                "library_construction_approach": ["Celera PicoPlus 3000"],
-                                "instrument_manufacturer_model": ["Smart-seq2"]
-                            }
-                        ]
-                    }
-                }
-            }
-        ]
-
-        project_summary1 = ProjectSummaryResponse(hits[0]['_source']['contents']).apiResponse.to_json()
-        self.assertEqual(1, project_summary1['donorCount'])
-        self.assertEqual(0, project_summary1['totalCellCount'])
-        self.assertEqual(['Homo sapiens'], sorted(project_summary1['genusSpecies']))
-        self.assertEqual(['Smart-seq2'], sorted(project_summary1['libraryConstructionApproach']))
-        self.assertEqual(['glioblastoma'], sorted(project_summary1['disease']))
-        expected_organ_summary1 = [
-            {
-                "organType": "brain",
-                "countOfDocsWithOrganType": 1,
-                "totalCellCountByOrgan": 0.0
-            }
-        ]
-        self.assertEqual(json.dumps(expected_organ_summary1, sort_keys=True),
-                         json.dumps(project_summary1['organSummaries'], sort_keys=True))
-
-        project_summary2 = ProjectSummaryResponse(hits[1]['_source']['contents']).apiResponse.to_json()
-        self.assertEqual(2, project_summary2['donorCount'])
-        self.assertEqual(39300011, project_summary2['totalCellCount'])
-        self.assertEqual(['Homo sapiens'], sorted(project_summary2['genusSpecies']))
-        self.assertEqual(['Illumina NextSeq 500'], sorted(project_summary2['libraryConstructionApproach']))
-        self.assertEqual(['normal', 'not normal'], sorted(project_summary2['disease']))
-        expected_organ_summary2 = [
-            {
-                "organType": "spleen",
-                "countOfDocsWithOrganType": 1,
-                "totalCellCountByOrgan": 39300001.0
-            },
-            {
-                "organType": "brain",
-                "countOfDocsWithOrganType": 1,
-                "totalCellCountByOrgan": 10.0
-            }
-        ]
-        self.assertEqual(json.dumps(expected_organ_summary2, sort_keys=True),
-                         json.dumps(project_summary2['organSummaries'], sort_keys=True))
-
-        project_summary3 = ProjectSummaryResponse(hits[2]['_source']['contents']).apiResponse.to_json()
-        self.assertEqual(16, project_summary3['donorCount'])
-        self.assertEqual(528092, project_summary3['totalCellCount'])
-        self.assertEqual(['Homo sapiens'], sorted(project_summary3['genusSpecies']))
-        self.assertEqual(['Celera PicoPlus 3000'], sorted(project_summary3['libraryConstructionApproach']))
-        self.assertEqual([], sorted(project_summary3['disease']))
-        expected_organ_summary3 = [
-            {
-                "organType": "hematopoietic system",
-                "countOfDocsWithOrganType": 1,
-                "totalCellCountByOrgan": 528092.0
-            }
-        ]
-        self.assertEqual(json.dumps(expected_organ_summary3, sort_keys=True),
-                         json.dumps(project_summary3['organSummaries'], sort_keys=True))
-
     def test_project_accessions_response(self):
         """
         This method tests the KeywordSearchResponse object for the projects entity type,
@@ -1405,6 +1213,49 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertEqual(len(response['hits']), len(hits_uuids))
         self.assertSetEqual(indexed_uuids, hits_uuids)
+
+
+class TestResponseSummary(WebServiceTestCase):
+
+    maxDiff = None
+    bundles = WebServiceTestCase.bundles + [
+        ('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
+    ]
+
+    def test_project_summary_response(self):
+        """
+        Test that ProjectSummaryResponse will correctly do the per-project aggregations
+
+        Should only return values associated to each project
+        Should sum cell counts per-organ per-project and return an organ summary
+        Should correctly get distinct values for diseases, species, library construction approaches for each project
+        Should correctly count donor ids within a project
+        """
+        url = self.base_url + "/repository/projects"
+        response = requests.get(url)
+        response.raise_for_status()
+        response_json = response.json()
+        self.assertEqual(len(response_json['hits']), 2)
+        for hit in response_json['hits']:
+            summary = hit['projectSummary']
+            if one(hit['projects'])['projectTitle'] == 'Assessing the relevance of organoids to model inter-individual variation':
+                self.assertEqual(summary['donorCount'], 4)
+                self.assertEqual(summary['totalCellCount'], 6210.0)
+                self.assertEqual(summary['genusSpecies'], ['Homo sapiens'])
+                self.assertEqual(summary['libraryConstructionApproach'], ["Chromium 3' Single Cell v2"])
+                self.assertEqual(summary['disease'], ['normal'])
+                organ_summaries = {'organType': 'Brain', 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0}
+                self.assertEqual(one(summary['organSummaries']), organ_summaries)
+            elif one(hit['projects'])['projectTitle'] == 'Single cell transcriptome patterns.':
+                self.assertEqual(summary['donorCount'], 1)
+                self.assertEqual(summary['totalCellCount'], 1.0)
+                self.assertEqual(summary['genusSpecies'], ['Australopithecus'])
+                self.assertEqual(summary['libraryConstructionApproach'], ['Smart-seq2'])
+                self.assertEqual(summary['disease'], ['normal'])
+                organ_summaries = {'organType': 'pancreas', 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0}
+                self.assertEqual(one(summary['organSummaries']), organ_summaries)
+            else:
+                assert False
 
 
 
