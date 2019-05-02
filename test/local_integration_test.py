@@ -24,7 +24,6 @@ from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
 from azul.requests import requests_session
 from azul import drs
-from azul.service.responseobjects.hca_response_v5 import ManifestResponse
 
 logger = logging.getLogger(__name__)
 
@@ -130,29 +129,24 @@ class IntegrationTest(unittest.TestCase):
         return response.content
 
     def check_manifest(self, response: bytes):
-        self._check_manifest(BytesIO(response), 'bundle_uuid', allow_multiple_uuid=True)
+        self._check_manifest(BytesIO(response), 'bundle_uuid')
 
     def check_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'samples.tsv')
             with zip_fh.open(file_path) as file:
-                self._check_manifest(file, 'entity:bundle_id', allow_multiple_uuid=False)
+                self._check_manifest(file, 'entity:bundle_id')
 
-    def _check_manifest(self, file: IO[bytes], uuid_field_name: str, allow_multiple_uuid: bool):
+    def _check_manifest(self, file: IO[bytes], uuid_field_name: str):
         text = TextIOWrapper(file)
         reader = csv.DictReader(text, delimiter='\t')
         rows = list(reader)
         logger.info(f'Manifest contains {len(rows)} rows.')
         self.assertGreater(len(rows), 0)
         self.assertIn(uuid_field_name, reader.fieldnames)
-        if allow_multiple_uuid:
-            bundle_uuids = rows[0][uuid_field_name].split(ManifestResponse.column_joiner)
-            self.assertGreater(len(bundle_uuids), 0)
-        else:
-            bundle_uuids = [rows[0][uuid_field_name]]
-        for bundle_uuid in bundle_uuids:
-            self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
+        bundle_uuid = rows[0][uuid_field_name]
+        self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
 
     def download_file_from_drs_response(self, response: bytes):
         json_data = json.loads(response)['data_object']
