@@ -562,7 +562,7 @@ class ManifestEntry:
 
 @dataclass(init=False)
 class File(LinkedEntity):
-    file_format: str
+    format: str
     from_processes: MutableMapping[UUID4, Process] = field(repr=False)
     to_processes: MutableMapping[UUID4, Process]
     manifest_entry: ManifestEntry
@@ -571,7 +571,7 @@ class File(LinkedEntity):
         super().__init__(json)
         content = json.get('content', json)
         core = content['file_core']
-        self.file_format = core['file_format']
+        self.format = lookup(core, 'format', 'file_format')
         self.manifest_entry = manifest[core['file_name']]
         self.from_processes = {}
         self.to_processes = {}
@@ -584,6 +584,12 @@ class File(LinkedEntity):
                 self.from_processes[other.document_id] = other
         else:
             raise LinkError(self, other, forward)
+
+    @property
+    def file_format(self) -> str:
+        warnings.warn(f"File.file_format is deprecated. "
+                      f"Use File.format instead.", DeprecationWarning)
+        return self.format
 
 
 @dataclass(init=False)

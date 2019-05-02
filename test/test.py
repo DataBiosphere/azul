@@ -565,6 +565,29 @@ class TestAccessorApi(TestCase):
             self._rename_keys(contributor, name='contact_name')
 
         assert_bundle()
+    def test_file_format(self):
+        uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
+        version = '2019-01-03T163633.780215Z'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+
+        def assert_bundle():
+            bundle = Bundle(uuid, version, manifest, metadata_files)
+            self.assertEqual(len(bundle.files), 6)
+            for file in bundle.files.values():
+                if isinstance(file, SequenceFile):
+                    self.assertEqual(file.format, 'fastq.gz')
+                if isinstance(file, SupplementaryFile):
+                    self.assertEqual(file.format, 'pdf')
+                self.assertEqual(file.format, file.file_format)
+
+        assert_bundle()
+
+        for file in [metadata_files[f] for f in metadata_files if f.startswith('sequence_file_')
+                                                               or f.startswith('supplementary_file_')]:
+            self._rename_keys(file['file_core'], format='file_format')
+
+        assert_bundle()
+
 
 # noinspection PyUnusedLocal
 def load_tests(loader, tests, ignore):
