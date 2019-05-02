@@ -136,7 +136,7 @@ class ProjectPublication:
 
 @dataclass(frozen=True)
 class ProjectContact:
-    contact_name: str
+    name: str
     email: Optional[str]
     institution: Optional[str]  # optional up to project/5.3.0/contact
     laboratory: Optional[str]
@@ -147,12 +147,18 @@ class ProjectContact:
     def from_json(cls, json: JSON) -> 'ProjectContact':
         project_role = json.get('project_role')
         project_role = ontology_label(project_role) if isinstance(project_role, dict) else project_role
-        return cls(contact_name=json['contact_name'],
+        return cls(name=lookup(json, 'name', 'contact_name'),
                    email=json.get('email'),
                    institution=json.get('institution'),
                    laboratory=json.get('laboratory'),
                    corresponding_contributor=json.get('corresponding_contributor'),
                    project_role=project_role)
+
+    @property
+    def contact_name(self) -> str:
+        warnings.warn(f"ProjectContact.contact_name is deprecated. "
+                      f"Use ProjectContact.name instead.", DeprecationWarning)
+        return self.name
 
 
 @dataclass(init=False)

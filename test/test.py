@@ -546,6 +546,25 @@ class TestAccessorApi(TestCase):
 
         assert_bundle()
 
+    def test_project_contact(self):
+        uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
+        version = '2019-01-03T163633.780215Z'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+
+        def assert_bundle():
+            bundle = Bundle(uuid, version, manifest, metadata_files)
+            project = bundle.projects[UUID('d96c2451-6e22-441f-a3e6-70fd0878bb1b')]
+            self.assertEqual(len(project.contributors), 5)
+            expected_names = {'Sabina,,Kanton', 'Barbara,,Treutlein', 'J,Gray,Camp', 'Mallory,Ann,Freeberg', 'Zhisong,,He'}
+            self.assertEqual({c.name for c in project.contributors}, expected_names)
+            self.assertEqual({c.contact_name for c in project.contributors}, expected_names)
+
+        assert_bundle()
+
+        for contributor in metadata_files['project_0.json']['contributors']:
+            self._rename_keys(contributor, name='contact_name')
+
+        assert_bundle()
 
 # noinspection PyUnusedLocal
 def load_tests(loader, tests, ignore):
