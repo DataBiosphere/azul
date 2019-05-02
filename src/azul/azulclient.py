@@ -1,3 +1,4 @@
+import uuid
 from collections import defaultdict
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial, lru_cache
@@ -7,7 +8,7 @@ import logging
 from pprint import PrettyPrinter
 
 import requests
-from typing import List, Optional, Iterable
+from typing import List, Optional, Iterable, Set
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
 
@@ -29,7 +30,6 @@ class AzulClient(object):
                  query: Optional[JSON] = None,
                  prefix: str = config.dss_query_prefix,
                  num_workers: int = 16,
-                 test_name: str = None,
                  dryrun: bool = False):
         assert query is None or not prefix, "Cannot mix `prefix` and `query`"
         self.num_workers = num_workers
@@ -37,7 +37,6 @@ class AzulClient(object):
         self.prefix = prefix
         self.dss_url = dss_url
         self.indexer_url = indexer_url
-        self.test_name = test_name
         self.dryrun = dryrun
 
     def query(self, prefix=None):
@@ -50,14 +49,20 @@ class AzulClient(object):
             assert not prefix
             return self._query
 
-    def post_bundle(self, bundle_fqid, indexer_url):
+    def post_bundle(self, indexer_url, notification):
         """
         Send a mock DSS notification to the indexer
         """
-        simulated_event = self._make_notification(bundle_fqid)
-        response = requests.post(indexer_url, json=simulated_event, auth=hmac.prepare())
+        response = requests.post(indexer_url, json=notification, auth=hmac.prepare())
         response.raise_for_status()
         return response.content
+
+    def _make_test_notification(self, bundle_fqid, new_bundle_uuid, test_name, test_uuid):
+        notification = self._make_notification(bundle_fqid)
+        notification["test_bundle_uuid"] = new_bundle_uuid
+        notification["test_name"] = test_name
+        notification["test_uuid"] = test_uuid
+        return notification
 
     def _make_notification(self, bundle_fqid):
         bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
@@ -69,41 +74,57 @@ class AzulClient(object):
                 "bundle_uuid": bundle_uuid,
                 "bundle_version": bundle_version
             },
-            "test_name": self.test_name
         }
 
     def reindex(self, sync: bool = False):
-        errors = defaultdict(int)
-        missing = {}
-        indexed = 0
-        total = 0
-
         logger.info('Querying DSS using %s', json.dumps(self.query(), indent=4))
         bundle_fqids = self._post_dss_search()
         logger.info("Bundle FQIDs to index: %i", len(bundle_fqids))
+        notifications = [self._make_notification(fqid) for fqid in bundle_fqids]
+        self._reindex(notifications, sync=sync)
+
+    def test_reindex(self, test_name: str, test_uuid: str, sync: bool = False) -> Set[str]:
+        logger.info('Querying DSS using %s', json.dumps(self.query(), indent=4))
+        real_bundle_fqids = self._post_dss_search()
+        logger.info("Bundle FQIDs to index: %i", len(real_bundle_fqids))
+        notifications = []
+        effective_bundle_fqids = set()
+        for bundle_fqid in real_bundle_fqids:
+            new_bundle_uuid = str(uuid.uuid4())
+            _, _, version = bundle_fqid.partition('.')
+            effective_bundle_fqids.add(new_bundle_uuid + '.' + version)
+            notifications.append(self._make_test_notification(bundle_fqid, new_bundle_uuid, test_name, test_uuid))
+        self._reindex(notifications, sync=sync)
+        return effective_bundle_fqids
+
+    def _reindex(self, notifications: Iterable, sync: bool = False):
+        errors = defaultdict(int)
+        missing = []
+        indexed = 0
+        total = 0
 
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
 
-            def attempt(bundle_fqid, i):
+            def attempt(notification, i):
                 try:
-                    logger.info("Bundle %s, attempt %i: Sending notification", bundle_fqid, i)
+                    logger.info("Sending notification %s -- attempt %i:", notification, i)
                     url = urlparse(self.indexer_url)
                     if sync:
                         # noinspection PyProtectedMember
                         url = url._replace(query=urlencode({**parse_qs(url.query),
                                                             'sync': sync}, doseq=True))
                     if not self.dryrun:
-                        self.post_bundle(bundle_fqid=bundle_fqid, indexer_url=url.geturl())
+                        self.post_bundle(url.geturl(), notification)
                 except HTTPError as e:
                     if i < 3:
-                        logger.warning("Bundle %s, attempt %i: scheduling retry after error %s", bundle_fqid, i, e)
-                        return bundle_fqid, tpe.submit(partial(attempt, bundle_fqid, i + 1))
+                        logger.warning("Notification %s, Attempt %i: scheduling retry after error %s", notification, i, e)
+                        return notification, tpe.submit(partial(attempt, notification, i + 1))
                     else:
-                        logger.warning("Bundle %s, attempt %i: giving up after error %s", bundle_fqid, i, e)
-                        return bundle_fqid, e
+                        logger.warning("Notification %s, attempt %i: giving up after error %s", notification, i, e)
+                        return notification, e
                 else:
-                    logger.info("Bundle %s, attempt %i: success", bundle_fqid, i)
-                    return bundle_fqid, None
+                    logger.info("Notification %s, attempt %i: success", notification, i)
+                    return notification, None
 
             def handle_future(future):
                 nonlocal indexed
@@ -115,7 +136,7 @@ class AzulClient(object):
                         indexed += 1
                     elif isinstance(result, HTTPError):
                         errors[result.code] += 1
-                        missing[bundle_fqid] = result.code
+                        missing.append((notification, result.code))
                     elif isinstance(result, Future):
                         # The task scheduled a follow-on task, presumably a retry. Follow that new task.
                         handle_future(result)
@@ -125,9 +146,9 @@ class AzulClient(object):
                     logger.warning("Unhandled exception in worker:", exc_info=exception)
 
             futures = []
-            for bundle_fqid in bundle_fqids:
+            for notification in notifications:
                 total += 1
-                futures.append(tpe.submit(partial(attempt, bundle_fqid, 0)))
+                futures.append(tpe.submit(partial(attempt, notification, 0)))
             for future in futures:
                 handle_future(future)
 
@@ -136,8 +157,6 @@ class AzulClient(object):
         logger.info("Total of bundle FQIDs indexed: %i", indexed)
         logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
         logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
-
-        return bundle_fqids
 
     def _post_dss_search(self) -> List[str]:
         """
