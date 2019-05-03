@@ -1,10 +1,8 @@
 from abc import ABCMeta, abstractmethod
 import logging
-from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Tuple, Union
-from more_itertools import one
+from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
 
 from humancellatlas.data.metadata import api
-from humancellatlas.data.metadata.helpers.json import as_json
 
 from azul import reject
 from azul.transformer import (Accumulator,
@@ -26,6 +24,24 @@ from azul.types import JSON
 log = logging.getLogger(__name__)
 
 Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
+
+
+def _contact_dict(p: api.ProjectContact):
+    return {
+        "contact_name": p.contact_name,
+        "corresponding_contributor": p.corresponding_contributor,
+        "email": p.email,
+        "institution": p.institution,
+        "laboratory": p.laboratory,
+        "project_role": p.project_role
+    }
+
+
+def _publication_dict(p: api.ProjectPublication):
+    return {
+        "publication_title": p.publication_title,
+        "publication_url": p.publication_url
+    }
 
 
 def _project_dict(project: api.Project) -> JSON:
@@ -55,14 +71,14 @@ def _project_dict(project: api.Project) -> JSON:
         'laboratory': list(laboratories),
         'institutions': list(institutions),
         'contact_names': list(contact_names),
-        'contributors': as_json(project.contributors),
+        'contributors': [_contact_dict(c) for c in project.contributors],
         'document_id': str(project.document_id),
         'publication_titles': list(publication_titles),
-        'publications': as_json(project.publications),
-        'insdc_project_accessions': as_json(project.insdc_project_accessions),
-        'geo_series_accessions': as_json(project.geo_series_accessions),
-        'array_express_accessions': as_json(project.array_express_accessions),
-        'insdc_study_accessions': as_json(project.insdc_study_accessions),
+        'publications': [_publication_dict(p) for p in project.publications],
+        'insdc_project_accessions': list(project.insdc_project_accessions),
+        'geo_series_accessions': list(project.geo_series_accessions),
+        'array_express_accessions': list(project.array_express_accessions),
+        'insdc_study_accessions': list(project.insdc_study_accessions),
         '_type': 'project'
     }
 
@@ -73,9 +89,9 @@ def _specimen_dict(specimen: api.SpecimenFromOrganism) -> JSON:
         '_source': api.schema_names[type(specimen)],
         'document_id': str(specimen.document_id),
         'biomaterial_id': specimen.biomaterial_id,
-        'disease': as_json(specimen.diseases),
+        'disease': list(specimen.diseases),
         'organ': specimen.organ,
-        'organ_part': as_json(specimen.organ_parts),
+        'organ_part': list(specimen.organ_parts),
         'storage_method': specimen.storage_method,
         'preservation_method': specimen.preservation_method,
         '_type': 'specimen',
@@ -102,8 +118,8 @@ def _donor_dict(donor: api.DonorOrganism) -> JSON:
         'document_id': str(donor.document_id),
         'biomaterial_id': donor.biomaterial_id,
         'biological_sex': donor.sex,
-        'genus_species': as_json(donor.genus_species),
-        'diseases': as_json(donor.diseases),
+        'genus_species': list(donor.genus_species),
+        'diseases': list(donor.diseases),
         'organism_age': donor.organism_age,
         'organism_age_unit': donor.organism_age_unit,
         **(
@@ -386,9 +402,9 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         assert isinstance(project, api.Project)
         return project
 
-    def _contribution(self, bundle, contents, entity):
+    def _contribution(self, bundle: api.Bundle, contents: JSON, entity_id: api.UUID4) -> Contribution:
         entity_reference = EntityReference(entity_type=self.entity_type(),
-                                           entity_id=str(entity.document_id))
+                                           entity_id=str(entity_id))
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
         return Contribution(entity=entity_reference,
@@ -433,7 +449,7 @@ class FileTransformer(Transformer):
                             files=[_file_dict(file)],
                             protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
                             projects=[_project_dict(project)])
-            yield self._contribution(bundle, contents, file)
+            yield self._contribution(bundle, contents, file.document_id)
 
 
 class SampleTransformer(Transformer):
@@ -479,13 +495,14 @@ class SampleTransformer(Transformer):
                             files=[_file_dict(f) for f in visitor.files.values()],
                             protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
                             projects=[_project_dict(project)])
-            yield self._contribution(bundle, contents, sample)
+            yield self._contribution(bundle, contents, sample.document_id)
 
 
-class ProjectTransformer(Transformer):
+class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
 
-    def entity_type(self) -> str:
-        return 'projects'
+    @abstractmethod
+    def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
+        raise NotImplementedError()
 
     def transform(self,
                   uuid: str,
@@ -521,4 +538,29 @@ class ProjectTransformer(Transformer):
                         files=[_file_dict(f) for f in visitor.files.values()],
                         protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
                         projects=[_project_dict(project)])
-        yield self._contribution(bundle, contents, project)
+
+        yield self._contribution(bundle, contents, self._get_entity_id(bundle, project))
+
+
+class ProjectTransformer(BundleProjectTransformer):
+
+    def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
+        return project.document_id
+
+    def entity_type(self) -> str:
+        return 'projects'
+
+
+class BundleTransformer(BundleProjectTransformer):
+
+    def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
+        return bundle.uuid
+
+    def get_aggregator(self, entity_type):
+        if entity_type == 'files':
+            return None
+        else:
+            return super().get_aggregator(entity_type)
+
+    def entity_type(self) -> str:
+        return 'bundles'

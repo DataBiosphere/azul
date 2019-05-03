@@ -181,7 +181,7 @@ class ElasticTransformDump(object):
 
         if source_filter:
             es_search = es_search.source(include=source_filter)
-        elif entity_type != "files":
+        elif entity_type not in ("files", "bundles"):
             es_search = es_search.source(exclude="bundles")
 
         if enable_aggregation:
