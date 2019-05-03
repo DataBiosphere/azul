@@ -58,6 +58,7 @@ sort_defaults = {
     'files': ('fileName', 'asc'),
     'samples': ('sampleId', 'asc'),
     'projects': ('projectTitle', 'asc'),
+    'bundles': ('bundleVersion', 'desc')
 }
 
 
@@ -251,6 +252,53 @@ def get_sample_data(sample_id=None):
     the facets and/or table data
     """
     return repository_search('samples', sample_id)
+
+
+@app.route('/repository/bundles', methods=['GET'], cors=True)
+@app.route('/repository/bundles/{bundle_uuid}', methods=['GET'], cors=True)
+def get_bundle_data(bundle_uuid=None):
+    """
+    Returns a dictionary with entries that can be used by the browser
+    to display the data and facets
+    parameters:
+        - name: filters
+          in: query
+          type: string
+          description: Filters to be applied when calling ElasticSearch
+        - name: size
+          in: integer
+          type: string
+          description: Size of the page being returned
+        - name: order
+          in: query
+          type: string
+          description: Whether it should be in ascending or descending order
+        - name: sort
+          in: query
+          type: string
+          description: Which field to sort by
+        - name: search_after
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
+          to set both this and search_before.
+        - name: search_after_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
+        - name: search_before
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
+          to set both this and search_after.
+        - name: search_before_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
+    :return: Returns a dictionary with the entries to be used when generating
+    the facets and/or table data
+    """
+    return repository_search('bundles', bundle_uuid)
 
 
 @app.route('/repository/projects', methods=['GET'], cors=True)
