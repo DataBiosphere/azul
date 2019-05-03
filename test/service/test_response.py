@@ -108,7 +108,9 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True]
+                            "pairedEnd": [True],
+                            "workflow": [],
+                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -196,7 +198,9 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True]
+                            "pairedEnd": [True],
+                            "workflow": [],
+                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -311,7 +315,9 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                                 "libraryConstructionApproach": ["Smart-seq2"],
-                                "pairedEnd": [True]
+                                "pairedEnd": [True],
+                                "workflow": [],
+                                "workflowVersion": []
                             }
                         ],
                         "samples": [
@@ -409,7 +415,9 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                                 "libraryConstructionApproach": ["Smart-seq2"],
-                                "pairedEnd": [True]
+                                "pairedEnd": [True],
+                                "workflow": [],
+                                "workflowVersion": []
                             }
                         ],
                         "samples": [
@@ -787,7 +795,9 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True]
+                            "pairedEnd": [True],
+                            "workflow": [],
+                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -914,7 +924,9 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True]
+                            "pairedEnd": [True],
+                            "workflow": [],
+                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -1293,7 +1305,9 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
                             "libraryConstructionApproach": ["10X v2 sequencing"],
-                            "pairedEnd": [False]
+                            "pairedEnd": [False],
+                            "workflow": ['cellranger'],
+                            "workflowVersion": ['v1.0.2']
                         }
                     ],
                     "samples": [
