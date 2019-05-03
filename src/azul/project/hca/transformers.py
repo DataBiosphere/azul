@@ -170,6 +170,10 @@ def _protocol_dict(protocol: api.Protocol) -> JSON:
     elif isinstance(protocol, api.SequencingProtocol):
         protocol_dict['instrument_manufacturer_model'] = protocol.instrument_manufacturer_model
         protocol_dict['paired_end'] = protocol.paired_end
+    elif isinstance(protocol, api.AnalysisProtocol):
+        protocol_id = protocol.protocol_id
+        workflow, version = protocol_id.rsplit('_', maxsplit=1) if '_' in protocol_id else (protocol_id, None)
+        protocol_dict['workflow'], protocol_dict['workflow_version'] = workflow, version
     else:
         assert False
     return protocol_dict
@@ -233,7 +237,7 @@ class TransformerVisitor(api.EntityVisitor):
             self.organoids[entity.document_id] = entity
         elif isinstance(entity, api.Process):
             for protocol in entity.protocols.values():
-                if isinstance(protocol, (api.SequencingProtocol, api.LibraryPreparationProtocol)):
+                if isinstance(protocol, (api.SequencingProtocol, api.LibraryPreparationProtocol, api.AnalysisProtocol)):
                     self.protocols[protocol.document_id] = protocol
         elif isinstance(entity, api.File):
             if entity.file_format == 'unknown' and '.zarr!' in entity.manifest_entry.name:
