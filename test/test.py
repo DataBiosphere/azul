@@ -177,9 +177,10 @@ class TestAccessorApi(TestCase):
 
     def test_bad_content_type(self):
         deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
-        client = Mock()
         file_uuid, file_version = 'b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-09-20T232924.687620Z'
-        client.get_bundle.return_value = {
+        response = Mock()
+        response.links = {}
+        response.json.return_value = {
             'bundle': {
                 'files': [
                     {
@@ -192,6 +193,8 @@ class TestAccessorApi(TestCase):
                 ]
             }
         }
+        client = Mock()
+        client.get_bundle._request.return_value = response
         with self.assertRaises(NotImplementedError) as cm:
             # noinspection PyTypeChecker
             download_bundle_metadata(client, replica, uuid)
@@ -493,6 +496,13 @@ class TestAccessorApi(TestCase):
         # FIXME: Assert JSON output?
 
         self.assertEqual({}, errors)
+
+    def test_large_bundle(self):
+        _, manifest, _ = download_bundle_metadata(client=dss_client('staging'),
+                                                  replica='aws',
+                                                  uuid='365c5f87-460a-41bc-a690-70ae6b5dba54',
+                                                  version='2018-10-17T092427.195428Z')
+        self.assertEqual(786, len(manifest))
 
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
