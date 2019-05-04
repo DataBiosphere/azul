@@ -442,14 +442,17 @@ class TestHCAIndexer(IndexerTestCase):
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit["_index"])
             contents = hit['_source']['contents']
-            if aggregate:
-                bundles = hit['_source']['bundles']
-                self.assertEqual(1, len(bundles))
             cell_suspensions = contents['cell_suspensions']
             if entity_type == 'files' and contents['files'][0]['file_format'] == 'pdf':
                 # The PDF files in that bundle aren't linked to a specimen
                 self.assertEqual(0, len(cell_suspensions))
             else:
+                if aggregate:
+                    bundles = hit['_source']['bundles']
+                    self.assertEqual(1, len(bundles))
+                    self.assertEqual(one(contents['protocols'])['paired_end'], [True])
+                else:
+                    self.assertEqual({p.get('paired_end') for p in contents['protocols']}, {True, None})
                 specimens = contents['specimens']
                 for specimen in specimens:
                     self.assertEqual({'bone marrow', 'temporal lobe'}, set(specimen['organ_part']))
@@ -472,9 +475,9 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_hits()
         self.assertGreater(len(hits), 0)
         for hit in hits:
+            contents = hit["_source"]['contents']
             entity_type, aggregate = config.parse_es_index_name(hit["_index"])
             if aggregate:
-                contents = hit["_source"]['contents']
                 cell_suspensions = contents['cell_suspensions']
                 self.assertEqual(1, len(cell_suspensions))
                 # Each bundle contributes a well with one cell. The data files in each bundle are derived from
@@ -482,6 +485,11 @@ class TestHCAIndexer(IndexerTestCase):
                 # Both bundles refer to the same specimen and project, so the cell count for those should be 2.
                 expected_cells = 1 if entity_type in ('files', 'bundles') else 2
                 self.assertEqual(expected_cells, cell_suspensions[0]['total_estimated_cells'])
+                self.assertEqual(one(one(contents['protocols'])['workflow']), 'smartseq2')
+                self.assertEqual(one(one(contents['protocols'])['workflow_version']), 'v2.1.0')
+            else:
+                self.assertEqual({p.get('workflow') for p in contents['protocols']}, {'smartseq2', None})
+                self.assertEqual({p.get('workflow_version') for p in contents['protocols']}, {'v2.1.0', None})
 
     def test_pooled_specimens(self):
         self._index_canned_bundle(('b7fc737e-9b7b-4800-8977-fe7c94e131df', '2018-09-12T121155.846604Z'))
@@ -626,25 +634,6 @@ class TestHCAIndexer(IndexerTestCase):
                     Counter(one(source['contents']['files'])['file_format']
                             for source in sources['files', aggregate])
                 )
-
-    def test_paired_end_field(self):
-        """
-        Index a bundle with a sequencing protocol and assert the value of the paired_end field
-        """
-        self._index_canned_bundle(('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'))
-        hits = self._get_hits()
-        for hit in hits:
-            contents = hit['_source']['contents']
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
-            if entity_type == 'files' and contents['files'][0]['file_format'] == 'pdf':
-                # The PDF files in that bundle aren't linked to a protocol
-                self.assertEqual(0, len(contents['protocols']))
-            else:
-                if aggregate:
-                    self.assertEqual(one(contents['protocols'])['paired_end'], [True])
-                else:
-                    values = [p['paired_end'] for p in contents['protocols'] if 'paired_end' in p]
-                    self.assertEqual(set(values), set([True]))
 
     def test_cell_line_sample(self):
         """
