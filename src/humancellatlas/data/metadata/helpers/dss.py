@@ -53,15 +53,27 @@ def download_bundle_metadata(client: DSSClient,
                        " guaranteed to stay in the code base in the future!")
 
     logger.debug("Getting bundle %s.%s from DSS.", uuid, version)
-    # noinspection PyUnresolvedReferences
-    response = client.get_bundle(uuid=uuid,
-                                 version=version,
-                                 replica=replica,
-                                 directurls=directurls,
-                                 presignedurls=presignedurls)
-    bundle = response['bundle']
-    manifest = bundle['files']
-    metadata_files = {f["name"]: f for f in manifest if f["indexed"]}
+    kwargs = dict(uuid=uuid,
+                  version=version,
+                  replica=replica,
+                  directurls=directurls,
+                  presignedurls=presignedurls)
+    url = None
+    manifest = []
+    while True:
+        # We can't use get_file.iterate because it only returns the `bundle.files` part of the response and swallows
+        # the `bundle.version`. See https://github.com/HumanCellAtlas/dcp-cli/issues/331
+        # noinspection PyUnresolvedReferences,PyProtectedMember
+        response = client.get_bundle._request(kwargs, url=url)
+        bundle = response.json()['bundle']
+        manifest.extend(bundle['files'])
+        try:
+            url = response.links['next']['url']
+        except KeyError:
+            break
+
+    metadata_files = {f['name']: f for f in manifest if f['indexed']}
+
     for f in metadata_files.values():
         content_type, _, _ = f['content-type'].partition(';')
         expected_content_type = 'application/json'

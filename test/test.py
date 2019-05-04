@@ -177,9 +177,10 @@ class TestAccessorApi(TestCase):
 
     def test_bad_content_type(self):
         deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
-        client = Mock()
         file_uuid, file_version = 'b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-09-20T232924.687620Z'
-        client.get_bundle.return_value = {
+        response = Mock()
+        response.links = {}
+        response.json.return_value = {
             'bundle': {
                 'files': [
                     {
@@ -192,6 +193,8 @@ class TestAccessorApi(TestCase):
                 ]
             }
         }
+        client = Mock()
+        client.get_bundle._request.return_value = response
         with self.assertRaises(NotImplementedError) as cm:
             # noinspection PyTypeChecker
             download_bundle_metadata(client, replica, uuid)
@@ -215,6 +218,7 @@ class TestAccessorApi(TestCase):
         A vx primary bundle with a cell_suspension as sequencing input
         """
         self._test_bundle(uuid='3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2',
+                          version=None,
                           deployment='staging',
                           diseases={'glioblastoma'}),
 
@@ -427,6 +431,7 @@ class TestAccessorApi(TestCase):
         has_library_preps = library_construction_methods != set() or len(library_prep_protos) > 0
         self.assertEqual({LibraryPreparationProtocol} if has_library_preps else set(), library_prep_proto_types)
         self.assertEqual(library_construction_methods, {p.library_construction_method for p in library_prep_protos})
+        # noinspection PyDeprecation
         self.assertEqual(library_construction_methods, {p.library_construction_approach for p in library_prep_protos})
 
         if slice_thickness is not None:
@@ -494,6 +499,13 @@ class TestAccessorApi(TestCase):
 
         self.assertEqual({}, errors)
 
+    def test_large_bundle(self):
+        _, manifest, _ = download_bundle_metadata(client=dss_client('staging'),
+                                                  replica='aws',
+                                                  uuid='365c5f87-460a-41bc-a690-70ae6b5dba54',
+                                                  version='2018-10-17T092427.195428Z')
+        self.assertEqual(786, len(manifest))
+
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
         version = '2019-02-02T065454.662896Z'
@@ -530,8 +542,10 @@ class TestAccessorApi(TestCase):
             publication = project.publications.pop()
             title = 'Precursors of human CD4+ cytotoxic T lymphocytes identified by single-cell transcriptome analysis.'
             self.assertEqual(publication.title, title)
+            # noinspection PyDeprecation
             self.assertEqual(publication.title, publication.publication_title)
             self.assertEqual(publication.url, 'http://immunology.sciencemag.org/content/3/19/eaan8664.long')
+            # noinspection PyDeprecation
             self.assertEqual(publication.url, publication.publication_url)
             project_roles = {c.project_role for c in project.contributors}
             self.assertEqual(project_roles, {None, 'external curator', 'Human Cell Atlas wrangler'})
@@ -555,8 +569,15 @@ class TestAccessorApi(TestCase):
             bundle = Bundle(uuid, version, manifest, metadata_files)
             project = bundle.projects[UUID('d96c2451-6e22-441f-a3e6-70fd0878bb1b')]
             self.assertEqual(len(project.contributors), 5)
-            expected_names = {'Sabina,,Kanton', 'Barbara,,Treutlein', 'J,Gray,Camp', 'Mallory,Ann,Freeberg', 'Zhisong,,He'}
+            expected_names = {
+                'Sabina,,Kanton',
+                'Barbara,,Treutlein',
+                'J,Gray,Camp',
+                'Mallory,Ann,Freeberg',
+                'Zhisong,,He'
+            }
             self.assertEqual({c.name for c in project.contributors}, expected_names)
+            # noinspection PyDeprecation
             self.assertEqual({c.contact_name for c in project.contributors}, expected_names)
 
         assert_bundle()
@@ -579,28 +600,35 @@ class TestAccessorApi(TestCase):
                     self.assertEqual(file.format, 'fastq.gz')
                 if isinstance(file, SupplementaryFile):
                     self.assertEqual(file.format, 'pdf')
+                # noinspection PyDeprecation
                 self.assertEqual(file.format, file.file_format)
 
         assert_bundle()
 
-        for file in [metadata_files[f] for f in metadata_files if f.startswith('sequence_file_')
-                                                               or f.startswith('supplementary_file_')]:
-            self._rename_keys(file['file_core'], format='file_format')
+        for file_name, file_content in metadata_files.items():
+            if file_name.startswith('sequence_file_') or file_name.startswith('supplementary_file_'):
+                self._rename_keys(file_content['file_core'], format='file_format')
 
         assert_bundle()
 
     def test_link_destination_type(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        replica = 'aws'
-        deployment = 'prod'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
 
         def assert_bundle():
             bundle = Bundle(uuid, version, manifest, metadata_files)
             destination_types = {link.destination_type for link in bundle.links}
-            expected_types = {'library_preparation_protocol', 'sequencing_protocol', 'dissociation_protocol',
-                              'differentiation_protocol', 'ipsc_induction_protocol', 'biomaterial', 'process', 'file'}
+            expected_types = {
+                'library_preparation_protocol',
+                'sequencing_protocol',
+                'dissociation_protocol',
+                'differentiation_protocol',
+                'ipsc_induction_protocol',
+                'biomaterial',
+                'process',
+                'file'
+            }
             self.assertEqual(destination_types, expected_types)
 
         assert_bundle()
@@ -610,6 +638,7 @@ class TestAccessorApi(TestCase):
                 self._rename_keys(protocol, type='protocol_type')
 
         assert_bundle()
+
 
 # noinspection PyUnusedLocal
 def load_tests(loader, tests, ignore):
