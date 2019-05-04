@@ -430,6 +430,7 @@ class TestAccessorApi(TestCase):
         has_library_preps = library_construction_methods != set() or len(library_prep_protos) > 0
         self.assertEqual({LibraryPreparationProtocol} if has_library_preps else set(), library_prep_proto_types)
         self.assertEqual(library_construction_methods, {p.library_construction_method for p in library_prep_protos})
+        # noinspection PyDeprecation
         self.assertEqual(library_construction_methods, {p.library_construction_approach for p in library_prep_protos})
 
         if slice_thickness is not None:
@@ -540,8 +541,10 @@ class TestAccessorApi(TestCase):
             publication = project.publications.pop()
             title = 'Precursors of human CD4+ cytotoxic T lymphocytes identified by single-cell transcriptome analysis.'
             self.assertEqual(publication.title, title)
+            # noinspection PyDeprecation
             self.assertEqual(publication.title, publication.publication_title)
             self.assertEqual(publication.url, 'http://immunology.sciencemag.org/content/3/19/eaan8664.long')
+            # noinspection PyDeprecation
             self.assertEqual(publication.url, publication.publication_url)
             project_roles = {c.project_role for c in project.contributors}
             self.assertEqual(project_roles, {None, 'external curator', 'Human Cell Atlas wrangler'})
@@ -567,6 +570,7 @@ class TestAccessorApi(TestCase):
             self.assertEqual(len(project.contributors), 5)
             expected_names = {'Sabina,,Kanton', 'Barbara,,Treutlein', 'J,Gray,Camp', 'Mallory,Ann,Freeberg', 'Zhisong,,He'}
             self.assertEqual({c.name for c in project.contributors}, expected_names)
+            # noinspection PyDeprecation
             self.assertEqual({c.contact_name for c in project.contributors}, expected_names)
 
         assert_bundle()
@@ -589,6 +593,7 @@ class TestAccessorApi(TestCase):
                     self.assertEqual(file.format, 'fastq.gz')
                 if isinstance(file, SupplementaryFile):
                     self.assertEqual(file.format, 'pdf')
+                # noinspection PyDeprecation
                 self.assertEqual(file.format, file.file_format)
 
         assert_bundle()
@@ -620,6 +625,7 @@ class TestAccessorApi(TestCase):
                 self._rename_keys(protocol, type='protocol_type')
 
         assert_bundle()
+
 
 # noinspection PyUnusedLocal
 def load_tests(loader, tests, ignore):
