@@ -218,6 +218,7 @@ class TestAccessorApi(TestCase):
         A vx primary bundle with a cell_suspension as sequencing input
         """
         self._test_bundle(uuid='3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2',
+                          version=None,
                           deployment='staging',
                           diseases={'glioblastoma'}),
 
@@ -568,7 +569,13 @@ class TestAccessorApi(TestCase):
             bundle = Bundle(uuid, version, manifest, metadata_files)
             project = bundle.projects[UUID('d96c2451-6e22-441f-a3e6-70fd0878bb1b')]
             self.assertEqual(len(project.contributors), 5)
-            expected_names = {'Sabina,,Kanton', 'Barbara,,Treutlein', 'J,Gray,Camp', 'Mallory,Ann,Freeberg', 'Zhisong,,He'}
+            expected_names = {
+                'Sabina,,Kanton',
+                'Barbara,,Treutlein',
+                'J,Gray,Camp',
+                'Mallory,Ann,Freeberg',
+                'Zhisong,,He'
+            }
             self.assertEqual({c.name for c in project.contributors}, expected_names)
             # noinspection PyDeprecation
             self.assertEqual({c.contact_name for c in project.contributors}, expected_names)
@@ -598,24 +605,30 @@ class TestAccessorApi(TestCase):
 
         assert_bundle()
 
-        for file in [metadata_files[f] for f in metadata_files if f.startswith('sequence_file_')
-                                                               or f.startswith('supplementary_file_')]:
-            self._rename_keys(file['file_core'], format='file_format')
+        for file_name, file_content in metadata_files.items():
+            if file_name.startswith('sequence_file_') or file_name.startswith('supplementary_file_'):
+                self._rename_keys(file_content['file_core'], format='file_format')
 
         assert_bundle()
 
     def test_link_destination_type(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        replica = 'aws'
-        deployment = 'prod'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica, deployment)
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
 
         def assert_bundle():
             bundle = Bundle(uuid, version, manifest, metadata_files)
             destination_types = {link.destination_type for link in bundle.links}
-            expected_types = {'library_preparation_protocol', 'sequencing_protocol', 'dissociation_protocol',
-                              'differentiation_protocol', 'ipsc_induction_protocol', 'biomaterial', 'process', 'file'}
+            expected_types = {
+                'library_preparation_protocol',
+                'sequencing_protocol',
+                'dissociation_protocol',
+                'differentiation_protocol',
+                'ipsc_induction_protocol',
+                'biomaterial',
+                'process',
+                'file'
+            }
             self.assertEqual(destination_types, expected_types)
 
         assert_bundle()
