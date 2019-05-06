@@ -56,8 +56,9 @@ app.log.setLevel(logging.DEBUG)
 
 sort_defaults = {
     'files': ('fileName', 'asc'),
-    'specimens': ('specimenId', 'asc'),
+    'samples': ('sampleId', 'asc'),
     'projects': ('projectTitle', 'asc'),
+    'bundles': ('bundleVersion', 'desc')
 }
 
 
@@ -206,9 +207,9 @@ def get_data(file_id=None):
     return repository_search('files', file_id)
 
 
-@app.route('/repository/specimens', methods=['GET'], cors=True)
-@app.route('/repository/specimens/{specimen_id}', methods=['GET'], cors=True)
-def get_specimen_data(specimen_id=None):
+@app.route('/repository/samples', methods=['GET'], cors=True)
+@app.route('/repository/samples/{sample_id}', methods=['GET'], cors=True)
+def get_sample_data(sample_id=None):
     """
     Returns a dictionary with entries that can be used by the browser
     to display the data and facets
@@ -250,7 +251,54 @@ def get_specimen_data(specimen_id=None):
     :return: Returns a dictionary with the entries to be used when generating
     the facets and/or table data
     """
-    return repository_search('specimens', specimen_id)
+    return repository_search('samples', sample_id)
+
+
+@app.route('/repository/bundles', methods=['GET'], cors=True)
+@app.route('/repository/bundles/{bundle_uuid}', methods=['GET'], cors=True)
+def get_bundle_data(bundle_uuid=None):
+    """
+    Returns a dictionary with entries that can be used by the browser
+    to display the data and facets
+    parameters:
+        - name: filters
+          in: query
+          type: string
+          description: Filters to be applied when calling ElasticSearch
+        - name: size
+          in: integer
+          type: string
+          description: Size of the page being returned
+        - name: order
+          in: query
+          type: string
+          description: Whether it should be in ascending or descending order
+        - name: sort
+          in: query
+          type: string
+          description: Which field to sort by
+        - name: search_after
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
+          to set both this and search_before.
+        - name: search_after_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
+        - name: search_before
+          in: query
+          type: string
+          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
+          to set both this and search_after.
+        - name: search_before_uid
+          in: query
+          type: string
+          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
+    :return: Returns a dictionary with the entries to be used when generating
+    the facets and/or table data
+    """
+    return repository_search('bundles', bundle_uuid)
 
 
 @app.route('/repository/projects', methods=['GET'], cors=True)
@@ -421,10 +469,17 @@ def get_manifest():
         app.current_request.query_params = {}
     from azul.service import AbstractService
     filters = AbstractService.parse_filters(params.get('filters'))
-    format = params.get('format', 'tsv')
     es_td = EsTd()
-    response = es_td.transform_manifest(format, filters)
+    response = es_td.transform_manifest(get_format(params), filters)
     return response
+
+
+def get_format(params):
+    format_ = params.get('format', 'tsv')
+    if format_ in ('tsv', 'bdbag'):
+        return format_
+    else:
+        raise BadRequestError(f'{format_} is not a valid manifest format.')
 
 
 @app.route('/manifest/files', methods=['GET'], cors=True)
@@ -457,6 +512,8 @@ def start_manifest_generation():
     If the manifest generation is done and the manifest is ready to be downloaded, the response will
     have a 302 status and will redirect to the URL of the manifest.
     """
+    get_format(app.current_request.query_params)
+
     wait_time, location = handle_manifest_generation_request()
     return Response(body='',
                     headers={
@@ -1196,8 +1253,8 @@ def add_all_results_to_cart(cart_id):
     except KeyError:
         raise BadRequestError('entityType and filters must be given')
 
-    if entity_type not in {'files', 'specimens', 'projects'}:
-        raise BadRequestError('entityType must be one of files, specimens, or projects')
+    if entity_type not in {'files', 'samples', 'projects'}:
+        raise BadRequestError('entityType must be one of files, samples, or projects')
 
     try:
         filters = json.loads(filters)
