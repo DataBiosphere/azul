@@ -49,6 +49,10 @@ class AWS:
     def iam(self):
         return boto3.client('iam')
 
+    @memoized_property
+    def secretsmanager(self):
+        return boto3.client('secretsmanager')
+
     @lru_cache(maxsize=1)
     def dynamo(self, endpoint_url, region_name):
         return boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
@@ -105,6 +109,18 @@ class AWS:
         return {} if self.permissions_boundary is None else {
             'permissions_boundary': self.permissions_boundary['Arn']
         }
+
+    def get_hmac_key_and_id(self):
+        # Note: dict contains 'key' and 'key_id' as keys and is provisioned in scripts/provision_credentials.py
+        response = self.secretsmanager.get_secret_value(SecretId=config.secrets_manager_secret_name('indexer', 'hmac'))
+        secret_dict = json.loads(response['SecretString'])
+        return secret_dict['key'], secret_dict['key_id']
+
+    @lru_cache()
+    def get_hmac_key_and_id_cached(self, cache_key_id):
+        key, key_id = self.get_hmac_key_and_id()
+        assert cache_key_id == key_id
+        return key, key_id
 
 
 aws = AWS()

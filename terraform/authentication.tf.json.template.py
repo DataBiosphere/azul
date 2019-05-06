@@ -1,3 +1,5 @@
+import shlex
+
 from azul import config
 from azul.template import emit
 
@@ -6,32 +8,64 @@ emit({
         {
             "google_service_account": {
                 "indexer": {
+                    # We set the count to 0 to ensure that the destroy provisioner runs.
+                    # See https://www.terraform.io/docs/provisioners/index.html#destroy-time-provisioners
+                    "count": 1 if config.subscribe_to_dss else 0,
                     "project": "${local.google_project}",
                     "account_id": config.qualified_resource_name('indexer'),
-                    "display_name": f"Azul indexer in {config.deployment_stage}"
-                }
-            }
-        },
-        {
-            "google_service_account_key": {
-                "indexer": {
-                    "service_account_id": "${google_service_account.indexer.name}"
-                }
-            }
-        },
-        {
-            "aws_secretsmanager_secret": {
-                "indexer_google_service_account": {
-                    "name": config.google_service_account('indexer'),
-                    "recovery_window_in_days": 0  # force immediate deletion
+                    "display_name": f"Azul indexer in {config.deployment_stage}",
+                    "provisioner": [
+                        {
+                            "local-exec": {
+                                "command": ' '.join(map(shlex.quote, [
+                                    "python",
+                                    config.project_root + "/scripts/provision_credentials.py",
+                                    "google-key",
+                                    "--build",
+                                    "${google_service_account.indexer.email}",
+                                ]))
+                            }
+                        }, {
+                            "local-exec": {
+                                "when": "destroy",
+                                "command": ' '.join(map(shlex.quote, [
+                                    "python",
+                                    config.project_root + "/scripts/provision_credentials.py",
+                                    "google-key",
+                                    "--destroy",
+                                    "${google_service_account.indexer.email}",
+                                ]))
+                            }
+                        }
+                    ]
                 }
             },
-            "aws_secretsmanager_secret_version": {
-                "indexer_google_service_account": {
-                    "secret_id": "${aws_secretsmanager_secret.indexer_google_service_account.id}",
-                    "secret_string": "${base64decode(google_service_account_key.indexer.private_key)}"
+            "null_resource":{
+                "hmac-secret": {
+                    "provisioner": [
+                        {
+                            "local-exec": {
+                                "command": ' '.join(map(shlex.quote, [
+                                    "python",
+                                    config.project_root + "/scripts/provision_credentials.py",
+                                    "hmac-key",
+                                    "--build",
+                                    ]))
+                            }
+                        }, {
+                            "local-exec": {
+                                "when": "destroy",
+                                "command": ' '.join(map(shlex.quote, [
+                                    "python",
+                                    config.project_root + "/scripts/provision_credentials.py",
+                                    "hmac-key",
+                                    "--destroy",
+                                    ]))
+                            }
+                        }
+                    ]
                 }
             }
-        }
+        },
     ]
-} if config.subscribe_to_dss else None)
+ })

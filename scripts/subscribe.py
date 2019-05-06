@@ -24,7 +24,7 @@ def main(argv):
 
     if options.shared:
         sm = boto3.client('secretsmanager')
-        creds = sm.get_secret_value(SecretId=config.google_service_account('indexer'))
+        creds = sm.get_secret_value(SecretId=config.secrets_manager_secret_name('indexer', 'google_service_account'))
         with tempfile.NamedTemporaryFile(mode='w+') as f:
             f.write(creds['SecretString'])
             f.flush()

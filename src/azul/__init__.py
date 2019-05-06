@@ -309,8 +309,8 @@ class Config:
         require(self.term_re.fullmatch(term) is not None,
                 f"{name} is either too short, too long or contains invalid characters: '{term}'")
 
-    def google_service_account(self, lambda_name):
-        return f"dcp/azul/{self.deployment_stage}/{lambda_name}/google_service_account"
+    def secrets_manager_secret_name(self, *args):
+        return '/'.join(['dcp', 'azul', self.deployment_stage, *args])
 
     def enable_gcp(self):
         return 'GOOGLE_PROJECT' in os.environ
@@ -417,11 +417,6 @@ class Config:
             f"https://{self.deployment_stage}.data.humancellatlas.org/",
             f"{self.access_token_issuer}/userinfo"
         ]
-
-    # TODO: Generate subscription HMAC key dynamically and store it securely
-    #  https://github.com/DataBiosphere/azul/issues/794
-    hmac_key = 'São Paulo number Juan among all the numbers'
-    hmac_key_id = 'Mueto bem'
 
     @property
     def fusillade_endpoint(self) -> str:
