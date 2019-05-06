@@ -1,9 +1,11 @@
+from unittest import mock
 import boto3
 from collections import deque
 import logging
 import random
 
 from furl import furl
+from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 import requests
 import time
 from typing import Any, Mapping, Set, Optional, IO
@@ -22,6 +24,7 @@ from zipfile import ZipFile
 from azul import config
 from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
+from azul.dss import patch_client_for_direct_file_access
 from azul.requests import requests_session
 from azul import drs
 
@@ -264,3 +267,63 @@ class IntegrationTest(unittest.TestCase):
     def _get_file_uuid(cls, response: bytes) -> str:
         """Returns file UUID of first FASTQ file."""
 
+
+
+class DSSIntegrationTest(unittest.TestCase):
+
+    def test_patched_dss_client(self):
+        query = {
+            "query": {
+                "bool": {
+                    "must_not": [
+                        {
+                            "term": {
+                                "admin_deleted": True
+                            }
+                        }
+                    ],
+                    "must": [
+                        {
+                            "exists": {
+                                "field": "files.project_json"
+                            }
+                        },
+                        {
+                            "range": {
+                                "manifest.version": {
+                                    "gte": "2019-04-01"
+                                }
+                            }
+                        }
+
+                    ]
+                }
+            }
+        }
+        self.maxDiff = None
+        for patch in False, True:
+            for replica in 'aws', 'gcp':
+                with self.subTest(patch=patch, replica=replica):
+                    dss_client = config.dss_client()
+                    if patch:
+                        patch_client_for_direct_file_access(dss_client)
+                    response = dss_client.post_search(es_query=query, replica=replica, per_page=10)
+                    bundle_uuid, _, bundle_version = response['results'][0]['bundle_fqid'].partition('.')
+                    with mock.patch('azul.dss.logger') as log:
+                        _, manifest, metadata = download_bundle_metadata(client=dss_client,
+                                                                         replica=replica,
+                                                                         uuid=bundle_uuid,
+                                                                         version=bundle_version,
+                                                                         num_workers=config.num_dss_workers)
+                        self.assertGreater(len(metadata), 0)
+                        self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))
+                        if patch:
+                            if replica == 'aws':
+                                # Extract the log method name and the first two words of log message logged
+                                actual = [(m, ' '.join(a[0].split()[:2])) for m, a, k in log.mock_calls]
+                                expected = [('debug', 'Loading file'), ('debug', 'Loading blob')] * len(metadata)
+                                self.assertSequenceEqual(sorted(actual), sorted(expected))
+                            else:
+                                self.assertListEqual(log.mock_calls, [mock.call.warning(mock.ANY)] * len(metadata))
+                        else:
+                            self.assertListEqual(log.mock_calls, [])
