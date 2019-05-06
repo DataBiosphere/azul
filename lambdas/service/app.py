@@ -784,8 +784,11 @@ def _dss_files(uuid, fetch=True):
             if wait == '0':
                 pass
             elif wait == '1':
+                # Sleep in the lambda but ensure that we wake up before it runs out of execution time (and before API
+                # Gateway times out) so we get a chance to return a response to the client.
+                remaining_lambda_seconds = app.lambda_context.get_remaining_time_in_millis() / 1000
                 server_side_sleep = min(float(retry_after),
-                                        app.lambda_context.get_remaining_time_in_millis() / 1000 - 5)
+                                        remaining_lambda_seconds - config.api_gateway_timeout_padding - 3)
                 time.sleep(server_side_sleep)
                 retry_after = round(retry_after - server_side_sleep)
             else:

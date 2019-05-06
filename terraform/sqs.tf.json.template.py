@@ -10,7 +10,7 @@ emit(
                 "aws_sqs_queue": {
                     "notification_queue": {
                         "name": config.notify_queue_name,
-                        "visibility_timeout_seconds": config.lambda_timeout,
+                        "visibility_timeout_seconds": config.indexer_lambda_timeout + 10,
                         "message_retention_seconds": 24 * 60 * 60,
                         "redrive_policy": json.dumps({
                             "maxReceiveCount": 10,
@@ -19,7 +19,7 @@ emit(
                     },
                     "token_queue": {
                         "name": config.token_queue_name,
-                        "visibility_timeout_seconds": config.lambda_timeout,
+                        "visibility_timeout_seconds": config.indexer_lambda_timeout + 10,
                         "message_retention_seconds": 24 * 60 * 60,
                         "redrive_policy": json.dumps({
                             "maxReceiveCount": 10,
@@ -30,7 +30,7 @@ emit(
                         "name": config.document_queue_name,
                         "fifo_queue": True,
                         "delay_seconds": config.es_refresh_interval + 9,
-                        "visibility_timeout_seconds": config.lambda_timeout,
+                        "visibility_timeout_seconds": config.indexer_lambda_timeout + 10,
                         "message_retention_seconds": 24 * 60 * 60,
                         "redrive_policy": json.dumps({
                             "maxReceiveCount": 10,

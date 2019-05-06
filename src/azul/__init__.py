@@ -301,7 +301,17 @@ class Config:
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
 
-    lambda_timeout = 300
+    indexer_lambda_timeout = 5 * 60
+
+    service_lambda_timeout = 15 * 60
+
+    api_gateway_timeout = 29
+
+    # The number of seconds to extend the timeout of a Lambda fronted by API Gateway so that API Gateway times out
+    # before the Lambda. We pad the Lambda timeout so we get consistent behaviour. Without this padding we'd have a
+    # race between the Lambda being killed and API Gateway timing out.
+    #
+    api_gateway_timeout_padding = 2
 
     term_re = re.compile("[a-z][a-z0-9]{2,29}")
 
