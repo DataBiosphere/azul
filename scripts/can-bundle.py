@@ -18,6 +18,7 @@ from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from humancellatlas.data.metadata.helpers.json import as_json
 
 from azul import config
+from azul.dss import patch_client_for_direct_file_access
 from azul.files import write_file_atomically
 
 logger = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ def main(argv):
     args = parser.parse_args(argv)
 
     dss_client = config.dss_client(dss_endpoint=args.dss_url)
+    patch_client_for_direct_file_access(dss_client)
     version, manifest, metadata_files = download_bundle_metadata(client=dss_client,
                                                                  replica=args.replica,
                                                                  uuid=args.uuid,
