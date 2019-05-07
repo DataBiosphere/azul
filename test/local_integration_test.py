@@ -135,7 +135,7 @@ class IntegrationTest(unittest.TestCase):
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'samples.tsv')
             with zip_fh.open(file_path) as file:
-                self._check_manifest(file, 'entity:bundle_id')
+                self._check_manifest(file, 'bundle_uuid')
 
     def _check_manifest(self, file: IO[bytes], uuid_field_name: str):
         text = TextIOWrapper(file)
