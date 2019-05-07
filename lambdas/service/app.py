@@ -771,9 +771,12 @@ def _dss_files(uuid, fetch=True):
     url = config.dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
     file_name = params.pop('fileName', None)
     wait = params.pop('wait', None)
+    request_index = params.pop('requestIndex', 0)
     dss_response = requests.get(url, params=params, allow_redirects=False)
     if dss_response.status_code == 301:
-        retry_after = int(dss_response.headers.get('Retry-After'))
+        retry_after = min(int(dss_response.headers.get('Retry-After')),
+                          int(1.3 ** request_index))
+        params['requestIndex'] = request_index + 1
         location = dss_response.headers['Location']
         location = urllib.parse.urlparse(location)
         query = urllib.parse.parse_qs(location.query, strict_parsing=True)
