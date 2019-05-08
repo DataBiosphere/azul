@@ -725,6 +725,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_cell_line(self, cell_line):
         return {
             "id": cell_line["biomaterial_id"],
+            "cellLineType": cell_line.get("cell_line_type", None),
+            "modelOrgan": cell_line.get("model_organ", None),
         }
 
     def make_cell_lines(self, entry):
