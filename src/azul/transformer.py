@@ -531,7 +531,8 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
                 assert len(entities) == 1
             else:
                 aggregator = self.get_aggregator(entity_type)
-                entities = aggregator.aggregate(contents[entity_type])
+                if aggregator is not None:
+                    entities = aggregator.aggregate(contents[entity_type])
             aggregate_contents[entity_type] = entities
         return aggregate_contents
 
