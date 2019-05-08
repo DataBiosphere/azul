@@ -39,6 +39,8 @@
     "organismAgeUnit": "contents.donors.organism_age_unit",
     "preservationMethod": "contents.specimens.preservation_method",
 
+    "cellLineType": "contents.cell_lines.cell_line_type",
+
     "cellCount": "contents.cell_suspensions.total_estimated_cells",
     "selectedCellType": "contents.cell_suspensions.selected_cell_type",
 
@@ -159,6 +161,7 @@
     "laboratory",
     "preservationMethod",
     "projectTitle",
+    "cellLineType",
     "selectedCellType",
     "projectDescription",
     "institution",

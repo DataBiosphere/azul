@@ -110,6 +110,8 @@ def _cell_line_dict(cell_line: api.CellLine) -> JSON:
     return {
         'document_id': str(cell_line.document_id),
         'biomaterial_id': cell_line.biomaterial_id,
+        'cell_line_type': cell_line.cell_line_type,
+        'model_organ': cell_line.model_organ
     }
 
 
@@ -281,9 +283,12 @@ class CellSuspensionVisitor(BiomaterialVisitor):
         elif isinstance(entity, api.SpecimenFromOrganism):
             self._set('organ', PrioritySetAccumulator, (0, entity.organ))
             self._set('organ_part', PrioritySetAccumulator, (0, entity.organ_parts))
-        elif isinstance(entity, api.Organoid):
+        elif isinstance(entity, api.CellLine):
             self._set('organ', PrioritySetAccumulator, (1, entity.model_organ))
-            self._set('organ_part', PrioritySetAccumulator, (1, entity.model_organ_part))
+            self._set('organ_part', PrioritySetAccumulator, (1, None))
+        elif isinstance(entity, api.Organoid):
+            self._set('organ', PrioritySetAccumulator, (2, entity.model_organ))
+            self._set('organ_part', PrioritySetAccumulator, (2, entity.model_organ_part))
 
     @property
     def merged_cell_suspension(self) -> JSON:
