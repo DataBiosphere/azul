@@ -1,0 +1,580 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Day7_DroNc_BioRep2",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "provenance": {
+            "document_id": "d29c64bd-b8d2-4e72-abbc-5536a44eac12",
+            "submission_date": "2018-12-04T16:22:45.794Z",
+            "update_date": "2018-12-04T16:22:50.680Z"
+        }
+    },
+    "cell_line_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "cell_line_Day7_hiPSC-CM_BioRep2",
+            "biomaterial_name": "hiPSC-CM,Day7",
+            "biomaterial_description": "human induced Pluripotent Stem Cells differentiating into Cardiomyocytes, day 7",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "cell_line_type": "stem cell-derived",
+        "growth_conditions": {
+            "mycoplasma_testing_method": "Microbiological assay",
+            "mycoplasma_testing_results": "pass",
+            "passage_number": 14,
+            "growth_medium": "hESC-qualified Matrigel"
+        },
+        "cell_type": {
+            "text": "cardiomyocyte",
+            "ontology": "CL:0000746",
+            "ontology_label": "cardiac muscle cell"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "cell_morphology": {
+            "cell_morphology": "adherent cells , form single layer colonies",
+            "cell_size": "40-45",
+            "cell_size_unit": {
+                "text": "micrometer",
+                "ontology": "UO:0000017",
+                "ontology_label": "micrometer"
+            },
+            "percent_cell_viability": 90,
+            "cell_viability_method": "trypan blue staining",
+            "cell_viability_result": "pass"
+        },
+        "provenance": {
+            "document_id": "195b2621-ec05-4618-9063-c56048de97d1",
+            "submission_date": "2018-12-04T16:22:45.625Z",
+            "update_date": "2018-12-04T16:22:50.631Z"
+        }
+    },
+    "cell_line_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "cell_line_GM18517",
+            "biomaterial_name": "LCL",
+            "biomaterial_description": "LCL from B-Lymphocyte",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "supplier": "Coriell",
+        "catalog_number": "GM18517",
+        "catalog_url": "https://www.coriell.org/0/Sections/Search/Sample_Detail.aspx?Ref=GM18517&product=CC",
+        "cell_line_type": "primary",
+        "growth_conditions": {
+            "mycoplasma_testing_results": "pass"
+        },
+        "cell_type": {
+            "text": "lymphocyte of B lineage",
+            "ontology": "CL:0000945",
+            "ontology_label": "lymphocyte of B lineage"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "provenance": {
+            "document_id": "c737000c-60d3-43c6-9017-16de92294529",
+            "submission_date": "2018-12-04T16:22:45.467Z",
+            "update_date": "2018-12-04T16:22:50.823Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "specimen_2",
+            "biomaterial_name": "blood",
+            "biomaterial_description": "B-Lymphocyte transformed with Epstein-Barr Virus",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "blood",
+            "ontology": "UBERON:0000178",
+            "ontology_label": "blood"
+        },
+        "organ_part": {
+            "text": "venous blood",
+            "ontology": "UBERON:0013756",
+            "ontology_label": "venous blood"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "provenance": {
+            "document_id": "50eec9fe-0138-458a-a946-9eec1403eb80",
+            "submission_date": "2018-12-04T16:22:45.420Z",
+            "update_date": "2018-12-04T16:22:50.751Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "GM18517",
+            "biomaterial_name": "YORUBA Female",
+            "biomaterial_description": "Nigerian Female Blood Donor, Age Unknown",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "human_specific": {
+            "ethnicity": [
+                {
+                    "text": "YORUBA",
+                    "ontology": "HANCESTRO:0575",
+                    "ontology_label": "Yoruban"
+                }
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "is_living": "yes",
+        "sex": "female",
+        "provenance": {
+            "document_id": "c4cfe441-ae72-4539-a23b-fac1fb61103e",
+            "submission_date": "2018-12-04T16:22:45.388Z",
+            "update_date": "2018-12-04T16:22:50.624Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "AB-HE0202-C-CZI-day7-DroNc_S2_R1_001.fastq.gz",
+            "file_format": "fastq.gz",
+            "checksum": "7611477fd4a2f318747ea1ebf052408c"
+        },
+        "read_index": "read1",
+        "lane_index": 1,
+        "read_length": 20,
+        "provenance": {
+            "document_id": "12b25cbd-8cfa-4f0e-818f-d6ba3e823af4",
+            "submission_date": "2018-12-04T16:22:46.380Z",
+            "update_date": "2018-12-04T16:37:34.535Z"
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "AB-HE0202-C-CZI-day7-DroNc_S2_R2_001.fastq.gz",
+            "file_format": "fastq.gz",
+            "checksum": "1d3eafcb52fcc778a0f856d310ab6505"
+        },
+        "read_index": "read2",
+        "lane_index": 1,
+        "read_length": 62,
+        "provenance": {
+            "document_id": "65d3d936-ae9d-4a18-a8c7-73ce6132355e",
+            "submission_date": "2018-12-04T16:22:46.388Z",
+            "update_date": "2018-12-04T16:43:52.193Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/9.0.3/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "Drop-seq, DroNc-seq, Fluidigm C1 Comparison",
+            "project_title": "Comparison, calibration, and benchmarking of high-throughput single cell RNA-Seq techniques for unbiased cell-type classification",
+            "project_description": "The Human Cell Atlas project seeks to identify and functionally characterize all cell types in the human body. Single-cell RNA-sequencing (scRNA-seq) methods quantify gene expression in individual cells. In principle, highly parallelized scRNA-seq approaches enable marker-free decomposition of cells from complex tissues to identify known and unknown cell types and provide direct insights into regulatory and functional states of each cell. Different scRNA-seq technologies vary in cell capture efficiency, library preparation, and throughput. Importantly, these approaches also vary in sensitivity and accuracy of mRNA quantification. The Human Cell Atlas project will collate data generated across many labs, necessitating the evaluation of experimental replicability, and comparing different experimental procedures. It is important to develop robust sequencing protocols and benchmark their performance on select cells and tissues. This project will perform a systematic comparison of three single cell RNA sequencing technologies, viz., Drop-Seq, Fluidigm C1, and DroNC-Seq and resulting datasets. Droplet-based methods facilitate high-throughput processing of tens of thousands of cells in parallel and at low costs, making them ideal for the Human Cell Atlas project. This project proposes to compare the sensitivity, accuracy, and precision with which the three methods quantify transcript levels within individual cells. In addition, this project will directly compare these methods using a \u2018synthetic tissue\u2019 created from a mixture of multiple cell types at known ratios."
+        },
+        "contributors": [
+            {
+                "contact_name": "Anindita,, Basu",
+                "email": "onibasu@uchicago.edu",
+                "institution": "University of Chicago",
+                "laboratory": "Basu",
+                "address": "5835 S. Cottage Grove Ave., N516, Chicago, IL 60637",
+                "country": "USA",
+                "project_role": "principal investigator",
+                "corresponding_contributor": true
+            },
+            {
+                "contact_name": "Sebastian,, Pott",
+                "email": "spott@uchicago.edu",
+                "institution": "University of Chicago",
+                "laboratory": "Pott",
+                "country": "USA",
+                "project_role": "principal investigator",
+                "corresponding_contributor": true
+            },
+            {
+                "contact_name": "Heather,, Eckart",
+                "email": "heckart@uchicago.edu",
+                "institution": "University of Chicago",
+                "laboratory": "Basu",
+                "address": "5835 S. Cottage Grove Ave., N516, Chicago, IL 60637",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Ryan,, Dohn",
+                "email": "dohnr@uchicago.edu",
+                "institution": "University of Chicago",
+                "laboratory": "Basu",
+                "address": "5835 S. Cottage Grove Ave., N516, Chicago, IL 60637",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Reem,, Elorbany",
+                "email": "reemelorbany@uchicago.edu",
+                "institution": "University of Chicago",
+                "laboratory": "Pott",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Katie,, Rhodes",
+                "email": "klrhodes@uchicago.edu",
+                "institution": "University of Chicago",
+                "laboratory": "Pott",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Eric,, Gauchat",
+                "email": "egauchat@uchicago.edu",
+                "institution": "University of Chicago",
+                "laboratory": "Basu",
+                "address": "5835 S. Cottage Grove Ave., N516, Chicago, IL 60637",
+                "country": "USA"
+            },
+            {
+                "contact_name": "Parisa,, Nejad",
+                "email": "pnejad@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "project_role": "Human Cell Atlas wrangler",
+                "corresponding_contributor": false
+            }
+        ],
+        "provenance": {
+            "document_id": "c765e3f9-7cfc-4501-8832-79e5f7abd321",
+            "submission_date": "2018-12-04T16:22:45.367Z",
+            "update_date": "2018-12-04T16:22:50.543Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "library_preparation_protocol_2",
+            "protocol_name": "High-throughput, single nuclei RNA-seq",
+            "protocol_description": "droplet based RNA-seq",
+            "publication_doi": "10.1038/nmeth.4407"
+        },
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 8
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "mRNA",
+            "ontology": "CHEBI:33699",
+            "ontology_label": "messenger RNA"
+        },
+        "library_construction_approach": {
+            "text": "DroNc-seq ",
+            "ontology": "EFO:0008720",
+            "ontology_label": "DroNc-Seq "
+        },
+        "library_construction_kit": {
+            "retail_name": "Nextera XT DNA Library Preparation Kit",
+            "catalog_number": "FC-131-1096",
+            "manufacturer": "Illumina",
+            "lot_number": "20208372",
+            "expiry_date": "2018-08-02"
+        },
+        "end_bias": "3 prime tag",
+        "strand": "second",
+        "provenance": {
+            "document_id": "7a7788ce-ba24-431b-bd4b-dc02dcee1547",
+            "submission_date": "2018-12-04T16:22:45.888Z",
+            "update_date": "2018-12-04T16:22:50.620Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/9.0.3/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_protocol_2",
+            "protocol_name": "DroNc-seq Protocol",
+            "protocol_description": "droplet based, high throughput,  single-cell RNA-seq"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina NextSeq 500",
+            "ontology": "EFO:0009173",
+            "ontology_label": "Illumina NextSeq 500"
+        },
+        "local_machine_name": "NextSeq500",
+        "paired_end": true,
+        "sequencing_approach": {
+            "text": "DroNc-seq",
+            "ontology": "EFO:0008720",
+            "ontology_label": "DroNc-Seq"
+        },
+        "provenance": {
+            "document_id": "2ea1f5b3-d137-43f5-98b6-268d82f682aa",
+            "submission_date": "2018-12-04T16:22:45.904Z",
+            "update_date": "2018-12-04T16:22:50.628Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_protocol_1",
+            "protocol_name": "Nuclei Isolation Protocol ",
+            "protocol_description": "Mechanical sheering using the EZ lysis kit"
+        },
+        "dissociation_method": {
+            "text": "mechanical dissociation",
+            "ontology": "EFO:0009129",
+            "ontology_label": "mechanical dissociation"
+        },
+        "provenance": {
+            "document_id": "028e8015-e9b6-4593-8cb8-59357085a746",
+            "submission_date": "2018-12-04T16:22:45.860Z",
+            "update_date": "2018-12-04T16:22:50.457Z"
+        }
+    },
+    "ipsc_induction_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/2.0.1/ipsc_induction_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "iPSC_induction_protcol_1",
+            "protocol_name": "iPSC Induction Protocol",
+            "protocol_description": "Reprogramming by Episomal Transfection using  a plasmids contain genes POU5F1, SOX2, KLF4, MYCL, LIN28, and an shRNA against TP53"
+        },
+        "ipsc_induction_method": "plasmid",
+        "ipsc_induction_kit": {
+            "retail_name": "AMAXA Cell Line Nucleofector Kit V",
+            "catalog_number": "VCA-1003",
+            "manufacturer": "Lonza"
+        },
+        "pluripotency_vector_removed": "no",
+        "ipsc_induction_produced_in_house": true,
+        "provenance": {
+            "document_id": "de1be240-5ac5-4b6d-8294-ae0c58e0e289",
+            "submission_date": "2018-12-04T16:22:45.824Z",
+            "update_date": "2018-12-04T16:22:50.382Z"
+        }
+    },
+    "differentiation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/1.3.0/differentiation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "differentiation_protocol_2",
+            "protocol_name": "Cardiomyocyte Differentiation Protocol ",
+            "protocol_description": "Directed differentiation of iPSC to cardiomyocytes using B27 insulin, Glutamax and Pennicillin/Streptomycin"
+        },
+        "differentiation_method": "monolayer",
+        "target_pathway": "Wnt Pathway",
+        "provenance": {
+            "document_id": "944f1bef-a1af-4a88-a6af-e8eec48172a3",
+            "submission_date": "2018-12-04T16:22:45.843Z",
+            "update_date": "2018-12-04T16:22:50.482Z"
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "Day7_DroNc_BioRep2"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "c124da1f-12bf-48c6-baf5-95aa74439a3a",
+            "submission_date": "2018-12-04T16:22:46.893Z",
+            "update_date": "2018-12-04T16:22:53.154Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_27"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "e2144c69-dbdd-485a-834b-5d05ba06b3fc",
+            "submission_date": "2018-12-04T16:22:46.678Z",
+            "update_date": "2018-12-04T16:22:57.582Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_12"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "7b7c1273-3e0f-4f77-af53-721807a6af85",
+            "submission_date": "2018-12-04T16:22:46.521Z",
+            "update_date": "2018-12-04T16:22:57.600Z"
+        }
+    },
+    "process_3.json": {
+        "process_core": {
+            "process_id": "process_id_4"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "e1c9e3e3-fa47-49bc-b718-33ca9b89eea9",
+            "submission_date": "2018-12-04T16:22:46.453Z",
+            "update_date": "2018-12-04T16:22:57.358Z"
+        }
+    },
+    "process_4.json": {
+        "process_core": {
+            "process_id": "process_id_2"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "84d06811-a6b5-4a37-809c-842b0ca9e093",
+            "submission_date": "2018-12-04T16:22:46.435Z",
+            "update_date": "2018-12-04T16:22:57.045Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.3/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.3",
+        "links": [
+            {
+                "process": "c124da1f-12bf-48c6-baf5-95aa74439a3a",
+                "inputs": [
+                    "d29c64bd-b8d2-4e72-abbc-5536a44eac12"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "12b25cbd-8cfa-4f0e-818f-d6ba3e823af4",
+                    "65d3d936-ae9d-4a18-a8c7-73ce6132355e"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "7a7788ce-ba24-431b-bd4b-dc02dcee1547"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "2ea1f5b3-d137-43f5-98b6-268d82f682aa"
+                    }
+                ]
+            },
+            {
+                "process": "e2144c69-dbdd-485a-834b-5d05ba06b3fc",
+                "inputs": [
+                    "195b2621-ec05-4618-9063-c56048de97d1"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "d29c64bd-b8d2-4e72-abbc-5536a44eac12"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "028e8015-e9b6-4593-8cb8-59357085a746"
+                    }
+                ]
+            },
+            {
+                "process": "7b7c1273-3e0f-4f77-af53-721807a6af85",
+                "inputs": [
+                    "c737000c-60d3-43c6-9017-16de92294529"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "195b2621-ec05-4618-9063-c56048de97d1"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "de1be240-5ac5-4b6d-8294-ae0c58e0e289"
+                    },
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "944f1bef-a1af-4a88-a6af-e8eec48172a3"
+                    }
+                ]
+            },
+            {
+                "process": "e1c9e3e3-fa47-49bc-b718-33ca9b89eea9",
+                "inputs": [
+                    "50eec9fe-0138-458a-a946-9eec1403eb80"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c737000c-60d3-43c6-9017-16de92294529"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "84d06811-a6b5-4a37-809c-842b0ca9e093",
+                "inputs": [
+                    "c4cfe441-ae72-4539-a23b-fac1fb61103e"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "50eec9fe-0138-458a-a946-9eec1403eb80"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            }
+        ]
+    }
+}

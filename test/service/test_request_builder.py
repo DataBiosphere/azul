@@ -420,6 +420,7 @@ class TestRequestBuilder(WebServiceTestCase):
                     "contents": {
                         "specimens": [],
                         "cell_suspensions": [],
+                        "donors": [],
                         "files": [],
                         "protocols": [],
                         "project": {
@@ -443,12 +444,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                 ],
                                 "disease": [
                                     "disease1"
-                                ],
-                                "donor_biomaterial_id": [
-                                    "donor1"
-                                ],
-                                "genus_species": [
-                                    "species1"
                                 ]
                             },
                             {
@@ -457,12 +452,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                 ],
                                 "disease": [
                                     "disease1"
-                                ],
-                                "donor_biomaterial_id": [
-                                    "donor2"
-                                ],
-                                "genus_species": [
-                                    "species1"
                                 ]
                             }
                         ],
@@ -474,6 +463,24 @@ class TestRequestBuilder(WebServiceTestCase):
                             {
                                 "organ": ["organ2"],
                                 "total_estimated_cells": 3
+                            }
+                        ],
+                        "donors": [
+                            {
+                                "biomaterial_id": [
+                                    "donor1"
+                                ],
+                                "genus_species": [
+                                    "species1"
+                                ]
+                            },
+                            {
+                                "biomaterial_id": [
+                                    "donor2"
+                                ],
+                                "genus_species": [
+                                    "species1"
+                                ]
                             }
                         ],
                         "files": [],
