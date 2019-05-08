@@ -63,6 +63,11 @@
             "cell_viability_method": "trypan blue staining",
             "cell_viability_result": "pass"
         },
+        "model_organ": {
+            "text": "blood (cell_line)",
+            "ontology": "UBERON:0000178",
+            "ontology_label": "blood (cell_line)"
+        },
         "provenance": {
             "document_id": "195b2621-ec05-4618-9063-c56048de97d1",
             "submission_date": "2018-12-04T16:22:45.625Z",
@@ -99,6 +104,11 @@
                 "ontology_label": "Homo sapiens"
             }
         ],
+        "model_organ": {
+            "text": "blood (cell_line)",
+            "ontology": "UBERON:0000178",
+            "ontology_label": "blood (cell_line)"
+        },
         "provenance": {
             "document_id": "c737000c-60d3-43c6-9017-16de92294529",
             "submission_date": "2018-12-04T16:22:45.467Z",
