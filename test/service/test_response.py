@@ -1160,6 +1160,23 @@ class TestResponse(WebServiceTestCase):
         cell_suspension = one(keyword_response['hits'][0]['cellSuspensions'])
         self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
 
+    def test_cell_line_response(self):
+        """
+        Test KeywordSearchResponse contains the correct cell_line field values
+        """
+        keyword_response = KeywordSearchResponse(
+            hits=self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
+            entity_type='projects'
+        ).return_response().to_json()
+
+        expected_cell_lines = {
+            'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
+            'cellLineType': ['primary', 'stem cell-derived'],
+            'modelOrgan': ['blood (cell_line)']
+        }
+        cell_lines = one(one(keyword_response['hits'])['cellLines'])
+        self.assertElasticsearchResultsEqual(cell_lines, expected_cell_lines)
+
     def test_filter_by_projectId(self):
         """
         Test response when using a projectId filter

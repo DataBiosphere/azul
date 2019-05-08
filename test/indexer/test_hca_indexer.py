@@ -640,6 +640,7 @@ class TestHCAIndexer(IndexerTestCase):
         Index a bundle with the following structure:
         donor -> specimen -> cell_line -> cell_line -> cell_suspension -> sequence_files
         and assert the singleton sample matches the first cell_line up from the sequence_files
+        and assert cell_suspension inherits the organ value from the cell_line not the specimen
         """
         self._index_canned_bundle(('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'))
         hits = self._get_hits()
@@ -654,8 +655,19 @@ class TestHCAIndexer(IndexerTestCase):
                 else:
                     document_ids = [d['document_id'] for d in contents[sample_entity_type]]
                     entity = one([d for d in contents[sample_entity_type] if d['document_id'] == sample['document_id']])
-                    self.assertEqual('cell_line_Day7_hiPSC-CM_BioRep2', entity['biomaterial_id'])
+                    self.assertEqual(sample['biomaterial_id'], entity['biomaterial_id'])
                 self.assertTrue(sample['document_id'] in document_ids)
+                self.assertEqual(one(contents['specimens'])['organ'], ['blood'] if aggregate else 'blood')
+                self.assertEqual(one(contents['specimens'])['organ_part'], ['venous blood'])
+                self.assertEqual(len(contents['cell_lines']), 1 if aggregate else 2)
+                if aggregate:
+                    cell_lines_model_organ = set(one(contents['cell_lines'])['model_organ'])
+                else:
+                    cell_lines_model_organ = {cl['model_organ'] for cl in contents['cell_lines']}
+                self.assertEqual(cell_lines_model_organ, {'blood (cell_line)'})
+                self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (cell_line)'])
+                self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [None])
+
 
 
 class TestValidNotificationRequests(LocalAppTestCase):
