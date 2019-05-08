@@ -24,7 +24,8 @@ class TestResponse(WebServiceTestCase):
     maxDiff = None
     bundles = WebServiceTestCase.bundles + [
         ('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
-        ('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z')
+        ('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'),
+        ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
     ]
 
     def get_hits(self, entity_type: str, entity_id: str):
@@ -62,12 +63,25 @@ class TestResponse(WebServiceTestCase):
                             "bundleVersion": "2018-11-02T113344.698028Z"
                         }
                     ],
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [],
                             "totalCells": 1
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["female"],
+                            "disease": None,
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
                         }
                     ],
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -81,6 +95,8 @@ class TestResponse(WebServiceTestCase):
                             "version": "2018-11-02T113344.698028Z"
                         }
                     ],
+                    "organoids": [
+                    ],
                     "projects": [
                         {
                             "laboratory": ["John Dear"],
@@ -92,23 +108,32 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True]
+                            "pairedEnd": [True],
+                            "workflow": [],
+                            "workflowVersion": []
+                        }
+                    ],
+                    "samples": [
+                        {
+                            "sampleEntityType": ["specimens"],
+                            "disease": ["normal"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "preservationMethod": [None],
+                            "source": [
+                                "specimen_from_organism"
+                            ]
                         }
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": ["female"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
-                                "donor_organism",
                                 "specimen_from_organism"
                             ]
                         }
@@ -118,25 +143,38 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
-    def test_key_search_specimens_response(self):
+    def test_key_search_samples_response(self):
         """
         KeywordSearchResponse for the specimens endpoint should return file type summaries instead of files
         """
         keyword_response = KeywordSearchResponse(
             # the entity_id is hardcoded, but corresponds to the bundle above
-            hits=self.get_hits('specimens', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-            entity_type='specimens'
+            hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
+            entity_type='samples'
         ).return_response().to_json()
 
         expected_response = {
             "hits": [
                 {
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [],
                             "totalCells": 1
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["female"],
+                            "disease": None,
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
                         }
                     ],
                     "entryId": "a21dc760-a500-4236-bcff-da34a0e873d2",
@@ -147,6 +185,8 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 385472253
                         }
                     ],
+                    "organoids": [
+                    ],
                     "projects": [
                         {
                             "laboratory": ["John Dear"],
@@ -158,24 +198,31 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True]
+                            "pairedEnd": [True],
+                            "workflow": [],
+                            "workflowVersion": []
+                        }
+                    ],
+                    "samples": [
+                        {
+                            "sampleEntityType": "specimens",
+                            "id": "DID_scRSq06_pancreas",
+                            "disease": ["normal"],
+                            "organ": "pancreas",
+                            "organPart": ["islet of Langerhans"],
+                            "preservationMethod": None,
+                            "source": "specimen_from_organism",
                         }
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": ["female"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
-                            "id": "DID_scRSq06_pancreas",
-                            "organ": "pancreas",
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
-                            "preservationMethod": None,
+                            "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
                                 "specimen_from_organism",
-                                "donor_organism"
                             ]
                         }
                     ]
@@ -222,12 +269,25 @@ class TestResponse(WebServiceTestCase):
                                 "bundleVersion": "2018-11-02T113344.698028Z"
                             }
                         ],
+                        "cellLines": [
+
+                        ],
                         "cellSuspensions": [
                             {
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
                                 "selectedCellType": [],
                                 "totalCells": 1
+                            }
+                        ],
+                        "donorOrganisms": [
+                            {
+                                "biologicalSex": ["female"],
+                                "disease": None,
+                                "genusSpecies": ["Australopithecus"],
+                                "id": ["DID_scRSq06"],
+                                "organismAge": ["38"],
+                                "organismAgeUnit": ["year"],
                             }
                         ],
                         "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -241,6 +301,9 @@ class TestResponse(WebServiceTestCase):
                                 "version": "2018-11-02T113344.698028Z"
                             }
                         ],
+                        "organoids": [
+
+                        ],
                         "projects": [
                             {
                                 "laboratory": ["John Dear"],
@@ -252,24 +315,33 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                                 "libraryConstructionApproach": ["Smart-seq2"],
-                                "pairedEnd": [True]
+                                "pairedEnd": [True],
+                                "workflow": [],
+                                "workflowVersion": []
+                            }
+                        ],
+                        "samples": [
+                            {
+                                "sampleEntityType": ["specimens"],
+                                "disease": ["normal"],
+                                "id": ["DID_scRSq06_pancreas"],
+                                "organ": ["pancreas"],
+                                "organPart": ["islet of Langerhans"],
+                                "preservationMethod": [None],
+                                "source": [
+                                    "specimen_from_organism",
+                                ]
                             }
                         ],
                         "specimens": [
                             {
-                                "biologicalSex": ["female"],
                                 "disease": ["normal"],
-                                "genusSpecies": ["Australopithecus"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
-                                "organismAge": ["38"],
-                                "organismAgeUnit": ["year"],
                                 "preservationMethod": [None],
                                 "source": [
-                                    "cell_suspension",
                                     "specimen_from_organism",
-                                    "donor_organism"
                                 ]
                             }
                         ]
@@ -298,12 +370,25 @@ class TestResponse(WebServiceTestCase):
                                 "bundleVersion": "2018-11-02T113344.698028Z"
                             }
                         ],
+                        "cellLines": [
+
+                        ],
                         "cellSuspensions": [
                             {
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
                                 "selectedCellType": [],
                                 "totalCells": 1
+                            }
+                        ],
+                        "donorOrganisms": [
+                            {
+                                "biologicalSex": ["female"],
+                                "disease": None,
+                                "genusSpecies": ["Australopithecus"],
+                                "id": ["DID_scRSq06"],
+                                "organismAge": ["38"],
+                                "organismAgeUnit": ["year"],
                             }
                         ],
                         "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -317,6 +402,8 @@ class TestResponse(WebServiceTestCase):
                                 "version": "2018-11-02T113344.698028Z"
                             }
                         ],
+                        "organoids": [
+                        ],
                         "projects": [
                             {
                                 "laboratory": ["John Dear"],
@@ -328,24 +415,33 @@ class TestResponse(WebServiceTestCase):
                             {
                                 "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                                 "libraryConstructionApproach": ["Smart-seq2"],
-                                "pairedEnd": [True]
+                                "pairedEnd": [True],
+                                "workflow": [],
+                                "workflowVersion": []
+                            }
+                        ],
+                        "samples": [
+                            {
+                                "sampleEntityType": ["specimens"],
+                                "disease": ["normal"],
+                                "id": ["DID_scRSq06_pancreas"],
+                                "organ": ["pancreas"],
+                                "organPart": ["islet of Langerhans"],
+                                "preservationMethod": [None],
+                                "source": [
+                                    "specimen_from_organism",
+                                ]
                             }
                         ],
                         "specimens": [
                             {
-                                "biologicalSex": ["female"],
                                 "disease": ["normal"],
-                                "genusSpecies": ["Australopithecus"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
                                 "organPart": ["islet of Langerhans"],
-                                "organismAge": ["38"],
-                                "organismAgeUnit": ["year"],
                                 "preservationMethod": [None],
                                 "source": [
-                                    "cell_suspension",
                                     "specimen_from_organism",
-                                    "donor_organism"
                                 ]
                             }
                         ]
@@ -381,10 +477,10 @@ class TestResponse(WebServiceTestCase):
         Test non-'files' entity type passed to FileSearchResponse will give file summaries
         """
         filesearch_response = FileSearchResponse(
-            hits=self.get_hits('specimens', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
+            hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
             pagination=self.paginations[0],
             facets={},
-            entity_type="specimens"
+            entity_type="samples"
         ).return_response().to_json()
 
         for hit in filesearch_response['hits']:
@@ -485,7 +581,7 @@ class TestResponse(WebServiceTestCase):
         # FIXME: local import for now to delay side effects of the import like logging being configured
         # https://github.com/DataBiosphere/azul/issues/637
         from lambdas.service.app import sort_defaults
-        for entity_type in 'files', 'specimens', 'projects':
+        for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
                 base_url = self.base_url
                 url = base_url + "/repository/" + entity_type
@@ -496,21 +592,27 @@ class TestResponse(WebServiceTestCase):
 
     def test_transform_request_with_file_url(self):
         base_url = self.base_url
-        url = base_url + "/repository/files"
-        response = requests.get(url)
-        response.raise_for_status()
-        response_json = response.json()
-        bundle_files = [file_data for hit in response_json['hits'] for file_data in hit['files']]
-        for file_data in bundle_files:
-            self.assertIn('url', file_data.keys())
-            actual_url = urllib.parse.urlparse(file_data['url'])
-            actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
-            expected_base_url = urllib.parse.urlparse(base_url)
-            self.assertEqual(expected_base_url.netloc, actual_url.netloc)
-            self.assertEqual(expected_base_url.scheme, actual_url.scheme)
-            self.assertIsNotNone(actual_url.path)
-            self.assertEqual('aws', actual_query_vars['replica'])
-            self.assertIsNotNone(actual_query_vars['version'])
+        for entity_type in ('files', 'bundles'):
+            with self.subTest(entity_type=entity_type):
+                url = base_url + f"/repository/{entity_type}"
+                response = requests.get(url)
+                response.raise_for_status()
+                response_json = response.json()
+                for hit in response_json['hits']:
+                    if entity_type == 'files':
+                        self.assertEqual(len(hit['files']), 1)
+                    else:
+                        self.assertGreater(len(hit['files']), 0)
+                    for file in hit['files']:
+                        self.assertIn('url', file.keys())
+                        actual_url = urllib.parse.urlparse(file['url'])
+                        actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
+                        expected_base_url = urllib.parse.urlparse(base_url)
+                        self.assertEqual(expected_base_url.netloc, actual_url.netloc)
+                        self.assertEqual(expected_base_url.scheme, actual_url.scheme)
+                        self.assertIsNotNone(actual_url.path)
+                        self.assertEqual('aws', actual_query_vars['replica'])
+                        self.assertIsNotNone(actual_query_vars['version'])
 
     def test_project_summary_cell_count(self):
         """
@@ -614,12 +716,25 @@ class TestResponse(WebServiceTestCase):
         expected_response = {
             "hits": [
                 {
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [],
                             "totalCells": 1
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["female"],
+                            "disease": None,
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -629,6 +744,8 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "fastq.gz",
                             "totalSize": 385472253
                         }
+                    ],
+                    "organoids": [
                     ],
                     "projects": [
                         {
@@ -678,24 +795,33 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True]
+                            "pairedEnd": [True],
+                            "workflow": [],
+                            "workflowVersion": []
+                        }
+                    ],
+                    "samples": [
+                        {
+                            "sampleEntityType": ["specimens"],
+                            "disease": ["normal"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "preservationMethod": [None],
+                            "source": [
+                                "specimen_from_organism"
+                            ]
                         }
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": ["female"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
-                                "specimen_from_organism",
-                                "donor_organism"
+                                "specimen_from_organism"
                             ]
                         }
                     ]
@@ -719,12 +845,25 @@ class TestResponse(WebServiceTestCase):
         expected_response = {
             "hits": [
                 {
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [],
                             "totalCells": 1
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["female"],
+                            "disease": None,
+                            "genusSpecies": ["Australopithecus"],
+                            "id": ["DID_scRSq06"],
+                            "organismAge": ["38"],
+                            "organismAgeUnit": ["year"],
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -734,6 +873,8 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "fastq.gz",
                             "totalSize": 385472253
                         }
+                    ],
+                    "organoids": [
                     ],
                     "projects": [
                         {
@@ -783,23 +924,32 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True]
+                            "pairedEnd": [True],
+                            "workflow": [],
+                            "workflowVersion": []
+                        }
+                    ],
+                    "samples": [
+                        {
+                            "sampleEntityType": ["specimens"],
+                            "disease": ["normal"],
+                            "id": ["DID_scRSq06_pancreas"],
+                            "organ": ["pancreas"],
+                            "organPart": ["islet of Langerhans"],
+                            "preservationMethod": [None],
+                            "source": [
+                                "specimen_from_organism"
+                            ]
                         }
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": ["female"],
                             "disease": ["normal"],
-                            "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
-                                "donor_organism",
                                 "specimen_from_organism"
                             ]
                         }
@@ -852,198 +1002,6 @@ class TestResponse(WebServiceTestCase):
 
         self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
-    def test_project_summary_response(self):
-        """
-        Test that ProjectSummaryResponse will correctly do the per-project aggregations
-
-        Should only return values associated with the given project id
-        Should sum cell counts per-organ per-project and return an organ summary
-        Should correctly get distinct values for diseases, species, library construction approaches for each project
-        Should correctly count donor ids within a project
-        """
-        # Stripped down response from ES partially based on real data
-        hits = [
-            {
-                "_id": "bae45747-546a-4aed-9377-08e9115a8fb8",
-                "_source": {
-                    "entity_id": "bae45747-546a-4aed-9377-08e9115a8fb8",
-                    "contents": {
-                        "entryId": "bae45747-546a-4aed-9377-08e9115a8fb8",
-                        "specimens": [
-                            {
-                                "disease": ["glioblastoma"],
-                                "_type": ["specimen"],
-                                "donor_biomaterial_id": ["Q4_DEMO-donor_MGH30"],
-                                "genus_species": ["Homo sapiens"]
-                            }
-                        ],
-                        "cell_suspensions": [
-                            {
-                                "organ": ["brain"],
-                                "total_estimated_cells": 0
-                            }
-                        ],
-                        "protocols": [
-                            {
-                                "library_construction_approach": ["Smart-seq2"],
-                                "instrument_manufacturer_model": ["Illumina NextSeq 500"]
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                "_id": "6ec8e247-2eb0-42d1-823f-75facd03988d",
-                "_source": {
-                    "entity_id": "6ec8e247-2eb0-42d1-823f-75facd03988d",
-                    "contents": {
-                        "entryId": "6ec8e247-2eb0-42d1-823f-75facd03988d",
-                        "specimens": [
-                            {
-                                "disease": ["normal"],
-                                "_type": ["specimen"],
-                                "donor_biomaterial_id": ["284C-A1"],
-                                "genus_species": ["Homo sapiens"]
-                            },
-                            {
-                                "disease": ["normal"],
-                                "_type": ["specimen"],
-                                "donor_biomaterial_id": ["284C-A1"],
-                                "genus_species": ["Homo sapiens"]
-                            },
-                            {
-                                "disease": ["not normal"],
-                                "organ": ["brain"],
-                                "_type": ["specimen"],
-                                "total_estimated_cells": 10,
-                                "donor_biomaterial_id": ["284C-A2"],
-                                "genus_species": ["Homo sapiens"]
-                            }
-                        ],
-                        "cell_suspensions": [
-                            {
-                                "organ": ["spleen"],
-                                "total_estimated_cells": 39300000
-                            },
-                            {
-                                "organ": ["spleen"],
-                                "total_estimated_cells": 1
-                            },
-                            {
-                                "organ": ["brain"],
-                                "total_estimated_cells": 10
-                            }
-                        ],
-                        "protocols": [
-                            {
-                                "library_construction_approach": ["Illumina NextSeq 500"],
-                                "instrument_manufacturer_model": ["Smart-seq2"]
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                "_id": "6504d48c-1610-43aa-8cf8-214a960e110c",
-                "_source": {
-                    "entity_id": "6504d48c-1610-43aa-8cf8-214a960e110c",
-                    "contents": {
-                        "entryId": "6504d48c-1610-43aa-8cf8-214a960e110c",
-                        "specimens": [
-                            {
-                                "disease": [],
-                                "_type": ["specimen"],
-                                "donor_biomaterial_id": [
-                                    "CB8",
-                                    "CB6",
-                                    "CB2",
-                                    "BM8",
-                                    "BM6",
-                                    "BM5",
-                                    "BM4",
-                                    "CB1",
-                                    "CB5",
-                                    "CB7",
-                                    "BM2",
-                                    "BM3",
-                                    "BM7",
-                                    "CB4",
-                                    "CB3",
-                                    "BM1"
-                                ],
-                                "genus_species": ["Homo sapiens"]
-                            }
-                        ],
-                        "cell_suspensions": [
-                            {
-                                "organ": ["hematopoietic system"],
-                                "total_estimated_cells": 528092
-                            }
-                        ],
-                        "protocols": [
-                            {
-                                "library_construction_approach": ["Celera PicoPlus 3000"],
-                                "instrument_manufacturer_model": ["Smart-seq2"]
-                            }
-                        ]
-                    }
-                }
-            }
-        ]
-
-        project_summary1 = ProjectSummaryResponse(hits[0]['_source']['contents']).apiResponse.to_json()
-        self.assertEqual(1, project_summary1['donorCount'])
-        self.assertEqual(0, project_summary1['totalCellCount'])
-        self.assertEqual(['Homo sapiens'], sorted(project_summary1['genusSpecies']))
-        self.assertEqual(['Smart-seq2'], sorted(project_summary1['libraryConstructionApproach']))
-        self.assertEqual(['glioblastoma'], sorted(project_summary1['disease']))
-        expected_organ_summary1 = [
-            {
-                "organType": "brain",
-                "countOfDocsWithOrganType": 1,
-                "totalCellCountByOrgan": 0.0
-            }
-        ]
-        self.assertEqual(json.dumps(expected_organ_summary1, sort_keys=True),
-                         json.dumps(project_summary1['organSummaries'], sort_keys=True))
-
-        project_summary2 = ProjectSummaryResponse(hits[1]['_source']['contents']).apiResponse.to_json()
-        self.assertEqual(2, project_summary2['donorCount'])
-        self.assertEqual(39300011, project_summary2['totalCellCount'])
-        self.assertEqual(['Homo sapiens'], sorted(project_summary2['genusSpecies']))
-        self.assertEqual(['Illumina NextSeq 500'], sorted(project_summary2['libraryConstructionApproach']))
-        self.assertEqual(['normal', 'not normal'], sorted(project_summary2['disease']))
-        expected_organ_summary2 = [
-            {
-                "organType": "spleen",
-                "countOfDocsWithOrganType": 1,
-                "totalCellCountByOrgan": 39300001.0
-            },
-            {
-                "organType": "brain",
-                "countOfDocsWithOrganType": 1,
-                "totalCellCountByOrgan": 10.0
-            }
-        ]
-        self.assertEqual(json.dumps(expected_organ_summary2, sort_keys=True),
-                         json.dumps(project_summary2['organSummaries'], sort_keys=True))
-
-        project_summary3 = ProjectSummaryResponse(hits[2]['_source']['contents']).apiResponse.to_json()
-        self.assertEqual(16, project_summary3['donorCount'])
-        self.assertEqual(528092, project_summary3['totalCellCount'])
-        self.assertEqual(['Homo sapiens'], sorted(project_summary3['genusSpecies']))
-        self.assertEqual(['Celera PicoPlus 3000'], sorted(project_summary3['libraryConstructionApproach']))
-        self.assertEqual([], sorted(project_summary3['disease']))
-        expected_organ_summary3 = [
-            {
-                "organType": "hematopoietic system",
-                "countOfDocsWithOrganType": 1,
-                "totalCellCountByOrgan": 528092.0
-            }
-        ]
-        self.assertEqual(json.dumps(expected_organ_summary3, sort_keys=True),
-                         json.dumps(project_summary3['organSummaries'], sort_keys=True))
-
     def test_project_accessions_response(self):
         """
         This method tests the KeywordSearchResponse object for the projects entity type,
@@ -1056,12 +1014,25 @@ class TestResponse(WebServiceTestCase):
         expected_response = {
             "hits": [
                 {
+                    "cellLines": [
+
+                    ],
                     "cellSuspensions": [
                         {
                             "organ": ["brain"],
                             "organPart": ["amygdala"],
                             "selectedCellType": [],
                             "totalCells": 10000
+                        }
+                    ],
+                    "donorOrganisms": [
+                        {
+                            "biologicalSex": ["male"],
+                            "disease": None,
+                            "genusSpecies": ["Homo sapiens"],
+                            "id": ["donor_ID_1"],
+                            "organismAge": ["20"],
+                            "organismAgeUnit": ["year"]
                         }
                     ],
                     "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
@@ -1107,6 +1078,9 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 15872628
                         }
                     ],
+                    "organoids": [
+
+                    ],
                     "projects": [
                         {
                             "contributors": [
@@ -1139,23 +1113,32 @@ class TestResponse(WebServiceTestCase):
                         {
                             "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
                             "libraryConstructionApproach": ["10X v2 sequencing"],
-                            "pairedEnd": [False]
+                            "pairedEnd": [False],
+                            "workflow": ['cellranger'],
+                            "workflowVersion": ['v1.0.2']
+                        }
+                    ],
+                    "samples": [
+                        {
+                            "sampleEntityType": ["specimens"],
+                            "disease": ["H syndrome"],
+                            "id": ["specimen_ID_1"],
+                            "organ": ["brain"],
+                            "organPart": ["amygdala"],
+                            "preservationMethod": [None],
+                            "source": [
+                                "specimen_from_organism"
+                            ]
                         }
                     ],
                     "specimens": [
                         {
-                            "biologicalSex": ["male"],
                             "disease": ["H syndrome"],
-                            "genusSpecies": ["Homo sapiens"],
                             "id": ["specimen_ID_1"],
                             "organ": ["brain"],
                             "organPart": ["amygdala"],
-                            "organismAge": ["20"],
-                            "organismAgeUnit": ["year"],
                             "preservationMethod": [None],
                             "source": [
-                                "cell_suspension",
-                                "donor_organism",
                                 "specimen_from_organism"
                             ]
                         }
@@ -1192,7 +1175,7 @@ class TestResponse(WebServiceTestCase):
             }
         ]
         for test_data in test_data_sets:
-            for entity_type in 'files', 'specimens', 'projects':
+            for entity_type in 'files', 'samples', 'projects', 'bundles':
                 with self.subTest(entity_type=entity_type):
                     url = self.base_url + "/repository/" + entity_type + "?size=2" \
                                           "&filters={'file':{'projectId':{'is':['" + test_data['id'] + "']}}}"
@@ -1205,6 +1188,89 @@ class TestResponse(WebServiceTestCase):
                                 self.assertEqual(test_data['title'], project['projectTitle'])
                             else:
                                 self.assertIn(test_data['title'], project['projectTitle'])
+                    for term in response_json['termFacets']['project']['terms']:
+                        self.assertEqual(term['projectId'], [test_data['id']])
+
+    def test_sample(self):
+        """
+        Test that sample(s) in the response contain values matching values in the source cellLine/organoid/specimen
+        """
+        for entity_type in 'projects', 'samples', 'files', 'bundles':
+            with self.subTest(entity_type=entity_type):
+                url = self.base_url + "/repository/" + entity_type
+                response = requests.get(url)
+                response.raise_for_status()
+                response_json = response.json()
+                if entity_type == 'samples':
+                    for hit in response_json['hits']:
+                        for sample in hit['samples']:
+                            sample_entity_type = sample['sampleEntityType']
+                            for key, val in sample.items():
+                                if key != 'sampleEntityType':
+                                    if isinstance(val, list):
+                                        for one_val in val:
+                                            self.assertIn(one_val, hit[sample_entity_type][0][key])
+                                    else:
+                                        self.assertIn(val, hit[sample_entity_type][0][key])
+
+    def test_bundles_outer_entity(self):
+        entity_type = 'bundles'
+        url = self.base_url + "/repository/" + entity_type
+        response = requests.get(url)
+        response.raise_for_status()
+        response = response.json()
+        indexed_uuids = set(self.bundles)
+        self.assertEqual(len(self.bundles), len(indexed_uuids))
+        hits_uuids = {
+            (one(hit['bundles'])['bundleUuid'], one(hit['bundles'])['bundleVersion'])
+            for hit in response['hits']
+        }
+        self.assertEqual(len(response['hits']), len(hits_uuids))
+        self.assertSetEqual(indexed_uuids, hits_uuids)
+
+
+class TestResponseSummary(WebServiceTestCase):
+
+    maxDiff = None
+    bundles = WebServiceTestCase.bundles + [
+        ('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
+    ]
+
+    def test_project_summary_response(self):
+        """
+        Test that ProjectSummaryResponse will correctly do the per-project aggregations
+
+        Should only return values associated to each project
+        Should sum cell counts per-organ per-project and return an organ summary
+        Should correctly get distinct values for diseases, species, library construction approaches for each project
+        Should correctly count donor ids within a project
+        """
+        url = self.base_url + "/repository/projects"
+        response = requests.get(url)
+        response.raise_for_status()
+        response_json = response.json()
+        self.assertEqual(len(response_json['hits']), 2)
+        for hit in response_json['hits']:
+            summary = hit['projectSummary']
+            if one(hit['projects'])['projectTitle'] == 'Assessing the relevance of organoids to model inter-individual variation':
+                self.assertEqual(summary['donorCount'], 4)
+                self.assertEqual(summary['totalCellCount'], 6210.0)
+                self.assertEqual(summary['genusSpecies'], ['Homo sapiens'])
+                self.assertEqual(summary['libraryConstructionApproach'], ["Chromium 3' Single Cell v2"])
+                self.assertEqual(summary['disease'], ['normal'])
+                organ_summaries = {'organType': 'Brain', 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0}
+                self.assertEqual(one(summary['organSummaries']), organ_summaries)
+            elif one(hit['projects'])['projectTitle'] == 'Single cell transcriptome patterns.':
+                self.assertEqual(summary['donorCount'], 1)
+                self.assertEqual(summary['totalCellCount'], 1.0)
+                self.assertEqual(summary['genusSpecies'], ['Australopithecus'])
+                self.assertEqual(summary['libraryConstructionApproach'], ['Smart-seq2'])
+                self.assertEqual(summary['disease'], ['normal'])
+                organ_summaries = {'organType': 'pancreas', 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0}
+                self.assertEqual(one(summary['organSummaries']), organ_summaries)
+            else:
+                assert False
+
 
 
 if __name__ == '__main__':
