@@ -368,20 +368,20 @@ class ElasticTransformDump(object):
         es_search.aggs.metric(
             'total_size',
             'sum',
-            field=request_config['translation']['fileSize'])
+            field='contents.files.size')
 
         # Add a per_organ aggregate to the ElasticSearch request
         es_search.aggs.bucket(
-            'group_by_organ', 'terms', field='{}.keyword'.format(request_config['translation']['organ'])
+            'group_by_organ', 'terms', field='contents.samples.organ.keyword'
         ).bucket(
-            'cell_count', 'sum', field=request_config['translation']['cellCount']
+            'cell_count', 'sum', field='contents.cell_suspensions.total_estimated_cells'
         )
 
         # Add a cell_count aggregate to the ElasticSearch request
         es_search.aggs.metric(
             'total_cell_count',
             'sum',
-            field=request_config['translation']['cellCount']
+            field='contents.cell_suspensions.total_estimated_cells'
         )
 
         for cardinality, agg_name in (
