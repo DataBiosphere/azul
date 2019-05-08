@@ -387,7 +387,7 @@ class ElasticTransformDump(object):
         for cardinality, agg_name in (
             ('contents.specimens.document_id', 'specimenCount'),
             ('contents.files.uuid', 'fileCount'),
-            ('contents.specimens.organ', 'organCount'),
+            ('contents.samples.organ', 'organCount'),
             ('contents.donors.document_id', 'donorCount'),
             ('contents.projects.laboratory', 'labCount'),
             ('contents.projects.document_id', 'projectCount')):
