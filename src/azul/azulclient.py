@@ -57,13 +57,6 @@ class AzulClient(object):
         response.raise_for_status()
         return response.content
 
-    def _make_test_notification(self, bundle_fqid, new_bundle_uuid, test_name, test_uuid):
-        notification = self._make_notification(bundle_fqid)
-        notification["test_bundle_uuid"] = new_bundle_uuid
-        notification["test_name"] = test_name
-        notification["test_uuid"] = test_uuid
-        return notification
-
     def _make_notification(self, bundle_fqid):
         bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
         return {
@@ -93,7 +86,11 @@ class AzulClient(object):
             new_bundle_uuid = str(uuid.uuid4())
             _, _, version = bundle_fqid.partition('.')
             effective_bundle_fqids.add(new_bundle_uuid + '.' + version)
-            notifications.append(self._make_test_notification(bundle_fqid, new_bundle_uuid, test_name, test_uuid))
+            notification = dict(self._make_notification(bundle_fqid),
+                                test_bundle_uuid=new_bundle_uuid,
+                                test_name=test_name,
+                                test_uuid=test_uuid)
+            notifications.append(notification)
         self._reindex(notifications, sync=sync)
         return effective_bundle_fqids
 

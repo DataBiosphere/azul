@@ -45,17 +45,20 @@ class IntegrationTest(unittest.TestCase):
     AzulClient.reindex() these bundle are used to construct fake notifications. These fake notifications
     Have an extra information embedded. They include:
      - the name of the integration test run,
-     - a new uuid for the project, and
+     - a new UUID for the project, and
      - a new unique bundle UUID.
     When the bundle is processed by the indexer lambda the original bundle uuid is used to fetch the
     metadata, etc., but these new fields are what's actually stored in Azul. This effectively creates a
-    copy of the bundles, but with a new uuid and shared project.
+    copy of the bundles, but each copy with a new and different bundle UUID and all copies sharing a
+    synthesized project with a different project UUID. Note that unlike real projects, the shared project
+    will contain a mix of metadata graph shapes since the bundles that contribute to it are selected
+    randomly.
 
     The UUIDs for these new bundles are used within the integration tests to assert that everything is
     indexed. Health endpoints etc. are also checked.
 
-    Finally, the tests schedule deletion for these new UUIDs which should remove all trace of the
-    integration test from the index.
+    Finally, the tests send deletion notifications for these new bundle UUIDs which should remove all
+    trace of the integration test from the index.
     """
     bundle_uuid_prefix = None
     prefix_length = 3
@@ -67,30 +70,29 @@ class IntegrationTest(unittest.TestCase):
         self.indexed_fqids = set()
         self.azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
                                       prefix=self.bundle_uuid_prefix)
+        self.test_uuid = str(uuid.uuid4())
+        self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
 
     def tearDown(self):
-        self.delete_bundles()
         self.set_lambda_test_mode(False)
+        self.delete_bundles()
         super().tearDown()
 
     def test_webservice_and_indexer(self):
         if config.deployment_stage != 'prod':
-            test_name = self._test_indexing()
-            self._test_manifest(test_name)
-            self._test_drs(test_name)
+            self._test_indexing()
+            self._test_manifest()
+            self._test_drs()
         self._test_other_endpoints()
 
-    def _test_indexing(self) -> str:
-        test_uuid = str(uuid.uuid4())
-        test_name = f'integration-test_{test_uuid}_{self.bundle_uuid_prefix}'
-        logger.info('Starting test using test name, %s ...', test_name)
+    def _test_indexing(self):
+        logger.info('Starting test using test name, %s ...', self.test_name)
         azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
                                  prefix=self.bundle_uuid_prefix)
         logger.info('Creating indices and reindexing ...')
-        test_bundle_fqids = azul_client.test_reindex(test_name, test_uuid)
+        test_bundle_fqids = azul_client.test_reindex(self.test_name, self.test_uuid)
         self.num_bundles = len(test_bundle_fqids)
-        self.check_bundles_are_indexed(test_name, 'files', test_bundle_fqids)
-        return test_name
+        self.check_bundles_are_indexed(self.test_name, 'files', test_bundle_fqids)
 
     def _test_other_endpoints(self):
         self.check_endpoint_is_working(config.indexer_endpoint(), '/health')
@@ -100,8 +102,8 @@ class IntegrationTest(unittest.TestCase):
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
 
-    def _test_manifest(self, test_name: str):
-        manifest_filter = {"file": {"project": {"is": [test_name]}}}
+    def _test_manifest(self):
+        manifest_filter = {"file": {"project": {"is": [self.test_name]}}}
         for format_, validator in [
             (None, self.check_manifest),
             ('tsv', self.check_manifest),
@@ -115,8 +117,8 @@ class IntegrationTest(unittest.TestCase):
                     response = self.check_endpoint_is_working(config.service_endpoint(), path, query)
                     validator(response)
 
-    def _test_drs(self, test_name):
-        filters = {"file": {"project": {"is": [test_name]}, "fileFormat": {"is": ["fastq.gz", "fastq"]}}}
+    def _test_drs(self):
+        filters = {"file": {"project": {"is": [self.test_name]}, "fileFormat": {"is": ["fastq.gz", "fastq"]}}}
         response = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
                                                   path='/repository/files',
                                                   query={
@@ -134,6 +136,11 @@ class IntegrationTest(unittest.TestCase):
         for fqid in self.indexed_fqids:
             bundle_uuid, _, version = fqid.partition('.')
             self.azul_client.delete_bundle(bundle_uuid, version)
+
+        self.wait_for_queue_level(empty=False)
+        self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
+        self.assertTrue(self.project_removed_from_azul(), f"Project '{self.test_name}' was not fully "
+                                                          "removed from index within 5 min. of deletion")
 
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -223,7 +230,7 @@ class IntegrationTest(unittest.TestCase):
                 logger.error('The queue(s) are NOT at the desired level.')
                 return
             elif (cumulative_queue_size == 0) == empty:
-                logger.info('The queue(s) at the desired level.')
+                logger.info('The queue(s) are at the desired level.')
                 break
             else:
                 logger.info('The most recently sampled queue sizes are %r.', queue_size_history)
@@ -242,9 +249,6 @@ class IntegrationTest(unittest.TestCase):
         logger.info('Starting integration test %s with the prefix %s for the entity type %s. Expected %i bundle(s).',
                     test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
         logger.debug('Expected bundles %s ', sorted(expected_bundle_fqids))
-        filters = '{"file":{"project":{"is":["' + test_name + '"]}}}'
-        url = base_url = config.service_endpoint() + '/repository/' + entity_type + '?' + urllib.parse.urlencode(
-            {'filters': filters, 'order': 'desc', 'sort': 'entryId', 'size': page_size})
         logger.info('Waiting for the queues to empty ...')
         self.wait_for_queue_level(empty=False)
         self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
@@ -253,45 +257,66 @@ class IntegrationTest(unittest.TestCase):
         deadline = time.time() + service_check_timeout
 
         while True:
-            response_json = self.requests.get(url).json()
-            hits = response_json.get('hits', [])
-            self.indexed_fqids.update({f"{entity['bundleUuid']}.{entity['bundleVersion']}"
-                                       for hit in hits
-                                       for entity in hit.get('bundles', [])
-                                       # FIXME: make sure this is right
-                                       if f"{entity['bundleUuid']}.{entity['bundleVersion']}" in expected_bundle_fqids})
-            search_after = response_json['pagination']['search_after']
-            search_after_uid = response_json['pagination']['search_after_uid']
-            total_entities = response_json['pagination']['total']
-            logger.info('Found %i/%i bundles on try #%i. There are %i files with the project name.'
-                        ' Current page has %i hits in %s.', len(self.indexed_fqids), num_bundles, retries + 1,
-                        total_entities, len(hits), url)
+            hits = self._get_entities_by_project(entity_type, test_name)
+            self.indexed_fqids.update({
+                f"{entity['bundleUuid']}.{entity['bundleVersion']}"
+                for hit in hits
+                for entity in hit.get('bundles', [])
+                if f"{entity['bundleUuid']}.{entity['bundleVersion']}" in expected_bundle_fqids
+            })
+            logger.info('Found %i/%i bundles on try #%i. There are %i files with the project name.',
+                         len(self.indexed_fqids), num_bundles, retries + 1, len(hits))
 
-            if search_after is None:
-                assert search_after_uid is None
-                if expected_bundle_fqids == self.indexed_fqids:
-                    logger.info('Found all bundles.')
-                    break
-                elif time.time() > deadline:
-                    logger.error('Unable to find all the bundles in under %i seconds.', service_check_timeout)
-                    break
-                else:
-                    time.sleep(delay_between_retries)
-                    retries += 1
+            if expected_bundle_fqids == self.indexed_fqids:
+                logger.info('Found all bundles.')
+                break
+            elif time.time() > deadline:
+                logger.error('Unable to find all the bundles in under %i seconds.', service_check_timeout)
+                break
             else:
-                assert search_after_uid is not None
-                url = base_url + '&' + urlencode(dict(search_after=search_after,
-                                                      search_after_uid=search_after_uid))
+                time.sleep(delay_between_retries)
+                retries += 1
 
         logger.info('Actual bundle count is %i.', len(self.indexed_fqids))
         self.assertEqual(expected_bundle_fqids, self.indexed_fqids)
-        for hit in response_json['hits']:
+        for hit in hits:
             project = one(hit['projects'])
             bundle_fqids = [bundle['bundleUuid'] + '.' + bundle['bundleVersion'] for bundle in hit['bundles']]
             self.assertTrue(test_name in project['projectShortname'],
                             f'There was a problem during indexing an {entity_type} entity'
                             f' {hit["entryId"]}. Bundle(s) ({",".join(bundle_fqids)})'
                             f' have been indexed without the debug project name. Contains {project}')
+
+    def project_removed_from_azul(self):
+        results_empty = [len(self._get_entities_by_project(entity, self.test_name)) == 0
+                         for entity in ['files', 'projects', 'samples', 'bundles']]
+        logger.info("Project removed from index files: {}, projects: {}, "
+                    "specimens: {}, bundles: {}".format(*results_empty))
+        return all(results_empty)
+
+    def _get_entities_by_project(self, entity_type, project_shortname):
+        """
+        Returns all entities of a given type in a given project.
+        """
+        filters = {'file': {'project': {'is': [project_shortname]}}}
+        entities = []
+        size = 100
+        params = dict(filters=str(filters), size=str(size))
+        while True:
+            query = urllib.parse.urlencode(params, safe="{}/'")
+            url = f'{config.service_endpoint()}/repository/{entity_type}?{query}'
+            response = self.requests.get(url)
+            response.raise_for_status()
+            body = response.json()
+            hits = body['hits']
+            entities.extend(hits)
+            pagination = body['pagination']
+            search_after = pagination['search_after']
+            if search_after is None:
+                break
+            params['search_after'] = search_after
+            params['search_after_uid'] = pagination['search_after_uid']
+        return entities
 
 
 class DSSIntegrationTest(unittest.TestCase):
