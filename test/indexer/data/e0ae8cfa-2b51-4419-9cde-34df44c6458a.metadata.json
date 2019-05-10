@@ -64,9 +64,9 @@
             "cell_viability_result": "pass"
         },
         "model_organ": {
-            "text": "blood (cell_line)",
+            "text": "blood (child_cell_line)",
             "ontology": "UBERON:0000178",
-            "ontology_label": "blood (cell_line)"
+            "ontology_label": "blood (child_cell_line)"
         },
         "provenance": {
             "document_id": "195b2621-ec05-4618-9063-c56048de97d1",
@@ -105,9 +105,9 @@
             }
         ],
         "model_organ": {
-            "text": "blood (cell_line)",
+            "text": "blood (parent_cell_line)",
             "ontology": "UBERON:0000178",
-            "ontology_label": "blood (cell_line)"
+            "ontology_label": "blood (parent_cell_line)"
         },
         "provenance": {
             "document_id": "c737000c-60d3-43c6-9017-16de92294529",

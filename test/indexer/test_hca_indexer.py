@@ -492,6 +492,9 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual({p.get('workflow_version') for p in contents['protocols']}, {'v2.1.0', None})
 
     def test_pooled_specimens(self):
+        """
+        Index a bundle that combines 3 specimen_from_organism into 1 cell_suspension
+        """
         self._index_canned_bundle(('b7fc737e-9b7b-4800-8977-fe7c94e131df', '2018-09-12T121155.846604Z'))
         self.maxDiff = None
 
@@ -507,6 +510,12 @@ class TestHCAIndexer(IndexerTestCase):
                 # 10000 cells. Until we introduced cell suspensions as an inner entity we used to associate cell
                 # counts with specimen which would have inflated the total cell count to 30000 in this case.
                 self.assertEqual(10000, cell_suspensions[0]['total_estimated_cells'])
+                sample = one(contents['samples'])
+                self.assertEqual(sample['organ'], sample['effective_organ'])
+                if entity_type == 'samples':
+                    self.assertTrue(sample['effective_organ'] in {'Brain 1', 'Brain 2', 'Brain 3'})
+                else:
+                    self.assertEqual(set(sample['effective_organ']), {'Brain 1', 'Brain 2', 'Brain 3'})
 
     def test_project_contact_extraction(self):
         """
@@ -640,7 +649,7 @@ class TestHCAIndexer(IndexerTestCase):
         Index a bundle with the following structure:
         donor -> specimen -> cell_line -> cell_line -> cell_suspension -> sequence_files
         and assert the singleton sample matches the first cell_line up from the sequence_files
-        and assert cell_suspension inherits the organ value from the cell_line not the specimen
+        and assert cell_suspension inherits the organ value from the nearest ancestor cell_line
         """
         self._index_canned_bundle(('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'))
         hits = self._get_hits()
@@ -664,8 +673,8 @@ class TestHCAIndexer(IndexerTestCase):
                     cell_lines_model_organ = set(one(contents['cell_lines'])['model_organ'])
                 else:
                     cell_lines_model_organ = {cl['model_organ'] for cl in contents['cell_lines']}
-                self.assertEqual(cell_lines_model_organ, {'blood (cell_line)'})
-                self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (cell_line)'])
+                self.assertEqual(cell_lines_model_organ, {'blood (parent_cell_line)', 'blood (child_cell_line)'})
+                self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (child_cell_line)'])
                 self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [None])
 
 
