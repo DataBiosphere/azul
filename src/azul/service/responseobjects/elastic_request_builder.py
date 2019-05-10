@@ -372,7 +372,7 @@ class ElasticTransformDump(object):
 
         # Add a per_organ aggregate to the ElasticSearch request
         es_search.aggs.bucket(
-            'group_by_organ', 'terms', field='contents.samples.organ.keyword'
+            'group_by_organ', 'terms', field='contents.cell_suspensions.organ.keyword'
         ).bucket(
             'cell_count', 'sum', field='contents.cell_suspensions.total_estimated_cells'
         )
@@ -387,7 +387,7 @@ class ElasticTransformDump(object):
         for cardinality, agg_name in (
             ('contents.specimens.document_id', 'specimenCount'),
             ('contents.files.uuid', 'fileCount'),
-            ('contents.samples.organ', 'organCount'),
+            ('contents.samples.effective_organ', 'organCount'),
             ('contents.donors.document_id', 'donorCount'),
             ('contents.projects.laboratory', 'labCount'),
             ('contents.projects.document_id', 'projectCount')):

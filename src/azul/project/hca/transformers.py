@@ -13,10 +13,7 @@ from azul.transformer import (Accumulator,
                               EntityReference,
                               GroupingAggregator,
                               ListAccumulator,
-                              MandatoryValueAccumulator,
-                              OptionalValueAccumulator,
                               SetAccumulator,
-                              PrioritySetAccumulator,
                               SimpleAggregator,
                               SumAccumulator)
 from azul.types import JSON
@@ -97,13 +94,30 @@ def _specimen_dict(specimen: api.SpecimenFromOrganism) -> JSON:
         '_type': 'specimen',
     }
 
-
 def _cell_suspension_dict(cell_suspension: api.CellSuspension) -> JSON:
-    visitor = CellSuspensionVisitor()
-    # Visit the cell suspension but don't descend. We're only interested in parent biomaterials
-    visitor.visit(cell_suspension)
-    cell_suspension.ancestors(visitor)
-    return visitor.merged_cell_suspension
+    organs = set()
+    organ_parts = set()
+    samples: MutableMapping[str, Sample] = dict()
+    SampleTransformer.get_ancestor_samples(cell_suspension, samples)
+    for sample in samples.values():
+        if isinstance(sample, api.SpecimenFromOrganism):
+            organs.add(sample.organ)
+            organ_parts.update(sample.organ_parts)
+        elif isinstance(sample, api.CellLine):
+            organs.add(sample.model_organ)
+            organ_parts.add(None)
+        elif isinstance(sample, api.Organoid):
+            organs.add(sample.model_organ)
+            organ_parts.add(sample.model_organ_part)
+        else:
+            assert False
+    return {
+        'document_id': str(cell_suspension.document_id),
+        'total_estimated_cells': cell_suspension.estimated_cell_count,
+        'selected_cell_type': list( cell_suspension.selected_cell_types),
+        'organ': list(organs),
+        'organ_part': list(organ_parts),
+    }
 
 
 def _cell_line_dict(cell_line: api.CellLine) -> JSON:
@@ -202,6 +216,8 @@ def _sample_dict(sample: api.Biomaterial) -> JSON:
         'entity_type': sample_entity_types[schema_type],
         **sample_entity_dict_functions[schema_type](sample)
     }
+    assert hasattr(sample, 'organ') != hasattr(sample, 'model_organ')
+    sample_dict['effective_organ'] = sample.organ if hasattr(sample, 'organ') else sample.model_organ
     assert sample_dict['document_id'] == str(sample.document_id)
     assert sample_dict['biomaterial_id'] == sample.biomaterial_id
     return sample_dict
@@ -247,53 +263,6 @@ class TransformerVisitor(api.EntityVisitor):
                 #
                 return
             self.files[entity.document_id] = entity
-
-
-class BiomaterialVisitor(api.EntityVisitor, metaclass=ABCMeta):
-
-    def __init__(self) -> None:
-        self._accumulators: MutableMapping[str, Accumulator] = {}
-        self._biomaterials: MutableMapping[api.UUID4, api.Biomaterial] = dict()
-
-    def _set(self, field: str, accumulator_factory: Callable[[], Accumulator], value: Any):
-        try:
-            accumulator = self._accumulators[field]
-        except KeyError:
-            self._accumulators[field] = accumulator = accumulator_factory()
-        accumulator.accumulate(value)
-
-    def visit(self, entity: api.Entity) -> None:
-        if isinstance(entity, api.Biomaterial) and entity.document_id not in self._biomaterials:
-            self._biomaterials[entity.document_id] = entity
-            self._visit(entity)
-
-    @abstractmethod
-    def _visit(self, entity: api.Biomaterial) -> None:
-        raise NotImplementedError()
-
-
-class CellSuspensionVisitor(BiomaterialVisitor):
-
-    def _visit(self, entity: api.Biomaterial) -> None:
-
-        if isinstance(entity, api.CellSuspension):
-            self._set('document_id', MandatoryValueAccumulator, str(entity.document_id))
-            self._set('total_estimated_cells', OptionalValueAccumulator, entity.total_estimated_cells)
-            self._set('selected_cell_type', SetAccumulator, entity.selected_cell_type)
-        elif isinstance(entity, api.SpecimenFromOrganism):
-            self._set('organ', PrioritySetAccumulator, (0, entity.organ))
-            self._set('organ_part', PrioritySetAccumulator, (0, entity.organ_parts))
-        elif isinstance(entity, api.CellLine):
-            self._set('organ', PrioritySetAccumulator, (1, entity.model_organ))
-            self._set('organ_part', PrioritySetAccumulator, (1, None))
-        elif isinstance(entity, api.Organoid):
-            self._set('organ', PrioritySetAccumulator, (2, entity.model_organ))
-            self._set('organ_part', PrioritySetAccumulator, (2, entity.model_organ_part))
-
-    @property
-    def merged_cell_suspension(self) -> JSON:
-        assert 'document_id' in self._accumulators
-        return {field: accumulator.get() for field, accumulator in self._accumulators.items()}
 
 
 class FileAggregator(GroupingAggregator):

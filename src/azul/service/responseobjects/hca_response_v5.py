@@ -95,14 +95,14 @@ class FileTypeSummary(JsonObject):
 
 
 class OrganCellCountSummary(JsonObject):
-    organType = StringProperty()
+    organType = ListProperty(StringProperty)
     countOfDocsWithOrganType = IntegerProperty()
     totalCellCountByOrgan = FloatProperty()
 
     @classmethod
     def for_bucket(cls, bucket):
         self = cls()
-        self.organType = bucket['key']
+        self.organType = [bucket['key']]
         self.countOfDocsWithOrganType = bucket['doc_count']
         self.totalCellCountByOrgan = bucket['cell_count']['value']
         return self
@@ -577,10 +577,10 @@ class ProjectSummaryResponse(AbstractResponse):
         """
         organ_cell_count = defaultdict(int)
         for cell_suspension in hit['cell_suspensions']:
-            assert len(cell_suspension['organ']) == 1
-            organ_cell_count[cell_suspension['organ'][0]] += cell_suspension.get('total_estimated_cells', 0)
+            organ = frozenset(cell_suspension['organ'])
+            organ_cell_count[organ] += cell_suspension.get('total_estimated_cells', 0)
         total_cell_count = sum(organ_cell_count.values())
-        organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
+        organ_cell_count = [{'key': list(k), 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
 
     def __init__(self, es_hit_contents):
