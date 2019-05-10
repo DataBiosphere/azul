@@ -535,6 +535,7 @@ class ElasticTransformDump(object):
         request_config_path = "{}/{}".format(config_folder, 'request_config.json')
         request_config = self.open_and_return_json(request_config_path)
         filters = filters['file']
+        manifest_config = request_config['manifest']
         if format == 'bdbag':
             # Terra rejects `.` in column names
             manifest_config = {
@@ -542,10 +543,8 @@ class ElasticTransformDump(object):
                     column_name.replace('.', ManifestResponse.column_path_separator): field_name
                     for column_name, field_name in mapping.items()
                 }
-                for path, mapping in request_config['bdbag'].items()
+                for path, mapping in manifest_config.items()
             }
-        else:
-            manifest_config = request_config['manifest']
 
         source_filter = [field_path_prefix + '.' + field_name
                          for field_path_prefix, field_mapping in manifest_config.items()

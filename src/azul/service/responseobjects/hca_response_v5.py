@@ -340,8 +340,7 @@ class ManifestResponse(AbstractResponse):
             for bundle in doc['bundles']:
                 bundle_fqid = bundle['uuid'], bundle['version']
 
-                # Extract fields from the bundle
-                bundle_cells = {}
+                bundle_cells = {'entity:bundle_id': '.'.join(bundle_fqid)}
                 self._extract_fields([bundle], bundle_column_mapping, bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
@@ -378,6 +377,7 @@ class ManifestResponse(AbstractResponse):
         # Compute the column names in deterministic order, bundle_columns first
         # followed by other columns
         column_names = dict.fromkeys(chain(
+            ['entity:bundle_id'],
             bundle_column_mapping.keys(),
             *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
 
