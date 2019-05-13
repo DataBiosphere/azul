@@ -527,7 +527,8 @@ class TestAccessorApi(TestCase):
         self.assertEqual(str(cell_lines[0].document_id), '961092cd-dcff-4b59-a0d2-ceeef0aece74')
         self.assertEqual(cell_lines[0].biomaterial_id, 'cell_line_at_day_54')
         self.assertEqual(cell_lines[0].has_input_biomaterial, None)
-        self.assertEqual(cell_lines[0].cell_line_type, 'stem cell-derived')
+        self.assertEqual(cell_lines[0].type, 'stem cell-derived')
+        self.assertEqual(cell_lines[0].type, cell_lines[0].cell_line_type)
         self.assertEqual(cell_lines[0].model_organ, 'brain')
 
     def test_project_fields(self):
