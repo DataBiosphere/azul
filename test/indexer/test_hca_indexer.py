@@ -37,7 +37,7 @@ def setUpModule():
 
 class TestHCAIndexer(IndexerTestCase):
 
-    def _get_hits(self):
+    def _get_all_hits(self):
         hits = scan(client=self.es_client,
                     index=','.join(self.get_hca_indexer().index_names()),
                     doc_type="doc")
@@ -61,7 +61,7 @@ class TestHCAIndexer(IndexerTestCase):
         self.maxDiff = None
         self._index_canned_bundle(self.old_bundle)
         expected_hits = self._load_canned_result(self.old_bundle)
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         self.assertElasticsearchResultsEqual(expected_hits, hits)
 
     def test_deletion(self):
@@ -86,7 +86,7 @@ class TestHCAIndexer(IndexerTestCase):
                 try:
                     self._index_bundle(self.new_bundle, manifest, metadata)
 
-                    hits = self._get_hits()
+                    hits = self._get_all_hits()
                     self.assertEqual(len(hits), size * 2)
                     num_aggregates, num_contribs = 0, 0
                     for hit in hits:
@@ -105,7 +105,7 @@ class TestHCAIndexer(IndexerTestCase):
 
                     self._delete_bundle(self.new_bundle)
 
-                    hits = self._get_hits()
+                    hits = self._get_all_hits()
                     self.assertEqual(len(hits), size)
                     for hit in hits:
                         entity_type, aggregate = config.parse_es_index_name(hit["_index"])
@@ -139,12 +139,12 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_bundle(bundle_fqid, manifest, metadata)
         self._index_bundle(patched_bundle_fqid, patched_manifest, patched_metadata)
 
-        hits_before = self._get_hits()
+        hits_before = self._get_all_hits()
         num_docs_by_index_before = self._num_docs_by_index(hits_before)
 
         self._delete_bundle(bundle_fqid)
 
-        hits_after = self._get_hits()
+        hits_after = self._get_all_hits()
         num_docs_by_index_after = self._num_docs_by_index(hits_after)
 
         for entity_type, aggregate in num_docs_by_index_after.keys():
@@ -198,7 +198,7 @@ class TestHCAIndexer(IndexerTestCase):
         """
         analysis_bundle = 'd5e01f9d-615f-4153-8a56-f2317d7d9ce8', '2018-09-06T185759.326912Z'
         self._index_canned_bundle(analysis_bundle)
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         num_files = 33
         self.assertEqual(len(hits), (num_files + 1 + 1 + 1) * 2)
         num_contribs, num_aggregates = Counter(), Counter()
@@ -251,7 +251,7 @@ class TestHCAIndexer(IndexerTestCase):
                            ignore_aggregates=False):
         num_actual_new_contributions = 0
         num_actual_new_deleted_contributions = 0
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         # Five entities (two files, one project, one sample and one bundle)
         # One contribution and one aggregate per entity
         self.assertEqual(5 + 5 + num_expected_new_contributions + num_expected_new_deleted_contributions, len(hits))
@@ -289,7 +289,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def _assert_new_bundle(self, num_expected_old_contributions=0, old_hits_by_id=None):
         num_actual_old_contributions = 0
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         # Five entities (two files, one project, one sample and one bundle)
         # One contribution and one aggregate per entity
         self.assertEqual(5 + 5 + num_expected_old_contributions, len(hits))
@@ -365,7 +365,7 @@ class TestHCAIndexer(IndexerTestCase):
                 # One conflict for the specimen and one for the project
                 self.assertEqual(num_hits, 2)
 
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         file_uuids = set()
         # One specimen, one project, one bundle and two file contributions per bundle, 10 contributions in total.
         # Both bundles share the specimen and the project, so two aggregates for those. None of the four files are
@@ -409,7 +409,7 @@ class TestHCAIndexer(IndexerTestCase):
         # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
         self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
         self.maxDiff = None
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         file_names, aggregate_file_names = set(), set()
         entities_with_matrix_files = set()
         for hit in hits:
@@ -442,7 +442,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'))
         self.maxDiff = None
 
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         self.assertGreater(len(hits), 0)
         documents_with_cell_suspension = 0
         for hit in hits:
@@ -478,7 +478,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(('e2c3054e-9fba-4d7a-b85b-a2220d16da73', '2018-10-24T234303.157920Z'))
         self.maxDiff = None
 
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         self.assertGreater(len(hits), 0)
         for hit in hits:
             contents = hit["_source"]['contents']
@@ -504,7 +504,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(('b7fc737e-9b7b-4800-8977-fe7c94e131df', '2018-09-12T121155.846604Z'))
         self.maxDiff = None
 
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         self.assertGreater(len(hits), 0)
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit["_index"])
@@ -528,7 +528,7 @@ class TestHCAIndexer(IndexerTestCase):
         Ensure all fields related to project contacts are properly extracted
         """
         self._index_canned_bundle(('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'))
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
             if aggregate and entity_type == 'projects':
@@ -557,7 +557,7 @@ class TestHCAIndexer(IndexerTestCase):
         """
         self._index_canned_bundle(("3db604da-940e-49b1-9bcc-25699a55b295", "2018-11-02T184048.983513Z"))
 
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         for hit in hits:
             source = hit['_source']
             contents = source['contents']
@@ -574,7 +574,7 @@ class TestHCAIndexer(IndexerTestCase):
         values saved are the ones from the Organoid and not the SpecimenFromOrganism
         """
         self._index_canned_bundle(('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'))
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         inner_specimens, inner_cell_suspensions = 0, 0
         for hit in hits:
 
@@ -612,7 +612,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_accessions_fields(self):
         self._index_canned_bundle(('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'))
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
             project = one(contents['projects'])
@@ -623,7 +623,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_imaging_bundle(self):
         self._index_canned_bundle(('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z'))
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         sources = defaultdict(list)
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
@@ -658,7 +658,7 @@ class TestHCAIndexer(IndexerTestCase):
         and assert cell_suspension inherits the organ value from the nearest ancestor cell_line
         """
         self._index_canned_bundle(('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'))
-        hits = self._get_hits()
+        hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
