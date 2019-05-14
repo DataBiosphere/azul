@@ -22,7 +22,6 @@ from more_itertools import one
 
 from app_test_case import LocalAppTestCase
 from azul import config, hmac
-from azul.deployment import aws
 from azul.indexer import IndexWriter
 from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
@@ -126,7 +125,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=5, old_hits_by_id=old_hits_by_id)
         self._delete_bundle(self.new_bundle)
-        self._assert_old_bundle(ignore_deletes=True)
+        self._assert_old_bundle(num_expected_new_deleted_contributions=5)
 
     def test_multi_entity_contributing_bundles(self):
         """
@@ -246,12 +245,16 @@ class TestHCAIndexer(IndexerTestCase):
         self._assert_old_bundle(num_expected_new_contributions=5, ignore_aggregates=True)
         self._assert_new_bundle(num_expected_old_contributions=5)
 
-    def _assert_old_bundle(self, num_expected_new_contributions=0, ignore_aggregates=False, ignore_deletes=False):
+    def _assert_old_bundle(self,
+                           num_expected_new_contributions=0,
+                           num_expected_new_deleted_contributions=0,
+                           ignore_aggregates=False):
         num_actual_new_contributions = 0
+        num_actual_new_deleted_contributions = 0
         hits = self._get_hits()
         # Five entities (two files, one project, one sample and one bundle)
         # One contribution and one aggregate per entity
-        self.assertEqual(5 + 5 + num_expected_new_contributions, len(hits))
+        self.assertEqual(5 + 5 + num_expected_new_contributions + num_expected_new_deleted_contributions, len(hits))
         hits_by_id = {}
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
@@ -272,13 +275,16 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertIn('Farmers Trucks', [c.get('institution') for c in project['contributors']])
                 donor = one(contents['donors'])
                 self.assertIn('Australopithecus', donor['genus_species'])
+                if not aggregate:
+                    self.assertFalse(source['bundle_deleted'])
             else:
                 if source['bundle_deleted']:
-                    self.assertTrue(ignore_deletes, "Unexpected deleted contribution")
+                    num_actual_new_deleted_contributions += 1
                 else:
                     self.assertLess(self.old_bundle[1], version)
                     num_actual_new_contributions += 1
         self.assertEqual(num_expected_new_contributions, num_actual_new_contributions)
+        self.assertEqual(num_expected_new_deleted_contributions, num_actual_new_deleted_contributions)
         return hits_by_id
 
     def _assert_new_bundle(self, num_expected_old_contributions=0, old_hits_by_id=None):
