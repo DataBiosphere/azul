@@ -114,6 +114,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "f396fa53-2a2d-4b8a-ad18-03bf4bd46833",  # Mouse Melanoma
                                                         "f8880be0-210c-4aa3-9348-f5a423e07421",  # Old neuron_diff
                                                         "0c7bbbce-3c70-4d6b-a443-1b92c1f205c8",  # BM_PC
+                                                        "e8642221-4c2c-4fd7-b926-a68bce363c88",  # Old pacreas6decades
                                                     ]
                                                 }
                                             },
