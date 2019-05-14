@@ -117,6 +117,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "e8642221-4c2c-4fd7-b926-a68bce363c88",  # Old pancreas6decades
                                                         "5e6c0ede-5648-4b0e-83ce-4644c437b4c0",  # Old pancreas6decades
                                                         "dadbdb31-5f69-485b-85f3-b244b74123f1",  # Old pancreas6decades
+                                                        "1a0f98b8-746a-489d-8af9-d5c657482aab",  # Old EMTAB5061
                                                     ]
                                                 }
                                             },
