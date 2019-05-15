@@ -3,7 +3,7 @@ from collections import OrderedDict, defaultdict
 from copy import deepcopy
 import os
 import csv
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkstemp
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
@@ -292,19 +292,23 @@ class ManifestResponse(AbstractResponse):
                 writer.writerow(row)
 
     def _create_bdbag_archive(self) -> str:
-        with TemporaryDirectory() as bag_path:
-            manifest_folder = os.path.join(bag_path, 'manifest')
-            os.makedirs(manifest_folder)
-            bdbag_api.make_bag(manifest_folder)
-            with open(os.path.join(manifest_folder, 'data', 'samples.tsv'), 'w') as samples_tsv:
+        with TemporaryDirectory() as temp_path:
+            bag_path = os.path.join(temp_path, 'manifest')
+            os.makedirs(bag_path)
+            bdbag_api.make_bag(bag_path)
+            with open(os.path.join(bag_path, 'data', 'samples.tsv'), 'w') as samples_tsv:
                 self._write_bdbag_samples_tsv(samples_tsv)
-            bag = bdbag_api.make_bag(manifest_folder, update=True)  # update TSV checksums
-            assert bdbag_api.is_bag(manifest_folder)
-            bdbag_api.validate_bag(manifest_folder)
+            bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
+            assert bdbag_api.is_bag(bag_path)
+            bdbag_api.validate_bag(bag_path)
             assert bdbag_api.check_payload_consistency(bag)
-            new_zip_path = os.path.join(os.path.dirname(bag_path), 'manifest.zip')
-            os.rename(bdbag_api.archive_bag(manifest_folder, 'zip'), new_zip_path)
-            return new_zip_path
+            temp, temp_path = mkstemp()
+            os.close(temp)
+            archive_path = bdbag_api.archive_bag(bag_path, 'zip')
+            # Moves the bdbag archive out of the temporary directory. This prevents
+            # the archive from being deleted when the temporary directory self-destructs.
+            os.rename(archive_path, temp_path)
+            return temp_path
 
     column_path_separator = '-'
 
