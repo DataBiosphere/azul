@@ -491,11 +491,9 @@ class TestHCAIndexer(IndexerTestCase):
                 # Both bundles refer to the same specimen and project, so the cell count for those should be 2.
                 expected_cells = 1 if entity_type in ('files', 'bundles') else 2
                 self.assertEqual(expected_cells, cell_suspensions[0]['total_estimated_cells'])
-                self.assertEqual(one(one(contents['protocols'])['workflow']), 'smartseq2')
-                self.assertEqual(one(one(contents['protocols'])['workflow_version']), 'v2.1.0')
+                self.assertEqual(one(one(contents['protocols'])['workflow']), 'smartseq2_v2.1.0')
             else:
-                self.assertEqual({p.get('workflow') for p in contents['protocols']}, {'smartseq2', None})
-                self.assertEqual({p.get('workflow_version') for p in contents['protocols']}, {'v2.1.0', None})
+                self.assertEqual({p.get('workflow') for p in contents['protocols']}, {'smartseq2_v2.1.0', None})
 
     def test_pooled_specimens(self):
         """

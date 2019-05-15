@@ -654,7 +654,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", []),
                 "pairedEnd": protocol.get("paired_end", []),
                 "workflow": protocol.get("workflow", []),
-                "workflowVersion": protocol.get("workflow_version", []),
             }
             protocols.append(translated_process)
         return protocols

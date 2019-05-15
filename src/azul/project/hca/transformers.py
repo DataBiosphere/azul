@@ -187,9 +187,7 @@ def _protocol_dict(protocol: api.Protocol) -> JSON:
         protocol_dict['instrument_manufacturer_model'] = protocol.instrument_manufacturer_model
         protocol_dict['paired_end'] = protocol.paired_end
     elif isinstance(protocol, api.AnalysisProtocol):
-        protocol_id = protocol.protocol_id
-        workflow, version = protocol_id.rsplit('_', maxsplit=1) if '_' in protocol_id else (protocol_id, None)
-        protocol_dict['workflow'], protocol_dict['workflow_version'] = workflow, version
+        protocol_dict['workflow'] = protocol.protocol_id
     else:
         assert False
     return protocol_dict
