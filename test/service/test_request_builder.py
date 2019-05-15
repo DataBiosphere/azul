@@ -516,12 +516,12 @@ class TestRequestBuilder(WebServiceTestCase):
                     "totalCellCount": 5.0,
                     "organSummaries": [
                         {
-                            "organType": "organ1",
+                            "organType": ["organ1"],
                             "countOfDocsWithOrganType": 1,
                             "totalCellCountByOrgan": 2.0
                         },
                         {
-                            "organType": "organ2",
+                            "organType": ["organ2"],
                             "countOfDocsWithOrganType": 1,
                             "totalCellCountByOrgan": 3.0
                         }

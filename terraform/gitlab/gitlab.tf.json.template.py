@@ -272,8 +272,8 @@ emit({} if config.terraform_component != 'gitlab' else {
                                                                'org-humancellatlas-azul-*',
                                                                '*.url.data.humancellatlas.org',
                                                                'url.data.humancellatlas.org',
-                                                               "org-humancellatlas-dss-checkout-*",
-                                                               "org-hca-dss-checkout-*"])
+                                                               "org-humancellatlas-dss-*",
+                                                               "org-hca-dss-*"])
                     },
 
                     *allow_service('KMS',

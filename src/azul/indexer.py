@@ -11,6 +11,7 @@ from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
 from azul import config
+from azul.dss import patch_client_for_direct_file_access
 from azul.es import ESClientFactory
 from azul.transformer import (Aggregate,
                               AggregatingTransformer,
@@ -83,7 +84,10 @@ class BaseIndexer(ABC):
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
         manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
-        self._add_test_modifications(manifest, metadata_files, dss_notification)
+        # If indexing a test bundle we want to change the uuid so that we can delete the bundle after
+        test_bundle_uuid = self._add_test_modifications(manifest, metadata_files, dss_notification)
+        if test_bundle_uuid:
+            bundle_uuid = test_bundle_uuid
 
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
         # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
@@ -104,7 +108,9 @@ class BaseIndexer(ABC):
 
     def _get_bundle(self, bundle_uuid, bundle_version):
         now = time.time()
-        _, manifest, metadata_files = download_bundle_metadata(client=config.dss_client(),
+        dss_client = config.dss_client()
+        patch_client_for_direct_file_access(dss_client)
+        _, manifest, metadata_files = download_bundle_metadata(client=dss_client,
                                                                replica='aws',
                                                                uuid=bundle_uuid,
                                                                version=bundle_version,
@@ -118,12 +124,16 @@ class BaseIndexer(ABC):
         if integration_test_name is not None:
             for dss_file in manifest:
                 if 'project_0.json' in dss_file['name']:
-                    dss_file['uuid'] = integration_test_name.split('_')[1]
+                    dss_file['uuid'] = dss_notification['test_uuid']
                     metadata_files['project_0.json']['project_core']['project_short_name'] = integration_test_name
-                    metadata_files['project_0.json']['provenance']['document_id'] = integration_test_name.split('_')[1]
+                    metadata_files['project_0.json']['provenance']['document_id'] = dss_notification['test_uuid']
+
                     break
             else:
                 assert False, "project_0.json doesn't exist for this bundle."
+            return dss_notification['test_bundle_uuid']
+        else:
+            return None
 
     def contribute(self, writer: 'IndexWriter', contributions: List[Contribution]) -> Tallies:
         """
