@@ -485,10 +485,9 @@ class GroupingAggregator(SimpleAggregator):
     def aggregate(self, entities: Entities) -> Entities:
         aggregates: MutableMapping[Any, MutableMapping[str, Optional[Accumulator]]] = defaultdict(dict)
         for entity in entities:
-            group_keys = self._group_keys(entity)
-            for group_key in group_keys:
-                aggregate = aggregates[group_key]
-                self._accumulate(aggregate, entity)
+            group_key = frozenset(self._group_keys(entity))
+            aggregate = aggregates[group_key]
+            self._accumulate(aggregate, entity)
         return [
             {
                 field: accumulator.get()

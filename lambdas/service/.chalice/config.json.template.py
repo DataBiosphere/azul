@@ -12,19 +12,19 @@ emit({
     'manage_iam_role': False,
     'iam_role_arn': f'arn:aws:iam::{aws.account}:role/{config.service_name}',
     'environment_variables': aws.lambda_env,
-    'lambda_timeout': 31,
+    'lambda_timeout': config.api_gateway_timeout + config.api_gateway_timeout_padding,
     'lambda_memory_size': 1024,
     'stages': {
         config.deployment_stage: {
             'lambda_functions': {
                 config.manifest_lambda_basename: {
-                    'lambda_timeout': 15 * 60
+                    'lambda_timeout': config.service_lambda_timeout
                 },
                 config.cart_item_write_lambda_basename: {
-                    'lambda_timeout': 15 * 60
+                    'lambda_timeout': config.service_lambda_timeout
                 },
                 config.cart_export_dss_push_lambda_basename: {
-                    'lambda_timeout': 15 * 60
+                    'lambda_timeout': config.service_lambda_timeout
                 }
             }
         }
