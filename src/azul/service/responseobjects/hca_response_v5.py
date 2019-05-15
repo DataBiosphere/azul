@@ -293,14 +293,18 @@ class ManifestResponse(AbstractResponse):
 
     def _create_bdbag_archive(self) -> str:
         with TemporaryDirectory() as bag_path:
-            bdbag_api.make_bag(bag_path)
-            with open(os.path.join(bag_path, 'data', 'samples.tsv'), 'w') as samples_tsv:
+            manifest_folder = os.path.join(bag_path, 'manifest')
+            os.makedirs(manifest_folder)
+            bdbag_api.make_bag(manifest_folder)
+            with open(os.path.join(manifest_folder, 'data', 'samples.tsv'), 'w') as samples_tsv:
                 self._write_bdbag_samples_tsv(samples_tsv)
-            bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
-            assert bdbag_api.is_bag(bag_path)
-            bdbag_api.validate_bag(bag_path)
+            bag = bdbag_api.make_bag(manifest_folder, update=True)  # update TSV checksums
+            assert bdbag_api.is_bag(manifest_folder)
+            bdbag_api.validate_bag(manifest_folder)
             assert bdbag_api.check_payload_consistency(bag)
-            return bdbag_api.archive_bag(bag_path, 'zip')
+            new_zip_path = os.path.join(os.path.dirname(bag_path), 'manifest.zip')
+            os.rename(bdbag_api.archive_bag(manifest_folder, 'zip'), new_zip_path)
+            return new_zip_path
 
     column_path_separator = '-'
 
