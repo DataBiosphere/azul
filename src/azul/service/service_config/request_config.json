@@ -10,7 +10,6 @@
     "libraryConstructionApproach": "contents.protocols.library_construction_approach",
     "pairedEnd": "contents.protocols.paired_end",
     "workflow": "contents.protocols.workflow",
-    "workflowVersion": "contents.protocols.workflow_version",
 
     "contactName": "contents.projects.contact_names",
     "projectId": "contents.projects.document_id",
@@ -155,7 +154,6 @@
     "instrumentManufacturerModel",
     "pairedEnd",
     "workflow",
-    "workflowVersion",
     "project",
     "fileFormat",
     "laboratory",
