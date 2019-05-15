@@ -119,11 +119,19 @@ class Config:
 
     @property
     def dss_checkout_bucket(self):
+        return self._dss_bucket('checkout')
+
+    def _dss_bucket(self, qualifier=None):
         stage = self.dss_deployment_stage
         # For domain_part, DSS went from `humancellatlas` to `hca` in 9/2018 and started reverting back to
         # `humancellatlas` in 12/2018. As I write this, only `dev` is back on `humancellatlas`
         domain_part = 'hca' if stage == 'prod' else 'humancellatlas'
-        return f'org-{domain_part}-dss-checkout-{stage}'
+        qualifier = [qualifier] if qualifier else []
+        return '-'.join(['org', domain_part, 'dss', *qualifier, stage])
+
+    @property
+    def dss_main_bucket(self):
+        return self._dss_bucket()
 
     @property
     def num_dss_workers(self) -> int:
@@ -293,7 +301,17 @@ class Config:
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
 
-    lambda_timeout = 300
+    indexer_lambda_timeout = 5 * 60
+
+    service_lambda_timeout = 15 * 60
+
+    api_gateway_timeout = 29
+
+    # The number of seconds to extend the timeout of a Lambda fronted by API Gateway so that API Gateway times out
+    # before the Lambda. We pad the Lambda timeout so we get consistent behaviour. Without this padding we'd have a
+    # race between the Lambda being killed and API Gateway timing out.
+    #
+    api_gateway_timeout_padding = 2
 
     term_re = re.compile("[a-z][a-z0-9]{2,29}")
 

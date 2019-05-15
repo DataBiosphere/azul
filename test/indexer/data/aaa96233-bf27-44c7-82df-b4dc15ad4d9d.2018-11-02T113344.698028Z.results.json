@@ -17,6 +17,7 @@
                         "disease": [
                             "normal"
                         ],
+                        "effective_organ": "pancreas",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -208,6 +209,7 @@
                         "disease": [
                             "normal"
                         ],
+                        "effective_organ": "pancreas",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -377,6 +379,7 @@
                         "disease": [
                             "normal"
                         ],
+                        "effective_organ": "pancreas",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -546,6 +549,7 @@
                         "disease": [
                             "normal"
                         ],
+                        "effective_organ": "pancreas",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -729,6 +733,7 @@
                         "disease": [
                             "normal"
                         ],
+                        "effective_organ": "pancreas",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -917,6 +922,9 @@
                         ],
                         "disease": [
                             "normal"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
                         ],
                         "organ": [
                             "pancreas"
@@ -1130,6 +1138,9 @@
                         "disease": [
                             "normal"
                         ],
+                        "effective_organ": [
+                            "pancreas"
+                        ],
                         "organ": [
                             "pancreas"
                         ],
@@ -1324,6 +1335,9 @@
                         "disease": [
                             "normal"
                         ],
+                        "effective_organ": [
+                            "pancreas"
+                        ],
                         "organ": [
                             "pancreas"
                         ],
@@ -1508,6 +1522,7 @@
                         "disease": [
                             "normal"
                         ],
+                        "effective_organ": "pancreas",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -1686,6 +1701,9 @@
                         ],
                         "disease": [
                             "normal"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
                         ],
                         "organ": [
                             "pancreas"

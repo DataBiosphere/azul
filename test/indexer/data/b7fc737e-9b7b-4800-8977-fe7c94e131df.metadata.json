@@ -56,7 +56,7 @@
             }
         ],
         "organ": {
-            "text": "Brain",
+            "text": "Brain 1",
             "ontology": "UBERON:0000955"
         },
         "organ_part": {
@@ -107,7 +107,7 @@
             }
         ],
         "organ": {
-            "text": "Brain",
+            "text": "Brain 2",
             "ontology": "UBERON:0000955"
         },
         "organ_part": {
@@ -158,7 +158,7 @@
             }
         ],
         "organ": {
-            "text": "Brain",
+            "text": "Brain 3",
             "ontology": "UBERON:0000955"
         },
         "organ_part": {

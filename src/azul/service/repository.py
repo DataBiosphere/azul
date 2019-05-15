@@ -95,6 +95,7 @@ class RepositoryService(AbstractService):
         def make_summary(entity_type):
             """Returns the key and value for a dict entry to transformation summary"""
             return entity_type, self.es_td.transform_summary(filters=filters, entity_type=entity_type)
+
         with ThreadPoolExecutor(max_workers=len(summary_fields_by_authority)) as executor:
             summaries = dict(executor.map(make_summary,
                                           summary_fields_by_authority))
