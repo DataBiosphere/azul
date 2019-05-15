@@ -95,14 +95,14 @@ class FileTypeSummary(JsonObject):
 
 
 class OrganCellCountSummary(JsonObject):
-    organType = StringProperty()
+    organType = ListProperty(StringProperty)
     countOfDocsWithOrganType = IntegerProperty()
     totalCellCountByOrgan = FloatProperty()
 
     @classmethod
     def for_bucket(cls, bucket):
         self = cls()
-        self.organType = bucket['key']
+        self.organType = [bucket['key']]
         self.countOfDocsWithOrganType = bucket['doc_count']
         self.totalCellCountByOrgan = bucket['cell_count']['value']
         return self
@@ -340,8 +340,7 @@ class ManifestResponse(AbstractResponse):
             for bundle in doc['bundles']:
                 bundle_fqid = bundle['uuid'], bundle['version']
 
-                # Extract fields from the bundle
-                bundle_cells = {}
+                bundle_cells = {'entity:bundle_id': '.'.join(bundle_fqid)}
                 self._extract_fields([bundle], bundle_column_mapping, bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
@@ -378,6 +377,7 @@ class ManifestResponse(AbstractResponse):
         # Compute the column names in deterministic order, bundle_columns first
         # followed by other columns
         column_names = dict.fromkeys(chain(
+            ['entity:bundle_id'],
             bundle_column_mapping.keys(),
             *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
 
@@ -577,10 +577,10 @@ class ProjectSummaryResponse(AbstractResponse):
         """
         organ_cell_count = defaultdict(int)
         for cell_suspension in hit['cell_suspensions']:
-            assert len(cell_suspension['organ']) == 1
-            organ_cell_count[cell_suspension['organ'][0]] += cell_suspension.get('total_estimated_cells', 0)
+            organ = frozenset(cell_suspension['organ'])
+            organ_cell_count[organ] += cell_suspension.get('total_estimated_cells', 0)
         total_cell_count = sum(organ_cell_count.values())
-        organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
+        organ_cell_count = [{'key': list(k), 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
 
     def __init__(self, es_hit_contents):
@@ -725,6 +725,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_cell_line(self, cell_line):
         return {
             "id": cell_line["biomaterial_id"],
+            "cellLineType": cell_line.get("cell_line_type", None),
+            "modelOrgan": cell_line.get("model_organ", None),
         }
 
     def make_cell_lines(self, entry):
