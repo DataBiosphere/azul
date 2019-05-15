@@ -161,7 +161,7 @@ def repository_search(entity_type: str, item_id: str):
         raise NotFoundError(msg=e)
 
 
-@app.route('/repository/files', methods=['GET'], cors=True)
+@app.route('/repository/files', methods=['HEAD', 'GET'], cors=True)
 @app.route('/repository/files/{file_id}', methods=['GET'], cors=True)
 def get_data(file_id=None):
     """
@@ -208,7 +208,7 @@ def get_data(file_id=None):
     return repository_search('files', file_id)
 
 
-@app.route('/repository/samples', methods=['GET'], cors=True)
+@app.route('/repository/samples', methods=['HEAD', 'GET'], cors=True)
 @app.route('/repository/samples/{sample_id}', methods=['GET'], cors=True)
 def get_sample_data(sample_id=None):
     """
@@ -255,7 +255,7 @@ def get_sample_data(sample_id=None):
     return repository_search('samples', sample_id)
 
 
-@app.route('/repository/bundles', methods=['GET'], cors=True)
+@app.route('/repository/bundles', methods=['HEAD', 'GET'], cors=True)
 @app.route('/repository/bundles/{bundle_uuid}', methods=['GET'], cors=True)
 def get_bundle_data(bundle_uuid=None):
     """
@@ -302,7 +302,7 @@ def get_bundle_data(bundle_uuid=None):
     return repository_search('bundles', bundle_uuid)
 
 
-@app.route('/repository/projects', methods=['GET'], cors=True)
+@app.route('/repository/projects', methods=['HEAD', 'GET'], cors=True)
 @app.route('/repository/projects/{project_id}', methods=['GET'], cors=True)
 def get_project_data(project_id=None):
     """
@@ -349,7 +349,7 @@ def get_project_data(project_id=None):
     return repository_search('projects', project_id)
 
 
-@app.route('/repository/summary', methods=['GET'], cors=True)
+@app.route('/repository/summary', methods=['HEAD', 'GET'], cors=True)
 def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
