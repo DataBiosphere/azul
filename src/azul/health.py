@@ -26,9 +26,7 @@ class Health:
                 for lambda_name in config.lambda_names()
                 if lambda_name != self.lambda_name
             }),
-            'unindexed_bundles': sum(self.queues[config.notify_queue_name].get('messages',{}).values()),
-
-            'unindexed_documents': sum(self.queues[config.document_queue_name].get('messages',{}).values())
+            'api_endpoints': self.api_endpoints
         }
 
     @memoized_property
@@ -56,6 +54,39 @@ class Health:
         return response
 
     @memoized_property
+    def progress(self) -> JSON:
+        return {
+            'unindexed_bundles': sum(self.queues[config.notify_queue_name].get('messages', {}).values()),
+            'unindexed_documents': sum(self.queues[config.document_queue_name].get('messages', {}).values())
+        }
+
+    @memoized_property
+    def api_endpoints(self):
+        status = {'up': True}
+
+        for endpoint in ('/repository/files',
+                         '/repository/projects',
+                         '/repository/samples',
+                         '/repository/bundles',
+                         '/repository/summary'):
+
+            response = requests.head(f'{config.service_endpoint()}{endpoint}')
+            try:
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                status[endpoint] = {
+                    'up': False,
+                    'error': str(e)
+                }
+                status['up'] = False
+            else:
+                status[endpoint] = {
+                    'up': True
+                }
+
+        return status
+
+    @memoized_property
     def elastic_search(self):
         return {
             'up': ESClientFactory.get().ping(),
@@ -65,6 +96,7 @@ class Health:
     def up(self):
         return (self.elastic_search['up'] and
                 self.queues['up'] and
+                self.api_endpoints['up'] and
                 all(self._lambda(lambda_name)['up']
                     for lambda_name in config.lambda_names()
                     if lambda_name != self.lambda_name))

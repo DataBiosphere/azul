@@ -68,6 +68,15 @@ def health():
     )
 
 
+@app.route('/progress', methods=['GET'], cors=True)
+def progress():
+    health = Health('indexer')
+    return Response(
+        body=json.dumps(health.progress),
+        status_code=200
+    )
+
+
 @app.route('/', cors=True)
 def hello():
     return {'Hello': 'World!'}
