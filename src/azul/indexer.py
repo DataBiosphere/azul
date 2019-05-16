@@ -7,6 +7,7 @@ from typing import Iterable, List, Mapping, MutableMapping, MutableSet, Union, T
 
 from elasticsearch import ConflictError, ElasticsearchException
 from elasticsearch.helpers import parallel_bulk, scan, streaming_bulk
+from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
@@ -88,23 +89,29 @@ class BaseIndexer(ABC):
         test_bundle_uuid = self._add_test_modifications(manifest, metadata_files, dss_notification)
         if test_bundle_uuid:
             bundle_uuid = test_bundle_uuid
+        return self._transform(bundle_uuid, bundle_version, False, manifest, metadata_files)
 
+    def _transform(self, bundle_uuid, bundle_version, deleted, manifest, metadata_files) -> List[Contribution]:
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
         # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
+        self.create_indices()
+        log.info("Transforming metadata for bundle %s.%s", bundle_uuid, bundle_version)
+        contributions = []
+        for transformer in self.transformers():
+            contributions.extend(transformer.transform(uuid=bundle_uuid,
+                                                       version=bundle_version,
+                                                       deleted=deleted,
+                                                       manifest=manifest,
+                                                       metadata_files=metadata_files))
+        return contributions
+
+    def create_indices(self):
         es_client = ESClientFactory.get()
         for index_name in self.index_names():
             es_client.indices.create(index=index_name,
                                      ignore=[400],
                                      body=dict(settings=self.settings(index_name),
                                                mappings=dict(doc=self.mapping())))
-        log.info("Transforming metadata for bundle %s.%s", bundle_uuid, bundle_version)
-        contributions = []
-        for transformer in self.transformers():
-            contributions.extend(transformer.transform(uuid=bundle_uuid,
-                                                       version=bundle_version,
-                                                       manifest=manifest,
-                                                       metadata_files=metadata_files))
-        return contributions
 
     def _get_bundle(self, bundle_uuid, bundle_version):
         now = time.time()
@@ -240,10 +247,22 @@ class BaseIndexer(ABC):
         # version of that bundle. If the latest non-deleted bundle. Group selected contributions by entity type and ID.
         contributions_by_entity = defaultdict(list)
         for bundle_contributions in contributions_by_bundle.values():
-            bundle_contributions = (c for c in bundle_contributions if not c.bundle_deleted)
+            bundle_version_deleted = {}
+            valid_contribution_by_version = {}
+            for c in bundle_contributions:
+                if c.bundle_deleted:
+                    bundle_version_deleted[c.bundle_version] = True
+                    valid_contribution_by_version[c.bundle_version] = c
+                else:
+                    if not bundle_version_deleted.get(c.bundle_version, False):
+                        bundle_version_deleted[c.bundle_version] = False
+                        valid_contribution_by_version[c.bundle_version] = c
+
+            undeleted_contributions = [c for c in valid_contribution_by_version.values() if not c.bundle_deleted]
             try:
-                contribution = max(bundle_contributions, key=attrgetter('bundle_version'))
+                contribution = max(undeleted_contributions, key=attrgetter('bundle_version'))
             except ValueError:
+                # max will throw ValueError for empty iterable
                 pass
             else:
                 contributions_by_entity[contribution.entity].append(contribution)
@@ -269,6 +288,11 @@ class BaseIndexer(ABC):
         return aggregates
 
     def delete(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
+        """
+        Synchronous form of delete that is currently only used for testing.
+
+        In production code, there is an SQS queue between the calls to `contribute()` and `aggregate()`
+        """
         # FIXME: this only works if the bundle version is not being indexed concurrently
         # The fix could be to optimistically lock on the aggregate version
         # https://github.com/DataBiosphere/azul/issues/611
@@ -281,6 +305,30 @@ class BaseIndexer(ABC):
         self.aggregate(writer, tallies)
 
     def transform_deletion(self, dss_notification: JSON) -> List[Contribution]:
+        bundle_uuid = dss_notification['match']['bundle_uuid']
+        bundle_version = dss_notification['match']['bundle_version']
+        try:
+            manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
+        except SwaggerAPIException as e:
+            if e.reason == 'not_found':
+                # Direct access must have failed and the DSS returned 404 (not found). This means this bundle has been
+                # fully (physically) deleted from DSS. The best Azul can do is try and look at it's own index to
+                # determine exactly which contributions need to be deleted
+                contributions = self.reflective_transform_delete(dss_notification)
+            else:
+                raise
+        else:
+            contributions = self._transform(bundle_uuid, bundle_version, True, manifest, metadata_files)
+        return contributions
+
+    def reflective_transform_delete(self, dss_notification: JSON) -> List[Contribution]:
+        """
+        Delete a bundle by first searching the index to determine what needs to be deleted.
+
+        Note that this method of deletion is inherently racey since the bundle may not be fully indexed when the search
+        is done.
+        """
+        # FIXME: (jesse) I suppose it's technically possible that the index doesn't exist when this code runs
         match = dss_notification['match']
         es_client = ESClientFactory.get()
         query = {

@@ -104,18 +104,54 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertEqual(num_aggregates, size)
                     self.assertEqual(num_contribs, size)
 
-                    self._delete_bundle(self.new_bundle)
+                    self._index_bundle(self.new_bundle, manifest, metadata, delete=True)
 
                     hits = self._get_all_hits()
-                    self.assertEqual(len(hits), size)
+                    # Twice the size because deletions create new contribution
+                    self.assertEqual(len(hits), 2 * size)
+                    docs_by_entity_id = defaultdict(list)
                     for hit in hits:
+                        doc = Contribution.from_index(hit)
+                        # FIXME: does fqid also need to be part of the key???
+                        docs_by_entity_id[doc.entity.entity_id].append(doc)
                         entity_type, aggregate = config.parse_es_index_name(hit["_index"])
                         self.assertFalse(aggregate)
-                        doc = Contribution.from_index(hit)
                         self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
-                        self.assertTrue(doc.bundle_deleted)
+
+                    for pair in docs_by_entity_id.values():
+                        self.assertEqual(len(pair), 2)
+                        one([i for i in pair if i.bundle_deleted])
+                        one([i for i in pair if not i.bundle_deleted])
                 finally:
                     self._delete_indices()
+
+    def test_deletion_before_addition(self):
+        self._index_canned_bundle(self.new_bundle, delete=True)
+        self._assert_index_counts(just_deletion=True)
+        self._index_canned_bundle(self.new_bundle)
+        self._assert_index_counts(just_deletion=False)
+
+    def _assert_index_counts(self, just_deletion):
+        # Five entities (two files, one project, one sample and one bundle)
+        num_expected_addition_contributions = 0 if just_deletion else 5
+        num_expected_deletion_contributions = 5
+        num_expected_aggregates = 0
+        hits = self._get_all_hits()
+        actual_addition_contributions = [h for h in hits if not h['_source']['bundle_deleted']]
+        actual_deletion_contributions = [h for h in hits if h['_source']['bundle_deleted']]
+
+        def is_aggregate(h):
+            _, aggregate_ = config.parse_es_index_name(h['_index'])
+            return aggregate_
+        actual_aggregates = [h for h in hits if is_aggregate(h)]
+
+        self.assertEqual(len(actual_addition_contributions), num_expected_addition_contributions)
+        self.assertEqual(len(actual_deletion_contributions), num_expected_deletion_contributions)
+        self.assertEqual(len(actual_aggregates), num_expected_aggregates)
+        self.assertEqual(num_expected_addition_contributions
+                         + num_expected_deletion_contributions
+                         + num_expected_aggregates,
+                         len(hits))
 
     def test_bundle_delete_downgrade(self):
         """
@@ -125,7 +161,7 @@ class TestHCAIndexer(IndexerTestCase):
         old_hits_by_id = self._assert_old_bundle()
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
-        self._delete_bundle(self.new_bundle)
+        self._index_canned_bundle(self.new_bundle, delete=True)
         self._assert_old_bundle(num_expected_new_deleted_contributions=6)
 
     def test_multi_entity_contributing_bundles(self):
@@ -143,7 +179,7 @@ class TestHCAIndexer(IndexerTestCase):
         hits_before = self._get_all_hits()
         num_docs_by_index_before = self._num_docs_by_index(hits_before)
 
-        self._delete_bundle(bundle_fqid)
+        self._index_canned_bundle(bundle_fqid, delete=True)
 
         hits_after = self._get_all_hits()
         num_docs_by_index_after = self._num_docs_by_index(hits_after)
@@ -152,11 +188,21 @@ class TestHCAIndexer(IndexerTestCase):
             # Both bundles reference two files. They both share one file
             # and exclusively own another one. Deleting one of the bundles removes the file owned exclusively by
             # that bundle, as well as the bundle itself.
-            difference = 1 if entity_type in ('files', 'bundles') and aggregate else 0
-            self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
-                             num_docs_by_index_before[entity_type, aggregate] - difference)
+            if aggregate:
+                difference = 1 if entity_type in ('files', 'bundles') else 0
+                self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
+                                 num_docs_by_index_before[entity_type, aggregate] - difference)
+            elif entity_type in ('bundles', 'samples', 'projects'):
+                # Count one extra deletion contribution
+                self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
+                                 num_docs_by_index_before[entity_type, aggregate] + 1)
+            else:
+                # Count two extra deletion contributions for the two files
+                self.assertEqual(entity_type, 'files')
+                self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
+                                 num_docs_by_index_before[entity_type, aggregate] + 2)
 
-        deleted_document_id = Contribution.make_document_id(old_file_uuid, *bundle_fqid)
+        deleted_document_id = Contribution.make_document_id(old_file_uuid, *bundle_fqid, True)
         hits = [hit['_source'] for hit in hits_after if hit['_id'] == deleted_document_id]
         self.assertTrue(one(hits)['bundle_deleted'])
 
@@ -250,12 +296,22 @@ class TestHCAIndexer(IndexerTestCase):
                            num_expected_new_contributions=0,
                            num_expected_new_deleted_contributions=0,
                            ignore_aggregates=False):
+        """
+        Assert that the old bundle is still indexed correctly
+
+        :param num_expected_new_contributions: Contributions from the new bundle without a corresponding deletion
+        contribution
+        :param num_expected_new_deleted_contributions: Contributions from the new bundle WITH a corresponding deletion
+        contribution
+        :param ignore_aggregates: Don't consider aggregates when counting docs in index
+        """
         num_actual_new_contributions = 0
         num_actual_new_deleted_contributions = 0
         hits = self._get_all_hits()
         # Six entities (two files, one project, one cell suspension, one sample, and one bundle)
         # One contribution and one aggregate per entity
-        self.assertEqual(6 + 6 + num_expected_new_contributions + num_expected_new_deleted_contributions, len(hits))
+        # Two times number of deleted contributions since deletes don't remove a contribution, but add a new one
+        self.assertEqual(6 + 6 + num_expected_new_contributions + num_expected_new_deleted_contributions * 2, len(hits))
         hits_by_id = {}
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
@@ -284,7 +340,9 @@ class TestHCAIndexer(IndexerTestCase):
                 else:
                     self.assertLess(self.old_bundle[1], version)
                     num_actual_new_contributions += 1
-        self.assertEqual(num_expected_new_contributions, num_actual_new_contributions)
+        # We count the deleted contributions here too since they should have a corresponding addition contribution
+        self.assertEqual(num_expected_new_contributions + num_expected_new_deleted_contributions,
+                         num_actual_new_contributions)
         self.assertEqual(num_expected_new_deleted_contributions, num_actual_new_deleted_contributions)
         return hits_by_id
 
