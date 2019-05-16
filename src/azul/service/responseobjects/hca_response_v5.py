@@ -95,7 +95,7 @@ class FileTypeSummary(JsonObject):
 
 
 class OrganCellCountSummary(JsonObject):
-    organType = ListProperty(StringProperty)
+    organType = ListProperty()  # List could have strings and/or None (eg. ['Brain', 'Skin', None])
     countOfDocsWithOrganType = IntegerProperty()
     totalCellCountByOrgan = FloatProperty()
 
