@@ -274,6 +274,10 @@ class Config:
     }
 
     @property
+    def is_main_deployment(self):
+        return self.deployment_stage in self.main_deployments_by_branch.values()
+
+    @property
     def _git_status(self) -> Mapping[str, str]:
         import git
         repo = git.Repo(config.project_root)
