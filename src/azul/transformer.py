@@ -121,11 +121,11 @@ class Contribution(Document):
 
     @property
     def document_id(self) -> str:
-        return self.make_document_id(self.entity.entity_id, self.bundle_uuid, self.bundle_version)
+        return self.make_document_id(self.entity.entity_id, self.bundle_uuid, self.bundle_version, self.bundle_deleted)
 
     @classmethod
-    def make_document_id(cls, entity_id, bundle_uuid, bundle_version):
-        document_id = entity_id, bundle_uuid, bundle_version
+    def make_document_id(cls, entity_id, bundle_uuid, bundle_version, bundle_deleted):
+        document_id = entity_id, bundle_uuid, bundle_version, 'deleted' if bundle_deleted else 'exists'
         return '_'.join(document_id)
 
     @classmethod
@@ -171,6 +171,7 @@ class Transformer(ABC):
     def transform(self,
                   uuid: BundleUUID,
                   version: BundleVersion,
+                  deleted: bool,
                   manifest: List[JSON],
                   metadata_files: Mapping[str, JSON]) -> Iterable[Contribution]:
         """
@@ -181,6 +182,7 @@ class Transformer(ABC):
 
         :param uuid: The UUID of the bundle to create documents for
         :param version: The version of the bundle to create documents for
+        :param deleted: Whether or not the bundle being indexed is deleted
         :param manifest:  The bundle manifest entries for all data and metadata files in the bundle
         :param metadata_files: The contents of all metadata files in the bundle
         :return: The document contributions
