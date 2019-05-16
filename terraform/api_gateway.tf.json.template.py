@@ -45,7 +45,11 @@ emit({
                 lambda_name: {
                     "domain_name": config.api_lambda_domain(lambda_name),
                     "validation_method": "DNS",
-                    "provider": "aws.us-east-1"
+                    "provider": "aws.us-east-1",
+                    "subject_alternative_names": [],
+                    "lifecycle": {
+                        "create_before_destroy": True
+                    }
                 }
             },
             "aws_acm_certificate_validation": {
