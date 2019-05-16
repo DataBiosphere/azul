@@ -44,6 +44,16 @@ emit({
             "aws_acm_certificate": {
                 lambda_name: {
                     "domain_name": config.api_lambda_domain(lambda_name),
+                    **(
+                        {
+                            # Main deployments have a CNAME pointing at them and
+                            # we need to add that CNAME as a
+                            "subject_alternative_names": [
+                                f"drs.{config.deployment_stage}.data.humancellatlas.org"
+                            ],
+                        } if config.is_main_deployment and lambda_name == 'service' else {
+                        }
+                    ),
                     "validation_method": "DNS",
                     "provider": "aws.us-east-1"
                 }
