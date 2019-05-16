@@ -258,14 +258,15 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         assert isinstance(project, api.Project)
         return project
 
-    def _contribution(self, bundle: api.Bundle, contents: JSON, entity_id: api.UUID4) -> Contribution:
+    def _contribution(self, bundle: api.Bundle, contents: JSON, entity_id: api.UUID4, deleted: bool) -> Contribution:
         entity_reference = EntityReference(entity_type=self.entity_type(),
                                            entity_id=str(entity_id))
         return Contribution(entity=entity_reference,
                             version=None,
                             contents=contents,
                             bundle_uuid=str(bundle.uuid),
-                            bundle_version=bundle.version)
+                            bundle_version=bundle.version,
+                            bundle_deleted=deleted)
 
 
 class TransformerVisitor(api.EntityVisitor):
@@ -322,6 +323,7 @@ class FileTransformer(Transformer):
     def transform(self,
                   uuid: str,
                   version: str,
+                  deleted: bool,
                   manifest: List[JSON],
                   metadata_files: Mapping[str, JSON]
                   ) -> Iterable[Document]:
@@ -351,7 +353,7 @@ class FileTransformer(Transformer):
                             files=[self._file(file)],
                             protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
                             projects=[self._project(project)])
-            yield self._contribution(bundle, contents, file.document_id)
+            yield self._contribution(bundle, contents, file.document_id, deleted)
 
 
 class CellSuspensionTransformer(Transformer):
@@ -398,6 +400,7 @@ class SampleTransformer(Transformer):
     def transform(self,
                   uuid: str,
                   version: str,
+                  deleted: bool,
                   manifest: List[JSON],
                   metadata_files: Mapping[str, JSON]
                   ) -> Sequence[Document]:
@@ -423,7 +426,7 @@ class SampleTransformer(Transformer):
                             files=[self._file(f) for f in visitor.files.values()],
                             protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
                             projects=[self._project(project)])
-            yield self._contribution(bundle, contents, sample.document_id)
+            yield self._contribution(bundle, contents, sample.document_id, deleted)
 
 
 class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
@@ -435,6 +438,7 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
     def transform(self,
                   uuid: str,
                   version: str,
+                  deleted: bool,
                   manifest: List[JSON],
                   metadata_files: Mapping[str, JSON]
                   ) -> Sequence[Document]:
@@ -467,7 +471,7 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
                         protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
                         projects=[self._project(project)])
 
-        yield self._contribution(bundle, contents, self._get_entity_id(bundle, project))
+        yield self._contribution(bundle, contents, self._get_entity_id(bundle, project), deleted)
 
 
 class ProjectTransformer(BundleProjectTransformer):
