@@ -83,12 +83,12 @@ class IndexerTestCase(ElasticsearchTestCase):
         return expected_hits
 
     @classmethod
-    def _index_canned_bundle(cls, bundle_fqid):
+    def _index_canned_bundle(cls, bundle_fqid, delete=False):
         manifest, metadata = cls._load_canned_bundle(bundle_fqid)
-        cls._index_bundle(bundle_fqid, manifest, metadata)
+        cls._index_bundle(bundle_fqid, manifest, metadata, delete=delete)
 
     @classmethod
-    def _index_bundle(cls, bundle_fqid, manifest, metadata):
+    def _index_bundle(cls, bundle_fqid, manifest, metadata, delete=False):
         def mocked_get_bundle(bundle_uuid, bundle_version):
             assert bundle_fqid == (bundle_uuid, bundle_version)
             return deepcopy(manifest), deepcopy(metadata)
@@ -97,7 +97,10 @@ class IndexerTestCase(ElasticsearchTestCase):
         notification = cls._make_fake_notification(bundle_fqid)
         with patch('azul.DSSClient'):
             with patch.object(cls.get_hca_indexer(), '_get_bundle', new=mocked_get_bundle):
-                cls.get_hca_indexer().index(index_writer, notification)
+                if delete:
+                    cls.get_hca_indexer().delete(index_writer, notification)
+                else:
+                    cls.get_hca_indexer().index(index_writer, notification)
 
     @classmethod
     def _create_index_writer(cls):
@@ -105,8 +108,3 @@ class IndexerTestCase(ElasticsearchTestCase):
         # request rate to 1/refresh_interval. That's only one request per second with refresh_interval being 1s.
         return IndexWriter(refresh=True, conflict_retry_limit=2, error_retry_limit=0)
 
-    def _delete_bundle(self, bundle_fqid):
-        index_writer = self._create_index_writer()
-        notification = self._make_fake_notification(bundle_fqid)
-        with patch('azul.DSSClient'):
-            self.get_hca_indexer().delete(index_writer, notification)
