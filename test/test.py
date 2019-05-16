@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, wait
 import doctest
 from itertools import chain
+from more_itertools import one
 import json
 import logging
 import os
@@ -22,6 +23,8 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               CellLine,
                                               CellSuspension,
                                               AnalysisProtocol,
+                                              ImagingTarget,
+                                              ImagingProtocol,
                                               LibraryPreparationProtocol,
                                               SequencingProtocol,
                                               SupplementaryFile,
@@ -516,6 +519,16 @@ class TestAccessorApi(TestCase):
         self.assertEqual(str(analysis_protocols[0].document_id), 'bb17ee61-193e-4ae1-a014-4f1b1c19b8b7')
         self.assertEqual(analysis_protocols[0].protocol_id, 'smartseq2_v2.2.0')
         self.assertEqual(analysis_protocols[0].protocol_name, None)
+
+    def test_imaging_protocol(self):
+        uuid = '94f2ba52-30c8-4de0-a78e-f95a3f8deb9c'
+        version = '2019-04-03T103426.471000Z'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='staging')
+        bundle = Bundle(uuid, version, manifest, metadata_files)
+        imaging_protocol = one([p for p in bundle.protocols.values() if isinstance(p, ImagingProtocol)])
+        self.assertEqual(len(imaging_protocol.target), 240)
+        assay_types = {target.assay_type for target in imaging_protocol.target}
+        self.assertEqual(assay_types, {'in situ sequencing'})
 
     def test_cell_line(self):
         uuid = 'ffee3a9b-14de-4dda-980f-c08092b2dabe'

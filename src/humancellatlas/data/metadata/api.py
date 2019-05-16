@@ -450,6 +450,16 @@ class SequencingProcess(Process):
         return True
 
 
+@dataclass(frozen=True)
+class ImagingTarget:
+    assay_type: str
+
+    @classmethod
+    def from_json(cls, json: JSON) -> 'ImagingTarget':
+        assay_type = ontology_label(json['assay_type'])
+        return cls(assay_type=assay_type)
+
+
 @dataclass(init=False)
 class Protocol(LinkedEntity):
     protocol_id: str
@@ -535,8 +545,12 @@ class IpscInductionProtocol(Protocol):
 
 @dataclass(init=False)
 class ImagingProtocol(Protocol):
-    pass
+    target: List[ImagingTarget]  # A list so all the ImagingTarget objects can be tallied when indexed
 
+    def __init__(self, json: JSON):
+        super().__init__(json)
+        content = json.get('content', json)
+        self.target = [ImagingTarget.from_json(target) for target in content['target']]
 
 @dataclass(init=False)
 class ImagingPreparationProtocol(Protocol):
