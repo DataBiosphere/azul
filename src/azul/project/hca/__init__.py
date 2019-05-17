@@ -78,11 +78,10 @@ class Plugin(azul.plugin.Plugin):
                             ] if config.dss_endpoint == "https://dss.staging.data.humancellatlas.org/v1" else [
                                 {
                                     "bool": {
-                                        "must": [
+                                        "should": [
                                             {
                                                 "terms": {
                                                     "files.project_json.provenance.document_id": [
-                                                        "179bf9e6-5b33-4c5b-ae26-96c7270976b8",  # 1m immune cells
                                                         "ff481f29-3d0b-4533-9de2-a760c61c162d",  # 1m neurons
                                                         "f8880be0-210c-4aa3-9348-f5a423e07421",  # an in vitro model of human inhibitory interneuron differentiation produced over time
                                                         "0c7bbbce-3c70-4d6b-a443-1b92c1f205c8",  # bm_pc
@@ -91,14 +90,33 @@ class Plugin(azul.plugin.Plugin):
                                                         "aabbec1a-1215-43e1-8e42-6489af25c12c",  # fetal/maternal interface
                                                         "1a0f98b8-746a-489d-8af9-d5c657482aab",  # healthy and type 2 diabetes pancreas
                                                         "d96c2451-6e22-441f-a3e6-70fd0878bb1b",  # hpsi human cerebral organoids
-                                                        "29f53b7e-071b-44b5-998a-0ae70d0229a4",  # human hematopoietic profiling
                                                         "34ec62a2-9643-430d-b41a-1e342bd615fc",  # kidney biopsy scrna-seq
                                                         "f396fa53-2a2d-4b8a-ad18-03bf4bd46833",  # mouse melanoma
                                                         "5f256182-5dfc-4070-8404-f6fa71d37c73",  # multiplexed scrna-seq with barcoded antibodies
-                                                        "b6dc9b93-929a-45d0-beb2-5cf8e64872fe",  # single cell rnaseq characterization of cell types produced over time in an in vitro model of human inhibitory interneuron differentiation.
                                                         "e8642221-4c2c-4fd7-b926-a68bce363c88",  # single cell transcriptome analysis of human pancreas
                                                         "f306435b-4e60-4a79-83a1-159bda5a2c79",  # tabula muris
                                                         "5dfe932f-159d-4cab-8039-d32f22ffbbc2",  # tissue stability
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "bool": {
+                                                    "must": [
+                                                        {
+                                                            "terms": {
+                                                                "files.project_json.provenance.document_id": [
+                                                                    "179bf9e6-5b33-4c5b-ae26-96c7270976b8",  # 1m immune cells
+                                                                    "29f53b7e-071b-44b5-998a-0ae70d0229a4",  # human hematopoietic profiling
+                                                                ]
+                                                            }
+                                                        }
+                                                    ],
+                                                    "must_not": [
+                                                        {
+                                                            "exists": {
+                                                                "field": "files.analysis_process_json" # only primary bundles
+                                                            }
+                                                        }
                                                     ]
                                                 }
                                             }
