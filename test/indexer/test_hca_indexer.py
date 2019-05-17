@@ -112,16 +112,14 @@ class TestHCAIndexer(IndexerTestCase):
                     docs_by_entity_id = defaultdict(list)
                     for hit in hits:
                         doc = Contribution.from_index(hit)
-                        # FIXME: does fqid also need to be part of the key???
                         docs_by_entity_id[doc.entity.entity_id].append(doc)
                         entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+                        # Since there is only one bundle and it was deleted, nothing should be aggregated
                         self.assertFalse(aggregate)
                         self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
 
                     for pair in docs_by_entity_id.values():
-                        self.assertEqual(len(pair), 2)
-                        one([i for i in pair if i.bundle_deleted])
-                        one([i for i in pair if not i.bundle_deleted])
+                        self.assertEqual(list(sorted(doc.bundle_deleted for doc in pair)), [False, True])
                 finally:
                     self._delete_indices()
 
@@ -133,8 +131,8 @@ class TestHCAIndexer(IndexerTestCase):
 
     def _assert_index_counts(self, just_deletion):
         # Five entities (two files, one project, one sample and one bundle)
-        num_expected_addition_contributions = 0 if just_deletion else 5
-        num_expected_deletion_contributions = 5
+        num_expected_addition_contributions = 0 if just_deletion else 6
+        num_expected_deletion_contributions = 6
         num_expected_aggregates = 0
         hits = self._get_all_hits()
         actual_addition_contributions = [h for h in hits if not h['_source']['bundle_deleted']]
@@ -192,7 +190,7 @@ class TestHCAIndexer(IndexerTestCase):
                 difference = 1 if entity_type in ('files', 'bundles') else 0
                 self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
                                  num_docs_by_index_before[entity_type, aggregate] - difference)
-            elif entity_type in ('bundles', 'samples', 'projects'):
+            elif entity_type in ('bundles', 'samples', 'projects', 'cell_suspensions'):
                 # Count one extra deletion contribution
                 self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
                                  num_docs_by_index_before[entity_type, aggregate] + 1)
@@ -202,7 +200,7 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
                                  num_docs_by_index_before[entity_type, aggregate] + 2)
 
-        deleted_document_id = Contribution.make_document_id(old_file_uuid, *bundle_fqid, True)
+        deleted_document_id = Contribution.make_document_id(old_file_uuid, *bundle_fqid, bundle_deleted=True)
         hits = [hit['_source'] for hit in hits_after if hit['_id'] == deleted_document_id]
         self.assertTrue(one(hits)['bundle_deleted'])
 
