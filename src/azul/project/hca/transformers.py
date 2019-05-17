@@ -364,6 +364,7 @@ class CellSuspensionTransformer(Transformer):
     def transform(self,
                   uuid: str,
                   version: str,
+                  deleted: bool,
                   manifest: List[JSON],
                   metadata_files: Mapping[str, JSON]
                   ) -> Iterable[Document]:
@@ -389,7 +390,7 @@ class CellSuspensionTransformer(Transformer):
                             files=[self._file(f) for f in visitor.files.values()],
                             protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
                             projects=[self._project(project)])
-            yield self._contribution(bundle, contents, cell_suspension.document_id)
+            yield self._contribution(bundle, contents, cell_suspension.document_id, deleted)
 
 
 class SampleTransformer(Transformer):
@@ -500,10 +501,11 @@ class BundleTransformer(BundleProjectTransformer):
     def transform(self,
                   uuid: str,
                   version: str,
+                  deleted: bool,
                   manifest: List[JSON],
                   metadata_files: Mapping[str, JSON]
                   ) -> Sequence[Document]:
-        for contrib in super().transform(uuid, version, manifest, metadata_files):
+        for contrib in super().transform(uuid, version, deleted, manifest, metadata_files):
             # noinspection PyArgumentList
             if 'project.json' in metadata_files:
                 # we can't handle v5 bundles

@@ -58,7 +58,10 @@ class TestDataExtractorTestCase(IndexerTestCase):
         for aggregate in True, False:
             with self.subTest(aggregate=aggregate):
                 entity_id = 'b3623b88-c369-46c9-a2e9-a16042d2c589'
-                document_id = entity_id if aggregate else Contribution.make_document_id(entity_id, *bundle_fqid, False)
+                if aggregate:
+                    document_id = entity_id
+                else:
+                    document_id = Contribution.make_document_id(entity_id, *bundle_fqid, bundle_deleted=False)
                 result = self.es_client.get(index=config.es_index_name('samples', aggregate=aggregate),
                                             id=document_id)
                 files = result['_source']['contents']['files']
