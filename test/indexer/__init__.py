@@ -96,11 +96,10 @@ class IndexerTestCase(ElasticsearchTestCase):
         index_writer = cls._create_index_writer()
         notification = cls._make_fake_notification(bundle_fqid)
         with patch('azul.DSSClient'):
-            with patch.object(cls.get_hca_indexer(), '_get_bundle', new=mocked_get_bundle):
-                if delete:
-                    cls.get_hca_indexer().delete(index_writer, notification)
-                else:
-                    cls.get_hca_indexer().index(index_writer, notification)
+            indexer = cls.get_hca_indexer()
+            with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
+                method = indexer.delete if delete else indexer.index
+                method(index_writer, notification)
 
     @classmethod
     def _create_index_writer(cls):

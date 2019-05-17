@@ -7,7 +7,6 @@ from typing import Iterable, List, Mapping, MutableMapping, MutableSet, Union, T
 
 from elasticsearch import ConflictError, ElasticsearchException
 from elasticsearch.helpers import parallel_bulk, scan, streaming_bulk
-from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
@@ -20,7 +19,10 @@ from azul.transformer import (Aggregate,
                               Document,
                               DocumentCoordinates,
                               EntityReference,
-                              Transformer, EntityID, BundleUUID)
+                              Transformer,
+                              EntityID,
+                              BundleUUID,
+                              BundleVersion)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -89,23 +91,32 @@ class BaseIndexer(ABC):
         test_bundle_uuid = self._add_test_modifications(manifest, metadata_files, dss_notification)
         if test_bundle_uuid:
             bundle_uuid = test_bundle_uuid
-        return self._transform(bundle_uuid, bundle_version, False, manifest, metadata_files)
+        return self._transform(bundle_uuid=bundle_uuid,
+                               bundle_version=bundle_version,
+                               bundle_deleted=False,
+                               manifest=manifest,
+                               metadata_files=metadata_files)
 
-    def _transform(self, bundle_uuid, bundle_version, deleted, manifest, metadata_files) -> List[Contribution]:
+    def _transform(self,
+                   bundle_uuid: BundleUUID,
+                   bundle_version: BundleVersion,
+                   bundle_deleted: bool,
+                   manifest: List[JSON],
+                   metadata_files: Mapping[str, JSON]) -> List[Contribution]:
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
         # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
-        self.create_indices()
+        self._create_indices()
         log.info("Transforming metadata for bundle %s.%s", bundle_uuid, bundle_version)
         contributions = []
         for transformer in self.transformers():
             contributions.extend(transformer.transform(uuid=bundle_uuid,
                                                        version=bundle_version,
-                                                       deleted=deleted,
+                                                       deleted=bundle_deleted,
                                                        manifest=manifest,
                                                        metadata_files=metadata_files))
         return contributions
 
-    def create_indices(self):
+    def _create_indices(self):
         es_client = ESClientFactory.get()
         for index_name in self.index_names():
             es_client.indices.create(index=index_name,
@@ -247,18 +258,20 @@ class BaseIndexer(ABC):
         # version of that bundle. If the latest non-deleted bundle. Group selected contributions by entity type and ID.
         contributions_by_entity = defaultdict(list)
         for bundle_contributions in contributions_by_bundle.values():
-            bundle_version_deleted = {}
-            valid_contribution_by_version = {}
+            effective_contribution_by_version = {}
             for c in bundle_contributions:
                 if c.bundle_deleted:
-                    bundle_version_deleted[c.bundle_version] = True
-                    valid_contribution_by_version[c.bundle_version] = c
+                    effective_contribution_by_version[c.bundle_version] = c
                 else:
-                    if not bundle_version_deleted.get(c.bundle_version, False):
-                        bundle_version_deleted[c.bundle_version] = False
-                        valid_contribution_by_version[c.bundle_version] = c
+                    try:
+                        effective_contribution = effective_contribution_by_version[c.bundle_version]
+                    except KeyError:
+                        effective_contribution_by_version[c.bundle_version] = c
+                    else:
+                        if not effective_contribution.bundle_deleted:
+                            effective_contribution_by_version[c.bundle_version] = c
 
-            undeleted_contributions = [c for c in valid_contribution_by_version.values() if not c.bundle_deleted]
+            undeleted_contributions = [c for c in effective_contribution_by_version.values() if not c.bundle_deleted]
             try:
                 contribution = max(undeleted_contributions, key=attrgetter('bundle_version'))
             except ValueError:
@@ -276,8 +289,6 @@ class BaseIndexer(ABC):
             transformer = transformers[entity.entity_type]
             contents = transformer.aggregate(contributions)
             bundles = [dict(uuid=c.bundle_uuid, version=c.bundle_version) for c in contributions]
-            # noinspection PyArgumentList
-            # https://youtrack.jetbrains.com/issue/PY-28506
             aggregate = Aggregate(entity=entity,
                                   version=None,
                                   contents=contents,
@@ -307,18 +318,8 @@ class BaseIndexer(ABC):
     def transform_deletion(self, dss_notification: JSON) -> List[Contribution]:
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
-        try:
-            manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
-        except SwaggerAPIException as e:
-            if e.reason == 'not_found':
-                # Direct access must have failed and the DSS returned 404 (not found). This means this bundle has been
-                # fully (physically) deleted from DSS. The best Azul can do is try and look at it's own index to
-                # determine exactly which contributions need to be deleted
-                contributions = self.reflective_transform_delete(dss_notification)
-            else:
-                raise
-        else:
-            contributions = self._transform(bundle_uuid, bundle_version, True, manifest, metadata_files)
+        manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
+        contributions = self._transform(bundle_uuid, bundle_version, True, manifest, metadata_files)
         return contributions
 
     def reflective_transform_delete(self, dss_notification: JSON) -> List[Contribution]:
@@ -327,8 +328,9 @@ class BaseIndexer(ABC):
 
         Note that this method of deletion is inherently racey since the bundle may not be fully indexed when the search
         is done.
+        # TODO: (jesse) delete this code when we are satisfied with the new transform_deletion
         """
-        # FIXME: (jesse) I suppose it's technically possible that the index doesn't exist when this code runs
+        self._create_indices()
         match = dss_notification['match']
         es_client = ESClientFactory.get()
         query = {
@@ -352,6 +354,7 @@ class BaseIndexer(ABC):
 
 
 class IndexWriter:
+
     def __init__(self,
                  refresh: Union[bool, str],
                  conflict_retry_limit: int,
