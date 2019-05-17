@@ -282,6 +282,7 @@ class FacetNameValidationTest(WebServiceTestCase):
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
+                self.assertTrue(all(['manifest' == first(name.split('/')) for name in zip_fh.namelist()]))
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
             service = config.api_lambda_domain('service')
             dss = config.dss_endpoint
