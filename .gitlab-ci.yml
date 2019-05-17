@@ -1,10 +1,10 @@
 stages:
   - build_image
   - setup
-  - test
+#  - test
   - deploy
   - subscribe
-  - integration_test
+#  - integration_test
   - teardown
   - manual
 
@@ -34,20 +34,20 @@ setup:
   script:
     - python scripts/github_status_check.py pending
 
-test:
-  extends: .base
-  stage: test
-  script:
-    - make clean
-    - make test
+#test:
+#  extends: .base
+#  stage: test
+#  script:
+#    - make clean
+#    - make test
 
 deploy:
   extends: .base
   stage: deploy
   script:
-    - make -C terraform plan auto_apply
+#    - make -C terraform plan auto_apply
     - make deploy
-    - make -C terraform plan auto_apply
+#    - make -C terraform plan auto_apply
 
 subscribe:
   extends: .base
@@ -55,11 +55,11 @@ subscribe:
   script:
     - make subscribe
 
-integration_test:
-  extends: .base
-  stage: integration_test
-  script:
-    - make integration_test
+#integration_test:
+#  extends: .base
+#  stage: integration_test
+#  script:
+#    - make integration_test
 
 on_success:
   extends: .base
