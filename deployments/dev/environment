@@ -12,6 +12,7 @@
 
 _set AZUL_DEPLOYMENT_STAGE dev
 _set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
+_set AZUL_DRS_DOMAIN_NAME "drs.dev.data.humancellatlas.org"
 
 _set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.data.humancellatlas.org"
 _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
