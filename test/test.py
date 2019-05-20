@@ -169,39 +169,48 @@ class TestAccessorApi(TestCase):
             manifest, metadata_files = self._canned_bundle(deployment, uuid, version)
         return manifest, metadata_files
 
-    def test_bad_content(self):
-        deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
-        client = dss_client(deployment)
-        with self.assertRaises(TypeError) as cm:
-            download_bundle_metadata(client, replica, uuid)
-        self.assertRegex(cm.exception.args[0],
-                         "Expecting file .* to contain a JSON object " +
-                         re.escape("(<class 'dict'>), not <class 'bytes'>"))
-
-    def test_bad_content_type(self):
-        deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
-        file_uuid, file_version = 'b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-09-20T232924.687620Z'
+    def _mock_get_bundle(self, file_uuid, file_version, content_type):
         response = Mock()
         response.links = {}
         response.json.return_value = {
             'bundle': {
+                'version': '2018-09-20T232924.687620Z',
                 'files': [
                     {
                         'name': 'name.json',
                         'uuid': file_uuid,
                         'version': file_version,
                         'indexed': True,
-                        'content-type': 'bad'
+                        'content-type': content_type
                     }
                 ]
             }
         }
         client = Mock()
         client.get_bundle._request.return_value = response
+        return client
+
+    def test_bad_content(self):
+        uuid = 'bad1bad1-bad1-bad1-bad1-bad1bad1bad1'
+        file_uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
+        file_version = '2018-09-20T232924.687620Z'
+        client = self._mock_get_bundle(file_uuid=file_uuid, file_version=file_version, content_type='application/json')
+        client.get_file.return_value = b'{}'
+        with self.assertRaises(TypeError) as cm:
+            download_bundle_metadata(client, 'aws', uuid)
+        self.assertRegex(cm.exception.args[0],
+                         "Expecting file .* to contain a JSON object " +
+                         re.escape("(<class 'dict'>), not <class 'bytes'>"))
+
+    def test_bad_content_type(self):
+        uuid = 'bad1bad1-bad1-bad1-bad1-bad1bad1bad1'
+        file_uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
+        file_version = '2018-09-20T232924.687620Z'
+        client = self._mock_get_bundle(file_uuid=file_uuid, file_version=file_version, content_type='bad')
         with self.assertRaises(NotImplementedError) as cm:
             # noinspection PyTypeChecker
-            download_bundle_metadata(client, replica, uuid)
-        self.assertEquals(cm.exception.args[0],
+            download_bundle_metadata(client, 'aws', uuid)
+        self.assertEqual(cm.exception.args[0],
                           f"Expecting file {file_uuid}.{file_version} "
                           "to have content type 'application/json', not 'bad'")
 
