@@ -191,6 +191,16 @@ class Config:
     def api_lambda_domain(self, lambda_name: str) -> str:
         return self.subdomain(lambda_name) + "." + self.domain_name
 
+    @property
+    def drs_domain(self):
+        return os.environ['AZUL_DRS_DOMAIN_NAME']
+
+    def api_lambda_domain_aliases(self, lambda_name):
+        """
+        Additional alias domain names for the given API lambda
+        """
+        return [self.drs_domain] if lambda_name == 'service' and self.drs_domain else []
+
     def lambda_endpoint(self, lambda_name: str) -> str:
         return "https://" + self.api_lambda_domain(lambda_name)
 
