@@ -12,6 +12,7 @@
 
 _set AZUL_DEPLOYMENT_STAGE prod
 _set AZUL_DSS_ENDPOINT "https://dss.data.humancellatlas.org/v1"
+_set AZUL_DRS_DOMAIN_NAME "drs.data.humancellatlas.org"
 
 _set AZUL_TERRAFORM_BACKEND_BUCKET "org-humancellatlas-azul-prod-config"
 _set AZUL_DOMAIN_NAME "explore.data.humancellatlas.org"
