@@ -71,8 +71,7 @@ class Config:
 
     @property
     def data_browser_domain(self):
-        # TODO: Work around for obtaining data-browser domain.
-        if self.deployment_stage not in ['dev', 'integration', 'staging', "prod"]:
+        if self.deployment_stage not in ('dev', 'integration', 'staging', 'prod'):
             return 'dev.data.humancellatlas.org'
         else:
             return f'{self.deployment_stage}.data.humancellatlas.org'
