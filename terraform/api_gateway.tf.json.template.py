@@ -45,7 +45,11 @@ emit({
                 lambda_name: {
                     "domain_name": config.api_lambda_domain(lambda_name),
                     "validation_method": "DNS",
-                    "provider": "aws.us-east-1"
+                    "provider": "aws.us-east-1",
+                    "subject_alternative_names": [],
+                    "lifecycle": {
+                        "create_before_destroy": True
+                    }
                 }
             },
             "aws_acm_certificate_validation": {
@@ -75,25 +79,28 @@ emit({
                     }
                 }
             },
-            **({
-                "aws_cloudwatch_log_group": {
-                    lambda_name: {
-                        "name": "/aws/apigateway/" + config.qualified_resource_name(lambda_name),
-                        "retention_in_days": 1827,
-                        "provisioner": {
-                            "local-exec": {
-                                "command": ' '.join(map(shlex.quote, [
-                                    "python",
-                                    config.project_root + "/scripts/log_api_gateway.py",
-                                    gateway_id,
-                                    config.deployment_stage,
-                                    "${aws_cloudwatch_log_group.%s.arn}" % lambda_name
-                                ]))
+            **(
+                {
+                    "aws_cloudwatch_log_group": {
+                        lambda_name: {
+                            "name": "/aws/apigateway/" + config.qualified_resource_name(lambda_name),
+                            "retention_in_days": 1827,
+                            "provisioner": {
+                                "local-exec": {
+                                    "command": ' '.join(map(shlex.quote, [
+                                        "python",
+                                        config.project_root + "/scripts/log_api_gateway.py",
+                                        gateway_id,
+                                        config.deployment_stage,
+                                        "${aws_cloudwatch_log_group.%s.arn}" % lambda_name
+                                    ]))
+                                }
                             }
                         }
                     }
+                } if config.enable_monitoring else {
                 }
-            } if config.enable_monitoring else {})
+            )
         } for lambda_name, gateway_id in gateway_ids.items() if gateway_id
     ]
 })
