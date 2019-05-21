@@ -1,5 +1,5 @@
 from abc import ABC, ABCMeta, abstractmethod
-from collections import defaultdict
+from collections import defaultdict, Counter
 import logging
 from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple, ClassVar
 
@@ -298,6 +298,37 @@ class SetOfDictAccumulator(SetAccumulator):
 
     def get(self):
         return thaw(super().get())
+
+
+class FrequencySetAccumulator(Accumulator):
+    """
+    An accumulator that accepts any number of values and returns a list with length max_size or smaller containing
+    the most frequent values accumulated.
+
+    >>> a = FrequencySetAccumulator(2)
+    >>> a.accumulate('x')
+    >>> a.accumulate(['x','y'])
+    >>> a.accumulate({'x','y','z'})
+    >>> a.get()
+    ['x', 'y']
+    >>> a = FrequencySetAccumulator(0)
+    >>> a.accumulate('x')
+    >>> a.get()
+    []
+    """
+    def __init__(self, max_size) -> None:
+        super().__init__()
+        self.value = Counter()
+        self.max_size = max_size
+
+    def accumulate(self, value) -> None:
+        if isinstance(value, (dict, list, set)):
+            self.value.update(value)
+        else:
+            self.value[value] += 1
+
+    def get(self) -> List[Any]:
+        return [item for item, count in self.value.most_common(self.max_size)]
 
 
 class PrioritySetAccumulator(SetAccumulator):

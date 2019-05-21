@@ -364,6 +364,7 @@ class ElasticTransformDump(object):
             request_config,
             post_filter=False,
             entity_type=entity_type)
+
         # Add a total_size aggregate to the ElasticSearch request
         es_search.aggs.metric(
             'total_size',
@@ -384,10 +385,13 @@ class ElasticTransformDump(object):
             field='contents.cell_suspensions.total_estimated_cells'
         )
 
+        es_search.aggs.bucket(
+            'organTypes', 'terms', field='contents.samples.effective_organ.keyword'
+        )
+
         for cardinality, agg_name in (
             ('contents.specimens.document_id', 'specimenCount'),
             ('contents.files.uuid', 'fileCount'),
-            ('contents.samples.effective_organ', 'organCount'),
             ('contents.donors.document_id', 'donorCount'),
             ('contents.projects.laboratory', 'labCount'),
             ('contents.projects.document_id', 'projectCount')):
