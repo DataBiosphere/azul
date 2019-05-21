@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from collections import Counter
 import logging
 from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
 
@@ -14,6 +15,7 @@ from azul.transformer import (Accumulator,
                               GroupingAggregator,
                               ListAccumulator,
                               SetAccumulator,
+                              FrequencySetAccumulator,
                               SimpleAggregator,
                               SumAccumulator)
 from azul.types import JSON
@@ -188,6 +190,8 @@ def _protocol_dict(protocol: api.Protocol) -> JSON:
         protocol_dict['paired_end'] = protocol.paired_end
     elif isinstance(protocol, api.AnalysisProtocol):
         protocol_dict['workflow'] = protocol.protocol_id
+    elif isinstance(protocol, api.ImagingProtocol):
+        protocol_dict['assay_type'] = dict(Counter(target.assay_type for target in protocol.target))
     else:
         assert False
     return protocol_dict
@@ -253,7 +257,10 @@ class TransformerVisitor(api.EntityVisitor):
             self.organoids[entity.document_id] = entity
         elif isinstance(entity, api.Process):
             for protocol in entity.protocols.values():
-                if isinstance(protocol, (api.SequencingProtocol, api.LibraryPreparationProtocol, api.AnalysisProtocol)):
+                if isinstance(protocol, (api.SequencingProtocol,
+                                         api.LibraryPreparationProtocol,
+                                         api.AnalysisProtocol,
+                                         api.ImagingProtocol)):
                     self.protocols[protocol.document_id] = protocol
         elif isinstance(entity, api.File):
             if entity.file_format == 'unknown' and '.zarr!' in entity.manifest_entry.name:
@@ -344,6 +351,8 @@ class ProtocolAggregator(SimpleAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':
             return None
+        elif field == 'assay_type':
+            return FrequencySetAccumulator(max_size=100)
         else:
             return SetAccumulator()
 

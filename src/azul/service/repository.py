@@ -84,12 +84,24 @@ class RepositoryService(AbstractService):
         # Request a summary for each entity type and cherry-pick summary fields from the summaries for the entity
         # that is authoritative for those fields.
         summary_fields_by_authority = {
-            'files':
-                ['totalFileSize', 'fileTypeSummaries', 'fileCount'],
-            'samples':
-                ['organCount', 'donorCount', 'labCount', 'totalCellCount', 'organSummaries', 'specimenCount'],
-            'projects':
-                ['projectCount']
+            'files': [
+                'totalFileSize',
+                'fileTypeSummaries',
+                'fileCount',
+            ],
+            'samples': [
+                'organTypes',
+                'donorCount',
+                'specimenCount',
+            ],
+            'projects': [
+                'projectCount',
+                'labCount',
+                # Cherry-pick cell count from projects as under samples it is possible that more than one sample could
+                # have the same cell suspension as an inner entity which would incorrectly inflate the total cell count.
+                'totalCellCount',
+                'cellCountSummaries',
+            ],
         }
 
         def make_summary(entity_type):
