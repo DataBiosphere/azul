@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, wait
 import doctest
 from itertools import chain
+from more_itertools import one
 import json
 import logging
 import os
@@ -22,6 +23,8 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               CellLine,
                                               CellSuspension,
                                               AnalysisProtocol,
+                                              ImagingTarget,
+                                              ImagingProtocol,
                                               LibraryPreparationProtocol,
                                               SequencingProtocol,
                                               SupplementaryFile,
@@ -166,39 +169,48 @@ class TestAccessorApi(TestCase):
             manifest, metadata_files = self._canned_bundle(deployment, uuid, version)
         return manifest, metadata_files
 
-    def test_bad_content(self):
-        deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
-        client = dss_client(deployment)
-        with self.assertRaises(TypeError) as cm:
-            download_bundle_metadata(client, replica, uuid)
-        self.assertRegex(cm.exception.args[0],
-                         "Expecting file .* to contain a JSON object " +
-                         re.escape("(<class 'dict'>), not <class 'bytes'>"))
-
-    def test_bad_content_type(self):
-        deployment, replica, uuid = 'staging', 'aws', 'df00a6fc-0015-4ae0-a1b7-d4b08af3c5a6'
-        file_uuid, file_version = 'b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-09-20T232924.687620Z'
+    def _mock_get_bundle(self, file_uuid, file_version, content_type):
         response = Mock()
         response.links = {}
         response.json.return_value = {
             'bundle': {
+                'version': '2018-09-20T232924.687620Z',
                 'files': [
                     {
                         'name': 'name.json',
                         'uuid': file_uuid,
                         'version': file_version,
                         'indexed': True,
-                        'content-type': 'bad'
+                        'content-type': content_type
                     }
                 ]
             }
         }
         client = Mock()
         client.get_bundle._request.return_value = response
+        return client
+
+    def test_bad_content(self):
+        uuid = 'bad1bad1-bad1-bad1-bad1-bad1bad1bad1'
+        file_uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
+        file_version = '2018-09-20T232924.687620Z'
+        client = self._mock_get_bundle(file_uuid=file_uuid, file_version=file_version, content_type='application/json')
+        client.get_file.return_value = b'{}'
+        with self.assertRaises(TypeError) as cm:
+            download_bundle_metadata(client, 'aws', uuid)
+        self.assertRegex(cm.exception.args[0],
+                         "Expecting file .* to contain a JSON object " +
+                         re.escape("(<class 'dict'>), not <class 'bytes'>"))
+
+    def test_bad_content_type(self):
+        uuid = 'bad1bad1-bad1-bad1-bad1-bad1bad1bad1'
+        file_uuid = 'b2216048-7eaa-45f4-8077-5a3fb4204953'
+        file_version = '2018-09-20T232924.687620Z'
+        client = self._mock_get_bundle(file_uuid=file_uuid, file_version=file_version, content_type='bad')
         with self.assertRaises(NotImplementedError) as cm:
             # noinspection PyTypeChecker
-            download_bundle_metadata(client, replica, uuid)
-        self.assertEquals(cm.exception.args[0],
+            download_bundle_metadata(client, 'aws', uuid)
+        self.assertEqual(cm.exception.args[0],
                           f"Expecting file {file_uuid}.{file_version} "
                           "to have content type 'application/json', not 'bad'")
 
@@ -516,6 +528,16 @@ class TestAccessorApi(TestCase):
         self.assertEqual(str(analysis_protocols[0].document_id), 'bb17ee61-193e-4ae1-a014-4f1b1c19b8b7')
         self.assertEqual(analysis_protocols[0].protocol_id, 'smartseq2_v2.2.0')
         self.assertEqual(analysis_protocols[0].protocol_name, None)
+
+    def test_imaging_protocol(self):
+        uuid = '94f2ba52-30c8-4de0-a78e-f95a3f8deb9c'
+        version = '2019-04-03T103426.471000Z'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='staging')
+        bundle = Bundle(uuid, version, manifest, metadata_files)
+        imaging_protocol = one([p for p in bundle.protocols.values() if isinstance(p, ImagingProtocol)])
+        self.assertEqual(len(imaging_protocol.target), 240)
+        assay_types = {target.assay_type for target in imaging_protocol.target}
+        self.assertEqual(assay_types, {'in situ sequencing'})
 
     def test_cell_line(self):
         uuid = 'ffee3a9b-14de-4dda-980f-c08092b2dabe'
