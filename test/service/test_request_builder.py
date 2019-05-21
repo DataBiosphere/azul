@@ -418,6 +418,7 @@ class TestRequestBuilder(WebServiceTestCase):
                 "_source": {
                     "entity_id": "a",
                     "contents": {
+                        "samples": [],
                         "specimens": [],
                         "cell_suspensions": [],
                         "donors": [],
@@ -437,14 +438,17 @@ class TestRequestBuilder(WebServiceTestCase):
                 "_source": {
                     "entity_id": "b",
                     "contents": {
-                        "specimens": [
+                        "samples": [
                             {
                                 "biomaterial_id": [
                                     "specimen1"
                                 ],
                                 "disease": [
                                     "disease1"
-                                ]
+                                ],
+                                "entity_type": "specimens",
+                                "effective_organ": "organ1",
+                                "organ": "organ1"
                             },
                             {
                                 "biomaterial_id": [
@@ -452,7 +456,30 @@ class TestRequestBuilder(WebServiceTestCase):
                                 ],
                                 "disease": [
                                     "disease1"
-                                ]
+                                ],
+                                "entity_type": "specimens",
+                                "effective_organ": "organ1",
+                                "organ": "organ1"
+                            }
+                        ],
+                        "specimens": [
+                            {
+                                "biomaterial_id": [
+                                    "specimen1"
+                                ],
+                                "disease": [
+                                    "disease1"
+                                ],
+                                "organ": "organ1"
+                            },
+                            {
+                                "biomaterial_id": [
+                                    "specimen2"
+                                ],
+                                "disease": [
+                                    "disease1"
+                                ],
+                                "organ": "organ1"
                             }
                         ],
                         "cell_suspensions": [
@@ -461,7 +488,7 @@ class TestRequestBuilder(WebServiceTestCase):
                                 "total_estimated_cells": 2
                             },
                             {
-                                "organ": ["organ2"],
+                                "organ": ["organ1"],
                                 "total_estimated_cells": 3
                             }
                         ],
@@ -502,8 +529,9 @@ class TestRequestBuilder(WebServiceTestCase):
                 "entryId": "a",
                 "projectSummary": {
                     "donorCount": 0,
+                    "organTypes": [],
                     "totalCellCount": 0.0,
-                    "organSummaries": [],
+                    "cellCountSummaries": [],
                     "genusSpecies": [],
                     "libraryConstructionApproach": [],
                     "disease": []
@@ -513,18 +541,16 @@ class TestRequestBuilder(WebServiceTestCase):
                 "entryId": "b",
                 "projectSummary": {
                     "donorCount": 2,
+                    "organTypes": [
+                        "organ1",
+                    ],
                     "totalCellCount": 5.0,
-                    "organSummaries": [
+                    "cellCountSummaries": [
                         {
                             "organType": ["organ1"],
                             "countOfDocsWithOrganType": 1,
-                            "totalCellCountByOrgan": 2.0
+                            "totalCellCountByOrgan": 5.0
                         },
-                        {
-                            "organType": ["organ2"],
-                            "countOfDocsWithOrganType": 1,
-                            "totalCellCountByOrgan": 3.0
-                        }
                     ],
                     "genusSpecies": [
                         "species1"
