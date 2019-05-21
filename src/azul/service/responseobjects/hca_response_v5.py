@@ -3,7 +3,7 @@ from collections import OrderedDict, defaultdict
 from copy import deepcopy
 import os
 import csv
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkstemp
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
@@ -95,7 +95,7 @@ class FileTypeSummary(JsonObject):
 
 
 class OrganCellCountSummary(JsonObject):
-    organType = ListProperty(StringProperty)
+    organType = ListProperty()  # List could have strings and/or None (eg. ['Brain', 'Skin', None])
     countOfDocsWithOrganType = IntegerProperty()
     totalCellCountByOrgan = FloatProperty()
 
@@ -292,7 +292,9 @@ class ManifestResponse(AbstractResponse):
                 writer.writerow(row)
 
     def _create_bdbag_archive(self) -> str:
-        with TemporaryDirectory() as bag_path:
+        with TemporaryDirectory() as temp_path:
+            bag_path = os.path.join(temp_path, 'manifest')
+            os.makedirs(bag_path)
             bdbag_api.make_bag(bag_path)
             with open(os.path.join(bag_path, 'data', 'samples.tsv'), 'w') as samples_tsv:
                 self._write_bdbag_samples_tsv(samples_tsv)
@@ -300,7 +302,13 @@ class ManifestResponse(AbstractResponse):
             assert bdbag_api.is_bag(bag_path)
             bdbag_api.validate_bag(bag_path)
             assert bdbag_api.check_payload_consistency(bag)
-            return bdbag_api.archive_bag(bag_path, 'zip')
+            temp, temp_path = mkstemp()
+            os.close(temp)
+            archive_path = bdbag_api.archive_bag(bag_path, 'zip')
+            # Moves the bdbag archive out of the temporary directory. This prevents
+            # the archive from being deleted when the temporary directory self-destructs.
+            os.rename(archive_path, temp_path)
+            return temp_path
 
     column_path_separator = '-'
 
@@ -654,7 +662,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", []),
                 "pairedEnd": protocol.get("paired_end", []),
                 "workflow": protocol.get("workflow", []),
-                "workflowVersion": protocol.get("workflow_version", []),
             }
             protocols.append(translated_process)
         return protocols
