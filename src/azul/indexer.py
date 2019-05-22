@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
+from itertools import groupby
 import logging
 from operator import attrgetter
 import time
@@ -20,7 +21,6 @@ from azul.transformer import (Aggregate,
                               DocumentCoordinates,
                               EntityReference,
                               Transformer,
-                              EntityID,
                               BundleUUID,
                               BundleVersion)
 from azul.types import JSON
@@ -246,39 +246,26 @@ class BaseIndexer(ABC):
         return contributions
 
     def _aggregate(self, contributions: List[Contribution]) -> List[Aggregate]:
-        # Group contributions by entity ID and bundle UUID
-        contributions_by_bundle: Mapping[Tuple[EntityID, BundleUUID], List[Contribution]] = defaultdict(list)
+        # Group contributions by entity and bundle UUID
+        contributions_by_bundle: Mapping[Tuple[EntityReference, BundleUUID], List[Contribution]] = defaultdict(list)
         tallies = Counter()
         for contribution in contributions:
-            contributions_by_bundle[contribution.entity.entity_id, contribution.bundle_uuid].append(contribution)
+            contributions_by_bundle[contribution.entity, contribution.bundle_uuid].append(contribution)
             # Track the raw, unfiltered number of contributions per entity
-            tallies[contribution.entity.entity_id] += 1
+            tallies[contribution.entity] += 1
 
-        # Among the contributions by a particular bundle to a particular entity, select the contribution from latest
-        # version of that bundle. If the latest non-deleted bundle. Group selected contributions by entity type and ID.
-        contributions_by_entity = defaultdict(list)
-        for bundle_contributions in contributions_by_bundle.values():
-            effective_contribution_by_version = {}
-            for c in bundle_contributions:
-                if c.bundle_deleted:
-                    effective_contribution_by_version[c.bundle_version] = c
-                else:
-                    try:
-                        effective_contribution = effective_contribution_by_version[c.bundle_version]
-                    except KeyError:
-                        effective_contribution_by_version[c.bundle_version] = c
-                    else:
-                        if not effective_contribution.bundle_deleted:
-                            effective_contribution_by_version[c.bundle_version] = c
-
-            undeleted_contributions = [c for c in effective_contribution_by_version.values() if not c.bundle_deleted]
-            try:
-                contribution = max(undeleted_contributions, key=attrgetter('bundle_version'))
-            except ValueError:
-                # max will throw ValueError for empty iterable
-                pass
-            else:
-                contributions_by_entity[contribution.entity].append(contribution)
+        # For each entity and bundle, find the most recent contribution that is not a deletion
+        contributions_by_entity: Mapping[EntityReference, List[Contribution]] = defaultdict(list)
+        for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
+            contributions = sorted(contributions, key=attrgetter('bundle_version', 'bundle_deleted'), reverse=True)
+            for bundle_version, group in groupby(contributions, key=attrgetter('bundle_version')):
+                contribution = next(group)
+                if not contribution.bundle_deleted:
+                    assert bundle_uuid == contribution.bundle_uuid
+                    assert bundle_version == contribution.bundle_version
+                    assert entity == contribution.entity
+                    contributions_by_entity[entity].append(contribution)
+                    break
 
         # Create lookup for transformer by entity type
         transformers = {t.entity_type(): t for t in self.transformers() if isinstance(t, AggregatingTransformer)}
@@ -293,7 +280,7 @@ class BaseIndexer(ABC):
                                   version=None,
                                   contents=contents,
                                   bundles=bundles,
-                                  num_contributions=tallies[entity.entity_id])
+                                  num_contributions=tallies[entity])
             aggregates.append(aggregate)
 
         return aggregates
