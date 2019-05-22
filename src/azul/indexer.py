@@ -3,7 +3,7 @@ from collections import Counter, defaultdict
 import logging
 from operator import attrgetter
 import time
-from typing import Iterable, List, Mapping, MutableMapping, MutableSet, Union
+from typing import Iterable, List, Mapping, MutableMapping, MutableSet, Union, Tuple, Optional
 
 from elasticsearch import ConflictError, ElasticsearchException
 from elasticsearch.helpers import parallel_bulk, scan, streaming_bulk
@@ -19,7 +19,7 @@ from azul.transformer import (Aggregate,
                               Document,
                               DocumentCoordinates,
                               EntityReference,
-                              Transformer)
+                              Transformer, EntityID, BundleUUID)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -229,7 +229,7 @@ class BaseIndexer(ABC):
 
     def _aggregate(self, contributions: List[Contribution]) -> List[Aggregate]:
         # Group contributions by entity ID and bundle UUID
-        contributions_by_bundle = defaultdict(list)
+        contributions_by_bundle: Mapping[Tuple[EntityID, BundleUUID], List[Contribution]] = defaultdict(list)
         tallies = Counter()
         for contribution in contributions:
             contributions_by_bundle[contribution.entity.entity_id, contribution.bundle_uuid].append(contribution)
@@ -237,12 +237,15 @@ class BaseIndexer(ABC):
             tallies[contribution.entity.entity_id] += 1
 
         # Among the contributions by a particular bundle to a particular entity, select the contribution from latest
-        # version of that bundle. If the latest version is a deletion, take no contribution from that bundle. Group
-        # selected contributions by entity type and ID.
+        # version of that bundle. If the latest non-deleted bundle. Group selected contributions by entity type and ID.
         contributions_by_entity = defaultdict(list)
         for bundle_contributions in contributions_by_bundle.values():
-            contribution = max(bundle_contributions, key=attrgetter('bundle_version'))
-            if not contribution.bundle_deleted:
+            bundle_contributions = (c for c in bundle_contributions if not c.bundle_deleted)
+            try:
+                contribution = max(bundle_contributions, key=attrgetter('bundle_version'))
+            except ValueError:
+                pass
+            else:
                 contributions_by_entity[contribution.entity].append(contribution)
 
         # Create lookup for transformer by entity type
