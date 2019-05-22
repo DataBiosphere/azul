@@ -77,6 +77,15 @@ class Document:
         return {}
 
     @classmethod
+    def mandatory_source_fields(cls) -> List[str]:
+        """
+        A list of field paths into the source of each document that are expected to be present. Subclasses that
+        override _from_source() should override this method, too, such that the list returned by this method mentions
+        the name of every field expected by _from_source().
+        """
+        return ['entity_id']
+
+    @classmethod
     def from_index(cls, hit: JSON) -> 'Document':
         source = hit['_source']
         # noinspection PyArgumentList
@@ -139,6 +148,10 @@ class Contribution(Document):
                     bundle_version=source['bundle_version'],
                     bundle_deleted=source['bundle_deleted'])
 
+    @classmethod
+    def mandatory_source_fields(cls) -> List[str]:
+        return super().mandatory_source_fields() + ['bundle_uuid', 'bundle_version', 'bundle_deleted']
+
     def to_source(self):
         return dict(super().to_source(),
                     bundle_uuid=self.bundle_uuid,
@@ -148,7 +161,7 @@ class Contribution(Document):
 
 @dataclass
 class Aggregate(Document):
-    bundles: List[JSON]
+    bundles: Optional[List[JSON]]
     num_contributions: int
     version_type: ClassVar[Optional[str]] = 'internal'
 
@@ -156,7 +169,11 @@ class Aggregate(Document):
     def _from_source(cls, source: JSON) -> Mapping[str, Any]:
         return dict(super()._from_source(source),
                     num_contributions=source['num_contributions'],
-                    bundles=source['bundles'])
+                    bundles=source.get('bundles'))
+
+    @classmethod
+    def mandatory_source_fields(cls) -> List[str]:
+        return super().mandatory_source_fields() + ['num_contributions']
 
     def to_source(self) -> JSON:
         return dict(super().to_source(),
