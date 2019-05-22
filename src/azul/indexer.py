@@ -361,7 +361,7 @@ class IndexWriter:
         self.es_client = ESClientFactory.get()
         self.errors: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
         self.conflicts: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
-        self.retries: MutableSet[DocumentCoordinates] = None
+        self.retries: Optional[MutableSet[DocumentCoordinates]] = None
 
     bulk_threshold = 32
 
