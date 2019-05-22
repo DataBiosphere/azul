@@ -174,7 +174,6 @@ class BaseIndexer(ABC):
         """
         while True:
             # Read the aggregates
-            # FIXME: we should source filter so we only read the num_contributions and version values
             old_aggregates = self._read_aggregates(entity for entity in tallies.keys())
             absolute_tallies = Counter(tallies)
             absolute_tallies.update({old_aggregate.entity: old_aggregate.num_contributions
@@ -209,7 +208,7 @@ class BaseIndexer(ABC):
                                   _index=Aggregate.index_name(entity.entity_type),
                                   _id=entity.entity_id)  # FIXME: assumes that document_id is entity_id for aggregates
                              for entity in entities])
-        response = ESClientFactory.get().mget(body=request)
+        response = ESClientFactory.get().mget(body=request, _source_include=Aggregate.mandatory_source_fields())
         aggregates = (Aggregate.from_index(doc) for doc in response['docs'] if doc['found'])
         aggregates = {a.entity: a for a in aggregates}
         return aggregates
