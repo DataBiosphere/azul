@@ -110,7 +110,6 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
-                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -200,7 +199,6 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
-                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -317,7 +315,6 @@ class TestResponse(WebServiceTestCase):
                                 "libraryConstructionApproach": ["Smart-seq2"],
                                 "pairedEnd": [True],
                                 "workflow": [],
-                                "workflowVersion": []
                             }
                         ],
                         "samples": [
@@ -417,7 +414,6 @@ class TestResponse(WebServiceTestCase):
                                 "libraryConstructionApproach": ["Smart-seq2"],
                                 "pairedEnd": [True],
                                 "workflow": [],
-                                "workflowVersion": []
                             }
                         ],
                         "samples": [
@@ -797,7 +793,6 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
-                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -926,7 +921,6 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
-                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -1114,8 +1108,7 @@ class TestResponse(WebServiceTestCase):
                             "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
                             "libraryConstructionApproach": ["10X v2 sequencing"],
                             "pairedEnd": [False],
-                            "workflow": ['cellranger'],
-                            "workflowVersion": ['v1.0.2']
+                            "workflow": ['cellranger_v1.0.2'],
                         }
                     ],
                     "samples": [
