@@ -160,12 +160,12 @@ class BaseIndexer(ABC):
         """
         while True:
             # Read the aggregates
-            old_aggregates = self._read_aggregates(entity for entity in tallies.keys())
-            absolute_tallies = Counter(tallies)
-            absolute_tallies.update({old_aggregate.entity: old_aggregate.num_contributions
+            old_aggregates = self._read_aggregates(tallies)
+            total_tallies = Counter(tallies)
+            total_tallies.update({old_aggregate.entity: old_aggregate.num_contributions
                                      for old_aggregate in old_aggregates.values()})
             # Read all contributions from Elasticsearch
-            contributions = self._read_contributions(absolute_tallies)
+            contributions = self._read_contributions(total_tallies)
             actual_tallies = Counter(contribution.entity for contribution in contributions)
             assert len(tallies) == len(actual_tallies)
             assert all(tallies[entity] <= actual_tally for entity, actual_tally in actual_tallies.items())
