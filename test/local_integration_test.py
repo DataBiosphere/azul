@@ -21,6 +21,8 @@ from more_itertools import one, first
 from io import BytesIO, TextIOWrapper
 from zipfile import ZipFile
 
+from requests import HTTPError
+
 from azul import config
 from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
@@ -67,7 +69,7 @@ class IntegrationTest(unittest.TestCase):
         super().setUp()
         self.set_lambda_test_mode(True)
         self.bundle_uuid_prefix = ''.join([str(random.choice('abcdef0123456789')) for _ in range(self.prefix_length)])
-        self.indexed_fqids = set()
+        self.expected_fqids = set()
         self.azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
                                       prefix=self.bundle_uuid_prefix)
         self.test_uuid = str(uuid.uuid4())
@@ -90,9 +92,10 @@ class IntegrationTest(unittest.TestCase):
         azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
                                  prefix=self.bundle_uuid_prefix)
         logger.info('Creating indices and reindexing ...')
-        test_bundle_fqids = azul_client.test_reindex(self.test_name, self.test_uuid)
-        self.num_bundles = len(test_bundle_fqids)
-        self.check_bundles_are_indexed(self.test_name, 'files', test_bundle_fqids)
+        test_notifications, self.expected_fqids = azul_client.test_notifications(self.test_name, self.test_uuid)
+        azul_client._reindex(test_notifications)
+        self.num_bundles = len(self.expected_fqids)
+        self.check_bundles_are_indexed(self.test_name, 'files')
 
     def _test_other_endpoints(self):
         self.check_endpoint_is_working(config.indexer_endpoint(), '/health')
@@ -133,9 +136,13 @@ class IntegrationTest(unittest.TestCase):
         self.download_file_from_drs_response(self.check_endpoint_is_working(config.service_endpoint(), drs_endpoint))
 
     def delete_bundles(self):
-        for fqid in self.indexed_fqids:
+        for fqid in self.expected_fqids:
             bundle_uuid, _, version = fqid.partition('.')
-            self.azul_client.delete_bundle(bundle_uuid, version)
+            try:
+                self.azul_client.delete_bundle(bundle_uuid, version)
+            except HTTPError as e:
+                logger.warning('Deletion for bundle %s version %s failed. Possibly it was never indexed.',
+                               bundle_uuid, version, exc_info=e)
 
         self.wait_for_queue_level(empty=False)
         self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
@@ -240,15 +247,15 @@ class IntegrationTest(unittest.TestCase):
         for queue in queues.values():
             queue.meta.client._endpoint.http_session.close()
 
-    def check_bundles_are_indexed(self, test_name: str, entity_type: str, expected_bundle_fqids: Set[str]):
+    def check_bundles_are_indexed(self, test_name: str, entity_type: str):
         service_check_timeout = 600
         delay_between_retries = 5
-        page_size = 100
+        indexed_fqids = set()
 
-        num_bundles = len(expected_bundle_fqids)
+        num_bundles = len(self.expected_fqids)
         logger.info('Starting integration test %s with the prefix %s for the entity type %s. Expected %i bundle(s).',
                     test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
-        logger.debug('Expected bundles %s ', sorted(expected_bundle_fqids))
+        logger.debug('Expected bundles %s ', sorted(self.expected_fqids))
         logger.info('Waiting for the queues to empty ...')
         self.wait_for_queue_level(empty=False)
         self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
@@ -258,16 +265,16 @@ class IntegrationTest(unittest.TestCase):
 
         while True:
             hits = self._get_entities_by_project(entity_type, test_name)
-            self.indexed_fqids.update({
+            indexed_fqids.update({
                 f"{entity['bundleUuid']}.{entity['bundleVersion']}"
                 for hit in hits
                 for entity in hit.get('bundles', [])
-                if f"{entity['bundleUuid']}.{entity['bundleVersion']}" in expected_bundle_fqids
+                if f"{entity['bundleUuid']}.{entity['bundleVersion']}" in self.expected_fqids
             })
             logger.info('Found %i/%i bundles on try #%i. There are %i files with the project name.',
-                         len(self.indexed_fqids), num_bundles, retries + 1, len(hits))
+                        len(indexed_fqids), num_bundles, retries + 1, len(hits))
 
-            if expected_bundle_fqids == self.indexed_fqids:
+            if indexed_fqids == self.expected_fqids:
                 logger.info('Found all bundles.')
                 break
             elif time.time() > deadline:
@@ -277,8 +284,8 @@ class IntegrationTest(unittest.TestCase):
                 time.sleep(delay_between_retries)
                 retries += 1
 
-        logger.info('Actual bundle count is %i.', len(self.indexed_fqids))
-        self.assertEqual(expected_bundle_fqids, self.indexed_fqids)
+        logger.info('Actual bundle count is %i.', len(indexed_fqids))
+        self.assertEqual(indexed_fqids, self.expected_fqids)
         for hit in hits:
             project = one(hit['projects'])
             bundle_fqids = [bundle['bundleUuid'] + '.' + bundle['bundleVersion'] for bundle in hit['bundles']]

@@ -8,7 +8,7 @@ import logging
 from pprint import PrettyPrinter
 
 import requests
-from typing import List, Optional, Iterable, Set
+from typing import List, Optional, Iterable, Set, Tuple
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
 
@@ -76,7 +76,7 @@ class AzulClient(object):
         notifications = [self._make_notification(fqid) for fqid in bundle_fqids]
         self._reindex(notifications, sync=sync)
 
-    def test_reindex(self, test_name: str, test_uuid: str, sync: bool = False) -> Set[str]:
+    def test_notifications(self, test_name: str, test_uuid: str) -> Tuple[List[dict], Set[str]]:
         logger.info('Querying DSS using %s', json.dumps(self.query(), indent=4))
         real_bundle_fqids = self._post_dss_search()
         logger.info("Bundle FQIDs to index: %i", len(real_bundle_fqids))
@@ -91,8 +91,7 @@ class AzulClient(object):
                                 test_name=test_name,
                                 test_uuid=test_uuid)
             notifications.append(notification)
-        self._reindex(notifications, sync=sync)
-        return effective_bundle_fqids
+        return notifications, effective_bundle_fqids
 
     def _reindex(self, notifications: Iterable, sync: bool = False):
         errors = defaultdict(int)
