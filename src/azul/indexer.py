@@ -157,6 +157,12 @@ class BaseIndexer(ABC):
         """
         Read all contributions to the entities listed in the given tallies from the index, aggregate the
         contributions into one aggregate per entity and write the resulting aggregates to the index.
+
+        Normally there is a 1 to 1 correspondence between number of contributions for an entity and the value for a
+        tally, however tallies are not counted for updates. This means, in the case of a duplicate notification or
+        writing over an already populated index, it's possible to receive a tally with a value of 0. We still need to
+        aggregate (if the indexed format changed for example) but tallies will not serve as an accurate guide for how
+        to read from contributions.
         """
         while True:
             # Read the aggregates
