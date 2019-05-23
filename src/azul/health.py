@@ -15,19 +15,27 @@ class Health:
     def __init__(self, lambda_name):
         self.lambda_name = lambda_name
 
+    default_keys = (
+        'up',
+        'elastic_search',
+        'queues',
+        'api_endpoints',
+        'other_lambdas',
+        'progress'
+    )
+
+    def as_json(self, keys=default_keys) -> JSON:
+        return {k: getattr(self, k) for k in keys if k in self.default_keys}
+
     @memoized_property
-    def as_json(self) -> JSON:
-        return {
-            'up': self.up,
-            'elastic_search': self.elastic_search,
-            'queues': self.queues,
-            **({
-                lambda_name: self._lambda(lambda_name)
-                for lambda_name in config.lambda_names()
-                if lambda_name != self.lambda_name
-            }),
-            'api_endpoints': self.api_endpoints
+    def other_lambdas(self):
+        d = {
+            lambda_name: self._lambda(lambda_name)
+            for lambda_name in config.lambda_names()
+            if lambda_name != self.lambda_name
         }
+        d['up'] = all(v['up'] for v in d.values())
+        return d
 
     @memoized_property
     def queues(self):
@@ -56,6 +64,7 @@ class Health:
     @memoized_property
     def progress(self) -> JSON:
         return {
+            'up': True,
             'unindexed_bundles': sum(self.queues[config.notify_queue_name].get('messages', {}).values()),
             'unindexed_documents': sum(self.queues[config.document_queue_name].get('messages', {}).values())
         }
@@ -64,7 +73,7 @@ class Health:
     def api_endpoints(self):
         status = {'up': True}
 
-        for endpoint in ('/repository/files',
+        for endpoint in ('/repository/files?size=1',
                          '/repository/projects',
                          '/repository/samples',
                          '/repository/bundles',
@@ -94,12 +103,7 @@ class Health:
 
     @memoized_property
     def up(self):
-        return (self.elastic_search['up'] and
-                self.queues['up'] and
-                self.api_endpoints['up'] and
-                all(self._lambda(lambda_name)['up']
-                    for lambda_name in config.lambda_names()
-                    if lambda_name != self.lambda_name))
+        return all(getattr(self, k)['up'] for k in self.default_keys if k != 'up')
 
     @lru_cache()
     def _lambda(self, lambda_name) -> JSON:
@@ -108,7 +112,7 @@ class Health:
         except BaseException as e:
             return {
                 'up': False,
-                'message': str(e)
+                'error': str(e)
             }
         else:
             return {

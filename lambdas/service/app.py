@@ -8,6 +8,7 @@ import math
 import os
 import re
 import time
+from typing import Optional
 import urllib
 from urllib.parse import urlparse
 
@@ -131,11 +132,13 @@ def basic_health():
 
 
 @app.route('/health', methods=['GET'], cors=True)
-def health():
+@app.route('/health/{key}', methods=['GET'], cors=True)
+def health(key: Optional[str]=None):
     health = Health('service')
+    body = health.as_json(*[(key,)] if key else [])
     return Response(
-        body=json.dumps(health.as_json),
-        status_code=200 if health.up else 503
+        body=json.dumps(body),
+        status_code=200 if body['up'] else 503
     )
 
 
