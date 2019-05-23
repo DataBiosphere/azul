@@ -101,7 +101,9 @@ class IndexerTestCase(ElasticsearchTestCase):
 
     @classmethod
     def _create_index_writer(cls):
-        return IndexWriter(refresh='wait_for', conflict_retry_limit=2, error_retry_limit=0)
+        # With a single client thread, refresh=True is faster than refresh="wait_for". The latter would limit the
+        # request rate to 1/refresh_interval. That's only one request per second with refresh_interval being 1s.
+        return IndexWriter(refresh=True, conflict_retry_limit=2, error_retry_limit=0)
 
     def _delete_bundle(self, bundle_fqid):
         index_writer = self._create_index_writer()
