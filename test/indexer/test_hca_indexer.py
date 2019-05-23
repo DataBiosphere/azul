@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import logging
 
+import elasticsearch
 from requests_http_signature import HTTPSignatureAuth
 
 import copy
@@ -20,6 +21,7 @@ from elasticsearch import Elasticsearch, RequestError
 from elasticsearch.helpers import scan
 from more_itertools import one
 
+import azul.indexer
 from app_test_case import LocalAppTestCase
 from azul import config, hmac
 from azul.indexer import IndexWriter
@@ -122,6 +124,44 @@ class TestHCAIndexer(IndexerTestCase):
                         self.assertEqual(list(sorted(doc.bundle_deleted for doc in pair)), [False, True])
                 finally:
                     self._delete_indices()
+
+    def test_duplicate_notification(self):
+        manifest, metadata = self._load_canned_bundle(self.new_bundle)
+        tallies = dict(self._write_contributions(self.new_bundle, manifest, metadata))
+
+        with self.assertLogs(logger=azul.indexer.log, level='WARNING') as logs:
+            # Writing again simulates a duplicate notification being processed
+            tallies.update(self._write_contributions(self.new_bundle, manifest, metadata))
+        message_re = re.compile(r'^WARNING:azul\.indexer:Writing document .* requires update\. Possible causes include '
+                                r'duplicate notifications or reindexing without clearing the index\.$')
+        for message in logs.output:
+            self.assertRegex(message, message_re)
+        # Tallies should not be inflated despite indexing document twice
+        self.get_hca_indexer().aggregate(tallies)
+        self._assert_new_bundle()
+
+    def test_zero_tallies(self):
+        """
+        Since duplicate notifications are subtracted back out of tally counts, it's possible to receive a tally with
+        zero notifications. Test that a tally with count 0 still triggers aggregation.
+        """
+        manifest, metadata = self._load_canned_bundle(self.new_bundle)
+        tallies = dict(self._write_contributions(self.new_bundle, manifest, metadata))
+        for tally in tallies:
+            tallies[tally] = 0
+        # Aggregating should not be a non-op even though tally counts are all zero
+        with self.assertLogs(elasticsearch.client.logger, level='INFO') as logs:
+            self.get_hca_indexer().aggregate(tallies)
+        doc_ids = {
+            '70d1af4a-82c8-478a-8960-e9028b3616ca',
+            'a21dc760-a500-4236-bcff-da34a0e873d2',
+            'e8642221-4c2c-4fd7-b926-a68bce363c88',
+            '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb',
+            'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
+        }
+        for doc_id in doc_ids:
+            message_re = re.compile(fr'^INFO:elasticsearch:PUT .*_aggregate_.*/doc/{doc_id}.* \[status:201 .*\]$')
+            self.assertTrue(any(message_re.fullmatch(message) for message in logs.output))
 
     def test_deletion_before_addition(self):
         self._index_canned_bundle(self.new_bundle, delete=True)
