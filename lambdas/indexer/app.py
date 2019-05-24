@@ -308,9 +308,10 @@ def write(event: chalice.app.SQSEvent):
 
 
 def _create_index_writer():
-    # The should be no conflicts because we use SQS FIFO message group per entity.
+    # We allow one conflict retry in the case of duplicate notifications and switch from 'add' to 'update'.
+    # After that, there should be no conflicts because we use an SQS FIFO message group per entity.
     # For other errors we use SQS message redelivery to take care of the retries.
-    index_writer = IndexWriter(refresh=False, conflict_retry_limit=0, error_retry_limit=0)
+    index_writer = IndexWriter(refresh=False, conflict_retry_limit=1, error_retry_limit=0)
     return index_writer
 
 

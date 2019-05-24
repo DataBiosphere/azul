@@ -113,7 +113,7 @@ class IndexerTestCase(ElasticsearchTestCase):
         notification = cls._make_fake_notification(bundle_fqid)
         with patch('azul.DSSClient'):
             with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
-                contributions = indexer.transform(notification)
+                contributions = indexer.transform(notification, delete=False)
                 return indexer.contribute(index_writer, contributions)
 
     @classmethod
