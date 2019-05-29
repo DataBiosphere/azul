@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-"""
-The Flatten class will collapse a set of HCA metadata JSON documents into a single csv file"""
 __author__ = "jupp"
 __license__ = "Apache 2.0"
 __date__ = "15/02/2019"
@@ -14,27 +11,28 @@ from argparse import ArgumentParser
 import glob
 import json
 
+
 class Flatten:
-    def __init__(self, order = None, ignore = None, format_filter = None):
+    def __init__(self, order=None, ignore=None, format_filter=None):
         self.all_objects_by_project_id = {}
         self.all_keys = []
         self.uuid4hex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.I)
 
         self.default_order = order if order else [
-             "path",
-             "^\\*\\.file_core\\.file_name",
-             "^\\*\\.file_core\\.file_format",
-             "^sequence_file.*",
-             "^analysis_file.*",
-             "^donor_organism.*",
-             "^specimen_from_organism.*",
-             "^cell_suspension.*",
-             "^.*protocol.*",
-             "^project.",
-             "^analysis_process.*",
-             "^process.*",
-             "^bundle_.*",
-             "^\\*\\.provenance\\.update_date"
+            "path",
+            "^\\*\\.file_core\\.file_name",
+            "^\\*\\.file_core\\.file_format",
+            "^sequence_file.*",
+            "^analysis_file.*",
+            "^donor_organism.*",
+            "^specimen_from_organism.*",
+            "^cell_suspension.*",
+            "^.*protocol.*",
+            "^project.",
+            "^analysis_process.*",
+            "^process.*",
+            "^bundle_.*",
+            "^\\*\\.provenance\\.update_date"
         ]
 
         self.default_ignore = ignore if ignore else [
@@ -88,7 +86,7 @@ class Flatten:
 
     def _flatten(self, master, obj, parent):
         for key, value in obj.items():
-            if key in self.default_ignore :
+            if key in self.default_ignore:
                 continue
 
             newkey = parent + "." + key
@@ -109,13 +107,6 @@ class Flatten:
         raise MissingDescribedByError("found a metadata without a describedBy property")
 
     def _cmp_keys(self, a, b):
-        '''
-        Simple comparator that uses a set of ordered items with
-        regular expression to roughly control the order.
-        :param a:
-        :param b:
-        :return:
-        '''
         best_a = sys.maxsize
         best_b = sys.maxsize
 
@@ -125,26 +116,21 @@ class Flatten:
             match_a = p.match(a)
             match_b = p.match(b)
 
-            if (match_a):
-                if (idx < best_a):
+            if match_a:
+                if idx < best_a:
                     best_a = idx
 
-            if (match_b):
-                if (idx < best_b):
+            if match_b:
+                if idx < best_b:
                     best_b = idx
 
-        if (best_a == best_b):
+        if best_a == best_b:
             if a >= b:
                 return 1
             return -1
         return best_a - best_b
 
     def add_bundle_files_to_row(self, bundle_uuid, bundle_version, list_of_metadata_objects, dir_name=None):
-        '''
-        :param list_of_metadata_objects:
-        :return:
-        '''
-        # get all the files
         file_uuids = self._get_file_uuids_from_objects(list_of_metadata_objects)
 
         for file, content in file_uuids.items():
@@ -169,7 +155,7 @@ class Flatten:
                     return False
                 else:
                     i += len(anchor) - 1
-                    dir_name, file_name = file_name[0:i], file_name[i+1:]
+                    dir_name, file_name = file_name[0:i], file_name[i + 1:]
                     if file_name == '.zattrs':
                         obj['*.file_core.file_name'] = dir_name + '/'
                         return False
@@ -251,9 +237,9 @@ def convert_bundle_dirs():
     for bundle in os.listdir(bundle_dir):
         # ignore any directory that isn't named with a uuid
         sep = bundle.index('.')
-        bundle_uuid, bundle_version = bundle[:sep], bundle[sep+1:]
+        bundle_uuid, bundle_version = bundle[:sep], bundle[sep + 1:]
         if uuid4hex.match(bundle_uuid):
-            print ("flattening " + bundle)
+            print("flattening " + bundle)
             metadata_files = []
             for file in glob.glob(bundle_dir + os.sep + bundle + os.sep + '*.json'):
                 with open(file) as f:
@@ -271,18 +257,22 @@ def convert_bundle_dirs():
 if __name__ == '__main__':
     convert_bundle_dirs()
 
+
 class Error(Exception):
-   """Base class for other exceptions"""
-   pass
+    pass
+
 
 class MissingSchemaTypeError(Error):
-   pass
+    pass
+
 
 class MissingDescribedByError(Error):
-   pass
+    pass
+
 
 class MissingFileTypeError(Error):
-   pass
+    pass
+
 
 class MissingFileNameError(Error):
-   pass
+    pass
