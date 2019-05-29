@@ -127,6 +127,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "b6dc9b93-929a-45d0-beb2-5cf8e64872fe",  # neuron_diff, superseded by 2043c65a-1cf8-4828-a656-9e247d4e64f1
                                                         "0ec2b05f-ddbe-4e5a-b30f-e81f4b1e330c",  # CD4+_lymphocytes "EGEOD106540", superseded by 90bd6933-40c0-48d4-8d76-778c103bf545
                                                         "ff481f29-3d0b-4533-9de2-a760c61c162d",  # "10x-mouse-brain", superseded by 74b6d569-3b11-42ef-b6b1-a0454522b4a0
+                                                        "5f256182-5dfc-4070-8404-f6fa71d37c73",  # cell_hashing "rsatija", superseded by f81efc03-9f56-4354-aabb-6ce819c3d414
                                                     ]
                                                 }
                                             },
