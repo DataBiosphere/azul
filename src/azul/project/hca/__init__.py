@@ -124,6 +124,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "34ec62a2-9643-430d-b41a-1e342bd615fc",  # kidney_biopsy_scRNA-seq "humphreys", superseded by 027c51c6-0719-469f-a7f5-640fe57cbece
                                                         "c765e3f9-7cfc-4501-8832-79e5f7abd321",  # cardiomyocytes_basu "basu", superseded by a9c022b4-c771-4468-b769-cabcf9738de3
                                                         "e1f2a0e4-1ec8-431e-a6df-c975b3a1131f",  # bone marrow "ido_amit", superseded by a29952d9-925e-40f4-8a1c-274f118f1f51
+                                                        "b6dc9b93-929a-45d0-beb2-5cf8e64872fe",  # neuron_diff, superseded by 2043c65a-1cf8-4828-a656-9e247d4e64f1
                                                     ]
                                                 }
                                             },
