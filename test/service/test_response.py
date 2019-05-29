@@ -110,7 +110,6 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
-                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -200,7 +199,6 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
-                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -317,7 +315,6 @@ class TestResponse(WebServiceTestCase):
                                 "libraryConstructionApproach": ["Smart-seq2"],
                                 "pairedEnd": [True],
                                 "workflow": [],
-                                "workflowVersion": []
                             }
                         ],
                         "samples": [
@@ -417,7 +414,6 @@ class TestResponse(WebServiceTestCase):
                                 "libraryConstructionApproach": ["Smart-seq2"],
                                 "pairedEnd": [True],
                                 "workflow": [],
-                                "workflowVersion": []
                             }
                         ],
                         "samples": [
@@ -655,11 +651,11 @@ class TestResponse(WebServiceTestCase):
 
         expected_output = [
             {
-                "key": "organ1",
+                "key": ["organ1"],
                 "value": 6
             },
             {
-                "key": "organ2",
+                "key": ["organ2"],
                 "value": 3
             }
         ]
@@ -797,7 +793,6 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
-                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -926,7 +921,6 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
-                            "workflowVersion": []
                         }
                     ],
                     "samples": [
@@ -1114,8 +1108,7 @@ class TestResponse(WebServiceTestCase):
                             "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
                             "libraryConstructionApproach": ["10X v2 sequencing"],
                             "pairedEnd": [False],
-                            "workflow": ['cellranger'],
-                            "workflowVersion": ['v1.0.2']
+                            "workflow": ['cellranger_v1.0.2'],
                         }
                     ],
                     "samples": [
@@ -1159,6 +1152,30 @@ class TestResponse(WebServiceTestCase):
 
         cell_suspension = one(keyword_response['hits'][0]['cellSuspensions'])
         self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
+
+    def test_cell_line_response(self):
+        """
+        Test KeywordSearchResponse contains the correct cell_line and sample field values
+        """
+        keyword_response = KeywordSearchResponse(
+            hits=self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
+            entity_type='projects'
+        ).return_response().to_json()
+        expected_cell_lines = {
+            'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
+            'cellLineType': ['primary', 'stem cell-derived'],
+            'modelOrgan': ['blood (parent_cell_line)', 'blood (child_cell_line)'],
+        }
+        cell_lines = one(one(keyword_response['hits'])['cellLines'])
+        self.assertElasticsearchResultsEqual(cell_lines, expected_cell_lines)
+        expected_samples = {
+            'sampleEntityType': ['cellLines'],
+            'id': ['cell_line_Day7_hiPSC-CM_BioRep2'],
+            'cellLineType': ['stem cell-derived'],
+            'modelOrgan': ['blood (child_cell_line)'],
+        }
+        samples = one(one(keyword_response['hits'])['samples'])
+        self.assertElasticsearchResultsEqual(samples, expected_samples)
 
     def test_filter_by_projectId(self):
         """
@@ -1258,7 +1275,7 @@ class TestResponseSummary(WebServiceTestCase):
                 self.assertEqual(summary['genusSpecies'], ['Homo sapiens'])
                 self.assertEqual(summary['libraryConstructionApproach'], ["Chromium 3' Single Cell v2"])
                 self.assertEqual(summary['disease'], ['normal'])
-                organ_summaries = {'organType': 'Brain', 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0}
+                organ_summaries = {'organType': ['Brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0}
                 self.assertEqual(one(summary['organSummaries']), organ_summaries)
             elif one(hit['projects'])['projectTitle'] == 'Single cell transcriptome patterns.':
                 self.assertEqual(summary['donorCount'], 1)
@@ -1266,7 +1283,7 @@ class TestResponseSummary(WebServiceTestCase):
                 self.assertEqual(summary['genusSpecies'], ['Australopithecus'])
                 self.assertEqual(summary['libraryConstructionApproach'], ['Smart-seq2'])
                 self.assertEqual(summary['disease'], ['normal'])
-                organ_summaries = {'organType': 'pancreas', 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0}
+                organ_summaries = {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0}
                 self.assertEqual(one(summary['organSummaries']), organ_summaries)
             else:
                 assert False
