@@ -26,7 +26,7 @@ from requests import HTTPError
 from azul import config
 from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
-from azul.dss import patch_client_for_direct_file_access
+from azul.dss import patch_client_for_direct_access
 from azul.requests import requests_session
 from azul import drs
 
@@ -368,27 +368,39 @@ class DSSIntegrationTest(unittest.TestCase):
         self.maxDiff = None
         for patch in False, True:
             for replica in 'aws', 'gcp':
-                with self.subTest(patch=patch, replica=replica):
                     dss_client = config.dss_client()
                     if patch:
-                        patch_client_for_direct_file_access(dss_client)
-                    response = dss_client.post_search(es_query=query, replica=replica, per_page=10)
-                    bundle_uuid, _, bundle_version = response['results'][0]['bundle_fqid'].partition('.')
-                    with mock.patch('azul.dss.logger') as log:
-                        _, manifest, metadata = download_bundle_metadata(client=dss_client,
-                                                                         replica=replica,
-                                                                         uuid=bundle_uuid,
-                                                                         version=bundle_version,
-                                                                         num_workers=config.num_dss_workers)
-                        self.assertGreater(len(metadata), 0)
-                        self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))
-                        if patch:
-                            if replica == 'aws':
-                                # Extract the log method name and the first two words of log message logged
-                                actual = [(m, ' '.join(a[0].split()[:2])) for m, a, k in log.mock_calls]
-                                expected = [('debug', 'Loading file'), ('debug', 'Loading blob')] * len(metadata)
-                                self.assertSequenceEqual(sorted(actual), sorted(expected))
-                            else:
-                                self.assertListEqual(log.mock_calls, [mock.call.warning(mock.ANY)] * len(metadata))
-                        else:
-                            self.assertListEqual(log.mock_calls, [])
+                        patch_client_for_direct_access(dss_client)
+                        with mock.patch('boto3.client') as mock_client:
+                            mock_s3 = mock.MagicMock()
+                            mock_s3.get_object.side_effect = ValueError()
+                            mock_client.return_value = mock_s3
+                            self._test_patched_client(patch, query, dss_client, replica, patch_fallback=True)
+                    self._test_patched_client(patch, query, dss_client, replica, patch_fallback=False)
+
+    def _test_patched_client(self, patch, query, dss_client, replica, patch_fallback):
+        with self.subTest(patch=patch, replica=replica, patch_fallback=patch_fallback):
+            response = dss_client.post_search(es_query=query, replica=replica, per_page=10)
+            bundle_uuid, _, bundle_version = response['results'][0]['bundle_fqid'].partition('.')
+            with mock.patch('azul.dss.logger') as log:
+                _, manifest, metadata = download_bundle_metadata(client=dss_client,
+                                                                 replica=replica,
+                                                                 uuid=bundle_uuid,
+                                                                 version=bundle_version,
+                                                                 num_workers=config.num_dss_workers)
+                self.assertGreater(len(metadata), 0)
+                self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))
+                for f in manifest:
+                    self.assertIn('s3_etag', f)
+                if patch:
+                    if replica == 'aws':
+                        # Extract the log method name and the first two words of log message logged
+                        actual = [(m, ' '.join(a[0].split()[:2])) for m, a, k in log.mock_calls]
+                        actual.remove(('debug', 'Loading bundle'))
+                        expected = [('debug', 'Loading file'), ('debug', 'Loading blob')] * len(metadata)
+                        self.assertSequenceEqual(sorted(actual), sorted(expected))
+                    else:
+                        actual = log.mock_calls[1:]  # remove log for get_bundle
+                        self.assertListEqual(actual, [mock.call.warning(mock.ANY)] * len(metadata))
+                else:
+                    self.assertListEqual(log.mock_calls, [])
