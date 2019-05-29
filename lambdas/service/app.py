@@ -771,9 +771,12 @@ def _dss_files(uuid, fetch=True):
     url = config.dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
     file_name = params.pop('fileName', None)
     wait = params.pop('wait', None)
+    request_index = params.pop('requestIndex', 0)
     dss_response = requests.get(url, params=params, allow_redirects=False)
     if dss_response.status_code == 301:
-        retry_after = int(dss_response.headers.get('Retry-After'))
+        retry_after = min(int(dss_response.headers.get('Retry-After')),
+                          int(1.3 ** request_index))
+        params['requestIndex'] = request_index + 1
         location = dss_response.headers['Location']
         location = urllib.parse.urlparse(location)
         query = urllib.parse.parse_qs(location.query, strict_parsing=True)
@@ -784,8 +787,11 @@ def _dss_files(uuid, fetch=True):
             if wait == '0':
                 pass
             elif wait == '1':
+                # Sleep in the lambda but ensure that we wake up before it runs out of execution time (and before API
+                # Gateway times out) so we get a chance to return a response to the client.
+                remaining_lambda_seconds = app.lambda_context.get_remaining_time_in_millis() / 1000
                 server_side_sleep = min(float(retry_after),
-                                        app.lambda_context.get_remaining_time_in_millis() / 1000 - 5)
+                                        remaining_lambda_seconds - config.api_gateway_timeout_padding - 3)
                 time.sleep(server_side_sleep)
                 retry_after = round(retry_after - server_side_sleep)
             else:

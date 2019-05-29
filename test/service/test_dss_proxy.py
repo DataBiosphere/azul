@@ -72,7 +72,6 @@ class TestDssProxy(LocalAppTestCase):
         s3.upload_fileobj(Bucket=bucket_name, Fileobj=io.BytesIO(b'foo'), Key=key)
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
         file_version = '2018-09-12T121154.054628Z'
-        retry_after = 3
         dss_url = furl(
             url=config.dss_endpoint,
             path='/v1/files',
@@ -106,7 +105,7 @@ class TestDssProxy(LocalAppTestCase):
                                                           url=dss_url.url,
                                                           status=301,
                                                           headers={'Location': dss_url_with_token.url,
-                                                                   'Retry-After': str(retry_after)}))
+                                                                   'Retry-After': '10'}))
                             azul_url = furl(
                                 url=self.base_url,
                                 path='/fetch/dss/files' if fetch else '/dss/files',
@@ -120,6 +119,7 @@ class TestDssProxy(LocalAppTestCase):
                                 azul_url.args['fileName'] = file_name
 
                             def request_azul(url, expect_status):
+                                retry_after = 1
                                 expect_retry_after = None if wait or expect_status == 302 else retry_after
                                 before = time.monotonic()
                                 with mock.patch('time.time', new=lambda: 1547691253.07010), \

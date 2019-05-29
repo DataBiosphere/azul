@@ -3,7 +3,7 @@ from collections import OrderedDict, defaultdict
 from copy import deepcopy
 import os
 import csv
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkstemp
 from io import TextIOWrapper, StringIO
 from itertools import chain
 import logging
@@ -95,14 +95,14 @@ class FileTypeSummary(JsonObject):
 
 
 class OrganCellCountSummary(JsonObject):
-    organType = StringProperty()
+    organType = ListProperty()  # List could have strings and/or None (eg. ['Brain', 'Skin', None])
     countOfDocsWithOrganType = IntegerProperty()
     totalCellCountByOrgan = FloatProperty()
 
     @classmethod
     def for_bucket(cls, bucket):
         self = cls()
-        self.organType = bucket['key']
+        self.organType = [bucket['key']]
         self.countOfDocsWithOrganType = bucket['doc_count']
         self.totalCellCountByOrgan = bucket['cell_count']['value']
         return self
@@ -292,7 +292,9 @@ class ManifestResponse(AbstractResponse):
                 writer.writerow(row)
 
     def _create_bdbag_archive(self) -> str:
-        with TemporaryDirectory() as bag_path:
+        with TemporaryDirectory() as temp_path:
+            bag_path = os.path.join(temp_path, 'manifest')
+            os.makedirs(bag_path)
             bdbag_api.make_bag(bag_path)
             with open(os.path.join(bag_path, 'data', 'samples.tsv'), 'w') as samples_tsv:
                 self._write_bdbag_samples_tsv(samples_tsv)
@@ -300,7 +302,13 @@ class ManifestResponse(AbstractResponse):
             assert bdbag_api.is_bag(bag_path)
             bdbag_api.validate_bag(bag_path)
             assert bdbag_api.check_payload_consistency(bag)
-            return bdbag_api.archive_bag(bag_path, 'zip')
+            temp, temp_path = mkstemp()
+            os.close(temp)
+            archive_path = bdbag_api.archive_bag(bag_path, 'zip')
+            # Moves the bdbag archive out of the temporary directory. This prevents
+            # the archive from being deleted when the temporary directory self-destructs.
+            os.rename(archive_path, temp_path)
+            return temp_path
 
     column_path_separator = '-'
 
@@ -340,8 +348,7 @@ class ManifestResponse(AbstractResponse):
             for bundle in doc['bundles']:
                 bundle_fqid = bundle['uuid'], bundle['version']
 
-                # Extract fields from the bundle
-                bundle_cells = {}
+                bundle_cells = {'entity:bundle_id': '.'.join(bundle_fqid)}
                 self._extract_fields([bundle], bundle_column_mapping, bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
@@ -378,6 +385,7 @@ class ManifestResponse(AbstractResponse):
         # Compute the column names in deterministic order, bundle_columns first
         # followed by other columns
         column_names = dict.fromkeys(chain(
+            ['entity:bundle_id'],
             bundle_column_mapping.keys(),
             *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
 
@@ -577,10 +585,10 @@ class ProjectSummaryResponse(AbstractResponse):
         """
         organ_cell_count = defaultdict(int)
         for cell_suspension in hit['cell_suspensions']:
-            assert len(cell_suspension['organ']) == 1
-            organ_cell_count[cell_suspension['organ'][0]] += cell_suspension.get('total_estimated_cells', 0)
+            organ = frozenset(cell_suspension['organ'])
+            organ_cell_count[organ] += cell_suspension.get('total_estimated_cells', 0)
         total_cell_count = sum(organ_cell_count.values())
-        organ_cell_count = [{'key': k, 'value': v} for k, v in organ_cell_count.items()]
+        organ_cell_count = [{'key': list(k), 'value': v} for k, v in organ_cell_count.items()]
         return total_cell_count, organ_cell_count
 
     def __init__(self, es_hit_contents):
@@ -654,7 +662,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", []),
                 "pairedEnd": protocol.get("paired_end", []),
                 "workflow": protocol.get("workflow", []),
-                "workflowVersion": protocol.get("workflow_version", []),
             }
             protocols.append(translated_process)
         return protocols
@@ -725,6 +732,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_cell_line(self, cell_line):
         return {
             "id": cell_line["biomaterial_id"],
+            "cellLineType": cell_line.get("cell_line_type", None),
+            "modelOrgan": cell_line.get("model_organ", None),
         }
 
     def make_cell_lines(self, entry):
