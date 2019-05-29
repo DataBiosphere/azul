@@ -1,11 +1,13 @@
 from abc import ABCMeta, abstractmethod
 from collections import Counter
 import logging
-from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
+from dataclasses import dataclass
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
 
 from humancellatlas.data.metadata import api
 
 from azul import reject
+from azul.project.hca.metadata_generator import MetadataGenerator
 from azul.transformer import (Accumulator,
                               AggregatingTransformer,
                               Contribution,
@@ -579,10 +581,28 @@ class BundleTransformer(BundleProjectTransformer):
         return bundle.uuid
 
     def get_aggregator(self, entity_type):
-        if entity_type == 'files':
+        if entity_type in ('files', 'metadata'):
             return None
         else:
             return super().get_aggregator(entity_type)
 
     def entity_type(self) -> str:
         return 'bundles'
+
+    def transform(self,
+                  uuid: str,
+                  version: str,
+                  manifest: List[JSON],
+                  metadata_files: Iterable[JSON]
+                  ) -> Sequence[Document]:
+        for contrib in super().transform(uuid, version, manifest, metadata_files):
+            # noinspection PyArgumentList
+            if 'project.json' in metadata_files:
+                # we can't handle v5 bundles
+                metadata = []
+            else:
+                generator = MetadataGenerator()
+                generator.add_bundle(uuid, version, list(metadata_files.values()))
+                metadata = generator.dump()
+            contrib.contents['metadata'] = metadata
+            yield contrib
