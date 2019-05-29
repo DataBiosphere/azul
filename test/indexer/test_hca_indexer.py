@@ -25,6 +25,7 @@ from azul import config, hmac
 from azul.indexer import IndexWriter
 from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
+from azul.project.hca.metadata_generator import MetadataGenerator
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper
 
@@ -685,6 +686,23 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [None])
 
 
+    def test_metadata_generator(self):
+        index_bundle = ('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
+        manifest, metadata = self._load_canned_bundle(index_bundle)
+        generator = MetadataGenerator()
+        uuid, version = index_bundle
+        generator.add_bundle(uuid, version, list(metadata.values()))
+        metadata_rows = generator.dump()
+        expected_metadata_contributions = 8
+        self.assertEqual(expected_metadata_contributions, len(metadata_rows))
+        for metadata_row in metadata_rows:
+            self.assertEqual(uuid, metadata_row['bundle_uuid'])
+            self.assertEqual(version, metadata_row['bundle_version'])
+            if metadata_row['*.file_core.file_format'] == 'matrix':
+                expected_file_name = '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/'
+                self.assertEqual(expected_file_name, metadata_row['*.file_core.file_name'])
+            else:
+                self.assertIn(metadata_row['*.file_core.file_format'], ['fastq.gz', 'results', 'bam', 'bai'])
 
 class TestValidNotificationRequests(LocalAppTestCase):
 

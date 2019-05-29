@@ -1,18 +1,16 @@
-__author__ = "jupp"
+# Adapted from https://github.com/HumanCellAtlas/\
+# hca_bundles_to_csv/blob/b516a3a4de96ea3e97a698e7a603faec48ae97ec/hca_bundle_tools/file_metadata_to_csv.py
+__author__ = "simonjupp"
 __license__ = "Apache 2.0"
 __date__ = "15/02/2019"
 
-import sys
+from typing import List, Any
+from more_itertools import one
+from azul.types import JSON
 import re
-import os
-import functools
-import csv
-from argparse import ArgumentParser
-import glob
-import json
 
 
-class Flatten:
+class MetadataGenerator:
     def __init__(self, order=None, ignore=None, format_filter=None):
         self.all_objects_by_project_id = {}
         self.all_keys = []
@@ -54,27 +52,28 @@ class Flatten:
         # TODO temp until block filetype is needed
         self.default_blocked_file_ext = {'csv', 'txt', 'pdf'}
 
-    def _get_file_uuids_from_objects(self, list_of_metadata_objects):
+    def _get_file_uuids_from_objects(self, list_of_metadata_objects: List[JSON]) -> JSON:
         file_uuids = {}
-        for object in list_of_metadata_objects:
-            if "schema_type" not in object:
+        for _object in list_of_metadata_objects:
+            if "schema_type" not in _object:
                 raise MissingSchemaTypeError("JSON objects must declare a schema type")
 
-            if object["schema_type"] == "file" and self._deep_get(object, ["provenance", "document_id"]):
-                file_uuid = self._deep_get(object, ["provenance", "document_id"])
-                file_uuids[file_uuid] = object
+            if _object["schema_type"] == "file" and self._deep_get(_object, ["provenance", "document_id"]):
+                file_uuid = self._deep_get(_object, ["provenance", "document_id"])
+                file_uuids[file_uuid] = _object
 
         if not file_uuids:
-            raise MissingFileTypeError("no fileuuids found in any of the metadata objects")
+            raise MissingFileTypeError("Bundle contains no data files")
 
         return file_uuids
 
-    def _deep_get(self, d, keys):
+    def _deep_get(self, d: JSON, keys: List):
         if not keys or d is None:
             return d
         return self._deep_get(d.get(keys[0]), keys[1:])
 
-    def _set_value(self, master, key, value):
+    @staticmethod
+    def _set_value(master: JSON, key: str, value: Any) -> None:
 
         if key not in master:
             master[key] = str(value)
@@ -84,7 +83,7 @@ class Flatten:
             uniq = sorted(list(set(existing_values)))
             master[key] = "||".join(uniq)
 
-    def _flatten(self, master, obj, parent):
+    def _flatten(self, master: JSON, obj: JSON, parent: str) -> None:
         for key, value in obj.items():
             if key in self.default_ignore:
                 continue
@@ -101,46 +100,27 @@ class Flatten:
             else:
                 self._set_value(master, newkey, value)
 
-    def _get_schema_name_from_object(self, object):
-        if "describedBy" in object:
-            return object["describedBy"].rsplit('/', 1)[-1]
+    @staticmethod
+    def _get_schema_name_from_object(_object: JSON):
+        if "describedBy" in _object:
+            return _object["describedBy"].rsplit('/', 1)[-1]
         raise MissingDescribedByError("found a metadata without a describedBy property")
 
-    def _cmp_keys(self, a, b):
-        best_a = sys.maxsize
-        best_b = sys.maxsize
+    def add_bundle(self,
+                   bundle_uuid: str,
+                   bundle_version: str,
+                   metadata_files: List[JSON]) -> None:
 
-        for idx, val in enumerate(self.default_order):
-            p = re.compile(val)
-
-            match_a = p.match(a)
-            match_b = p.match(b)
-
-            if match_a:
-                if idx < best_a:
-                    best_a = idx
-
-            if match_b:
-                if idx < best_b:
-                    best_b = idx
-
-        if best_a == best_b:
-            if a >= b:
-                return 1
-            return -1
-        return best_a - best_b
-
-    def add_bundle_files_to_row(self, bundle_uuid, bundle_version, list_of_metadata_objects, dir_name=None):
-        file_uuids = self._get_file_uuids_from_objects(list_of_metadata_objects)
+        file_uuids = self._get_file_uuids_from_objects(metadata_files)
 
         for file, content in file_uuids.items():
-            obj = {}
-
-            obj['bundle_uuid'] = bundle_uuid
-            obj['bundle_version'] = bundle_version
-            obj['*.provenance.update_date'] = self._deep_get(content, ["provenance", "update_date"])
-            obj["*.file_core.file_name"] = self._deep_get(content, ["file_core", "file_name"])
-            obj["*.file_core.file_format"] = self._deep_get(content, ["file_core", "file_format"])
+            obj = {
+                'bundle_uuid': bundle_uuid,
+                'bundle_version': bundle_version,
+                '*.provenance.update_date': self._deep_get(content, ["provenance", "update_date"]),
+                "*.file_core.file_name": self._deep_get(content, ["file_core", "file_name"]),
+                "*.file_core.file_format": self._deep_get(content, ["file_core", "file_format"])
+            }
 
             file_segments = obj["*.file_core.file_name"].split('.')
 
@@ -167,9 +147,6 @@ class Flatten:
             if not (obj["*.file_core.file_name"] or obj["*.file_core.file_format"]):
                 raise MissingFileNameError("expecting file_core.file_name")
 
-            if dir_name:
-                obj["path"] = dir_name + os.sep + obj["*.file_core.file_name"]
-
             if self.default_format_filter and obj["*.file_core.file_format"] not in self.default_format_filter:
                 continue
 
@@ -177,7 +154,7 @@ class Flatten:
             self._flatten(obj, content, schema_name)
 
             project_uuid = None
-            for metadata in list_of_metadata_objects:
+            for metadata in metadata_files:
 
                 # ignore files
                 if metadata["schema_type"] == "file" or metadata["schema_type"] == "link_bundle":
@@ -193,69 +170,11 @@ class Flatten:
             assert project_uuid is not None
             self.all_objects_by_project_id.setdefault(project_uuid, []).append(obj)
 
-    def dump(self, filename='output.csv', delim=","):
-        self.write_csv(filename, delim, [y for x in self.all_objects_by_project_id.values() for y in x])
-
-    def dump_by_project(self, delim=','):
-        file_extension = 'tsv' if delim == '\t' else 'csv'
-        for project_uuid, objects in self.all_objects_by_project_id.items():
-            self.write_csv(f'{project_uuid}.{file_extension}', delim, objects)
-
-    def write_csv(self, filename, delim, objects):
-        self.all_keys.sort(key=functools.cmp_to_key(self._cmp_keys))
-
-        delim = delim
-
-        with open(filename, 'w') as csvfile:
-            csv_writer = csv.DictWriter(csvfile, self.all_keys, delimiter=delim)
-            csv_writer.writeheader()
-            for obj in objects:
-                csv_writer.writerow(obj)
-
-
-def convert_bundle_dirs():
-    parser = ArgumentParser()
-    parser.add_argument("-d", "--dir", dest="dirname",
-                        help="path to bundle directory", metavar="FILE", default=".")
-    parser.add_argument("-o", "--output", dest="filename",
-                        help="path to output file", default='bundles.csv')
-    parser.add_argument("-s", "--seperator", dest="seperator",
-                        help="seperator/delimiter for csv", default=',')
-    parser.add_argument("-f", "--filter", dest="filter",
-                        help="only get metadata for files with this file extension", default=None)
-    parser.add_argument('--project', dest='project', help="splits csv files by project and into separate folders",
-                        action='store_true')
-
-    args = parser.parse_args()
-
-    bundle_dir = args.dirname
-
-    flattener = Flatten(format_filter=args.filter)
-
-    uuid4hex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.I)
-
-    for bundle in os.listdir(bundle_dir):
-        # ignore any directory that isn't named with a uuid
-        sep = bundle.index('.')
-        bundle_uuid, bundle_version = bundle[:sep], bundle[sep + 1:]
-        if uuid4hex.match(bundle_uuid):
-            print("flattening " + bundle)
-            metadata_files = []
-            for file in glob.glob(bundle_dir + os.sep + bundle + os.sep + '*.json'):
-                with open(file) as f:
-                    data = json.load(f)
-                    metadata_files.append(data)
-
-            flattener.add_bundle_files_to_row(bundle_uuid, bundle_version, metadata_files, dir_name=bundle)
-
-    if args.project:
-        flattener.dump_by_project(delim=args.seperator)
-    else:
-        flattener.dump(filename=args.filename, delim=args.seperator)
-
-
-if __name__ == '__main__':
-    convert_bundle_dirs()
+    def dump(self) -> List[JSON]:
+        """
+        :return: A list of metadata row entries in key, value format
+        """
+        return one(list(self.all_objects_by_project_id.values()))
 
 
 class Error(Exception):
