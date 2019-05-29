@@ -118,6 +118,17 @@ class Plugin(azul.plugin.Plugin):
                                                         "5e6c0ede-5648-4b0e-83ce-4644c437b4c0",  # Old pancreas6decades
                                                         "dadbdb31-5f69-485b-85f3-b244b74123f1",  # Old pancreas6decades
                                                         "1a0f98b8-746a-489d-8af9-d5c657482aab",  # Old EMTAB5061
+                                                        "d96c2451-6e22-441f-a3e6-70fd0878bb1b",  # "cerebral organoid", superseded by 005d611a-14d5-4fbf-846e-571a1f874f70
+                                                        "5dfe932f-159d-4cab-8039-d32f22ffbbc2",  # Tissue Sensitivity "meyer", superseded by c4077b3c-5c98-4d26-a614-246d12c2e5d7
+                                                        "ccd8370a-84b8-464d-a87e-e688ac3e4f62",  # Mouse Melanoma, superseded by 8c3c290d-dfff-4553-8868-54ce45f4ba7f
+                                                        "34ec62a2-9643-430d-b41a-1e342bd615fc",  # kidney_biopsy_scRNA-seq "humphreys", superseded by 027c51c6-0719-469f-a7f5-640fe57cbece
+                                                        "c765e3f9-7cfc-4501-8832-79e5f7abd321",  # cardiomyocytes_basu "basu", superseded by a9c022b4-c771-4468-b769-cabcf9738de3
+                                                        "e1f2a0e4-1ec8-431e-a6df-c975b3a1131f",  # bone marrow "ido_amit", superseded by a29952d9-925e-40f4-8a1c-274f118f1f51
+                                                        "b6dc9b93-929a-45d0-beb2-5cf8e64872fe",  # neuron_diff, superseded by 2043c65a-1cf8-4828-a656-9e247d4e64f1
+                                                        "0ec2b05f-ddbe-4e5a-b30f-e81f4b1e330c",  # CD4+_lymphocytes "EGEOD106540", superseded by 90bd6933-40c0-48d4-8d76-778c103bf545
+                                                        "ff481f29-3d0b-4533-9de2-a760c61c162d",  # "10x-mouse-brain", superseded by 74b6d569-3b11-42ef-b6b1-a0454522b4a0
+                                                        "5f256182-5dfc-4070-8404-f6fa71d37c73",  # cell_hashing "rsatija", superseded by f81efc03-9f56-4354-aabb-6ce819c3d414
+                                                        "aabbec1a-1215-43e1-8e42-6489af25c12c",  # fetal-maternal interface, superseded by f83165c5-e2ea-4d15-a5cf-33f3550bffde
                                                     ]
                                                 }
                                             },
@@ -129,6 +140,25 @@ class Plugin(azul.plugin.Plugin):
                                                         "6ec8e247-2eb0-42d1-823f-75facd03988d",  # meyer
                                                         "93f6a42f-1790-4af4-b5d1-8c436cb6feae",  # Teichmann-mouse-melanoma
                                                         "6504d48c-1610-43aa-8cf8-214a960e110c",  # duplicate of Regev-ICA
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "bool": {
+                                                    "must": [
+                                                        {
+                                                            "exists": {
+                                                                "field": "files.analysis_process_json"  # exclude secondary bundles from …
+                                                            }
+                                                        },
+                                                        {
+                                                            "terms": {
+                                                                "files.project_json.provenance.document_id": [
+                                                                    "179bf9e6-5b33-4c5b-ae26-96c7270976b8",  # 1m immune cells aka "Regev-ICA"
+                                                                    "29f53b7e-071b-44b5-998a-0ae70d0229a4",  # human hematopoietic profiling "peer"
+                                                                ]
+                                                            }
+                                                        }
                                                     ]
                                                 }
                                             }
