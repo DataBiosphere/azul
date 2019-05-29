@@ -133,7 +133,7 @@ def basic_health():
 
 @app.route('/health', methods=['GET'], cors=True)
 @app.route('/health/{key}', methods=['GET'], cors=True)
-def health(key: Optional[str]=None):
+def health(key: Optional[str] = None):
     health = Health('service')
     body = health.as_json(*[(key,)] if key else [])
     return Response(

@@ -61,21 +61,12 @@ def basic_health():
 
 @app.route('/health', methods=['GET'], cors=True)
 @app.route('/health/{key}', methods=['GET'], cors=True)
-def health(key: Optional[str]=None):
+def health(key: Optional[str] = None):
     health = Health('indexer')
     body = health.as_json(*[(key,)] if key else [])
     return Response(
         body=json.dumps(body),
         status_code=200 if body['up'] else 503
-    )
-
-
-@app.route('/progress', methods=['GET'], cors=True)
-def progress():
-    health = Health('indexer')
-    return Response(
-        body=json.dumps(health.progress),
-        status_code=200
     )
 
 

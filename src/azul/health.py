@@ -16,15 +16,27 @@ class Health:
         self.lambda_name = lambda_name
 
     default_keys = (
-        'up',
         'elastic_search',
         'queues',
         'api_endpoints',
-        'other_lambdas'
+        'other_lambdas',
+        'progress'
+    )
+
+    endpoints = (
+        '/repository/summary', *(
+            f'/repository/{entity_type}?size=1'
+            for entity_type in ('projects', 'samples', 'files', 'bundles')
+        )
     )
 
     def as_json(self, keys=default_keys) -> JSON:
-        return {k: getattr(self, k) for k in keys if k in self.default_keys}
+        return {
+            'up': self.up,
+            **({
+                k: getattr(self, k) for k in keys if k in self.default_keys
+            })
+        }
 
     @memoized_property
     def other_lambdas(self):
@@ -53,9 +65,9 @@ class Health:
                 response[queue] = {
                     'up': True,
                     'messages': {
-                    'delayed': int(queue_instance['ApproximateNumberOfMessagesDelayed']),
-                    'invisible': int(queue_instance['ApproximateNumberOfMessagesNotVisible']),
-                    'queued': int(queue_instance['ApproximateNumberOfMessages'])
+                        'delayed': int(queue_instance['ApproximateNumberOfMessagesDelayed']),
+                        'invisible': int(queue_instance['ApproximateNumberOfMessagesNotVisible']),
+                        'queued': int(queue_instance['ApproximateNumberOfMessages'])
                     }
                 }
         return response
@@ -63,6 +75,7 @@ class Health:
     @memoized_property
     def progress(self) -> JSON:
         return {
+            'up': True,
             'unindexed_bundles': sum(self.queues[config.notify_queue_name].get('messages', {}).values()),
             'unindexed_documents': sum(self.queues[config.document_queue_name].get('messages', {}).values())
         }
@@ -71,12 +84,7 @@ class Health:
     def api_endpoints(self):
         status = {'up': True}
 
-        for endpoint in ('/repository/files?size=1',
-                         '/repository/projects?size=1',
-                         '/repository/samples?size=1',
-                         '/repository/bundles?size=1',
-                         '/repository/summary?size=1'):
-
+        for endpoint in self.endpoints:
             response = requests.head(f'{config.service_endpoint()}{endpoint}')
             try:
                 response.raise_for_status()
@@ -90,7 +98,6 @@ class Health:
                 status[endpoint] = {
                     'up': True
                 }
-
         return status
 
     @memoized_property
@@ -101,7 +108,7 @@ class Health:
 
     @memoized_property
     def up(self):
-        return all(getattr(self, k)['up'] for k in self.default_keys if k != 'up')
+        return all(getattr(self, k)['up'] for k in self.default_keys)
 
     @lru_cache()
     def _lambda(self, lambda_name) -> JSON:
@@ -116,4 +123,3 @@ class Health:
             return {
                 'up': up,
             }
-
