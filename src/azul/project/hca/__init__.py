@@ -131,6 +131,25 @@ class Plugin(azul.plugin.Plugin):
                                                         "6504d48c-1610-43aa-8cf8-214a960e110c",  # duplicate of Regev-ICA
                                                     ]
                                                 }
+                                            },
+                                            {
+                                                "bool": {
+                                                    "must": [
+                                                        {
+                                                            "exists": {
+                                                                "field": "files.analysis_process_json"  # exclude secondary bundles from …
+                                                            }
+                                                        },
+                                                        {
+                                                            "terms": {
+                                                                "files.project_json.provenance.document_id": [
+                                                                    "179bf9e6-5b33-4c5b-ae26-96c7270976b8",  # 1m immune cells aka "Regev-ICA"
+                                                                    "29f53b7e-071b-44b5-998a-0ae70d0229a4",  # human hematopoietic profiling "peer"
+                                                                ]
+                                                            }
+                                                        }
+                                                    ]
+                                                }
                                             }
                                         ]
                                     }
