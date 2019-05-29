@@ -128,6 +128,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "0ec2b05f-ddbe-4e5a-b30f-e81f4b1e330c",  # CD4+_lymphocytes "EGEOD106540", superseded by 90bd6933-40c0-48d4-8d76-778c103bf545
                                                         "ff481f29-3d0b-4533-9de2-a760c61c162d",  # "10x-mouse-brain", superseded by 74b6d569-3b11-42ef-b6b1-a0454522b4a0
                                                         "5f256182-5dfc-4070-8404-f6fa71d37c73",  # cell_hashing "rsatija", superseded by f81efc03-9f56-4354-aabb-6ce819c3d414
+                                                        "aabbec1a-1215-43e1-8e42-6489af25c12c",  # fetal-maternal interface, superseded by f83165c5-e2ea-4d15-a5cf-33f3550bffde
                                                     ]
                                                 }
                                             },
