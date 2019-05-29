@@ -121,6 +121,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "d96c2451-6e22-441f-a3e6-70fd0878bb1b",  # "cerebral organoid", superseded by 005d611a-14d5-4fbf-846e-571a1f874f70
                                                         "5dfe932f-159d-4cab-8039-d32f22ffbbc2",  # Tissue Sensitivity "meyer", superseded by c4077b3c-5c98-4d26-a614-246d12c2e5d7
                                                         "ccd8370a-84b8-464d-a87e-e688ac3e4f62",  # Mouse Melanoma, superseded by 8c3c290d-dfff-4553-8868-54ce45f4ba7f
+                                                        "34ec62a2-9643-430d-b41a-1e342bd615fc",  # kidney_biopsy_scRNA-seq "humphreys", superseded by 027c51c6-0719-469f-a7f5-640fe57cbece
                                                     ]
                                                 }
                                             },
