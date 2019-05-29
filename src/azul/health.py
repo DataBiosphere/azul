@@ -20,8 +20,7 @@ class Health:
         'elastic_search',
         'queues',
         'api_endpoints',
-        'other_lambdas',
-        'progress'
+        'other_lambdas'
     )
 
     def as_json(self, keys=default_keys) -> JSON:
@@ -29,13 +28,13 @@ class Health:
 
     @memoized_property
     def other_lambdas(self):
-        d = {
+        response = {
             lambda_name: self._lambda(lambda_name)
             for lambda_name in config.lambda_names()
             if lambda_name != self.lambda_name
         }
-        d['up'] = all(v['up'] for v in d.values())
-        return d
+        response['up'] = all(v['up'] for v in response.values())
+        return response
 
     @memoized_property
     def queues(self):
@@ -64,7 +63,6 @@ class Health:
     @memoized_property
     def progress(self) -> JSON:
         return {
-            'up': True,
             'unindexed_bundles': sum(self.queues[config.notify_queue_name].get('messages', {}).values()),
             'unindexed_documents': sum(self.queues[config.document_queue_name].get('messages', {}).values())
         }
@@ -74,10 +72,10 @@ class Health:
         status = {'up': True}
 
         for endpoint in ('/repository/files?size=1',
-                         '/repository/projects',
-                         '/repository/samples',
-                         '/repository/bundles',
-                         '/repository/summary'):
+                         '/repository/projects?size=1',
+                         '/repository/samples?size=1',
+                         '/repository/bundles?size=1',
+                         '/repository/summary?size=1'):
 
             response = requests.head(f'{config.service_endpoint()}{endpoint}')
             try:
