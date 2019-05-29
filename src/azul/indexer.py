@@ -12,7 +12,7 @@ from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
 from azul import config
-from azul.dss import patch_client_for_direct_file_access
+from azul.dss import patch_client_for_direct_access
 from azul.es import ESClientFactory
 from azul.transformer import (Aggregate,
                               AggregatingTransformer,
@@ -127,7 +127,7 @@ class BaseIndexer(ABC):
     def _get_bundle(self, bundle_uuid, bundle_version):
         now = time.time()
         dss_client = config.dss_client()
-        patch_client_for_direct_file_access(dss_client)
+        patch_client_for_direct_access(dss_client)
         _, manifest, metadata_files = download_bundle_metadata(client=dss_client,
                                                                replica='aws',
                                                                uuid=bundle_uuid,
