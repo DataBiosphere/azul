@@ -1,11 +1,13 @@
 from abc import ABCMeta, abstractmethod
 from collections import Counter
 import logging
-from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
+from dataclasses import dataclass
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
 
 from humancellatlas.data.metadata import api
 
 from azul import reject
+from azul.project.hca.metadata_generator import MetadataGenerator
 from azul.transformer import (Accumulator,
                               AggregatingTransformer,
                               Contribution,
@@ -536,6 +538,23 @@ class ProjectTransformer(BundleProjectTransformer):
         return 'projects'
 
 
+@dataclass
+class BundleContribution(Contribution):
+    # TypeError is raised if a field without a default value follows a field with a default value. Also true for
+    #  inheritance. That is why `metadata` is declared Optional. pep-0557
+    #  TODO: Remove hack 'https://github.com/DataBiosphere/azul/issues/1050'
+    metadata: Optional[List[JSON]] = None
+
+    @classmethod
+    def _from_source(cls, source: JSON) -> Mapping[str, Any]:
+        return dict(super()._from_source(source),
+                    metadata=source['metadata'])
+
+    def to_source(self):
+        return dict(super().to_source(),
+                    metadata=self.metadata)
+
+
 class BundleTransformer(BundleProjectTransformer):
 
     def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
@@ -549,3 +568,20 @@ class BundleTransformer(BundleProjectTransformer):
 
     def entity_type(self) -> str:
         return 'bundles'
+
+    def transform(self,
+                  uuid: str,
+                  version: str,
+                  manifest: List[JSON],
+                  metadata_files: Iterable[JSON]
+                  ) -> Sequence[Document]:
+        for contrib in super().transform(uuid, version, manifest, metadata_files):
+            # noinspection PyArgumentList
+            if 'project.json' in metadata_files:
+                # we can't handle v5 bundles
+                metadata = []
+            else:
+                generator = MetadataGenerator()
+                generator.add_bundle(uuid, version, list(metadata_files.values()))
+                metadata = generator.dump()
+            yield BundleContribution(metadata=metadata, **contrib.to_dict())

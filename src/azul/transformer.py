@@ -3,7 +3,7 @@ from collections import defaultdict, Counter
 import logging
 from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple, ClassVar
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 from azul import config
 from azul.json_freeze import freeze, thaw
@@ -66,6 +66,9 @@ class Document:
     def to_source(self) -> JSON:
         return dict(entity_id=self.entity.entity_id,
                     contents=self.contents)
+
+    def to_dict(self) -> JSON:
+        return {f.name: getattr(self, f.name) for f in fields(self)}
 
     @classmethod
     def _from_source(cls, source: JSON) -> Mapping[str, Any]:
