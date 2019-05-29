@@ -126,6 +126,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "e1f2a0e4-1ec8-431e-a6df-c975b3a1131f",  # bone marrow "ido_amit", superseded by a29952d9-925e-40f4-8a1c-274f118f1f51
                                                         "b6dc9b93-929a-45d0-beb2-5cf8e64872fe",  # neuron_diff, superseded by 2043c65a-1cf8-4828-a656-9e247d4e64f1
                                                         "0ec2b05f-ddbe-4e5a-b30f-e81f4b1e330c",  # CD4+_lymphocytes "EGEOD106540", superseded by 90bd6933-40c0-48d4-8d76-778c103bf545
+                                                        "ff481f29-3d0b-4533-9de2-a760c61c162d",  # "10x-mouse-brain", superseded by 74b6d569-3b11-42ef-b6b1-a0454522b4a0
                                                     ]
                                                 }
                                             },
