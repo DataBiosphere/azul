@@ -122,10 +122,10 @@ class ElasticTransformDump(object):
             _field = facet_config[agg]
         if agg == 'project':
             _sub_field = request_config['translation']['projectId'] + '.keyword'
-            aggregate.bucket('myTerms', 'terms', field=_field, size=99999).bucket(
-                             'myProjectIds', 'terms', field=_sub_field, size=99999)
+            aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size).bucket(
+                             'myProjectIds', 'terms', field=_sub_field, size=config.terms_aggregation_size)
         else:
-            aggregate.bucket('myTerms', 'terms', field=_field, size=99999)
+            aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size)
         aggregate.bucket('untagged', 'missing', field=_field)
         if agg == "fileFormat":
             fileSizeField = request_config['translation']['fileSize']
@@ -373,9 +373,14 @@ class ElasticTransformDump(object):
 
         # Add a per_organ aggregate to the ElasticSearch request
         es_search.aggs.bucket(
-            'group_by_organ', 'terms', field='contents.cell_suspensions.organ.keyword'
+            'group_by_organ',
+            'terms',
+            field='contents.cell_suspensions.organ.keyword',
+            size=config.terms_aggregation_size
         ).bucket(
-            'cell_count', 'sum', field='contents.cell_suspensions.total_estimated_cells'
+            'cell_count',
+            'sum',
+            field='contents.cell_suspensions.total_estimated_cells'
         )
 
         # Add a cell_count aggregate to the ElasticSearch request
@@ -386,7 +391,7 @@ class ElasticTransformDump(object):
         )
 
         es_search.aggs.bucket(
-            'organTypes', 'terms', field='contents.samples.effective_organ.keyword'
+            'organTypes', 'terms', field='contents.samples.effective_organ.keyword', size=config.terms_aggregation_size
         )
 
         for cardinality, agg_name in (
