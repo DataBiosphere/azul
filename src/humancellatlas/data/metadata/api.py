@@ -204,7 +204,7 @@ class Project(Entity):
 @dataclass(init=False)
 class Biomaterial(LinkedEntity):
     biomaterial_id: str
-    ncbi_taxon_id: int
+    ncbi_taxon_id: List[int]
     has_input_biomaterial: Optional[str]
     from_processes: MutableMapping[UUID4, 'Process'] = field(repr=False)
     to_processes: MutableMapping[UUID4, 'Process']
