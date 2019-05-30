@@ -75,9 +75,9 @@ class TestHCAIndexer(IndexerTestCase):
 
         # Ensure that we have a bundle whose documents are written individually and another one that's written in bulk
         small_bundle = BundleAndSize(bundle=self.new_bundle,
-                                     size=5)
+                                     size=6)
         large_bundle = BundleAndSize(bundle=("2a87dc5c-0c3c-4d91-a348-5d784ab48b92", "2018-03-29T103945.437487Z"),
-                                     size=226)
+                                     size=258)
         self.assertTrue(small_bundle.size < IndexWriter.bulk_threshold < large_bundle.size)
 
         for bundle, size in small_bundle, large_bundle:
@@ -123,9 +123,9 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(self.old_bundle)
         old_hits_by_id = self._assert_old_bundle()
         self._index_canned_bundle(self.new_bundle)
-        self._assert_new_bundle(num_expected_old_contributions=5, old_hits_by_id=old_hits_by_id)
+        self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
         self._delete_bundle(self.new_bundle)
-        self._assert_old_bundle(num_expected_new_deleted_contributions=5)
+        self._assert_old_bundle(num_expected_new_deleted_contributions=6)
 
     def test_multi_entity_contributing_bundles(self):
         """
@@ -200,7 +200,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(analysis_bundle)
         hits = self._get_all_hits()
         num_files = 33
-        self.assertEqual(len(hits), (num_files + 1 + 1 + 1) * 2)
+        self.assertEqual(len(hits), (num_files + 1 + 1 + 1 + 1) * 2)
         num_contribs, num_aggregates = Counter(), Counter()
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
@@ -222,7 +222,7 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(1 if entity_type == 'files' else num_files, len(contents['files']))
             self.assertEqual(1, len(contents['specimens']))
             self.assertEqual(1, len(contents['projects']))
-        num_expected = dict(files=num_files, samples=1, projects=1, bundles=1)
+        num_expected = dict(files=num_files, samples=1, cell_suspensions=1, projects=1, bundles=1)
         self.assertEqual(num_contribs, num_expected)
         self.assertEqual(num_aggregates, num_expected)
 
@@ -233,7 +233,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(self.old_bundle)
         old_hits_by_id = self._assert_old_bundle()
         self._index_canned_bundle(self.new_bundle)
-        self._assert_new_bundle(num_expected_old_contributions=5, old_hits_by_id=old_hits_by_id)
+        self._assert_new_bundle(num_expected_old_contributions=6, old_hits_by_id=old_hits_by_id)
 
     def test_bundle_downgrade(self):
         """
@@ -242,8 +242,8 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(self.new_bundle)
         self._assert_new_bundle(num_expected_old_contributions=0)
         self._index_canned_bundle(self.old_bundle)
-        self._assert_old_bundle(num_expected_new_contributions=5, ignore_aggregates=True)
-        self._assert_new_bundle(num_expected_old_contributions=5)
+        self._assert_old_bundle(num_expected_new_contributions=6, ignore_aggregates=True)
+        self._assert_new_bundle(num_expected_old_contributions=6)
 
     def _assert_old_bundle(self,
                            num_expected_new_contributions=0,
@@ -252,9 +252,9 @@ class TestHCAIndexer(IndexerTestCase):
         num_actual_new_contributions = 0
         num_actual_new_deleted_contributions = 0
         hits = self._get_all_hits()
-        # Five entities (two files, one project, one sample and one bundle)
+        # Six entities (two files, one project, one cell suspension, one sample, and one bundle)
         # One contribution and one aggregate per entity
-        self.assertEqual(5 + 5 + num_expected_new_contributions + num_expected_new_deleted_contributions, len(hits))
+        self.assertEqual(6 + 6 + num_expected_new_contributions + num_expected_new_deleted_contributions, len(hits))
         hits_by_id = {}
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
@@ -290,9 +290,9 @@ class TestHCAIndexer(IndexerTestCase):
     def _assert_new_bundle(self, num_expected_old_contributions=0, old_hits_by_id=None):
         num_actual_old_contributions = 0
         hits = self._get_all_hits()
-        # Five entities (two files, one project, one sample and one bundle)
+        # Six entities (two files, one project, one cell suspension, one sample and one bundle)
         # One contribution and one aggregate per entity
-        self.assertEqual(5 + 5 + num_expected_old_contributions, len(hits))
+        self.assertEqual(6 + 6 + num_expected_old_contributions, len(hits))
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
             source = hit['_source']
@@ -367,11 +367,11 @@ class TestHCAIndexer(IndexerTestCase):
 
         hits = self._get_all_hits()
         file_uuids = set()
-        # One specimen, one project, one bundle and two file contributions per bundle, 10 contributions in total.
-        # Both bundles share the specimen and the project, so two aggregates for those. None of the four files are
-        # shared, so four aggregates for those and two unique bundles. In total we should have
-        # 10 + 2 + 4 + 2 == 18 documents.
-        self.assertEqual(18, len(hits))
+        # Two bundles each with 1 sample, 1 cell suspension, 1 project, 1 bundle and 2 files
+        # Both bundles share the same sample and the project, so they get aggregated only once:
+        # 2 samples + 2 projects + 2 cell suspension + 2 bundles + 4 files +
+        # 1 samples agg + 1 projects agg + 2 cell suspension agg + 2 bundle agg + 4 file agg = 22 hits
+        self.assertEqual(22, len(hits))
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
             contents = hit['_source']['contents']
@@ -393,6 +393,12 @@ class TestHCAIndexer(IndexerTestCase):
                 if aggregate:
                     self.assertEqual(1, len(hit['_source']['bundles']))
                     self.assertEqual(2, len(contents['files']))
+                else:
+                    self.assertEqual(2, len(contents['files']))
+            elif entity_type == 'cell_suspensions':
+                if aggregate:
+                    self.assertEqual(1, len(hit['_source']['bundles']))
+                    self.assertEqual(1, len(contents['files']))
                 else:
                     self.assertEqual(2, len(contents['files']))
             else:
@@ -433,7 +439,7 @@ class TestHCAIndexer(IndexerTestCase):
                 for file in files:
                     file_name = file['name']
                     file_names.add(file_name)
-        self.assertEqual(3, len(entities_with_matrix_files))  # a project, a specimen and a bundle
+        self.assertEqual(4, len(entities_with_matrix_files))  # a project, a specimen, a cell suspension and a bundle
         self.assertEqual(aggregate_file_names, file_names)
         matrix_file_names = {file_name for file_name in file_names if '.zarr!' in file_name}
         self.assertEqual({'377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr!.zattrs'}, matrix_file_names)
@@ -444,6 +450,8 @@ class TestHCAIndexer(IndexerTestCase):
 
         hits = self._get_all_hits()
         self.assertGreater(len(hits), 0)
+        counted_cell_count = 0
+        expected_cell_count = 380  # 384 wells in total, four of them empty, the rest with a single cell
         documents_with_cell_suspension = 0
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit["_index"])
@@ -465,13 +473,16 @@ class TestHCAIndexer(IndexerTestCase):
                 for cell_suspension in cell_suspensions:
                     self.assertEqual({'bone marrow', 'temporal lobe'}, set(cell_suspension['organ_part']))
                     self.assertEqual({'Plasma cells'}, set(cell_suspension['selected_cell_type']))
-                self.assertEqual(1 if aggregate else 384, len(cell_suspensions))
-                # 384 wells in total, four of them empty, the rest with a single cell
-                self.assertEqual(380, sum(cs['total_estimated_cells'] for cs in cell_suspensions))
+                self.assertEqual(1 if entity_type == 'cell_suspensions' or aggregate else 384, len(cell_suspensions))
+                if entity_type == 'cell_suspensions':
+                    counted_cell_count += one(cell_suspensions)['total_estimated_cells']
+                else:
+                    self.assertEqual(expected_cell_count, sum(cs['total_estimated_cells'] for cs in cell_suspensions))
                 documents_with_cell_suspension += 1
-        # Cell suspensions should be mentioned in one project, two files (one per fastq), one
-        # specimen and one bundle. There should be one original and one aggregate document for each of those.
-        self.assertEqual(10, documents_with_cell_suspension)
+        self.assertEqual(expected_cell_count * 2, counted_cell_count)  # times 2 for original document and aggregate
+        # Cell suspensions should be mentioned in 1 bundle, 1 project, 1 specimen, 384 cell suspensions, and 2 files
+        # (one per fastq). There should be one original and one aggregate document for each of those. (389 * 2 = 778)
+        self.assertEqual(778, documents_with_cell_suspension)
 
     def test_well_bundles(self):
         self._index_canned_bundle(('3f8176ff-61a7-4504-a57c-fc70f38d5b13', '2018-10-24T234431.820615Z'))
@@ -489,7 +500,7 @@ class TestHCAIndexer(IndexerTestCase):
                 # Each bundle contributes a well with one cell. The data files in each bundle are derived from
                 # the cell in that well. This is why each data file and bundle should only have a cell count of 1.
                 # Both bundles refer to the same specimen and project, so the cell count for those should be 2.
-                expected_cells = 1 if entity_type in ('files', 'bundles') else 2
+                expected_cells = 1 if entity_type in ('files', 'cell_suspensions', 'bundles') else 2
                 self.assertEqual(expected_cells, cell_suspensions[0]['total_estimated_cells'])
                 self.assertEqual(one(one(contents['protocols'])['workflow']), 'smartseq2_v2.1.0')
             else:
@@ -598,10 +609,10 @@ class TestHCAIndexer(IndexerTestCase):
         specimens = 4
         cell_suspensions = 1
         files = 16
-        inner_specimens_in_contributions = (files + projects + bundles) * specimens + specimens * 1
-        inner_specimens_in_aggregates = (files + specimens + projects + bundles) * 1
-        inner_cell_suspensions_in_contributions = (files + specimens + projects + bundles) * cell_suspensions
-        inner_cell_suspensions_in_aggregates = (files + specimens + projects + bundles) * 1
+        inner_specimens_in_contributions = (files + projects + bundles + cell_suspensions) * specimens + specimens * 1
+        inner_specimens_in_aggregates = (files + specimens + projects + bundles + cell_suspensions) * 1
+        inner_cell_suspensions_in_contributions = (files + specimens + projects + bundles + cell_suspensions) * cell_suspensions
+        inner_cell_suspensions_in_aggregates = (files + specimens + projects + bundles + cell_suspensions) * 1
 
         self.assertEqual(inner_specimens_in_contributions + inner_specimens_in_aggregates,
                          inner_specimens)
