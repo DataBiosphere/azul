@@ -5,6 +5,7 @@ import logging
 import random
 
 from furl import furl
+from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 import requests
 import time
@@ -405,3 +406,16 @@ class DSSIntegrationTest(unittest.TestCase):
                         self.assertListEqual(actual, [mock.call.warning(mock.ANY)] * len(metadata))
                 else:
                     self.assertListEqual(log.mock_calls, [])
+
+    def test_get_file_fail(self):
+        for patch in True, False:
+            with self.subTest(path=patch):
+                dss_client = config.dss_client()
+                if patch:
+                    patch_client_for_direct_access(dss_client)
+                with self.assertRaises(SwaggerAPIException) as e:
+                    dss_client.get_file(uuid='acafefed-beef-4bad-babe-feedfa11afe1',
+                                        version='2018-11-19T232756.056947Z',
+                                        replica='aws')
+                self.assertEqual(e.exception.reason, 'not_found')
+
