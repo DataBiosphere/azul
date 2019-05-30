@@ -479,6 +479,7 @@ class Config:
     def github_access_token(self) -> str:
         return os.environ['azul_github_access_token']
 
+    terms_aggregation_size = 99999
 
 config = Config()
 
