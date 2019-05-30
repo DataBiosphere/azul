@@ -223,9 +223,17 @@ class BaseIndexer(ABC):
         if hits is None:
             log.info('Reading %i expected contribution(s) using scan().', num_contributions)
             hits = scan(es_client, index=index, query=query, size=page_size, doc_type=Document.type)
-        contributions = [Contribution.from_index(hit) for hit in hits]
+        contributions = [self.get_contribution(hit) for hit in hits]
         log.info('Read %i contribution(s).', len(contributions))
         return contributions
+
+    @staticmethod
+    def get_contribution(hit):
+        if hit['_index'] == config.es_index_name(entity_type='bundles'):
+            from azul.project.hca.transformers import BundleContribution
+            return BundleContribution.from_index(hit)
+        else:
+            return Contribution.from_index(hit)
 
     def _aggregate(self, contributions: List[Contribution]) -> List[Aggregate]:
         # Group contributions by entity ID and bundle UUID
@@ -259,14 +267,27 @@ class BaseIndexer(ABC):
             bundles = [dict(uuid=c.bundle_uuid, version=c.bundle_version) for c in contributions]
             # noinspection PyArgumentList
             # https://youtrack.jetbrains.com/issue/PY-28506
-            aggregate = Aggregate(entity=entity,
-                                  version=None,
-                                  contents=contents,
-                                  bundles=bundles,
-                                  num_contributions=tallies[entity.entity_id])
+            aggregate = self.selective_aggregate(bundles, contents, entity, tallies, contributions)
             aggregates.append(aggregate)
 
         return aggregates
+
+    def selective_aggregate(self, bundles, contents, entity, tallies, contributions):
+        if entity.entity_type == 'bundles':
+            from azul.project.hca.transformers import BundleAggregate
+            metadata = one(contributions).metadata
+            return BundleAggregate(entity=entity,
+                                   version=None,
+                                   contents=contents,
+                                   bundles=bundles,
+                                   num_contributions=tallies[entity.entity_id],
+                                   metadata=metadata)
+        else:
+            return Aggregate(entity=entity,
+                             version=None,
+                             contents=contents,
+                             bundles=bundles,
+                             num_contributions=tallies[entity.entity_id])
 
     def delete(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
         # FIXME: this only works if the bundle version is not being indexed concurrently
@@ -297,7 +318,7 @@ class BaseIndexer(ABC):
         # minimize the response size)
         contributions = []
         for hit in scan(es_client, query=query, doc_type="doc", index=self.index_names(aggregate=False)):
-            contribution = Contribution.from_index(hit)
+            contribution = self.get_contribution(hit)
             contribution.bundle_deleted = True
             contributions.append(contribution)
         return contributions
