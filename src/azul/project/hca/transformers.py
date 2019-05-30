@@ -437,6 +437,43 @@ class FileTransformer(Transformer):
             yield self._contribution(bundle, contents, file.document_id)
 
 
+class CellSuspensionTransformer(Transformer):
+
+    def entity_type(self) -> str:
+        return 'cell_suspensions'
+
+    def transform(self,
+                  uuid: str,
+                  version: str,
+                  manifest: List[JSON],
+                  metadata_files: Mapping[str, JSON]
+                  ) -> Iterable[Document]:
+        bundle = api.Bundle(uuid=uuid,
+                            version=version,
+                            manifest=manifest,
+                            metadata_files=metadata_files)
+        project = self._get_project(bundle)
+        for cell_suspension in bundle.biomaterials.values():
+            if not isinstance(cell_suspension, api.CellSuspension):
+                continue
+            samples: MutableMapping[str, Sample] = dict()
+            SampleTransformer.get_ancestor_samples(cell_suspension, samples)
+            visitor = TransformerVisitor()
+            cell_suspension.accept(visitor)
+            cell_suspension.ancestors(visitor)
+            contents = dict(samples=[_sample_dict(s) for s in samples.values()],
+                            specimens=[_specimen_dict(s) for s in visitor.specimens.values()],
+                            cell_suspensions=[_cell_suspension_dict(cell_suspension)],
+                            cell_lines=[_cell_line_dict(cl) for cl in visitor.cell_lines.values()],
+                            donors=[_donor_dict(d) for d in visitor.donors.values()],
+                            organoids=[_organoid_dict(o) for o in visitor.organoids.values()],
+                            files=[_file_dict(f) for f in visitor.files.values()],
+                            protocols=[_protocol_dict(pl) for pl in visitor.protocols.values()],
+                            projects=[_project_dict(project)])
+            yield self._contribution(bundle, contents, cell_suspension.document_id)
+
+
+
 class SampleTransformer(Transformer):
 
     def entity_type(self) -> str:
