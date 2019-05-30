@@ -260,15 +260,15 @@ class Config:
         return entity_type, aggregate
 
     def parse_foreign_es_index_name(self, index_name) -> Tuple[str, str, str, bool]:
-        index_name = index_name.split('_')
-        if len(index_name) == 3:
-            aggregate = False
-        elif len(index_name) == 4:
-            assert index_name.pop(2) == 'aggregate'
+        assert index_name.count('_') >= 2
+        prefix, index_name = index_name.split('_', 1)
+        index_name, deployment_stage = index_name.rsplit('_', 1)
+        if index_name.endswith('_aggregate'):
+            entity_type = index_name.rsplit('_', 1)[0]
             aggregate = True
         else:
-            assert False
-        prefix, entity_type, deployment_stage = index_name
+            entity_type = index_name
+            aggregate = False
         return prefix, deployment_stage, entity_type, aggregate
 
     @property
@@ -326,7 +326,7 @@ class Config:
     #
     api_gateway_timeout_padding = 2
 
-    term_re = re.compile("[a-z][a-z0-9]{2,29}")
+    term_re = re.compile("[a-z][a-z0-9_]{2,29}")
 
     def _term_from_env(self, env_var_name: str, optional=False) -> str:
         value = os.environ.get(env_var_name, default='')
