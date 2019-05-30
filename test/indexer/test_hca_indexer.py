@@ -685,7 +685,6 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (child_cell_line)'])
                 self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [None])
 
-
     def test_metadata_generator(self):
         index_bundle = ('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
         manifest, metadata = self._load_canned_bundle(index_bundle)
@@ -703,6 +702,42 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(expected_file_name, metadata_row['*.file_core.file_name'])
             else:
                 self.assertIn(metadata_row['*.file_core.file_format'], ['fastq.gz', 'results', 'bam', 'bai'])
+
+    def test_metadata_field_exclusion(self):
+        self._index_canned_bundle(self.old_bundle)
+
+        # Check that the dynamic mapping has the field disabled
+        bundles_index = config.es_index_name('bundles')
+        mapping = self.es_client.indices.get_mapping(index=bundles_index)
+        self.assertFalse(mapping[bundles_index]['mappings']['doc']['properties']['metadata']['enabled'])
+
+        # Ensure that a metadata row exists …
+        hits = self._get_all_hits()
+        bundles_hit = one(hit['_source'] for hit in hits if hit['_index'] == bundles_index)
+        for metadata_row in bundles_hit['metadata']:
+            self.assertEqual(self.old_bundle, (metadata_row['bundle_uuid'], metadata_row['bundle_version']))
+
+        # … but that it can't be used for queries
+        empty_response = self.es_client.search(index=bundles_index,
+                                               body={
+                                                   "query": {
+                                                       "match": {
+                                                           "metadata.bundle_uuid": self.old_bundle[0]
+                                                       }
+                                                   }
+                                               })
+        self.assertEqual(0, empty_response["hits"]["total"])
+
+        response_with_hit = self.es_client.search(index=bundles_index,
+                                                  body={
+                                                      "query": {
+                                                          "match": {
+                                                              "bundle_uuid": self.old_bundle[0]
+                                                          }
+                                                      }
+                                                  })
+        self.assertEqual(1, response_with_hit["hits"]["total"])
+
 
 class TestValidNotificationRequests(LocalAppTestCase):
 

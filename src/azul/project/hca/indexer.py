@@ -12,17 +12,27 @@ class Indexer(BaseIndexer):
         return {
             "dynamic_templates": [
                 {
+                    "exclude_metadata_field": {
+                        "path_match": "metadata",
+                        "mapping": {
+                            "enabled": False
+                        }
+                    }
+                },
+                {
                     "project_nested_contributors": {
-                        "match_pattern": "regex",
-                        "path_match": r".*projects?\.contributors",
-                        "mapping": {}
+                        "path_match": "contents.projects.contributors",
+                        "mapping": {
+                            "enabled": False
+                        }
                     }
                 },
                 {
                     "project_nested_publications": {
-                        "match_pattern": "regex",
-                        "path_match": r".*projects?\.publications",
-                        "mapping": {}
+                        "path_match": "contents.projects.publications",
+                        "mapping": {
+                            "enabled": False
+                        }
                     }
                 },
                 {
