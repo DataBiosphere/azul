@@ -74,6 +74,7 @@ class IntegrationTest(unittest.TestCase):
                                       prefix=self.bundle_uuid_prefix)
         self.test_uuid = str(uuid.uuid4())
         self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
+        self.num_bundles = 0
 
     def tearDown(self):
         self.set_lambda_test_mode(False)
