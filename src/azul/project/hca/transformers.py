@@ -10,6 +10,7 @@ from azul import reject
 from azul.project.hca.metadata_generator import MetadataGenerator
 from azul.transformer import (Accumulator,
                               AggregatingTransformer,
+                              Aggregate,
                               Contribution,
                               DistinctAccumulator,
                               Document,
@@ -536,6 +537,20 @@ class ProjectTransformer(BundleProjectTransformer):
 
     def entity_type(self) -> str:
         return 'projects'
+
+
+@dataclass
+class BundleAggregate(Aggregate):
+    metadata: Optional[List[JSON]] = None
+
+    @classmethod
+    def _from_source(cls, source: JSON) -> Mapping[str, Any]:
+        return dict(super()._from_source(source),
+                    metadata=source['metadata'])
+
+    def to_source(self) -> JSON:
+        return dict(super().to_source(),
+                    metadata=self.metadata)
 
 
 @dataclass
