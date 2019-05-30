@@ -97,11 +97,11 @@ class RepositoryService(AbstractService):
             'projects': [
                 'projectCount',
                 'labCount',
-                # Cherry-pick cell count from projects as under samples it is possible that more than one sample could
-                # have the same cell suspension as an inner entity which would incorrectly inflate the total cell count.
+            ],
+            'cell_suspensions': [
                 'totalCellCount',
                 'cellCountSummaries',
-            ],
+            ]
         }
 
         def make_summary(entity_type):
