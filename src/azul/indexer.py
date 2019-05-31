@@ -75,11 +75,11 @@ class BaseIndexer(ABC):
         efficient implementation would transform many bundles, collect their contributions and aggregate all affected
         entities at the end.
         """
-        contributions = self.transform(dss_notification)
+        contributions = self.transform(dss_notification, delete=False)
         tallies = self.contribute(writer, contributions)
         self.aggregate(writer, tallies)
 
-    def transform(self, dss_notification: JSON) -> List[Contribution]:
+    def transform(self, dss_notification: JSON, delete: bool) -> List[Contribution]:
         """
         Transform the metadata in the bundle referenced by the given notification into a list of contributions to
         documents, each document representing one metadata entity in the index.
@@ -88,21 +88,7 @@ class BaseIndexer(ABC):
         bundle_version = dss_notification['match']['bundle_version']
         manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
         # If indexing a test bundle we want to change the uuid so that we can delete the bundle after
-        test_bundle_uuid = self._add_test_modifications(manifest, metadata_files, dss_notification)
-        if test_bundle_uuid:
-            bundle_uuid = test_bundle_uuid
-        return self._transform(bundle_uuid=bundle_uuid,
-                               bundle_version=bundle_version,
-                               bundle_deleted=False,
-                               manifest=manifest,
-                               metadata_files=metadata_files)
-
-    def _transform(self,
-                   bundle_uuid: BundleUUID,
-                   bundle_version: BundleVersion,
-                   bundle_deleted: bool,
-                   manifest: List[JSON],
-                   metadata_files: Mapping[str, JSON]) -> List[Contribution]:
+        bundle_uuid = self._add_test_modifications(bundle_uuid, manifest, metadata_files, dss_notification)
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
         # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
         self._create_indices()
@@ -111,7 +97,7 @@ class BaseIndexer(ABC):
         for transformer in self.transformers():
             contributions.extend(transformer.transform(uuid=bundle_uuid,
                                                        version=bundle_version,
-                                                       deleted=bundle_deleted,
+                                                       deleted=delete,
                                                        manifest=manifest,
                                                        metadata_files=metadata_files))
         return contributions
@@ -137,9 +123,11 @@ class BaseIndexer(ABC):
         assert _ == bundle_version
         return manifest, metadata_files
 
-    def _add_test_modifications(self, manifest, metadata_files, dss_notification):
+    def _add_test_modifications(self, bundle_uuid, manifest, metadata_files, dss_notification):
         integration_test_name = dss_notification.get('test_name', None)
-        if integration_test_name is not None:
+        if integration_test_name is None:
+            return bundle_uuid
+        else:
             for dss_file in manifest:
                 if 'project_0.json' in dss_file['name']:
                     dss_file['uuid'] = dss_notification['test_uuid']
@@ -150,8 +138,6 @@ class BaseIndexer(ABC):
             else:
                 assert False, "project_0.json doesn't exist for this bundle."
             return dss_notification['test_bundle_uuid']
-        else:
-            return None
 
     def contribute(self, writer: 'IndexWriter', contributions: List[Contribution]) -> Tallies:
         """
@@ -293,50 +279,13 @@ class BaseIndexer(ABC):
         # FIXME: this only works if the bundle version is not being indexed concurrently
         # The fix could be to optimistically lock on the aggregate version
         # https://github.com/DataBiosphere/azul/issues/611
-        contributions = self.transform_deletion(dss_notification)
+        contributions = self.transform(dss_notification, delete=True)
         # FIXME: these are all modified contributions, not new ones. This also happens when we reindex without
         # deleting the indices first. The tallies refer to number of updated or added contributions but we treat them
         # as if they are all new when we estimate the number of contributions per bundle.
         # https://github.com/DataBiosphere/azul/issues/610
         tallies = self.contribute(writer, contributions)
         self.aggregate(writer, tallies)
-
-    def transform_deletion(self, dss_notification: JSON) -> List[Contribution]:
-        bundle_uuid = dss_notification['match']['bundle_uuid']
-        bundle_version = dss_notification['match']['bundle_version']
-        manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
-        contributions = self._transform(bundle_uuid, bundle_version, True, manifest, metadata_files)
-        return contributions
-
-    def reflective_transform_delete(self, dss_notification: JSON) -> List[Contribution]:
-        """
-        Delete a bundle by first searching the index to determine what needs to be deleted.
-
-        Note that this method of deletion is inherently racey since the bundle may not be fully indexed when the search
-        is done.
-        # TODO: (jesse) delete this code when we are satisfied with the new transform_deletion
-        """
-        self._create_indices()
-        match = dss_notification['match']
-        es_client = ESClientFactory.get()
-        query = {
-            "query": {
-                "bool": {
-                    "must": [
-                        {"term": {"bundle_uuid.keyword": match['bundle_uuid']}},
-                        {"term": {"bundle_version.keyword": match['bundle_version']}}
-                    ]
-                }
-            }
-        }
-        # FIXME: decide if we want to keep the contents of the contribution, or not (and use source filtering to
-        # minimize the response size)
-        contributions = []
-        for hit in scan(es_client, query=query, doc_type="doc", index=self.index_names(aggregate=False)):
-            contribution = Contribution.from_index(hit)
-            contribution.bundle_deleted = True
-            contributions.append(contribution)
-        return contributions
 
 
 class IndexWriter:
