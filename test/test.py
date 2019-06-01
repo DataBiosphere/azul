@@ -232,7 +232,7 @@ class TestAccessorApi(TestCase):
         self._test_bundle(uuid='3e7c6f8e-334c-41fb-a1e5-ddd9fe70a0e2',
                           version=None,
                           deployment='staging',
-                          diseases={'glioblastoma'}),
+                          diseases={'glioblastoma'})
 
     # TODO: Use bundle from production to fix test broken by missing bundle
     @skip("Test bundle no longer exists on staging")
@@ -279,7 +279,8 @@ class TestAccessorApi(TestCase):
                           storage_methods={'frozen, liquid nitrogen'},
                           preservation_methods={'cryopreservation, other'},
                           library_construction_methods={'Smart-seq2'},
-                          selected_cell_types={'TEMRA'})
+                          selected_cell_types={'TEMRA'},
+                          ncbi_taxon_ids={9606})
 
     def test_ontology_label_field(self):
         """
@@ -352,9 +353,14 @@ class TestAccessorApi(TestCase):
                        array_express_accessions=frozenset(),
                        insdc_study_accessions=frozenset(),
                        is_sequencing_bundle=True,
-                       slice_thickness=None):
+                       slice_thickness=None,
+                       ncbi_taxon_ids=None):
         bundle = Bundle(uuid, version, manifest, metadata_files)
         biomaterials = bundle.biomaterials.values()
+
+        if ncbi_taxon_ids is not None:
+            self.assertSetEqual(ncbi_taxon_ids, set(chain(*(b.ncbi_taxon_id for b in biomaterials))))
+
         actual_diseases = set(chain(*(bm.diseases for bm in biomaterials
                                       if isinstance(bm, (DonorOrganism, SpecimenFromOrganism)))))
         # noinspection PyDeprecation
