@@ -62,7 +62,6 @@ class IntegrationTest(unittest.TestCase):
     Finally, the tests send deletion notifications for these new bundle UUIDs which should remove all
     trace of the integration test from the index.
     """
-    bundle_uuid_prefix = None
     prefix_length = 3
 
     def setUp(self):
@@ -70,6 +69,7 @@ class IntegrationTest(unittest.TestCase):
         self.set_lambda_test_mode(True)
         self.bundle_uuid_prefix = ''.join([str(random.choice('abcdef0123456789')) for _ in range(self.prefix_length)])
         self.expected_fqids = set()
+        self.num_bundles = 0
         self.azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
                                       prefix=self.bundle_uuid_prefix)
         self.test_uuid = str(uuid.uuid4())
@@ -136,18 +136,19 @@ class IntegrationTest(unittest.TestCase):
         self.download_file_from_drs_response(self.check_endpoint_is_working(config.service_endpoint(), drs_endpoint))
 
     def delete_bundles(self):
-        for fqid in self.expected_fqids:
-            bundle_uuid, _, version = fqid.partition('.')
-            try:
-                self.azul_client.delete_bundle(bundle_uuid, version)
-            except HTTPError as e:
-                logger.warning('Deletion for bundle %s version %s failed. Possibly it was never indexed.',
-                               bundle_uuid, version, exc_info=e)
+        if self.num_bundles:
+            for fqid in self.expected_fqids:
+                bundle_uuid, _, version = fqid.partition('.')
+                try:
+                    self.azul_client.delete_bundle(bundle_uuid, version)
+                except HTTPError as e:
+                    logger.warning('Deletion for bundle %s version %s failed. Possibly it was never indexed.',
+                                   bundle_uuid, version, exc_info=e)
 
-        self.wait_for_queue_level(empty=False)
-        self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
-        self.assertTrue(self.project_removed_from_azul(), f"Project '{self.test_name}' was not fully "
-                                                          "removed from index within 5 min. of deletion")
+            self.wait_for_queue_level(empty=False)
+            self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
+            self.assertTrue(self.project_removed_from_azul(), f"Project '{self.test_name}' was not fully "
+                                                              "removed from index within 5 min. of deletion")
 
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
