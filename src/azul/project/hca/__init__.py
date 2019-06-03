@@ -129,6 +129,13 @@ class Plugin(azul.plugin.Plugin):
                                                         "ff481f29-3d0b-4533-9de2-a760c61c162d",  # "10x-mouse-brain", superseded by 74b6d569-3b11-42ef-b6b1-a0454522b4a0
                                                         "5f256182-5dfc-4070-8404-f6fa71d37c73",  # cell_hashing "rsatija", superseded by f81efc03-9f56-4354-aabb-6ce819c3d414
                                                         "aabbec1a-1215-43e1-8e42-6489af25c12c",  # fetal-maternal interface, superseded by f83165c5-e2ea-4d15-a5cf-33f3550bffde
+                                                        "f7152c47-4ba7-4b29-9dbe-bf4dbc9faccb",  # prod/optimus/2019-05-18T12:01:24Z
+                                                        "ee777bd0-b70d-46ea-8488-3c635c0680a0",  # prod/optimus/2019-05-20T12:00:56Z
+                                                        "d90ca86f-6461-4db7-9e44-fd7c15f93947",  # prod/optimus/2019-05-19T12:01:25Z
+                                                        "4a6976fc-1add-4538-a410-4b8ecfd6d26d",  # prod/optimus/2019-05-28T19:09:31Z
+                                                        "ef2a1708-773c-4077-ae87-14c9c16fbdfe",  # prod/Smart-seq2/2019-05-18T12:01:25Z
+                                                        "6ccf02fe-7284-4e22-8f13-34cee293d003",  # prod/Smart-seq2/2019-05-19T12:01:25Z
+                                                        "24dce12d-c6d5-402d-b864-dbd4ac5bdf29",  # prod/Smart-seq2/2019-05-20T12:00:55Z
                                                     ]
                                                 }
                                             },
