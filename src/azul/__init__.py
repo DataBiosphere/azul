@@ -260,15 +260,46 @@ class Config:
         return entity_type, aggregate
 
     def parse_foreign_es_index_name(self, index_name) -> Tuple[str, str, str, bool]:
-        assert index_name.count('_') >= 2
-        prefix, index_name = index_name.split('_', 1)
-        index_name, deployment_stage = index_name.rsplit('_', 1)
-        if index_name.endswith('_aggregate'):
-            entity_type = index_name.rsplit('_', 1)[0]
+        """
+        >>> config.parse_foreign_es_index_name('azul_foo_dev')
+        ('azul', 'dev', 'foo', False)
+
+        >>> config.parse_foreign_es_index_name('azul_foo_aggregate_dev')
+        ('azul', 'dev', 'foo', True)
+
+        >>> config.parse_foreign_es_index_name('azul_foo_bar_dev')
+        ('azul', 'dev', 'foo_bar', False)
+
+        >>> config.parse_foreign_es_index_name('azul_foo_bar_aggregate_dev')
+        ('azul', 'dev', 'foo_bar', True)
+
+        >>> config.parse_foreign_es_index_name('bad_foo_dev')
+        Traceback (most recent call last):
+        ...
+        AssertionError: bad
+
+        >>> config.parse_foreign_es_index_name('azul_dev')
+        Traceback (most recent call last):
+        ...
+        AssertionError: ['azul', 'dev']
+
+        >>> config.parse_foreign_es_index_name('azul_aggregate_dev')
+        Traceback (most recent call last):
+        ...
+        AssertionError: ''
+        """
+        index_name = index_name.split('_')
+        assert len(index_name) > 2, index_name
+        prefix, *index_name = index_name
+        assert prefix == 'azul', prefix
+        *index_name, deployment_stage = index_name
+        if index_name[-1] == 'aggregate':
+            *index_name, _ = index_name
             aggregate = True
         else:
-            entity_type = index_name
             aggregate = False
+        entity_type = '_' . join(index_name)
+        assert entity_type, repr(entity_type)
         return prefix, deployment_stage, entity_type, aggregate
 
     @property
