@@ -80,6 +80,8 @@ class IntegrationTest(unittest.TestCase):
     def tearDown(self):
         self.set_lambda_test_mode(False)
         self.delete_bundles()
+        # Delete again to test duplicate deletion notifications
+        self.delete_bundles(duplicates=True)
         super().tearDown()
 
     def test_webservice_and_indexer(self):
@@ -95,7 +97,9 @@ class IntegrationTest(unittest.TestCase):
                                  prefix=self.bundle_uuid_prefix)
         logger.info('Creating indices and reindexing ...')
         self.test_notifications, self.expected_fqids = azul_client.test_notifications(self.test_name, self.test_uuid)
-        azul_client._reindex(self.test_notifications)
+        azul_client._index(self.test_notifications)
+        # Index some again to test that we can handle duplicate notifications. Note: choices are with replacement
+        azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications)//2))
         self.num_bundles = len(self.expected_fqids)
         self.check_bundles_are_indexed(self.test_name, 'files')
 
@@ -144,8 +148,13 @@ class IntegrationTest(unittest.TestCase):
         drs_endpoint = drs.drs_http_object_path(file_uuid)
         self.download_file_from_drs_response(self.check_endpoint_is_working(config.service_endpoint(), drs_endpoint))
 
-    def delete_bundles(self):
-        for n in self.test_notifications:
+    def delete_bundles(self, duplicates=False):
+        if duplicates:
+            # Note: random.choices is with replacement (so the same choice may be made several times
+            notifications = random.choices(self.test_notifications, k=len(self.test_notifications)//2)
+        else:
+            notifications = self.test_notifications
+        for n in notifications:
             try:
                 self.azul_client.delete_notification(n)
             except HTTPError as e:
