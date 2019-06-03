@@ -136,6 +136,7 @@ class Plugin(azul.plugin.Plugin):
                                                         "ef2a1708-773c-4077-ae87-14c9c16fbdfe",  # prod/Smart-seq2/2019-05-18T12:01:25Z
                                                         "6ccf02fe-7284-4e22-8f13-34cee293d003",  # prod/Smart-seq2/2019-05-19T12:01:25Z
                                                         "24dce12d-c6d5-402d-b864-dbd4ac5bdf29",  # prod/Smart-seq2/2019-05-20T12:00:55Z
+                                                        "4129d036-67b9-4981-9d6d-3aaa235236d5",  # Another old neuron_diff
                                                     ]
                                                 }
                                             },
