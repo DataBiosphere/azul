@@ -18,7 +18,10 @@ def main(argv):
     import argparse
     parser = argparse.ArgumentParser(description='Subscribe indexer lambda to bundle events from DSS')
     parser.add_argument('--unsubscribe', '-U', dest='subscribe', action='store_false', default=True)
-    parser.add_argument('--shared', '-s', dest='shared', action='store_true', default=False)
+    parser.add_argument('--shared', '-s', dest='shared', action='store_true', default=False,
+                        help='Fetch credentials to a shared Google service account from AWS Secrets Manager. This '
+                             'option allows you to not have Google Cloud access as long as someone else with access '
+                             'provisions the credentials for you.')
     options = parser.parse_args(argv)
     dss_client = config.dss_client()
 
