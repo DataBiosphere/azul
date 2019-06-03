@@ -35,6 +35,6 @@ check_trufflehog:
 	@hash trufflehog || ( echo 'Please install trufflehog using "pip install trufflehog"' ; false )
 
 trufflehog: check_trufflehog
-	trufflehog --regex --rules trufflehog-rules.json --entropy=False file:///$$azul_home
+	trufflehog --regex --rules .trufflehog.json --entropy=False file:///$$azul_home
 
 .PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test trufflehog check_trufflehog
