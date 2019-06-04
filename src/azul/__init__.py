@@ -71,8 +71,7 @@ class Config:
 
     @property
     def data_browser_domain(self):
-        # TODO: Work around for obtaining data-browser domain.
-        if self.deployment_stage not in ['dev', 'integration', 'staging', "prod"]:
+        if self.deployment_stage not in ('dev', 'integration', 'staging', 'prod'):
             return 'dev.data.humancellatlas.org'
         else:
             return f'{self.deployment_stage}.data.humancellatlas.org'
@@ -191,6 +190,16 @@ class Config:
 
     def api_lambda_domain(self, lambda_name: str) -> str:
         return self.subdomain(lambda_name) + "." + self.domain_name
+
+    @property
+    def drs_domain(self):
+        return os.environ['AZUL_DRS_DOMAIN_NAME']
+
+    def api_lambda_domain_aliases(self, lambda_name):
+        """
+        Additional alias domain names for the given API lambda
+        """
+        return [self.drs_domain] if lambda_name == 'service' and self.drs_domain else []
 
     def lambda_endpoint(self, lambda_name: str) -> str:
         return "https://" + self.api_lambda_domain(lambda_name)
@@ -470,6 +479,7 @@ class Config:
     def github_access_token(self) -> str:
         return os.environ['azul_github_access_token']
 
+    terms_aggregation_size = 99999
 
 config = Config()
 
