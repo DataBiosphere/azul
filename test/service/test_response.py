@@ -110,6 +110,7 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
+                            "assayType": [],
                         }
                     ],
                     "samples": [
@@ -199,6 +200,7 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
+                            "assayType": [],
                         }
                     ],
                     "samples": [
@@ -315,6 +317,7 @@ class TestResponse(WebServiceTestCase):
                                 "libraryConstructionApproach": ["Smart-seq2"],
                                 "pairedEnd": [True],
                                 "workflow": [],
+                                "assayType": [],
                             }
                         ],
                         "samples": [
@@ -414,6 +417,7 @@ class TestResponse(WebServiceTestCase):
                                 "libraryConstructionApproach": ["Smart-seq2"],
                                 "pairedEnd": [True],
                                 "workflow": [],
+                                "assayType": [],
                             }
                         ],
                         "samples": [
@@ -562,16 +566,6 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticsearchResultsEqual(facets, expected_output)
 
-    def test_summary_endpoint(self):
-        url = self.base_url + "/repository/summary"
-        response = requests.get(url)
-        response.raise_for_status()
-        summary_object = response.json()
-        self.assertGreaterEqual(summary_object['fileCount'], 1)
-        self.assertGreaterEqual(summary_object['organCount'], 1)
-        self.assertGreaterEqual(len(summary_object['fileTypeSummaries']), 1)
-        self.assertGreaterEqual(summary_object['fileTypeSummaries'][0]['totalSize'], 1)
-        self.assertIsNotNone(summary_object['organSummaries'])
 
     def test_default_sorting_parameter(self):
         # FIXME: local import for now to delay side effects of the import like logging being configured
@@ -793,6 +787,7 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
+                            "assayType": [],
                         }
                     ],
                     "samples": [
@@ -921,6 +916,7 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "pairedEnd": [True],
                             "workflow": [],
+                            "assayType": [],
                         }
                     ],
                     "samples": [
@@ -1109,6 +1105,7 @@ class TestResponse(WebServiceTestCase):
                             "libraryConstructionApproach": ["10X v2 sequencing"],
                             "pairedEnd": [False],
                             "workflow": ['cellranger_v1.0.2'],
+                            "assayType": [],
                         }
                     ],
                     "samples": [
@@ -1251,7 +1248,45 @@ class TestResponseSummary(WebServiceTestCase):
     maxDiff = None
     bundles = WebServiceTestCase.bundles + [
         ('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
+        ('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z')  # an imaging bundle
     ]
+
+    def test_summary_response(self):
+        """
+        Verify the /repository/summary response with 2 sequencing bundles and 1 imaging bundle that has no cell suspension
+        - bundle=aaa96233…, fileCount=2, donorCount=1, totalCellCount=1.0, organType=pancreas
+        - bundle=dcccb551…, fileCount=19, donorCount=4, totalCellCount=6210.0, organType=Brain
+        - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain
+        """
+        url = self.base_url + "/repository/summary"
+        response = requests.get(url)
+        response.raise_for_status()
+        summary_object = response.json()
+        self.assertEqual(summary_object['fileCount'], 2 + 19 + 227)
+        self.assertEqual(summary_object['donorCount'], 1 + 4 + 1)
+        self.assertEqual(summary_object['totalCellCount'], 1.0 + 6210.0 + 0)
+        file_counts_expected = {
+            'tiff': 221,
+            'json': 6,
+            'fastq.gz': 5,
+            'tsv': 4,
+            'h5': 3,
+            'pdf': 3,
+            'mtx': 2,
+            'bai': 1,
+            'bam': 1,
+            'csv': 1,
+            'unknown': 1
+        }
+        file_counts_actual = {summary['fileType']: summary['count'] for summary in summary_object['fileTypeSummaries']}
+        self.assertEqual(file_counts_actual, file_counts_expected)
+        self.assertEqual(set(summary_object['organTypes']), {'Brain', 'brain', 'pancreas'})
+        self.assertEqual(summary_object['cellCountSummaries'], [
+            # 'brain' from the imaging bundle is not represented in cellCountSummaries as these values are tallied
+            # from the cell suspensions and the imaging bundle does not have any cell suspensions
+            {'organType': ['Brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0},
+            {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0},
+        ])
 
     def test_project_summary_response(self):
         """
@@ -1266,7 +1301,7 @@ class TestResponseSummary(WebServiceTestCase):
         response = requests.get(url)
         response.raise_for_status()
         response_json = response.json()
-        self.assertEqual(len(response_json['hits']), 2)
+        self.assertEqual(len(response_json['hits']), 3)
         for hit in response_json['hits']:
             summary = hit['projectSummary']
             if one(hit['projects'])['projectTitle'] == 'Assessing the relevance of organoids to model inter-individual variation':
@@ -1275,16 +1310,27 @@ class TestResponseSummary(WebServiceTestCase):
                 self.assertEqual(summary['genusSpecies'], ['Homo sapiens'])
                 self.assertEqual(summary['libraryConstructionApproach'], ["Chromium 3' Single Cell v2"])
                 self.assertEqual(summary['disease'], ['normal'])
-                organ_summaries = {'organType': ['Brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0}
-                self.assertEqual(one(summary['organSummaries']), organ_summaries)
+                self.assertEqual(summary['organTypes'], ['Brain'])
+                count_summary = {'organType': ['Brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0}
+                self.assertEqual(one(summary['cellCountSummaries']), count_summary)
             elif one(hit['projects'])['projectTitle'] == 'Single cell transcriptome patterns.':
                 self.assertEqual(summary['donorCount'], 1)
                 self.assertEqual(summary['totalCellCount'], 1.0)
                 self.assertEqual(summary['genusSpecies'], ['Australopithecus'])
                 self.assertEqual(summary['libraryConstructionApproach'], ['Smart-seq2'])
                 self.assertEqual(summary['disease'], ['normal'])
-                organ_summaries = {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0}
-                self.assertEqual(one(summary['organSummaries']), organ_summaries)
+                self.assertEqual(summary['organTypes'], ['pancreas'])
+                count_summary = {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0}
+                self.assertEqual(one(summary['cellCountSummaries']), count_summary)
+            elif one(hit['projects'])['projectTitle'] == '1 FOV BaristaSeq mouse SpaceTx dataset':
+                self.assertEqual(summary['donorCount'], 1)
+                self.assertEqual(summary['totalCellCount'], 0.0)
+                self.assertEqual(summary['genusSpecies'], ['Mus musculus'])
+                self.assertEqual(summary['libraryConstructionApproach'], [])
+                self.assertEqual(summary['disease'], [])
+                self.assertEqual(summary['organTypes'], ['brain'])
+                self.assertEqual(summary['cellCountSummaries'], [])  # bundle has no cell suspension
+                self.assertEqual(one(hit['protocols'])['assayType'], ['in situ sequencing'])
             else:
                 assert False
 
