@@ -85,17 +85,17 @@ class Health:
         status = {'up': True}
 
         for endpoint in self.endpoints:
-            response = requests.head(f'{config.service_endpoint()}{endpoint}')
+            response = requests.head(config.service_endpoint() + endpoint)
             try:
                 response.raise_for_status()
             except requests.exceptions.HTTPError as e:
-                status[endpoint] = {
+                status[config.service_endpoint() + endpoint] = {
                     'up': False,
                     'error': str(e)
                 }
                 status['up'] = False
             else:
-                status[endpoint] = {
+                status[config.service_endpoint() + endpoint] = {
                     'up': True
                 }
         return status

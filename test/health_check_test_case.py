@@ -189,7 +189,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             'api_endpoints': {
                 'up': all(up for endpoint, up in endpoint_states.items()),
                 **({
-                    endpoint: {
+                    config.service_endpoint() + endpoint: {
                         'up': up
                     } if up else {
                         'up': up,
