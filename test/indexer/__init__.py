@@ -12,6 +12,7 @@ from azul.plugin import Plugin
 from azul.project.hca import Indexer
 from azul.types import JSON
 from es_test_case import ElasticsearchTestCase
+from lambdas.indexer.app import _create_index_writer
 
 
 class IndexerTestCase(ElasticsearchTestCase):
@@ -118,7 +119,9 @@ class IndexerTestCase(ElasticsearchTestCase):
 
     @classmethod
     def _create_index_writer(cls) -> IndexWriter:
+        writer = _create_index_writer()
         # With a single client thread, refresh=True is faster than refresh="wait_for". The latter would limit the
         # request rate to 1/refresh_interval. That's only one request per second with refresh_interval being 1s.
-        return IndexWriter(refresh=True, conflict_retry_limit=2, error_retry_limit=0)
+        writer.refresh = True
+        return writer
 
