@@ -16,6 +16,14 @@ class Indexer(BaseIndexer):
         return {
             "dynamic_templates": [
                 {
+                    "donor_age_range": {
+                        "path_match": "contents.donors.organism_age_range_in_seconds",
+                        "mapping": {
+                            "type": "double_range"
+                        }
+                    }
+                },
+                {
                     "exclude_metadata_field": {
                         "path_match": "contents.metadata.*",
                         "mapping": {

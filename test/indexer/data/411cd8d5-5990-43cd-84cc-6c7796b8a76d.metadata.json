@@ -1,0 +1,2198 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI_organoids_pooled_2",
+            "biomaterial_name": "pooled cells from 4 dissociated organoids",
+            "biomaterial_description": "pooled cells from 4 dissociated organoids (wibj_2, kucg_2, hoik_1, sojd_3)",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "selected_cell_type": [
+            {
+                "text": "neural cell",
+                "ontology": "CL:0002319"
+            }
+        ],
+        "total_estimated_cells": 6210,
+        "provenance": {
+            "document_id": "803fd65a-c578-4c4f-a39e-bedec24e2578",
+            "submission_date": "2018-10-11T21:18:02.832Z",
+            "update_date": "2018-10-11T21:18:13.146Z"
+        }
+    },
+    "organoid_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.3.8/organoid",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Org_HPSI0214i-wibj_2_2",
+            "biomaterial_name": "human cerebral organoid wibj_2",
+            "biomaterial_description": "human cerebral organoid wibj_2, 62d",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "model_for_organ": {
+            "text": "Brain",
+            "ontology": "UBERON:0000955"
+        },
+        "organoid_age": 62,
+        "organoid_age_unit": {
+            "text": "day",
+            "ontology": "UO:0000033"
+        },
+        "organoid_type": "stem cell-derived",
+        "embedded_in_matrigel": true,
+        "organoid_growth_environment": "suspension",
+        "provenance": {
+            "document_id": "2d8282f0-6cbb-4d5a-822c-4b01718b4d0d",
+            "submission_date": "2018-10-11T21:18:02.654Z",
+            "update_date": "2018-10-11T21:18:12.864Z"
+        }
+    },
+    "organoid_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.3.8/organoid",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Org_HPSI0214i-kucg_2_2",
+            "biomaterial_name": "human cerebral organoid kucg_2",
+            "biomaterial_description": "human cerebral organoid kucg_2, 62d",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "model_for_organ": {
+            "text": "Brain",
+            "ontology": "UBERON:0000955"
+        },
+        "organoid_age": 62,
+        "organoid_age_unit": {
+            "text": "day",
+            "ontology": "UO:0000033"
+        },
+        "organoid_type": "stem cell-derived",
+        "embedded_in_matrigel": true,
+        "organoid_growth_environment": "suspension",
+        "provenance": {
+            "document_id": "b7214641-1ac5-4f60-b795-cb33a7c25434",
+            "submission_date": "2018-10-11T21:18:02.696Z",
+            "update_date": "2018-10-11T21:18:12.763Z"
+        }
+    },
+    "organoid_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.3.8/organoid",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Org_HPSI0314i-hoik_1_2",
+            "biomaterial_name": "human cerebral organoid hoik_1",
+            "biomaterial_description": "human cerebral organoid hoik_1, 62d",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "model_for_organ": {
+            "text": "Brain",
+            "ontology": "UBERON:0000955"
+        },
+        "organoid_age": 62,
+        "organoid_age_unit": {
+            "text": "day",
+            "ontology": "UO:0000033"
+        },
+        "organoid_type": "stem cell-derived",
+        "embedded_in_matrigel": true,
+        "organoid_growth_environment": "suspension",
+        "provenance": {
+            "document_id": "308eea51-d14b-4036-8cd1-cfd81d7532c3",
+            "submission_date": "2018-10-11T21:18:02.732Z",
+            "update_date": "2018-10-11T21:18:06.730Z"
+        }
+    },
+    "organoid_3.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.3.8/organoid",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Org_HPSI0314i-sojd_3_2",
+            "biomaterial_name": "human cerebral organoid sojd_3",
+            "biomaterial_description": "human cerebral organoid sojd_3, 62d",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "model_for_organ": {
+            "text": "Brain",
+            "ontology": "UBERON:0000955"
+        },
+        "organoid_age": 62,
+        "organoid_age_unit": {
+            "text": "day",
+            "ontology": "UO:0000033"
+        },
+        "organoid_type": "stem cell-derived",
+        "embedded_in_matrigel": true,
+        "organoid_growth_environment": "suspension",
+        "provenance": {
+            "document_id": "73f10dad-afc5-4d1d-a71c-4a8b6fff9172",
+            "submission_date": "2018-10-11T21:18:02.785Z",
+            "update_date": "2018-10-11T21:18:06.725Z"
+        }
+    },
+    "cell_line_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0214i-wibj_2",
+            "biomaterial_name": "iPS cell line wibj_2",
+            "biomaterial_description": "iPS cell line wibj_2",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosd_biomaterial": "SAMEA2627567"
+        },
+        "disease": {
+            "text": "normal",
+            "ontology": "PATO:0000461"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "cell_type": {
+            "text": "pluripotent stem cell",
+            "ontology": "CL:0002248"
+        },
+        "catalog_number": "77650057",
+        "catalog_url": "http://www.hipsci.org/lines/#/lines/HPSI0214i-wibj_2",
+        "cell_line_type": "induced pluripotent",
+        "cell_morphology": {
+            "cell_viability_method": "Growth to confluence post-thaw"
+        },
+        "growth_conditions": {
+            "passage_number": 32,
+            "growth_medium": "mTeSR1",
+            "feeder_layer_type": "feeder-free",
+            "drug_treatment": "Cells were cultured in presence of Penicillin and Streptomycin",
+            "mycoplasma_testing_method": "PCR",
+            "mycoplasma_testing_results": "pass"
+        },
+        "date_established": "2014-10-24T00:00:00Z",
+        "provenance": {
+            "document_id": "c532cca7-67c6-4617-ac47-5b91652621a5",
+            "submission_date": "2018-10-11T21:18:02.561Z",
+            "update_date": "2018-10-11T21:18:06.721Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0214i-wibj_skin",
+            "biomaterial_name": "Skin cells from HPSI0214i-wibj_skin",
+            "biomaterial_description": "Skin cells from HPSI0214i-wibj_skin",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "organ": {
+            "text": "skin of body",
+            "ontology": "UBERON:0002097"
+        },
+        "organ_part": {
+            "text": "skin epidermis",
+            "ontology": "UBERON:0001003"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "provenance": {
+            "document_id": "c8e14a8e-81f9-4109-bb27-4bb3029240c1",
+            "submission_date": "2018-10-11T21:18:02.500Z",
+            "update_date": "2018-10-11T21:18:06.720Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0214i-wibj",
+            "biomaterial_name": "donor HPSI0214i-wibj",
+            "biomaterial_description": "donor HPSI0214i-wibj_2, iPSC, cell line, skin",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosd_biomaterial": "SAMEA2398911"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "sex": "female",
+        "organism_age": "55-59",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036"
+        },
+        "human_specific": {
+            "ethnicity": [
+                {
+                    "text": "European, White, British",
+                    "ontology": "hancestro:0462"
+                }
+            ]
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "is_living": "yes",
+        "provenance": {
+            "document_id": "d4c29b1a-f23c-4511-a2ae-097772d90254",
+            "submission_date": "2018-10-11T21:18:02.456Z",
+            "update_date": "2018-10-11T21:18:06.768Z"
+        }
+    },
+    "cell_line_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0214i-kucg_2",
+            "biomaterial_name": "iPS cell line kucg_2",
+            "biomaterial_description": "iPS cell line kucg_2",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosd_biomaterial": "SAMEA2645814"
+        },
+        "disease": {
+            "text": "normal",
+            "ontology": "PATO:0000461"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "cell_type": {
+            "text": "pluripotent stem cell",
+            "ontology": "CL:0002248"
+        },
+        "catalog_number": "77650065",
+        "catalog_url": "http://www.hipsci.org/lines/#/lines/HPSI0214i-kucg_2",
+        "cell_line_type": "induced pluripotent",
+        "cell_morphology": {
+            "cell_viability_method": "Growth to confluence post-thaw"
+        },
+        "growth_conditions": {
+            "passage_number": 36,
+            "growth_medium": "mTeSR1",
+            "feeder_layer_type": "feeder-free",
+            "drug_treatment": "Cells were cultured in presence of Penicillin and Streptomycin",
+            "mycoplasma_testing_method": "PCR",
+            "mycoplasma_testing_results": "pass"
+        },
+        "date_established": "2014-11-03T00:00:00Z",
+        "provenance": {
+            "document_id": "e924c114-e3cd-4060-9c8e-3d980ec7fcbe",
+            "submission_date": "2018-10-11T21:18:02.573Z",
+            "update_date": "2018-10-11T21:18:06.679Z"
+        }
+    },
+    "specimen_from_organism_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0214i-kucg_skin",
+            "biomaterial_name": "Skin cells from HPSI0214i-kucg_skin",
+            "biomaterial_description": "Skin cells from HPSI0214i-kucg_skin",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "organ": {
+            "text": "skin of body",
+            "ontology": "UBERON:0002097"
+        },
+        "organ_part": {
+            "text": "skin epidermis",
+            "ontology": "UBERON:0001003"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "provenance": {
+            "document_id": "5bd6106c-0158-4c2c-8c60-32019c599c83",
+            "submission_date": "2018-10-11T21:18:02.525Z",
+            "update_date": "2018-10-11T21:18:06.627Z"
+        }
+    },
+    "donor_organism_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0214i-kucg",
+            "biomaterial_name": "donor HPSI0214i-kucg",
+            "biomaterial_description": "donor HPSI0214i-kucg_2, iPSC, cell line, skin",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosd_biomaterial": "SAMEA2397923"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "sex": "male",
+        "organism_age": "40-44",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036"
+        },
+        "human_specific": {
+            "ethnicity": [
+                {
+                    "text": "European, White, British",
+                    "ontology": "hancestro:0462"
+                }
+            ]
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "is_living": "yes",
+        "provenance": {
+            "document_id": "ef7e6ac7-172a-4b24-9620-fc909a5e9c6c",
+            "submission_date": "2018-10-11T21:18:02.467Z",
+            "update_date": "2018-10-11T21:18:06.720Z"
+        }
+    },
+    "cell_line_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0314i-hoik_1",
+            "biomaterial_name": "iPS cell line hoik_1",
+            "biomaterial_description": "iPS cell line hoik_1",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosd_biomaterial": "SAMEA2698315"
+        },
+        "disease": {
+            "text": "normal",
+            "ontology": "PATO:0000461"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "cell_type": {
+            "text": "pluripotent stem cell",
+            "ontology": "CL:0002248"
+        },
+        "catalog_number": "77650129",
+        "catalog_url": "http://www.hipsci.org/lines/#/lines/HPSI0314i-hoik_1",
+        "cell_line_type": "induced pluripotent",
+        "cell_morphology": {
+            "cell_viability_method": "Growth to confluence post-thaw"
+        },
+        "growth_conditions": {
+            "passage_number": 28,
+            "growth_medium": "mTeSR1",
+            "feeder_layer_type": "feeder-free",
+            "drug_treatment": "Cells were cultured in presence of Penicillin and Streptomycin",
+            "mycoplasma_testing_method": "PCR",
+            "mycoplasma_testing_results": "pass"
+        },
+        "date_established": "2015-02-02T00:00:00Z",
+        "provenance": {
+            "document_id": "a3651f83-dee6-49b2-ba4e-0ce20f02467d",
+            "submission_date": "2018-10-11T21:18:02.597Z",
+            "update_date": "2018-10-11T21:18:06.795Z"
+        }
+    },
+    "specimen_from_organism_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0314i-hoik_skin",
+            "biomaterial_name": "Skin cells from HPSI0314i-hoik_skin",
+            "biomaterial_description": "Skin cells from HPSI0314i-hoik_skin",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "organ": {
+            "text": "skin of body",
+            "ontology": "UBERON:0002097"
+        },
+        "organ_part": {
+            "text": "skin epidermis",
+            "ontology": "UBERON:0001003"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "provenance": {
+            "document_id": "8f328973-9bc0-46b9-8a1f-38893e77b3b5",
+            "submission_date": "2018-10-11T21:18:02.542Z",
+            "update_date": "2018-10-11T21:18:06.643Z"
+        }
+    },
+    "donor_organism_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0314i-hoik",
+            "biomaterial_name": "donor HPSI0314i-hoik",
+            "biomaterial_description": "donor HPSI0314i-hoik_1, iPSC, cell line, skin",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosd_biomaterial": "SAMEA2399961"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "sex": "female",
+        "organism_age": "40-44",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036"
+        },
+        "human_specific": {
+            "ethnicity": [
+                {
+                    "text": "European, White, British",
+                    "ontology": "hancestro:0462"
+                }
+            ]
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "is_living": "yes",
+        "provenance": {
+            "document_id": "931528fa-820b-49ca-af1e-ae9a2c0ef551",
+            "submission_date": "2018-10-11T21:18:02.477Z",
+            "update_date": "2018-10-11T21:18:06.762Z"
+        }
+    },
+    "cell_line_3.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0314i-sojd_3",
+            "biomaterial_name": "iPS cell line sojd_3",
+            "biomaterial_description": "iPS cell line sojd_3",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosd_biomaterial": "SAMEA2627569"
+        },
+        "disease": {
+            "text": "normal",
+            "ontology": "PATO:0000461"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "cell_type": {
+            "text": "pluripotent stem cell",
+            "ontology": "CL:0002248"
+        },
+        "catalog_number": "77650126",
+        "catalog_url": "http://www.hipsci.org/lines/#/lines/HPSI0314i-sojd_3",
+        "cell_line_type": "induced pluripotent",
+        "cell_morphology": {
+            "cell_viability_method": "Growth to confluence post-thaw"
+        },
+        "growth_conditions": {
+            "passage_number": 29,
+            "growth_medium": "mTeSR1",
+            "feeder_layer_type": "feeder-free",
+            "drug_treatment": "Cells were cultured in presence of Penicillin and Streptomycin",
+            "mycoplasma_testing_method": "PCR",
+            "mycoplasma_testing_results": "pass"
+        },
+        "date_established": "2015-01-09T00:00:00Z",
+        "provenance": {
+            "document_id": "6a16de30-176d-4488-81de-9337a1a6d8c5",
+            "submission_date": "2018-10-11T21:18:02.618Z",
+            "update_date": "2018-10-11T21:18:06.634Z"
+        }
+    },
+    "specimen_from_organism_3.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0314i-sojd_skin",
+            "biomaterial_name": "Skin cells from HPSI0314i-sojd_skin",
+            "biomaterial_description": "Skin cells from HPSI0314i-sojd_skin",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "organ": {
+            "text": "skin of body",
+            "ontology": "UBERON:0002097"
+        },
+        "organ_part": {
+            "text": "skin epidermis",
+            "ontology": "UBERON:0001003"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "provenance": {
+            "document_id": "82368936-7b99-4864-9f49-b8fee3906d47",
+            "submission_date": "2018-10-11T21:18:02.552Z",
+            "update_date": "2018-10-11T21:18:06.743Z"
+        }
+    },
+    "donor_organism_3.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "HPSI0314i-sojd",
+            "biomaterial_name": "donor HPSI0314i-sojd",
+            "biomaterial_description": "donor HPSI0314i-sojd_3, iPSC, cell line, skin",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosd_biomaterial": "SAMEA2418245"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606"
+            }
+        ],
+        "sex": "female",
+        "organism_age": "40-44",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036"
+        },
+        "human_specific": {
+            "ethnicity": [
+                {
+                    "text": "White - other, Ad Mixed American",
+                    "ontology": "hancestro:0463"
+                }
+            ]
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461"
+            }
+        ],
+        "is_living": "yes",
+        "provenance": {
+            "document_id": "96757312-0221-447a-84f1-7a737b5afd01",
+            "submission_date": "2018-10-11T21:18:02.486Z",
+            "update_date": "2018-10-11T21:18:06.767Z"
+        }
+    },
+    "analysis_file_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "barcodes.tsv",
+            "file_format": "tsv"
+        },
+        "provenance": {
+            "document_id": "cf93f747-1392-4670-8eb3-3ac60a96855e",
+            "submission_date": "2018-10-18T20:32:25.801Z",
+            "update_date": "2018-10-18T20:39:13.335Z"
+        }
+    },
+    "analysis_file_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "genes.tsv",
+            "file_format": "tsv"
+        },
+        "provenance": {
+            "document_id": "477c0b3e-4a06-4214-8f27-58199ba63528",
+            "submission_date": "2018-10-18T20:32:25.877Z",
+            "update_date": "2018-10-18T20:39:16.337Z"
+        }
+    },
+    "analysis_file_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "matrix.mtx",
+            "file_format": "mtx"
+        },
+        "provenance": {
+            "document_id": "ad6d5170-d74b-408c-af6b-25a14315c9da",
+            "submission_date": "2018-10-18T20:32:25.951Z",
+            "update_date": "2018-10-18T20:39:25.337Z"
+        }
+    },
+    "analysis_file_3.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "filtered_gene_bc_matrices_h5.h5",
+            "file_format": "h5"
+        },
+        "provenance": {
+            "document_id": "50be9b67-fae5-4472-9719-478dd1303d6e",
+            "submission_date": "2018-10-18T20:32:26.026Z",
+            "update_date": "2018-10-18T20:39:22.340Z"
+        }
+    },
+    "analysis_file_4.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "metrics_summary.csv",
+            "file_format": "csv"
+        },
+        "provenance": {
+            "document_id": "fd16b62e-e540-4f03-8ba0-07d0c204e3c8",
+            "submission_date": "2018-10-18T20:32:26.097Z",
+            "update_date": "2018-10-18T20:37:28.333Z"
+        }
+    },
+    "analysis_file_5.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "molecule_info.h5",
+            "file_format": "h5"
+        },
+        "provenance": {
+            "document_id": "3c41b5b6-f480-4d47-8c5e-155e7c1adf54",
+            "submission_date": "2018-10-18T20:32:26.174Z",
+            "update_date": "2018-10-18T20:40:01.344Z"
+        }
+    },
+    "analysis_file_6.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "possorted_genome_bam.bam",
+            "file_format": "bam"
+        },
+        "provenance": {
+            "document_id": "022a217c-384d-4d9d-8631-6397b6838e3a",
+            "submission_date": "2018-10-18T20:32:26.243Z",
+            "update_date": "2018-10-18T20:45:01.366Z"
+        }
+    },
+    "analysis_file_7.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "possorted_genome_bam.bam.bai",
+            "file_format": "bai"
+        },
+        "provenance": {
+            "document_id": "9b778e46-0c51-4260-8e3f-000ecc145f0a",
+            "submission_date": "2018-10-18T20:32:26.313Z",
+            "update_date": "2018-10-18T20:39:10.339Z"
+        }
+    },
+    "analysis_file_8.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "raw_gene_bc_matrices_h5.h5",
+            "file_format": "h5"
+        },
+        "provenance": {
+            "document_id": "af025a74-53f1-4972-b50d-53095b5ffac2",
+            "submission_date": "2018-10-18T20:32:26.383Z",
+            "update_date": "2018-10-18T20:39:40.335Z"
+        }
+    },
+    "analysis_file_9.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "web_summary.html",
+            "file_format": "unknown"
+        },
+        "provenance": {
+            "document_id": "e8395271-7c8e-4ec4-9598-495df43fe5fd",
+            "submission_date": "2018-10-18T20:32:26.453Z",
+            "update_date": "2018-10-18T20:39:55.336Z"
+        }
+    },
+    "analysis_file_10.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "raw_barcodes.tsv",
+            "file_format": "tsv"
+        },
+        "provenance": {
+            "document_id": "211a8fbf-b190-4576-ac2f-2b1a91743abb",
+            "submission_date": "2018-10-18T20:32:26.528Z",
+            "update_date": "2018-10-18T20:39:58.363Z"
+        }
+    },
+    "analysis_file_11.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "raw_genes.tsv",
+            "file_format": "tsv"
+        },
+        "provenance": {
+            "document_id": "17222e3a-5757-45e9-9dfe-c4b6aa10f28a",
+            "submission_date": "2018-10-18T20:32:26.603Z",
+            "update_date": "2018-10-18T20:39:58.363Z"
+        }
+    },
+    "analysis_file_12.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "raw_matrix.mtx",
+            "file_format": "mtx"
+        },
+        "provenance": {
+            "document_id": "2fb8a975-b50c-4528-b850-838a19e19a1e",
+            "submission_date": "2018-10-18T20:32:26.681Z",
+            "update_date": "2018-10-18T20:40:13.334Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "GAC027_hOrg_HipSci_2_S6_L008_I1_001.fastq.gz",
+            "file_format": "fastq.gz",
+            "checksum": "892321d611c15d8b6543aa8e70b287cb"
+        },
+        "read_index": "index1",
+        "lane_index": 8,
+        "read_length": 8,
+        "provenance": {
+            "document_id": "213381ea-6161-4159-853e-cfcae4968001",
+            "submission_date": "2018-10-11T21:18:01.964Z",
+            "update_date": "2018-10-18T20:32:16.894Z"
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "GAC027_hOrg_HipSci_2_S6_L008_R1_001.fastq.gz",
+            "file_format": "fastq.gz",
+            "checksum": "1c171b7e43b5048693839e26532c612c"
+        },
+        "read_index": "read1",
+        "lane_index": 8,
+        "read_length": 26,
+        "provenance": {
+            "document_id": "9ee3da9e-83ca-4c02-84d6-ac09702b12ba",
+            "submission_date": "2018-10-11T21:18:01.979Z",
+            "update_date": "2018-10-18T20:32:18.864Z"
+        }
+    },
+    "sequence_file_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "GAC027_hOrg_HipSci_2_S6_L008_R2_001.fastq.gz",
+            "file_format": "fastq.gz",
+            "checksum": "dc13142325a6033063b9eb0ddbca1454"
+        },
+        "read_index": "read2",
+        "lane_index": 8,
+        "read_length": 100,
+        "provenance": {
+            "document_id": "330a08ca-ae8e-4f1f-aa03-970abcd27f39",
+            "submission_date": "2018-10-11T21:18:01.990Z",
+            "update_date": "2018-10-18T20:32:20.845Z"
+        }
+    },
+    "supplementary_file_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "hipsci-ipsc-pipeline.pdf",
+            "file_format": "pdf"
+        },
+        "file_description": "iPSC induction by Sendai virus protocol.",
+        "provenance": {
+            "document_id": "281c2d08-9e43-47f9-b937-e733e3ba3322",
+            "submission_date": "2018-10-11T21:18:01.623Z",
+            "update_date": "2018-10-18T20:40:54.699Z"
+        }
+    },
+    "supplementary_file_1.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Dissociation_protocol_130-092-628.pdf",
+            "file_format": "pdf"
+        },
+        "file_description": "Cerebral organoid dissociation protocol.",
+        "provenance": {
+            "document_id": "ae1d6fa7-964f-465a-8c78-565206827434",
+            "submission_date": "2018-10-11T21:18:01.642Z",
+            "update_date": "2018-10-18T20:40:55.940Z"
+        }
+    },
+    "supplementary_file_2.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf",
+            "file_format": "pdf"
+        },
+        "file_description": "10x Chromium single cell 3' v2 library preparation.",
+        "provenance": {
+            "document_id": "f518a8cc-e1d9-4fc9-bc32-491dd8543902",
+            "submission_date": "2018-10-11T21:18:01.654Z",
+            "update_date": "2018-10-18T20:40:57.146Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/project/9.0.3/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "HPSI human cerebral organoids",
+            "project_title": "Assessing the relevance of organoids to model inter-individual variation",
+            "project_description": "The purpose of this project is to assess the relevance of pluripotent stem cell-derived cerebral and liver organoids to recapitulate the variation in cell-type specific gene expression programs between individuals. Towards this aim, we will generate reference atlases of the developing cortex and liver from multiple individuals, derive iPSC lines from these same individuals, and determine if inter-individual gene expression variation is recapitulated in cerebral and liver organoids from the same individual from which we have reference maps. In parallel we will assess the genetic contribution to variablity between organoids from different iPSCs of multiple human individuals that are available in existing iPSC resources (e.g. HipSci)."
+        },
+        "contributors": [
+            {
+                "contact_name": "Barbara,,Treutlein",
+                "email": "barbara_treutlein@eva.mpg.de",
+                "institution": "Max Planck Institute for Evolutionary Anthropology",
+                "address": "Deutscher Pl. 6, 04103 Leipzig",
+                "country": "Germany",
+                "project_role": "principal investigator",
+                "orcid_id": "0000-0002-3299-5597",
+                "corresponding_contributor": true
+            },
+            {
+                "contact_name": "J,Gray,Camp",
+                "email": "gray_camp@eva.mpg.de",
+                "institution": "Max Planck Institute for Evolutionary Anthropology",
+                "address": "Deutscher Pl. 6, 04103 Leipzig",
+                "country": "Germany",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Zhisong,,He",
+                "email": "zhisong_he@eva.mpg.de",
+                "institution": "Max Planck Institute for Evolutionary Anthropology",
+                "address": "Deutscher Pl. 6, 04103 Leipzig",
+                "country": "Germany",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Sabina,,Kanton",
+                "email": "sabina_kanton@eva.mpg.de",
+                "institution": "Max Planck Institute for Evolutionary Anthropology",
+                "address": "Deutscher Pl. 6, 04103 Leipzig",
+                "country": "Germany",
+                "corresponding_contributor": false
+            },
+            {
+                "contact_name": "Mallory,Ann,Freeberg",
+                "email": "mfreeberg@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Cambridge UK",
+                "country": "UK",
+                "project_role": "Human Cell Atlas wrangler",
+                "orcid_id": "0000-0003-2949-3921",
+                "corresponding_contributor": false
+            }
+        ],
+        "provenance": {
+            "document_id": "2c4724a4-7252-409e-b008-ff5c127c7e89",
+            "submission_date": "2018-10-11T21:18:01.605Z",
+            "update_date": "2018-10-11T21:18:06.651Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "10x_3'_library_preparation",
+            "protocol_name": "10x 3' single cell library preparation",
+            "protocol_description": "10x Chromium single cell 3' v2 library preparation",
+            "document": "CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf"
+        },
+        "nucleic_acid_source": "single cell",
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869"
+        },
+        "library_construction_approach": {
+            "text": "Chromium 3' Single Cell v2",
+            "ontology": "EFO:0009310"
+        },
+        "end_bias": "3 prime tag",
+        "primer": "poly-dT",
+        "strand": "unstranded",
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16
+        },
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 15,
+            "barcode_length": 10
+        },
+        "library_construction_kit": {
+            "retail_name": "10X Chromium Single Cell 3' Solution v2 Chemistry",
+            "manufacturer": "10X Genomics"
+        },
+        "provenance": {
+            "document_id": "92277226-bf78-4df9-a594-5190a8790a14",
+            "submission_date": "2018-10-11T21:18:02.895Z",
+            "update_date": "2018-10-11T21:18:12.704Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "10x_scRNASeq",
+            "protocol_name": "10x single cell RNA Sequencing",
+            "protocol_description": "10x RNA sequencing",
+            "document": "CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2500",
+            "ontology": "EFO:0008565"
+        },
+        "paired_end": true,
+        "sequencing_approach": {
+            "text": "tag based single cell RNA sequencing",
+            "ontology": "EFO:0008440"
+        },
+        "provenance": {
+            "document_id": "102cdbf3-b0e5-4dd5-9168-51150a9ebb6b",
+            "submission_date": "2018-10-11T21:18:02.905Z",
+            "update_date": "2018-10-11T21:18:12.667Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Cerebral_organoid_dissociation",
+            "protocol_name": "cerebral organoid dissociation",
+            "protocol_description": "cerebral organoid dissociation",
+            "document": "Dissociation_protocol_130-092-628.pdf"
+        },
+        "dissociation_method": {
+            "text": "Papain-based enzymatic dissociation",
+            "ontology": "EFO:0009128"
+        },
+        "protocol_reagents": [
+            {
+                "retail_name": "Neural Tissue Dissociation Kit",
+                "catalog_number": "130-092-628",
+                "manufacturer": "Miltenyi Biotec"
+            }
+        ],
+        "provenance": {
+            "document_id": "755762e0-7aff-48ed-a7d4-d3ea4005758f",
+            "submission_date": "2018-10-11T21:18:02.886Z",
+            "update_date": "2018-10-11T21:18:12.751Z"
+        }
+    },
+    "differentiation_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/1.3.0/differentiation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Org_Lanc_2014",
+            "protocol_name": "Differentiation of cerebral organoids",
+            "protocol_description": "Generation of cerebral organoids from human pluripotent stem cells",
+            "publication_doi": "10.1038/nprot.2014.158"
+        },
+        "differentiation_method": "embryoid bodies",
+        "target_pathway": "RHO, ROCK",
+        "validation_method": "immunostaining",
+        "reagents": [
+            {
+                "retail_name": "ROCK inhibitor Y27632"
+            }
+        ],
+        "small_molecules": "Vitamin A (retinoic acid)",
+        "provenance": {
+            "document_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f",
+            "submission_date": "2018-10-11T21:18:02.876Z",
+            "update_date": "2018-10-11T21:18:12.764Z"
+        }
+    },
+    "ipsc_induction_protocol_0.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.0.1/ipsc_induction_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "ipsc_induction_protocol_1",
+            "protocol_name": "iPSC induction by Sendai virus",
+            "protocol_description": "Fibroblasts are thawed, transduced using Cytotune 2.0 Sendai virus (containing the Yamanaka genes encoding transcription factors Oct4, Sox2, cMyc and Klf4) and maintained until iPSC colony formation. Colonies are then picked and cultured to obtain a sizable yield of IPS cells, which are banked to a commercial grade standard. These banks then undergo quality checks to ensure the banks pass resuscitation tests and are free of mycoplasma.",
+            "document": "hipsci-ipsc-pipeline.pdf"
+        },
+        "ipsc_induction_method": "sendai virus",
+        "pluripotency_vector_removed": "yes",
+        "ipsc_induction_kit": {
+            "retail_name": "Cytotune 1.0",
+            "manufacturer": "Thermofisher"
+        },
+        "pluripotency_test": "HipSci Pluri test",
+        "ipsc_induction_produced_in_house": false,
+        "provenance": {
+            "document_id": "cdfe38f2-1d90-4700-a199-d8105ce299df",
+            "submission_date": "2018-10-11T21:18:02.867Z",
+            "update_date": "2018-10-11T21:18:06.713Z"
+        }
+    },
+    "analysis_process_0.json": {
+        "analysis_run_type": "run",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/analysis/8.0.3/analysis_process",
+        "input_bundles": [
+            "a2f76df2-a80f-4c66-8fdd-169ae350be4e"
+        ],
+        "inputs": [
+            {
+                "parameter_name": "fastqs",
+                "parameter_value": "/cromwell_root/org-humancellatlas-dss-checkout-staging/bundles/a2f76df2-a80f-4c66-8fdd-169ae350be4e.2018-10-11T220441.424590Z/GAC027_hOrg_HipSci_2_S6_L008_R1_001.fastq.gz, /cromwell_root/org-humancellatlas-dss-checkout-staging/bundles/a2f76df2-a80f-4c66-8fdd-169ae350be4e.2018-10-11T220441.424590Z/GAC027_hOrg_HipSci_2_S6_L008_R2_001.fastq.gz, /cromwell_root/org-humancellatlas-dss-checkout-staging/bundles/a2f76df2-a80f-4c66-8fdd-169ae350be4e.2018-10-11T220441.424590Z/GAC027_hOrg_HipSci_2_S6_L008_I1_001.fastq.gz"
+            },
+            {
+                "parameter_name": "sample_id",
+                "parameter_value": "803fd65a-c578-4c4f-a39e-bedec24e2578"
+            },
+            {
+                "parameter_name": "reference_name",
+                "parameter_value": "GRCh38"
+            },
+            {
+                "parameter_name": "transcriptome_tar_gz",
+                "parameter_value": "gs://hca-dcp-mint-test-data/reference/GRCh38_Gencode/GRCh38_GencodeV27_Primary_CellRanger.tar"
+            },
+            {
+                "parameter_name": "expect_cells",
+                "parameter_value": "5000"
+            }
+        ],
+        "outputs": [
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "tsv",
+                    "file_name": "barcodes.tsv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "tsv",
+                    "file_name": "genes.tsv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "mtx",
+                    "file_name": "matrix.mtx"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "h5",
+                    "file_name": "filtered_gene_bc_matrices_h5.h5"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "csv",
+                    "file_name": "metrics_summary.csv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "h5",
+                    "file_name": "molecule_info.h5"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "bam",
+                    "file_name": "possorted_genome_bam.bam"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "bai",
+                    "file_name": "possorted_genome_bam.bam.bai"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "h5",
+                    "file_name": "raw_gene_bc_matrices_h5.h5"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "unknown",
+                    "file_name": "web_summary.html"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "tsv",
+                    "file_name": "raw_barcodes.tsv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "tsv",
+                    "file_name": "raw_genes.tsv"
+                },
+                "schema_type": "file"
+            },
+            {
+                "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                "file_core": {
+                    "file_format": "mtx",
+                    "file_name": "raw_matrix.mtx"
+                },
+                "schema_type": "file"
+            }
+        ],
+        "process_core": {
+            "process_id": "41422884-4d87-4f84-8ae1-aa71eba2df23"
+        },
+        "process_type": {
+            "text": "analysis"
+        },
+        "reference_bundle": "bf51d668-3e14-4843-9bc7-5d676fdf0e01",
+        "schema_type": "process",
+        "tasks": [
+            {
+                "cpus": 64,
+                "disk_size": "local-disk 250 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-cellranger:v1.0.0",
+                "log_err": "gs://broad-dsde-mint-staging-cromwell-execution/caas-cromwell-executions/Adapter10xCount/af8aea8f-d962-4ac7-9d38-05d0271e62ea/call-analysis/CellRanger.CellRanger/41422884-4d87-4f84-8ae1-aa71eba2df23/call-cellranger_count/stderr",
+                "log_out": "gs://broad-dsde-mint-staging-cromwell-execution/caas-cromwell-executions/Adapter10xCount/af8aea8f-d962-4ac7-9d38-05d0271e62ea/call-analysis/CellRanger.CellRanger/41422884-4d87-4f84-8ae1-aa71eba2df23/call-cellranger_count/stdout",
+                "memory": "416 GB",
+                "start_time": "2018-10-18T18:34:35.134Z",
+                "stop_time": "2018-10-18T20:26:15.377Z",
+                "task_name": "cellranger_count",
+                "zone": "us-central1-b"
+            }
+        ],
+        "timestamp_start_utc": "2018-10-18T18:34:33.085Z",
+        "timestamp_stop_utc": "2018-10-18T20:26:16.765Z",
+        "provenance": {
+            "document_id": "228fd33a-3627-4dea-bda9-e9cdc3b924b6",
+            "submission_date": "2018-10-18T20:32:14.657Z",
+            "update_date": "2018-10-18T20:32:19.562Z"
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "tech_rep_4"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "a2510b8c-8c92-4fe4-bc06-5e4e92093545",
+            "submission_date": "2018-10-11T21:18:02.960Z",
+            "update_date": "2018-10-11T21:18:12.743Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_22"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "c7b6e9fe-6f08-41a9-8907-9c0347e6d604",
+            "submission_date": "2018-10-11T21:18:03.340Z",
+            "update_date": "2018-10-11T21:18:10.787Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_10"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "0d1d507d-4246-4b1c-8836-261d42f784eb",
+            "submission_date": "2018-10-11T21:18:03.113Z",
+            "update_date": "2018-10-11T21:18:10.859Z"
+        }
+    },
+    "process_3.json": {
+        "process_core": {
+            "process_id": "process_id_5"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "5fcbd4b3-6ad0-434a-bf84-19c33c2d7dc0",
+            "submission_date": "2018-10-11T21:18:03.057Z",
+            "update_date": "2018-10-11T21:18:10.803Z"
+        }
+    },
+    "process_4.json": {
+        "process_core": {
+            "process_id": "process_id_1"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "54760853-d6ed-4149-9a49-53c4cddfd93c",
+            "submission_date": "2018-10-11T21:18:02.993Z",
+            "update_date": "2018-10-11T21:18:10.611Z"
+        }
+    },
+    "process_5.json": {
+        "process_core": {
+            "process_id": "process_id_13"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "d5ac7f5f-9a50-403e-9b8d-6e983a099826",
+            "submission_date": "2018-10-11T21:18:03.149Z",
+            "update_date": "2018-10-11T21:18:11.909Z"
+        }
+    },
+    "process_6.json": {
+        "process_core": {
+            "process_id": "process_id_6"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "53f025f5-931a-4b6e-9a9b-545b5b881710",
+            "submission_date": "2018-10-11T21:18:03.067Z",
+            "update_date": "2018-10-11T21:18:10.866Z"
+        }
+    },
+    "process_7.json": {
+        "process_core": {
+            "process_id": "process_id_2"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "45c67d31-0b05-4d5e-b215-e50e1b2b125c",
+            "submission_date": "2018-10-11T21:18:03.005Z",
+            "update_date": "2018-10-11T21:18:10.656Z"
+        }
+    },
+    "process_8.json": {
+        "process_core": {
+            "process_id": "process_id_16"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "fe0d9d3a-56be-41ca-9fdf-70c8c637fd62",
+            "submission_date": "2018-10-11T21:18:03.269Z",
+            "update_date": "2018-10-11T21:18:10.879Z"
+        }
+    },
+    "process_9.json": {
+        "process_core": {
+            "process_id": "process_id_7"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "4ed306ec-5cf1-49ed-a17a-00f9a0fc38bc",
+            "submission_date": "2018-10-11T21:18:03.080Z",
+            "update_date": "2018-10-11T21:18:10.699Z"
+        }
+    },
+    "process_10.json": {
+        "process_core": {
+            "process_id": "process_id_3"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "76e685c9-fcf2-4582-bbfa-5e0369eb5bdb",
+            "submission_date": "2018-10-11T21:18:03.016Z",
+            "update_date": "2018-10-11T21:18:11.587Z"
+        }
+    },
+    "process_11.json": {
+        "process_core": {
+            "process_id": "process_id_19"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "bce97917-252e-40f2-af8e-df591099acd8",
+            "submission_date": "2018-10-11T21:18:03.300Z",
+            "update_date": "2018-10-11T21:18:11.481Z"
+        }
+    },
+    "process_12.json": {
+        "process_core": {
+            "process_id": "process_id_8"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "6458ae59-0aed-471e-95a0-4de534d449ca",
+            "submission_date": "2018-10-11T21:18:03.090Z",
+            "update_date": "2018-10-11T21:18:10.788Z"
+        }
+    },
+    "process_13.json": {
+        "process_core": {
+            "process_id": "process_id_4"
+        },
+        "schema_type": "process",
+        "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+        "provenance": {
+            "document_id": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
+            "submission_date": "2018-10-11T21:18:03.026Z",
+            "update_date": "2018-10-11T21:18:10.586Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "http://schema.staging.data.humancellatlas.org/system/1.1.3/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.3",
+        "links": [
+            {
+                "process": "228fd33a-3627-4dea-bda9-e9cdc3b924b6",
+                "inputs": [
+                    "281c2d08-9e43-47f9-b937-e733e3ba3322",
+                    "ae1d6fa7-964f-465a-8c78-565206827434",
+                    "f518a8cc-e1d9-4fc9-bc32-491dd8543902",
+                    "213381ea-6161-4159-853e-cfcae4968001",
+                    "9ee3da9e-83ca-4c02-84d6-ac09702b12ba",
+                    "330a08ca-ae8e-4f1f-aa03-970abcd27f39"
+                ],
+                "input_type": "file",
+                "outputs": [
+                    "cf93f747-1392-4670-8eb3-3ac60a96855e",
+                    "477c0b3e-4a06-4214-8f27-58199ba63528",
+                    "ad6d5170-d74b-408c-af6b-25a14315c9da",
+                    "50be9b67-fae5-4472-9719-478dd1303d6e",
+                    "fd16b62e-e540-4f03-8ba0-07d0c204e3c8",
+                    "3c41b5b6-f480-4d47-8c5e-155e7c1adf54",
+                    "022a217c-384d-4d9d-8631-6397b6838e3a",
+                    "9b778e46-0c51-4260-8e3f-000ecc145f0a",
+                    "af025a74-53f1-4972-b50d-53095b5ffac2",
+                    "e8395271-7c8e-4ec4-9598-495df43fe5fd",
+                    "211a8fbf-b190-4576-ac2f-2b1a91743abb",
+                    "17222e3a-5757-45e9-9dfe-c4b6aa10f28a",
+                    "2fb8a975-b50c-4528-b850-838a19e19a1e"
+                ],
+                "output_type": "file",
+                "protocols": []
+            },
+            {
+                "process": "a2510b8c-8c92-4fe4-bc06-5e4e92093545",
+                "inputs": [
+                    "803fd65a-c578-4c4f-a39e-bedec24e2578"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "213381ea-6161-4159-853e-cfcae4968001",
+                    "9ee3da9e-83ca-4c02-84d6-ac09702b12ba",
+                    "330a08ca-ae8e-4f1f-aa03-970abcd27f39"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "92277226-bf78-4df9-a594-5190a8790a14"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "102cdbf3-b0e5-4dd5-9168-51150a9ebb6b"
+                    }
+                ]
+            },
+            {
+                "process": "c7b6e9fe-6f08-41a9-8907-9c0347e6d604",
+                "inputs": [
+                    "2d8282f0-6cbb-4d5a-822c-4b01718b4d0d",
+                    "b7214641-1ac5-4f60-b795-cb33a7c25434",
+                    "308eea51-d14b-4036-8cd1-cfd81d7532c3",
+                    "73f10dad-afc5-4d1d-a71c-4a8b6fff9172"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "803fd65a-c578-4c4f-a39e-bedec24e2578"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "755762e0-7aff-48ed-a7d4-d3ea4005758f"
+                    }
+                ]
+            },
+            {
+                "process": "0d1d507d-4246-4b1c-8836-261d42f784eb",
+                "inputs": [
+                    "c532cca7-67c6-4617-ac47-5b91652621a5"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "2d8282f0-6cbb-4d5a-822c-4b01718b4d0d"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "5fcbd4b3-6ad0-434a-bf84-19c33c2d7dc0",
+                "inputs": [
+                    "c8e14a8e-81f9-4109-bb27-4bb3029240c1"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c532cca7-67c6-4617-ac47-5b91652621a5"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "54760853-d6ed-4149-9a49-53c4cddfd93c",
+                "inputs": [
+                    "d4c29b1a-f23c-4511-a2ae-097772d90254"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c8e14a8e-81f9-4109-bb27-4bb3029240c1"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "d5ac7f5f-9a50-403e-9b8d-6e983a099826",
+                "inputs": [
+                    "e924c114-e3cd-4060-9c8e-3d980ec7fcbe"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "b7214641-1ac5-4f60-b795-cb33a7c25434"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "53f025f5-931a-4b6e-9a9b-545b5b881710",
+                "inputs": [
+                    "5bd6106c-0158-4c2c-8c60-32019c599c83"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "e924c114-e3cd-4060-9c8e-3d980ec7fcbe"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "45c67d31-0b05-4d5e-b215-e50e1b2b125c",
+                "inputs": [
+                    "ef7e6ac7-172a-4b24-9620-fc909a5e9c6c"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "5bd6106c-0158-4c2c-8c60-32019c599c83"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "fe0d9d3a-56be-41ca-9fdf-70c8c637fd62",
+                "inputs": [
+                    "a3651f83-dee6-49b2-ba4e-0ce20f02467d"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "308eea51-d14b-4036-8cd1-cfd81d7532c3"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "4ed306ec-5cf1-49ed-a17a-00f9a0fc38bc",
+                "inputs": [
+                    "8f328973-9bc0-46b9-8a1f-38893e77b3b5"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "a3651f83-dee6-49b2-ba4e-0ce20f02467d"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "76e685c9-fcf2-4582-bbfa-5e0369eb5bdb",
+                "inputs": [
+                    "931528fa-820b-49ca-af1e-ae9a2c0ef551"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "8f328973-9bc0-46b9-8a1f-38893e77b3b5"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "bce97917-252e-40f2-af8e-df591099acd8",
+                "inputs": [
+                    "6a16de30-176d-4488-81de-9337a1a6d8c5"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "73f10dad-afc5-4d1d-a71c-4a8b6fff9172"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "6458ae59-0aed-471e-95a0-4de534d449ca",
+                "inputs": [
+                    "82368936-7b99-4864-9f49-b8fee3906d47"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "6a16de30-176d-4488-81de-9337a1a6d8c5"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
+                "inputs": [
+                    "96757312-0221-447a-84f1-7a737b5afd01"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "82368936-7b99-4864-9f49-b8fee3906d47"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "a2510b8c-8c92-4fe4-bc06-5e4e92093545",
+                "inputs": [
+                    "803fd65a-c578-4c4f-a39e-bedec24e2578"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "213381ea-6161-4159-853e-cfcae4968001",
+                    "9ee3da9e-83ca-4c02-84d6-ac09702b12ba",
+                    "330a08ca-ae8e-4f1f-aa03-970abcd27f39"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "92277226-bf78-4df9-a594-5190a8790a14"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "102cdbf3-b0e5-4dd5-9168-51150a9ebb6b"
+                    }
+                ]
+            },
+            {
+                "process": "c7b6e9fe-6f08-41a9-8907-9c0347e6d604",
+                "inputs": [
+                    "2d8282f0-6cbb-4d5a-822c-4b01718b4d0d",
+                    "b7214641-1ac5-4f60-b795-cb33a7c25434",
+                    "308eea51-d14b-4036-8cd1-cfd81d7532c3",
+                    "73f10dad-afc5-4d1d-a71c-4a8b6fff9172"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "803fd65a-c578-4c4f-a39e-bedec24e2578"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "755762e0-7aff-48ed-a7d4-d3ea4005758f"
+                    }
+                ]
+            },
+            {
+                "process": "0d1d507d-4246-4b1c-8836-261d42f784eb",
+                "inputs": [
+                    "c532cca7-67c6-4617-ac47-5b91652621a5"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "2d8282f0-6cbb-4d5a-822c-4b01718b4d0d"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "5fcbd4b3-6ad0-434a-bf84-19c33c2d7dc0",
+                "inputs": [
+                    "c8e14a8e-81f9-4109-bb27-4bb3029240c1"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c532cca7-67c6-4617-ac47-5b91652621a5"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "54760853-d6ed-4149-9a49-53c4cddfd93c",
+                "inputs": [
+                    "d4c29b1a-f23c-4511-a2ae-097772d90254"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c8e14a8e-81f9-4109-bb27-4bb3029240c1"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "d5ac7f5f-9a50-403e-9b8d-6e983a099826",
+                "inputs": [
+                    "e924c114-e3cd-4060-9c8e-3d980ec7fcbe"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "b7214641-1ac5-4f60-b795-cb33a7c25434"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "53f025f5-931a-4b6e-9a9b-545b5b881710",
+                "inputs": [
+                    "5bd6106c-0158-4c2c-8c60-32019c599c83"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "e924c114-e3cd-4060-9c8e-3d980ec7fcbe"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "45c67d31-0b05-4d5e-b215-e50e1b2b125c",
+                "inputs": [
+                    "ef7e6ac7-172a-4b24-9620-fc909a5e9c6c"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "5bd6106c-0158-4c2c-8c60-32019c599c83"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "fe0d9d3a-56be-41ca-9fdf-70c8c637fd62",
+                "inputs": [
+                    "a3651f83-dee6-49b2-ba4e-0ce20f02467d"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "308eea51-d14b-4036-8cd1-cfd81d7532c3"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "4ed306ec-5cf1-49ed-a17a-00f9a0fc38bc",
+                "inputs": [
+                    "8f328973-9bc0-46b9-8a1f-38893e77b3b5"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "a3651f83-dee6-49b2-ba4e-0ce20f02467d"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "76e685c9-fcf2-4582-bbfa-5e0369eb5bdb",
+                "inputs": [
+                    "931528fa-820b-49ca-af1e-ae9a2c0ef551"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "8f328973-9bc0-46b9-8a1f-38893e77b3b5"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "bce97917-252e-40f2-af8e-df591099acd8",
+                "inputs": [
+                    "6a16de30-176d-4488-81de-9337a1a6d8c5"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "73f10dad-afc5-4d1d-a71c-4a8b6fff9172"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "6458ae59-0aed-471e-95a0-4de534d449ca",
+                "inputs": [
+                    "82368936-7b99-4864-9f49-b8fee3906d47"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "6a16de30-176d-4488-81de-9337a1a6d8c5"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
+                "inputs": [
+                    "96757312-0221-447a-84f1-7a737b5afd01"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "82368936-7b99-4864-9f49-b8fee3906d47"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "a2510b8c-8c92-4fe4-bc06-5e4e92093545",
+                "inputs": [
+                    "803fd65a-c578-4c4f-a39e-bedec24e2578"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "213381ea-6161-4159-853e-cfcae4968001",
+                    "9ee3da9e-83ca-4c02-84d6-ac09702b12ba",
+                    "330a08ca-ae8e-4f1f-aa03-970abcd27f39"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "92277226-bf78-4df9-a594-5190a8790a14"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "102cdbf3-b0e5-4dd5-9168-51150a9ebb6b"
+                    }
+                ]
+            },
+            {
+                "process": "c7b6e9fe-6f08-41a9-8907-9c0347e6d604",
+                "inputs": [
+                    "2d8282f0-6cbb-4d5a-822c-4b01718b4d0d",
+                    "b7214641-1ac5-4f60-b795-cb33a7c25434",
+                    "308eea51-d14b-4036-8cd1-cfd81d7532c3",
+                    "73f10dad-afc5-4d1d-a71c-4a8b6fff9172"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "803fd65a-c578-4c4f-a39e-bedec24e2578"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "755762e0-7aff-48ed-a7d4-d3ea4005758f"
+                    }
+                ]
+            },
+            {
+                "process": "0d1d507d-4246-4b1c-8836-261d42f784eb",
+                "inputs": [
+                    "c532cca7-67c6-4617-ac47-5b91652621a5"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "2d8282f0-6cbb-4d5a-822c-4b01718b4d0d"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "5fcbd4b3-6ad0-434a-bf84-19c33c2d7dc0",
+                "inputs": [
+                    "c8e14a8e-81f9-4109-bb27-4bb3029240c1"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c532cca7-67c6-4617-ac47-5b91652621a5"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "54760853-d6ed-4149-9a49-53c4cddfd93c",
+                "inputs": [
+                    "d4c29b1a-f23c-4511-a2ae-097772d90254"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c8e14a8e-81f9-4109-bb27-4bb3029240c1"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "d5ac7f5f-9a50-403e-9b8d-6e983a099826",
+                "inputs": [
+                    "e924c114-e3cd-4060-9c8e-3d980ec7fcbe"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "b7214641-1ac5-4f60-b795-cb33a7c25434"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "53f025f5-931a-4b6e-9a9b-545b5b881710",
+                "inputs": [
+                    "5bd6106c-0158-4c2c-8c60-32019c599c83"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "e924c114-e3cd-4060-9c8e-3d980ec7fcbe"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "45c67d31-0b05-4d5e-b215-e50e1b2b125c",
+                "inputs": [
+                    "ef7e6ac7-172a-4b24-9620-fc909a5e9c6c"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "5bd6106c-0158-4c2c-8c60-32019c599c83"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "fe0d9d3a-56be-41ca-9fdf-70c8c637fd62",
+                "inputs": [
+                    "a3651f83-dee6-49b2-ba4e-0ce20f02467d"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "308eea51-d14b-4036-8cd1-cfd81d7532c3"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "4ed306ec-5cf1-49ed-a17a-00f9a0fc38bc",
+                "inputs": [
+                    "8f328973-9bc0-46b9-8a1f-38893e77b3b5"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "a3651f83-dee6-49b2-ba4e-0ce20f02467d"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "76e685c9-fcf2-4582-bbfa-5e0369eb5bdb",
+                "inputs": [
+                    "931528fa-820b-49ca-af1e-ae9a2c0ef551"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "8f328973-9bc0-46b9-8a1f-38893e77b3b5"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            },
+            {
+                "process": "bce97917-252e-40f2-af8e-df591099acd8",
+                "inputs": [
+                    "6a16de30-176d-4488-81de-9337a1a6d8c5"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "73f10dad-afc5-4d1d-a71c-4a8b6fff9172"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "8f4a8e7c-e7ee-44dc-8e09-f4012355060f"
+                    }
+                ]
+            },
+            {
+                "process": "6458ae59-0aed-471e-95a0-4de534d449ca",
+                "inputs": [
+                    "82368936-7b99-4864-9f49-b8fee3906d47"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "6a16de30-176d-4488-81de-9337a1a6d8c5"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "ipsc_induction_protocol",
+                        "protocol_id": "cdfe38f2-1d90-4700-a199-d8105ce299df"
+                    }
+                ]
+            },
+            {
+                "process": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
+                "inputs": [
+                    "96757312-0221-447a-84f1-7a737b5afd01"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "82368936-7b99-4864-9f49-b8fee3906d47"
+                ],
+                "output_type": "biomaterial",
+                "protocols": []
+            }
+        ]
+    }
+}
