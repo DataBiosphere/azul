@@ -261,8 +261,6 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
     def _contribution(self, bundle: api.Bundle, contents: JSON, entity_id: api.UUID4) -> Contribution:
         entity_reference = EntityReference(entity_type=self.entity_type(),
                                            entity_id=str(entity_id))
-        # noinspection PyArgumentList
-        # https://youtrack.jetbrains.com/issue/PY-28506
         return Contribution(entity=entity_reference,
                             version=None,
                             contents=contents,
