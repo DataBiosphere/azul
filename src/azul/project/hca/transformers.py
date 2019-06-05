@@ -13,10 +13,10 @@ from azul.transformer import (Accumulator,
                               DistinctAccumulator,
                               Document,
                               EntityReference,
+                              FrequencySetAccumulator,
                               GroupingAggregator,
                               ListAccumulator,
                               SetAccumulator,
-                              FrequencySetAccumulator,
                               SimpleAggregator,
                               SumAccumulator)
 from azul.types import JSON
