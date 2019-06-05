@@ -118,8 +118,8 @@
     },
     "contents.samples": {
       "_entity_type": "entity_type",
-      "*.provenance.document_id": "document_id",
-      "*.biomaterial_core.biomaterial_id": "biomaterial_id"
+      "sample.provenance.document_id": "document_id",
+      "sample.biomaterial_core.biomaterial_id": "biomaterial_id"
     }
   },
   "cart-item": {
