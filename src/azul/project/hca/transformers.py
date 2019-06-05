@@ -6,7 +6,7 @@ from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Seque
 
 from humancellatlas.data.metadata import api
 
-from azul import reject
+from azul import reject, require
 from azul.project.hca.metadata_generator import MetadataGenerator
 from azul.transformer import (Accumulator,
                               AggregatingTransformer,
@@ -346,26 +346,17 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             assert False
         return protocol_
 
-    # map Sample api.schema_names to keys in the contents dict
-    sample_entity_types = {
-        'cell_line': 'cell_lines',
-        'organoid': 'organoids',
-        'specimen_from_organism': 'specimens',
-    }
-
-    # map Sample api.schema_names to the corresponding factory method
-    sample_entity_factory = {
-        'cell_line': _cell_line,
-        'organoid': _organoid,
-        'specimen_from_organism': _specimen,
-    }
-
     def _sample(self, sample: api.Biomaterial) -> JSON:
-        schema_type = api.schema_names[type(sample)]
-        sample_ = {
-            'entity_type': self.sample_entity_types[schema_type],
-            **self.sample_entity_factory[schema_type](self, sample)
-        }
+        entity_type, sample_ = (
+            'cell_lines', self._cell_line(sample)
+        ) if isinstance(sample, api.CellLine) else (
+            'organoids', self._organoid(sample)
+        ) if isinstance(sample, api.Organoid) else (
+            'specimens', self._specimen(sample)
+        ) if isinstance(sample, api.SpecimenFromOrganism) else (
+            require(False, sample), None
+        )
+        sample_['entity_type'] = entity_type
         assert hasattr(sample, 'organ') != hasattr(sample, 'model_organ')
         sample_['effective_organ'] = sample.organ if hasattr(sample, 'organ') else sample.model_organ
         assert sample_['document_id'] == str(sample.document_id)
