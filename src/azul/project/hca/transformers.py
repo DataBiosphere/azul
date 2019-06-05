@@ -26,138 +26,6 @@ log = logging.getLogger(__name__)
 Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
 
 
-class TransformerVisitor(api.EntityVisitor):
-    # Entities are tracked by ID to ensure uniqueness if an entity is visited twice while descending the entity DAG
-    specimens: MutableMapping[api.UUID4, api.SpecimenFromOrganism]
-    cell_suspensions: MutableMapping[api.UUID4, api.CellSuspension]
-    cell_lines: MutableMapping[api.UUID4, api.CellLine]
-    donors: MutableMapping[api.UUID4, api.DonorOrganism]
-    organoids: MutableMapping[api.UUID4, api.Organoid]
-    protocols: MutableMapping[api.UUID4, api.Protocol]
-    files: MutableMapping[api.UUID4, api.File]
-
-    def __init__(self) -> None:
-        self.specimens = {}
-        self.cell_suspensions = {}
-        self.cell_lines = {}
-        self.donors = {}
-        self.organoids = {}
-        self.protocols = {}
-        self.files = {}
-
-    def visit(self, entity: api.Entity) -> None:
-        if isinstance(entity, api.SpecimenFromOrganism):
-            self.specimens[entity.document_id] = entity
-        elif isinstance(entity, api.CellSuspension):
-            self.cell_suspensions[entity.document_id] = entity
-        elif isinstance(entity, api.CellLine):
-            self.cell_lines[entity.document_id] = entity
-        elif isinstance(entity, api.DonorOrganism):
-            self.donors[entity.document_id] = entity
-        elif isinstance(entity, api.Organoid):
-            self.organoids[entity.document_id] = entity
-        elif isinstance(entity, api.Process):
-            for protocol in entity.protocols.values():
-                if isinstance(protocol, (api.SequencingProtocol,
-                                         api.LibraryPreparationProtocol,
-                                         api.AnalysisProtocol,
-                                         api.ImagingProtocol)):
-                    self.protocols[protocol.document_id] = protocol
-        elif isinstance(entity, api.File):
-            if entity.file_format == 'unknown' and '.zarr!' in entity.manifest_entry.name:
-                # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
-                #
-                return
-            self.files[entity.document_id] = entity
-
-
-class FileAggregator(GroupingAggregator):
-
-    def _transform_entity(self, entity: JSON) -> JSON:
-        return dict(size=((entity['uuid'], entity['version']), entity['size']),
-                    file_format=entity['file_format'],
-                    count=((entity['uuid'], entity['version']), 1))
-
-    def _group_keys(self, entity) -> Iterable[Any]:
-        return [entity['file_format']]
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'file_format':
-            return SetAccumulator()
-        elif field in ('size', 'count'):
-            return DistinctAccumulator(SumAccumulator(0))
-        else:
-            return None
-
-
-class SampleAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
-
-
-class SpecimenAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
-
-
-class CellSuspensionAggregator(GroupingAggregator):
-
-    def _group_keys(self, entity) -> Iterable[Any]:
-        return entity['organ']
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'total_estimated_cells':
-            return SumAccumulator(0)
-        else:
-            return SetAccumulator(max_size=100)
-
-
-class CellLineAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
-
-
-class DonorOrganismAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
-
-
-class OrganoidAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
-
-
-class ProjectAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'document_id':
-            return ListAccumulator(max_size=100)
-        elif field in ('project_description',
-                       'contact_names',
-                       'contributors',
-                       'publication_titles',
-                       'publications'):
-            return None
-        else:
-            return SetAccumulator(max_size=100)
-
-
-class ProtocolAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'document_id':
-            return None
-        elif field == 'assay_type':
-            return FrequencySetAccumulator(max_size=100)
-        else:
-            return SetAccumulator()
-
-
 class Transformer(AggregatingTransformer, metaclass=ABCMeta):
 
     def get_aggregator(self, entity_type):
@@ -380,6 +248,51 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                             bundle_version=bundle.version)
 
 
+class TransformerVisitor(api.EntityVisitor):
+    # Entities are tracked by ID to ensure uniqueness if an entity is visited twice while descending the entity DAG
+    specimens: MutableMapping[api.UUID4, api.SpecimenFromOrganism]
+    cell_suspensions: MutableMapping[api.UUID4, api.CellSuspension]
+    cell_lines: MutableMapping[api.UUID4, api.CellLine]
+    donors: MutableMapping[api.UUID4, api.DonorOrganism]
+    organoids: MutableMapping[api.UUID4, api.Organoid]
+    protocols: MutableMapping[api.UUID4, api.Protocol]
+    files: MutableMapping[api.UUID4, api.File]
+
+    def __init__(self) -> None:
+        self.specimens = {}
+        self.cell_suspensions = {}
+        self.cell_lines = {}
+        self.donors = {}
+        self.organoids = {}
+        self.protocols = {}
+        self.files = {}
+
+    def visit(self, entity: api.Entity) -> None:
+        if isinstance(entity, api.SpecimenFromOrganism):
+            self.specimens[entity.document_id] = entity
+        elif isinstance(entity, api.CellSuspension):
+            self.cell_suspensions[entity.document_id] = entity
+        elif isinstance(entity, api.CellLine):
+            self.cell_lines[entity.document_id] = entity
+        elif isinstance(entity, api.DonorOrganism):
+            self.donors[entity.document_id] = entity
+        elif isinstance(entity, api.Organoid):
+            self.organoids[entity.document_id] = entity
+        elif isinstance(entity, api.Process):
+            for protocol in entity.protocols.values():
+                if isinstance(protocol, (api.SequencingProtocol,
+                                         api.LibraryPreparationProtocol,
+                                         api.AnalysisProtocol,
+                                         api.ImagingProtocol)):
+                    self.protocols[protocol.document_id] = protocol
+        elif isinstance(entity, api.File):
+            if entity.file_format == 'unknown' and '.zarr!' in entity.manifest_entry.name:
+                # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+                #
+                return
+            self.files[entity.document_id] = entity
+
+
 class FileTransformer(Transformer):
 
     def entity_type(self) -> str:
@@ -586,3 +499,90 @@ class BundleTransformer(BundleProjectTransformer):
                 metadata = generator.dump()
             contrib.contents['metadata'] = metadata
             yield contrib
+
+
+class FileAggregator(GroupingAggregator):
+
+    def _transform_entity(self, entity: JSON) -> JSON:
+        return dict(size=((entity['uuid'], entity['version']), entity['size']),
+                    file_format=entity['file_format'],
+                    count=((entity['uuid'], entity['version']), 1))
+
+    def _group_keys(self, entity) -> Iterable[Any]:
+        return [entity['file_format']]
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'file_format':
+            return SetAccumulator()
+        elif field in ('size', 'count'):
+            return DistinctAccumulator(SumAccumulator(0))
+        else:
+            return None
+
+
+class SampleAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        return SetAccumulator(max_size=100)
+
+
+class SpecimenAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        return SetAccumulator(max_size=100)
+
+
+class CellSuspensionAggregator(GroupingAggregator):
+
+    def _group_keys(self, entity) -> Iterable[Any]:
+        return entity['organ']
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'total_estimated_cells':
+            return SumAccumulator(0)
+        else:
+            return SetAccumulator(max_size=100)
+
+
+class CellLineAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        return SetAccumulator(max_size=100)
+
+
+class DonorOrganismAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        return SetAccumulator(max_size=100)
+
+
+class OrganoidAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        return SetAccumulator(max_size=100)
+
+
+class ProjectAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'document_id':
+            return ListAccumulator(max_size=100)
+        elif field in ('project_description',
+                       'contact_names',
+                       'contributors',
+                       'publication_titles',
+                       'publications'):
+            return None
+        else:
+            return SetAccumulator(max_size=100)
+
+
+class ProtocolAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'document_id':
+            return None
+        elif field == 'assay_type':
+            return FrequencySetAccumulator(max_size=100)
+        else:
+            return SetAccumulator()
