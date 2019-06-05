@@ -183,7 +183,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         else:
             return super().get_aggregator(entity_type)
 
-    def _contact_dict(self, p: api.ProjectContact):
+    def _contact(self, p: api.ProjectContact):
         return {
             "contact_name": p.contact_name,
             "corresponding_contributor": p.corresponding_contributor,
@@ -193,13 +193,13 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             "project_role": p.project_role
         }
 
-    def _publication_dict(self, p: api.ProjectPublication):
+    def _publication(self, p: api.ProjectPublication):
         return {
             "publication_title": p.publication_title,
             "publication_url": p.publication_url
         }
 
-    def _project_dict(self, project: api.Project) -> JSON:
+    def _project(self, project: api.Project) -> JSON:
         # Store lists of all values of each of these facets to allow facet filtering
         # and term counting on the webservice
         laboratories: Set[str] = set()
@@ -226,10 +226,10 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'laboratory': list(laboratories),
             'institutions': list(institutions),
             'contact_names': list(contact_names),
-            'contributors': [self._contact_dict(c) for c in project.contributors],
+            'contributors': [self._contact(c) for c in project.contributors],
             'document_id': str(project.document_id),
             'publication_titles': list(publication_titles),
-            'publications': [self._publication_dict(p) for p in project.publications],
+            'publications': [self._publication(p) for p in project.publications],
             'insdc_project_accessions': list(project.insdc_project_accessions),
             'geo_series_accessions': list(project.geo_series_accessions),
             'array_express_accessions': list(project.array_express_accessions),
@@ -237,7 +237,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             '_type': 'project'
         }
 
-    def _specimen_dict(self, specimen: api.SpecimenFromOrganism) -> JSON:
+    def _specimen(self, specimen: api.SpecimenFromOrganism) -> JSON:
         return {
             'has_input_biomaterial': specimen.has_input_biomaterial,
             '_source': api.schema_names[type(specimen)],
@@ -251,7 +251,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             '_type': 'specimen',
         }
 
-    def _cell_suspension_dict(self, cell_suspension: api.CellSuspension) -> JSON:
+    def _cell_suspension(self, cell_suspension: api.CellSuspension) -> JSON:
         organs = set()
         organ_parts = set()
         samples: MutableMapping[str, Sample] = dict()
@@ -276,7 +276,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'organ_part': list(organ_parts),
         }
 
-    def _cell_line_dict(self, cell_line: api.CellLine) -> JSON:
+    def _cell_line(self, cell_line: api.CellLine) -> JSON:
         return {
             'document_id': str(cell_line.document_id),
             'biomaterial_id': cell_line.biomaterial_id,
@@ -284,7 +284,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'model_organ': cell_line.model_organ
         }
 
-    def _donor_dict(self, donor: api.DonorOrganism) -> JSON:
+    def _donor(self, donor: api.DonorOrganism) -> JSON:
         return {
             'document_id': str(donor.document_id),
             'biomaterial_id': donor.biomaterial_id,
@@ -302,7 +302,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             ),
         }
 
-    def _organoid_dict(self, organoid: api.Organoid) -> JSON:
+    def _organoid(self, organoid: api.Organoid) -> JSON:
         return {
             'document_id': str(organoid.document_id),
             'biomaterial_id': organoid.biomaterial_id,
@@ -310,7 +310,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'model_organ_part': organoid.model_organ_part,
         }
 
-    def _file_dict(self, file: api.File) -> JSON:
+    def _file(self, file: api.File) -> JSON:
         return {
             'content-type': file.manifest_entry.content_type,
             'indexed': file.manifest_entry.indexed,
@@ -331,20 +331,20 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             )
         }
 
-    def _protocol_dict(self, protocol: api.Protocol) -> JSON:
-        protocol_dict = {"document_id": protocol.document_id}
+    def _protocol(self, protocol: api.Protocol) -> JSON:
+        protocol_ = {"document_id": protocol.document_id}
         if isinstance(protocol, api.LibraryPreparationProtocol):
-            protocol_dict['library_construction_approach'] = protocol.library_construction_approach
+            protocol_['library_construction_approach'] = protocol.library_construction_approach
         elif isinstance(protocol, api.SequencingProtocol):
-            protocol_dict['instrument_manufacturer_model'] = protocol.instrument_manufacturer_model
-            protocol_dict['paired_end'] = protocol.paired_end
+            protocol_['instrument_manufacturer_model'] = protocol.instrument_manufacturer_model
+            protocol_['paired_end'] = protocol.paired_end
         elif isinstance(protocol, api.AnalysisProtocol):
-            protocol_dict['workflow'] = protocol.protocol_id
+            protocol_['workflow'] = protocol.protocol_id
         elif isinstance(protocol, api.ImagingProtocol):
-            protocol_dict['assay_type'] = dict(Counter(target.assay_type for target in protocol.target))
+            protocol_['assay_type'] = dict(Counter(target.assay_type for target in protocol.target))
         else:
             assert False
-        return protocol_dict
+        return protocol_
 
     # map Sample api.schema_names to keys in the contents dict
     sample_entity_types = {
@@ -353,24 +353,24 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         'specimen_from_organism': 'specimens',
     }
 
-    # map Sample api.schema_names to the related ..._dict function
-    sample_entity_dict_functions = {
-        'cell_line': _cell_line_dict,
-        'organoid': _organoid_dict,
-        'specimen_from_organism': _specimen_dict,
+    # map Sample api.schema_names to the corresponding factory method
+    sample_entity_factory = {
+        'cell_line': _cell_line,
+        'organoid': _organoid,
+        'specimen_from_organism': _specimen,
     }
 
-    def _sample_dict(self, sample: api.Biomaterial) -> JSON:
+    def _sample(self, sample: api.Biomaterial) -> JSON:
         schema_type = api.schema_names[type(sample)]
-        sample_dict = {
+        sample_ = {
             'entity_type': self.sample_entity_types[schema_type],
-            **self.sample_entity_dict_functions[schema_type](self, sample)
+            **self.sample_entity_factory[schema_type](self, sample)
         }
         assert hasattr(sample, 'organ') != hasattr(sample, 'model_organ')
-        sample_dict['effective_organ'] = sample.organ if hasattr(sample, 'organ') else sample.model_organ
-        assert sample_dict['document_id'] == str(sample.document_id)
-        assert sample_dict['biomaterial_id'] == sample.biomaterial_id
-        return sample_dict
+        sample_['effective_organ'] = sample.organ if hasattr(sample, 'organ') else sample.model_organ
+        assert sample_['document_id'] == str(sample.document_id)
+        assert sample_['biomaterial_id'] == sample.biomaterial_id
+        return sample_
 
     def _get_project(self, bundle) -> api.Project:
         project, *additional_projects = bundle.projects.values()
@@ -416,16 +416,16 @@ class FileTransformer(Transformer):
             file.ancestors(visitor)
             samples: MutableMapping[str, Sample] = dict()
             SampleTransformer.get_ancestor_samples(file, samples)
-            contents = dict(samples=[self._sample_dict(s) for s in samples.values()],
-                            specimens=[self._specimen_dict(s) for s in visitor.specimens.values()],
-                            cell_suspensions=[self._cell_suspension_dict(cs) for cs in
+            contents = dict(samples=[self._sample(s) for s in samples.values()],
+                            specimens=[self._specimen(s) for s in visitor.specimens.values()],
+                            cell_suspensions=[self._cell_suspension(cs) for cs in
                                               visitor.cell_suspensions.values()],
-                            cell_lines=[self._cell_line_dict(cl) for cl in visitor.cell_lines.values()],
-                            donors=[self._donor_dict(d) for d in visitor.donors.values()],
-                            organoids=[self._organoid_dict(o) for o in visitor.organoids.values()],
-                            files=[self._file_dict(file)],
-                            protocols=[self._protocol_dict(pl) for pl in visitor.protocols.values()],
-                            projects=[self._project_dict(project)])
+                            cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
+                            donors=[self._donor(d) for d in visitor.donors.values()],
+                            organoids=[self._organoid(o) for o in visitor.organoids.values()],
+                            files=[self._file(file)],
+                            protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+                            projects=[self._project(project)])
             yield self._contribution(bundle, contents, file.document_id)
 
 
@@ -453,15 +453,15 @@ class CellSuspensionTransformer(Transformer):
             visitor = TransformerVisitor()
             cell_suspension.accept(visitor)
             cell_suspension.ancestors(visitor)
-            contents = dict(samples=[self._sample_dict(s) for s in samples.values()],
-                            specimens=[self._specimen_dict(s) for s in visitor.specimens.values()],
-                            cell_suspensions=[self._cell_suspension_dict(cell_suspension)],
-                            cell_lines=[self._cell_line_dict(cl) for cl in visitor.cell_lines.values()],
-                            donors=[self._donor_dict(d) for d in visitor.donors.values()],
-                            organoids=[self._organoid_dict(o) for o in visitor.organoids.values()],
-                            files=[self._file_dict(f) for f in visitor.files.values()],
-                            protocols=[self._protocol_dict(pl) for pl in visitor.protocols.values()],
-                            projects=[self._project_dict(project)])
+            contents = dict(samples=[self._sample(s) for s in samples.values()],
+                            specimens=[self._specimen(s) for s in visitor.specimens.values()],
+                            cell_suspensions=[self._cell_suspension(cell_suspension)],
+                            cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
+                            donors=[self._donor(d) for d in visitor.donors.values()],
+                            organoids=[self._organoid(o) for o in visitor.organoids.values()],
+                            files=[self._file(f) for f in visitor.files.values()],
+                            protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+                            projects=[self._project(project)])
             yield self._contribution(bundle, contents, cell_suspension.document_id)
 
 
@@ -499,16 +499,16 @@ class SampleTransformer(Transformer):
             visitor = TransformerVisitor()
             sample.accept(visitor)
             sample.ancestors(visitor)
-            contents = dict(samples=[self._sample_dict(sample)],
-                            specimens=[self._specimen_dict(s) for s in visitor.specimens.values()],
-                            cell_suspensions=[self._cell_suspension_dict(cs) for cs in
+            contents = dict(samples=[self._sample(sample)],
+                            specimens=[self._specimen(s) for s in visitor.specimens.values()],
+                            cell_suspensions=[self._cell_suspension(cs) for cs in
                                               visitor.cell_suspensions.values()],
-                            cell_lines=[self._cell_line_dict(cl) for cl in visitor.cell_lines.values()],
-                            donors=[self._donor_dict(d) for d in visitor.donors.values()],
-                            organoids=[self._organoid_dict(o) for o in visitor.organoids.values()],
-                            files=[self._file_dict(f) for f in visitor.files.values()],
-                            protocols=[self._protocol_dict(pl) for pl in visitor.protocols.values()],
-                            projects=[self._project_dict(project)])
+                            cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
+                            donors=[self._donor(d) for d in visitor.donors.values()],
+                            organoids=[self._organoid(o) for o in visitor.organoids.values()],
+                            files=[self._file(f) for f in visitor.files.values()],
+                            protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+                            projects=[self._project(project)])
             yield self._contribution(bundle, contents, sample.document_id)
 
 
@@ -543,15 +543,15 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
             SampleTransformer.get_ancestor_samples(file, samples)
         project = self._get_project(bundle)
 
-        contents = dict(samples=[self._sample_dict(s) for s in samples.values()],
-                        specimens=[self._specimen_dict(s) for s in visitor.specimens.values()],
-                        cell_suspensions=[self._cell_suspension_dict(cs) for cs in visitor.cell_suspensions.values()],
-                        cell_lines=[self._cell_line_dict(cl) for cl in visitor.cell_lines.values()],
-                        donors=[self._donor_dict(d) for d in visitor.donors.values()],
-                        organoids=[self._organoid_dict(o) for o in visitor.organoids.values()],
-                        files=[self._file_dict(f) for f in visitor.files.values()],
-                        protocols=[self._protocol_dict(pl) for pl in visitor.protocols.values()],
-                        projects=[self._project_dict(project)])
+        contents = dict(samples=[self._sample(s) for s in samples.values()],
+                        specimens=[self._specimen(s) for s in visitor.specimens.values()],
+                        cell_suspensions=[self._cell_suspension(cs) for cs in visitor.cell_suspensions.values()],
+                        cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
+                        donors=[self._donor(d) for d in visitor.donors.values()],
+                        organoids=[self._organoid(o) for o in visitor.organoids.values()],
+                        files=[self._file(f) for f in visitor.files.values()],
+                        protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+                        projects=[self._project(project)])
 
         yield self._contribution(bundle, contents, self._get_entity_id(bundle, project))
 
