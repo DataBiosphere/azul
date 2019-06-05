@@ -52,6 +52,17 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         else:
             return super().get_aggregator(entity_type)
 
+    def _find_ancestor_samples(self, entity: api.LinkedEntity, samples: MutableMapping[str, Sample]):
+        """
+        Populate the `samples` argument with the sample ancestors of the given entity. A sample is any biomaterial
+        that is neither a cell suspension nor an ancestor of another sample.
+        """
+        if isinstance(entity, sample_types):
+            samples[str(entity.document_id)] = entity
+        else:
+            for parent in entity.parents.values():
+                self._find_ancestor_samples(parent, samples)
+
     def _contact(self, p: api.ProjectContact):
         # noinspection PyDeprecation
         return {
@@ -130,7 +141,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         organs = set()
         organ_parts = set()
         samples: MutableMapping[str, Sample] = dict()
-        SampleTransformer.get_ancestor_samples(cell_suspension, samples)
+        self._find_ancestor_samples(cell_suspension, samples)
         for sample in samples.values():
             if isinstance(sample, api.SpecimenFromOrganism):
                 organs.add(sample.organ)
@@ -331,7 +342,7 @@ class FileTransformer(Transformer):
             file.accept(visitor)
             file.ancestors(visitor)
             samples: MutableMapping[str, Sample] = dict()
-            SampleTransformer.get_ancestor_samples(file, samples)
+            self._find_ancestor_samples(file, samples)
             contents = dict(samples=[self._sample(s) for s in samples.values()],
                             specimens=[self._specimen(s) for s in visitor.specimens.values()],
                             cell_suspensions=[self._cell_suspension(cs) for cs in
@@ -365,7 +376,7 @@ class CellSuspensionTransformer(Transformer):
             if not isinstance(cell_suspension, api.CellSuspension):
                 continue
             samples: MutableMapping[str, Sample] = dict()
-            SampleTransformer.get_ancestor_samples(cell_suspension, samples)
+            self._find_ancestor_samples(cell_suspension, samples)
             visitor = TransformerVisitor()
             cell_suspension.accept(visitor)
             cell_suspension.ancestors(visitor)
@@ -386,17 +397,6 @@ class SampleTransformer(Transformer):
     def entity_type(self) -> str:
         return 'samples'
 
-    @classmethod
-    def get_ancestor_samples(cls, entity: api.LinkedEntity, samples: MutableMapping[str, Sample]):
-        """
-        Fill samples dict with the first Sample found up each ancestor tree
-        """
-        if isinstance(entity, sample_types):
-            samples[str(entity.document_id)] = entity
-        else:
-            for parent in entity.parents.values():
-                cls.get_ancestor_samples(parent, samples)
-
     def transform(self,
                   uuid: str,
                   version: str,
@@ -410,7 +410,7 @@ class SampleTransformer(Transformer):
         project = self._get_project(bundle)
         samples: MutableMapping[str, Sample] = dict()
         for file in bundle.files.values():
-            self.get_ancestor_samples(file, samples)
+            self._find_ancestor_samples(file, samples)
         for sample in samples.values():
             visitor = TransformerVisitor()
             sample.accept(visitor)
@@ -456,7 +456,7 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
         for file in bundle.files.values():
             file.accept(visitor)
             file.ancestors(visitor)
-            SampleTransformer.get_ancestor_samples(file, samples)
+            self._find_ancestor_samples(file, samples)
         project = self._get_project(bundle)
 
         contents = dict(samples=[self._sample(s) for s in samples.values()],
