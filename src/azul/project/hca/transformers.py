@@ -51,6 +51,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             return super().get_aggregator(entity_type)
 
     def _contact(self, p: api.ProjectContact):
+        # noinspection PyDeprecation
         return {
             "contact_name": p.contact_name,
             "corresponding_contributor": p.corresponding_contributor,
@@ -61,6 +62,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     def _publication(self, p: api.ProjectPublication):
+        # noinspection PyDeprecation
         return {
             "publication_title": p.publication_title,
             "publication_url": p.publication_url
@@ -77,13 +79,17 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         for contributor in project.contributors:
             if contributor.laboratory:
                 laboratories.add(contributor.laboratory)
+            # noinspection PyDeprecation
             if contributor.contact_name:
+                # noinspection PyDeprecation
                 contact_names.add(contributor.contact_name)
             if contributor.institution:
                 institutions.add(contributor.institution)
 
         for publication in project.publications:
+            # noinspection PyDeprecation
             if publication.publication_title:
+                # noinspection PyDeprecation
                 publication_titles.add(publication.publication_title)
 
         return {
@@ -144,6 +150,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     def _cell_line(self, cell_line: api.CellLine) -> JSON:
+        # noinspection PyDeprecation
         return {
             'document_id': str(cell_line.document_id),
             'biomaterial_id': cell_line.biomaterial_id,
@@ -178,6 +185,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     def _file(self, file: api.File) -> JSON:
+        # noinspection PyDeprecation
         return {
             'content-type': file.manifest_entry.content_type,
             'indexed': file.manifest_entry.indexed,
@@ -201,6 +209,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
     def _protocol(self, protocol: api.Protocol) -> JSON:
         protocol_ = {'document_id': protocol.document_id}
         if isinstance(protocol, api.LibraryPreparationProtocol):
+            # noinspection PyDeprecation
             protocol_['library_construction_approach'] = protocol.library_construction_approach
         elif isinstance(protocol, api.SequencingProtocol):
             protocol_['instrument_manufacturer_model'] = protocol.instrument_manufacturer_model
@@ -286,6 +295,7 @@ class TransformerVisitor(api.EntityVisitor):
                                          api.ImagingProtocol)):
                     self.protocols[protocol.document_id] = protocol
         elif isinstance(entity, api.File):
+            # noinspection PyDeprecation
             if entity.file_format == 'unknown' and '.zarr!' in entity.manifest_entry.name:
                 # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
                 #
@@ -310,6 +320,7 @@ class FileTransformer(Transformer):
                             metadata_files=metadata_files)
         project = self._get_project(bundle)
         for file in bundle.files.values():
+            # noinspection PyDeprecation
             if file.file_format == 'unknown' and '.zarr!' in file.manifest_entry.name:
                 # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
                 #
