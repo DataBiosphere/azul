@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections import Counter
 import logging
-from dataclasses import dataclass
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
 
 from humancellatlas.data.metadata import api
@@ -332,7 +331,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     def _protocol(self, protocol: api.Protocol) -> JSON:
-        protocol_ = {"document_id": protocol.document_id}
+        protocol_ = {'document_id': protocol.document_id}
         if isinstance(protocol, api.LibraryPreparationProtocol):
             protocol_['library_construction_approach'] = protocol.library_construction_approach
         elif isinstance(protocol, api.SequencingProtocol):
