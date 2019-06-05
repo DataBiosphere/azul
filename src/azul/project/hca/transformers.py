@@ -24,6 +24,8 @@ from azul.types import JSON
 log = logging.getLogger(__name__)
 
 Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
+sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
+assert Sample.__args__ == sample_types  # since we can't use * in generic types
 
 
 class Transformer(AggregatingTransformer, metaclass=ABCMeta):
@@ -389,7 +391,7 @@ class SampleTransformer(Transformer):
         """
         Fill samples dict with the first Sample found up each ancestor tree
         """
-        if isinstance(entity, Sample.__args__):
+        if isinstance(entity, sample_types):
             samples[str(entity.document_id)] = entity
         else:
             for parent in entity.parents.values():
@@ -497,7 +499,7 @@ class BundleTransformer(BundleProjectTransformer):
                   uuid: str,
                   version: str,
                   manifest: List[JSON],
-                  metadata_files: Iterable[JSON]
+                  metadata_files: Mapping[str, JSON]
                   ) -> Sequence[Document]:
         for contrib in super().transform(uuid, version, manifest, metadata_files):
             # noinspection PyArgumentList
