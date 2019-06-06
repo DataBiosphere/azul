@@ -116,6 +116,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": ["specimens"],
+                            "effectiveOrgan": ['pancreas'],
                             "disease": ["normal"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
@@ -206,6 +207,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": "specimens",
+                            "effectiveOrgan": "pancreas",
                             "id": "DID_scRSq06_pancreas",
                             "disease": ["normal"],
                             "organ": "pancreas",
@@ -323,6 +325,7 @@ class TestResponse(WebServiceTestCase):
                         "samples": [
                             {
                                 "sampleEntityType": ["specimens"],
+                                "effectiveOrgan": ['pancreas'],
                                 "disease": ["normal"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
@@ -423,6 +426,7 @@ class TestResponse(WebServiceTestCase):
                         "samples": [
                             {
                                 "sampleEntityType": ["specimens"],
+                                "effectiveOrgan": ['pancreas'],
                                 "disease": ["normal"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
@@ -793,6 +797,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": ["specimens"],
+                            "effectiveOrgan": ["pancreas"],
                             "disease": ["normal"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
@@ -922,6 +927,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": ["specimens"],
+                            "effectiveOrgan": ["pancreas"],
                             "disease": ["normal"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
@@ -1111,6 +1117,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": ["specimens"],
+                            "effectiveOrgan": ["brain"],
                             "disease": ["H syndrome"],
                             "id": ["specimen_ID_1"],
                             "organ": ["brain"],
@@ -1167,6 +1174,7 @@ class TestResponse(WebServiceTestCase):
         self.assertElasticsearchResultsEqual(cell_lines, expected_cell_lines)
         expected_samples = {
             'sampleEntityType': ['cellLines'],
+            'effectiveOrgan': ['blood (child_cell_line)'],
             'id': ['cell_line_Day7_hiPSC-CM_BioRep2'],
             'cellLineType': ['stem cell-derived'],
             'modelOrgan': ['blood (child_cell_line)'],
@@ -1220,7 +1228,7 @@ class TestResponse(WebServiceTestCase):
                         for sample in hit['samples']:
                             sample_entity_type = sample['sampleEntityType']
                             for key, val in sample.items():
-                                if key != 'sampleEntityType':
+                                if key not in ['sampleEntityType', 'effectiveOrgan']:
                                     if isinstance(val, list):
                                         for one_val in val:
                                             self.assertIn(one_val, hit[sample_entity_type][0][key])
