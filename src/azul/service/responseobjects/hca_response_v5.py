@@ -776,7 +776,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         'specimens': 'specimens',
     }
 
-    # Map keys in the contents dict to the related make_... function
+    # Map keys in the contents dict to the corresponding make method
     sample_entity_make_functions = {
         'cell_lines': make_cell_line,
         'organoids': make_organoid,
@@ -785,7 +785,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_sample(self, sample):
         if isinstance(sample['entity_type'], list):
-            sample_dict = {'sampleEntityType': []}
+            sample_dict = {'sampleEntityType': [], 'effectiveOrgan': sample['effective_organ']}
             for entity_type in sample['entity_type']:
                 sample_entity_type = self.sample_entity_types[entity_type]
                 sample_dict['sampleEntityType'].append(sample_entity_type)
@@ -798,6 +798,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             entity_make_function = self.sample_entity_make_functions[entity_type]
             sample_dict = {
                 "sampleEntityType": sample_entity_type,
+                "effectiveOrgan": sample['effective_organ'],
                 **entity_make_function(self, sample)
             }
         return sample_dict
