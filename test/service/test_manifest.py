@@ -187,7 +187,7 @@ class ManifestGenerationTest(WebServiceTestCase):
         from lambdas.service.app import generate_manifest
         storage_service = StorageService()
         storage_service.create_bucket()
-        manifest_url = generate_manifest(event={'format': 'tsv', 'filters': {'file': {}}}, context=None)['Location']
+        manifest_url = generate_manifest(event={'format': 'tsv', 'filters': {}}, context=None)['Location']
         manifest_response = requests.get(manifest_url)
         self.assertEqual(200, manifest_response.status_code)
         self.assertTrue(len(manifest_response.text) > 0)
@@ -207,8 +207,11 @@ class ManifestGenerationTest(WebServiceTestCase):
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                        url = self.base_url + '/repository/files/export?filters={"file":{}}'
-                        response = requests.get(url)
+                        url = self.base_url + '/repository/files/export'
+                        params = {
+                            'filters': json.dumps({}),
+                        }
+                        response = requests.get(url, params=params)
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
                         expected = [
@@ -294,8 +297,12 @@ class ManifestGenerationTest(WebServiceTestCase):
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            url = self.base_url + '/repository/files/export?filters={"file":{"fileFormat":{"is":["bam", "fastq.gz", "fastq"]}}}&format=bdbag'
-            response = requests.get(url, stream=True)
+            url = self.base_url + '/repository/files/export'
+            params = {
+                'filters': json.dumps({'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}),
+                'format': 'bdbag',
+            }
+            response = requests.get(url, params=params, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
