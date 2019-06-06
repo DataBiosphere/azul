@@ -11,7 +11,6 @@ import requests
 import time
 from typing import Any, Mapping, Set, Optional, IO
 import unittest
-import urllib
 from urllib.parse import urlencode
 import uuid
 import os
@@ -116,7 +115,7 @@ class IntegrationTest(unittest.TestCase):
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
 
     def _test_manifest(self):
-        manifest_filter = {"file": {"project": {"is": [self.test_name]}}}
+        manifest_filter = json.dumps({'project': {'is': [self.test_name]}})
         for format_, validator in [
             (None, self.check_manifest),
             ('tsv', self.check_manifest),
@@ -131,7 +130,7 @@ class IntegrationTest(unittest.TestCase):
                     validator(response)
 
     def _test_drs(self):
-        filters = {"file": {"project": {"is": [self.test_name]}, "fileFormat": {"is": ["fastq.gz", "fastq"]}}}
+        filters = json.dumps({'project': {'is': [self.test_name]}, 'fileFormat': {'is': ['fastq.gz', 'fastq']}})
         response = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
                                                   path='/repository/files',
                                                   query={
@@ -170,10 +169,9 @@ class IntegrationTest(unittest.TestCase):
     def check_endpoint_is_working(self, endpoint: str, path: str, query: Optional[Mapping[str, str]] = None) -> bytes:
         url = furl(endpoint)
         url.path.add(path)
-        if query is not None:
-            url.query.set({k: str(v) for k, v in query.items()})
-        logger.info('Requesting %s', url)
-        response = self.requests.get(url.url)
+        query = query or {}
+        logger.info('Requesting %s?%s', url.url, urlencode(query))
+        response = self.requests.get(url.url, params=query)
         response.raise_for_status()
         return response.content
 
@@ -312,14 +310,13 @@ class IntegrationTest(unittest.TestCase):
         """
         Returns all entities of a given type in a given project.
         """
-        filters = {'file': {'project': {'is': [project_shortname]}}}
+        filters = json.dumps({'project': {'is': [project_shortname]}})
         entities = []
         size = 100
-        params = dict(filters=str(filters), size=str(size))
+        params = dict(filters=filters, size=str(size))
         while True:
-            query = urllib.parse.urlencode(params, safe="{}/'")
-            url = f'{config.service_endpoint()}/repository/{entity_type}?{query}'
-            response = self.requests.get(url)
+            url = f'{config.service_endpoint()}/repository/{entity_type}'
+            response = self.requests.get(url, params=params)
             response.raise_for_status()
             body = response.json()
             hits = body['hits']
