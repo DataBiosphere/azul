@@ -1,8 +1,8 @@
 import logging
 import requests
 from more_itertools import one
-import urllib
 import sys
+import json
 from json.decoder import JSONDecodeError
 import argparse
 
@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_project_name(document_id):
-    base_url = service_base_url + f'/repository/projects/{document_id}'
-    response = requests.get(base_url)
+    url = service_base_url + f'/repository/projects/{document_id}'
+    response = requests.get(url)
     project_list = response.json()['projects']
 
     one(project_list)
@@ -19,18 +19,19 @@ def get_project_name(document_id):
 
 
 def get_project_bundle_count(project_name):
-    page_size = 1000
-
-    filter_dict = urllib.parse.quote('{"file":{"project":{"is":["' + project_name + '"]}}}')
-    base_url = service_base_url + f'/repository/files?filters={filter_dict}&order=desc&sort=entryId'
-    url = base_url + f'&size={page_size}&order=desc'
-
+    url = f'{service_base_url}/repository/files'
+    params = {
+        'filters' : json.dumps({'project': {'is': [project_name]}}),
+        'order' : 'desc',
+        'sort' : 'entryId',
+        'size': 1000
+    }
     found_analysis_bundle_ids = set()
     all_bundle_ids = set()
     page = 0
     while True:
         page += 1
-        response = requests.get(url)
+        response = requests.get(url, params=params)
         response_json = response.json()
         hit_list = response_json.get('hits', [])
 
@@ -51,12 +52,13 @@ def get_project_bundle_count(project_name):
 
         logging.info(f'All Bundles: {len(all_bundle_ids)}, Analysis Bundles: {len(found_analysis_bundle_ids)}'
                      f' Size: {len(hit_list)} Page: {page}/{total_pages}'
-                     f' Total: {total_entities} URL: {url}')
+                     f' Total: {total_entities} URL: {response.url}')
 
         if search_after is None and search_after_uid is None:
             break
         else:
-            url = base_url + f'&size={page_size}&search_after={search_after}&search_after_uid={search_after_uid}'
+            params['search_after'] = search_after
+            params['search_after_uid'] = search_after_uid
     return len(all_bundle_ids), len(found_analysis_bundle_ids)
 
 

@@ -1,3 +1,4 @@
+import json
 import logging
 import unittest
 import urllib.parse
@@ -1206,9 +1207,12 @@ class TestResponse(WebServiceTestCase):
         for test_data in test_data_sets:
             for entity_type in 'files', 'samples', 'projects', 'bundles':
                 with self.subTest(entity_type=entity_type):
-                    url = self.base_url + "/repository/" + entity_type + "?size=2" \
-                                          "&filters={'file':{'projectId':{'is':['" + test_data['id'] + "']}}}"
-                    response = requests.get(url)
+                    url = self.base_url + "/repository/" + entity_type
+                    params = {
+                        'size': 2,
+                        'filters': json.dumps({'projectId': {'is': [test_data['id']]}})
+                    }
+                    response = requests.get(url, params=params)
                     response.raise_for_status()
                     response_json = response.json()
                     for hit in response_json['hits']:
