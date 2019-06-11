@@ -626,6 +626,9 @@ class TestHCAIndexer(IndexerTestCase):
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
             sources[entity_type, aggregate].append(hit['_source'])
+            # bundle has 240 imaging_protocol_0.json['target'] items, each with an assay_type of 'in situ sequencing'
+            assay_type = ['in situ sequencing'] if aggregate else {'in situ sequencing': 240}
+            self.assertEqual(one(hit['_source']['contents']['protocols'])['assay_type'], assay_type)
         for aggregate in True, False:
             with self.subTest(aggregate=aggregate):
                 self.assertEqual(
