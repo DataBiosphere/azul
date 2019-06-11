@@ -49,7 +49,7 @@ Code Style
 * We don't use trailing commas in enumerations to optimize diffs yet. [#]_
 
 * We avoid the use of backslash for continuing statements beyond one line.
-  Instead, we exploity the fact that Python can infer continuation if they
+  Instead, we exploit the fact that Python can infer continuation if they
   occur in balanced constructs like brackets or parentheses. If necessary we
   introduce a a pair of parentheses around the wrapping expression.
 
@@ -97,12 +97,12 @@ Imports
 
 .. [#] Note: This needs to be refined. The motivation behind always wrapping
        is to make diffs smaller and reduce the potential for merge conflicts.
-       The use of aligned indent contradicts that aim . It also raises the
+       The use of aligned indent contradicts that aim. It also raises the
        question of whether single-symbol ``from`` imports should also use
        parentheses and wrapping such that every addition of an imported symbol
        from the same module is a one-line diff. We could also discourage
-       multi-symbol ``from`` imports and require that every symbol is imported in
-       a seperate
+       multi-symbol ``from`` imports and require that every symbol is imported
+       in a seperate `import` statement.
 
 
 Comments
@@ -312,9 +312,12 @@ Type Hints
   that's something we want to avoid, especially in externally facing APIs where
   backwards compatibility is a more important concern.
 
-* Due to the prominence of JSON in the project we annotate variables containing
-  deserialized JSON as such, using the ``JSON`` type from ``azul.typing``. Note
-  that due to the lack of recursive types in PEP-484, ``JSON`` is 
+* Owing to the prominence of JSON in the project we annotate variables
+  containing deserialized JSON as such, using the ``JSON`` type from
+  ``azul.typing``. Note that due to the lack of recursive types in PEP-484,
+  ``JSON`` unrolls the recursion only three levels deep. This means that with
+  ``x: JSON`` the expression ``x['a']['b']['c']`` would be of type ``JSON``
+  while ``x['a']['b']['c']['d']`` would be of type `Any`.
 
   
 Testing
