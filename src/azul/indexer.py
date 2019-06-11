@@ -21,8 +21,7 @@ from azul.transformer import (Aggregate,
                               DocumentCoordinates,
                               EntityReference,
                               Transformer,
-                              BundleUUID,
-                              BundleVersion)
+                              BundleUUID)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
