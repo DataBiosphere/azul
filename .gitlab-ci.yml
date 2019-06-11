@@ -3,7 +3,7 @@ stages:
   - setup
   - test
   - deploy
-#  - subscribe
+  - subscribe
   - integration_test
   - teardown
   - manual
@@ -49,11 +49,11 @@ deploy:
     - make deploy
     - make -C terraform plan auto_apply
 
-#subscribe:
-#  extends: .base
-#  stage: subscribe
-#  script:
-#    - make subscribe
+subscribe:
+  extends: .base
+  stage: subscribe
+  script:
+    - make subscribe
 
 integration_test:
   extends: .base
