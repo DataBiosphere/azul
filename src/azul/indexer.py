@@ -68,15 +68,15 @@ class BaseIndexer(ABC):
                 for entity in self.entities()
                 for aggregate in aggregates]
 
-    def index(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
+    def index(self, dss_notification: JSON) -> None:
         """
         Index the bundle referenced by the given notification. This is an inefficient default implementation. A more
         efficient implementation would transform many bundles, collect their contributions and aggregate all affected
         entities at the end.
         """
         contributions = self.transform(dss_notification, delete=False)
-        tallies = self.contribute(writer, contributions)
-        self.aggregate(writer, tallies)
+        tallies = self.contribute(contributions)
+        self.aggregate(tallies)
 
     def transform(self, dss_notification: JSON, delete: bool) -> List[Contribution]:
         """
@@ -138,11 +138,12 @@ class BaseIndexer(ABC):
                 assert False, "project_0.json doesn't exist for this bundle."
             return dss_notification['test_bundle_uuid']
 
-    def contribute(self, writer: 'IndexWriter', contributions: List[Contribution]) -> Tallies:
+    def contribute(self, contributions: List[Contribution]) -> Tallies:
         """
         Write the given entity contributions to the index and return tallies, a dictionary tracking the number of
         contributions made to each entity.
         """
+        writer = self._create_writer()
         tallies = Counter(c.entity for c in contributions)
         while True:
             writer.write(contributions, expect_update=True)
@@ -155,7 +156,7 @@ class BaseIndexer(ABC):
             tallies[entity] -= 1
         return tallies
 
-    def aggregate(self, writer: 'IndexWriter', tallies: Tallies):
+    def aggregate(self, tallies: Tallies):
         """
         Read all contributions to the entities listed in the given tallies from the index, aggregate the
         contributions into one aggregate per entity and write the resulting aggregates to the index.
@@ -166,6 +167,7 @@ class BaseIndexer(ABC):
         aggregate (if the indexed format changed for example) but tallies will not serve as an accurate guide for how
         to read from contributions.
         """
+        writer = self._create_writer()
         while True:
             # Read the aggregates
             old_aggregates = self._read_aggregates(tallies)
@@ -278,7 +280,7 @@ class BaseIndexer(ABC):
 
         return aggregates
 
-    def delete(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
+    def delete(self, dss_notification: JSON) -> None:
         """
         Synchronous form of delete that is currently only used for testing.
 
@@ -292,10 +294,14 @@ class BaseIndexer(ABC):
         # deleting the indices first. The tallies refer to number of updated or added contributions but we treat them
         # as if they are all new when we estimate the number of contributions per bundle.
         # https://github.com/DataBiosphere/azul/issues/610
-        tallies = self.contribute(writer, contributions)
-        # The state of retries is saved in the writer. We need to clear it for aggregation to avoid false positives
-        writer.update_retries.clear()
-        self.aggregate(writer, tallies)
+        tallies = self.contribute(contributions)
+        self.aggregate(tallies)
+
+    def _create_writer(self) -> 'IndexWriter':
+        # We allow one conflict retry in the case of duplicate notifications and switch from 'add' to 'update'.
+        # After that, there should be no conflicts because we use an SQS FIFO message group per entity.
+        # For other errors we use SQS message redelivery to take care of the retries.
+        return IndexWriter(refresh=False, conflict_retry_limit=1, error_retry_limit=0)
 
 
 class IndexWriter:
