@@ -8,7 +8,8 @@ import math
 import os
 import re
 import time
-import urllib.parse
+import urllib
+from urllib.parse import urlparse
 
 import boto3
 from botocore.exceptions import ClientError
@@ -1557,19 +1558,23 @@ def file_to_drs(doc):
     """
     Converts an aggregate file document to a DRS data object response.
     """
-    replicas = ['aws']
+    urls = [
+        file_url(uuid=doc['uuid'],
+                 version=doc['version'],
+                 replica='aws',
+                 fetch=False,
+                 wait='1',
+                 fileName=doc['name']),
+        gs_url(doc['uuid'], doc['version'])
+    ]
+
     return {
         'id': doc['uuid'],
         'urls': [
             {
-                'url': file_url(uuid=doc['uuid'],
-                                version=doc['version'],
-                                replica=replica,
-                                fetch=False,
-                                wait='1',
-                                fileName=doc['name'])
+                'url': url
             }
-            for replica in replicas
+            for url in urls
         ],
         'size': str(doc['size']),
         'checksums': [
@@ -1611,3 +1616,34 @@ def get_data_object(file_uuid):
         return Response({'data_object': data_obj}, status_code=200)
     else:
         return Response({'msg': "Data object not found."}, status_code=404)
+
+
+def gs_url(file_uuid, version):
+    url = config.dss_endpoint + '/files/' + urllib.parse.quote(file_uuid, safe='')
+    params = dict({'file_version': version} if version else {},
+                  directurl=True,
+                  replica='gcp')
+    while True:
+        if app.lambda_context.get_remaining_time_in_millis() / 1000 > 3:
+            dss_response = requests.get(url, params=params, allow_redirects=False)
+            if dss_response.status_code == 302:
+                url = dss_response.next.url
+                assert url.startswith('gs')
+                return url
+            elif dss_response.status_code == 301:
+                url = dss_response.next.url
+                remaining_lambda_seconds = app.lambda_context.get_remaining_time_in_millis() / 1000
+                server_side_sleep = min(1, max(remaining_lambda_seconds - config.api_gateway_timeout_padding - 3, 0))
+                time.sleep(server_side_sleep)
+            else:
+                raise ChaliceViewError({
+                    'msg': f'Received {dss_response.status_code} from DSS. Could not get file'
+                })
+        else:
+            raise GatewayTimeoutError({
+                'msg': f"DSS timed out getting file: '{file_uuid}', version: '{version}'."
+            })
+
+
+class GatewayTimeoutError(ChaliceViewError):
+    STATUS_CODE = 504

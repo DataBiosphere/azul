@@ -1,0 +1,18 @@
+# Note that these are all regexes so if you don't use proper quoting/escaping
+# you risk ignoring more secrets strings than you expect, or not ignoring
+# the secret string you intend to ignore. After committing changes to this file
+# you should run `make trufflehog` to ensure that none of the secrets in this
+# file actually trigger Trufflehog. If they do, use [] around one of the
+# characters in the ignored pattern in this file.
+
+# Expired STS credentials. It is included in an iPython notebook that was
+# since deleted but is still present in the history.
+FQoGZXIvYXdzEOv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDKiwtLk68EMtDZh8jiLgAQR5XVOWZF0pdqnxIkUIxNc40BSe8NM%2BcC7wPUFwZaHpXSNNasMcRyq%2FS7ER52bxMVzNqJHUUm585Sa%2FWKNqKEceTeQMljJpNcWCIZG39RmdAjocb2syTJ7psJDfcYE%2FXOh%2BeDr0pPDqmXIV%2FKRC0u0XwtH%2BeX6LfwvTh0hmy4byqN6SjwcZTfOCv3y1alQW7naRqX%2FsCMlPITaL1CMF%2F43js4cqa6YCm9LwO%2F8gZSFZrxEYxw8fyqwf6B%2BDJUD8xLKu%2BuHW4B5%2FM33diSR4l5otXehgmqIyAT1ITmOrAdpnKJCs%2F%2BEF
+
+# This pair of credentials was issued to a contractor. It was invalidated.
+AWS_SECRET_ACCESS_KEY=L[+]LI3XvaHH3gXGKTrWLuo5D81M9xDkHl2Ev0uoBC
+AWS_ACCESS_KEY_ID=[A]KIAJT3AWIL63X6OJBYQ
+
+# This overrides one of the default patterns used by the AWS provider for
+# `git secrets. We don't mind exposing account IDs.
+AWS_ACCOUNT_ID=861229788715
