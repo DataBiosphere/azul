@@ -140,7 +140,7 @@ class SummaryRepresentation(JsonObject):
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
     fileTypeSummaries = ListProperty(FileTypeSummary)
-    organSummaries = ListProperty(OrganCellCountSummary)
+    cellCountSummaries = ListProperty(OrganCellCountSummary)
 
 
 class ProjectSummaryRepresentation(JsonObject):
@@ -149,7 +149,7 @@ class ProjectSummaryRepresentation(JsonObject):
     """
     totalCellCount = FloatProperty()
     donorCount = IntegerProperty()
-    organSummaries = ListProperty(OrganCellCountSummary)
+    cellCountSummaries = ListProperty(OrganCellCountSummary)
     genusSpecies = ListProperty(StringProperty)
     libraryConstructionApproach = ListProperty(StringProperty)
     disease = ListProperty(StringProperty)
@@ -548,6 +548,7 @@ class SummaryResponse(BaseSummaryResponse):
 
         _sum = raw_response['aggregations']['fileFormat']["myTerms"]
         _organ_group = raw_response['aggregations']['group_by_organ']
+        _organ_types = raw_response['aggregations']['organTypes']
 
         # Create a SummaryRepresentation object
         kwargs = dict(
@@ -555,12 +556,12 @@ class SummaryResponse(BaseSummaryResponse):
             totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
             specimenCount=self.agg_contents(self.aggregates, 'specimenCount', agg_form='value'),
             fileCount=self.agg_contents(self.aggregates, 'fileCount', agg_form='value'),
-            organCount=self.agg_contents(self.aggregates, 'organCount', agg_form='value'),
             donorCount=self.agg_contents(self.aggregates, 'donorCount', agg_form='value'),
             labCount=self.agg_contents(self.aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(self.aggregates, 'total_cell_count', agg_form='value'),
+            organTypes=[bucket['key'] for bucket in _organ_types['buckets']],
             fileTypeSummaries=[FileTypeSummary.for_bucket(bucket) for bucket in _sum['buckets']],
-            organSummaries=[OrganCellCountSummary.for_bucket(bucket) for bucket in _organ_group['buckets']])
+            cellCountSummaries=[OrganCellCountSummary.for_bucket(bucket) for bucket in _organ_group['buckets']])
 
         self.apiResponse = SummaryRepresentation(**kwargs)
 
@@ -608,13 +609,18 @@ class ProjectSummaryResponse(AbstractResponse):
             if 'library_construction_approach' in protocol:
                 library_accumulator.accumulate(protocol['library_construction_approach'])
 
+        organ_accumulator = SetAccumulator()
+        for sample in es_hit_contents['samples']:
+            organ_accumulator.accumulate(sample['effective_organ'])
+
         total_cell_count, organ_cell_count = self.get_cell_count(es_hit_contents)
 
         self.apiResponse = ProjectSummaryRepresentation(
             donorCount=len(donor_accumulator.get()),
             totalCellCount=total_cell_count,
-            organSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
-                            for count in organ_cell_count],
+            organTypes=organ_accumulator.get(),
+            cellCountSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
+                                for count in organ_cell_count],
             genusSpecies=genus_species_accumulator.get(),
             libraryConstructionApproach=library_accumulator.get(),
             disease=disease_accumulator.get()
@@ -662,6 +668,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", []),
                 "pairedEnd": protocol.get("paired_end", []),
                 "workflow": protocol.get("workflow", []),
+                "assayType": protocol.get("assay_type", []),
             }
             protocols.append(translated_process)
         return protocols
