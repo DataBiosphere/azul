@@ -545,12 +545,18 @@ class SpecimenAggregator(SimpleAggregator):
 
 class CellSuspensionAggregator(GroupingAggregator):
 
+    def _transform_entity(self, entity: JSON) -> JSON:
+        return {
+            **entity,
+            'total_estimated_cells': (entity['document_id'], entity['total_estimated_cells']),
+        }
+
     def _group_keys(self, entity) -> Iterable[Any]:
         return entity['organ']
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'total_estimated_cells':
-            return SumAccumulator(0)
+            return DistinctAccumulator(SumAccumulator(0))
         else:
             return SetAccumulator(max_size=100)
 
