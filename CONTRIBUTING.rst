@@ -450,12 +450,16 @@ Pull Requests
   ``SQ:`` an follow that with the title of an earlier commit that the current
   commit should be squashed with.
   
-* We don't amend commits on PR branches. Considering that we also require
-  frequent rebasing, this rule makes for a more transparent review process.
-  Without amended commits the reviewer can ignore force pushes (because those
-  can only be the result of rebases) and always have a track record of the
-  changes made in response to their comments and how those changes affected the
-  build status on the PR.
+* We may amend commits on PR branches, but only between reviews. We don't amend
+  a commit that's already been reviewed. Instead we create a new ``SQ: …``
+  commit for addressing the reviewers comments. Before asking for another
+  review we may amend that commit.
+  
+  Considering that we also require frequent rebasing, this rule makes for a
+  more transparent review process. The reviewer can ignore force pushes—because
+  those can only be the result of rebases or in-between review amends—and still
+  see a record of the changes made in response to reviews and how those changes
+  affected the build status of the PR.
   
 * At times it may be necessary to temporarily add a commit to a PR branch e.g.,
   to facilitate testing. These commits should be removed prior to landing the
