@@ -286,7 +286,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
             service = config.api_lambda_domain('service')
             dss = config.dss_endpoint
-            with open(os.path.join(zip_dir, zip_fname, 'data', 'samples.tsv'), 'r') as fh:
+            with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
                 reader = csv.DictReader(fh, delimiter='\t')
                 # The order in which the rows appear in the TSV is ultimately
                 # driven by the order in which the documents are coming back
@@ -298,7 +298,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                 # We'll assert the column ordering independently below.
                 self.assertEqual({
                     freeze({
-                        'entity:bundle_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2.2018-09-14T133314.453337Z',
+                        'entity:participant_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2.2018-09-14T133314.453337Z',
                         'bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                         'bundle_version': '2018-09-14T133314.453337Z',
                         'cell_suspension-provenance-document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
@@ -375,7 +375,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'fastq[read2]-dos_url': f'dos://{service}/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z',
                     }),
                     freeze({
-                        'entity:bundle_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.2018-11-02T113344.698028Z',
+                        'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.2018-11-02T113344.698028Z',
                         'bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                         'bundle_version': '2018-11-02T113344.698028Z',
                         'cell_suspension-provenance-document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
@@ -453,7 +453,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                     })
                 }, set(freeze(row) for row in reader))
                 self.assertEqual([
-                    'entity:bundle_id',
+                    'entity:participant_id',
                     'bundle_uuid',
                     'bundle_version',
                     'cell_suspension-provenance-document_id',
