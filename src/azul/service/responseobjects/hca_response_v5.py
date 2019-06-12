@@ -296,7 +296,7 @@ class ManifestResponse(AbstractResponse):
             bag_path = os.path.join(temp_path, 'manifest')
             os.makedirs(bag_path)
             bdbag_api.make_bag(bag_path)
-            with open(os.path.join(bag_path, 'data', 'samples.tsv'), 'w') as samples_tsv:
+            with open(os.path.join(bag_path, 'data', 'participants.tsv'), 'w') as samples_tsv:
                 self._write_bdbag_samples_tsv(samples_tsv)
             bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
             assert bdbag_api.is_bag(bag_path)
@@ -348,7 +348,7 @@ class ManifestResponse(AbstractResponse):
             for bundle in doc['bundles']:
                 bundle_fqid = bundle['uuid'], bundle['version']
 
-                bundle_cells = {'entity:bundle_id': '.'.join(bundle_fqid)}
+                bundle_cells = {'entity:participant_id': '.'.join(bundle_fqid)}
                 self._extract_fields([bundle], bundle_column_mapping, bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
@@ -385,7 +385,7 @@ class ManifestResponse(AbstractResponse):
         # Compute the column names in deterministic order, bundle_columns first
         # followed by other columns
         column_names = dict.fromkeys(chain(
-            ['entity:bundle_id'],
+            ['entity:participant_id'],
             bundle_column_mapping.keys(),
             *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
 
