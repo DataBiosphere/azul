@@ -1,9 +1,11 @@
 from abc import ABC, ABCMeta, abstractmethod
 from collections import defaultdict, Counter
 import logging
+
+from more_itertools import one
 from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple, ClassVar
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 from azul import config
 from azul.json_freeze import freeze, thaw
@@ -66,6 +68,9 @@ class Document:
     def to_source(self) -> JSON:
         return dict(entity_id=self.entity.entity_id,
                     contents=self.contents)
+
+    def to_dict(self) -> JSON:
+        return {f.name: getattr(self, f.name) for f in fields(self)}
 
     @classmethod
     def _from_source(cls, source: JSON) -> Mapping[str, Any]:
@@ -573,16 +578,19 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
         If two or more contributions contain copies of the same entity, potentially with different contents, the copy
         from the contribution with the latest bundle version will be selected.
         """
-        contents: MutableMapping[EntityType, CollatedEntities] = defaultdict(dict)
-        for contribution in contributions:
-            for entity_type, entities in contribution.contents.items():
-                collated_entities = contents[entity_type]
-                for entity in entities:
-                    entity_id = entity['document_id']  # FIXME: the key 'document_id' is HCA specific
-                    bundle_version, _ = collated_entities.get(entity_id, ('', None))
-                    if bundle_version < contribution.bundle_version:
-                        collated_entities[entity_id] = contribution.bundle_version, entity
-        return {
-            entity_type: [entity for _, entity in entities.values()]
-            for entity_type, entities in contents.items()
-        }
+        if len(contributions) == 1:
+            return one(contributions).contents
+        else:
+            contents: MutableMapping[EntityType, CollatedEntities] = defaultdict(dict)
+            for contribution in contributions:
+                for entity_type, entities in contribution.contents.items():
+                    collated_entities = contents[entity_type]
+                    for entity in entities:
+                        entity_id = entity['document_id']  # FIXME: the key 'document_id' is HCA specific
+                        bundle_version, _ = collated_entities.get(entity_id, ('', None))
+                        if bundle_version < contribution.bundle_version:
+                            collated_entities[entity_id] = contribution.bundle_version, entity
+            return {
+                entity_type: [entity for _, entity in entities.values()]
+                for entity_type, entities in contents.items()
+            }

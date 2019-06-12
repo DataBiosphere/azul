@@ -746,7 +746,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    previous release tag for the TARGET branch. Then run:
 
    ```
-   git LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --no-merges
+   git log LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --no-merges
    ```
 
    You will also need to add the release tag and commit hash which are generated
