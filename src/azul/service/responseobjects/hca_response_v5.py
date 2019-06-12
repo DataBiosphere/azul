@@ -1,5 +1,5 @@
 import abc
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict, defaultdict, ChainMap
 from copy import deepcopy
 import os
 import csv
@@ -769,38 +769,25 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_organoids(self, entry):
         return [self.make_organoid(organoid) for organoid in entry["contents"]["organoids"]]
 
-    # Map keys in the contents dict to keys in the response HitEntry
-    sample_entity_types = {
-        'cell_lines': 'cellLines',
-        'organoids': 'organoids',
-        'specimens': 'specimens',
-    }
-
-    # Map keys in the contents dict to the related make_... function
-    sample_entity_make_functions = {
-        'cell_lines': make_cell_line,
-        'organoids': make_organoid,
-        'specimens': make_specimen,
-    }
-
     def make_sample(self, sample):
-        if isinstance(sample['entity_type'], list):
-            sample_dict = {'sampleEntityType': []}
-            for entity_type in sample['entity_type']:
-                sample_entity_type = self.sample_entity_types[entity_type]
-                sample_dict['sampleEntityType'].append(sample_entity_type)
-                entity_make_function = self.sample_entity_make_functions[entity_type]
-                entity_dict = entity_make_function(self, sample)
-                sample_dict.update(entity_dict)
+        lookup = {
+            'cell_lines': ('cellLines', self.make_cell_line),
+            'organoids': ('organoids', self.make_organoid),
+            'specimens': ('specimens', self.make_specimen),
+        }
+        entity_type = sample['entity_type']
+        if isinstance(entity_type, list):
+            entity_type, make_functions = map(list, zip(*map(lookup.get, entity_type)))
+            entity_dicts = (make_function(sample) for make_function in make_functions)
+            entity_dict = ChainMap(*entity_dicts)
         else:
-            entity_type = sample['entity_type']
-            sample_entity_type = self.sample_entity_types[entity_type]
-            entity_make_function = self.sample_entity_make_functions[entity_type]
-            sample_dict = {
-                "sampleEntityType": sample_entity_type,
-                **entity_make_function(self, sample)
-            }
-        return sample_dict
+            entity_type, make_function = lookup[entity_type]
+            entity_dict = make_function(sample)
+        return {
+            'sampleEntityType': entity_type,
+            'effectiveOrgan': sample['effective_organ'],
+            **entity_dict
+        }
 
     def make_samples(self, entry):
         return [self.make_sample(sample) for sample in entry["contents"]["samples"]]

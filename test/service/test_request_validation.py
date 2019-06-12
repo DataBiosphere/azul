@@ -249,9 +249,9 @@ class FacetNameValidationTest(WebServiceTestCase):
                             ('organoid.model_organ', '', ''),
                             ('organoid.model_organ_part', '', ''),
                             ('_entity_type', '', 'specimens'),
-                            ('*.provenance.document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
+                            ('sample.provenance.document_id', '', 'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244'
                              ' || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
-                            ('*.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
+                            ('sample.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
                         ]
 
                         expected_fieldnames, expected_pdf_row, expected_fastq_row = map(list, zip(*expected))
@@ -331,8 +331,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'organoid-model_organ': '',
                         'organoid-model_organ_part': '',
                         '_entity_type': 'specimens',
-                        '*-provenance-document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
-                        '*-biomaterial_core-biomaterial_id': 'Q4_DEMO-sample_SAMN02797092',
+                        'sample-provenance-document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
+                        'sample-biomaterial_core-biomaterial_id': 'Q4_DEMO-sample_SAMN02797092',
                         'bam[0]-file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_qc.bam',
                         'bam[0]-file_format': 'bam',
                         'bam[0]-read_index': '',
@@ -408,8 +408,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                         'organoid-model_organ': '',
                         'organoid-model_organ_part': '',
                         '_entity_type': 'specimens',
-                        '*-provenance-document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
-                        '*-biomaterial_core-biomaterial_id': 'DID_scRSq06_pancreas',
+                        'sample-provenance-document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
+                        'sample-biomaterial_core-biomaterial_id': 'DID_scRSq06_pancreas',
                         'bam[0]-file_name': '',
                         'bam[0]-file_format': '',
                         'bam[0]-read_index': '',
@@ -486,8 +486,8 @@ class FacetNameValidationTest(WebServiceTestCase):
                     'organoid-model_organ',
                     'organoid-model_organ_part',
                     '_entity_type',
-                    '*-provenance-document_id',
-                    '*-biomaterial_core-biomaterial_id',
+                    'sample-provenance-document_id',
+                    'sample-biomaterial_core-biomaterial_id',
                     'bam[0]-file_name',
                     'bam[0]-file_format',
                     'bam[0]-read_index',
