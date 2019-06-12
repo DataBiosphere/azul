@@ -346,9 +346,9 @@ class ManifestResponse(AbstractResponse):
 
             # For each bundle containing the current file …
             for bundle in doc['bundles']:
-                bundle_fqid = bundle['uuid'], bundle['version']
+                bundle_fqid = bundle['uuid'], bundle['version'].replace('.', '_')
 
-                bundle_cells = {'entity:participant_id': '.'.join(bundle_fqid)}
+                bundle_cells = {'entity:participant_id': '_'.join(bundle_fqid)}
                 self._extract_fields([bundle], bundle_column_mapping, bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
