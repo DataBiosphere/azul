@@ -184,7 +184,7 @@ class IntegrationTest(unittest.TestCase):
     def check_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
-            file_path = os.path.join(data_path, 'samples.tsv')
+            file_path = os.path.join(data_path, 'participants.tsv')
             with zip_fh.open(file_path) as file:
                 self._check_manifest(file, 'bundle_uuid')
 
