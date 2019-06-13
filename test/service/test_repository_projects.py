@@ -13,6 +13,16 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
     # Set a seed so that we can test the detail response with a stable project ID
     seed = 123
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
     @staticmethod
     def get_project_detail_properties():
         """Get a list of properties that are only returned in the /repository/projects/{id} response"""
