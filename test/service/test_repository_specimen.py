@@ -11,6 +11,16 @@ def setUpModule():
 
 class RepositorySpecimenEndpointTest(WebServiceTestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
     def test_basic_response(self):
         url = self.base_url + "/repository/samples"
         response = requests.get(url)

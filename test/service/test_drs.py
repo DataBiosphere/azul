@@ -12,6 +12,16 @@ from service import WebServiceTestCase
 
 class DataRepositoryServiceEndpointTest(WebServiceTestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
     def chalice_config(self):
         return ChaliceConfig.create(lambda_timeout=15)
 

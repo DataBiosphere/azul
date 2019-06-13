@@ -25,6 +25,16 @@ class TestResponse(WebServiceTestCase):
         ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
     ]
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
     def get_hits(self, entity_type: str, entity_id: str):
         """Fetches hits from es instance searching for a particular entity ID"""
         body = {
@@ -1255,6 +1265,16 @@ class TestResponseSummary(WebServiceTestCase):
         ('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
         ('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z')  # an imaging bundle
     ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
 
     def test_summary_response(self):
         """
