@@ -31,12 +31,9 @@ class Health:
     )
 
     def as_json(self, keys=default_keys) -> JSON:
-        return {
-            'up': self.up,
-            **({
-                k: getattr(self, k) for k in keys if k in self.default_keys
-            })
-        }
+        json = {k: getattr(self, k) for k in keys if k in self.default_keys}
+        json['up'] = all(v['up'] for v in json.values())
+        return json
 
     @memoized_property
     def other_lambdas(self):
