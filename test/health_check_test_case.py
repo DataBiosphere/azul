@@ -154,6 +154,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                 ('other_lambdas', self._expected_other_lambdas(True)),
                 ('api_endpoints', self._expected_api_endpoints(endpoint_states)),
                 ('progress', self._expected_progress()),
+                ('progress,queues', {**self._expected_progress(), **self._expected_queues(True)}),
             ]
         }
         self._create_mock_queues()
