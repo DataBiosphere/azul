@@ -20,10 +20,16 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls._setup_indices()
         cls._fill_index(cls.number_of_documents)
         with mock.patch('azul.deployment.aws.dynamo') as dynamo:
             dynamo.return_value = cls.dynamo_accessor.dynamo_client
             cls.cart_item_manager = CartItemManager()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
 
     def setUp(self):
         super().setUp()
