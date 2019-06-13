@@ -13,9 +13,10 @@ class Indexer(BaseIndexer):
             "dynamic_templates": [
                 {
                     "exclude_metadata_field": {
-                        "path_match": "contents.metadata",
+                        "path_match": "contents.metadata.*",
                         "mapping": {
-                            "enabled": False
+                            "type": "{dynamic_type}",
+                            "index": False
                         }
                     }
                 },
