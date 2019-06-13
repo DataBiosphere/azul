@@ -145,26 +145,39 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     def test_health_endpoint_keys(self):
         endpoint_states = self._make_endpoint_states(self.endpoints)
         expected = {
-            key: {
+            keys: {
                 'up': True,
                 **expected_response
-            } for key, expected_response in [('elastic_search', self._expected_elastic_search(True)),
-                                             ('queues', self._expected_queues(True)),
-                                             ('other_lambdas', self._expected_other_lambdas(True)),
-                                             ('api_endpoints', self._expected_api_endpoints(endpoint_states)),
-                                             ('progress', self._expected_progress())]
+            } for keys, expected_response in [
+                ('elastic_search', self._expected_elastic_search(True)),
+                ('queues', self._expected_queues(True)),
+                ('other_lambdas', self._expected_other_lambdas(True)),
+                ('api_endpoints', self._expected_api_endpoints(endpoint_states)),
+                ('progress', self._expected_progress()),
+            ]
         }
         self._create_mock_queues()
-        for health_key, expected_response in expected.items():
-            with self.subTest(msg=health_key):
+        for keys, expected_response in expected.items():
+            with self.subTest(msg=keys):
                 with ResponsesHelper() as helper:
                     helper.add_passthru(self.base_url)
-                    self._add_helper_responses(helper, endpoint_states, True)
+                    self._mock_other_lambdas(helper, up=True)
+                    self._mock_service_endpoints(helper, endpoint_states)
                     with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
-                        response = requests.get(self.base_url + '/health/' + health_key)
-                        health_object = response.json()
+                        response = requests.get(self.base_url + '/health/' + keys)
                         self.assertEqual(200, response.status_code)
-                        self.assertEqual(health_object, expected_response)
+                        self.assertEqual(expected_response, response.json())
+
+    def test_laziness(self):
+        # Note the absence of mock decorators on this test.
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            self._mock_other_lambdas(helper, up=True)
+            # If Health werent't lazy, it would fail due the lack of mocks for SQS.
+            response = requests.get(self.base_url + '/health/other_lambdas')
+            self.assertEqual(200, response.status_code)
+            expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
+            self.assertEqual(expected_response, response.json())
 
     def _expected_queues(self, up: bool) -> JSON:
         return {
@@ -193,8 +206,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                         'up': up
                     } if up else {
                         'up': up,
-                        'error': f'503 Server Error: Service Unavailable for url: {config.service_endpoint()}'
-                                 f'{endpoint}'
+                        'error': f'503 Server Error: Service Unavailable for url: {config.service_endpoint()}{endpoint}'
                     } for endpoint, up in endpoint_states.items()
                 })
             }
@@ -231,21 +243,24 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
-            self._add_helper_responses(helper, endpoint_states, lambdas_up)
+            self._mock_other_lambdas(helper, lambdas_up)
+            self._mock_service_endpoints(helper, endpoint_states)
             with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
                 return requests.get(self.base_url + '/health')
 
-    def _add_helper_responses(self, helper: ResponsesHelper, endpoint_states: Mapping[str, bool], lambdas_up: bool):
-        for lambda_name in self._other_lambda_names():
-            helper.add(responses.Response(method='GET',
-                                          url=config.lambda_endpoint(lambda_name) + '/health/basic',
-                                          status=200 if lambdas_up else 503,
-                                          json={'up': lambdas_up}))
+    def _mock_service_endpoints(self, helper: ResponsesHelper, endpoint_states: Mapping[str, bool]) -> None:
         for endpoint, endpoint_up in endpoint_states.items():
             helper.add(responses.Response(method='HEAD',
                                           url=config.service_endpoint() + endpoint,
                                           status=200 if endpoint_up else 503,
                                           json={}))
+
+    def _mock_other_lambdas(self, helper: ResponsesHelper, up: bool):
+        for lambda_name in self._other_lambda_names():
+            helper.add(responses.Response(method='GET',
+                                          url=config.lambda_endpoint(lambda_name) + '/health/basic',
+                                          status=200 if up else 503,
+                                          json={'up': up}))
 
     def _create_mock_queues(self):
         sqs = boto3.resource('sqs', region_name='us-east-1')
