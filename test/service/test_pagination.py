@@ -17,7 +17,13 @@ class PaginationTestCase(WebServiceTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls._setup_indices()
         cls._fill_index()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
 
     def get_base_url(self):
         return self.base_url + '/repository/files'
