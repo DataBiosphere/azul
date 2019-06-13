@@ -1,4 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
+from typing import Tuple
 
 import boto3
 import requests
@@ -77,24 +79,22 @@ class Health:
             'unindexed_documents': sum(self.queues[config.document_queue_name].get('messages', {}).values())
         }
 
+    def _api_endpoint(self, path: str) -> Tuple[str, JSON]:
+        url = config.service_endpoint() + path
+        response = requests.head(url)
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            return url, {'up': False, 'error': str(e)}
+        else:
+            return url, {'up': True}
+
     @memoized_property
     def api_endpoints(self):
-        status = {'up': True}
-
-        for endpoint in self.endpoints:
-            response = requests.head(config.service_endpoint() + endpoint)
-            try:
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as e:
-                status[config.service_endpoint() + endpoint] = {
-                    'up': False,
-                    'error': str(e)
-                }
-                status['up'] = False
-            else:
-                status[config.service_endpoint() + endpoint] = {
-                    'up': True
-                }
+        endpoints = self.endpoints
+        with ThreadPoolExecutor(len(endpoints)) as tpe:
+            status = dict(tpe.map(self._api_endpoint, endpoints))
+        status['up'] = all(v['up'] for v in status.values())
         return status
 
     @memoized_property
