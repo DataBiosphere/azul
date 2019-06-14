@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import collections
 from copy import deepcopy
 import json
 import logging
@@ -541,8 +542,15 @@ class ElasticTransformDump(object):
         config_folder = os.path.dirname(service_config.__file__)
         request_config_path = "{}/{}".format(config_folder, 'request_config.json')
         request_config = self.open_and_return_json(request_config_path)
+        source_filter = None
         manifest_config = request_config['manifest']
-        if format == 'bdbag':
+        entity_type = 'files'
+
+        if format == 'full':
+            source_filter = ['contents.metadata.*']
+            entity_type = 'bundles'
+            manifest_config = self.generate_metadata_manifest()
+        elif format == 'bdbag':
             # Terra rejects `.` in column names
             manifest_config = {
                 path: {
@@ -552,19 +560,55 @@ class ElasticTransformDump(object):
                 for path, mapping in manifest_config.items()
             }
 
-        source_filter = [field_path_prefix + '.' + field_name
-                         for field_path_prefix, field_mapping in manifest_config.items()
-                         for field_name in field_mapping.values()]
+        if not source_filter:
+            source_filter = [field_path_prefix + '.' + field_name
+                             for field_path_prefix, field_mapping in manifest_config.items()
+                             for field_name in field_mapping.values()]
+
         es_search = self.create_request(filters,
                                         self.es_client,
                                         request_config,
                                         post_filter=False,
                                         source_filter=source_filter,
-                                        enable_aggregation=False)
-
+                                        enable_aggregation=False,
+                                        entity_type=entity_type)
         manifest = ManifestResponse(es_search, manifest_config, request_config['translation'], format)
 
         return manifest.return_response()
+
+    def generate_metadata_manifest(self) -> JSON:
+        bundles_index = config.es_index_name('bundles')
+        mapping = self.es_client.indices.get_mapping(index=bundles_index)
+        metadata = mapping[bundles_index]['mappings']['doc']['properties']['contents']['properties']['metadata']
+        metadata_mapping = self.metadata_mapping(metadata, None)
+        metadata_config = self.flatten_mapping(mapping=metadata_mapping)
+        return metadata_config
+
+    def metadata_mapping(self, mapping: JSON, key: str) -> JSON:
+        try:
+            return {k: self.metadata_mapping(v, k) for k, v in mapping.get('properties').items()}
+        except AttributeError:
+            return str(key)
+
+    # TODO: Write a doctest for this which will clarify what it does.
+    def flatten_mapping(self, mapping, parent_key='', sep='.') -> JSON:
+        """
+        >>> from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+        >>> es_tf = EsTd()
+        >>> es_tf.flatten_mapping(mapping={'foo': {'bar': {'foobar': 'foobar'}}})
+        {'foo.bar.foobar': 'foobar'}
+
+        >>> es_tf.flatten_mapping(mapping={'bar': {'foo': {'barfoo': {'foobar': {'foobarfoo': 'foobarfoo'}}}}})
+        {'bar.foo.barfoo.foobar.foobarfoo': 'foobarfoo'}
+        """
+        items = []
+        for k, v in mapping.items():
+            new_key = parent_key + sep + k if parent_key else k
+            if isinstance(v, collections.MutableMapping):
+                items.extend(self.flatten_mapping(mapping=v, parent_key=new_key, sep=sep).items())
+            else:
+                items.append((new_key, v))
+        return dict(items)
 
     def transform_autocomplete_request(
         self,
