@@ -275,6 +275,12 @@ class ManifestResponse(AbstractResponse):
                 return self.storage_service.upload(bdbag_path, object_key)
             finally:
                 os.remove(bdbag_path)
+        elif self.format == 'full':
+            output = StringIO()
+            self._write_metadata(output)
+            return self.storage_service.put(object_key=f'metadata/{uuid4()}.tsv',
+                                            data=output.getvalue().encode(),
+                                            content_type='text/tab-separated-values')
         else:
             assert False
 
@@ -289,6 +295,17 @@ class ManifestResponse(AbstractResponse):
                 for doc_path, column_mapping in self.manifest_entries.items():
                     entities = self._get_entities(doc_path, doc)
                     self._extract_fields(entities, column_mapping, row)
+                writer.writerow(row)
+
+    def _write_metadata(self, output: IO[str]) -> None:
+        sources = list(self.manifest_entries.keys())
+        writer = csv.DictWriter(output, sources, dialect='excel-tab')
+        writer.writeheader()
+        for hit in self.es_search.scan():
+            doc = hit['contents'].to_dict()
+            for metadata in list(doc['metadata']):
+                row = dict.fromkeys(sources)
+                row.update(metadata)
                 writer.writerow(row)
 
     def _create_bdbag_archive(self) -> str:
@@ -456,7 +473,7 @@ class ManifestResponse(AbstractResponse):
         return dss_url
 
     def return_response(self):
-        if config.disable_multipart_manifests or self.format == 'bdbag':
+        if config.disable_multipart_manifests or self.format in ('bdbag', 'full'):
             object_key = self._push_content_single_part()
             file_name = None
         else:
