@@ -777,9 +777,9 @@ class TestHCAIndexer(IndexerTestCase):
         bundles_index = config.es_index_name('bundles')
         mapping = self.es_client.indices.get_mapping(index=bundles_index)
         self.assertIn('bundle_uuid', mapping[bundles_index]
-                        ['mappings']['doc']['properties']
-                        ['contents']['properties']
-                        ['metadata']['properties'])
+                                     ['mappings']['doc']['properties']
+                                     ['contents']['properties']
+                                     ['metadata']['properties'])
 
         # Ensure that a metadata row exists …
         hits = self._get_all_hits()
