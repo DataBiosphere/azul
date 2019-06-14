@@ -481,7 +481,7 @@ def get_manifest():
 
 def get_format(params):
     format_ = params.get('format', 'tsv')
-    if format_ in ('tsv', 'bdbag'):
+    if format_ in ('tsv', 'bdbag', 'full'):
         return format_
     else:
         raise BadRequestError(f'{format_} is not a valid manifest format.')
