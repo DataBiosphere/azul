@@ -182,6 +182,7 @@ class TestHCAIndexer(IndexerTestCase):
         def is_aggregate(h):
             _, aggregate_ = config.parse_es_index_name(h['_index'])
             return aggregate_
+
         actual_aggregates = [h for h in hits if is_aggregate(h)]
 
         self.assertEqual(len(actual_addition_contributions), num_expected_addition_contributions)
@@ -689,8 +690,7 @@ class TestHCAIndexer(IndexerTestCase):
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
 
             if entity_type != 'files' or one(contents['files'])['file_format'] != 'pdf':
-                for cell_suspension in contents['cell_suspensions']:
-                    inner_cell_suspensions += 1
+                inner_cell_suspensions += len(contents['cell_suspensions'])
 
             for specimen in contents['specimens']:
                 inner_specimens += 1
@@ -707,10 +707,12 @@ class TestHCAIndexer(IndexerTestCase):
         specimens = 4
         cell_suspensions = 1
         files = 16
-        inner_specimens_in_contributions = (files + projects + bundles + cell_suspensions) * specimens + specimens * 1
-        inner_specimens_in_aggregates = (files + specimens + projects + bundles + cell_suspensions) * 1
-        inner_cell_suspensions_in_contributions = (files + specimens + projects + bundles + cell_suspensions) * cell_suspensions
-        inner_cell_suspensions_in_aggregates = (files + specimens + projects + bundles + cell_suspensions) * 1
+        all_entities = files + specimens + projects + bundles + cell_suspensions
+        non_specimens = files + projects + bundles + cell_suspensions
+        inner_specimens_in_contributions = non_specimens * specimens + specimens * 1
+        inner_specimens_in_aggregates = all_entities * 1
+        inner_cell_suspensions_in_contributions = all_entities * cell_suspensions
+        inner_cell_suspensions_in_aggregates = all_entities * 1
 
         self.assertEqual(inner_specimens_in_contributions + inner_specimens_in_aggregates,
                          inner_specimens)
@@ -954,8 +956,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             hmac_creds = {'key': b'good key', 'key_id': 'the id'}
-            with patch('azul.deployment.aws.get_hmac_key_and_id',
-                       return_value=hmac_creds) as mock:
+            with patch('azul.deployment.aws.get_hmac_key_and_id', return_value=hmac_creds):
                 with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
                     if valid_auth:
                         auth = hmac.prepare()
