@@ -48,6 +48,11 @@ class ServiceTaskSet(TaskSet):
 
     @task(3)
     class FilesTaskSet(TaskSequence):
+        '''
+        Because this subclass of TaskSequence, it represents the sequence of a user type,
+        the `@task()` decorator gives a weight to the frequency of a users request.
+        Read: https://docs.locust.io/en/stable/writing-a-locustfile.html#tasks-attribute
+        '''
         def on_start(self):
             self.files_page()
 
@@ -57,6 +62,7 @@ class ServiceTaskSet(TaskSet):
                 group.spawn(lambda: self.client.get('/repository/files?filters=%7B%7D&size=15'))
 
         @seq_task(1)
+        @task(15)
         def filter_organ_part(self):
             """Select temporal lobe since it's shared between most deployments"""
             with parallel_requests() as group:
@@ -67,6 +73,7 @@ class ServiceTaskSet(TaskSet):
                                                     '&size=15&sort=sampleId&order=desc'))
 
         @seq_task(2)
+        @task(1)
         def download_manifest(self):
             self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22organPart%22%3A%7B%22'
                             'is%22%3A%5B%22temporal%20lobe%22%5D%7D%7D%7D')
