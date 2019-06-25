@@ -182,9 +182,9 @@ def index(event: chalice.app.SQSEvent):
                 indexer_cls = plugin.indexer_class()
                 indexer = indexer_cls()
                 if action == 'add':
-                    contributions = indexer.transform(notification)
+                    contributions = indexer.transform(notification, delete=False)
                 elif action == 'delete':
-                    contributions = indexer.transform_deletion(notification)
+                    contributions = indexer.transform(notification, delete=True)
                 else:
                     assert False
 
