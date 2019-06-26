@@ -296,7 +296,7 @@ class ManifestResponse(AbstractResponse):
             bag_path = os.path.join(temp_path, 'manifest')
             os.makedirs(bag_path)
             bdbag_api.make_bag(bag_path)
-            with open(os.path.join(bag_path, 'data', 'samples.tsv'), 'w') as samples_tsv:
+            with open(os.path.join(bag_path, 'data', 'participants.tsv'), 'w') as samples_tsv:
                 self._write_bdbag_samples_tsv(samples_tsv)
             bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
             assert bdbag_api.is_bag(bag_path)
@@ -310,7 +310,7 @@ class ManifestResponse(AbstractResponse):
             os.rename(archive_path, temp_path)
             return temp_path
 
-    column_path_separator = '-'
+    column_path_separator = '__'
 
     def _write_bdbag_samples_tsv(self, bundle_tsv: IO[str]) -> None:
         """
@@ -342,13 +342,13 @@ class ManifestResponse(AbstractResponse):
             # prefix the names of file-specific columns in the TSV
             qualifier = file['file_format']
             if qualifier in ('fastq.gz', 'fastq'):
-                qualifier = f"fastq[{file['read_index']}]"
+                qualifier = f"fastq_{file['read_index']}"
 
             # For each bundle containing the current file …
             for bundle in doc['bundles']:
-                bundle_fqid = bundle['uuid'], bundle['version']
+                bundle_fqid = bundle['uuid'], bundle['version'].replace('.', '_')
 
-                bundle_cells = {'entity:bundle_id': '.'.join(bundle_fqid)}
+                bundle_cells = {'entity:participant_id': '_'.join(bundle_fqid)}
                 self._extract_fields([bundle], bundle_column_mapping, bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
@@ -364,8 +364,8 @@ class ManifestResponse(AbstractResponse):
         # one file per file format
         def qualify(qualifier, column_name, index=None):
             if index is not None:
-                qualifier = f"{qualifier}[{index}]"
-            return f"{qualifier}{self.column_path_separator}{column_name}"
+                qualifier = f"{qualifier}_{index}"
+            return f"{self.column_path_separator}{qualifier}{self.column_path_separator}{column_name}"
 
         num_groups_per_qualifier = defaultdict(int)
 
@@ -385,7 +385,7 @@ class ManifestResponse(AbstractResponse):
         # Compute the column names in deterministic order, bundle_columns first
         # followed by other columns
         column_names = dict.fromkeys(chain(
-            ['entity:bundle_id'],
+            ['entity:participant_id'],
             bundle_column_mapping.keys(),
             *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
 

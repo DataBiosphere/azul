@@ -285,6 +285,9 @@ class AzulClient(object):
                 'bundle_version': bundle_version
             }
         }
+        self.delete_notification(notification)
+
+    def delete_notification(self, notification):
         response = requests.post(url=self.indexer_url + '/delete',
                                  json=notification,
                                  auth=hmac.prepare())

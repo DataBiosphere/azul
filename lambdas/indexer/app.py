@@ -60,10 +60,11 @@ def basic_health():
 
 
 @app.route('/health', methods=['GET'], cors=True)
-@app.route('/health/{key}', methods=['GET'], cors=True)
-def health(key: Optional[str] = None):
+@app.route('/health/{keys}', methods=['GET'], cors=True)
+def health(keys: Optional[str] = None):
     health = Health('indexer')
-    body = health.as_json(*[(key,)] if key else [])
+    kwargs = {} if keys is None else dict(keys=keys.split(','))
+    body = health.as_json(**kwargs)
     return Response(
         body=json.dumps(body),
         status_code=200 if body['up'] else 503
@@ -181,9 +182,9 @@ def index(event: chalice.app.SQSEvent):
                 indexer_cls = plugin.indexer_class()
                 indexer = indexer_cls()
                 if action == 'add':
-                    contributions = indexer.transform(notification)
+                    contributions = indexer.transform(notification, delete=False)
                 elif action == 'delete':
-                    contributions = indexer.transform_deletion(notification)
+                    contributions = indexer.transform(notification, delete=True)
                 else:
                     assert False
 
