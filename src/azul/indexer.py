@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
+from itertools import groupby
 import logging
 from operator import attrgetter
 import time
@@ -11,7 +12,7 @@ from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
 from azul import config
-from azul.dss import patch_client_for_direct_file_access
+from azul.dss import patch_client_for_direct_access
 from azul.es import ESClientFactory
 from azul.transformer import (Aggregate,
                               AggregatingTransformer,
@@ -19,7 +20,9 @@ from azul.transformer import (Aggregate,
                               Document,
                               DocumentCoordinates,
                               EntityReference,
-                              Transformer, EntityID, BundleUUID)
+                              Transformer,
+                              BundleUUID,
+                              BundleVersion)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -72,11 +75,11 @@ class BaseIndexer(ABC):
         efficient implementation would transform many bundles, collect their contributions and aggregate all affected
         entities at the end.
         """
-        contributions = self.transform(dss_notification)
+        contributions = self.transform(dss_notification, delete=False)
         tallies = self.contribute(writer, contributions)
         self.aggregate(writer, tallies)
 
-    def transform(self, dss_notification: JSON) -> List[Contribution]:
+    def transform(self, dss_notification: JSON, delete: bool) -> List[Contribution]:
         """
         Transform the metadata in the bundle referenced by the given notification into a list of contributions to
         documents, each document representing one metadata entity in the index.
@@ -85,31 +88,32 @@ class BaseIndexer(ABC):
         bundle_version = dss_notification['match']['bundle_version']
         manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
         # If indexing a test bundle we want to change the uuid so that we can delete the bundle after
-        test_bundle_uuid = self._add_test_modifications(manifest, metadata_files, dss_notification)
-        if test_bundle_uuid:
-            bundle_uuid = test_bundle_uuid
-
+        bundle_uuid = self._add_test_modifications(bundle_uuid, manifest, metadata_files, dss_notification)
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
         # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
+        self._create_indices()
+        log.info("Transforming metadata for bundle %s.%s", bundle_uuid, bundle_version)
+        contributions = []
+        for transformer in self.transformers():
+            contributions.extend(transformer.transform(uuid=bundle_uuid,
+                                                       version=bundle_version,
+                                                       deleted=delete,
+                                                       manifest=manifest,
+                                                       metadata_files=metadata_files))
+        return contributions
+
+    def _create_indices(self):
         es_client = ESClientFactory.get()
         for index_name in self.index_names():
             es_client.indices.create(index=index_name,
                                      ignore=[400],
                                      body=dict(settings=self.settings(index_name),
                                                mappings=dict(doc=self.mapping())))
-        log.info("Transforming metadata for bundle %s.%s", bundle_uuid, bundle_version)
-        contributions = []
-        for transformer in self.transformers():
-            contributions.extend(transformer.transform(uuid=bundle_uuid,
-                                                       version=bundle_version,
-                                                       manifest=manifest,
-                                                       metadata_files=metadata_files))
-        return contributions
 
     def _get_bundle(self, bundle_uuid, bundle_version):
         now = time.time()
         dss_client = config.dss_client()
-        patch_client_for_direct_file_access(dss_client)
+        patch_client_for_direct_access(dss_client)
         _, manifest, metadata_files = download_bundle_metadata(client=dss_client,
                                                                replica='aws',
                                                                uuid=bundle_uuid,
@@ -119,9 +123,11 @@ class BaseIndexer(ABC):
         assert _ == bundle_version
         return manifest, metadata_files
 
-    def _add_test_modifications(self, manifest, metadata_files, dss_notification):
+    def _add_test_modifications(self, bundle_uuid, manifest, metadata_files, dss_notification):
         integration_test_name = dss_notification.get('test_name', None)
-        if integration_test_name is not None:
+        if integration_test_name is None:
+            return bundle_uuid
+        else:
             for dss_file in manifest:
                 if 'project_0.json' in dss_file['name']:
                     dss_file['uuid'] = dss_notification['test_uuid']
@@ -132,8 +138,6 @@ class BaseIndexer(ABC):
             else:
                 assert False, "project_0.json doesn't exist for this bundle."
             return dss_notification['test_bundle_uuid']
-        else:
-            return None
 
     def contribute(self, writer: 'IndexWriter', contributions: List[Contribution]) -> Tallies:
         """
@@ -156,7 +160,6 @@ class BaseIndexer(ABC):
         """
         while True:
             # Read the aggregates
-            # FIXME: we should source filter so we only read the num_contributions and version values
             old_aggregates = self._read_aggregates(entity for entity in tallies.keys())
             absolute_tallies = Counter(tallies)
             absolute_tallies.update({old_aggregate.entity: old_aggregate.num_contributions
@@ -191,7 +194,7 @@ class BaseIndexer(ABC):
                                   _index=Aggregate.index_name(entity.entity_type),
                                   _id=entity.entity_id)  # FIXME: assumes that document_id is entity_id for aggregates
                              for entity in entities])
-        response = ESClientFactory.get().mget(body=request)
+        response = ESClientFactory.get().mget(body=request, _source_include=Aggregate.mandatory_source_fields())
         aggregates = (Aggregate.from_index(doc) for doc in response['docs'] if doc['found'])
         aggregates = {a.entity: a for a in aggregates}
         return aggregates
@@ -228,25 +231,26 @@ class BaseIndexer(ABC):
         return contributions
 
     def _aggregate(self, contributions: List[Contribution]) -> List[Aggregate]:
-        # Group contributions by entity ID and bundle UUID
-        contributions_by_bundle: Mapping[Tuple[EntityID, BundleUUID], List[Contribution]] = defaultdict(list)
+        # Group contributions by entity and bundle UUID
+        contributions_by_bundle: Mapping[Tuple[EntityReference, BundleUUID], List[Contribution]] = defaultdict(list)
         tallies = Counter()
         for contribution in contributions:
-            contributions_by_bundle[contribution.entity.entity_id, contribution.bundle_uuid].append(contribution)
+            contributions_by_bundle[contribution.entity, contribution.bundle_uuid].append(contribution)
             # Track the raw, unfiltered number of contributions per entity
-            tallies[contribution.entity.entity_id] += 1
+            tallies[contribution.entity] += 1
 
-        # Among the contributions by a particular bundle to a particular entity, select the contribution from latest
-        # version of that bundle. If the latest non-deleted bundle. Group selected contributions by entity type and ID.
-        contributions_by_entity = defaultdict(list)
-        for bundle_contributions in contributions_by_bundle.values():
-            bundle_contributions = (c for c in bundle_contributions if not c.bundle_deleted)
-            try:
-                contribution = max(bundle_contributions, key=attrgetter('bundle_version'))
-            except ValueError:
-                pass
-            else:
-                contributions_by_entity[contribution.entity].append(contribution)
+        # For each entity and bundle, find the most recent contribution that is not a deletion
+        contributions_by_entity: Mapping[EntityReference, List[Contribution]] = defaultdict(list)
+        for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
+            contributions = sorted(contributions, key=attrgetter('bundle_version', 'bundle_deleted'), reverse=True)
+            for bundle_version, group in groupby(contributions, key=attrgetter('bundle_version')):
+                contribution = next(group)
+                if not contribution.bundle_deleted:
+                    assert bundle_uuid == contribution.bundle_uuid
+                    assert bundle_version == contribution.bundle_version
+                    assert entity == contribution.entity
+                    contributions_by_entity[entity].append(contribution)
+                    break
 
         # Create lookup for transformer by entity type
         transformers = {t.entity_type(): t for t in self.transformers() if isinstance(t, AggregatingTransformer)}
@@ -257,22 +261,25 @@ class BaseIndexer(ABC):
             transformer = transformers[entity.entity_type]
             contents = transformer.aggregate(contributions)
             bundles = [dict(uuid=c.bundle_uuid, version=c.bundle_version) for c in contributions]
-            # noinspection PyArgumentList
-            # https://youtrack.jetbrains.com/issue/PY-28506
             aggregate = Aggregate(entity=entity,
                                   version=None,
                                   contents=contents,
                                   bundles=bundles,
-                                  num_contributions=tallies[entity.entity_id])
+                                  num_contributions=tallies[entity])
             aggregates.append(aggregate)
 
         return aggregates
 
     def delete(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
+        """
+        Synchronous form of delete that is currently only used for testing.
+
+        In production code, there is an SQS queue between the calls to `contribute()` and `aggregate()`
+        """
         # FIXME: this only works if the bundle version is not being indexed concurrently
         # The fix could be to optimistically lock on the aggregate version
         # https://github.com/DataBiosphere/azul/issues/611
-        contributions = self.transform_deletion(dss_notification)
+        contributions = self.transform(dss_notification, delete=True)
         # FIXME: these are all modified contributions, not new ones. This also happens when we reindex without
         # deleting the indices first. The tallies refer to number of updated or added contributions but we treat them
         # as if they are all new when we estimate the number of contributions per bundle.
@@ -280,30 +287,9 @@ class BaseIndexer(ABC):
         tallies = self.contribute(writer, contributions)
         self.aggregate(writer, tallies)
 
-    def transform_deletion(self, dss_notification: JSON) -> List[Contribution]:
-        match = dss_notification['match']
-        es_client = ESClientFactory.get()
-        query = {
-            "query": {
-                "bool": {
-                    "must": [
-                        {"term": {"bundle_uuid.keyword": match['bundle_uuid']}},
-                        {"term": {"bundle_version.keyword": match['bundle_version']}}
-                    ]
-                }
-            }
-        }
-        # FIXME: decide if we want to keep the contents of the contribution, or not (and use source filtering to
-        # minimize the response size)
-        contributions = []
-        for hit in scan(es_client, query=query, doc_type="doc", index=self.index_names(aggregate=False)):
-            contribution = Contribution.from_index(hit)
-            contribution.bundle_deleted = True
-            contributions.append(contribution)
-        return contributions
-
 
 class IndexWriter:
+
     def __init__(self,
                  refresh: Union[bool, str],
                  conflict_retry_limit: int,
@@ -324,7 +310,7 @@ class IndexWriter:
         self.es_client = ESClientFactory.get()
         self.errors: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
         self.conflicts: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
-        self.retries: MutableSet[DocumentCoordinates] = None
+        self.retries: Optional[MutableSet[DocumentCoordinates]] = None
 
     bulk_threshold = 32
 
