@@ -306,11 +306,11 @@ class IntegrationTest(unittest.TestCase):
                     "specimens: {}, bundles: {}".format(*results_empty))
         return all(results_empty)
 
-    def _get_entities_by_project(self, entity_type, project_shortname):
+    def _get_entities_by_project(self, entity_type, project_short_name):
         """
         Returns all entities of a given type in a given project.
         """
-        filters = json.dumps({'project': {'is': [project_shortname]}})
+        filters = json.dumps({'project': {'is': [project_short_name]}})
         entities = []
         size = 100
         params = dict(filters=filters, size=str(size))

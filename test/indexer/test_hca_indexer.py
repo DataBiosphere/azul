@@ -322,7 +322,7 @@ class TestHCAIndexer(IndexerTestCase):
                 contents = source['contents']
                 project = one(contents['projects'])
                 self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
-                self.assertEqual('Single of human pancreas', get(project['project_shortname']))
+                self.assertEqual('Single of human pancreas', get(project['project_short_name']))
                 self.assertIn('John Dear', get(project['laboratory']))
                 if aggregate and entity_type != 'projects':
                     self.assertIn('Farmers Trucks', project['institutions'])
@@ -370,7 +370,7 @@ class TestHCAIndexer(IndexerTestCase):
                 old_contents = old_source['contents']
                 old_project = one(old_contents['projects'])
                 self.assertNotEqual(old_project["project_title"], project["project_title"])
-                self.assertNotEqual(old_project["project_shortname"], project["project_shortname"])
+                self.assertNotEqual(old_project["project_short_name"], project["project_short_name"])
                 self.assertNotEqual(old_project["laboratory"], project["laboratory"])
                 if aggregate and entity_type != 'projects':
                     self.assertNotEqual(old_project["institutions"], project["institutions"])
@@ -383,7 +383,7 @@ class TestHCAIndexer(IndexerTestCase):
                              "signatures of aging and somatic mutation patterns.",
                              get(project["project_title"]))
             self.assertEqual("Single cell transcriptome analysis of human pancreas",
-                             get(project["project_shortname"]))
+                             get(project["project_short_name"]))
             self.assertNotIn("Sarah Teichmann", project["laboratory"])
             self.assertIn("Molecular Atlas", project["laboratory"])
             if aggregate and entity_type != 'projects':

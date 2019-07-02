@@ -3,7 +3,7 @@
         "content": {
             "describedBy": "https://schema.humancellatlas.org/type/project/5.1.0/project",
             "project_core": {
-                "project_shortname": "1M Immune Cells",
+                "project_short_name": "1M Immune Cells",
                 "project_description": "Diverse cells of the immune system maintain and protect tissue function, integrity, and homeostasis upon changes in functional demands and diverse perturbations. Recent advances such as massively parallel single-cell RNA-sequencing and sophisticated computational methods help shed new light on this complexity. This immune cell census aims to profile up to 2M immunocytes, the first tranche of this is currently available. With computational methods optimized to a massive scale, we can readily identify cell types and markers, as well as the process of hematopoietic differentiation. The high quality and comprehensive reference map is provided as an open community resource for understanding human health and disease.",
                 "project_title": "Census of Immune Cells"
             },
