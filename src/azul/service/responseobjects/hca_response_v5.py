@@ -695,7 +695,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for project in entry["contents"]["projects"]:
             translated_project = {
                 "projectTitle": project.get("project_title"),
-                "projectShortname": project["project_shortname"],
+                "projectShortname": project["project_short_name"],
                 "laboratory": list(set(project.get("laboratory", [])))
             }
             if self.entity_type == 'projects':
