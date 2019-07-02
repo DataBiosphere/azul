@@ -108,7 +108,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         return {
             'project_title': project.project_title,
             'project_description': project.project_description,
-            'project_shortname': project.project_short_name,
+            'project_short_name': project.project_short_name,
             'laboratory': list(laboratories),
             'institutions': list(institutions),
             'contact_names': list(contact_names),
