@@ -8,8 +8,7 @@ import requests
 
 from azul import config
 from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
-                                                          KeywordSearchResponse,
-                                                          ProjectSummaryResponse)
+                                                          KeywordSearchResponse)
 from service import WebServiceTestCase
 
 
@@ -616,94 +615,6 @@ class TestResponse(WebServiceTestCase):
                         self.assertEqual('aws', actual_query_vars['replica'])
                         self.assertIsNotNone(actual_query_vars['version'])
 
-    def test_project_summary_cell_count(self):
-        """
-        Test per organ and total cell counter in ProjectSummaryResponse. Should return a correct total cell count and
-        per organ cell count. Should not double count cell count from cell suspensions with an already counted id (
-        i.e. each unique cell suspension counted exactly once).
-        """
-        es_hit = {
-            "specimens": [
-                {
-                    "biomaterial_id": ["specimen1", "specimen3"],
-                    "disease": ["disease1"],
-                    "donor_biomaterial_id": ["donor1"],
-                    "genus_species": ["species1"]
-                },
-                {
-                    "biomaterial_id": ["specimen2"],
-                    "disease": ["disease1"],
-                    "donor_biomaterial_id": ["donor1"],
-                    "genus_species": ["species1"]
-                }
-            ],
-            "cell_suspensions": [
-                {
-                    "organ": ["organ1"],
-                    "total_estimated_cells": 6,
-                },
-                {
-                    "organ": ["organ2"],
-                    "total_estimated_cells": 3,
-                }
-
-            ],
-            "files": [],
-            "protocols": [],
-            "project": {
-                "document_id": "a"
-            }
-        }
-
-        expected_output = [
-            {
-                "key": ["organ1"],
-                "value": 6
-            },
-            {
-                "key": ["organ2"],
-                "value": 3
-            }
-        ]
-
-        total_cell_count, organ_cell_count = ProjectSummaryResponse.get_cell_count(es_hit)
-
-        self.assertEqual(total_cell_count,
-                         sum([cell_count['value'] for cell_count in expected_output]))
-        self.assertElasticsearchResultsEqual(organ_cell_count, expected_output)
-
-    project_buckets = {
-        "buckets": [
-            {
-                "key": "project1",
-                "term_bucket": {
-                    "buckets": [
-                        {
-                            "key": "term1"
-                        },
-                        {
-                            "key": "term2"
-                        },
-                        {
-                            "key": "term3"
-                        }
-                    ]
-                },
-                "value_bucket": {
-                    "value": 2
-                }
-            },
-            {
-                "key": "project2",
-                "term_bucket": {
-                    "buckets": []
-                },
-                "value_bucket": {
-                    "value": 4
-                }
-            }
-        ]
-    }
 
     def test_projects_key_search_response(self):
         """
@@ -1316,53 +1227,6 @@ class TestResponseSummary(WebServiceTestCase):
             {'organType': ['Brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0},
             {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0},
         ])
-
-    def test_project_summary_response(self):
-        """
-        Test that ProjectSummaryResponse will correctly do the per-project aggregations
-
-        Should only return values associated to each project
-        Should sum cell counts per-organ per-project and return an organ summary
-        Should correctly get distinct values for diseases, species, library construction approaches for each project
-        Should correctly count donor ids within a project
-        """
-        url = self.base_url + "/repository/projects"
-        response = requests.get(url)
-        response.raise_for_status()
-        response_json = response.json()
-        self.assertEqual(len(response_json['hits']), 3)
-        for hit in response_json['hits']:
-            summary = hit['projectSummary']
-            if one(hit['projects'])['projectTitle'] == 'Assessing the relevance of organoids to model inter-individual variation':
-                self.assertEqual(summary['donorCount'], 4)
-                self.assertEqual(summary['totalCellCount'], 6210.0)
-                self.assertEqual(summary['genusSpecies'], ['Homo sapiens'])
-                self.assertEqual(summary['libraryConstructionApproach'], ["Chromium 3' Single Cell v2"])
-                self.assertEqual(summary['disease'], ['normal'])
-                self.assertEqual(summary['organTypes'], ['Brain'])
-                count_summary = {'organType': ['Brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0}
-                self.assertEqual(one(summary['cellCountSummaries']), count_summary)
-            elif one(hit['projects'])['projectTitle'] == 'Single cell transcriptome patterns.':
-                self.assertEqual(summary['donorCount'], 1)
-                self.assertEqual(summary['totalCellCount'], 1.0)
-                self.assertEqual(summary['genusSpecies'], ['Australopithecus'])
-                self.assertEqual(summary['libraryConstructionApproach'], ['Smart-seq2'])
-                self.assertEqual(summary['disease'], ['normal'])
-                self.assertEqual(summary['organTypes'], ['pancreas'])
-                count_summary = {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0}
-                self.assertEqual(one(summary['cellCountSummaries']), count_summary)
-            elif one(hit['projects'])['projectTitle'] == '1 FOV BaristaSeq mouse SpaceTx dataset':
-                self.assertEqual(summary['donorCount'], 1)
-                self.assertEqual(summary['totalCellCount'], 0.0)
-                self.assertEqual(summary['genusSpecies'], ['Mus musculus'])
-                self.assertEqual(summary['libraryConstructionApproach'], [])
-                self.assertEqual(summary['disease'], [])
-                self.assertEqual(summary['organTypes'], ['brain'])
-                self.assertEqual(summary['cellCountSummaries'], [])  # bundle has no cell suspension
-                self.assertEqual(one(hit['protocols'])['assayType'], ['in situ sequencing'])
-            else:
-                assert False
-
 
 
 if __name__ == '__main__':
