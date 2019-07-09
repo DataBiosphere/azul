@@ -87,10 +87,9 @@ class FileTypeSummary(JsonObject):
         self = cls()
         self.count = aggregate_file['count']
         self.totalSize = aggregate_file['size']
-        format = aggregate_file['file_format']
-        assert isinstance(format, list)
-        assert len(format)
-        self.fileType = format[0]
+        self.fileType = aggregate_file['file_format']
+        assert isinstance(self.fileType, str)
+        assert len(self.fileType)
         return self
 
 
