@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import collections
 from copy import deepcopy
 import json
 import logging
@@ -53,7 +54,7 @@ class ElasticTransformDump(object):
     def translate_filters(filters, field_mapping):
         """
         Function for translating the filters
-        :param filters: Raw filters from the filters /files param.
+        :param filters: Raw filters from the filters param.
         That is, in 'browserForm'
         :param field_mapping: Mapping config json with
         '{'browserKey': 'es_key'}' format
@@ -61,7 +62,7 @@ class ElasticTransformDump(object):
         """
         # Translate the fields to the appropriate ElasticSearch Index.
         # Probably can be edited later to do not just files but donors, etc.
-        # for key, value in filters['file'].items():
+        # for key, value in filters.items():
         iterate_filters = deepcopy(filters)
         for key, value in iterate_filters.items():
             if key in field_mapping:
@@ -149,7 +150,7 @@ class ElasticTransformDump(object):
         """
         This function will create an ElasticSearch request based on
         the filters and facet_config passed into the function
-        :param filters: The 'filters' parameter from '/files'.
+        :param filters: The 'filters' parameter.
         Assumes to be translated into es_key terms
         :param es_client: The ElasticSearch client object used
          to configure the Search object
@@ -355,8 +356,7 @@ class ElasticTransformDump(object):
         self.logger.debug('Getting the request_config file')
         request_config = self.open_and_return_json(request_config_path)
         if not filters:
-            filters = {"file": {}}
-        filters = filters["file"]
+            filters = {}
         # Create a request to ElasticSearch
         self.logger.info('Creating request to ElasticSearch')
         es_search = self.create_request(
@@ -458,8 +458,7 @@ class ElasticTransformDump(object):
         # FIXME: cache the json (or, even better, convert to Python module
         request_config = self.open_and_return_json(request_config_path)
         if not filters:
-            filters = {"file": {}}
-        filters = filters['file']
+            filters = {}
 
         translation = request_config['translation']
         inverse_translation = {v: k for k, v in translation.items()}
@@ -543,9 +542,15 @@ class ElasticTransformDump(object):
         config_folder = os.path.dirname(service_config.__file__)
         request_config_path = "{}/{}".format(config_folder, 'request_config.json')
         request_config = self.open_and_return_json(request_config_path)
-        filters = filters['file']
+        source_filter = None
         manifest_config = request_config['manifest']
-        if format == 'bdbag':
+        entity_type = 'files'
+
+        if format == 'full':
+            source_filter = ['contents.metadata.*']
+            entity_type = 'bundles'
+            manifest_config = self.generate_metadata_manifest()
+        elif format == 'bdbag':
             # Terra rejects `.` in column names
             manifest_config = {
                 path: {
@@ -555,19 +560,55 @@ class ElasticTransformDump(object):
                 for path, mapping in manifest_config.items()
             }
 
-        source_filter = [field_path_prefix + '.' + field_name
-                         for field_path_prefix, field_mapping in manifest_config.items()
-                         for field_name in field_mapping.values()]
+        if not source_filter:
+            source_filter = [field_path_prefix + '.' + field_name
+                             for field_path_prefix, field_mapping in manifest_config.items()
+                             for field_name in field_mapping.values()]
+
         es_search = self.create_request(filters,
                                         self.es_client,
                                         request_config,
                                         post_filter=False,
                                         source_filter=source_filter,
-                                        enable_aggregation=False)
-
+                                        enable_aggregation=False,
+                                        entity_type=entity_type)
         manifest = ManifestResponse(es_search, manifest_config, request_config['translation'], format)
 
         return manifest.return_response()
+
+    def generate_metadata_manifest(self) -> JSON:
+        bundles_index = config.es_index_name('bundles')
+        mapping = self.es_client.indices.get_mapping(index=bundles_index)
+        metadata = mapping[bundles_index]['mappings']['doc']['properties']['contents']['properties']['metadata']
+        metadata_mapping = self.metadata_mapping(metadata, None)
+        metadata_config = self.flatten_mapping(mapping=metadata_mapping)
+        return metadata_config
+
+    def metadata_mapping(self, mapping: JSON, key: str) -> JSON:
+        try:
+            return {k: self.metadata_mapping(v, k) for k, v in mapping.get('properties').items()}
+        except AttributeError:
+            return str(key)
+
+    # TODO: Write a doctest for this which will clarify what it does.
+    def flatten_mapping(self, mapping, parent_key='', sep='.') -> JSON:
+        """
+        >>> from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+        >>> es_tf = EsTd()
+        >>> es_tf.flatten_mapping(mapping={'foo': {'bar': {'foobar': 'foobar'}}})
+        {'foo.bar.foobar': 'foobar'}
+
+        >>> es_tf.flatten_mapping(mapping={'bar': {'foo': {'barfoo': {'foobar': {'foobarfoo': 'foobarfoo'}}}}})
+        {'bar.foo.barfoo.foobar.foobarfoo': 'foobarfoo'}
+        """
+        items = []
+        for k, v in mapping.items():
+            new_key = parent_key + sep + k if parent_key else k
+            if isinstance(v, collections.MutableMapping):
+                items.extend(self.flatten_mapping(mapping=v, parent_key=new_key, sep=sep).items())
+            else:
+                items.append((new_key, v))
+        return dict(items)
 
     def transform_autocomplete_request(
         self,
@@ -621,7 +662,7 @@ class ElasticTransformDump(object):
                 json_pp(mapping_config)))
         mapping_config = mapping_config[entry_format]
         if not filters:
-            filters = {"file": {}}
+            filters = {}
 
         entity_type = 'files' if entry_format == 'file' else 'donor'
         # Create an ElasticSearch autocomplete request
@@ -683,8 +724,7 @@ class ElasticTransformDump(object):
         request_config_path = "{}/{}".format(config_folder, request_config_file)
         request_config = self.open_and_return_json(request_config_path)
         if not filters:
-            filters = {"file": {}}
-        filters = filters['file']
+            filters = {}
 
         field_mappings = request_config['translation']
         cart_item_config = request_config['cart-item']
