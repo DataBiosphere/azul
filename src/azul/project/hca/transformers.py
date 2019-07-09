@@ -15,6 +15,7 @@ from azul.transformer import (Accumulator,
                               EntityReference,
                               FrequencySetAccumulator,
                               GroupingAggregator,
+                              SingleValueAccumulator,
                               ListAccumulator,
                               SetAccumulator,
                               SimpleAggregator,
@@ -526,11 +527,11 @@ class FileAggregator(GroupingAggregator):
                     count=((entity['uuid'], entity['version']), 1))
 
     def _group_keys(self, entity) -> Iterable[Any]:
-        return [entity['file_format']]
+        return entity['file_format']
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'file_format':
-            return SetAccumulator()
+            return SingleValueAccumulator()
         elif field in ('size', 'count'):
             return DistinctAccumulator(SumAccumulator(0))
         else:

@@ -489,7 +489,7 @@ class TestHCAIndexer(IndexerTestCase):
                             if file['file_format'] == 'matrix':
                                 entities_with_matrix_files.add(hit['_source']['entity_id'])
                         else:
-                            if one(file['file_format']) == 'matrix':
+                            if file['file_format'] == 'matrix':
                                 self.assertEqual(1, file['count'])
                                 entities_with_matrix_files.add(hit['_source']['entity_id'])
             else:

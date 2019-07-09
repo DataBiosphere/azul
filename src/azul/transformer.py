@@ -394,6 +394,19 @@ class LastValueAccumulator(Accumulator):
         return self.value
 
 
+class SingleValueAccumulator(LastValueAccumulator):
+    """
+    An accumulator that accepts any number of values given that they all are the same value and returns a single value.
+    Occurrence of any value that is different than the first accumulated value raises a ValueError.
+    """
+
+    def accumulate(self, value):
+        if self.value is None:
+            super().accumulate(value)
+        elif self.value != value:
+            raise ValueError('Conflicting values:', self.value, value)
+
+
 class OptionalValueAccumulator(LastValueAccumulator):
     """
     An accumulator that accepts at most one value and returns it.
@@ -544,7 +557,9 @@ class GroupingAggregator(SimpleAggregator):
     def aggregate(self, entities: Entities) -> Entities:
         aggregates: MutableMapping[Any, MutableMapping[str, Optional[Accumulator]]] = defaultdict(dict)
         for entity in entities:
-            group_key = frozenset(self._group_keys(entity))
+            group_key = self._group_keys(entity)
+            if isinstance(group_key, (list, set)):
+                group_key = frozenset(group_key)
             aggregate = aggregates[group_key]
             self._accumulate(aggregate, entity)
         return [
