@@ -1,4 +1,4 @@
-import ast
+import json
 import logging
 
 from typing import Optional
@@ -20,11 +20,11 @@ class AbstractService:
         :raises ValueError: Will raise a ValueError if token is misformatted or invalid
         :return: python literal
         """
-        default_filters = {'file': {}}
+        default_filters = {}
         if filters is None:
             return default_filters
         try:
-            filters = ast.literal_eval(filters)
+            filters = json.loads(filters or '{}')
         except ValueError as e:
             logger.error('Malformed filters parameter: {}'.format(e))
             raise BadArgumentException('Malformed filters parameter')

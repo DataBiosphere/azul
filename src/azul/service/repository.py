@@ -39,7 +39,7 @@ class RepositoryService(AbstractService):
         return response
 
     def _get_item(self, entity_type, item_id, pagination, filters, file_url_func):
-        filters['file']['entryId'] = {"is": [item_id]}
+        filters['entryId'] = {'is': [item_id]}
         try:
             formatted_uuid = uuid.UUID(item_id)
         except ValueError:
