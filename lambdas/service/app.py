@@ -469,9 +469,9 @@ def get_manifest():
           https://software.broadinstitute.org/firecloud/documentation/article?id=10954
     :return: A manifest that the user can use to download the files in there
     """
-    params = app.current_request.query_params
-    if params is None:  # FIXME: is this necessary?
+    if app.current_request.query_params is None:
         app.current_request.query_params = {}
+    params = app.current_request.query_params
     from azul.service import AbstractService
     filters = AbstractService.parse_filters(params.get('filters'))
     es_td = EsTd()
@@ -481,7 +481,7 @@ def get_manifest():
 
 def get_format(params):
     format_ = params.get('format', 'tsv')
-    if format_ in ('tsv', 'bdbag'):
+    if format_ in ('tsv', 'bdbag', 'full'):
         return format_
     else:
         raise BadRequestError(f'{format_} is not a valid manifest format.')
@@ -1268,7 +1268,7 @@ def add_all_results_to_cart(cart_id):
         raise BadRequestError('entityType must be one of files, samples, or projects')
 
     try:
-        filters = json.loads(filters)
+        filters = json.loads(filters or '{}')
     except json.JSONDecodeError:
         raise BadRequestError('Invalid filters given')
     hits, search_after = EsTd().transform_cart_item_request(entity_type, filters=filters, size=1)
@@ -1601,10 +1601,8 @@ def get_data_object(file_uuid):
     params = app.current_request.query_params or {}
     file_version = params.get('version')
     filters = {
-        "file": {
-            "fileId": {"is": [file_uuid]},
-            **({"fileVersion": {"is": [file_version]}} if file_version else {})
-        }
+        "fileId": {"is": [file_uuid]},
+        **({"fileVersion": {"is": [file_version]}} if file_version else {})
     }
     es_td = EsTd()
     pagination = _get_pagination(app.current_request, entity_type='files')
