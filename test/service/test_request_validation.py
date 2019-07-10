@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -48,99 +49,164 @@ class FacetNameValidationTest(WebServiceTestCase):
                             self.assertEqual(response.json()['git'], expected_json)
 
     def test_bad_single_filter_facet_of_sample(self):
-        url = self.base_url + "/repository/samples?from=1&size=1&filters={'file':{'bad-facet':{'is':['fake-val']}}}"
-        response = requests.get(url)
+        url = self.base_url + '/repository/samples'
+        params = {
+            'from': 1,
+            'size': 1,
+            'filters': json.dumps({'bad-facet': {'is': ['fake-val']}}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_multiple_filter_facet_of_sample(self):
-        url = self.base_url + "/repository/samples?from=1&size=1" \
-                              "&filters={'file':{'bad-facet':{'is':['fake-val']},'bad-facet2':{'is':['fake-val2']}}}"
-        response = requests.get(url)
+        url = self.base_url + '/repository/samples'
+        params = {
+            'from': 1,
+            'size': 1,
+            'filters': json.dumps({'bad-facet': {'is': ['fake-val']}, 'bad-facet2': {'is': ['fake-val2']}}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_mixed_multiple_filter_facet_of_sample(self):
-        url = self.base_url + "/repository/samples?from=1&size=1" \
-                              "&filters={'file':{'organPart':{'is':['fake-val']},'bad-facet':{'is':['fake-val']}}}"
-        response = requests.get(url)
+        url = self.base_url + '/repository/samples'
+        params = {
+            'from': 1,
+            'size': 1,
+            'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-facet': {'is': ['fake-val']}}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_sort_facet_of_sample(self):
-        url = self.base_url + "/repository/samples?size=15&filters={}&sort=bad-facet&order=asc"
-        response = requests.get(url)
+        url = self.base_url + '/repository/samples'
+        params = {
+            'from': 1,
+            'size': 1,
+            'filters': json.dumps({}),
+            'sort': 'bad-facet',
+            'order': 'asc',
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
 
     def test_bad_sort_facet_and_filter_facet_of_sample(self):
-        url = self.base_url + "/repository/samples?size=15" \
-                              "&filters={'file':{'bad-facet':{'is':['fake-val']}}}&sort=bad-facet&order=asc"
-
-        response = requests.get(url)
+        url = self.base_url + '/repository/samples'
+        params = {
+            'size': 15,
+            'filters': json.dumps({'bad-facet': {'is': ['fake-val']}}),
+            'sort': 'bad-facet',
+            'order': 'asc',
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertTrue(response.json() in [self.sort_facet_message, self.filter_facet_message])
 
     def test_valid_sort_facet_but_bad_filter_facet_of_sample(self):
-        url = self.base_url + "/repository/samples?size=15" \
-                              "&filters={'file':{'bad-facet':{'is':['fake-val']}}}&sort=organPart&order=asc"
-        response = requests.get(url)
+        url = self.base_url + '/repository/samples'
+        params = {
+            'size': 15,
+            'filters': json.dumps({'bad-facet': {'is': ['fake-val']}}),
+            'sort': 'organPart',
+            'order': 'asc',
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_sort_facet_but_valid_filter_facet_of_sample(self):
-        url = self.base_url + "/repository/samples?size=15" \
-                              "&filters={'file':{'organPart':{'is':['fake-val2']}}}&sort=bad-facet&order=asc"
-        response = requests.get(url)
+        url = self.base_url + '/repository/samples'
+        params = {
+            'size': 15,
+            'filters': json.dumps({'organPart': {'is': ['fake-val2']}}),
+            'sort': 'bad-facet',
+            'order': 'asc',
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
 
     def test_bad_single_filter_facet_of_file(self):
-        url = self.base_url + "/repository/files?from=1&size=1" \
-                              "&filters={'file':{'bad-facet':{'is':['fake-val2']}}}"
-        response = requests.get(url)
+        url = self.base_url + '/repository/files'
+        params = {
+            'from': 1,
+            'size': 1,
+            'filters': json.dumps({'bad-facet': {'is': ['fake-val2']}}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_multiple_filter_facet_of_file(self):
-        url = self.base_url + "/repository/files?from=1&size=1" \
-                              "&filters={'file':{'bad-facet':{'is':['fake-val']},'bad-facet2':{'is':['fake-val2']}}}"
-        response = requests.get(url)
+        url = self.base_url + '/repository/files'
+        params = {
+            'from': 1,
+            'size': 1,
+            'filters': json.dumps({'bad-facet': {'is': ['fake-val']}, 'bad-facet2': {'is': ['fake-val2']}}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_mixed_multiple_filter_facet_of_file(self):
-        url = self.base_url + "/repository/files?from=1&size=1" \
-                              "&filters={'file':{'organPart':{'is':['fake-val']},'bad-facet':{'is':['fake-val']}}}"
-        response = requests.get(url)
+        url = self.base_url + '/repository/files'
+        params = {
+            'from': 1,
+            'size': 1,
+            'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-facet': {'is': ['fake-val']}}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
     def test_bad_sort_facet_of_file(self):
-        url = self.base_url + "/repository/files?size=15&sort=bad-facet&order=asc" \
-                              "&filters={}"
-        response = requests.get(url)
+        url = self.base_url + '/repository/files'
+        params = {
+            'size': 15,
+            'sort': 'bad-facet',
+            'order': 'asc',
+            'filters': json.dumps({}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
 
     def test_bad_sort_facet_and_filter_facet_of_file(self):
-        url = self.base_url + "/repository/files?size=15" \
-                              "&filters={'file':{'bad-facet':{'is':['fake-val2']}}}"
-        response = requests.get(url)
+        url = self.base_url + '/repository/files'
+        params = {
+            'size': 15,
+            'filters': json.dumps({'bad-facet': {'is': ['fake-val2']}}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertTrue(response.json() in [self.sort_facet_message, self.filter_facet_message])
 
     def test_bad_sort_facet_but_valid_filter_facet_of_file(self):
-        url = self.base_url + "/repository/files?size=15&sort=bad-facet&order=asc" \
-                              "&filters={'file':{'organ':{'is':['fake-val2']}}}"
-        response = requests.get(url)
+        url = self.base_url + '/repository/files'
+        params = {
+            'size': 15,
+            'sort': 'bad-facet',
+            'order': 'asc',
+            'filters': json.dumps({'organ': {'is': ['fake-val2']}}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.sort_facet_message, response.json())
 
     def test_valid_sort_facet_but_bad_filter_facet_of_file(self):
-        url = self.base_url + "/repository/files?size=15&sort=organPart&order=asc" \
-                              "&filters={'file':{'bad-facet':{'is':['fake-val2']}}}"
-        response = requests.get(url)
+
+        url = self.base_url + '/repository/files'
+        params = {
+            'size': 15,
+            'sort': 'organPart',
+            'order': 'asc',
+            'filters': json.dumps({'bad-facet': {'is': ['fake-val2']}}),
+        }
+        response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.filter_facet_message, response.json())
 
