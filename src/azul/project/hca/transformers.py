@@ -507,15 +507,14 @@ class BundleTransformer(BundleProjectTransformer):
                   ) -> Sequence[Document]:
         for contrib in super().transform(uuid, version, deleted, manifest, metadata_files):
             # noinspection PyArgumentList
-            if False:
-                if 'project.json' in metadata_files:
-                    # we can't handle v5 bundles
-                    metadata = []
-                else:
-                    generator = MetadataGenerator()
-                    generator.add_bundle(uuid, version, list(metadata_files.values()))
-                    metadata = generator.dump()
-                contrib.contents['metadata'] = metadata
+            if 'project.json' in metadata_files:
+                # we can't handle v5 bundles
+                metadata = []
+            else:
+                generator = MetadataGenerator()
+                generator.add_bundle(uuid, version, list(metadata_files.values()))
+                metadata = generator.dump()
+            contrib.contents['metadata'] = metadata
             yield contrib
 
 
