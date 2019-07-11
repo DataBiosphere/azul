@@ -36,6 +36,8 @@ class Health:
         json = {k: getattr(self, k) for k in keys if k in self.default_keys}
         if len(keys) != 1:
             json['up'] = all(v['up'] for v in json.values())
+        else:
+            json['up'] = True
         return json
 
     @memoized_property
