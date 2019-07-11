@@ -139,7 +139,7 @@ def health(keys: Optional[str] = None):
     body = health.as_json(**kwargs)
     return Response(
         body=json.dumps(body),
-        status_code=200 if body['up'] else 503
+        status_code=200 if body.get('up', True) else 503
     )
 
 
