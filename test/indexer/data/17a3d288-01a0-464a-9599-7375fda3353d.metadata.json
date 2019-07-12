@@ -78,7 +78,7 @@
                 }
             ],
             "project_core": {
-                "project_shortname": "Tissue stability",
+                "project_short_name": "Tissue stability",
                 "project_description": "Assessment of ischaemic sensitivity of three human tissues using 10x 3' single cell RNA sequencing - this submission is ONLY for the first spleen sample; further samples to be collected.  Ultimately we aim to collect data from three tissues expected to have different sensitivity to ischaemia: spleen (expected least sensitive), oesophagus (in the middle) and liver (expected most sensitive).  Samples will be collected 'fresh' (ie as soon as possible) and at 12h, 24h and 72h post onset of ischaemia in the donor.  Single cell RNA sequencing data will be generated at each time point using the 10x genomics single cell 3' method.",
                 "project_title": "Ischaemic sensitivity of human tissue by single cell RNA seq"
             },
