@@ -30,7 +30,7 @@ from azul.service.responseobjects.buffer import FlushableBuffer
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
-from azul.transformer import SetAccumulator
+from azul.transformer import Document
 from azul.types import JSON
 
 logger = logging.getLogger(__name__)
@@ -267,7 +267,7 @@ class ManifestResponse(AbstractResponse):
         writer = csv.DictWriter(output, self.ordered_column_names, dialect='excel-tab')
         writer.writeheader()
         for hit in self.es_search.scan():
-            doc = hit.to_dict()
+            doc = Document.translate_fields(hit.to_dict(), forward=False)
             for bundle in list(doc['bundles']):
                 doc['bundles'] = [bundle]
                 row = {}
@@ -320,7 +320,7 @@ class ManifestResponse(AbstractResponse):
 
         # For each outer file entity_type in the response …
         for hit in self.es_search.scan():
-            doc = hit.to_dict()
+            doc = Document.translate_fields(hit.to_dict(), forward=False)
 
             # Extract fields from inner entities other than bundles or files
             other_cells = {}
@@ -805,6 +805,8 @@ class FileSearchResponse(KeywordSearchResponse):
         def choose_entry(_term):
             if 'key_as_string' in _term:
                 return _term['key_as_string']
+            elif not isinstance(_term['key'], str):
+                return str(_term['key'])
             else:
                 return _term['key']
 
