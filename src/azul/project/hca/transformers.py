@@ -15,6 +15,7 @@ from azul.transformer import (Accumulator,
                               EntityReference,
                               FrequencySetAccumulator,
                               GroupingAggregator,
+                              SingleValueAccumulator,
                               ListAccumulator,
                               SetAccumulator,
                               SimpleAggregator,
@@ -108,7 +109,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         return {
             'project_title': project.project_title,
             'project_description': project.project_description,
-            'project_shortname': project.project_short_name,
+            'project_short_name': project.project_short_name,
             'laboratory': list(laboratories),
             'institutions': list(institutions),
             'contact_names': list(contact_names),
@@ -507,15 +508,14 @@ class BundleTransformer(BundleProjectTransformer):
                   ) -> Sequence[Document]:
         for contrib in super().transform(uuid, version, deleted, manifest, metadata_files):
             # noinspection PyArgumentList
-            if False:
-                if 'project.json' in metadata_files:
-                    # we can't handle v5 bundles
-                    metadata = []
-                else:
-                    generator = MetadataGenerator()
-                    generator.add_bundle(uuid, version, list(metadata_files.values()))
-                    metadata = generator.dump()
-                contrib.contents['metadata'] = metadata
+            if 'project.json' in metadata_files:
+                # we can't handle v5 bundles
+                metadata = []
+            else:
+                generator = MetadataGenerator()
+                generator.add_bundle(uuid, version, list(metadata_files.values()))
+                metadata = generator.dump()
+            contrib.contents['metadata'] = metadata
             yield contrib
 
 
@@ -527,11 +527,11 @@ class FileAggregator(GroupingAggregator):
                     count=((entity['uuid'], entity['version']), 1))
 
     def _group_keys(self, entity) -> Iterable[Any]:
-        return [entity['file_format']]
+        return entity['file_format']
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'file_format':
-            return SetAccumulator()
+            return SingleValueAccumulator()
         elif field in ('size', 'count'):
             return DistinctAccumulator(SumAccumulator(0))
         else:
