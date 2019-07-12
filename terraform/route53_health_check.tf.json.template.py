@@ -12,7 +12,7 @@ emit(None if not config.enable_monitoring else {
                     "type": "HTTPS",
                     "resource_path": "/health",
                     "failure_threshold": "3",
-                    "request_interval": "300",
+                    "request_interval": "30",
                     "tags": {
                         "Name": config.indexer_name
                     }
@@ -27,7 +27,7 @@ emit(None if not config.enable_monitoring else {
                     "type": "HTTPS",
                     "resource_path": "/health",
                     "failure_threshold": "3",
-                    "request_interval": "300",
+                    "request_interval": "30",
                     "tags": {
                         "Name": config.service_name
                     }
