@@ -54,13 +54,26 @@ class BaseIndexer(ABC):
             }
         }
 
+    @classmethod
     @abstractmethod
-    def transformers(self) -> Iterable[Transformer]:
+    def transformers(cls) -> Iterable[Transformer]:
         raise NotImplementedError()
 
     @abstractmethod
     def entities(self) -> Iterable[str]:
         raise NotImplementedError()
+
+    @classmethod
+    def field_types(cls) -> Mapping[str, type]:
+        """
+        Returns a mapping of fields to field types
+
+        :return: dict with nested keys matching Elasticsearch fields and values with the field's type
+        """
+        field_types = {}
+        for transformer in cls.transformers():
+            field_types.update(transformer.field_types())
+        return {'contents': field_types}
 
     def index_names(self, aggregate=None) -> List[str]:
         aggregates = (False, True) if aggregate is None else (aggregate,)

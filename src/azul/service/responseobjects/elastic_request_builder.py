@@ -5,7 +5,7 @@ import json
 import logging
 from more_itertools import one
 import os
-from typing import List
+from typing import List, Tuple
 
 import elasticsearch
 from elasticsearch_dsl import A, Q, Search
@@ -17,6 +17,7 @@ from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse, 
                                                           KeywordSearchResponse, ManifestResponse,
                                                           SummaryResponse)
 from azul.service.responseobjects.utilities import json_pp
+from azul.transformer import Document
 from azul.types import JSON
 
 logger = logging.getLogger(__name__)
@@ -51,28 +52,42 @@ class ElasticTransformDump(object):
         self.logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
         self.es_client = ESClientFactory.get()
 
-    @staticmethod
-    def translate_filters(filters, field_mapping):
+    @classmethod
+    def translate_filters(cls, filters: JSON, field_mapping: JSON) -> JSON:
         """
         Function for translating the filters
-        :param filters: Raw filters from the filters param.
-        That is, in 'browserForm'
-        :param field_mapping: Mapping config json with
-        '{'browserKey': 'es_key'}' format
+        :param filters: Raw filters from the filters param. That is, in 'browserForm'
+        :param field_mapping: Mapping config json with '{'browserKey': 'es_key'}' format
         :return: Returns translated filters with 'es_keys'
         """
-        # Translate the fields to the appropriate ElasticSearch Index.
-        # Probably can be edited later to do not just files but donors, etc.
-        # for key, value in filters.items():
         iterate_filters = deepcopy(filters)
         for key, value in iterate_filters.items():
             if key in field_mapping:
-                # Get the corrected term within ElasticSearch
+                # Replace the key in the filter with the name within ElasticSearch
                 corrected_term = field_mapping[key]
-                # Replace the key in the filter with the name within
-                # ElasticSearch
                 filters[corrected_term] = filters.pop(key)
+        for key, value in filters.items():
+            path = tuple(key.split('.'))
+            filters[key] = cls.translate_filter(value, path)
         return filters
+
+    @classmethod
+    def translate_filter(cls, value: JSON, path: Tuple[str, ...]) -> JSON:
+        """
+        Translate a single filter's value to query against Elasticsearch
+        :param value: A single filter value eg. {'is': {[None]}}
+        :param path: A tuple with the path of the field eg. ('contents', 'protocols', 'paired_end')
+
+        :return: The translated value
+        """
+        if isinstance(value, dict):
+            return {key: cls.translate_filter(val, path) for key, val in value.items()}
+        elif isinstance(value, list):
+            return [cls.translate_filter(val, path) for val in value]
+        elif isinstance(value, set):
+            return {cls.translate_filter(val, path) for val in value}
+        else:
+            return Document.translate_field(value, path)
 
     @staticmethod
     def create_query(filters):
@@ -86,11 +101,9 @@ class ElasticTransformDump(object):
         for facet, values in filters.items():
             relation, value = one(values.items())
             if relation == 'is':
-                if value is None:
-                    # If filter is {"is": None}, search for values where field does not exist
-                    filter_list.append(Q('bool', must_not=Q('exists', field=f'{facet}.keyword')))
-                else:
-                    filter_list.append(Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}))
+                # None values in filters have been translated eg. {'is': ['__null__']}
+                # so we can just do a 'terms' query instead of handling Nones with an 'exists' query
+                filter_list.append(Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}))
             elif relation in {'contains', 'within', 'intersects'}:
                 for min_value, max_value in value:
                     range_value = {
@@ -505,6 +518,7 @@ class ElasticTransformDump(object):
             es_response_dict = es_response.to_dict()
             hits = [x['_source']
                     for x in es_response_dict['hits']['hits']]
+            hits = Document.translate_fields(hits, forward=False)
             final_response = KeywordSearchResponse(hits, entity_type)
         else:
             # It's a full file search
@@ -532,6 +546,8 @@ class ElasticTransformDump(object):
                         reversed(es_hits[0:len(es_hits) - list_adjustment])]
             else:
                 hits = [x['_source'] for x in es_hits[0:len(es_hits) - list_adjustment]]
+
+            hits = Document.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             paging = self.generate_paging_dict(es_response_dict, pagination)

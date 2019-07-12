@@ -27,7 +27,7 @@ from app_test_case import LocalAppTestCase
 from azul import config, hmac
 from azul.indexer import IndexWriter
 from azul.threads import Latch
-from azul.transformer import Aggregate, Contribution
+from azul.transformer import Aggregate, Contribution, Document
 from azul.project.hca.metadata_generator import MetadataGenerator
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper
@@ -655,7 +655,7 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual({'Prof. Ido Amit', 'Human Cell Atlas Data Coordination Platform'},
                                  contributor_values['laboratory'])
                 self.assertEqual({False, True}, contributor_values['corresponding_contributor'])
-                self.assertEqual({'Human Cell Atlas wrangler', None},
+                self.assertEqual({'Human Cell Atlas wrangler', config.null_keyword},
                                  contributor_values['project_role'])
 
     def test_diseases_field(self):
@@ -700,7 +700,7 @@ class TestHCAIndexer(IndexerTestCase):
 
             for organoid in contents['organoids']:
                 self.assertEqual(['Brain'] if aggregate else 'Brain', organoid['model_organ'])
-                self.assertEqual([None] if aggregate else None, organoid['model_organ_part'])
+                self.assertEqual([config.null_keyword] if aggregate else config.null_keyword, organoid['model_organ_part'])
 
         projects = 1
         bundles = 1
@@ -793,7 +793,7 @@ class TestHCAIndexer(IndexerTestCase):
                     cell_lines_model_organ = {cl['model_organ'] for cl in contents['cell_lines']}
                 self.assertEqual(cell_lines_model_organ, {'blood (parent_cell_line)', 'blood (child_cell_line)'})
                 self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (child_cell_line)'])
-                self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [None])
+                self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [config.null_keyword])
 
     def test_metadata_generator(self):
         index_bundle = ('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
