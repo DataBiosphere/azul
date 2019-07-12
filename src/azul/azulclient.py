@@ -74,7 +74,7 @@ class AzulClient(object):
         bundle_fqids = self._post_dss_search()
         logger.info("Bundle FQIDs to index: %i", len(bundle_fqids))
         notifications = [self._make_notification(fqid) for fqid in bundle_fqids]
-        self._reindex(notifications, sync=sync)
+        self._index(notifications, sync=sync)
 
     def test_notifications(self, test_name: str, test_uuid: str) -> Tuple[List[dict], Set[str]]:
         logger.info('Querying DSS using %s', json.dumps(self.query(), indent=4))
@@ -93,7 +93,7 @@ class AzulClient(object):
             notifications.append(notification)
         return notifications, effective_bundle_fqids
 
-    def _reindex(self, notifications: Iterable, sync: bool = False):
+    def _index(self, notifications: Iterable, sync: bool = False):
         errors = defaultdict(int)
         missing = []
         indexed = 0
