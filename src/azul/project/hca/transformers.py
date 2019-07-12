@@ -65,6 +65,17 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             for parent in entity.parents.values():
                 self._find_ancestor_samples(parent, samples)
 
+    @classmethod
+    def _contact_types(cls) -> Mapping[str, type]:
+        return {
+            'contact_name': str,
+            'corresponding_contributor': bool,
+            'email': str,
+            'institution': str,
+            'laboratory': str,
+            'project_role': str
+        }
+
     def _contact(self, p: api.ProjectContact):
         # noinspection PyDeprecation
         return {
@@ -76,11 +87,38 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             "project_role": p.project_role
         }
 
+    @classmethod
+    def _publication_types(cls) -> Mapping[str, type]:
+        return {
+            'publication_title': str,
+            'publication_url': str
+        }
+
     def _publication(self, p: api.ProjectPublication):
         # noinspection PyDeprecation
         return {
             "publication_title": p.publication_title,
             "publication_url": p.publication_url
+        }
+
+    @classmethod
+    def _project_types(cls) -> Mapping[str, type]:
+        return {
+            'project_title': str,
+            'project_description': str,
+            'project_short_name': str,
+            'laboratory': str,
+            'institutions': str,
+            'contact_names': str,
+            'contributors': cls._contact_types(),
+            'document_id': str,
+            'publication_titles': str,
+            'publications': cls._publication_types(),
+            'insdc_project_accessions': str,
+            'geo_series_accessions': str,
+            'array_express_accessions': str,
+            'insdc_study_accessions': str,
+            '_type': str
         }
 
     def _project(self, project: api.Project) -> JSON:
@@ -125,6 +163,21 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             '_type': 'project'
         }
 
+    @classmethod
+    def _specimen_types(cls) -> Mapping[str, type]:
+        return {
+            'has_input_biomaterial': str,
+            '_source': str,
+            'document_id': str,
+            'biomaterial_id': str,
+            'disease': str,
+            'organ': str,
+            'organ_part': str,
+            'storage_method': str,
+            'preservation_method': str,
+            '_type': str
+        }
+
     def _specimen(self, specimen: api.SpecimenFromOrganism) -> JSON:
         return {
             'has_input_biomaterial': specimen.has_input_biomaterial,
@@ -136,7 +189,17 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'organ_part': list(specimen.organ_parts),
             'storage_method': specimen.storage_method,
             'preservation_method': specimen.preservation_method,
-            '_type': 'specimen',
+            '_type': 'specimen'
+        }
+
+    @classmethod
+    def _cell_suspension_types(cls) -> Mapping[str, type]:
+        return {
+            'document_id': str,
+            'total_estimated_cells': int,
+            'selected_cell_type': str,
+            'organ': str,
+            'organ_part': str
         }
 
     def _cell_suspension(self, cell_suspension: api.CellSuspension) -> JSON:
@@ -161,7 +224,16 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'total_estimated_cells': cell_suspension.estimated_cell_count,
             'selected_cell_type': list(cell_suspension.selected_cell_types),
             'organ': list(organs),
-            'organ_part': list(organ_parts),
+            'organ_part': list(organ_parts)
+        }
+
+    @classmethod
+    def _cell_line_types(cls) -> Mapping[str, type]:
+        return {
+            'document_id': str,
+            'biomaterial_id': str,
+            'cell_line_type': str,
+            'model_organ': str
         }
 
     def _cell_line(self, cell_line: api.CellLine) -> JSON:
@@ -171,6 +243,19 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'biomaterial_id': cell_line.biomaterial_id,
             'cell_line_type': cell_line.cell_line_type,
             'model_organ': cell_line.model_organ
+        }
+
+    @classmethod
+    def _donor_types(cls) -> Mapping[str, type]:
+        return {
+            'document_id': str,
+            'biomaterial_id': str,
+            'biological_sex': str,
+            'genus_species': str,
+            'diseases': str,
+            'organism_age': str,
+            'organism_age_unit': str,
+            'organism_age_range': dict
         }
 
     def _donor(self, donor: api.DonorOrganism) -> JSON:
@@ -190,7 +275,16 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                     }
                 } if donor.organism_age_in_seconds else {
                 }
-            ),
+            )
+        }
+
+    @classmethod
+    def _organoid_types(cls) -> Mapping[str, type]:
+        return {
+            'document_id': str,
+            'biomaterial_id': str,
+            'model_organ': str,
+            'model_organ_part': str
         }
 
     def _organoid(self, organoid: api.Organoid) -> JSON:
@@ -198,8 +292,26 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'document_id': str(organoid.document_id),
             'biomaterial_id': organoid.biomaterial_id,
             'model_organ': organoid.model_organ,
-            'model_organ_part': organoid.model_organ_part,
+            'model_organ_part': organoid.model_organ_part
         }
+
+    @classmethod
+    def _file_types(cls) -> Mapping[str, type]:
+        return {
+            'content-type': str,
+            'indexed': bool,
+            'name': str,
+            'sha256': str,
+            'size': int,
+            'uuid': api.UUID4,
+            'version': str,
+            'document_id': str,
+            'file_format': str,
+            '_type': str,
+            'read_index': str,
+            'lane_index': int
+        }
+
 
     def _file(self, file: api.File) -> JSON:
         # noinspection PyDeprecation
@@ -223,6 +335,17 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             )
         }
 
+    @classmethod
+    def _protocol_types(cls) -> Mapping[str, type]:
+        return {
+            'document_id': str,
+            'library_construction_approach': str,
+            'instrument_manufacturer_model': str,
+            'paired_end': bool,
+            'workflow': str,
+            'assay_type': str
+        }
+
     def _protocol(self, protocol: api.Protocol) -> JSON:
         protocol_ = {'document_id': protocol.document_id}
         if isinstance(protocol, api.LibraryPreparationProtocol):
@@ -238,6 +361,16 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         else:
             assert False
         return protocol_
+
+    @classmethod
+    def _sample_types(cls) -> Mapping[str, type]:
+        return {
+            'entity_type': str,
+            'effective_organ': str,
+            **cls._cell_line_types(),
+            **cls._organoid_types(),
+            **cls._specimen_types()
+        }
 
     def _sample(self, sample: api.Biomaterial) -> JSON:
         entity_type, sample_ = (
@@ -271,6 +404,20 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                             bundle_uuid=str(bundle.uuid),
                             bundle_version=bundle.version,
                             bundle_deleted=deleted)
+
+    @classmethod
+    def field_types(cls):
+        return {
+            'samples': cls._sample_types(),
+            'specimens': cls._specimen_types(),
+            'cell_suspensions': cls._cell_suspension_types(),
+            'cell_lines': cls._cell_line_types(),
+            'donors': cls._donor_types(),
+            'organoids': cls._organoid_types(),
+            'files': cls._file_types(),
+            'protocols': cls._protocol_types(),
+            'projects': cls._project_types()
+        }
 
 
 class TransformerVisitor(api.EntityVisitor):
@@ -522,6 +669,13 @@ class BundleTransformer(BundleProjectTransformer):
             if False:
                 contrib.contents['metadata'] = metadata
             yield contrib
+
+    @classmethod
+    def field_types(cls):
+        return {
+            **super().field_types(),
+            'metadata': list
+        }
 
 
 class FileAggregator(GroupingAggregator):

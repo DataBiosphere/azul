@@ -9,6 +9,7 @@ import requests
 from azul import config
 from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
                                                           KeywordSearchResponse)
+from azul.transformer import Document
 from service import WebServiceTestCase
 
 
@@ -48,7 +49,7 @@ class TestResponse(WebServiceTestCase):
         }
         # Tests are assumed to only ever run with the azul dev index
         results = self.es_client.search(index=config.es_index_name(entity_type, aggregate=True), body=body)
-        return [results['hits']['hits'][0]['_source']]
+        return Document.translate_fields([results['hits']['hits'][0]['_source']], forward=False)
 
     def test_key_search_files_response(self):
         """
@@ -1105,6 +1106,30 @@ class TestResponse(WebServiceTestCase):
         }
         samples = one(one(keyword_response['hits'])['samples'])
         self.assertElasticsearchResultsEqual(samples, expected_samples)
+
+    def test_filter_with_none(self):
+        """
+        Test response when using a filter with a None value
+        """
+        test_data_values = [["year"], [None], ["year", None]]
+        for test_data in test_data_values:
+            with self.subTest(test_data=test_data):
+                url = self.base_url + "/repository/samples"
+                params = {
+                    'size': 10,
+                    'filters': json.dumps({'organismAgeUnit': {'is': test_data}})
+                }
+                response = requests.get(url, params=params)
+                response.raise_for_status()
+                response_json = response.json()
+                organismAgeUnits = {
+                    oau
+                    for hit in response_json['hits']
+                    for donor in hit['donorOrganisms']
+                    for oau in donor['organismAgeUnit']
+                }
+                # Assert that the organismAgeUnits values found in the response only match what was filtered for
+                self.assertEqual(organismAgeUnits, set(test_data))
 
     def test_filter_by_projectId(self):
         """
