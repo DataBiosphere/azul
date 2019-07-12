@@ -22,6 +22,9 @@ class Plugin(ABC):
     def indexer_class(self) -> Type[BaseIndexer]:
         raise NotImplementedError()
 
+    def field_types(self):
+        return self.indexer_class().field_types()
+
     @abstractmethod
     def dss_subscription_query(self, prefix: str) -> JSON:
         """

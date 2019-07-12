@@ -1,15 +1,21 @@
 from abc import ABC, ABCMeta, abstractmethod
 from collections import defaultdict, Counter
 import logging
+import sys
+from functools import lru_cache
 
 from more_itertools import one
 from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple, ClassVar
 
 from dataclasses import dataclass, fields
 
+from humancellatlas.data.metadata import api
+
 from azul import config
 from azul.json_freeze import freeze, thaw
 from azul.types import JSON
+
+MIN_INT = -sys.maxsize - 1
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +47,91 @@ class Document:
     version: Optional[int]
     version_type: ClassVar[Optional[str]] = None
     contents: Optional[JSON]
+
+    @classmethod
+    @lru_cache(maxsize=1)
+    def field_types(cls):
+        from azul.plugin import Plugin
+        return Plugin.load().field_types()
+
+    @classmethod
+    @lru_cache(maxsize=64)
+    def _field_type(cls, path: Tuple[str, ...]) -> Any:
+        """
+        Get the field type of a field specified by the full field name split on '.'
+        :param path: A tuple of keys to traverse down the field_types dict
+        """
+        types_mapping = cls.field_types()
+        for p in path:
+            try:
+                types_mapping = types_mapping[p]
+            except KeyError:
+                return None
+            except TypeError:
+                return None
+        return types_mapping
+
+
+    @classmethod
+    def translate_field(cls, value: Any, path: Tuple[str, ...] = (), forward: bool = True) -> Any:
+        """
+        Translate a single value for insert into or after fetching from Elasticsearch.
+
+        :param value: A value to translate
+        :param path: A tuple representing the field name split on dots (.)
+        :param forward: If we should translate forward or backward (aka un-translate)
+        :return: The translated value
+        """
+        field_type = cls._field_type(path)
+        if field_type is bool:
+            if forward:
+                return {None: -1, False: 0, True: 1}[value]
+            else:
+                return {-1: None, 0: False, 1: True}[value]
+        elif field_type is int or field_type is float:
+            if forward:
+                if value is None:
+                    return MIN_INT
+            else:
+                if value == MIN_INT:
+                    return None
+            return value
+        elif field_type is str:
+            if forward:
+                if value is None:
+                    return config.null_keyword
+            else:
+                if value == config.null_keyword:
+                    return None
+            return value
+        elif field_type is dict:
+            return value
+        elif field_type is api.UUID4:
+            return value
+        elif field_type is None:
+            return value
+        else:
+            raise ValueError(f'Field type not found for path {path}')
+
+    @classmethod
+    def translate_fields(cls, source: JSON, path: Tuple[str, ...] = (), forward: bool = True):
+        """
+        Traverse a document to translate field values for insert into Elasticsearch, or to translate back
+        response data. This is done to support None/null values since Elasticsearch does not index these values.
+
+        :param source: A document dict of values
+        :param path: A tuple containing the keys encountered as we traverse down the document
+        :param forward: If we should translate forward or backward (aka un-translate)
+        :return: A copy of the original document with values translated according to their type
+        """
+        if isinstance(source, dict):
+            return {key: cls.translate_fields(val, path=path + (key,), forward=forward) for key, val in source.items()}
+        elif isinstance(source, list):
+            return [cls.translate_fields(val, path=path, forward=forward) for val in source]
+        elif isinstance(source, set):
+            return {cls.translate_fields(val, path=path, forward=forward) for val in source}
+        else:
+            return cls.translate_field(source, path=path, forward=forward)
 
     @classmethod
     def index_name(cls, entity_type: EntityType) -> str:
@@ -87,7 +178,7 @@ class Document:
 
     @classmethod
     def from_index(cls, hit: JSON) -> 'Document':
-        source = hit['_source']
+        source = cls.translate_fields(hit['_source'], forward=False)
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
         self = cls(entity=EntityReference(entity_type=cls.entity_type(hit['_index']),
@@ -110,7 +201,7 @@ class Document:
         result = {
             '_index' if bulk else 'index': self.document_index,
             '_type' if bulk else 'doc_type': self.type,
-            **({} if delete else {'_source' if bulk else 'body': self.to_source()}),
+            **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source(), forward=True)}),
             '_id' if bulk else 'id': self.document_id
         }
         if self.version_type is None:
@@ -198,6 +289,12 @@ class Aggregate(Document):
 
 
 class Transformer(ABC):
+
+    @classmethod
+    @abstractmethod
+    def field_types(cls) -> Mapping[str, type]:
+        raise NotImplementedError()
+
 
     @abstractmethod
     def transform(self,
