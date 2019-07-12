@@ -582,7 +582,7 @@
             "text": "Illumina NextSeq 500",
             "ontology": "EFO:0009173"
         },
-        "paired_end": "True",
+        "paired_end": true,
         "sequencing_approach": {
             "text": "full length single cell RNA sequencing",
             "ontology": "EFO:0008441"

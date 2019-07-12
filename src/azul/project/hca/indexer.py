@@ -86,7 +86,8 @@ class Indexer(BaseIndexer):
             ]
         }
 
-    def transformers(self) -> Iterable[Transformer]:
+    @classmethod
+    def transformers(cls) -> Iterable[Transformer]:
         return (FileTransformer(),
                 CellSuspensionTransformer(),
                 SampleTransformer(),
