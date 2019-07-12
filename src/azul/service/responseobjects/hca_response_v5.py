@@ -87,10 +87,9 @@ class FileTypeSummary(JsonObject):
         self = cls()
         self.count = aggregate_file['count']
         self.totalSize = aggregate_file['size']
-        format = aggregate_file['file_format']
-        assert isinstance(format, list)
-        assert len(format)
-        self.fileType = format[0]
+        self.fileType = aggregate_file['file_format']
+        assert isinstance(self.fileType, str)
+        assert len(self.fileType)
         return self
 
 
@@ -695,7 +694,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for project in entry["contents"]["projects"]:
             translated_project = {
                 "projectTitle": project.get("project_title"),
-                "projectShortname": project["project_shortname"],
+                "projectShortname": project["project_short_name"],
                 "laboratory": list(set(project.get("laboratory", [])))
             }
             if self.entity_type == 'projects':

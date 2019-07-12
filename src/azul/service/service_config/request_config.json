@@ -17,7 +17,7 @@
     "institution": "contents.projects.institutions",
     "laboratory": "contents.projects.laboratory",
     "projectDescription": "contents.projects.project_description",
-    "project": "contents.projects.project_shortname",
+    "project": "contents.projects.project_short_name",
     "projectTitle": "contents.projects.project_title",
     "publicationTitle": "contents.projects.publication_titles",
     "arrayExpressAccessions": "contents.projects.array_express_accessions",
@@ -88,7 +88,7 @@
       "project.provenance.document_id": "document_id",
       "project.contributors.institution": "institutions",
       "project.contributors.laboratory": "laboratory",
-      "project.project_core.project_short_name": "project_shortname",
+      "project.project_core.project_short_name": "project_short_name",
       "project.project_core.project_title": "project_title"
     },
     "contents.specimens": {
@@ -133,7 +133,7 @@
       "contents.samples.entity_type"
     ],
     "projects": [
-      "contents.projects.project_shortname"
+      "contents.projects.project_short_name"
     ],
     "bundles": [
       "bundles.uuid",
