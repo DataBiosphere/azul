@@ -21,8 +21,7 @@ def manage_subscriptions(dss_client, subscribe=True):
         new_subscriptions = [freeze(dict(replica='aws',
                                          es_query=query,
                                          callback_url=base_url + path,
-                                         hmac_key_id=key_id,
-                                         hmac_secret_key=key))
+                                         hmac_key_id=key_id))
                              for query, path in [(plugin.dss_subscription_query(prefix), '/'),
                                                  (plugin.dss_deletion_subscription_query(prefix), '/delete')]]
     else:
@@ -46,7 +45,7 @@ def manage_subscriptions(dss_client, subscribe=True):
 
     for subscription in new_subscriptions:
         subscription = thaw(subscription)
-        response = dss_client.put_subscription(**subscription)
+        response = dss_client.put_subscription(**subscription, hmac_secret_key=key)
         subscription['uuid'] = response['uuid']
         logging.info('Registered subscription %r.', subscription)
 
