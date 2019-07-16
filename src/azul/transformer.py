@@ -97,7 +97,15 @@ class Document:
                    **cls._from_source(source))
         return self
 
-    def to_index(self, bulk=False) -> JSON:
+    def to_index(self, bulk=False, update=False) -> dict:
+        """
+        Build request parameters from the document for indexing
+
+        :param bulk: If bulk indexing
+        :param update: If creation failed and we need to try update. This will only affect docs with version_type None
+                       (AKA contributions)
+        :return: Request parameters for indexing
+        """
         delete = self.delete
         result = {
             '_index' if bulk else 'index': self.document_index,
@@ -106,8 +114,11 @@ class Document:
             '_id' if bulk else 'id': self.document_id
         }
         if self.version_type is None:
-            if bulk:
+            # TODO: FIXME: (jesse) why only for bulk???
+            if False and bulk:
                 result['_op_type'] = 'delete' if delete else 'index'
+            op_key = '_op_type' if bulk else 'op_type'
+            result[op_key] = 'delete' if delete else ('index' if update else 'create')
         else:
             if bulk:
                 result['_op_type'] = 'delete' if delete else ('create' if self.version is None else 'index')
@@ -394,6 +405,19 @@ class LastValueAccumulator(Accumulator):
         return self.value
 
 
+class SingleValueAccumulator(LastValueAccumulator):
+    """
+    An accumulator that accepts any number of values given that they all are the same value and returns a single value.
+    Occurrence of any value that is different than the first accumulated value raises a ValueError.
+    """
+
+    def accumulate(self, value):
+        if self.value is None:
+            super().accumulate(value)
+        elif self.value != value:
+            raise ValueError('Conflicting values:', self.value, value)
+
+
 class OptionalValueAccumulator(LastValueAccumulator):
     """
     An accumulator that accepts at most one value and returns it.
@@ -544,7 +568,9 @@ class GroupingAggregator(SimpleAggregator):
     def aggregate(self, entities: Entities) -> Entities:
         aggregates: MutableMapping[Any, MutableMapping[str, Optional[Accumulator]]] = defaultdict(dict)
         for entity in entities:
-            group_key = frozenset(self._group_keys(entity))
+            group_key = self._group_keys(entity)
+            if isinstance(group_key, (list, set)):
+                group_key = frozenset(group_key)
             aggregate = aggregates[group_key]
             self._accumulate(aggregate, entity)
         return [

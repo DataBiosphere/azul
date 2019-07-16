@@ -21,8 +21,7 @@ from azul.transformer import (Aggregate,
                               DocumentCoordinates,
                               EntityReference,
                               Transformer,
-                              BundleUUID,
-                              BundleVersion)
+                              BundleUUID)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -69,15 +68,15 @@ class BaseIndexer(ABC):
                 for entity in self.entities()
                 for aggregate in aggregates]
 
-    def index(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
+    def index(self, dss_notification: JSON) -> None:
         """
         Index the bundle referenced by the given notification. This is an inefficient default implementation. A more
         efficient implementation would transform many bundles, collect their contributions and aggregate all affected
         entities at the end.
         """
         contributions = self.transform(dss_notification, delete=False)
-        tallies = self.contribute(writer, contributions)
-        self.aggregate(writer, tallies)
+        tallies = self.contribute(contributions)
+        self.aggregate(tallies)
 
     def transform(self, dss_notification: JSON, delete: bool) -> List[Contribution]:
         """
@@ -139,33 +138,44 @@ class BaseIndexer(ABC):
                 assert False, "project_0.json doesn't exist for this bundle."
             return dss_notification['test_bundle_uuid']
 
-    def contribute(self, writer: 'IndexWriter', contributions: List[Contribution]) -> Tallies:
+    def contribute(self, contributions: List[Contribution]) -> Tallies:
         """
         Write the given entity contributions to the index and return tallies, a dictionary tracking the number of
         contributions made to each entity.
         """
+        writer = self._create_writer()
+        tallies = Counter(c.entity for c in contributions)
         while True:
-            writer.write(contributions)
+            writer.write(contributions, expect_update=True)
             if not writer.retries:
                 break
-            contributions = [v for v in contributions if v.coordinates in writer.retries]
+            contributions = [c for c in contributions if c.coordinates in writer.retries]
         writer.raise_on_errors()
-        tallies = Counter(c.entity for c in contributions)
+        for entity in writer.update_retries:
+            assert entity in tallies
+            tallies[entity] -= 1
         return tallies
 
-    def aggregate(self, writer: 'IndexWriter', tallies: Tallies):
+    def aggregate(self, tallies: Tallies):
         """
         Read all contributions to the entities listed in the given tallies from the index, aggregate the
         contributions into one aggregate per entity and write the resulting aggregates to the index.
+
+        Normally there is a 1 to 1 correspondence between number of contributions for an entity and the value for a
+        tally, however tallies are not counted for updates. This means, in the case of a duplicate notification or
+        writing over an already populated index, it's possible to receive a tally with a value of 0. We still need to
+        aggregate (if the indexed format changed for example) but tallies will not serve as an accurate guide for how
+        to read from contributions.
         """
+        writer = self._create_writer()
         while True:
             # Read the aggregates
-            old_aggregates = self._read_aggregates(entity for entity in tallies.keys())
-            absolute_tallies = Counter(tallies)
-            absolute_tallies.update({old_aggregate.entity: old_aggregate.num_contributions
+            old_aggregates = self._read_aggregates(tallies)
+            total_tallies = Counter(tallies)
+            total_tallies.update({old_aggregate.entity: old_aggregate.num_contributions
                                      for old_aggregate in old_aggregates.values()})
             # Read all contributions from Elasticsearch
-            contributions = self._read_contributions(absolute_tallies)
+            contributions = self._read_contributions(total_tallies)
             actual_tallies = Counter(contribution.entity for contribution in contributions)
             assert len(tallies) == len(actual_tallies)
             assert all(tallies[entity] <= actual_tally for entity, actual_tally in actual_tallies.items())
@@ -180,7 +190,7 @@ class BaseIndexer(ABC):
                 old_aggregate.contents = {}
                 new_aggregates.append(old_aggregate)
             # Write aggregates to Elasticsearch
-            writer.write(new_aggregates)
+            writer.write(new_aggregates, expect_update=False)
             # Retry if necessary
             if not writer.retries:
                 break
@@ -270,7 +280,7 @@ class BaseIndexer(ABC):
 
         return aggregates
 
-    def delete(self, writer: 'IndexWriter', dss_notification: JSON) -> None:
+    def delete(self, dss_notification: JSON) -> None:
         """
         Synchronous form of delete that is currently only used for testing.
 
@@ -284,8 +294,14 @@ class BaseIndexer(ABC):
         # deleting the indices first. The tallies refer to number of updated or added contributions but we treat them
         # as if they are all new when we estimate the number of contributions per bundle.
         # https://github.com/DataBiosphere/azul/issues/610
-        tallies = self.contribute(writer, contributions)
-        self.aggregate(writer, tallies)
+        tallies = self.contribute(contributions)
+        self.aggregate(tallies)
+
+    def _create_writer(self) -> 'IndexWriter':
+        # We allow one conflict retry in the case of duplicate notifications and switch from 'add' to 'update'.
+        # After that, there should be no conflicts because we use an SQS FIFO message group per entity.
+        # For other errors we use SQS message redelivery to take care of the retries.
+        return IndexWriter(refresh=False, conflict_retry_limit=1, error_retry_limit=0)
 
 
 class IndexWriter:
@@ -311,33 +327,55 @@ class IndexWriter:
         self.errors: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
         self.conflicts: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
         self.retries: Optional[MutableSet[DocumentCoordinates]] = None
+        self.update_retries: MutableSet[EntityReference] = set()
 
     bulk_threshold = 32
 
-    def write(self, documents: List[Document]):
+    def write(self, documents: List[Document], expect_update: bool):
+        """
+        Make an attempt to write the documents into the index, updating local state with failures and conflicts
+
+        :param documents: Documents to index
+        :param expect_update: If writing a document could possibly cause an update. This can happen for contributions
+                              in the case of duplicate notifications or reindexing without first clearing the index.
+                              This should not ever happen with aggregates since SQS FIFO queues ensure that tallies for
+                              the same entity are not processed at the same time.
+        """
         # documents.sort(key=attrgetter('coordinates'))
         self.retries = set()
         if len(documents) < self.bulk_threshold:
-            self._write_individually(documents)
+            self._write_individually(documents, expect_update=expect_update)
         else:
-            self._write_bulk(documents)
+            self._write_bulk(documents, expect_update=expect_update)
 
-    def _write_individually(self, documents: Iterable[Document]):
+    def _write_individually(self, documents: Iterable[Document], expect_update: bool):
         log.info('Writing documents individually')
         for doc in documents:
+            assert (doc.version_type is None) == expect_update, \
+                'version_type should only be set for aggregates which should not make updates'
+            update = doc.entity in self.update_retries
+            assert not update or expect_update, 'update implies expected_update'
             try:
                 method = self.es_client.delete if doc.delete else self.es_client.index
-                method(refresh=self.refresh, **doc.to_index())
+                method(refresh=self.refresh, **doc.to_index(update=update))
             except ConflictError as e:
-                self._on_conflict(doc, e)
+                # Try again but update this time if we expect that possibility
+                self._on_conflict(doc, e, update=expect_update)
             except ElasticsearchException as e:
                 self._on_error(doc, e)
             else:
                 self._on_success(doc)
 
-    def _write_bulk(self, documents: Iterable[Document]):
+    def _write_bulk(self, documents: Iterable[Document], expect_update: bool):
         documents: Mapping[DocumentCoordinates, Document] = {doc.coordinates: doc for doc in documents}
-        actions = [doc.to_index(bulk=True) for doc in documents.values()]
+        actions = []
+        for coords, doc in documents.items():
+            update = doc.entity in self.update_retries
+            assert not update or expect_update, 'update implies expected_update'
+            actions.append(doc.to_index(bulk=True, update=update))
+        for doc in documents.values():
+            assert (doc.version_type is None) == expect_update, \
+                'Version should only be set for aggregates which do not expect to make updates'
         if len(actions) < 1024:
             log.info('Writing documents using streaming_bulk().')
             helper = streaming_bulk
@@ -357,8 +395,8 @@ class IndexWriter:
             if success:
                 self._on_success(doc)
             else:
-                if info['index']['status'] == 409:
-                    self._on_conflict(doc, info)
+                if info['status'] == 409:
+                    self._on_conflict(doc, info, update=expect_update)
                 else:
                     self._on_error(doc, info)
 
@@ -383,16 +421,22 @@ class IndexWriter:
         log.warning('There was a general error with document %r: %r. Total # of errors: %i, %s.',
                     doc.coordinates, e, self.errors[doc.coordinates], action)
 
-    def _on_conflict(self, doc: Document, e):
+    def _on_conflict(self, doc: Document, e, update: bool):
         self.conflicts[doc.coordinates] += 1
         self.errors.pop(doc.coordinates, None)  # a conflict resets the error count
         if self.conflict_retry_limit is None or self.conflicts[doc.coordinates] <= self.conflict_retry_limit:
             action = 'retrying'
             self.retries.add(doc.coordinates)
+            if update:
+                self.update_retries.add(doc.entity)
         else:
             action = 'giving up'
-        log.warning('There was a conflict with document %r: %r. Total # of errors: %i, %s.',
-                    doc.coordinates, e, self.conflicts[doc.coordinates], action)
+        if update:
+            log.warning('Writing document %r requires update. Possible causes include duplicate notifications '
+                        'or reindexing without clearing the index.', doc.coordinates)
+        else:
+            log.warning('There was a conflict with document %r: %r. Total # of errors: %i, %s.',
+                        doc.coordinates, e, self.conflicts[doc.coordinates], action)
 
     def raise_on_errors(self):
         if self.errors or self.conflicts:
