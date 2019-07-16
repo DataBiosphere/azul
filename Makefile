@@ -14,6 +14,9 @@ deploy:
 subscribe: check_branch
 	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py --shared; fi
 
+unsubscribe:
+	python scripts/subscribe.py --unsubscribe --shared
+
 reindex: check_branch
 	python scripts/reindex.py --delete --partition-prefix-length=2
 

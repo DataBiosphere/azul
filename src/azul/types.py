@@ -1,6 +1,7 @@
 from typing import Union, Mapping, Any, List
 
-AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
+AnyJSON3 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
+AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, AnyJSON3], List[AnyJSON3]]
 AnyJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyJSON2], List[AnyJSON2]]
 AnyJSON = Union[str, int, float, bool, None, Mapping[str, AnyJSON1], List[AnyJSON1]]
 JSON = Mapping[str, AnyJSON]
