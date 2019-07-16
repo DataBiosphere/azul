@@ -1,7 +1,11 @@
 from typing import Iterable
 
 from azul.indexer import BaseIndexer
-from azul.project.hca.transformers import FileTransformer, CellSuspensionTransformer, SampleTransformer, ProjectTransformer, BundleTransformer
+from azul.project.hca.transformers import (FileTransformer,
+                                           CellSuspensionTransformer,
+                                           SampleTransformer,
+                                           ProjectTransformer,
+                                           BundleTransformer)
 from azul.transformer import Transformer
 from azul.types import JSON
 
@@ -67,7 +71,11 @@ class Indexer(BaseIndexer):
         }
 
     def transformers(self) -> Iterable[Transformer]:
-        return FileTransformer(), CellSuspensionTransformer(), SampleTransformer(), ProjectTransformer(), BundleTransformer()
+        return (FileTransformer(),
+                CellSuspensionTransformer(),
+                SampleTransformer(),
+                ProjectTransformer(),
+                BundleTransformer())
 
     def entities(self) -> Iterable[str]:
         return ['files', 'cell_suspensions', 'samples', 'projects', 'bundles']

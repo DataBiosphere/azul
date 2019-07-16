@@ -1,8 +1,10 @@
 import os
+import re
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import logging
 
+import elasticsearch
 from requests_http_signature import HTTPSignatureAuth
 
 import copy
@@ -20,6 +22,7 @@ from elasticsearch import Elasticsearch, RequestError
 from elasticsearch.helpers import scan
 from more_itertools import one
 
+import azul.indexer
 from app_test_case import LocalAppTestCase
 from azul import config, hmac
 from azul.indexer import IndexWriter
@@ -123,6 +126,44 @@ class TestHCAIndexer(IndexerTestCase):
                 finally:
                     self._delete_indices()
 
+    def test_duplicate_notification(self):
+        manifest, metadata = self._load_canned_bundle(self.new_bundle)
+        tallies = dict(self._write_contributions(self.new_bundle, manifest, metadata))
+
+        with self.assertLogs(logger=azul.indexer.log, level='WARNING') as logs:
+            # Writing again simulates a duplicate notification being processed
+            tallies.update(self._write_contributions(self.new_bundle, manifest, metadata))
+        message_re = re.compile(r'^WARNING:azul\.indexer:Writing document .* requires update\. Possible causes include '
+                                r'duplicate notifications or reindexing without clearing the index\.$')
+        for message in logs.output:
+            self.assertRegex(message, message_re)
+        # Tallies should not be inflated despite indexing document twice
+        self.get_hca_indexer().aggregate(tallies)
+        self._assert_new_bundle()
+
+    def test_zero_tallies(self):
+        """
+        Since duplicate notifications are subtracted back out of tally counts, it's possible to receive a tally with
+        zero notifications. Test that a tally with count 0 still triggers aggregation.
+        """
+        manifest, metadata = self._load_canned_bundle(self.new_bundle)
+        tallies = dict(self._write_contributions(self.new_bundle, manifest, metadata))
+        for tally in tallies:
+            tallies[tally] = 0
+        # Aggregating should not be a non-op even though tally counts are all zero
+        with self.assertLogs(elasticsearch.client.logger, level='INFO') as logs:
+            self.get_hca_indexer().aggregate(tallies)
+        doc_ids = {
+            '70d1af4a-82c8-478a-8960-e9028b3616ca',
+            'a21dc760-a500-4236-bcff-da34a0e873d2',
+            'e8642221-4c2c-4fd7-b926-a68bce363c88',
+            '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb',
+            'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
+        }
+        for doc_id in doc_ids:
+            message_re = re.compile(fr'^INFO:elasticsearch:PUT .*_aggregate_.*/doc/{doc_id}.* \[status:201 .*\]$')
+            self.assertTrue(any(message_re.fullmatch(message) for message in logs.output))
+
     def test_deletion_before_addition(self):
         self._index_canned_bundle(self.new_bundle, delete=True)
         self._assert_index_counts(just_deletion=True)
@@ -141,6 +182,7 @@ class TestHCAIndexer(IndexerTestCase):
         def is_aggregate(h):
             _, aggregate_ = config.parse_es_index_name(h['_index'])
             return aggregate_
+
         actual_aggregates = [h for h in hits if is_aggregate(h)]
 
         self.assertEqual(len(actual_addition_contributions), num_expected_addition_contributions)
@@ -322,7 +364,7 @@ class TestHCAIndexer(IndexerTestCase):
                 contents = source['contents']
                 project = one(contents['projects'])
                 self.assertEqual('Single cell transcriptome patterns.', get(project['project_title']))
-                self.assertEqual('Single of human pancreas', get(project['project_shortname']))
+                self.assertEqual('Single of human pancreas', get(project['project_short_name']))
                 self.assertIn('John Dear', get(project['laboratory']))
                 if aggregate and entity_type != 'projects':
                     self.assertIn('Farmers Trucks', project['institutions'])
@@ -370,7 +412,7 @@ class TestHCAIndexer(IndexerTestCase):
                 old_contents = old_source['contents']
                 old_project = one(old_contents['projects'])
                 self.assertNotEqual(old_project["project_title"], project["project_title"])
-                self.assertNotEqual(old_project["project_shortname"], project["project_shortname"])
+                self.assertNotEqual(old_project["project_short_name"], project["project_short_name"])
                 self.assertNotEqual(old_project["laboratory"], project["laboratory"])
                 if aggregate and entity_type != 'projects':
                     self.assertNotEqual(old_project["institutions"], project["institutions"])
@@ -383,7 +425,7 @@ class TestHCAIndexer(IndexerTestCase):
                              "signatures of aging and somatic mutation patterns.",
                              get(project["project_title"]))
             self.assertEqual("Single cell transcriptome analysis of human pancreas",
-                             get(project["project_shortname"]))
+                             get(project["project_short_name"]))
             self.assertNotIn("Sarah Teichmann", project["laboratory"])
             self.assertIn("Molecular Atlas", project["laboratory"])
             if aggregate and entity_type != 'projects':
@@ -489,7 +531,7 @@ class TestHCAIndexer(IndexerTestCase):
                             if file['file_format'] == 'matrix':
                                 entities_with_matrix_files.add(hit['_source']['entity_id'])
                         else:
-                            if one(file['file_format']) == 'matrix':
+                            if file['file_format'] == 'matrix':
                                 self.assertEqual(1, file['count'])
                                 entities_with_matrix_files.add(hit['_source']['entity_id'])
             else:
@@ -648,8 +690,7 @@ class TestHCAIndexer(IndexerTestCase):
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
 
             if entity_type != 'files' or one(contents['files'])['file_format'] != 'pdf':
-                for cell_suspension in contents['cell_suspensions']:
-                    inner_cell_suspensions += 1
+                inner_cell_suspensions += len(contents['cell_suspensions'])
 
             for specimen in contents['specimens']:
                 inner_specimens += 1
@@ -666,10 +707,12 @@ class TestHCAIndexer(IndexerTestCase):
         specimens = 4
         cell_suspensions = 1
         files = 16
-        inner_specimens_in_contributions = (files + projects + bundles + cell_suspensions) * specimens + specimens * 1
-        inner_specimens_in_aggregates = (files + specimens + projects + bundles + cell_suspensions) * 1
-        inner_cell_suspensions_in_contributions = (files + specimens + projects + bundles + cell_suspensions) * cell_suspensions
-        inner_cell_suspensions_in_aggregates = (files + specimens + projects + bundles + cell_suspensions) * 1
+        all_entities = files + specimens + projects + bundles + cell_suspensions
+        non_specimens = files + projects + bundles + cell_suspensions
+        inner_specimens_in_contributions = non_specimens * specimens + specimens * 1
+        inner_specimens_in_aggregates = all_entities * 1
+        inner_cell_suspensions_in_contributions = all_entities * cell_suspensions
+        inner_cell_suspensions_in_aggregates = all_entities * 1
 
         self.assertEqual(inner_specimens_in_contributions + inner_specimens_in_aggregates,
                          inner_specimens)
@@ -771,52 +814,51 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertIn(metadata_row['*.file_core.file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
 
     def test_metadata_field_exclusion(self):
-        if False:
-            self._index_canned_bundle(self.old_bundle)
+        self._index_canned_bundle(self.old_bundle)
 
-            # Check that the dynamic mapping for the field is present
-            bundles_index = config.es_index_name('bundles')
-            mapping = self.es_client.indices.get_mapping(index=bundles_index)
-            self.assertIn('bundle_uuid', mapping[bundles_index]
-                                         ['mappings']['doc']['properties']
-                                         ['contents']['properties']
-                                         ['metadata']['properties'])
+        # Check that the dynamic mapping for the field is present
+        bundles_index = config.es_index_name('bundles')
+        mapping = self.es_client.indices.get_mapping(index=bundles_index)
+        self.assertIn('bundle_uuid', mapping[bundles_index]
+                                     ['mappings']['doc']['properties']
+                                     ['contents']['properties']
+                                     ['metadata']['properties'])
 
-            # Ensure that a metadata row exists …
-            hits = self._get_all_hits()
-            bundles_hit = one(hit['_source'] for hit in hits if hit['_index'] == bundles_index)
-            expected_metadata_hits = 2
-            self.assertEqual(expected_metadata_hits, len(bundles_hit['contents']['metadata']))
-            for metadata_row in bundles_hit['contents']['metadata']:
-                self.assertEqual(self.old_bundle, (metadata_row['bundle_uuid'], metadata_row['bundle_version']))
+        # Ensure that a metadata row exists …
+        hits = self._get_all_hits()
+        bundles_hit = one(hit['_source'] for hit in hits if hit['_index'] == bundles_index)
+        expected_metadata_hits = 2
+        self.assertEqual(expected_metadata_hits, len(bundles_hit['contents']['metadata']))
+        for metadata_row in bundles_hit['contents']['metadata']:
+            self.assertEqual(self.old_bundle, (metadata_row['bundle_uuid'], metadata_row['bundle_version']))
 
-            # … but that it can't be used for queries
-            try:
-                self.es_client.search(index=bundles_index,
-                                      body={
-                                          "query": {
-                                              "match": {
-                                                  "contents.metadata.bundle_uuid": self.old_bundle[0]
-                                              }
+        # … but that it can't be used for queries
+        try:
+            self.es_client.search(index=bundles_index,
+                                  body={
+                                      "query": {
+                                          "match": {
+                                              "contents.metadata.bundle_uuid": self.old_bundle[0]
                                           }
-                                      })
-            # Fields mapped with indexed=False cannot be used in queries
-            except RequestError as e:
-                self.assertEqual(400, e.status_code)
-                self.assertEqual('search_phase_execution_exception', e.error)
-            else:
-                self.fail()
+                                      }
+                                  })
+        # Fields mapped with indexed=False cannot be used in queries
+        except RequestError as e:
+            self.assertEqual(400, e.status_code)
+            self.assertEqual('search_phase_execution_exception', e.error)
+        else:
+            self.fail()
 
-            # We can, however, find documents by the mention of the bundle UUID outside of `metadata`.
-            hits = self.es_client.search(index=bundles_index,
-                                         body={
-                                             "query": {
-                                                 "match": {
-                                                     "bundle_uuid": self.old_bundle[0]
-                                                 }
+        # We can, however, find documents by the mention of the bundle UUID outside of `metadata`.
+        hits = self.es_client.search(index=bundles_index,
+                                     body={
+                                         "query": {
+                                             "match": {
+                                                 "bundle_uuid": self.old_bundle[0]
                                              }
-                                         })
-            self.assertEqual(1, hits["hits"]["total"])
+                                         }
+                                     })
+        self.assertEqual(1, hits["hits"]["total"])
 
 
 class TestValidNotificationRequests(LocalAppTestCase):
@@ -913,8 +955,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             hmac_creds = {'key': b'good key', 'key_id': 'the id'}
-            with patch('azul.deployment.aws.get_hmac_key_and_id',
-                       return_value=hmac_creds) as mock:
+            with patch('azul.deployment.aws.get_hmac_key_and_id', return_value=hmac_creds):
                 with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
                     if valid_auth:
                         auth = hmac.prepare()
