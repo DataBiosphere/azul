@@ -29,7 +29,7 @@ class MetadataGenerator:
             "^analysis_process.*",
             "^process.*",
             "^bundle_.*",
-            "^\\*\\.provenance\\.update_date"
+            "^file_.*"
         ]
 
         self.default_ignore = ignore if ignore else [
