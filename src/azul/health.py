@@ -91,12 +91,10 @@ class Health:
 
     @memoized_property
     def api_endpoints(self):
-        if False:
-            endpoints = self.endpoints
-            with ThreadPoolExecutor(len(endpoints)) as tpe:
-                status = dict(tpe.map(self._api_endpoint, endpoints))
-            status['up'] = all(v['up'] for v in status.values())
-        status = {'up': True}
+        endpoints = self.endpoints
+        with ThreadPoolExecutor(len(endpoints)) as tpe:
+            status = dict(tpe.map(self._api_endpoint, endpoints))
+        status['up'] = all(v['up'] for v in status.values())
         return status
 
     @memoized_property
