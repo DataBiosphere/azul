@@ -51,20 +51,27 @@ class MetadataGenerator:
         # TODO temp until block filetype is needed
         self.default_blocked_file_ext = {'csv', 'txt', 'pdf'}
 
-    def _get_file_uuids_from_objects(self, list_of_metadata_objects: List[JSON]) -> JSON:
-        file_uuids = {}
+    def _get_file_uuids_from_objects(self, manifest: List[JSON], list_of_metadata_objects: List[JSON]) -> JSON:
+        file_info = {}
+        file_manifests = {file_manifest['name']: file_manifest
+                          for file_manifest in manifest if not file_manifest['indexed']}
+
         for _object in list_of_metadata_objects:
             if "schema_type" not in _object:
                 raise MissingSchemaTypeError("JSON objects must declare a schema type")
 
-            if _object["schema_type"] == "file" and self._deep_get(_object, ["provenance", "document_id"]):
-                file_uuid = self._deep_get(_object, ["provenance", "document_id"])
-                file_uuids[file_uuid] = _object
+            if _object["schema_type"] == "file":
+                file_name = self._deep_get(_object, ["file_core", "file_name"])
+                if file_name is None:
+                    raise MissingFileNameError("expecting file_core.file_name")
 
-        if not file_uuids:
+                file_manifest = file_manifests[file_name]
+                file_info[file_manifest['uuid']] = {'metadata': _object, 'manifest': file_manifest}
+
+        if not file_info:
             raise MissingFileTypeError("Bundle contains no data files")
 
-        return file_uuids
+        return file_info
 
     def _deep_get(self, d: JSON, keys: List[str]):
         if not keys or d is None:
@@ -108,17 +115,21 @@ class MetadataGenerator:
     def add_bundle(self,
                    bundle_uuid: str,
                    bundle_version: str,
+                   manifest: List[JSON],
                    metadata_files: List[JSON]) -> None:
 
-        file_uuids = self._get_file_uuids_from_objects(metadata_files)
+        file_info = self._get_file_uuids_from_objects(manifest, metadata_files)
 
-        for file, content in file_uuids.items():
+        for content in file_info.values():
+            file_metadata = content['metadata']
+            file_manifest = content['manifest']
             obj = {
                 'bundle_uuid': bundle_uuid,
                 'bundle_version': bundle_version,
-                '*.provenance.update_date': self._deep_get(content, ["provenance", "update_date"]),
-                "*.file_core.file_name": self._deep_get(content, ["file_core", "file_name"]),
-                "*.file_core.file_format": self._deep_get(content, ["file_core", "file_format"])
+                'file_uuid': file_manifest['uuid'],
+                'file_version': file_manifest['version'],
+                "*.file_core.file_name": self._deep_get(file_metadata, ["file_core", "file_name"]),
+                "*.file_core.file_format": self._deep_get(file_metadata, ["file_core", "file_format"])
             }
 
             file_segments = obj["*.file_core.file_name"].split('.')
@@ -143,26 +154,24 @@ class MetadataGenerator:
             if handle_zarray('.zarr/') or handle_zarray('.zarr!'):
                 continue
 
-            if not (obj["*.file_core.file_name"] or obj["*.file_core.file_format"]):
-                raise MissingFileNameError("expecting file_core.file_name")
 
             if self.default_format_filter and obj["*.file_core.file_format"] not in self.default_format_filter:
                 continue
 
-            schema_name = self._get_schema_name_from_object(content)
-            self._flatten(obj, content, schema_name)
+            schema_name = self._get_schema_name_from_object(file_metadata)
+            self._flatten(obj, file_metadata, schema_name)
 
             project_uuid = None
-            for metadata in metadata_files:
+            for file_metadata in metadata_files:
 
                 # ignore files
-                if metadata["schema_type"] == "file" or metadata["schema_type"] == "link_bundle":
+                if file_metadata["schema_type"] == "file" or file_metadata["schema_type"] == "link_bundle":
                     continue
-                elif metadata["schema_type"] == 'project':
-                    project_uuid = metadata['provenance']['document_id']
+                elif file_metadata["schema_type"] == 'project':
+                    project_uuid = file_metadata['provenance']['document_id']
 
-                schema_name = self._get_schema_name_from_object(metadata)
-                self._flatten(obj, metadata, schema_name)
+                schema_name = self._get_schema_name_from_object(file_metadata)
+                self._flatten(obj, file_metadata, schema_name)
 
             self.all_keys.extend(obj.keys())
             self.all_keys = list(set(self.all_keys))
