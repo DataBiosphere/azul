@@ -4,36 +4,24 @@ from azul import config
 
 emit(None if not config.enable_monitoring else {
     "resource": [
-        {
-            "aws_route53_health_check": {
-                "indexer": {
-                    "fqdn": config.api_lambda_domain('indexer'),
-                    "port": 443,
-                    "type": "HTTPS",
-                    "resource_path": "/health",
-                    "failure_threshold": "3",
-                    "request_interval": "30",
-                    "tags": {
-                        "Name": config.indexer_name
+        *[
+            {
+                "aws_route53_health_check": {
+                    name: {
+                        "fqdn": config.api_lambda_domain(name),
+                        "port": 443,
+                        "type": "HTTPS",
+                        "resource_path": "/health",
+                        "failure_threshold": "3",
+                        "request_interval": "30",
+                        "tags": {
+                            "Name": full_name
+                        },
                     }
                 }
-            }
-        },
-        {
-            "aws_route53_health_check": {
-                "service": {
-                    "fqdn": config.api_lambda_domain('service'),
-                    "port": 443,
-                    "type": "HTTPS",
-                    "resource_path": "/health",
-                    "failure_threshold": "3",
-                    "request_interval": "30",
-                    "tags": {
-                        "Name": config.service_name
-                    }
-                }
-            }
-        },
+            } for name, full_name in (('indexer', config.indexer_name),
+                                      ('service', config.service_name))
+        ],
         {
             "aws_route53_health_check": {
                 "composite-azul": {
@@ -53,36 +41,26 @@ emit(None if not config.enable_monitoring else {
                 }
             }
         },
-        {
-            "aws_route53_health_check": {
-                "data-browser": {
-                    "fqdn": config.data_browser_domain,
-                    "port": 443,
-                    "type": "HTTPS",
-                    "resource_path": "/explore",
-                    "failure_threshold": "3",
-                    "request_interval": "30",
-                    "tags": {
-                        "Name": config.data_browser_name
+        *[
+            {
+                "aws_route53_health_check": {
+                    name: {
+                        "fqdn": domain,
+                        "port": 443,
+                        "type": "HTTPS",
+                        "resource_path": path,
+                        "failure_threshold": "3",
+                        "request_interval": "30",
+                        "tags": {
+                            "Name": full_name
+                        }
                     }
                 }
-            }
-        },
-        {
-            "aws_route53_health_check": {
-                "data-portal": {
-                    "fqdn": config.data_browser_domain,
-                    "port": 443,
-                    "type": "HTTPS",
-                    "resource_path": "/",
-                    "failure_threshold": "3",
-                    "request_interval": "30",
-                    "tags": {
-                        "Name": config.data_portal_name
-                    }
-                }
-            }
-        },
+            } for name, domain, full_name, path in (
+                ("data-browser", config.data_browser_domain, config.data_browser_name, '/explore'),
+                ("data-portal", config.data_browser_domain, config.data_portal_name, '/')
+            )
+        ],
         {
             "aws_route53_health_check": {
                 "composite-portal": {
