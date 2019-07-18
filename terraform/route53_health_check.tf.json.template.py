@@ -17,7 +17,13 @@ emit(None if not config.enable_monitoring else {
                         "tags": {
                             "Name": full_name
                         },
-                    }
+                        "regions": ['us-west-2', 'us-east-1', 'eu-west-1'],
+                        # This is necessary only because of a Terraform bug:
+                        # https://github.com/hashicorp/terraform/issues/22171
+                        "lifecycle": {
+                            "create_before_destroy": True
+                        }
+                    },
                 }
             } for name, full_name in (('indexer', config.indexer_name),
                                       ('service', config.service_name))

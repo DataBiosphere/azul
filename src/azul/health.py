@@ -13,27 +13,36 @@ from azul.types import JSON
 
 
 class Health:
+    keys = {
+        'all': (
+            'elastic_search',
+            'queues',
+            'progress',
+            'api_endpoints',
+            'other_lambdas',
+        ),
+        'indexer': (
+            'elastic_search',
+            'queues',
+            'progress'
+        ),
+        'service': (
+            'elastic_search',
+            'api_endpoints',
+        )
+    }
+    endpoints = [f'/repository/{entity_type}?size=1'
+                 for entity_type in ('projects', 'samples', 'files', 'bundles')]
 
     def __init__(self, lambda_name):
         self.lambda_name = lambda_name
 
-    default_keys = (
-        'elastic_search',
-        'queues',
-        'api_endpoints',
-        'other_lambdas',
-        'progress'
-    )
-
-    endpoints = (
-        '/repository/summary', *(
-            f'/repository/{entity_type}?size=1'
-            for entity_type in ('projects', 'samples', 'files', 'bundles')
-        )
-    )
-
-    def as_json(self, keys=default_keys) -> JSON:
-        json = {k: getattr(self, k) for k in keys if k in self.default_keys}
+    def as_json(self, keys=None) -> JSON:
+        if keys is None:
+            keys = self.keys[self.lambda_name]
+        elif keys == ['all']:
+            keys = self.keys['all']
+        json = {k: getattr(self, k) for k in keys if k in self.keys['all']}
         json['up'] = all(v['up'] for v in json.values())
         return json
 
