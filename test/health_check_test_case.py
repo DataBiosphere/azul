@@ -93,10 +93,9 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         endpoint_states = self._make_endpoint_states([], down_endpoints=self.endpoints)
         response = self._test(endpoint_states, lambdas_up=True)
         health_object = response.json()
-        # FIXME https://github.com/DataBiosphere/azul/issues/1124 503 <- 200
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(503, response.status_code)
         self.assertEqual({
-            'up': True,
+            'up': False,
             **self._expected_elastic_search(True),
             **self._expected_queues(True),
             **self._expected_other_lambdas(True),
@@ -111,10 +110,9 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         endpoint_states = self._make_endpoint_states(self.endpoints[1:], down_endpoints=self.endpoints[:1])
         response = self._test(endpoint_states, lambdas_up=True)
         health_object = response.json()
-        # FIXME https://github.com/DataBiosphere/azul/issues/1124 503 <- 200
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(503, response.status_code)
         self.assertEqual({
-            'up': True,
+            'up': False,
             **self._expected_elastic_search(True),
             **self._expected_queues(True),
             **self._expected_other_lambdas(True),
@@ -201,10 +199,17 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         }
 
     def _expected_api_endpoints(self, endpoint_states: Mapping[str, bool]) -> JSON:
-        # FIXME https://github.com/DataBiosphere/azul/issues/1124
         return {
             'api_endpoints': {
-                'up': True
+                'up': all(up for endpoint, up in endpoint_states.items()),
+                **({
+                    config.service_endpoint() + endpoint: {
+                        'up': up
+                    } if up else {
+                        'up': up,
+                        'error': f'503 Server Error: Service Unavailable for url: {config.service_endpoint()}{endpoint}'
+                    } for endpoint, up in endpoint_states.items()
+                })
             }
         }
 
