@@ -800,7 +800,7 @@ class TestHCAIndexer(IndexerTestCase):
         manifest, metadata = self._load_canned_bundle(index_bundle)
         generator = MetadataGenerator()
         uuid, version = index_bundle
-        generator.add_bundle(uuid, version, list(metadata.values()))
+        generator.add_bundle(uuid, version, manifest, list(metadata.values()))
         metadata_rows = generator.dump()
         expected_metadata_contributions = 8
         self.assertEqual(expected_metadata_contributions, len(metadata_rows))

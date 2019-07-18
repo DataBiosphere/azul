@@ -596,7 +596,6 @@ class ElasticTransformDump(object):
         except AttributeError:
             return str(key)
 
-    # TODO: Write a doctest for this which will clarify what it does.
     def flatten_mapping(self, mapping, parent_key='', sep='.') -> JSON:
         """
         >>> from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
