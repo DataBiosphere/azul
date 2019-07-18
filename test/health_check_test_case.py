@@ -26,8 +26,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     endpoints = ['/repository/files?size=1',
                  '/repository/projects?size=1',
                  '/repository/samples?size=1',
-                 '/repository/bundles?size=1',
-                 '/repository/summary']
+                 '/repository/bundles?size=1']
 
     def _other_lambda_names(self) -> List[str]:
         return [
@@ -38,10 +37,10 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
 
     @mock_sts
     @mock_sqs
-    def test_ok_response(self):
+    def test_health_all_ok(self):
         self._create_mock_queues()
         endpoint_states = self._make_endpoint_states(self.endpoints)
-        response = self._test(endpoint_states, lambdas_up=True)
+        response = self._test(endpoint_states, lambdas_up=True, path='/health/all')
         health_object = response.json()
         self.assertEqual(200, response.status_code)
         self.assertEqual({
@@ -52,93 +51,6 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             **self._expected_api_endpoints(endpoint_states),
             **self._expected_progress()
         }, health_object)
-
-    @mock_sts
-    @mock_sqs
-    def test_other_lambda_down(self):
-        self._create_mock_queues()
-        endpoint_states = self._make_endpoint_states(self.endpoints)
-        response = self._test(endpoint_states, lambdas_up=False)
-        health_object = response.json()
-        self.assertEqual(503, response.status_code)
-        self.assertEqual({
-            'up': False,
-            **self._expected_elastic_search(True),
-            **self._expected_queues(True),
-            **self._expected_other_lambdas(False),
-            **self._expected_api_endpoints(endpoint_states),
-            **self._expected_progress()
-        }, health_object)
-
-    @mock_sts
-    @mock_sqs
-    def test_queues_down(self):
-        endpoint_states = self._make_endpoint_states(self.endpoints)
-        response = self._test(endpoint_states, lambdas_up=True)
-        health_object = response.json()
-        self.assertEqual(503, response.status_code)
-        self.assertEqual({
-            'up': False,
-            **self._expected_elastic_search(True),
-            **self._expected_queues(False),
-            **self._expected_other_lambdas(True),
-            **self._expected_api_endpoints(endpoint_states),
-            **self._expected_progress()
-        }, health_object)
-
-    @mock_sts
-    @mock_sqs
-    def test_all_api_endpoints_down(self):
-        self._create_mock_queues()
-        endpoint_states = self._make_endpoint_states([], down_endpoints=self.endpoints)
-        response = self._test(endpoint_states, lambdas_up=True)
-        health_object = response.json()
-        self.assertEqual(503, response.status_code)
-        self.assertEqual({
-            'up': False,
-            **self._expected_elastic_search(True),
-            **self._expected_queues(True),
-            **self._expected_other_lambdas(True),
-            **self._expected_api_endpoints(endpoint_states),
-            **self._expected_progress()
-        }, health_object)
-
-    @mock_sts
-    @mock_sqs
-    def test_one_api_endpoint_down(self):
-        self._create_mock_queues()
-        endpoint_states = self._make_endpoint_states(self.endpoints[1:], down_endpoints=self.endpoints[:1])
-        response = self._test(endpoint_states, lambdas_up=True)
-        health_object = response.json()
-        self.assertEqual(503, response.status_code)
-        self.assertEqual({
-            'up': False,
-            **self._expected_elastic_search(True),
-            **self._expected_queues(True),
-            **self._expected_other_lambdas(True),
-            **self._expected_api_endpoints(endpoint_states),
-            **self._expected_progress()
-        }, health_object)
-
-    @mock_sts
-    @mock_sqs
-    def test_elasticsearch_down(self):
-        self._create_mock_queues()
-        mock_endpoint = ('nonexisting-index.com', 80)
-        endpoint_states = self._make_endpoint_states(self.endpoints)
-        with mock.patch.dict(os.environ, **config.es_endpoint_env(mock_endpoint)):
-            response = self._test(endpoint_states, lambdas_up=True)
-            health_object = response.json()
-            self.assertEqual(503, response.status_code)
-            documents_ = {
-                'up': False,
-                **self._expected_elastic_search(False),
-                **self._expected_queues(True),
-                **self._expected_other_lambdas(True),
-                **self._expected_api_endpoints(endpoint_states),
-                **self._expected_progress()
-            }
-            self.assertEqual(documents_, health_object)
 
     @mock_sts
     @mock_sqs
@@ -241,13 +153,13 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             }
         }
 
-    def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool):
+    def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health'):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             self._mock_other_lambdas(helper, lambdas_up)
             self._mock_service_endpoints(helper, endpoint_states)
             with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
-                return requests.get(self.base_url + '/health')
+                return requests.get(self.base_url + path)
 
     def _mock_service_endpoints(self, helper: ResponsesHelper, endpoint_states: Mapping[str, bool]) -> None:
         for endpoint, endpoint_up in endpoint_states.items():
