@@ -31,7 +31,7 @@ class TestIndexerHealthCheck(HealthCheckTestCase):
             self.assertEqual(503, response.status_code)
             documents_ = {
                 'up': False,
-                **self._expected_elastic_search(False),
+                **self._expected_elasticsearch(False),
                 **self._expected_queues(True),
                 **self._expected_progress()
             }
@@ -46,7 +46,7 @@ class TestIndexerHealthCheck(HealthCheckTestCase):
         self.assertEqual(503, response.status_code)
         self.assertEqual({
             'up': False,
-            **self._expected_elastic_search(True),
+            **self._expected_elasticsearch(True),
             **self._expected_queues(False),
             **self._expected_progress()
         }, health_object)
@@ -63,7 +63,7 @@ class TestIndexerHealthCheck(HealthCheckTestCase):
             self.assertEqual(503, response.status_code)
             documents_ = {
                 'up': False,
-                **self._expected_elastic_search(False),
+                **self._expected_elasticsearch(False),
                 **self._expected_queues(True),
                 **self._expected_progress()
             }
