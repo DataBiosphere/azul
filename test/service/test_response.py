@@ -1269,9 +1269,9 @@ class TestResponse(WebServiceTestCase):
                     'order': 'desc',
                     'sort': 'entryId'
                 }
-            response = requests.get(url, params=params)
-            actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
-            self.assertElasticsearchResultsEqual(expected_hits, actual_value)
+                response = requests.get(url, params=params)
+                actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
+                self.assertElasticsearchResultsEqual(expected_hits, actual_value)
 
 
 class TestResponseSummary(WebServiceTestCase):
