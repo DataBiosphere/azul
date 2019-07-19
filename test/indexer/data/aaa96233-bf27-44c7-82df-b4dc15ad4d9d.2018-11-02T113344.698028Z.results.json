@@ -73,7 +73,7 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "organism_age_range_in_seconds": {
+                        "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         }
@@ -433,7 +433,7 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "organism_age_range_in_seconds": {
+                        "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         },
@@ -605,7 +605,7 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "organism_age_range_in_seconds": {
+                        "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         },
@@ -777,7 +777,7 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "organism_age_range_in_seconds": {
+                        "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         },
@@ -963,7 +963,7 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "organism_age_range_in_seconds": {
+                        "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         },
@@ -1206,7 +1206,7 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "organism_age_range_in_seconds": [{
+                        "organism_age_range": [{
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         }]
@@ -1584,7 +1584,7 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "organism_age_range_in_seconds": [{
+                        "organism_age_range": [{
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         }],
@@ -1779,7 +1779,7 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "organism_age_range_in_seconds": [{
+                        "organism_age_range": [{
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         }],
@@ -1954,7 +1954,7 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "organism_age_range_in_seconds": [{
+                        "organism_age_range": [{
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         }],
@@ -2140,7 +2140,7 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "organism_age_range_in_seconds": [{
+                        "organism_age_range": [{
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         }],
@@ -2325,7 +2325,7 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "organism_age_range_in_seconds": {
+                        "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         }
@@ -2561,7 +2561,7 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "organism_age_range_in_seconds": [{
+                        "organism_age_range": [{
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         }]

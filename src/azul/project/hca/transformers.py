@@ -184,7 +184,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'organism_age_unit': donor.organism_age_unit,
             **(
                 {
-                    'organism_age_range_in_seconds': {
+                    'organism_age_range': {
                         'gte': donor.organism_age_in_seconds.min,
                         'lte': donor.organism_age_in_seconds.max
                     }
@@ -580,7 +580,7 @@ class CellLineAggregator(SimpleAggregator):
 class DonorOrganismAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'organism_age_range_in_seconds':
+        if field == 'organism_age_range':
             return SetOfDictAccumulator(max_size=100)
         else:
             return SetAccumulator(max_size=100)

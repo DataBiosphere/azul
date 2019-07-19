@@ -17,8 +17,13 @@ class Indexer(BaseIndexer):
             "dynamic_templates": [
                 {
                     "donor_age_range": {
-                        "path_match": "contents.donors.organism_age_range_in_seconds",
+                        "path_match": "contents.donors.organism_age_range",
                         "mapping": {
+                            # This field has to be a double because the `donor_age_range` needs to be precise at values
+                            # slightly larger than the human lifespan. A float with 2 decimal precision starts losing
+                            # its accuracy at 16,777,216.00. That value in seconds, is only about 0.53 in years.
+                            # Doubles lose their accuracy at 9,007,199,254,740,993.00 seconds which is
+                            # 285,616,414.72 years.
                             "type": "double_range"
                         }
                     }
