@@ -45,7 +45,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         self.assertEqual(200, response.status_code)
         self.assertEqual({
             'up': True,
-            **self._expected_elastic_search(True),
+            **self._expected_elasticsearch(True),
             **self._expected_queues(True),
             **self._expected_other_lambdas(True),
             **self._expected_api_endpoints(endpoint_states),
@@ -61,7 +61,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                 'up': True,
                 **expected_response
             } for keys, expected_response in [
-                ('elastic_search', self._expected_elastic_search(True)),
+                ('elasticsearch', self._expected_elasticsearch(True)),
                 ('queues', self._expected_queues(True)),
                 ('other_lambdas', self._expected_other_lambdas(True)),
                 ('api_endpoints', self._expected_api_endpoints(endpoint_states)),
@@ -146,9 +146,9 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             }
         }
 
-    def _expected_elastic_search(self, up: bool) -> JSON:
+    def _expected_elasticsearch(self, up: bool) -> JSON:
         return {
-            'elastic_search': {
+            'elasticsearch': {
                 'up': up
             }
         }
