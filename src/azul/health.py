@@ -15,19 +15,19 @@ from azul.types import JSON
 class Health:
     keys = {
         'all': (
-            'elastic_search',
+            'elasticsearch',
             'queues',
             'progress',
             'api_endpoints',
             'other_lambdas',
         ),
         'indexer': (
-            'elastic_search',
+            'elasticsearch',
             'queues',
             'progress'
         ),
         'service': (
-            'elastic_search',
+            'elasticsearch',
             'api_endpoints',
         )
     }
@@ -107,7 +107,7 @@ class Health:
         return status
 
     @memoized_property
-    def elastic_search(self):
+    def elasticsearch(self):
         return {
             'up': ESClientFactory.get().ping(),
         }

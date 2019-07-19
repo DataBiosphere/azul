@@ -29,7 +29,7 @@ class TestServiceHealthCheck(HealthCheckTestCase):
         self.assertEqual(503, response.status_code)
         self.assertEqual({
             'up': False,
-            **self._expected_elastic_search(True),
+            **self._expected_elasticsearch(True),
             **self._expected_api_endpoints(endpoint_states),
         }, health_object)
 
@@ -43,7 +43,7 @@ class TestServiceHealthCheck(HealthCheckTestCase):
         self.assertEqual(503, response.status_code)
         self.assertEqual({
             'up': False,
-            **self._expected_elastic_search(True),
+            **self._expected_elasticsearch(True),
             **self._expected_api_endpoints(endpoint_states),
         }, health_object)
 
@@ -59,7 +59,7 @@ class TestServiceHealthCheck(HealthCheckTestCase):
             self.assertEqual(503, response.status_code)
             documents_ = {
                 'up': False,
-                **self._expected_elastic_search(False),
+                **self._expected_elasticsearch(False),
                 **self._expected_api_endpoints(endpoint_states),
             }
             self.assertEqual(documents_, health_object)
