@@ -125,13 +125,12 @@ class IntegrationTest(unittest.TestCase):
             ('tsv', self.check_manifest),
             ('bdbag', self.check_bdbag)
         ]:
-            for path in '/repository/files/export', '/manifest/files':
-                with self.subTest(format=format_, filter=manifest_filter, path=path):
-                    query = {'filters': manifest_filter}
-                    if format_ is not None:
-                        query['format'] = format_
-                    response = self.check_endpoint_is_working(config.service_endpoint(), path, query)
-                    validator(response)
+            with self.subTest(format=format_, filter=manifest_filter):
+                query = {'filters': manifest_filter}
+                if format_ is not None:
+                    query['format'] = format_
+                response = self.check_endpoint_is_working(config.service_endpoint(), '/manifest/files', query)
+                validator(response)
 
     def _test_drs(self):
         filters = json.dumps({'project': {'is': [self.test_name]}, 'fileFormat': {'is': ['fastq.gz', 'fastq']}})
