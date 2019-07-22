@@ -19,11 +19,14 @@ class Indexer(BaseIndexer):
                     "donor_age_range": {
                         "path_match": "contents.donors.organism_age_range",
                         "mapping": {
-                            # This field has to be a double because the `donor_age_range` needs to be precise at values
-                            # slightly larger than the human lifespan. A float with 2 decimal precision starts losing
-                            # its accuracy at 16,777,216.00. That value in seconds, is only about 0.53 in years.
-                            # Doubles lose their accuracy at 9,007,199,254,740,993.00 seconds which is
-                            # 285,616,414.72 years.
+                            # A float (single precision IEEE-754) can represent all integers up to 16,777,216. If we
+                            # used float values for organism ages in seconds, we would not be able to accurately
+                            # represent an organism age of 16,777,217 seconds. That is 194 days and 15617 seconds.
+                            # A double precision IEEE-754 representation loses accuracy at 9,007,199,254,740,993 which
+                            # is more than 285616415 years.
+
+                            # Note that Python's float uses double precision IEEE-754.
+                            # (https://docs.python.org/3/tutorial/floatingpoint.html#representation-error)
                             "type": "double_range"
                         }
                     }
