@@ -4,6 +4,11 @@ from azul.template import emit
 emit({
     "provider": [
         {
+            "null": {
+                'version': "~> 2.1"
+            }
+        },
+        {
             "google": {
                 'version': "~> 1.18"
             }
