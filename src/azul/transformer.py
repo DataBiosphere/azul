@@ -1,9 +1,11 @@
 from abc import ABC, ABCMeta, abstractmethod
 from collections import defaultdict, Counter
 import logging
+
+from more_itertools import one
 from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple, ClassVar
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 from azul import config
 from azul.json_freeze import freeze, thaw
@@ -67,9 +69,21 @@ class Document:
         return dict(entity_id=self.entity.entity_id,
                     contents=self.contents)
 
+    def to_dict(self) -> JSON:
+        return {f.name: getattr(self, f.name) for f in fields(self)}
+
     @classmethod
     def _from_source(cls, source: JSON) -> Mapping[str, Any]:
         return {}
+
+    @classmethod
+    def mandatory_source_fields(cls) -> List[str]:
+        """
+        A list of field paths into the source of each document that are expected to be present. Subclasses that
+        override _from_source() should override this method, too, such that the list returned by this method mentions
+        the name of every field expected by _from_source().
+        """
+        return ['entity_id']
 
     @classmethod
     def from_index(cls, hit: JSON) -> 'Document':
@@ -83,7 +97,15 @@ class Document:
                    **cls._from_source(source))
         return self
 
-    def to_index(self, bulk=False) -> JSON:
+    def to_index(self, bulk=False, update=False) -> dict:
+        """
+        Build request parameters from the document for indexing
+
+        :param bulk: If bulk indexing
+        :param update: If creation failed and we need to try update. This will only affect docs with version_type None
+                       (AKA contributions)
+        :return: Request parameters for indexing
+        """
         delete = self.delete
         result = {
             '_index' if bulk else 'index': self.document_index,
@@ -92,8 +114,11 @@ class Document:
             '_id' if bulk else 'id': self.document_id
         }
         if self.version_type is None:
-            if bulk:
+            # TODO: FIXME: (jesse) why only for bulk???
+            if False and bulk:
                 result['_op_type'] = 'delete' if delete else 'index'
+            op_key = '_op_type' if bulk else 'op_type'
+            result[op_key] = 'delete' if delete else ('index' if update else 'create')
         else:
             if bulk:
                 result['_op_type'] = 'delete' if delete else ('create' if self.version is None else 'index')
@@ -112,15 +137,19 @@ class Document:
 class Contribution(Document):
     bundle_uuid: BundleUUID
     bundle_version: BundleVersion
-    bundle_deleted: bool = False
+    bundle_deleted: bool
 
     @property
     def document_id(self) -> str:
-        return self.make_document_id(self.entity.entity_id, self.bundle_uuid, self.bundle_version)
+        return self.make_document_id(self.entity.entity_id, self.bundle_uuid, self.bundle_version, self.bundle_deleted)
 
     @classmethod
-    def make_document_id(cls, entity_id, bundle_uuid, bundle_version):
-        document_id = entity_id, bundle_uuid, bundle_version
+    def make_document_id(cls,
+                         entity_id: EntityID,
+                         bundle_uuid: BundleUUID,
+                         bundle_version: BundleVersion,
+                         bundle_deleted: bool):
+        document_id = entity_id, bundle_uuid, bundle_version, 'deleted' if bundle_deleted else 'exists'
         return '_'.join(document_id)
 
     @classmethod
@@ -129,6 +158,10 @@ class Contribution(Document):
                     bundle_uuid=source['bundle_uuid'],
                     bundle_version=source['bundle_version'],
                     bundle_deleted=source['bundle_deleted'])
+
+    @classmethod
+    def mandatory_source_fields(cls) -> List[str]:
+        return super().mandatory_source_fields() + ['bundle_uuid', 'bundle_version', 'bundle_deleted']
 
     def to_source(self):
         return dict(super().to_source(),
@@ -139,7 +172,7 @@ class Contribution(Document):
 
 @dataclass
 class Aggregate(Document):
-    bundles: JSON
+    bundles: Optional[List[JSON]]
     num_contributions: int
     version_type: ClassVar[Optional[str]] = 'internal'
 
@@ -147,7 +180,11 @@ class Aggregate(Document):
     def _from_source(cls, source: JSON) -> Mapping[str, Any]:
         return dict(super()._from_source(source),
                     num_contributions=source['num_contributions'],
-                    bundles=source['bundles'])
+                    bundles=source.get('bundles'))
+
+    @classmethod
+    def mandatory_source_fields(cls) -> List[str]:
+        return super().mandatory_source_fields() + ['num_contributions']
 
     def to_source(self) -> JSON:
         return dict(super().to_source(),
@@ -166,6 +203,7 @@ class Transformer(ABC):
     def transform(self,
                   uuid: BundleUUID,
                   version: BundleVersion,
+                  deleted: bool,
                   manifest: List[JSON],
                   metadata_files: Mapping[str, JSON]) -> Iterable[Contribution]:
         """
@@ -176,6 +214,7 @@ class Transformer(ABC):
 
         :param uuid: The UUID of the bundle to create documents for
         :param version: The version of the bundle to create documents for
+        :param deleted: Whether or not the bundle being indexed is a deleted bundle
         :param manifest:  The bundle manifest entries for all data and metadata files in the bundle
         :param metadata_files: The contents of all metadata files in the bundle
         :return: The document contributions
@@ -366,6 +405,19 @@ class LastValueAccumulator(Accumulator):
         return self.value
 
 
+class SingleValueAccumulator(LastValueAccumulator):
+    """
+    An accumulator that accepts any number of values given that they all are the same value and returns a single value.
+    Occurrence of any value that is different than the first accumulated value raises a ValueError.
+    """
+
+    def accumulate(self, value):
+        if self.value is None:
+            super().accumulate(value)
+        elif self.value != value:
+            raise ValueError('Conflicting values:', self.value, value)
+
+
 class OptionalValueAccumulator(LastValueAccumulator):
     """
     An accumulator that accepts at most one value and returns it.
@@ -516,7 +568,9 @@ class GroupingAggregator(SimpleAggregator):
     def aggregate(self, entities: Entities) -> Entities:
         aggregates: MutableMapping[Any, MutableMapping[str, Optional[Accumulator]]] = defaultdict(dict)
         for entity in entities:
-            group_key = frozenset(self._group_keys(entity))
+            group_key = self._group_keys(entity)
+            if isinstance(group_key, (list, set)):
+                group_key = frozenset(group_key)
             aggregate = aggregates[group_key]
             self._accumulate(aggregate, entity)
         return [
@@ -573,16 +627,19 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
         If two or more contributions contain copies of the same entity, potentially with different contents, the copy
         from the contribution with the latest bundle version will be selected.
         """
-        contents: MutableMapping[EntityType, CollatedEntities] = defaultdict(dict)
-        for contribution in contributions:
-            for entity_type, entities in contribution.contents.items():
-                collated_entities = contents[entity_type]
-                for entity in entities:
-                    entity_id = entity['document_id']  # FIXME: the key 'document_id' is HCA specific
-                    bundle_version, _ = collated_entities.get(entity_id, ('', None))
-                    if bundle_version < contribution.bundle_version:
-                        collated_entities[entity_id] = contribution.bundle_version, entity
-        return {
-            entity_type: [entity for _, entity in entities.values()]
-            for entity_type, entities in contents.items()
-        }
+        if len(contributions) == 1:
+            return one(contributions).contents
+        else:
+            contents: MutableMapping[EntityType, CollatedEntities] = defaultdict(dict)
+            for contribution in contributions:
+                for entity_type, entities in contribution.contents.items():
+                    collated_entities = contents[entity_type]
+                    for entity in entities:
+                        entity_id = entity['document_id']  # FIXME: the key 'document_id' is HCA specific
+                        bundle_version, _ = collated_entities.get(entity_id, ('', None))
+                        if bundle_version < contribution.bundle_version:
+                            collated_entities[entity_id] = contribution.bundle_version, entity
+            return {
+                entity_type: [entity for _, entity in entities.values()]
+                for entity_type, entities in contents.items()
+            }

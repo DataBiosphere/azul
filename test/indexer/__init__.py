@@ -7,8 +7,9 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from azul import config
-from azul.indexer import IndexWriter
+from azul.indexer import IndexWriter, Tallies
 from azul.plugin import Plugin
+from azul.project.hca import Indexer
 from azul.types import JSON
 from es_test_case import ElasticsearchTestCase
 
@@ -21,11 +22,23 @@ class IndexerTestCase(ElasticsearchTestCase):
     def setUpClass(cls):
         super().setUpClass()
         plugin = Plugin.load()
-        cls.indexer_cls = plugin.indexer_class()
+
+        # noinspection PyAbstractClass
+        class _Indexer(plugin.indexer_class()):
+
+            def _create_writer(self) -> IndexWriter:
+                writer = super()._create_writer()
+                # With a single client thread, refresh=True is faster than refresh="wait_for". The latter would limit
+                # the request rate to 1/refresh_interval. That's only one request per second with refresh_interval
+                # being 1s.
+                writer.refresh = True
+                return writer
+
+        cls.indexer_cls = _Indexer
         cls.per_thread = threading.local()
 
     @classmethod
-    def get_hca_indexer(cls):
+    def get_hca_indexer(cls) -> Indexer:
         try:
             # One of the indexer tests uses multiple threads to facilate concurrent indexing. Each of these threads
             # must use its own indexer instance because each one needs to be mock.patch'ed to a different canned
@@ -83,30 +96,32 @@ class IndexerTestCase(ElasticsearchTestCase):
         return expected_hits
 
     @classmethod
-    def _index_canned_bundle(cls, bundle_fqid):
+    def _index_canned_bundle(cls, bundle_fqid, delete=False):
         manifest, metadata = cls._load_canned_bundle(bundle_fqid)
-        cls._index_bundle(bundle_fqid, manifest, metadata)
+        cls._index_bundle(bundle_fqid, manifest, metadata, delete=delete)
 
     @classmethod
-    def _index_bundle(cls, bundle_fqid, manifest, metadata):
+    def _index_bundle(cls, bundle_fqid, manifest, metadata, delete=False):
         def mocked_get_bundle(bundle_uuid, bundle_version):
             assert bundle_fqid == (bundle_uuid, bundle_version)
             return deepcopy(manifest), deepcopy(metadata)
 
-        index_writer = cls._create_index_writer()
         notification = cls._make_fake_notification(bundle_fqid)
         with patch('azul.DSSClient'):
-            with patch.object(cls.get_hca_indexer(), '_get_bundle', new=mocked_get_bundle):
-                cls.get_hca_indexer().index(index_writer, notification)
+            indexer = cls.get_hca_indexer()
+            with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
+                method = indexer.delete if delete else indexer.index
+                method(notification)
 
     @classmethod
-    def _create_index_writer(cls):
-        # With a single client thread, refresh=True is faster than refresh="wait_for". The latter would limit the
-        # request rate to 1/refresh_interval. That's only one request per second with refresh_interval being 1s.
-        return IndexWriter(refresh=True, conflict_retry_limit=2, error_retry_limit=0)
+    def _write_contributions(cls, bundle_fqid, manifest, metadata) -> Tallies:
+        def mocked_get_bundle(bundle_uuid, bundle_version):
+            assert bundle_fqid == (bundle_uuid, bundle_version)
+            return deepcopy(manifest), deepcopy(metadata)
 
-    def _delete_bundle(self, bundle_fqid):
-        index_writer = self._create_index_writer()
-        notification = self._make_fake_notification(bundle_fqid)
+        indexer = cls.get_hca_indexer()
+        notification = cls._make_fake_notification(bundle_fqid)
         with patch('azul.DSSClient'):
-            self.get_hca_indexer().delete(index_writer, notification)
+            with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
+                contributions = indexer.transform(notification, delete=False)
+                return indexer.contribute(contributions)

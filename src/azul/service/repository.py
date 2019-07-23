@@ -39,7 +39,7 @@ class RepositoryService(AbstractService):
         return response
 
     def _get_item(self, entity_type, item_id, pagination, filters, file_url_func):
-        filters['file']['entryId'] = {"is": [item_id]}
+        filters['entryId'] = {'is': [item_id]}
         try:
             formatted_uuid = uuid.UUID(item_id)
         except ValueError:
@@ -97,11 +97,11 @@ class RepositoryService(AbstractService):
             'projects': [
                 'projectCount',
                 'labCount',
-                # Cherry-pick cell count from projects as under samples it is possible that more than one sample could
-                # have the same cell suspension as an inner entity which would incorrectly inflate the total cell count.
+            ],
+            'cell_suspensions': [
                 'totalCellCount',
                 'cellCountSummaries',
-            ],
+            ]
         }
 
         def make_summary(entity_type):
