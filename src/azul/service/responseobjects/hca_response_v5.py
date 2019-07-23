@@ -687,6 +687,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "genusSpecies": donor.get("genus_species", None),
             "organismAge": donor.get("organism_age", None),
             "organismAgeUnit": donor.get("organism_age_unit", None),
+            "organismAgeRange": donor.get("organism_age_range", None),
             "biologicalSex": donor.get("biological_sex", None),
             "disease": donor.get("disease", None)
         }
