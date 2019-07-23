@@ -46,7 +46,7 @@ class ManifestServiceTest(AzulTestCase):
             'status': 'SUCCEEDED',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
             'stopDate': datetime.datetime(2018, 11, 15, 18, 30, 59, 295000),
-            'input': '{"filters": {"file": {}}}',
+            'input': '{"filters": {}}',
             'output': json.dumps({'Location': manifest_url})
         }
         step_function_helper.describe_execution.return_value = execution_success_output
@@ -70,7 +70,7 @@ class ManifestServiceTest(AzulTestCase):
             'name': execution_id,
             'status': 'RUNNING',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
-            'input': '{"filters": {"file": {}}}'
+            'input': '{"filters": {}}'
         }
         step_function_helper.describe_execution.return_value = execution_running_output
         manifest_service = ManifestService()
@@ -96,7 +96,7 @@ class ManifestServiceTest(AzulTestCase):
             'status': 'FAILED',
             'startDate': datetime.datetime(2018, 11, 14, 16, 6, 53, 382000),
             'stopDate': datetime.datetime(2018, 11, 14, 16, 6, 55, 860000),
-            'input': '{"filters": {"file": {"organ": {"is": ["lymph node"]}}}}',
+            'input': '{"filters": {"organ": {"is": ["lymph node"]}}}',
         }
         step_function_helper.describe_execution.return_value = execution_failed_output
         manifest_service = ManifestService()
