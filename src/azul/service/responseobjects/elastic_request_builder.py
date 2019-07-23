@@ -570,7 +570,28 @@ class ElasticTransformDump(object):
         if format == 'full':
             source_filter = ['contents.metadata.*']
             entity_type = 'bundles'
-            manifest_config = self.generate_full_manifest_config()
+            es_search = self.create_request(filters,
+                                            self.es_client,
+                                            request_config,
+                                            post_filter=False,
+                                            source_filter=source_filter,
+                                            enable_aggregation=False,
+                                            entity_type=entity_type)
+            es_search.aggs.metric('fields', 'scripted_metric',
+                                  init_script='params._agg.fields = new HashSet()',
+                                  map_script='for (row in params._source.contents.metadata) { '
+                                             'for (f in row.keySet()) {'
+                                             'params._agg.fields.add(f)}}',
+                                  combine_script='return new ArrayList(params._agg.fields)',
+                                  reduce_script='Set fields = new HashSet();'
+                                                ' for (agg in params._aggs) { '
+                                                'fields.addAll(agg) '
+                                                '} return new ArrayList(fields)'
+                                  )
+            es_search.size = 0
+            response = es_search.execute()
+            aggregate = response.aggregations
+            manifest_config = self.generate_full_manifest_config(aggregate)
         elif format == 'bdbag':
             # Terra rejects `.` in column names
             manifest_config = {
@@ -593,17 +614,13 @@ class ElasticTransformDump(object):
                                         source_filter=source_filter,
                                         enable_aggregation=False,
                                         entity_type=entity_type)
+
         manifest = ManifestResponse(es_search, manifest_config, request_config['translation'], format)
 
         return manifest.return_response()
 
-    def generate_full_manifest_config(self) -> JSON:
-        bundles_index = config.es_index_name('bundles')
-        mapping = self.es_client.indices.get_mapping(index=bundles_index)
-        metadata = mapping[bundles_index]['mappings']['doc']['properties']['contents']['properties']['metadata']
-        metadata_mapping = self.metadata_mapping(metadata, None)
-        metadata_config = self.flatten_mapping(mapping=metadata_mapping)
-        return metadata_config
+    def generate_full_manifest_config(self, aggregate) -> JSON:
+        return aggregate.fields.value
 
     def metadata_mapping(self, mapping: JSON, key: str) -> JSON:
         try:
