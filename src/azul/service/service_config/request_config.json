@@ -38,6 +38,7 @@
     "effectiveOrgan": "contents.samples.effective_organ",
     "organismAge": "contents.donors.organism_age",
     "organismAgeUnit": "contents.donors.organism_age_unit",
+    "organismAgeRange": "contents.donors.organism_age_range",
     "preservationMethod": "contents.specimens.preservation_method",
 
     "cellLineType": "contents.cell_lines.cell_line_type",
