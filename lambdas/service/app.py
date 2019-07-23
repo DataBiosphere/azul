@@ -449,36 +449,6 @@ def get_order():
     return {'order': order_list}
 
 
-@app.route('/repository/files/export', methods=['GET'], cors=True)
-def get_manifest():
-    """
-    Creates and returns a manifest based on the filters passed on
-    to this endpoint
-    parameters:
-        - name: filters
-          in: query
-          type: string
-          description: Filters to be applied when generating the manifest
-        - name: format
-          in: query
-          type: string
-          description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
-          manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
-          latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
-          samples (aka specimens). The format of the manifests inside the BDBag is documented here:
-          https://software.broadinstitute.org/firecloud/documentation/article?id=10954
-    :return: A manifest that the user can use to download the files in there
-    """
-    if app.current_request.query_params is None:
-        app.current_request.query_params = {}
-    params = app.current_request.query_params
-    from azul.service import AbstractService
-    filters = AbstractService.parse_filters(params.get('filters'))
-    es_td = EsTd()
-    response = es_td.transform_manifest(get_format(params), filters)
-    return response
-
-
 def get_format(params):
     format_ = params.get('format', 'tsv')
     if format_ in ('tsv', 'bdbag', 'full'):
