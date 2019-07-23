@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import collections
 from copy import deepcopy
 import json
 import logging
@@ -612,12 +611,20 @@ class ElasticTransformDump(object):
         except AttributeError:
             return str(key)
 
-    def flatten_mapping(self, mapping, parent_key='', sep='.') -> JSON:
+    @classmethod
+    def flatten_mapping(cls, mapping, parent_key='', sep='.') -> JSON:
+        """
+        >>> ElasticTransformDump.flatten_mapping(mapping={'foo': {'bar': {'foobar': 'foobar'}}})
+        {'foo.bar.foobar': 'foobar'}
+
+        >>> ElasticTransformDump.flatten_mapping(mapping={'bar': {'foo': {'barfoo': {'foobar': {'foobarfoo': 'foobarfoo'}}}}})
+        {'bar.foo.barfoo.foobar.foobarfoo': 'foobarfoo'}
+        """
         items = []
         for k, v in mapping.items():
             new_key = parent_key + sep + k if parent_key else k
-            if isinstance(v, collections.MutableMapping):
-                items.extend(self.flatten_mapping(mapping=v, parent_key=new_key, sep=sep).items())
+            if isinstance(v, dict):
+                items.extend(cls.flatten_mapping(mapping=v, parent_key=new_key, sep=sep).items())
             else:
                 items.append((new_key, v))
         return dict(items)
