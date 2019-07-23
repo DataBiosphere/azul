@@ -21,16 +21,14 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
         return "service"
 
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def _setup_indices(cls):
         for bundle in cls.bundles:
             cls._index_canned_bundle(bundle)
 
     @classmethod
-    def tearDownClass(cls):
+    def _teardown_indices(cls):
         for index_name in cls.get_hca_indexer().index_names():
             cls.es_client.indices.delete(index=index_name, ignore=[400, 404])
-        super().tearDownClass()
 
     @classmethod
     def _get_doc(cls):
