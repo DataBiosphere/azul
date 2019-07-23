@@ -1,5 +1,5 @@
 import abc
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict, defaultdict, ChainMap
 from copy import deepcopy
 import os
 import csv
@@ -87,10 +87,9 @@ class FileTypeSummary(JsonObject):
         self = cls()
         self.count = aggregate_file['count']
         self.totalSize = aggregate_file['size']
-        format = aggregate_file['file_format']
-        assert isinstance(format, list)
-        assert len(format)
-        self.fileType = format[0]
+        self.fileType = aggregate_file['file_format']
+        assert isinstance(self.fileType, str)
+        assert len(self.fileType)
         return self
 
 
@@ -275,6 +274,12 @@ class ManifestResponse(AbstractResponse):
                 return self.storage_service.upload(bdbag_path, object_key)
             finally:
                 os.remove(bdbag_path)
+        elif self.format == 'full':
+            output = StringIO()
+            self._write_metadata(output)
+            return self.storage_service.put(object_key=f'metadata/{uuid4()}.tsv',
+                                            data=output.getvalue().encode(),
+                                            content_type='text/tab-separated-values')
         else:
             assert False
 
@@ -291,12 +296,23 @@ class ManifestResponse(AbstractResponse):
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
 
+    def _write_metadata(self, output: IO[str]) -> None:
+        sources = list(self.manifest_entries.keys())
+        writer = csv.DictWriter(output, sources, dialect='excel-tab')
+        writer.writeheader()
+        for hit in self.es_search.scan():
+            doc = hit['contents'].to_dict()
+            for metadata in list(doc['metadata']):
+                row = dict.fromkeys(sources)
+                row.update(metadata)
+                writer.writerow(row)
+
     def _create_bdbag_archive(self) -> str:
         with TemporaryDirectory() as temp_path:
             bag_path = os.path.join(temp_path, 'manifest')
             os.makedirs(bag_path)
             bdbag_api.make_bag(bag_path)
-            with open(os.path.join(bag_path, 'data', 'samples.tsv'), 'w') as samples_tsv:
+            with open(os.path.join(bag_path, 'data', 'participants.tsv'), 'w') as samples_tsv:
                 self._write_bdbag_samples_tsv(samples_tsv)
             bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
             assert bdbag_api.is_bag(bag_path)
@@ -310,7 +326,7 @@ class ManifestResponse(AbstractResponse):
             os.rename(archive_path, temp_path)
             return temp_path
 
-    column_path_separator = '-'
+    column_path_separator = '__'
 
     def _write_bdbag_samples_tsv(self, bundle_tsv: IO[str]) -> None:
         """
@@ -342,13 +358,13 @@ class ManifestResponse(AbstractResponse):
             # prefix the names of file-specific columns in the TSV
             qualifier = file['file_format']
             if qualifier in ('fastq.gz', 'fastq'):
-                qualifier = f"fastq[{file['read_index']}]"
+                qualifier = f"fastq_{file['read_index']}"
 
             # For each bundle containing the current file …
             for bundle in doc['bundles']:
-                bundle_fqid = bundle['uuid'], bundle['version']
+                bundle_fqid = bundle['uuid'], bundle['version'].replace('.', '_')
 
-                bundle_cells = {'entity:bundle_id': '.'.join(bundle_fqid)}
+                bundle_cells = {'entity:participant_id': '_'.join(bundle_fqid)}
                 self._extract_fields([bundle], bundle_column_mapping, bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
@@ -364,8 +380,8 @@ class ManifestResponse(AbstractResponse):
         # one file per file format
         def qualify(qualifier, column_name, index=None):
             if index is not None:
-                qualifier = f"{qualifier}[{index}]"
-            return f"{qualifier}{self.column_path_separator}{column_name}"
+                qualifier = f"{qualifier}_{index}"
+            return f"{self.column_path_separator}{qualifier}{self.column_path_separator}{column_name}"
 
         num_groups_per_qualifier = defaultdict(int)
 
@@ -385,7 +401,7 @@ class ManifestResponse(AbstractResponse):
         # Compute the column names in deterministic order, bundle_columns first
         # followed by other columns
         column_names = dict.fromkeys(chain(
-            ['entity:bundle_id'],
+            ['entity:participant_id'],
             bundle_column_mapping.keys(),
             *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
 
@@ -456,7 +472,7 @@ class ManifestResponse(AbstractResponse):
         return dss_url
 
     def return_response(self):
-        if config.disable_multipart_manifests or self.format == 'bdbag':
+        if config.disable_multipart_manifests or self.format in ('bdbag', 'full'):
             object_key = self._push_content_single_part()
             file_name = None
         else:
@@ -678,7 +694,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for project in entry["contents"]["projects"]:
             translated_project = {
                 "projectTitle": project.get("project_title"),
-                "projectShortname": project["project_shortname"],
+                "projectShortname": project["project_short_name"],
                 "laboratory": list(set(project.get("laboratory", [])))
             }
             if self.entity_type == 'projects':
@@ -769,38 +785,25 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_organoids(self, entry):
         return [self.make_organoid(organoid) for organoid in entry["contents"]["organoids"]]
 
-    # Map keys in the contents dict to keys in the response HitEntry
-    sample_entity_types = {
-        'cell_lines': 'cellLines',
-        'organoids': 'organoids',
-        'specimens': 'specimens',
-    }
-
-    # Map keys in the contents dict to the related make_... function
-    sample_entity_make_functions = {
-        'cell_lines': make_cell_line,
-        'organoids': make_organoid,
-        'specimens': make_specimen,
-    }
-
     def make_sample(self, sample):
-        if isinstance(sample['entity_type'], list):
-            sample_dict = {'sampleEntityType': []}
-            for entity_type in sample['entity_type']:
-                sample_entity_type = self.sample_entity_types[entity_type]
-                sample_dict['sampleEntityType'].append(sample_entity_type)
-                entity_make_function = self.sample_entity_make_functions[entity_type]
-                entity_dict = entity_make_function(self, sample)
-                sample_dict.update(entity_dict)
+        lookup = {
+            'cell_lines': ('cellLines', self.make_cell_line),
+            'organoids': ('organoids', self.make_organoid),
+            'specimens': ('specimens', self.make_specimen),
+        }
+        entity_type = sample['entity_type']
+        if isinstance(entity_type, list):
+            entity_type, make_functions = map(list, zip(*map(lookup.get, entity_type)))
+            entity_dicts = (make_function(sample) for make_function in make_functions)
+            entity_dict = ChainMap(*entity_dicts)
         else:
-            entity_type = sample['entity_type']
-            sample_entity_type = self.sample_entity_types[entity_type]
-            entity_make_function = self.sample_entity_make_functions[entity_type]
-            sample_dict = {
-                "sampleEntityType": sample_entity_type,
-                **entity_make_function(self, sample)
-            }
-        return sample_dict
+            entity_type, make_function = lookup[entity_type]
+            entity_dict = make_function(sample)
+        return {
+            'sampleEntityType': entity_type,
+            'effectiveOrgan': sample['effective_organ'],
+            **entity_dict
+        }
 
     def make_samples(self, entry):
         return [self.make_sample(sample) for sample in entry["contents"]["samples"]]

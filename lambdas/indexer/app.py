@@ -11,7 +11,7 @@ import random
 import time
 
 from chalice import Response
-from typing import List, MutableMapping
+from typing import List, MutableMapping, Optional
 import uuid
 
 import boto3
@@ -24,7 +24,6 @@ from azul import config
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul import hmac
-from azul.indexer import IndexWriter
 from azul.plugin import Plugin
 from azul.azulclient import AzulClient
 from azul.time import RemainingLambdaContextTime
@@ -60,11 +59,14 @@ def basic_health():
 
 
 @app.route('/health', methods=['GET'], cors=True)
-def health():
+@app.route('/health/{keys}', methods=['GET'], cors=True)
+def health(keys: Optional[str] = None):
     health = Health('indexer')
+    kwargs = {} if keys is None else dict(keys=keys.split(','))
+    body = health.as_json(**kwargs)
     return Response(
-        body=json.dumps(health.as_json),
-        status_code=200 if health.up else 503
+        body=json.dumps(body),
+        status_code=200 if body['up'] else 503
     )
 
 
@@ -88,8 +90,7 @@ def post_notification():
         if params and params.get('sync', 'False').lower() == 'true':
             indexer_cls = plugin.indexer_class()
             indexer = indexer_cls()
-            writer = _create_index_writer()
-            indexer.index(writer, notification)
+            indexer.index(notification)
         else:
             message = dict(action='add', notification=notification)
             notify_queue = queue(config.notify_queue_name)
@@ -179,15 +180,14 @@ def index(event: chalice.app.SQSEvent):
                 indexer_cls = plugin.indexer_class()
                 indexer = indexer_cls()
                 if action == 'add':
-                    contributions = indexer.transform(notification)
+                    contributions = indexer.transform(notification, delete=False)
                 elif action == 'delete':
-                    contributions = indexer.transform_deletion(notification)
+                    contributions = indexer.transform(notification, delete=True)
                 else:
                     assert False
 
                 log.info("Writing %i contributions to index.", len(contributions))
-                writer = _create_index_writer()
-                tallies = indexer.contribute(writer, contributions)
+                tallies = indexer.contribute(contributions)
                 tallies = [DocumentTally.for_entity(entity, num_contributions)
                            for entity, num_contributions in tallies.items()]
 
@@ -271,8 +271,7 @@ def write(event: chalice.app.SQSEvent):
             indexer_cls = plugin.indexer_class()
             indexer = indexer_cls()
             tallies = {tally.entity: tally.num_contributions for tally in referrals}
-            writer = _create_index_writer()
-            indexer.aggregate(writer, tallies)
+            indexer.aggregate(tallies)
 
         if deferrals:
             for tally in deferrals:
@@ -302,13 +301,6 @@ def write(event: chalice.app.SQSEvent):
     elif total < 0:
         # Discarding token deficit will lead to an overall surplus of token value which will expire at some point.
         log.info("Discarding token deficit of %i.", total)
-
-
-def _create_index_writer():
-    # The should be no conflicts because we use SQS FIFO message group per entity.
-    # For other errors we use SQS message redelivery to take care of the retries.
-    index_writer = IndexWriter(refresh=False, conflict_retry_limit=0, error_retry_limit=0)
-    return index_writer
 
 
 @dataclass(frozen=True)

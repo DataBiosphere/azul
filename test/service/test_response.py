@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import json
 import logging
 import unittest
@@ -27,6 +25,16 @@ class TestResponse(WebServiceTestCase):
         ('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'),
         ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
     ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
 
     def get_hits(self, entity_type: str, entity_id: str):
         """Fetches hits from es instance searching for a particular entity ID"""
@@ -116,6 +124,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": ["specimens"],
+                            "effectiveOrgan": ['pancreas'],
                             "disease": ["normal"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
@@ -206,6 +215,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": "specimens",
+                            "effectiveOrgan": "pancreas",
                             "id": "DID_scRSq06_pancreas",
                             "disease": ["normal"],
                             "organ": "pancreas",
@@ -323,6 +333,7 @@ class TestResponse(WebServiceTestCase):
                         "samples": [
                             {
                                 "sampleEntityType": ["specimens"],
+                                "effectiveOrgan": ['pancreas'],
                                 "disease": ["normal"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
@@ -423,6 +434,7 @@ class TestResponse(WebServiceTestCase):
                         "samples": [
                             {
                                 "sampleEntityType": ["specimens"],
+                                "effectiveOrgan": ['pancreas'],
                                 "disease": ["normal"],
                                 "id": ["DID_scRSq06_pancreas"],
                                 "organ": ["pancreas"],
@@ -793,6 +805,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": ["specimens"],
+                            "effectiveOrgan": ["pancreas"],
                             "disease": ["normal"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
@@ -922,6 +935,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": ["specimens"],
+                            "effectiveOrgan": ["pancreas"],
                             "disease": ["normal"],
                             "id": ["DID_scRSq06_pancreas"],
                             "organ": ["pancreas"],
@@ -1111,6 +1125,7 @@ class TestResponse(WebServiceTestCase):
                     "samples": [
                         {
                             "sampleEntityType": ["specimens"],
+                            "effectiveOrgan": ["brain"],
                             "disease": ["H syndrome"],
                             "id": ["specimen_ID_1"],
                             "organ": ["brain"],
@@ -1167,6 +1182,7 @@ class TestResponse(WebServiceTestCase):
         self.assertElasticsearchResultsEqual(cell_lines, expected_cell_lines)
         expected_samples = {
             'sampleEntityType': ['cellLines'],
+            'effectiveOrgan': ['blood (child_cell_line)'],
             'id': ['cell_line_Day7_hiPSC-CM_BioRep2'],
             'cellLineType': ['stem cell-derived'],
             'modelOrgan': ['blood (child_cell_line)'],
@@ -1191,9 +1207,12 @@ class TestResponse(WebServiceTestCase):
         for test_data in test_data_sets:
             for entity_type in 'files', 'samples', 'projects', 'bundles':
                 with self.subTest(entity_type=entity_type):
-                    url = self.base_url + "/repository/" + entity_type + "?size=2" \
-                                          "&filters={'file':{'projectId':{'is':['" + test_data['id'] + "']}}}"
-                    response = requests.get(url)
+                    url = self.base_url + "/repository/" + entity_type
+                    params = {
+                        'size': 2,
+                        'filters': json.dumps({'projectId': {'is': [test_data['id']]}})
+                    }
+                    response = requests.get(url, params=params)
                     response.raise_for_status()
                     response_json = response.json()
                     for hit in response_json['hits']:
@@ -1220,7 +1239,7 @@ class TestResponse(WebServiceTestCase):
                         for sample in hit['samples']:
                             sample_entity_type = sample['sampleEntityType']
                             for key, val in sample.items():
-                                if key != 'sampleEntityType':
+                                if key not in ['sampleEntityType', 'effectiveOrgan']:
                                     if isinstance(val, list):
                                         for one_val in val:
                                             self.assertIn(one_val, hit[sample_entity_type][0][key])
@@ -1250,6 +1269,16 @@ class TestResponseSummary(WebServiceTestCase):
         ('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
         ('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z')  # an imaging bundle
     ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
 
     def test_summary_response(self):
         """

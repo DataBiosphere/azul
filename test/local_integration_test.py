@@ -5,12 +5,12 @@ import logging
 import random
 
 from furl import furl
+from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 import requests
 import time
 from typing import Any, Mapping, Set, Optional, IO
 import unittest
-import urllib
 from urllib.parse import urlencode
 import uuid
 import os
@@ -26,7 +26,7 @@ from requests import HTTPError
 from azul import config
 from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
-from azul.dss import patch_client_for_direct_file_access
+from azul.dss import patch_client_for_direct_access
 from azul.requests import requests_session
 from azul import drs
 
@@ -69,15 +69,19 @@ class IntegrationTest(unittest.TestCase):
         self.set_lambda_test_mode(True)
         self.bundle_uuid_prefix = ''.join([str(random.choice('abcdef0123456789')) for _ in range(self.prefix_length)])
         self.expected_fqids = set()
+        self.test_notifications = set()
         self.num_bundles = 0
         self.azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
                                       prefix=self.bundle_uuid_prefix)
         self.test_uuid = str(uuid.uuid4())
         self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
+        self.num_bundles = 0
 
     def tearDown(self):
         self.set_lambda_test_mode(False)
         self.delete_bundles()
+        # Delete again to test duplicate deletion notifications
+        self.delete_bundles(duplicates=True)
         super().tearDown()
 
     def test_webservice_and_indexer(self):
@@ -92,21 +96,30 @@ class IntegrationTest(unittest.TestCase):
         azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
                                  prefix=self.bundle_uuid_prefix)
         logger.info('Creating indices and reindexing ...')
-        test_notifications, self.expected_fqids = azul_client.test_notifications(self.test_name, self.test_uuid)
-        azul_client._reindex(test_notifications)
+        self.test_notifications, self.expected_fqids = azul_client.test_notifications(self.test_name, self.test_uuid)
+        azul_client._index(self.test_notifications)
+        # Index some again to test that we can handle duplicate notifications. Note: choices are with replacement
+        azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications)//2))
         self.num_bundles = len(self.expected_fqids)
         self.check_bundles_are_indexed(self.test_name, 'files')
 
     def _test_other_endpoints(self):
-        self.check_endpoint_is_working(config.indexer_endpoint(), '/health')
+        for health_key in ('',
+                           '/elastic_search',
+                           '/queues',
+                           '/api_endpoints',
+                           '/other_lambdas',
+                           '/basic',
+                           '/progress'):
+            self.check_endpoint_is_working(config.service_endpoint(), '/health' + health_key)
+            self.check_endpoint_is_working(config.indexer_endpoint(), '/health' + health_key)
         self.check_endpoint_is_working(config.service_endpoint(), '/')
-        self.check_endpoint_is_working(config.service_endpoint(), '/health')
         self.check_endpoint_is_working(config.service_endpoint(), '/version')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
 
     def _test_manifest(self):
-        manifest_filter = {"file": {"project": {"is": [self.test_name]}}}
+        manifest_filter = json.dumps({'project': {'is': [self.test_name]}})
         for format_, validator in [
             (None, self.check_manifest),
             ('tsv', self.check_manifest),
@@ -121,7 +134,7 @@ class IntegrationTest(unittest.TestCase):
                     validator(response)
 
     def _test_drs(self):
-        filters = {"file": {"project": {"is": [self.test_name]}, "fileFormat": {"is": ["fastq.gz", "fastq"]}}}
+        filters = json.dumps({'project': {'is': [self.test_name]}, 'fileFormat': {'is': ['fastq.gz', 'fastq']}})
         response = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
                                                   path='/repository/files',
                                                   query={
@@ -135,20 +148,21 @@ class IntegrationTest(unittest.TestCase):
         drs_endpoint = drs.drs_http_object_path(file_uuid)
         self.download_file_from_drs_response(self.check_endpoint_is_working(config.service_endpoint(), drs_endpoint))
 
-    def delete_bundles(self):
-        if self.num_bundles:
-            for fqid in self.expected_fqids:
-                bundle_uuid, _, version = fqid.partition('.')
-                try:
-                    self.azul_client.delete_bundle(bundle_uuid, version)
-                except HTTPError as e:
-                    logger.warning('Deletion for bundle %s version %s failed. Possibly it was never indexed.',
-                                   bundle_uuid, version, exc_info=e)
-
-            self.wait_for_queue_level(empty=False)
-            self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
-            self.assertTrue(self.project_removed_from_azul(), f"Project '{self.test_name}' was not fully "
-                                                              "removed from index within 5 min. of deletion")
+    def delete_bundles(self, duplicates=False):
+        if duplicates:
+            # Note: random.choices is with replacement (so the same choice may be made several times
+            notifications = random.choices(self.test_notifications, k=len(self.test_notifications)//2)
+        else:
+            notifications = self.test_notifications
+        for n in notifications:
+            try:
+                self.azul_client.delete_notification(n)
+            except HTTPError as e:
+                logger.warning('Deletion for notification %s failed. Possibly it was never indexed.', n, exc_info=e)
+        self.wait_for_queue_level(empty=False)
+        self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
+        self.assertTrue(self.project_removed_from_azul(), f"Project '{self.test_name}' was not fully "
+                                                          "removed from index within 5 min. of deletion")
 
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -164,10 +178,9 @@ class IntegrationTest(unittest.TestCase):
     def check_endpoint_is_working(self, endpoint: str, path: str, query: Optional[Mapping[str, str]] = None) -> bytes:
         url = furl(endpoint)
         url.path.add(path)
-        if query is not None:
-            url.query.set({k: str(v) for k, v in query.items()})
-        logger.info('Requesting %s', url)
-        response = self.requests.get(url.url)
+        query = query or {}
+        logger.info('Requesting %s?%s', url.url, urlencode(query))
+        response = self.requests.get(url.url, params=query)
         response.raise_for_status()
         return response.content
 
@@ -177,7 +190,7 @@ class IntegrationTest(unittest.TestCase):
     def check_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
-            file_path = os.path.join(data_path, 'samples.tsv')
+            file_path = os.path.join(data_path, 'participants.tsv')
             with zip_fh.open(file_path) as file:
                 self._check_manifest(file, 'bundle_uuid')
 
@@ -302,18 +315,17 @@ class IntegrationTest(unittest.TestCase):
                     "specimens: {}, bundles: {}".format(*results_empty))
         return all(results_empty)
 
-    def _get_entities_by_project(self, entity_type, project_shortname):
+    def _get_entities_by_project(self, entity_type, project_short_name):
         """
         Returns all entities of a given type in a given project.
         """
-        filters = {'file': {'project': {'is': [project_shortname]}}}
+        filters = json.dumps({'project': {'is': [project_short_name]}})
         entities = []
         size = 100
-        params = dict(filters=str(filters), size=str(size))
+        params = dict(filters=filters, size=str(size))
         while True:
-            query = urllib.parse.urlencode(params, safe="{}/'")
-            url = f'{config.service_endpoint()}/repository/{entity_type}?{query}'
-            response = self.requests.get(url)
+            url = f'{config.service_endpoint()}/repository/{entity_type}'
+            response = self.requests.get(url, params=params)
             response.raise_for_status()
             body = response.json()
             hits = body['hits']
@@ -361,27 +373,52 @@ class DSSIntegrationTest(unittest.TestCase):
         self.maxDiff = None
         for patch in False, True:
             for replica in 'aws', 'gcp':
-                with self.subTest(patch=patch, replica=replica):
                     dss_client = config.dss_client()
                     if patch:
-                        patch_client_for_direct_file_access(dss_client)
-                    response = dss_client.post_search(es_query=query, replica=replica, per_page=10)
-                    bundle_uuid, _, bundle_version = response['results'][0]['bundle_fqid'].partition('.')
-                    with mock.patch('azul.dss.logger') as log:
-                        _, manifest, metadata = download_bundle_metadata(client=dss_client,
-                                                                         replica=replica,
-                                                                         uuid=bundle_uuid,
-                                                                         version=bundle_version,
-                                                                         num_workers=config.num_dss_workers)
-                        self.assertGreater(len(metadata), 0)
-                        self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))
-                        if patch:
-                            if replica == 'aws':
-                                # Extract the log method name and the first two words of log message logged
-                                actual = [(m, ' '.join(a[0].split()[:2])) for m, a, k in log.mock_calls]
-                                expected = [('debug', 'Loading file'), ('debug', 'Loading blob')] * len(metadata)
-                                self.assertSequenceEqual(sorted(actual), sorted(expected))
-                            else:
-                                self.assertListEqual(log.mock_calls, [mock.call.warning(mock.ANY)] * len(metadata))
-                        else:
-                            self.assertListEqual(log.mock_calls, [])
+                        patch_client_for_direct_access(dss_client)
+                        with mock.patch('boto3.client') as mock_client:
+                            mock_s3 = mock.MagicMock()
+                            mock_s3.get_object.side_effect = ValueError()
+                            mock_client.return_value = mock_s3
+                            self._test_patched_client(patch, query, dss_client, replica, patch_fallback=True)
+                    self._test_patched_client(patch, query, dss_client, replica, patch_fallback=False)
+
+    def _test_patched_client(self, patch, query, dss_client, replica, patch_fallback):
+        with self.subTest(patch=patch, replica=replica, patch_fallback=patch_fallback):
+            response = dss_client.post_search(es_query=query, replica=replica, per_page=10)
+            bundle_uuid, _, bundle_version = response['results'][0]['bundle_fqid'].partition('.')
+            with mock.patch('azul.dss.logger') as log:
+                _, manifest, metadata = download_bundle_metadata(client=dss_client,
+                                                                 replica=replica,
+                                                                 uuid=bundle_uuid,
+                                                                 version=bundle_version,
+                                                                 num_workers=config.num_dss_workers)
+                self.assertGreater(len(metadata), 0)
+                self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))
+                for f in manifest:
+                    self.assertIn('s3_etag', f)
+                if patch:
+                    if replica == 'aws':
+                        # Extract the log method name and the first two words of log message logged
+                        actual = [(m, ' '.join(a[0].split()[:2])) for m, a, k in log.mock_calls]
+                        actual.remove(('debug', 'Loading bundle'))
+                        expected = [('debug', 'Loading file'), ('debug', 'Loading blob')] * len(metadata)
+                        self.assertSequenceEqual(sorted(actual), sorted(expected))
+                    else:
+                        actual = log.mock_calls[1:]  # remove log for get_bundle
+                        self.assertListEqual(actual, [mock.call.warning(mock.ANY)] * len(metadata))
+                else:
+                    self.assertListEqual(log.mock_calls, [])
+
+    def test_get_file_fail(self):
+        for patch in True, False:
+            with self.subTest(path=patch):
+                dss_client = config.dss_client()
+                if patch:
+                    patch_client_for_direct_access(dss_client)
+                with self.assertRaises(SwaggerAPIException) as e:
+                    dss_client.get_file(uuid='acafefed-beef-4bad-babe-feedfa11afe1',
+                                        version='2018-11-19T232756.056947Z',
+                                        replica='aws')
+                self.assertEqual(e.exception.reason, 'not_found')
+

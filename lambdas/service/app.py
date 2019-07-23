@@ -8,6 +8,7 @@ import math
 import os
 import re
 import time
+from typing import Optional
 import urllib
 from urllib.parse import urlparse
 
@@ -131,11 +132,14 @@ def basic_health():
 
 
 @app.route('/health', methods=['GET'], cors=True)
-def health():
+@app.route('/health/{keys}', methods=['GET'], cors=True)
+def health(keys: Optional[str] = None):
     health = Health('service')
+    kwargs = {} if keys is None else dict(keys=keys.split(','))
+    body = health.as_json(**kwargs)
     return Response(
-        body=json.dumps(health.as_json),
-        status_code=200 if health.up else 503
+        body=json.dumps(body),
+        status_code=200 if body['up'] else 503
     )
 
 
@@ -161,7 +165,7 @@ def repository_search(entity_type: str, item_id: str):
         raise NotFoundError(msg=e)
 
 
-@app.route('/repository/files', methods=['GET'], cors=True)
+@app.route('/repository/files', methods=['HEAD', 'GET'], cors=True)
 @app.route('/repository/files/{file_id}', methods=['GET'], cors=True)
 def get_data(file_id=None):
     """
@@ -208,7 +212,7 @@ def get_data(file_id=None):
     return repository_search('files', file_id)
 
 
-@app.route('/repository/samples', methods=['GET'], cors=True)
+@app.route('/repository/samples', methods=['HEAD', 'GET'], cors=True)
 @app.route('/repository/samples/{sample_id}', methods=['GET'], cors=True)
 def get_sample_data(sample_id=None):
     """
@@ -255,7 +259,7 @@ def get_sample_data(sample_id=None):
     return repository_search('samples', sample_id)
 
 
-@app.route('/repository/bundles', methods=['GET'], cors=True)
+@app.route('/repository/bundles', methods=['HEAD', 'GET'], cors=True)
 @app.route('/repository/bundles/{bundle_uuid}', methods=['GET'], cors=True)
 def get_bundle_data(bundle_uuid=None):
     """
@@ -302,7 +306,7 @@ def get_bundle_data(bundle_uuid=None):
     return repository_search('bundles', bundle_uuid)
 
 
-@app.route('/repository/projects', methods=['GET'], cors=True)
+@app.route('/repository/projects', methods=['HEAD', 'GET'], cors=True)
 @app.route('/repository/projects/{project_id}', methods=['GET'], cors=True)
 def get_project_data(project_id=None):
     """
@@ -349,7 +353,7 @@ def get_project_data(project_id=None):
     return repository_search('projects', project_id)
 
 
-@app.route('/repository/summary', methods=['GET'], cors=True)
+@app.route('/repository/summary', methods=['HEAD', 'GET'], cors=True)
 def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
@@ -465,9 +469,9 @@ def get_manifest():
           https://software.broadinstitute.org/firecloud/documentation/article?id=10954
     :return: A manifest that the user can use to download the files in there
     """
-    params = app.current_request.query_params
-    if params is None:  # FIXME: is this necessary?
+    if app.current_request.query_params is None:
         app.current_request.query_params = {}
+    params = app.current_request.query_params
     from azul.service import AbstractService
     filters = AbstractService.parse_filters(params.get('filters'))
     es_td = EsTd()
@@ -477,7 +481,7 @@ def get_manifest():
 
 def get_format(params):
     format_ = params.get('format', 'tsv')
-    if format_ in ('tsv', 'bdbag'):
+    if format_ in ('tsv', 'bdbag', 'full'):
         return format_
     else:
         raise BadRequestError(f'{format_} is not a valid manifest format.')
@@ -1264,7 +1268,7 @@ def add_all_results_to_cart(cart_id):
         raise BadRequestError('entityType must be one of files, samples, or projects')
 
     try:
-        filters = json.loads(filters)
+        filters = json.loads(filters or '{}')
     except json.JSONDecodeError:
         raise BadRequestError('Invalid filters given')
     hits, search_after = EsTd().transform_cart_item_request(entity_type, filters=filters, size=1)
@@ -1597,10 +1601,8 @@ def get_data_object(file_uuid):
     params = app.current_request.query_params or {}
     file_version = params.get('version')
     filters = {
-        "file": {
-            "fileId": {"is": [file_uuid]},
-            **({"fileVersion": {"is": [file_version]}} if file_version else {})
-        }
+        "fileId": {"is": [file_uuid]},
+        **({"fileVersion": {"is": [file_version]}} if file_version else {})
     }
     es_td = EsTd()
     pagination = _get_pagination(app.current_request, entity_type='files')
