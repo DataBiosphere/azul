@@ -3,6 +3,7 @@ import collections
 from copy import deepcopy
 import json
 import logging
+from more_itertools import one
 import os
 from typing import List
 
@@ -83,13 +84,21 @@ class ElasticTransformDump(object):
         """
         filter_list = []
         for facet, values in filters.items():
-            value = values.get('is', {})
-            if value is None:
-                # If filter is {"is": None}, search for values where field does not exist
-                f = Q('bool', must_not=Q('exists', field=f'{facet}.keyword'))
-            else:
-                f = Q('terms', **{f'{facet.replace(".", "__")}__keyword': value})
-            filter_list.append(f)
+            relation, value = one(values.items())
+            if relation == 'is':
+                if value is None:
+                    # If filter is {"is": None}, search for values where field does not exist
+                    filter_list.append(Q('bool', must_not=Q('exists', field=f'{facet}.keyword')))
+                else:
+                    filter_list.append(Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}))
+            elif relation in {'contains', 'within', 'intersects'}:
+                for min_value, max_value in value:
+                    range_value = {
+                        'gte': min_value,
+                        'lte': max_value,
+                        'relation': relation
+                    }
+                    filter_list.append(Q('range', **{facet: range_value}))
 
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=f) for f in filter_list]
