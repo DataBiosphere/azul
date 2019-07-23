@@ -23,6 +23,8 @@ class TestResponse(WebServiceTestCase):
         ('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
         ('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'),
         ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
+        ('411cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
+        ('412cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
     ]
 
     @classmethod
@@ -89,6 +91,7 @@ class TestResponse(WebServiceTestCase):
                             "id": ["DID_scRSq06"],
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
+                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -183,6 +186,7 @@ class TestResponse(WebServiceTestCase):
                             "id": ["DID_scRSq06"],
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
+                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
                     "entryId": "a21dc760-a500-4236-bcff-da34a0e873d2",
@@ -297,6 +301,7 @@ class TestResponse(WebServiceTestCase):
                                 "id": ["DID_scRSq06"],
                                 "organismAge": ["38"],
                                 "organismAgeUnit": ["year"],
+                                "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                             }
                         ],
                         "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -399,6 +404,7 @@ class TestResponse(WebServiceTestCase):
                                 "id": ["DID_scRSq06"],
                                 "organismAge": ["38"],
                                 "organismAgeUnit": ["year"],
+                                "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                             }
                         ],
                         "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -648,6 +654,7 @@ class TestResponse(WebServiceTestCase):
                             "id": ["DID_scRSq06"],
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
+                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -778,6 +785,7 @@ class TestResponse(WebServiceTestCase):
                             "id": ["DID_scRSq06"],
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
+                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -947,7 +955,8 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Homo sapiens"],
                             "id": ["donor_ID_1"],
                             "organismAge": ["20"],
-                            "organismAgeUnit": ["year"]
+                            "organismAgeUnit": ["year"],
+                            "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}]
                         }
                     ],
                     "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
@@ -1171,6 +1180,98 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertEqual(len(response['hits']), len(hits_uuids))
         self.assertSetEqual(indexed_uuids, hits_uuids)
+
+    def test_ranged_values(self):
+        test_hits = [
+                [
+                    {
+                        "biologicalSex": [
+                            "male",
+                            "female"
+                        ],
+                        "disease": None,
+                        "genusSpecies": [
+                            "Homo sapiens"
+                        ],
+                        "id": [
+                            "HPSI0314i-hoik",
+                            "HPSI0214i-wibj",
+                            "HPSI0314i-sojd",
+                            "HPSI0214i-kucg"
+                        ],
+                        "organismAge": [
+                            "45-49",
+                            "65-69"
+                        ],
+                        "organismAgeRange": [
+                            {
+                                "gte": 2049840000.0,
+                                "lte": 2175984000.0
+                            },
+                            {
+                                "gte": 1419120000.0,
+                                "lte": 1545264000.0
+                            }
+                        ],
+                        "organismAgeUnit": [
+                            "year"
+                        ]
+                    }
+                ],
+                [
+                    {
+                        "biologicalSex": [
+                            "male",
+                            "female"
+                        ],
+                        "disease": None,
+                        "genusSpecies": [
+                            "Homo sapiens"
+                        ],
+                        "id": [
+                            "HPSI0314i-hoik",
+                            "HPSI0214i-wibj",
+                            "HPSI0314i-sojd",
+                            "HPSI0214i-kucg"
+                        ],
+                        "organismAge": [
+                            "40-44",
+                            "55-59"
+                        ],
+                        "organismAgeRange": [
+                            {
+                                "gte": 1734480000.0,
+                                "lte": 1860624000.0
+                            },
+                            {
+                                "gte": 1261440000.0,
+                                "lte": 1387584000.0
+                            }
+                        ],
+                        "organismAgeUnit": [
+                            "year"
+                        ]
+                    }
+                ]
+            ]
+
+        url = self.base_url + '/repository/projects'
+        for relation, range_value, expected_hits in [('contains', (1419130000, 1545263000), test_hits[:1]),
+                                                     ('within', (1261430000, 1545265000), test_hits),
+                                                     ('intersects', (1860623000, 1900000000), test_hits[1:]),
+                                                     ('contains', (1860624000, 2049641000), []),
+                                                     ('within', (1734490000, 1860623000), []),
+                                                     ('intersects', (1860624100, 2049641000), [])]:
+
+            with self.subTest(relation=relation, value=range_value):
+                params = {
+                    'filters': json.dumps({'organismAgeRange': {relation: [range_value]}}),
+                    'order': 'desc',
+                    'sort': 'entryId'
+                }
+                response = requests.get(url, params=params)
+                actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
+                self.assertElasticsearchResultsEqual(expected_hits, actual_value)
 
 
 class TestResponseSummary(WebServiceTestCase):

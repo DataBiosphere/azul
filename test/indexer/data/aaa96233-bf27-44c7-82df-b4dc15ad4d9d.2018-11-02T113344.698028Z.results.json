@@ -73,8 +73,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }
                     }
                 ],
                 "organoids": [],
@@ -431,8 +433,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0,
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
                         "biological_sex": "female"
                     }
                 ],
@@ -601,8 +605,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0,
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
                         "biological_sex": "female"
                     }
                 ],
@@ -771,8 +777,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0,
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
                         "biological_sex": "female"
                     }
                 ],
@@ -955,8 +963,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0,
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
                         "biological_sex": "female"
                     }
                 ],
@@ -1196,12 +1206,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ]
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }]
                     }
                 ],
                 "organoids": [],
@@ -1576,12 +1584,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }],
                         "biological_sex": [
                             "female"
                         ]
@@ -1773,12 +1779,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }],
                         "biological_sex": [
                             "female"
                         ]
@@ -1950,12 +1954,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }],
                         "biological_sex": [
                             "female"
                         ]
@@ -2138,12 +2140,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }],
                         "biological_sex": [
                             "female"
                         ]
@@ -2325,8 +2325,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }
                     }
                 ],
                 "organoids": [],
@@ -2559,12 +2561,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ]
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }]
                     }
                 ],
                 "organoids": [],
