@@ -106,14 +106,6 @@ class OrganCellCountSummary(JsonObject):
         self.totalCellCountByOrgan = bucket['cell_count']['value']
         return self
 
-    @classmethod
-    def create_object_from_simple_count(cls, count):
-        self = cls()
-        self.organType = count['key']
-        self.countOfDocsWithOrganType = 1
-        self.totalCellCountByOrgan = count['value']
-        return self
-
 
 class HitEntry(JsonObject):
     """
@@ -140,18 +132,6 @@ class SummaryRepresentation(JsonObject):
     totalFileSize = FloatProperty()
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
-
-
-class ProjectSummaryRepresentation(JsonObject):
-    """
-    Class defining the Project Summary Response
-    """
-    totalCellCount = FloatProperty()
-    donorCount = IntegerProperty()
-    cellCountSummaries = ListProperty(OrganCellCountSummary)
-    genusSpecies = ListProperty(StringProperty)
-    libraryConstructionApproach = ListProperty(StringProperty)
-    disease = ListProperty(StringProperty)
 
 
 class FileIdAutoCompleteEntry(JsonObject):
@@ -580,67 +560,6 @@ class SummaryResponse(BaseSummaryResponse):
             cellCountSummaries=[OrganCellCountSummary.for_bucket(bucket) for bucket in _organ_group['buckets']])
 
         self.apiResponse = SummaryRepresentation(**kwargs)
-
-
-class ProjectSummaryResponse(AbstractResponse):
-    """
-    Build summary field for each project in projects endpoint
-    """
-
-    def return_response(self):
-        return self.apiResponse
-
-    @classmethod
-    def get_cell_count(cls, hit):
-        """
-        Iterate through cell suspensions to get overall and per organ cell count. Expects cell suspensions to already
-        be grouped and aggregated by organ.
-
-        :param hit: Project document hit from ES response
-        :return: tuple where total_cell_count is the number of cells in the project and organ_cell_count is a dict
-            where the key is an organ and the value is the number of cells for the organ in the project
-        """
-        organ_cell_count = defaultdict(int)
-        for cell_suspension in hit['cell_suspensions']:
-            organ = frozenset(cell_suspension['organ'])
-            organ_cell_count[organ] += cell_suspension.get('total_estimated_cells', 0)
-        total_cell_count = sum(organ_cell_count.values())
-        organ_cell_count = [{'key': list(k), 'value': v} for k, v in organ_cell_count.items()]
-        return total_cell_count, organ_cell_count
-
-    def __init__(self, es_hit_contents):
-
-        disease_accumulator = SetAccumulator()
-        for specimen in es_hit_contents['specimens']:
-            disease_accumulator.accumulate(specimen['disease'])
-
-        donor_accumulator = SetAccumulator()
-        genus_species_accumulator = SetAccumulator()
-        for donor in es_hit_contents['donors']:
-            donor_accumulator.accumulate(donor['biomaterial_id'])
-            genus_species_accumulator.accumulate(donor['genus_species'])
-
-        library_accumulator = SetAccumulator()
-        for protocol in es_hit_contents['protocols']:
-            if 'library_construction_approach' in protocol:
-                library_accumulator.accumulate(protocol['library_construction_approach'])
-
-        organ_accumulator = SetAccumulator()
-        for sample in es_hit_contents['samples']:
-            organ_accumulator.accumulate(sample['effective_organ'])
-
-        total_cell_count, organ_cell_count = self.get_cell_count(es_hit_contents)
-
-        self.apiResponse = ProjectSummaryRepresentation(
-            donorCount=len(donor_accumulator.get()),
-            totalCellCount=total_cell_count,
-            organTypes=organ_accumulator.get(),
-            cellCountSummaries=[OrganCellCountSummary.create_object_from_simple_count(count)
-                                for count in organ_cell_count],
-            genusSpecies=genus_species_accumulator.get(),
-            libraryConstructionApproach=library_accumulator.get(),
-            disease=disease_accumulator.get()
-        )
 
 
 class KeywordSearchResponse(AbstractResponse, EntryFetcher):
