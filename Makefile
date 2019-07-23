@@ -11,10 +11,13 @@ terraform:
 deploy:
 	$(MAKE) -C lambdas
 
-subscribe:
+subscribe: check_branch
 	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py --shared; fi
 
-reindex:
+unsubscribe:
+	python scripts/subscribe.py --unsubscribe --shared
+
+reindex: check_branch
 	python scripts/reindex.py --delete --partition-prefix-length=2
 
 clean:
@@ -28,7 +31,7 @@ tag: check_branch
 	@tag_name="$$(date '+deployed/$(AZUL_DEPLOYMENT_STAGE)/%Y-%m-%d__%H-%M')" ; \
 	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
 
-integration_test:
+integration_test: check_branch
 	python -m unittest -v local_integration_test
 
 check_trufflehog:

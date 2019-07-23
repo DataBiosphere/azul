@@ -20,10 +20,16 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls._setup_indices()
         cls._fill_index(cls.number_of_documents)
         with mock.patch('azul.deployment.aws.dynamo') as dynamo:
             dynamo.return_value = cls.dynamo_accessor.dynamo_client
             cls.cart_item_manager = CartItemManager()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
 
     def setUp(self):
         super().setUp()
@@ -460,7 +466,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         cart_id = '123'
         write_params = {
             'entity_type': 'samples',
-            'filters': {'file': {}},
+            'filters': {},
             'cart_id': cart_id,
             'batch_size': 1000
         }
@@ -489,7 +495,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
             'executionArn': f'arn:aws:states:us-east-1:1234567890:execution:state_machine:{execution_id}'
         }
 
-        mock_app.current_request.json_body = {'filters': '{"file": {}}', 'entityType': 'files'}
+        mock_app.current_request.json_body = {'filters': '{}', 'entityType': 'files'}
 
         user_id = '123'
         get_user_id.return_value = user_id

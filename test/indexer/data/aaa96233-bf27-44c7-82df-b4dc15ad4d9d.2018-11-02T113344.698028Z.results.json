@@ -2,8 +2,9 @@
     {
         "_index": "azul_bundles_dev",
         "_type": "doc",
-        "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z",
+        "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": null,
+        "sort": [0],
         "_source": {
             "entity_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
             "contents": {
@@ -122,7 +123,7 @@
                     {
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
-                        "project_shortname": "Single of human pancreas",
+                        "project_short_name": "Single of human pancreas",
                         "laboratory": [
                             "John Dear"
                         ],
@@ -177,21 +178,200 @@
                         "insdc_study_accessions": [],
                         "_type": "project"
                     }
-                ]
+                ],
+                "metadata": [
+                {
+                    "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "bundle_version": "2018-11-02T113344.698028Z",
+                    "*.provenance.update_date": "2018-11-02T10:35:03.810Z",
+                    "*.file_core.file_name": "SRR3562915_2.fastq.gz",
+                    "*.file_core.file_format": "fastq.gz",
+                    "sequence_file.read_index": "read2",
+                    "sequence_file.read_length": "75",
+                    "sequence_file.insdc_run": "SRR3562915",
+                    "sequence_file.provenance.document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                    "cell_suspension.biomaterial_core.biomaterial_description": "Single cell from human pancreas",
+                    "cell_suspension.biomaterial_core.ncbi_taxon_id": "9606",
+                    "cell_suspension.biomaterial_core.insdc_biomaterial": "SRS1459312",
+                    "cell_suspension.genus_species.text": "Homo sapiens",
+                    "cell_suspension.genus_species.ontology": "NCBITaxon:9606",
+                    "cell_suspension.genus_species.ontology_label": "Homo sapiens",
+                    "cell_suspension.total_estimated_cells": "1",
+                    "cell_suspension.provenance.document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                    "specimen_from_organism.biomaterial_core.ncbi_taxon_id": "9606",
+                    "specimen_from_organism.genus_species.text": "Australopithecus",
+                    "specimen_from_organism.genus_species.ontology": "NCBITaxon:9606",
+                    "specimen_from_organism.genus_species.ontology_label": "Australopithecus",
+                    "specimen_from_organism.organ.text": "pancreas",
+                    "specimen_from_organism.organ.ontology": "UBERON:0001264",
+                    "specimen_from_organism.organ.ontology_label": "pancreas",
+                    "specimen_from_organism.organ_part.text": "islet of Langerhans",
+                    "specimen_from_organism.organ_part.ontology": "UBERON:0000006",
+                    "specimen_from_organism.organ_part.ontology_label": "islet of Langerhans",
+                    "specimen_from_organism.diseases.text": "normal",
+                    "specimen_from_organism.diseases.ontology": "PATO:0000461",
+                    "specimen_from_organism.diseases.ontology_label": "normal",
+                    "specimen_from_organism.provenance.document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                    "donor_organism.biomaterial_core.ncbi_taxon_id": "9606",
+                    "donor_organism.genus_species.text": "Australopithecus",
+                    "donor_organism.genus_species.ontology": "NCBITaxon:9606",
+                    "donor_organism.genus_species.ontology_label": "Australopithecus",
+                    "donor_organism.is_living": "no",
+                    "donor_organism.sex": "female",
+                    "donor_organism.diseases.text": "normal",
+                    "donor_organism.diseases.ontology": "PATO:0000461",
+                    "donor_organism.diseases.ontology_label": "normal",
+                    "donor_organism.organism_age": "38",
+                    "donor_organism.organism_age_unit.text": "year",
+                    "donor_organism.organism_age_unit.ontology": "UO:0000036",
+                    "donor_organism.organism_age_unit.ontology_label": "year",
+                    "donor_organism.human_specific.body_mass_index": "29.5",
+                    "donor_organism.human_specific.ethnicity.text": "European",
+                    "donor_organism.human_specific.ethnicity.ontology": "hancestro:0005",
+                    "donor_organism.human_specific.ethnicity.ontology_label": "European",
+                    "donor_organism.death.cause_of_death": "stroke",
+                    "donor_organism.provenance.document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                    "project.project_core.project_short_name": "Single of human pancreas",
+                    "project.project_core.project_title": "Single cell transcriptome patterns.",
+                    "project.supplementary_links": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results",
+                    "project.insdc_project": "SRP075496",
+                    "project.geo_series": "GSE81547",
+                    "project.provenance.document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                    "library_preparation_protocol.nucleic_acid_source": "single cell",
+                    "library_preparation_protocol.input_nucleic_acid_molecule.text": "polyA RNA",
+                    "library_preparation_protocol.input_nucleic_acid_molecule.ontology": "OBI:0000869",
+                    "library_preparation_protocol.library_construction_approach.text": "Smart-seq2",
+                    "library_preparation_protocol.library_construction_approach.ontology": "EFO:0008931",
+                    "library_preparation_protocol.library_construction_approach.ontology_label": "Smart-seq2",
+                    "library_preparation_protocol.library_construction_kit.retail_name": "Nextera XT kit",
+                    "library_preparation_protocol.library_construction_kit.manufacturer": "Illumina",
+                    "library_preparation_protocol.end_bias": "full length",
+                    "library_preparation_protocol.primer": "poly-dT",
+                    "library_preparation_protocol.strand": "unstranded",
+                    "library_preparation_protocol.provenance.document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                    "sequencing_protocol.instrument_manufacturer_model.text": "Illumina NextSeq 500",
+                    "sequencing_protocol.instrument_manufacturer_model.ontology": "EFO:0008566",
+                    "sequencing_protocol.instrument_manufacturer_model.ontology_label": "Illumina NextSeq 500",
+                    "sequencing_protocol.paired_end": "True",
+                    "sequencing_protocol.sequencing_approach.text": "RNA-Seq",
+                    "sequencing_protocol.sequencing_approach.ontology": "EFO:0008896",
+                    "sequencing_protocol.sequencing_approach.ontology_label": "RNA-Seq",
+                    "sequencing_protocol.provenance.document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                    "dissociation_protocol.protocol_core.publication_doi": "https://doi.org/10.1101/108043",
+                    "dissociation_protocol.dissociation_method.text": "fluorescence-activated cell sorting",
+                    "dissociation_protocol.dissociation_method.ontology": "EFO:0009108",
+                    "dissociation_protocol.dissociation_method.ontology_label": "fluorescence-activated cell sorting",
+                    "dissociation_protocol.provenance.document_id": "31e708d3-79df-49b8-a3df-b1d694963468",
+                    "enrichment_protocol.protocol_core.publication_doi": "https://doi.org/10.1101/108043",
+                    "enrichment_protocol.enrichment_method.text": "FACS",
+                    "enrichment_protocol.enrichment_method.ontology": "EFO:0009108",
+                    "enrichment_protocol.enrichment_method.ontology_label": "fluorescence-activated cell sorting",
+                    "enrichment_protocol.markers": "HPx1+ HPi2+ CD133/1+ CD133/2+",
+                    "enrichment_protocol.provenance.document_id": "5bd4ba68-4c0e-4d22-840d-afc025e7badc",
+                    "process.provenance.document_id": "4674255d-5ecd-4860-9b8d-beae98772cd9||4c28e079-59af-4bd3-8c8b-763ea0beba98||771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                },
+                {
+                    "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "bundle_version": "2018-11-02T113344.698028Z",
+                    "*.provenance.update_date": "2018-11-02T10:35:07.705Z",
+                    "*.file_core.file_name": "SRR3562915_1.fastq.gz",
+                    "*.file_core.file_format": "fastq.gz",
+                    "sequence_file.read_index": "read1",
+                    "sequence_file.read_length": "75",
+                    "sequence_file.insdc_run": "SRR3562915",
+                    "sequence_file.provenance.document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                    "cell_suspension.biomaterial_core.biomaterial_description": "Single cell from human pancreas",
+                    "cell_suspension.biomaterial_core.ncbi_taxon_id": "9606",
+                    "cell_suspension.biomaterial_core.insdc_biomaterial": "SRS1459312",
+                    "cell_suspension.genus_species.text": "Homo sapiens",
+                    "cell_suspension.genus_species.ontology": "NCBITaxon:9606",
+                    "cell_suspension.genus_species.ontology_label": "Homo sapiens",
+                    "cell_suspension.total_estimated_cells": "1",
+                    "cell_suspension.provenance.document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                    "specimen_from_organism.biomaterial_core.ncbi_taxon_id": "9606",
+                    "specimen_from_organism.genus_species.text": "Australopithecus",
+                    "specimen_from_organism.genus_species.ontology": "NCBITaxon:9606",
+                    "specimen_from_organism.genus_species.ontology_label": "Australopithecus",
+                    "specimen_from_organism.organ.text": "pancreas",
+                    "specimen_from_organism.organ.ontology": "UBERON:0001264",
+                    "specimen_from_organism.organ.ontology_label": "pancreas",
+                    "specimen_from_organism.organ_part.text": "islet of Langerhans",
+                    "specimen_from_organism.organ_part.ontology": "UBERON:0000006",
+                    "specimen_from_organism.organ_part.ontology_label": "islet of Langerhans",
+                    "specimen_from_organism.diseases.text": "normal",
+                    "specimen_from_organism.diseases.ontology": "PATO:0000461",
+                    "specimen_from_organism.diseases.ontology_label": "normal",
+                    "specimen_from_organism.provenance.document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                    "donor_organism.biomaterial_core.ncbi_taxon_id": "9606",
+                    "donor_organism.genus_species.text": "Australopithecus",
+                    "donor_organism.genus_species.ontology": "NCBITaxon:9606",
+                    "donor_organism.genus_species.ontology_label": "Australopithecus",
+                    "donor_organism.is_living": "no",
+                    "donor_organism.sex": "female",
+                    "donor_organism.diseases.text": "normal",
+                    "donor_organism.diseases.ontology": "PATO:0000461",
+                    "donor_organism.diseases.ontology_label": "normal",
+                    "donor_organism.organism_age": "38",
+                    "donor_organism.organism_age_unit.text": "year",
+                    "donor_organism.organism_age_unit.ontology": "UO:0000036",
+                    "donor_organism.organism_age_unit.ontology_label": "year",
+                    "donor_organism.human_specific.body_mass_index": "29.5",
+                    "donor_organism.human_specific.ethnicity.text": "European",
+                    "donor_organism.human_specific.ethnicity.ontology": "hancestro:0005",
+                    "donor_organism.human_specific.ethnicity.ontology_label": "European",
+                    "donor_organism.death.cause_of_death": "stroke",
+                    "donor_organism.provenance.document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                    "project.project_core.project_short_name": "Single of human pancreas",
+                    "project.project_core.project_title": "Single cell transcriptome patterns.",
+                    "project.supplementary_links": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results",
+                    "project.insdc_project": "SRP075496",
+                    "project.geo_series": "GSE81547",
+                    "project.provenance.document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                    "library_preparation_protocol.nucleic_acid_source": "single cell",
+                    "library_preparation_protocol.input_nucleic_acid_molecule.text": "polyA RNA",
+                    "library_preparation_protocol.input_nucleic_acid_molecule.ontology": "OBI:0000869",
+                    "library_preparation_protocol.library_construction_approach.text": "Smart-seq2",
+                    "library_preparation_protocol.library_construction_approach.ontology": "EFO:0008931",
+                    "library_preparation_protocol.library_construction_approach.ontology_label": "Smart-seq2",
+                    "library_preparation_protocol.library_construction_kit.retail_name": "Nextera XT kit",
+                    "library_preparation_protocol.library_construction_kit.manufacturer": "Illumina",
+                    "library_preparation_protocol.end_bias": "full length",
+                    "library_preparation_protocol.primer": "poly-dT",
+                    "library_preparation_protocol.strand": "unstranded",
+                    "library_preparation_protocol.provenance.document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                    "sequencing_protocol.instrument_manufacturer_model.text": "Illumina NextSeq 500",
+                    "sequencing_protocol.instrument_manufacturer_model.ontology": "EFO:0008566",
+                    "sequencing_protocol.instrument_manufacturer_model.ontology_label": "Illumina NextSeq 500",
+                    "sequencing_protocol.paired_end": "True",
+                    "sequencing_protocol.sequencing_approach.text": "RNA-Seq",
+                    "sequencing_protocol.sequencing_approach.ontology": "EFO:0008896",
+                    "sequencing_protocol.sequencing_approach.ontology_label": "RNA-Seq",
+                    "sequencing_protocol.provenance.document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                    "dissociation_protocol.protocol_core.publication_doi": "https://doi.org/10.1101/108043",
+                    "dissociation_protocol.dissociation_method.text": "fluorescence-activated cell sorting",
+                    "dissociation_protocol.dissociation_method.ontology": "EFO:0009108",
+                    "dissociation_protocol.dissociation_method.ontology_label": "fluorescence-activated cell sorting",
+                    "dissociation_protocol.provenance.document_id": "31e708d3-79df-49b8-a3df-b1d694963468",
+                    "enrichment_protocol.protocol_core.publication_doi": "https://doi.org/10.1101/108043",
+                    "enrichment_protocol.enrichment_method.text": "FACS",
+                    "enrichment_protocol.enrichment_method.ontology": "EFO:0009108",
+                    "enrichment_protocol.enrichment_method.ontology_label": "fluorescence-activated cell sorting",
+                    "enrichment_protocol.markers": "HPx1+ HPi2+ CD133/1+ CD133/2+",
+                    "enrichment_protocol.provenance.document_id": "5bd4ba68-4c0e-4d22-840d-afc025e7badc",
+                    "process.provenance.document_id": "4674255d-5ecd-4860-9b8d-beae98772cd9||4c28e079-59af-4bd3-8c8b-763ea0beba98||771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                }
+            ]
             },
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
             "bundle_version": "2018-11-02T113344.698028Z",
             "bundle_deleted": false
-        },
-        "sort": [
-            0
-        ]
+        }
     },
     {
         "_index": "azul_files_dev",
         "_type": "doc",
         "sort": [0],
-        "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z",
+        "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": null,
         "_source": {
             "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -300,7 +480,7 @@
                     {
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
-                        "project_shortname": "Single of human pancreas",
+                        "project_short_name": "Single of human pancreas",
                         "array_express_accessions": [],
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
@@ -361,7 +541,7 @@
         "_index": "azul_files_dev",
         "_type": "doc",
         "sort": [0],
-        "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z",
+        "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": null,
         "_source": {
             "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
@@ -470,7 +650,7 @@
                     {
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
-                        "project_shortname": "Single of human pancreas",
+                        "project_short_name": "Single of human pancreas",
                         "array_express_accessions": [],
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
@@ -531,7 +711,7 @@
         "_index": "azul_samples_dev",
         "_type": "doc",
         "sort": [0],
-        "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z",
+        "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": null,
         "_source": {
             "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
@@ -654,7 +834,7 @@
                     {
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
-                        "project_shortname": "Single of human pancreas",
+                        "project_short_name": "Single of human pancreas",
                         "array_express_accessions": [],
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
@@ -715,7 +895,7 @@
         "_index": "azul_projects_dev",
         "_type": "doc",
         "sort": [0],
-        "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z",
+        "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": null,
         "_source": {
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -838,7 +1018,7 @@
                     {
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
-                        "project_shortname": "Single of human pancreas",
+                        "project_short_name": "Single of human pancreas",
                         "array_express_accessions": [],
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
@@ -1073,7 +1253,7 @@
                         "project_title": [
                             "Single cell transcriptome patterns."
                         ],
-                        "project_shortname": [
+                        "project_short_name": [
                             "Single of human pancreas"
                         ],
                         "laboratory": [
@@ -1094,7 +1274,189 @@
                             "project"
                         ]
                     }
-                ]
+                ],
+                "metadata": [
+                {
+                    "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "bundle_version": "2018-11-02T113344.698028Z",
+                    "*.provenance.update_date": "2018-11-02T10:35:03.810Z",
+                    "*.file_core.file_name": "SRR3562915_2.fastq.gz",
+                    "*.file_core.file_format": "fastq.gz",
+                    "sequence_file.read_index": "read2",
+                    "sequence_file.read_length": "75",
+                    "sequence_file.insdc_run": "SRR3562915",
+                    "sequence_file.provenance.document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                    "cell_suspension.biomaterial_core.biomaterial_description": "Single cell from human pancreas",
+                    "cell_suspension.biomaterial_core.ncbi_taxon_id": "9606",
+                    "cell_suspension.biomaterial_core.insdc_biomaterial": "SRS1459312",
+                    "cell_suspension.genus_species.text": "Homo sapiens",
+                    "cell_suspension.genus_species.ontology": "NCBITaxon:9606",
+                    "cell_suspension.genus_species.ontology_label": "Homo sapiens",
+                    "cell_suspension.total_estimated_cells": "1",
+                    "cell_suspension.provenance.document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                    "specimen_from_organism.biomaterial_core.ncbi_taxon_id": "9606",
+                    "specimen_from_organism.genus_species.text": "Australopithecus",
+                    "specimen_from_organism.genus_species.ontology": "NCBITaxon:9606",
+                    "specimen_from_organism.genus_species.ontology_label": "Australopithecus",
+                    "specimen_from_organism.organ.text": "pancreas",
+                    "specimen_from_organism.organ.ontology": "UBERON:0001264",
+                    "specimen_from_organism.organ.ontology_label": "pancreas",
+                    "specimen_from_organism.organ_part.text": "islet of Langerhans",
+                    "specimen_from_organism.organ_part.ontology": "UBERON:0000006",
+                    "specimen_from_organism.organ_part.ontology_label": "islet of Langerhans",
+                    "specimen_from_organism.diseases.text": "normal",
+                    "specimen_from_organism.diseases.ontology": "PATO:0000461",
+                    "specimen_from_organism.diseases.ontology_label": "normal",
+                    "specimen_from_organism.provenance.document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                    "donor_organism.biomaterial_core.ncbi_taxon_id": "9606",
+                    "donor_organism.genus_species.text": "Australopithecus",
+                    "donor_organism.genus_species.ontology": "NCBITaxon:9606",
+                    "donor_organism.genus_species.ontology_label": "Australopithecus",
+                    "donor_organism.is_living": "no",
+                    "donor_organism.sex": "female",
+                    "donor_organism.diseases.text": "normal",
+                    "donor_organism.diseases.ontology": "PATO:0000461",
+                    "donor_organism.diseases.ontology_label": "normal",
+                    "donor_organism.organism_age": "38",
+                    "donor_organism.organism_age_unit.text": "year",
+                    "donor_organism.organism_age_unit.ontology": "UO:0000036",
+                    "donor_organism.organism_age_unit.ontology_label": "year",
+                    "donor_organism.human_specific.body_mass_index": "29.5",
+                    "donor_organism.human_specific.ethnicity.text": "European",
+                    "donor_organism.human_specific.ethnicity.ontology": "hancestro:0005",
+                    "donor_organism.human_specific.ethnicity.ontology_label": "European",
+                    "donor_organism.death.cause_of_death": "stroke",
+                    "donor_organism.provenance.document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                    "project.project_core.project_short_name": "Single of human pancreas",
+                    "project.project_core.project_title": "Single cell transcriptome patterns.",
+                    "project.supplementary_links": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results",
+                    "project.insdc_project": "SRP075496",
+                    "project.geo_series": "GSE81547",
+                    "project.provenance.document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                    "library_preparation_protocol.nucleic_acid_source": "single cell",
+                    "library_preparation_protocol.input_nucleic_acid_molecule.text": "polyA RNA",
+                    "library_preparation_protocol.input_nucleic_acid_molecule.ontology": "OBI:0000869",
+                    "library_preparation_protocol.library_construction_approach.text": "Smart-seq2",
+                    "library_preparation_protocol.library_construction_approach.ontology": "EFO:0008931",
+                    "library_preparation_protocol.library_construction_approach.ontology_label": "Smart-seq2",
+                    "library_preparation_protocol.library_construction_kit.retail_name": "Nextera XT kit",
+                    "library_preparation_protocol.library_construction_kit.manufacturer": "Illumina",
+                    "library_preparation_protocol.end_bias": "full length",
+                    "library_preparation_protocol.primer": "poly-dT",
+                    "library_preparation_protocol.strand": "unstranded",
+                    "library_preparation_protocol.provenance.document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                    "sequencing_protocol.instrument_manufacturer_model.text": "Illumina NextSeq 500",
+                    "sequencing_protocol.instrument_manufacturer_model.ontology": "EFO:0008566",
+                    "sequencing_protocol.instrument_manufacturer_model.ontology_label": "Illumina NextSeq 500",
+                    "sequencing_protocol.paired_end": "True",
+                    "sequencing_protocol.sequencing_approach.text": "RNA-Seq",
+                    "sequencing_protocol.sequencing_approach.ontology": "EFO:0008896",
+                    "sequencing_protocol.sequencing_approach.ontology_label": "RNA-Seq",
+                    "sequencing_protocol.provenance.document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                    "dissociation_protocol.protocol_core.publication_doi": "https://doi.org/10.1101/108043",
+                    "dissociation_protocol.dissociation_method.text": "fluorescence-activated cell sorting",
+                    "dissociation_protocol.dissociation_method.ontology": "EFO:0009108",
+                    "dissociation_protocol.dissociation_method.ontology_label": "fluorescence-activated cell sorting",
+                    "dissociation_protocol.provenance.document_id": "31e708d3-79df-49b8-a3df-b1d694963468",
+                    "enrichment_protocol.protocol_core.publication_doi": "https://doi.org/10.1101/108043",
+                    "enrichment_protocol.enrichment_method.text": "FACS",
+                    "enrichment_protocol.enrichment_method.ontology": "EFO:0009108",
+                    "enrichment_protocol.enrichment_method.ontology_label": "fluorescence-activated cell sorting",
+                    "enrichment_protocol.markers": "HPx1+ HPi2+ CD133/1+ CD133/2+",
+                    "enrichment_protocol.provenance.document_id": "5bd4ba68-4c0e-4d22-840d-afc025e7badc",
+                    "process.provenance.document_id": "4674255d-5ecd-4860-9b8d-beae98772cd9||4c28e079-59af-4bd3-8c8b-763ea0beba98||771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                },
+                {
+                    "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "bundle_version": "2018-11-02T113344.698028Z",
+                    "*.provenance.update_date": "2018-11-02T10:35:07.705Z",
+                    "*.file_core.file_name": "SRR3562915_1.fastq.gz",
+                    "*.file_core.file_format": "fastq.gz",
+                    "sequence_file.read_index": "read1",
+                    "sequence_file.read_length": "75",
+                    "sequence_file.insdc_run": "SRR3562915",
+                    "sequence_file.provenance.document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                    "cell_suspension.biomaterial_core.biomaterial_description": "Single cell from human pancreas",
+                    "cell_suspension.biomaterial_core.ncbi_taxon_id": "9606",
+                    "cell_suspension.biomaterial_core.insdc_biomaterial": "SRS1459312",
+                    "cell_suspension.genus_species.text": "Homo sapiens",
+                    "cell_suspension.genus_species.ontology": "NCBITaxon:9606",
+                    "cell_suspension.genus_species.ontology_label": "Homo sapiens",
+                    "cell_suspension.total_estimated_cells": "1",
+                    "cell_suspension.provenance.document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                    "specimen_from_organism.biomaterial_core.ncbi_taxon_id": "9606",
+                    "specimen_from_organism.genus_species.text": "Australopithecus",
+                    "specimen_from_organism.genus_species.ontology": "NCBITaxon:9606",
+                    "specimen_from_organism.genus_species.ontology_label": "Australopithecus",
+                    "specimen_from_organism.organ.text": "pancreas",
+                    "specimen_from_organism.organ.ontology": "UBERON:0001264",
+                    "specimen_from_organism.organ.ontology_label": "pancreas",
+                    "specimen_from_organism.organ_part.text": "islet of Langerhans",
+                    "specimen_from_organism.organ_part.ontology": "UBERON:0000006",
+                    "specimen_from_organism.organ_part.ontology_label": "islet of Langerhans",
+                    "specimen_from_organism.diseases.text": "normal",
+                    "specimen_from_organism.diseases.ontology": "PATO:0000461",
+                    "specimen_from_organism.diseases.ontology_label": "normal",
+                    "specimen_from_organism.provenance.document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                    "donor_organism.biomaterial_core.ncbi_taxon_id": "9606",
+                    "donor_organism.genus_species.text": "Australopithecus",
+                    "donor_organism.genus_species.ontology": "NCBITaxon:9606",
+                    "donor_organism.genus_species.ontology_label": "Australopithecus",
+                    "donor_organism.is_living": "no",
+                    "donor_organism.sex": "female",
+                    "donor_organism.diseases.text": "normal",
+                    "donor_organism.diseases.ontology": "PATO:0000461",
+                    "donor_organism.diseases.ontology_label": "normal",
+                    "donor_organism.organism_age": "38",
+                    "donor_organism.organism_age_unit.text": "year",
+                    "donor_organism.organism_age_unit.ontology": "UO:0000036",
+                    "donor_organism.organism_age_unit.ontology_label": "year",
+                    "donor_organism.human_specific.body_mass_index": "29.5",
+                    "donor_organism.human_specific.ethnicity.text": "European",
+                    "donor_organism.human_specific.ethnicity.ontology": "hancestro:0005",
+                    "donor_organism.human_specific.ethnicity.ontology_label": "European",
+                    "donor_organism.death.cause_of_death": "stroke",
+                    "donor_organism.provenance.document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                    "project.project_core.project_short_name": "Single of human pancreas",
+                    "project.project_core.project_title": "Single cell transcriptome patterns.",
+                    "project.supplementary_links": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results",
+                    "project.insdc_project": "SRP075496",
+                    "project.geo_series": "GSE81547",
+                    "project.provenance.document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                    "library_preparation_protocol.nucleic_acid_source": "single cell",
+                    "library_preparation_protocol.input_nucleic_acid_molecule.text": "polyA RNA",
+                    "library_preparation_protocol.input_nucleic_acid_molecule.ontology": "OBI:0000869",
+                    "library_preparation_protocol.library_construction_approach.text": "Smart-seq2",
+                    "library_preparation_protocol.library_construction_approach.ontology": "EFO:0008931",
+                    "library_preparation_protocol.library_construction_approach.ontology_label": "Smart-seq2",
+                    "library_preparation_protocol.library_construction_kit.retail_name": "Nextera XT kit",
+                    "library_preparation_protocol.library_construction_kit.manufacturer": "Illumina",
+                    "library_preparation_protocol.end_bias": "full length",
+                    "library_preparation_protocol.primer": "poly-dT",
+                    "library_preparation_protocol.strand": "unstranded",
+                    "library_preparation_protocol.provenance.document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                    "sequencing_protocol.instrument_manufacturer_model.text": "Illumina NextSeq 500",
+                    "sequencing_protocol.instrument_manufacturer_model.ontology": "EFO:0008566",
+                    "sequencing_protocol.instrument_manufacturer_model.ontology_label": "Illumina NextSeq 500",
+                    "sequencing_protocol.paired_end": "True",
+                    "sequencing_protocol.sequencing_approach.text": "RNA-Seq",
+                    "sequencing_protocol.sequencing_approach.ontology": "EFO:0008896",
+                    "sequencing_protocol.sequencing_approach.ontology_label": "RNA-Seq",
+                    "sequencing_protocol.provenance.document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                    "dissociation_protocol.protocol_core.publication_doi": "https://doi.org/10.1101/108043",
+                    "dissociation_protocol.dissociation_method.text": "fluorescence-activated cell sorting",
+                    "dissociation_protocol.dissociation_method.ontology": "EFO:0009108",
+                    "dissociation_protocol.dissociation_method.ontology_label": "fluorescence-activated cell sorting",
+                    "dissociation_protocol.provenance.document_id": "31e708d3-79df-49b8-a3df-b1d694963468",
+                    "enrichment_protocol.protocol_core.publication_doi": "https://doi.org/10.1101/108043",
+                    "enrichment_protocol.enrichment_method.text": "FACS",
+                    "enrichment_protocol.enrichment_method.ontology": "EFO:0009108",
+                    "enrichment_protocol.enrichment_method.ontology_label": "fluorescence-activated cell sorting",
+                    "enrichment_protocol.markers": "HPx1+ HPi2+ CD133/1+ CD133/2+",
+                    "enrichment_protocol.provenance.document_id": "5bd4ba68-4c0e-4d22-840d-afc025e7badc",
+                    "process.provenance.document_id": "4674255d-5ecd-4860-9b8d-beae98772cd9||4c28e079-59af-4bd3-8c8b-763ea0beba98||771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                }
+            ]
             },
             "num_contributions": 1,
             "bundles": [
@@ -1274,7 +1636,7 @@
                         "project_title": [
                             "Single cell transcriptome patterns."
                         ],
-                        "project_shortname": [
+                        "project_short_name": [
                             "Single of human pancreas"
                         ],
                         "array_express_accessions": [],
@@ -1471,7 +1833,7 @@
                         "project_title": [
                             "Single cell transcriptome patterns."
                         ],
-                        "project_shortname": [
+                        "project_short_name": [
                             "Single of human pancreas"
                         ],
                         "array_express_accessions": [],
@@ -1617,9 +1979,7 @@
                 "files": [
                     {
                         "size": 385472253,
-                        "file_format": [
-                            "fastq.gz"
-                        ],
+                        "file_format": "fastq.gz",
                         "count": 2
                     }
                 ],
@@ -1641,7 +2001,7 @@
                         "project_title": [
                             "Single cell transcriptome patterns."
                         ],
-                        "project_shortname": [
+                        "project_short_name": [
                             "Single of human pancreas"
                         ],
                         "array_express_accessions": [],
@@ -1807,9 +2167,7 @@
                 "files": [
                     {
                         "size": 385472253,
-                        "file_format": [
-                            "fastq.gz"
-                        ],
+                        "file_format": "fastq.gz",
                         "count": 2
                     }
                 ],
@@ -1830,7 +2188,7 @@
                     {
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
-                        "project_shortname": "Single of human pancreas",
+                        "project_short_name": "Single of human pancreas",
                         "array_express_accessions": [],
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
@@ -1893,5 +2251,381 @@
                 }
             ]
         }
+    },
+    {
+        "_index": "azul_cell_suspensions_dev",
+        "_type": "doc",
+        "_id": "412898c5-5b9b-4907-b07c-e9b89666e204_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
+        "_score": null,
+        "_source": {
+            "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+            "contents": {
+                "samples": [
+                    {
+                        "entity_type": "specimens",
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": null,
+                        "preservation_method": null,
+                        "_type": "specimen",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": null,
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": null,
+                        "preservation_method": null,
+                        "_type": "specimen"
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "total_estimated_cells": 1,
+                        "selected_cell_type": [],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
+                        "biological_sex": "female",
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": "38",
+                        "organism_age_unit": "year",
+                        "min_organism_age_in_seconds": 1198368000.0,
+                        "max_organism_age_in_seconds": 1198368000.0
+                    }
+                ],
+                "organoids": [],
+                "files": [
+                    {
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": false,
+                        "name": "SRR3562915_2.fastq.gz",
+                        "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
+                        "size": 190330156,
+                        "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                        "version": "2018-11-02T113344.450442Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_format": "fastq.gz",
+                        "_type": "file",
+                        "read_index": "read2",
+                        "lane_index": null
+                    },
+                    {
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": false,
+                        "name": "SRR3562915_1.fastq.gz",
+                        "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                        "size": 195142097,
+                        "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                        "version": "2018-11-02T113344.698028Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_format": "fastq.gz",
+                        "_type": "file",
+                        "read_index": "read1",
+                        "lane_index": null
+                    }
+                ],
+                "protocols": [
+                    {
+                        "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "library_construction_approach": "Smart-seq2"
+                    },
+                    {
+                        "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": true
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": "Single cell transcriptome patterns.",
+                        "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                        "project_short_name": "Single of human pancreas",
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "contact_names": [
+                            "Martin, Enge",
+                            "Laura,,Huerta",
+                            "Matthew,,Green"
+                        ],
+                        "contributors": [
+                            {
+                                "contact_name": "Laura,,Huerta",
+                                "corresponding_contributor": false,
+                                "email": "lauhuema@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "project_role": "external curator"
+                            },
+                            {
+                                "contact_name": "Martin, Enge",
+                                "corresponding_contributor": null,
+                                "email": "martin.enge@gmail.com",
+                                "institution": "University",
+                                "laboratory": null,
+                                "project_role": null
+                            },
+                            {
+                                "contact_name": "Matthew,,Green",
+                                "corresponding_contributor": false,
+                                "email": "hewgreen@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "project_role": "Human Cell Atlas wrangler"
+                            }
+                        ],
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "publications": [
+                            {
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
+                        "insdc_project_accessions": [],
+                        "geo_series_accessions": [],
+                        "array_express_accessions": [],
+                        "insdc_study_accessions": [],
+                        "_type": "project"
+                    }
+                ]
+            },
+            "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+            "bundle_version": "2018-11-02T113344.698028Z",
+            "bundle_deleted": false
+        },
+        "sort": [
+            0
+        ]
+    },
+    {
+        "_index": "azul_cell_suspensions_aggregate_dev",
+        "_type": "doc",
+        "_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+        "_score": null,
+        "_source": {
+            "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+            "contents": {
+                "samples": [
+                    {
+                        "entity_type": [
+                            "specimens"
+                        ],
+                        "has_input_biomaterial": [
+                            null
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            null
+                        ],
+                        "preservation_method": [
+                            null
+                        ],
+                        "_type": [
+                            "specimen"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            null
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            null
+                        ],
+                        "preservation_method": [
+                            null
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "total_estimated_cells": 1,
+                        "selected_cell_type": [],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
+                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06"
+                        ],
+                        "biological_sex": [
+                            "female"
+                        ],
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": [
+                            "38"
+                        ],
+                        "organism_age_unit": [
+                            "year"
+                        ],
+                        "min_organism_age_in_seconds": [
+                            1198368000.0
+                        ],
+                        "max_organism_age_in_seconds": [
+                            1198368000.0
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "files": [
+                    {
+                        "size": 385472253,
+                        "file_format": "fastq.gz",
+                        "count": 2
+                    }
+                ],
+                "protocols": [
+                    {
+                        "library_construction_approach": [
+                            "Smart-seq2"
+                        ],
+                        "instrument_manufacturer_model": [
+                            "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            true
+                        ]
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": [
+                            "Single cell transcriptome patterns."
+                        ],
+                        "project_short_name": [
+                            "Single of human pancreas"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "document_id": [
+                            "e8642221-4c2c-4fd7-b926-a68bce363c88"
+                        ],
+                        "insdc_project_accessions": [],
+                        "geo_series_accessions": [],
+                        "array_express_accessions": [],
+                        "insdc_study_accessions": [],
+                        "_type": [
+                            "project"
+                        ]
+                    }
+                ]
+            },
+            "num_contributions": 1,
+            "bundles": [
+                {
+                    "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "version": "2018-11-02T113344.698028Z"
+                }
+            ]
+        },
+        "sort": [
+            0
+        ]
     }
 ]

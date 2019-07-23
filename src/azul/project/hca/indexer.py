@@ -1,7 +1,11 @@
 from typing import Iterable
 
 from azul.indexer import BaseIndexer
-from azul.project.hca.transformers import FileTransformer, SampleTransformer, ProjectTransformer, BundleTransformer
+from azul.project.hca.transformers import (FileTransformer,
+                                           CellSuspensionTransformer,
+                                           SampleTransformer,
+                                           ProjectTransformer,
+                                           BundleTransformer)
 from azul.transformer import Transformer
 from azul.types import JSON
 
@@ -12,17 +16,28 @@ class Indexer(BaseIndexer):
         return {
             "dynamic_templates": [
                 {
+                    "exclude_metadata_field": {
+                        "path_match": "contents.metadata.*",
+                        "mapping": {
+                            "type": "{dynamic_type}",
+                            "index": False
+                        }
+                    }
+                },
+                {
                     "project_nested_contributors": {
-                        "match_pattern": "regex",
-                        "path_match": r".*projects?\.contributors",
-                        "mapping": {}
+                        "path_match": "contents.projects.contributors",
+                        "mapping": {
+                            "enabled": False
+                        }
                     }
                 },
                 {
                     "project_nested_publications": {
-                        "match_pattern": "regex",
-                        "path_match": r".*projects?\.publications",
-                        "mapping": {}
+                        "path_match": "contents.projects.publications",
+                        "mapping": {
+                            "enabled": False
+                        }
                     }
                 },
                 {
@@ -56,7 +71,11 @@ class Indexer(BaseIndexer):
         }
 
     def transformers(self) -> Iterable[Transformer]:
-        return FileTransformer(), SampleTransformer(), ProjectTransformer(), BundleTransformer()
+        return (FileTransformer(),
+                CellSuspensionTransformer(),
+                SampleTransformer(),
+                ProjectTransformer(),
+                BundleTransformer())
 
     def entities(self) -> Iterable[str]:
-        return ['files', 'samples', 'projects', 'bundles']
+        return ['files', 'cell_suspensions', 'samples', 'projects', 'bundles']
