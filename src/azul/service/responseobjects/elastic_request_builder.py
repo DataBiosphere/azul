@@ -613,15 +613,6 @@ class ElasticTransformDump(object):
             return str(key)
 
     def flatten_mapping(self, mapping, parent_key='', sep='.') -> JSON:
-        """
-        >>> from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
-        >>> es_tf = EsTd()
-        >>> es_tf.flatten_mapping(mapping={'foo': {'bar': {'foobar': 'foobar'}}})
-        {'foo.bar.foobar': 'foobar'}
-
-        >>> es_tf.flatten_mapping(mapping={'bar': {'foo': {'barfoo': {'foobar': {'foobarfoo': 'foobarfoo'}}}}})
-        {'bar.foo.barfoo.foobar.foobarfoo': 'foobarfoo'}
-        """
         items = []
         for k, v in mapping.items():
             new_key = parent_key + sep + k if parent_key else k
