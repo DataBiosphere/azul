@@ -11,6 +11,9 @@ from service import WebServiceTestCase
 
 def setUpModule():
     logging.basicConfig(level=logging.INFO)
+    # Late import of Chalice app, otherwise it would interfere with test logging
+    global app
+    from lambdas.service import app
 
 
 class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
@@ -458,9 +461,6 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         """
         One call to the cart item batch write function should write one batch of the given batch size to Dynamo
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import cart_item_write_batch
         dynamo.return_value = self.dynamo_accessor.dynamo_client
 
         cart_id = '123'
@@ -470,7 +470,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
             'cart_id': cart_id,
             'batch_size': 1000
         }
-        write_response = cart_item_write_batch(write_params, None)
+        write_response = app.cart_item_write_batch(write_params, None)
         inserted_items = self.dynamo_accessor.query(table_name=config.dynamo_cart_item_table_name,
                                                     key_conditions={'CartId': cart_id})
 
@@ -485,9 +485,6 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         Write all results endpoint should start an execution of the cart item write state machine and
         return the name of the execution and the number items that will be written
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import add_all_results_to_cart
         dynamo.return_value = self.dynamo_accessor.dynamo_client
 
         execution_id = '89a68f98-48cb-43d0-88ad-5ffd8aa26b9d'
@@ -501,7 +498,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         get_user_id.return_value = user_id
         cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
 
-        response = add_all_results_to_cart(cart_id)
+        response = app.add_all_results_to_cart(cart_id)
 
         self.assertEqual(response['count'], self.number_of_documents)
         token = response['statusUrl'].split('/')[-1]
