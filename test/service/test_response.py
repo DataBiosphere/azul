@@ -583,11 +583,7 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticsearchResultsEqual(facets, expected_output)
 
-
     def test_default_sorting_parameter(self):
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import sort_defaults
         for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
                 base_url = self.base_url
@@ -595,7 +591,7 @@ class TestResponse(WebServiceTestCase):
                 response = requests.get(url)
                 response.raise_for_status()
                 summary_object = response.json()
-                self.assertEqual(summary_object['pagination']["sort"], sort_defaults[entity_type][0])
+                self.assertEqual(summary_object['pagination']["sort"], self.app_module.sort_defaults[entity_type][0])
 
     def test_transform_request_with_file_url(self):
         base_url = self.base_url
