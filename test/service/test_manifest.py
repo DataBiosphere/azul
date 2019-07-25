@@ -26,6 +26,9 @@ from service import WebServiceTestCase
 
 def setUpModule():
     logging.basicConfig(level=logging.INFO)
+    # Late import of Chalice app, otherwise it would interfere with test logging
+    global app
+    from lambdas.service import app
 
 
 class ManifestEndpointTest(AzulTestCase):
@@ -39,16 +42,14 @@ class ManifestEndpointTest(AzulTestCase):
         Calling start manifest generation without a token should start an execution and return a response
         with Retry-After and Location in the headers
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import start_manifest_generation
+
         execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
         mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
         format = 'tsv'
         filters = {'file': {'organ': {'is': ['lymph node']}}}
         current_request.query_params = {'filters': json.dumps(filters), 'format': format}
-        response = start_manifest_generation()
+        response = app.start_manifest_generation()
         self.assertEqual(301, response.status_code)
         self.assertIn('Retry-After', response.headers)
         self.assertIn('Location', response.headers)
@@ -67,16 +68,14 @@ class ManifestEndpointTest(AzulTestCase):
         Calling start manifest generation with the browser parameter should return the status code,
         Retry-After, and Location in the body of a 200 response instead of the headers
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import start_manifest_generation_fetch
+
         execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
         mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
         format = 'tsv'
         filters = {'file': {'organ': {'is': ['lymph node']}}}
         current_request.query_params = {'filters': json.dumps(filters), 'format': format}
-        response = start_manifest_generation_fetch()
+        response = app.start_manifest_generation_fetch()
         self.assertEqual(301, response['Status'])
         self.assertIn('Retry-After', response)
         self.assertIn('Location', response)
@@ -92,14 +91,12 @@ class ManifestEndpointTest(AzulTestCase):
         """
         Calling start manifest generation with a token should check the status without starting an execution
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
-        handle_manifest_generation_request()
+        app.handle_manifest_generation_request()
         step_function_helper.start_execution.assert_not_called()
         step_function_helper.describe_execution.assert_called_once()
 
@@ -109,9 +106,7 @@ class ManifestEndpointTest(AzulTestCase):
         """
         Manifest status check should raise a BadRequestError (400 status code) if execution cannot be found
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -120,7 +115,7 @@ class ManifestEndpointTest(AzulTestCase):
                 'Code': 'ExecutionDoesNotExist'
             }
         }, '')
-        self.assertRaises(BadRequestError, handle_manifest_generation_request)
+        self.assertRaises(BadRequestError, app.handle_manifest_generation_request)
 
     @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
@@ -128,9 +123,7 @@ class ManifestEndpointTest(AzulTestCase):
         """
         Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -139,7 +132,7 @@ class ManifestEndpointTest(AzulTestCase):
                 'Code': 'OtherError'
             }
         }, '')
-        self.assertRaises(ClientError, handle_manifest_generation_request)
+        self.assertRaises(ClientError, app.handle_manifest_generation_request)
 
     @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
@@ -147,25 +140,21 @@ class ManifestEndpointTest(AzulTestCase):
         """
         Manifest status check should return a generic error (500 status code) if the execution errored
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
         step_function_helper.get_manifest_status.side_effect = StateMachineError
-        self.assertRaises(ChaliceViewError, handle_manifest_generation_request)
+        self.assertRaises(ChaliceViewError, app.handle_manifest_generation_request)
 
     @mock.patch('lambdas.service.app.app.current_request')
     def test_manifest_endpoint_invalid_token(self, current_request):
         """
         Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {'token': 'Invalid base64'}
-        self.assertRaises(BadRequestError, handle_manifest_generation_request)
+        self.assertRaises(BadRequestError, app.handle_manifest_generation_request)
 
 
 class ManifestGenerationTest(WebServiceTestCase):
