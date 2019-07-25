@@ -21,16 +21,23 @@ def main(argv):
         import site
         if hasattr(site, 'getsitepackages'):
             # Both plain Python and `venv` have `getsitepackages()`
-            sys_prefix = os.path.abspath(sys.prefix)
-            link_dir = next(p for p in site.getsitepackages() if os.path.abspath(p).startswith(sys_prefix))
+            sys_prefix = os.path.realpath(sys.prefix)
+            link_dir = next(p for p in site.getsitepackages() if os.path.realpath(p).startswith(sys_prefix))
         else:
             # virtualenv's `site` does not have getsitepackages()
-            link_dir = os.path.abspath(os.path.join(os.path.dirname(site.__file__), 'site-packages'))
+            link_dir = os.path.realpath(os.path.join(os.path.dirname(site.__file__), 'site-packages'))
     else:
         raise RuntimeError('Need to be run from within a virtualenv')
+    dst = os.path.realpath(__file__)
+    try:
+        import sitecustomize
+    except ImportError:
+        pass
+    else:
+        if os.path.realpath(sitecustomize.__file__) != dst:
+            raise RuntimeError(f'A different sitecustomize module already exists at {sitecustomize.__file__}')
     link = os.path.join(link_dir, 'sitecustomize.py')
-    dst = os.path.abspath(__file__)
-    dst = os.path.relpath(dst, link_dir)
+    rel_dst = os.path.relpath(dst, link_dir)
     try:
         cur_dst = os.readlink(link)
     except FileNotFoundError:
@@ -42,15 +49,15 @@ def main(argv):
             raise
     if options.action == 'install':
         if cur_dst is None:
-            os.symlink(dst, link)
-        elif dst == cur_dst:
+            os.symlink(rel_dst, link)
+        elif rel_dst == cur_dst:
             pass
         else:
             raise RuntimeError(f'{link} points somewhere unexpected ({cur_dst})')
     elif options.action == 'remove':
         if cur_dst is None:
             pass
-        elif cur_dst == dst:
+        elif cur_dst == rel_dst:
             os.unlink(link)
         else:
             raise RuntimeError(f'{link} points somewhere unexpected ({cur_dst})')
