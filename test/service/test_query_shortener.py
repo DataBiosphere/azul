@@ -11,6 +11,9 @@ from azul_test_case import AzulTestCase
 
 def setUpModule():
     logging.basicConfig(level=logging.INFO)
+    # Late import of Chalice app, otherwise it would interfere with test logging
+    global app
+    from lambdas.service import app
 
 
 class TestQueryShortener(AzulTestCase):
@@ -23,15 +26,12 @@ class TestQueryShortener(AzulTestCase):
         Passing in a valid url should create an object in s3 and return a link
         that redirects to the given url
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import shorten_query_url
         current_request.json_body = {
             'url': 'https://dev.data.humancellatlas.org/explore/specimens'
                    '?filter=%5B%7B%22facetName%22%3A%22organ%22%2C%22terms%22%3A%5B%22bone%22%5D%7D%5D'
         }
         storage_service_get.side_effect = StorageService().client.exceptions.NoSuchKey({}, "")
-        response = shorten_query_url()
+        response = app.shorten_query_url()
         self.assertEqual({'url': f'http://{config.url_redirect_full_domain_name}/FFq'}, response)
         storage_service_put.assert_called_once()
 
@@ -42,9 +42,6 @@ class TestQueryShortener(AzulTestCase):
         """
         URL shortener should accept any humancellatlas domain
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import shorten_query_url
         urls = [
             'https://humancellatlas.org',
             'http://humancellatlas.org',
@@ -57,7 +54,7 @@ class TestQueryShortener(AzulTestCase):
         for i in range(len(urls)):
             with self.subTest(i=i):
                 current_request.json_body = {'url': urls[i]}
-                shorten_query_url()
+                app.shorten_query_url()
 
     @mock_sts
     @mock_s3
@@ -66,9 +63,6 @@ class TestQueryShortener(AzulTestCase):
         """
         URL shortener should reject any non-URL argument and any non-HCA URL
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import shorten_query_url
         urls = [
             'https://hmanclatls.org',
             'https://humancellatlas.orgo',
@@ -79,7 +73,7 @@ class TestQueryShortener(AzulTestCase):
         for i in range(len(urls)):
             with self.subTest(i=i):
                 current_request.json_body = {'url': urls[i]}
-                self.assertRaises(BadRequestError, shorten_query_url)
+                self.assertRaises(BadRequestError, app.shorten_query_url)
 
     @mock_sts
     @mock_s3
@@ -88,14 +82,11 @@ class TestQueryShortener(AzulTestCase):
         """
         URL shortener should return the same response URL for identical input URLs
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import shorten_query_url
         current_request.json_body = {'url': 'https://humancellatlas.org'}
 
         StorageService().create_bucket(config.url_redirect_full_domain_name)
-        shortened_url1 = shorten_query_url()
-        shortened_url2 = shorten_query_url()
+        shortened_url1 = app.shorten_query_url()
+        shortened_url2 = app.shorten_query_url()
         self.assertEqual(shortened_url1, shortened_url2)
 
     @mock_sts
@@ -107,20 +98,17 @@ class TestQueryShortener(AzulTestCase):
         URL shortener should increase the key length by one for each time there is a key collision on
         non-matching URLs, raising an exception if an entire key matches another
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import shorten_query_url
         hash_url.return_value = 'abcde'
         StorageService().create_bucket(config.url_redirect_full_domain_name)
 
         current_request.json_body = {'url': 'https://humancellatlas.org'}
-        self.assertEqual(shorten_query_url()['url'], f'http://{config.url_redirect_full_domain_name}/abc')
+        self.assertEqual(app.shorten_query_url()['url'], f'http://{config.url_redirect_full_domain_name}/abc')
 
         current_request.json_body = {'url': 'https://humancellatlas.org/2'}
-        self.assertEqual(shorten_query_url()['url'], f'http://{config.url_redirect_full_domain_name}/abcd')
+        self.assertEqual(app.shorten_query_url()['url'], f'http://{config.url_redirect_full_domain_name}/abcd')
 
         current_request.json_body = {'url': 'https://humancellatlas.org/3'}
-        self.assertEqual(shorten_query_url()['url'], f'http://{config.url_redirect_full_domain_name}/abcde')
+        self.assertEqual(app.shorten_query_url()['url'], f'http://{config.url_redirect_full_domain_name}/abcde')
 
         current_request.json_body = {'url': 'https://humancellatlas.org/4'}
-        self.assertRaises(ChaliceViewError, shorten_query_url)
+        self.assertRaises(ChaliceViewError, app.shorten_query_url)

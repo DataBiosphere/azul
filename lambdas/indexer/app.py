@@ -30,14 +30,17 @@ from azul.time import RemainingLambdaContextTime
 from azul.transformer import EntityReference
 from azul.types import JSON
 
-logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
-for top_level_pkg in (__name__, 'azul'):
-    logging.getLogger(top_level_pkg).setLevel(logging.DEBUG)
+if len(logging.root.handlers) == 0:
+    logging.basicConfig(level=logging.WARNING)
+    for top_level_pkg in (__name__, 'azul'):
+        logging.getLogger(top_level_pkg).setLevel(logging.DEBUG)
 
-app = AzulChaliceApp(app_name=config.indexer_name)
+app = AzulChaliceApp(app_name=config.indexer_name, configure_logs=False)
+# FIXME: this should be configurable via environment variable (https://github.com/DataBiosphere/azul/issues/419)
 app.debug = True
-app.log.setLevel(logging.DEBUG)  # please use module logger instead
+# FIXME: please use module logger instead (https://github.com/DataBiosphere/azul/issues/419)
+app.log.setLevel(logging.DEBUG)
 
 plugin = Plugin.load()
 
