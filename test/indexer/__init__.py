@@ -92,6 +92,9 @@ class IndexerTestCase(ElasticsearchTestCase):
         assert isinstance(expected_hits, list)
         for hit in expected_hits:
             _, _, entity_type, aggregate = config.parse_foreign_es_index_name(hit['_index'])
+            # FIXME: Remove the line below when resolving https://github.com/DataBiosphere/azul/issues/1152
+            if entity_type == 'bundles':
+                del hit['_source']['contents']['metadata']
             hit['_index'] = config.es_index_name(entity_type, aggregate=aggregate)
         return expected_hits
 
