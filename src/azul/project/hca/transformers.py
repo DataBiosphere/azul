@@ -515,7 +515,9 @@ class BundleTransformer(BundleProjectTransformer):
                 generator = MetadataGenerator()
                 generator.add_bundle(uuid, version, list(metadata_files.values()))
                 metadata = generator.dump()
-            contrib.contents['metadata'] = metadata
+            # FIXME: Remove when resolving https://github.com/DataBiosphere/azul/issues/1152
+            if False:
+                contrib.contents['metadata'] = metadata
             yield contrib
 
 

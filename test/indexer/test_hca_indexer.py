@@ -813,6 +813,7 @@ class TestHCAIndexer(IndexerTestCase):
             else:
                 self.assertIn(metadata_row['*.file_core.file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
 
+    @unittest.skip("https://github.com/DataBiosphere/azul/issues/1152")
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
 
