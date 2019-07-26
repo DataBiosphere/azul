@@ -61,7 +61,7 @@ class AzulClient(object):
         bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
         return {
             "query": self.query(),
-            "subscription_id": 'feeb0f2b-c16f-48f8-bac0-e6fd09b92320',
+            "subscription_id": 'cafebabe-feed-4bad-dead-beaf8badf00d',
             "transaction_id": str(uuid.uuid4()),
             "match": {
                 "bundle_uuid": bundle_uuid,
@@ -235,9 +235,6 @@ class AzulClient(object):
         num_messages = 0
         for batch in chunked(messages, 10):
             if not self.dryrun:
-                if logger.isEnabledFor(logging.DEBUG):
-                    for message in batch:
-                        logger.debug('Sending message %r', message)
                 notify_queue.send_messages(Entries=[dict(Id=str(i), MessageBody=json.dumps(message))
                                                     for i, message in enumerate(batch)])
             num_messages += len(batch)
