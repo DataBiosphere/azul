@@ -15,8 +15,10 @@ import requests
 
 from azul import config
 from azul.json_freeze import freeze
+from azul.service import AbstractService
 from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
+from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 from azul_test_case import AzulTestCase
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
@@ -176,21 +178,12 @@ class ManifestGenerationTest(WebServiceTestCase):
         self._teardown_indices()
         super().tearDown()
 
-    @mock_s3
-    @mock_sts
-    def test_manifest_generation(self):
-        """
-        The lambda function should create a valid manifest and upload it to s3
-        """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import generate_manifest
-        storage_service = StorageService()
-        storage_service.create_bucket()
-        manifest_url = generate_manifest(event={'format': 'tsv', 'filters': {}}, context=None)['Location']
-        manifest_response = requests.get(manifest_url)
-        self.assertEqual(200, manifest_response.status_code)
-        self.assertTrue(len(manifest_response.text) > 0)
+    def get_manifest(self, params, stream=False):
+        filters = AbstractService.parse_filters(params.get('filters'))
+        estd = ElasticTransformDump()
+        url = estd.transform_manifest(params.get('format', 'tsv'), filters).headers['Location']
+        response = requests.get(url, stream=stream)
+        return response
 
     @mock_sts
     @mock_s3
@@ -207,11 +200,11 @@ class ManifestGenerationTest(WebServiceTestCase):
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                        url = self.base_url + '/repository/files/export'
                         params = {
                             'filters': json.dumps({}),
+                            'format': 'tsv'
                         }
-                        response = requests.get(url, params=params)
+                        response = self.get_manifest(params)
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
                         expected = [
@@ -297,12 +290,11 @@ class ManifestGenerationTest(WebServiceTestCase):
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            url = self.base_url + '/repository/files/export'
             params = {
                 'filters': json.dumps({'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}),
                 'format': 'bdbag',
             }
-            response = requests.get(url, params=params, stream=True)
+            response = self.get_manifest(params, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
@@ -566,9 +558,11 @@ class ManifestGenerationTest(WebServiceTestCase):
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-
-            url = self.base_url + '/repository/files/export?format=full'
-            response = requests.get(url)
+            params = {
+                'filters': json.dumps({}),
+                'format': 'full'
+            }
+            response = self.get_manifest(params)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
             expected = [
@@ -772,8 +766,6 @@ class ManifestGenerationTest(WebServiceTestCase):
             self.assertTrue(all(len(row) == len(expected_fastq1_row) for row in rows))
 
     def test_manifest_format_validation(self):
-        for manifest_endpoint in '/manifest/files', '/repository/files/export':
-            with self.subTest(manifest_endpoint=manifest_endpoint):
-                url = self.base_url + f'{manifest_endpoint}?format=invalid-type'
-                response = requests.get(url)
-                self.assertEqual(400, response.status_code, response.content)
+        url = self.base_url + '/manifest/files?format=invalid-type'
+        response = requests.get(url)
+        self.assertEqual(400, response.status_code, response.content)
