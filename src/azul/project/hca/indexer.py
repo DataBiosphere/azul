@@ -14,6 +14,8 @@ class Indexer(BaseIndexer):
 
     def mapping(self) -> JSON:
         return {
+            "date_detection": False,  # TODO: https://github.com/DataBiosphere/azul/issues/1173
+            "numeric_detection": False,
             "dynamic_templates": [
                 {
                     "donor_age_range": {
