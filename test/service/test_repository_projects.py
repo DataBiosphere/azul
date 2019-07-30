@@ -41,26 +41,26 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
 
         def assert_file_type_summaries(hit):
             self.assertEqual(len(hit['fileTypeSummaries']), 1)
-            self.assertTrue('fileType' in hit['fileTypeSummaries'][0])
+            self.assertIn('fileType', hit['fileTypeSummaries'][0])
             self.assertGreater(hit['fileTypeSummaries'][0]['count'], 0)
             self.assertGreater(hit['fileTypeSummaries'][0]['totalSize'], 0)
 
-        self.assertTrue('hits' in response_json)
+        self.assertIn('hits', response_json)
         self.assertGreater(len(response_json['hits']), 0)
         for hit in response_json['hits']:
-            self.assertTrue('protocols' in hit)
-            self.assertTrue('entryId' in hit)
+            self.assertIn('protocols', hit)
+            self.assertIn('entryId', hit)
             assert_file_type_summaries(hit)
-            self.assertTrue('projects' in hit)
-            self.assertTrue('specimens' in hit)
-            self.assertTrue('projectSummary' in hit)
-            self.assertFalse('files' in hit)
+            self.assertIn('projects', hit)
+            self.assertIn('specimens', hit)
+            self.assertNotIn('projectSummary', hit)
+            self.assertNotIn('files', hit)
             for project in hit['projects']:
                 for prop in RepositoryProjectsEndpointTest.get_project_detail_properties():
-                    self.assertFalse(prop in project)
+                    self.assertNotIn(prop, project)
             self._test_detail_response(hit['entryId'])
-        self.assertTrue('pagination' in response_json)
-        self.assertTrue('termFacets' in response_json)
+        self.assertIn('pagination', response_json)
+        self.assertIn('termFacets', response_json)
 
     def _test_detail_response(self, uuid):
         """
@@ -74,17 +74,17 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         hit = response.json()
 
         self.assertEqual(len(hit['fileTypeSummaries']), 1)
-        self.assertTrue('fileType' in hit['fileTypeSummaries'][0])
+        self.assertIn('fileType', hit['fileTypeSummaries'][0])
         self.assertGreater(hit['fileTypeSummaries'][0]['count'], 0)
         self.assertGreater(hit['fileTypeSummaries'][0]['totalSize'], 0)
 
-        self.assertTrue('protocols' in hit)
-        self.assertTrue('entryId' in hit)
-        self.assertTrue('projects' in hit)
-        self.assertTrue('specimens' in hit)
-        self.assertTrue('projectSummary' in hit)
-        self.assertFalse('files' in hit)
+        self.assertIn('protocols', hit)
+        self.assertIn('entryId', hit)
+        self.assertIn('projects', hit)
+        self.assertIn('specimens', hit)
+        self.assertNotIn('projectSummary', hit)
+        self.assertNotIn('files', hit)
 
         for project in hit['projects']:
             for prop in RepositoryProjectsEndpointTest.get_project_detail_properties():
-                self.assertTrue(prop in project)
+                self.assertIn(prop, project)
