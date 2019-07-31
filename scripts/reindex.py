@@ -72,7 +72,11 @@ group2.add_argument('--partition-prefix-length',
 parser.add_argument('--delete',
                     default=False,
                     action='store_true',
-                    help='Delete all entity indices before reindexing.')
+                    help='Delete all Azul indices in the current deployment before doing anything else.')
+parser.add_argument('--index',
+                    default=False,
+                    action='store_true',
+                    help='Index all matching bundles in the configured DSS instance.')
 parser.add_argument('--dryrun', '--dry-run',
                     default=False,
                     action='store_true',
@@ -99,10 +103,11 @@ def main(argv: List[str]):
                              dryrun=args.dryrun)
     if args.delete:
         azul_client.delete_all_indices()
-    if args.partition_prefix_length:
-        azul_client.remote_reindex(args.partition_prefix_length)
-    else:
-        azul_client.reindex(args.sync)
+    if args.index:
+        if args.partition_prefix_length:
+            azul_client.remote_reindex(args.partition_prefix_length)
+        else:
+            azul_client.reindex(args.sync)
 
 
 if __name__ == "__main__":
