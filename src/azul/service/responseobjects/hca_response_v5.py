@@ -100,6 +100,9 @@ class OrganCellCountSummary(JsonObject):
 
     @classmethod
     def for_bucket(cls, bucket):
+        bucket['key'] = Document.translate_field(bucket['key'],
+                                                 path=('contents', 'cell_suspensions', 'organ'),
+                                                 forward=False)
         self = cls()
         self.organType = [bucket['key']]
         self.countOfDocsWithOrganType = bucket['doc_count']
@@ -559,6 +562,13 @@ class SummaryResponse(BaseSummaryResponse):
             fileTypeSummaries=[FileTypeSummary.for_bucket(bucket) for bucket in _sum['buckets']],
             cellCountSummaries=[OrganCellCountSummary.for_bucket(bucket) for bucket in _organ_group['buckets']])
 
+        # Un-translate values that had been translated with translate_fields() to handle Nones in Elasticsearch
+        # The path for the translation directly relates to the field used in transform_summary() for the aggregation
+        for i, value in enumerate(kwargs['organTypes']):
+            kwargs['organTypes'][i] = Document.translate_field(value,
+                                                               path=('contents', 'samples', 'effective_organ'),
+                                                               forward=False)
+
         self.apiResponse = SummaryRepresentation(**kwargs)
 
 
@@ -805,10 +815,12 @@ class FileSearchResponse(KeywordSearchResponse):
         def choose_entry(_term):
             if 'key_as_string' in _term:
                 return _term['key_as_string']
-            elif not isinstance(_term['key'], str):
-                return str(_term['key'])
+            elif _term['key'] is None:
+                return None
+            elif isinstance(_term['key'], bool):
+                return str(_term['key']).lower()
             else:
-                return _term['key']
+                return str(_term['key'])
 
         term_list = []
         for term in contents['myTerms']['buckets']:
@@ -817,8 +829,15 @@ class FileSearchResponse(KeywordSearchResponse):
                 term_object_params['projectId'] = [bucket['key'] for bucket in term['myProjectIds']['buckets']]
             term_list.append(TermObj(**term_object_params))
 
-        # Add 'unspecified' term if there is at least one unlabelled document
         untagged_count = contents['untagged']['doc_count']
+
+        # Add the untagged_count to the existing termObj for a None value, or add a new one
+        if untagged_count > 0:
+            for term_obj in term_list:
+                if term_obj.term is None:
+                    term_obj.count += untagged_count
+                    untagged_count = 0
+                    break
         if untagged_count > 0:
             term_list.append(TermObj(term=None, count=untagged_count))
 
