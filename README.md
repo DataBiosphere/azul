@@ -773,13 +773,20 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
 
 ### 6.1.3 Finishing up deployment / promotion
 
-If promoting to staging or production this part of the process should be
-coordinated on the [#dcp-ops](https://humancellatlas.slack.com/messages/G9XD6L0AD)
-Slack channel. 
+If promoting to staging or production this part of the process must be
+coordinated on the
+[#dcp-ops](https://humancellatlas.slack.com/messages/G9XD6L0AD) Slack channel.
+While any component can technically promote to integration at any time, you
+should consider that promoting to integration while the DCP-wide test is red
+for that deployment could interfere with other teams' efforts to fix the test.
+If in doubt ask on #dcp-ops.
 
-1. Now you need to push the current branch to Github. This is needed because the
-   Gitlab build performs a status check update on Github. This would fail if
-   Github doesn't know the commit.
+None of these steps can be performed ahead of time. Only perform them once you
+are ready to actually deploy.
+
+1. Now you need to push the current branch to Github. This is needed because
+   the Gitlab build performs a status check update on Github. This would fail
+   if Github didn't know the commit.
 
    ```
    git push origin
@@ -788,7 +795,8 @@ Slack channel.
 2. Finally, push to Gitlab.
 
    ```
-   git push gitlab.dev
+   git push gitlab.dev   # for a dev, integration or staging deployment
+   git push gitlab.prod  # for a prod deployment
    ```
 
    The build should start immediately. You can monitor its progress from the
