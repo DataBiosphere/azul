@@ -4,13 +4,18 @@ from azul.template import emit
 emit({
     "provider": [
         {
+            "null": {
+                'version': "~> 2.1"
+            }
+        },
+        {
             "google": {
-                'version': "~> 1.18"
+                'version': "~> 2.10"
             }
         },
         *({
             "aws": {
-                'version': "~> 1.52",
+                'version': "~> 2.20",
                 **(
                     {
                         'region': region,

@@ -18,6 +18,7 @@ from azul.transformer import (Accumulator,
                               SingleValueAccumulator,
                               ListAccumulator,
                               SetAccumulator,
+                              SetOfDictAccumulator,
                               SimpleAggregator,
                               SumAccumulator)
 from azul.types import JSON
@@ -183,8 +184,10 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'organism_age_unit': donor.organism_age_unit,
             **(
                 {
-                    'min_organism_age_in_seconds': donor.organism_age_in_seconds.min,
-                    'max_organism_age_in_seconds': donor.organism_age_in_seconds.max,
+                    'organism_age_range': {
+                        'gte': donor.organism_age_in_seconds.min,
+                        'lte': donor.organism_age_in_seconds.max
+                    }
                 } if donor.organism_age_in_seconds else {
                 }
             ),
@@ -513,9 +516,11 @@ class BundleTransformer(BundleProjectTransformer):
                 metadata = []
             else:
                 generator = MetadataGenerator()
-                generator.add_bundle(uuid, version, list(metadata_files.values()))
+                generator.add_bundle(uuid, version, manifest, list(metadata_files.values()))
                 metadata = generator.dump()
-            contrib.contents['metadata'] = metadata
+            # FIXME: Remove when resolving https://github.com/DataBiosphere/azul/issues/1152
+            if False:
+                contrib.contents['metadata'] = metadata
             yield contrib
 
 
@@ -577,7 +582,10 @@ class CellLineAggregator(SimpleAggregator):
 class DonorOrganismAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
+        if field == 'organism_age_range':
+            return SetOfDictAccumulator(max_size=100)
+        else:
+            return SetAccumulator(max_size=100)
 
 
 class OrganoidAggregator(SimpleAggregator):

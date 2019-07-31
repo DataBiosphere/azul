@@ -61,8 +61,8 @@ class AzulClient(object):
         bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
         return {
             "query": self.query(),
-            "subscription_id": 'feeb0f2b-c16f-48f8-bac0-e6fd09b92320',
-            "transaction_id": 'feeb0f2b-c16f-48f8-bac0-e6fd09b92320',
+            "subscription_id": 'cafebabe-feed-4bad-dead-beaf8badf00d',
+            "transaction_id": str(uuid.uuid4()),
             "match": {
                 "bundle_uuid": bundle_uuid,
                 "bundle_version": bundle_version
