@@ -40,10 +40,9 @@ from azul.service.responseobjects.storage_service import StorageService
 ENTRIES_PER_PAGE = 10
 
 log = logging.getLogger(__name__)
-if len(logging.root.handlers) == 0:
-    logging.basicConfig(level=logging.WARNING)
-    for top_level_pkg in (__name__, 'azul'):
-        logging.getLogger(top_level_pkg).setLevel(logging.INFO)
+logging.basicConfig(level=logging.WARNING)
+for top_level_pkg in (__name__, 'azul'):
+    logging.getLogger(top_level_pkg).setLevel(logging.INFO)
 
 app = AzulChaliceApp(app_name=config.service_name, configure_logs=False)
 # FIXME: this should be configurable via environment variable (https://github.com/DataBiosphere/azul/issues/419)
