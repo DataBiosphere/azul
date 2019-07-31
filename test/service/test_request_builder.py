@@ -6,6 +6,7 @@ import unittest
 
 from elasticsearch_dsl.utils import AttrList
 
+from azul import config
 from azul.service import service_config
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump, ElasticTransformDump as EsTd
 from service import WebServiceTestCase
@@ -21,7 +22,9 @@ class TestRequestBuilder(WebServiceTestCase):
             "entity_id": "entity_id",
             "entity_version": "entity_version",
             "projectId": "contents.projects.document_id",
-            "libraryConstructionApproach": "contents.processes.library_construction_approach",
+            "institution": "contents.projects.institutions",
+            "laboratory": "contents.projects.laboratory",
+            "libraryConstructionApproach": "contents.protocols.library_construction_approach",
             "disease": "contents.specimens.disease",
             "donorId": "contents.specimens.donor_biomaterial_id",
             "genusSpecies": "contents.specimens.genus_species"
@@ -229,14 +232,8 @@ class TestRequestBuilder(WebServiceTestCase):
                         {
                             "constant_score": {
                                 "filter": {
-                                    "bool": {
-                                        "must_not": [
-                                            {
-                                                "exists": {
-                                                    "field": "entity_id.keyword"
-                                                }
-                                            }
-                                        ]
+                                    "terms": {
+                                        "contents.protocols.library_construction_approach.keyword": "__null__"
                                     }
                                 }
                             }
@@ -250,7 +247,7 @@ class TestRequestBuilder(WebServiceTestCase):
         }
 
         # Create a filter for missing values
-        sample_filter = {"entity_id": {"is": None}}
+        sample_filter = {"libraryConstructionApproach": {"is": None}}
 
         # Create ElasticTransformDump instance
         es_ts_instance = EsTd()
@@ -285,14 +282,8 @@ class TestRequestBuilder(WebServiceTestCase):
                         {
                             "constant_score": {
                                 "filter": {
-                                    "bool": {
-                                        "must_not": [
-                                            {
-                                                "exists": {
-                                                    "field": "term1.keyword"
-                                                }
-                                            }
-                                        ]
+                                    "terms": {
+                                        "contents.projects.laboratory.keyword": "__null__"
                                     }
                                 }
                             }
@@ -301,9 +292,7 @@ class TestRequestBuilder(WebServiceTestCase):
                             "constant_score": {
                                 "filter": {
                                     "terms": {
-                                        "term2.keyword": [
-                                            "test"
-                                        ]
+                                        "contents.projects.institutions.keyword": ["test"]
                                     }
                                 }
                             }
@@ -311,14 +300,8 @@ class TestRequestBuilder(WebServiceTestCase):
                         {
                             "constant_score": {
                                 "filter": {
-                                    "bool": {
-                                        "must_not": [
-                                            {
-                                                "exists": {
-                                                    "field": "term3.keyword"
-                                                }
-                                            }
-                                        ]
+                                    "terms": {
+                                        "contents.specimens.disease.keyword": ["__null__"]
                                     }
                                 }
                             }
@@ -333,9 +316,9 @@ class TestRequestBuilder(WebServiceTestCase):
 
         # Create a filter for missing values
         sample_filter = {
-            "term1": {"is": None},
-            "term2": {"is": ["test"]},
-            "term3": {"is": None},
+            "laboratory": {"is": None},
+            "institution": {"is": ["test"]},
+            "disease": {"is": [None]},
         }
 
         # Create ElasticTransformDump instance

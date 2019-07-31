@@ -512,6 +512,8 @@ class Config:
 
     terms_aggregation_size = 99999
 
+    null_keyword = '__null__'
+
 config = Config()
 
 
