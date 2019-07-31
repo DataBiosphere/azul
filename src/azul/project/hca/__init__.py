@@ -76,38 +76,6 @@ class Plugin(azul.plugin.Plugin):
                                     }
                                 }
                             ] if config.dss_endpoint == "https://dss.staging.data.humancellatlas.org/v1" else [
-                                {
-                                    "bool": {
-                                        "must_not": [
-                                            {
-                                                "terms": {
-                                                    "files.project_json.provenance.document_id": [
-                                                        "179bf9e6-5b33-4c5b-ae26-96c7270976b8"  # 1m immune cells aka "Regev-ICA"
-                                                    ]
-                                                }
-                                            },
-                                            {
-                                                "bool": {
-                                                    "must": [
-                                                        {
-                                                            "exists": {
-                                                                "field": "files.analysis_process_json"  # exclude secondary bundles from …
-                                                            }
-                                                        },
-                                                        {
-                                                            "terms": {
-                                                                "files.project_json.provenance.document_id": [
-                                                                    "29f53b7e-071b-44b5-998a-0ae70d0229a4",  # human hematopoietic profiling "peer"
-                                                                ]
-                                                            }
-                                                        }
-                                                    ]
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            ] if config.dss_endpoint == "https://dss.data.humancellatlas.org/v1" else [
                             ]
                         )
                     ]
