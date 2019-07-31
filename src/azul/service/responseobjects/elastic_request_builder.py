@@ -88,6 +88,23 @@ class ElasticTransformDump(object):
         else:
             return Document.translate_field(value, path)
 
+    @classmethod
+    def translate_facets(cls, facets: JSON, translation: JSON):
+        """
+        Translate facet values from Elasticsearch (eg. '__null__' -> None)
+
+        :param facets: Aggregation data from the es_response
+        :param translation: Mapping of facet names to their full field name (eg. 'fileSize': 'contents.files.size')
+        :return: The facets data with translated values
+        """
+        for key in facets.keys():
+            full_key = translation[key]
+            path = tuple(full_key.split('.'))
+            for bucket in facets[key]['myTerms']['buckets']:
+                bucket['key'] = Document.translate_field(bucket['key'], path, forward=False)
+        return facets
+
+
     @staticmethod
     def create_query(filters):
         """
@@ -136,12 +153,7 @@ class ElasticTransformDump(object):
         # Create the filter aggregate
         aggregate = A('filter', filter_query)
         # Make an inner aggregate that will contain the terms in question
-        # _field = '{}.keyword'.format(facet_config[agg])
-        # HACK
-        if facet_config[agg] != 'pairedEnds':
-            _field = '{}.keyword'.format(facet_config[agg])
-        else:
-            _field = facet_config[agg]
+        _field = f'{facet_config[agg]}.keyword'
         if agg == 'project':
             _sub_field = request_config['translation']['projectId'] + '.keyword'
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size).bucket(
@@ -390,7 +402,7 @@ class ElasticTransformDump(object):
         es_search.aggs.metric(
             'total_size',
             'sum',
-            field='contents.files.size')
+            field='contents.files.size_')
 
         # Add a per_organ aggregate to the ElasticSearch request
         es_search.aggs.bucket(
@@ -401,14 +413,14 @@ class ElasticTransformDump(object):
         ).bucket(
             'cell_count',
             'sum',
-            field='contents.cell_suspensions.total_estimated_cells'
+            field='contents.cell_suspensions.total_estimated_cells_'
         )
 
         # Add a cell_count aggregate to the ElasticSearch request
         es_search.aggs.metric(
             'total_cell_count',
             'sum',
-            field='contents.cell_suspensions.total_estimated_cells'
+            field='contents.cell_suspensions.total_estimated_cells_'
         )
 
         es_search.aggs.bucket(
@@ -419,7 +431,7 @@ class ElasticTransformDump(object):
             ('contents.specimens.document_id', 'specimenCount'),
             ('contents.files.uuid', 'fileCount'),
             ('contents.donors.document_id', 'donorCount'),
-            ('contents.projects.laboratory', 'labCount'),
+            ('contents.projects.laboratory', 'labCount'),   # FIXME Possible +1 error due to '__null__' value (#1188)
             ('contents.projects.document_id', 'projectCount')):
             es_search.aggs.metric(
                 agg_name, 'cardinality',
@@ -549,6 +561,8 @@ class ElasticTransformDump(object):
             hits = Document.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
+            facets = self.translate_facets(facets, translation)
+
             paging = self.generate_paging_dict(es_response_dict, pagination)
             # Translate the sort field back to external name
             if paging['sort'] in inverse_translation:
