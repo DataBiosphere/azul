@@ -134,6 +134,31 @@ emit({
                     "dimensions": {
                         "HealthCheckId": "${aws_route53_health_check.composite-portal.id}",
                     }
+                },
+                **{
+                    f"{queue.replace('.', '-')}-queue": {
+                        "alarm_name": f"{queue}-message-count",
+                        "actions_enabled": True,
+                        "comparison_operator": "GreaterThanThreshold",
+                        "evaluation_periods": "1",
+                        "metric_name": "ApproximateNumberOfMessagesVisible",
+                        "namespace": "AWS/SQS",
+                        "period": "300",  # SQS pushes metrics at most every 5 min, lower periods wouldn't make sense
+                        "statistic": "Maximum",
+                        "threshold": "0.0",
+                        "alarm_description": json.dumps({
+                            "slack_channel": "azul-dev",
+                            "environment": config.deployment_stage,
+                            "description": f"{queue} ApproximateNumberOfMessagesVisible alarm"
+                        }),
+                        "dimensions": {
+                            "QueueName": queue
+                        },
+                        "alarm_actions": [
+                            f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                            f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                        ],
+                    } for queue in (config.fail_queue_name, config.fail_fifo_queue_name)
                 }
             }
         }
