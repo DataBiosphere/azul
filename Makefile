@@ -17,8 +17,14 @@ subscribe: check_branch
 unsubscribe:
 	python scripts/subscribe.py --unsubscribe --shared
 
+delete: check_branch
+	python scripts/reindex.py --delete
+
+index: check_branch
+	python scripts/reindex.py --index --partition-prefix-length=2
+
 reindex: check_branch
-	python scripts/reindex.py --delete --partition-prefix-length=2
+	python scripts/reindex.py --delete --index --partition-prefix-length=2
 
 clean:
 	rm -rf .cache .config
