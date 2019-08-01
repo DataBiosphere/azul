@@ -577,17 +577,25 @@ class ElasticTransformDump(object):
                                             source_filter=source_filter,
                                             enable_aggregation=False,
                                             entity_type=entity_type)
+            map_script = '''
+                for (row in params._source.contents.metadata) {
+                    for (f in row.keySet()) {
+                        params._agg.fields.add(f);
+                    }
+                }
+            '''
+            reduce_script = '''
+                Set fields = new HashSet();
+                for (agg in params._aggs) {
+                    fields.addAll(agg);
+                }
+                return new ArrayList(fields);
+            '''
             es_search.aggs.metric('fields', 'scripted_metric',
                                   init_script='params._agg.fields = new HashSet()',
-                                  map_script='for (row in params._source.contents.metadata) { '
-                                             'for (f in row.keySet()) {'
-                                             'params._agg.fields.add(f)}}',
+                                  map_script=map_script,
                                   combine_script='return new ArrayList(params._agg.fields)',
-                                  reduce_script='Set fields = new HashSet();'
-                                                ' for (agg in params._aggs) { '
-                                                'fields.addAll(agg) '
-                                                '} return new ArrayList(fields)'
-                                  )
+                                  reduce_script=reduce_script)
             es_search.size = 0
             response = es_search.execute()
             aggregate = response.aggregations
@@ -620,31 +628,10 @@ class ElasticTransformDump(object):
         return manifest.return_response()
 
     def generate_full_manifest_config(self, aggregate) -> JSON:
-        return aggregate.fields.value
-
-    def metadata_mapping(self, mapping: JSON, key: str) -> JSON:
-        try:
-            return {k: self.metadata_mapping(v, k) for k, v in mapping.get('properties').items()}
-        except AttributeError:
-            return str(key)
-
-    @classmethod
-    def flatten_mapping(cls, mapping, parent_key='', sep='.') -> JSON:
-        """
-        >>> ElasticTransformDump.flatten_mapping(mapping={'foo': {'bar': {'foobar': 'foobar'}}})
-        {'foo.bar.foobar': 'foobar'}
-
-        >>> ElasticTransformDump.flatten_mapping(mapping={'bar': {'foo': {'barfoo': {'foobar': {'foobarfoo': 'foobarfoo'}}}}})
-        {'bar.foo.barfoo.foobar.foobarfoo': 'foobarfoo'}
-        """
-        items = []
-        for k, v in mapping.items():
-            new_key = parent_key + sep + k if parent_key else k
-            if isinstance(v, dict):
-                items.extend(cls.flatten_mapping(mapping=v, parent_key=new_key, sep=sep).items())
-            else:
-                items.append((new_key, v))
-        return dict(items)
+        manifest_config = {}
+        for value in sorted(aggregate.fields.value):
+            manifest_config[value] = value.split('.')[-1]
+        return {'contents': manifest_config}
 
     def transform_autocomplete_request(
         self,
