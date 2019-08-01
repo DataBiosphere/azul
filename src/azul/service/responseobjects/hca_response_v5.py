@@ -518,14 +518,9 @@ class BaseSummaryResponse(AbstractResponse):
         """
         # Return the specified content of the aggregate. Otherwise return
         # an empty string
-        try:
-            contents = aggs_dict[agg_name][agg_form]
-            if agg_form == "buckets":
-                contents = len(contents)
-        except Exception:
-            # FIXME: Eliminate this except clause (https://github.com/DataBiosphere/azul/issues/421)
-            logger.warning('Exception occurred trying to extract aggregation bucket', exc_info=True)
-            contents = -1
+        contents = aggs_dict[agg_name][agg_form]
+        if agg_form == "buckets":
+            contents = len(contents)
         return contents
 
     def __init__(self, raw_response):
