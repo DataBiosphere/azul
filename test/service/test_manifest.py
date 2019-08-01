@@ -4,7 +4,7 @@ import logging
 import os
 from io import BytesIO
 from tempfile import TemporaryDirectory
-from unittest import mock, skip
+from unittest import mock
 from zipfile import ZipFile
 
 from botocore.exceptions import ClientError
@@ -535,7 +535,6 @@ class ManifestGenerationTest(WebServiceTestCase):
                     '__fastq_read2__file_url',
                 ], reader.fieldnames)
 
-    @skip("https://github.com/DataBiosphere/azul/issues/1152")
     @mock_sts
     @mock_s3
     def test_full_metadata(self):
