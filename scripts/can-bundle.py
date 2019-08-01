@@ -11,7 +11,6 @@ import os
 import sys
 
 import argparse
-import tempfile
 
 from humancellatlas.data.metadata.api import Bundle
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
