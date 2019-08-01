@@ -28,7 +28,7 @@ from app_test_case import LocalAppTestCase
 from azul import config, hmac
 from azul.indexer import IndexWriter
 from azul.threads import Latch
-from azul.transformer import Aggregate, Contribution, Document
+from azul.transformer import Aggregate, Contribution
 from azul.project.hca.metadata_generator import MetadataGenerator
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper

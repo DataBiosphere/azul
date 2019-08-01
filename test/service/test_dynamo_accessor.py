@@ -1,7 +1,7 @@
 import logging
 
-from dynamo_test_case import DynamoTestCase
 from azul.service.responseobjects.dynamo_data_access import ConditionalUpdateItemError
+from dynamo_test_case import DynamoTestCase
 
 
 def setUpModule():
