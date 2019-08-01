@@ -9,23 +9,21 @@ import json
 import logging
 import random
 import time
-
-from chalice import Response
 from typing import List, MutableMapping, Optional
 import uuid
 
 import boto3
 # noinspection PyPackageRequirements
 import chalice
+from chalice import Response
 from dataclasses import asdict, dataclass, replace
 from more_itertools import chunked, partition
 
-from azul import config
+from azul import config, hmac
+from azul.azulclient import AzulClient
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
-from azul import hmac
 from azul.plugin import Plugin
-from azul.azulclient import AzulClient
 from azul.time import RemainingLambdaContextTime
 from azul.transformer import EntityReference
 from azul.types import JSON
