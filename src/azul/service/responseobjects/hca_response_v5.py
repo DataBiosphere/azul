@@ -256,7 +256,7 @@ class ManifestResponse(AbstractResponse):
                 os.remove(bdbag_path)
         elif self.format == 'full':
             output = StringIO()
-            self._write_metadata(output)
+            self._write_full(output)
             return self.storage_service.put(object_key=f'metadata/{uuid4()}.tsv',
                                             data=output.getvalue().encode(),
                                             content_type='text/tab-separated-values')
@@ -276,7 +276,7 @@ class ManifestResponse(AbstractResponse):
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
 
-    def _write_metadata(self, output: IO[str]) -> None:
+    def _write_full(self, output: IO[str]) -> None:
         sources = list(self.manifest_entries.keys())
         writer = csv.DictWriter(output, sources, dialect='excel-tab')
         writer.writeheader()

@@ -570,7 +570,7 @@ class ElasticTransformDump(object):
         if format == 'full':
             source_filter = ['contents.metadata.*']
             entity_type = 'bundles'
-            manifest_config = self.generate_metadata_manifest()
+            manifest_config = self.generate_full_manifest_config()
         elif format == 'bdbag':
             # Terra rejects `.` in column names
             manifest_config = {
@@ -597,7 +597,7 @@ class ElasticTransformDump(object):
 
         return manifest.return_response()
 
-    def generate_metadata_manifest(self) -> JSON:
+    def generate_full_manifest_config(self) -> JSON:
         bundles_index = config.es_index_name('bundles')
         mapping = self.es_client.indices.get_mapping(index=bundles_index)
         metadata = mapping[bundles_index]['mappings']['doc']['properties']['contents']['properties']['metadata']
