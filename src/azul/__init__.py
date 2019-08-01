@@ -71,10 +71,13 @@ class Config:
 
     @property
     def data_browser_domain(self):
-        if self.deployment_stage not in ('dev', 'integration', 'staging', 'prod'):
-            return 'dev.data.humancellatlas.org'
+        dcp_domain = 'data.humancellatlas.org'
+        if self.deployment_stage == 'prod':
+            return dcp_domain
+        elif self.deployment_stage in ('integration', 'staging'):
+            return f'{self.deployment_stage}.{dcp_domain}'
         else:
-            return f'{self.deployment_stage}.data.humancellatlas.org'
+            return f'dev.{dcp_domain}'
 
     @property
     def data_browser_name(self):
