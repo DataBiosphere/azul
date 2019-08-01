@@ -1,12 +1,8 @@
 import difflib
 import json
-import logging.config
 import os
 import unittest
 
-from elasticsearch_dsl.utils import AttrList
-
-from azul import config
 from azul.service import service_config
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump, ElasticTransformDump as EsTd
 from service import WebServiceTestCase
