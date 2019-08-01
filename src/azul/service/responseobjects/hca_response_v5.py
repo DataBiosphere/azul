@@ -231,7 +231,12 @@ class ManifestResponse(AbstractResponse):
         with MultipartUploadHandler(object_key, content_type) as multipart_upload:
             with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
                 text_buffer = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
-                self._write_tsv(text_buffer)
+                if self.format == 'tsv':
+                    self._write_tsv(text_buffer)
+                elif self.format == 'full':
+                    self._write_full(text_buffer)
+                else:
+                    raise NotImplementedError(f'Multipart upload not implemented for `{self.format}`')
 
         return object_key
 
@@ -452,7 +457,7 @@ class ManifestResponse(AbstractResponse):
         return dss_url
 
     def return_response(self):
-        if config.disable_multipart_manifests or self.format in ('bdbag', 'full'):
+        if config.disable_multipart_manifests or self.format == 'bdbag':
             object_key = self._push_content_single_part()
             file_name = None
         else:
