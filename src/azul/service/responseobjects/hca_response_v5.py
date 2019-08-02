@@ -231,7 +231,12 @@ class ManifestResponse(AbstractResponse):
         with MultipartUploadHandler(object_key, content_type) as multipart_upload:
             with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
                 text_buffer = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
-                self._write_tsv(text_buffer)
+                if self.format == 'tsv':
+                    self._write_tsv(text_buffer)
+                elif self.format == 'full':
+                    self._write_full(text_buffer)
+                else:
+                    raise NotImplementedError(f'Multipart upload not implemented for `{self.format}`')
 
         return object_key
 
@@ -256,7 +261,7 @@ class ManifestResponse(AbstractResponse):
                 os.remove(bdbag_path)
         elif self.format == 'full':
             output = StringIO()
-            self._write_metadata(output)
+            self._write_full(output)
             return self.storage_service.put(object_key=f'metadata/{uuid4()}.tsv',
                                             data=output.getvalue().encode(),
                                             content_type='text/tab-separated-values')
@@ -276,7 +281,7 @@ class ManifestResponse(AbstractResponse):
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
 
-    def _write_metadata(self, output: IO[str]) -> None:
+    def _write_full(self, output: IO[str]) -> None:
         sources = list(self.manifest_entries.keys())
         writer = csv.DictWriter(output, sources, dialect='excel-tab')
         writer.writeheader()
@@ -452,7 +457,7 @@ class ManifestResponse(AbstractResponse):
         return dss_url
 
     def return_response(self):
-        if config.disable_multipart_manifests or self.format in ('bdbag', 'full'):
+        if config.disable_multipart_manifests or self.format == 'bdbag':
             object_key = self._push_content_single_part()
             file_name = None
         else:
