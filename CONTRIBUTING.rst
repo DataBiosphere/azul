@@ -450,16 +450,27 @@ Pull Requests
   ``SQ:`` an follow that with the title of an earlier commit that the current
   commit should be squashed with.
   
-* We may amend commits on PR branches, but only between reviews. We don't amend
-  a commit that's already been reviewed. Instead we create a new ``SQ: …``
-  commit for addressing the reviewers comments. Before asking for another
-  review we may amend that commit.
+* The author of a PR may request reviews from anyone at any time. Once the
+  author considers a PR ready to land (be merged into the base branch), the
+  author rebases the branch, assigns the PR to the reviewer, the *primary
+  reviewer* and requests a review from that person. Note that assigning a PR
+  and requesting a review are different actions on the Github UI.
+
+* If a PR is assigned to someone (typically the primary reviewer), only the
+  assignee may push to the PR branch. If a PR is assigned to no one, only the
+  author may push to the PR branch.
+
+* We may amend commits on PR branches, but only between primary reviews. We 
+  don't amend a commit that's already been reviewed. Instead we create a new
+  ``SQ: …`` commit for addressing the reviewers comments. Before asking for
+  another review we may amend that commit.
   
   Considering that we also require frequent rebasing, this rule makes for a
-  more transparent review process. The reviewer can ignore force pushes—because
-  those can only be the result of rebases or in-between review amends—and still
-  see a record of the changes made in response to reviews and how those changes
-  affected the build status of the PR.
+  more transparent review process. The reviewers can ignore force pushes
+  because those can only be the result of rebases or in-between review amends.
+  The reviewer can still see a record of the changes made in response to
+  previous review comments and how those changes affected the build status of
+  the PR.
   
 * At times it may be necessary to temporarily add a commit to a PR branch e.g.,
   to facilitate testing. These commits should be removed prior to landing the
@@ -472,23 +483,26 @@ Pull Requests
 
 * Most PRs land squashed down into a single commit. A PR with more than one
   significant commit is referred to as a *multi-commit PR*. Prior to landing
-  such a PR, the lead may decide to consolidate its branch. Alternatively, the
-  lead may ask the PR author to do so in a final rejection of the PR. The final
-  consolidation eliminates both ``SQ:`` and ``DELETE ME:`` commits.
+  such a PR, the primary reviewer may decide to consolidate its branch.
+  Alternatively, the primary reviewer may ask the PR author to do so in a final
+  rejection of the PR. The final consolidation eliminates both ``SQ:`` and
+  ``DELETE ME:`` commits.
 
 * We usually don't request a review before all status checks are green. In
   certain cases a preliminary review of a work in progress is permissable but
   the request for a preliminary review has to be qualified as such in a comment
   on the PR.
   
-* Without expressed permission by the lead, only the lead lands PR branches.
-  Certain team members may posess sufficient privileges to push to main
-  branches, but that does not imply that those team members may land PR
-  branches.
+* Without expressed permission by the primary reviewer, only the primary
+  reviewer lands PR branches. Certain team members may posess sufficient
+  privileges to push to main branches, but that does not imply that those team
+  members may land PR branches.
   
-* We use the ``sandbox`` label to indicate that a PR is being tested in the
-  sandbox deployment prior to landing. Only one open PR may be assigned the
-  ``sandbox`` label at any point in time.
+* The primary reviewer uses the ``sandbox`` label to indicate that a PR is
+  being tested in the sandbox deployment prior to landing. Only one open PR may
+  be assigned the ``sandbox`` label at any point in time.
+  
+* Until further notice only the lead may act as a primary reviewer.
   
 .. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
   
