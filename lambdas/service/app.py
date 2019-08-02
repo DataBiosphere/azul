@@ -35,8 +35,6 @@ from azul.service.responseobjects.elastic_request_builder import (BadArgumentExc
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
 
-ENTRIES_PER_PAGE = 10
-
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING)
 for top_level_pkg in (__name__, 'azul'):
@@ -67,7 +65,7 @@ def _get_pagination(current_request, entity_type):
     default_sort, default_order = sort_defaults[entity_type]
     pagination = {
         "order": query_params.get('order', default_order),
-        "size": int(query_params.get('size', ENTRIES_PER_PAGE)),
+        "size": int(query_params.get('size', '10')),
         "sort": query_params.get('sort', default_sort),
     }
     sa = query_params.get('search_after')
