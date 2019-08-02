@@ -449,14 +449,6 @@ def get_order():
     return {'order': order_list}
 
 
-def get_format(params):
-    format_ = params.get('format', 'tsv')
-    if format_ in ('tsv', 'bdbag', 'full'):
-        return format_
-    else:
-        raise BadRequestError(f'{format_} is not a valid manifest format.')
-
-
 @app.route('/manifest/files', methods=['GET'], cors=True)
 def start_manifest_generation():
     """
@@ -487,8 +479,6 @@ def start_manifest_generation():
     If the manifest generation is done and the manifest is ready to be downloaded, the response will
     have a 302 status and will redirect to the URL of the manifest.
     """
-    get_format(app.current_request.query_params)
-
     wait_time, location = handle_manifest_generation_request()
     return Response(body='',
                     headers={
@@ -578,14 +568,19 @@ def handle_manifest_generation_request():
     """
     query_params = app.current_request.query_params or {}
     filters = query_params.get('filters')
-    format = query_params.get('format')
+    try:
+        format_ = query_params['format']
+    except KeyError:
+        format_ = 'tsv'
+    if format_ not in ('tsv', 'bdbag', 'full'):
+        raise BadRequestError(f'{format_} is not a valid manifest format.')
     token = query_params.get('token')
     retry_url = self_url()
     manifest_service = ManifestService()
     try:
         return manifest_service.start_or_inspect_manifest_generation(retry_url,
                                                                      token=token,
-                                                                     format=format,
+                                                                     format=format_,
                                                                      filters=filters)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
