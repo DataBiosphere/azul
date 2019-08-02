@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import collections
 from copy import deepcopy
 import json
 import logging
@@ -571,7 +570,7 @@ class ElasticTransformDump(object):
         if format == 'full':
             source_filter = ['contents.metadata.*']
             entity_type = 'bundles'
-            manifest_config = self.generate_metadata_manifest()
+            manifest_config = self.generate_full_manifest_config()
         elif format == 'bdbag':
             # Terra rejects `.` in column names
             manifest_config = {
@@ -598,7 +597,7 @@ class ElasticTransformDump(object):
 
         return manifest.return_response()
 
-    def generate_metadata_manifest(self) -> JSON:
+    def generate_full_manifest_config(self) -> JSON:
         bundles_index = config.es_index_name('bundles')
         mapping = self.es_client.indices.get_mapping(index=bundles_index)
         metadata = mapping[bundles_index]['mappings']['doc']['properties']['contents']['properties']['metadata']
@@ -612,12 +611,20 @@ class ElasticTransformDump(object):
         except AttributeError:
             return str(key)
 
-    def flatten_mapping(self, mapping, parent_key='', sep='.') -> JSON:
+    @classmethod
+    def flatten_mapping(cls, mapping, parent_key='', sep='.') -> JSON:
+        """
+        >>> ElasticTransformDump.flatten_mapping(mapping={'foo': {'bar': {'foobar': 'foobar'}}})
+        {'foo.bar.foobar': 'foobar'}
+
+        >>> ElasticTransformDump.flatten_mapping(mapping={'bar': {'foo': {'barfoo': {'foobar': {'foobarfoo': 'foobarfoo'}}}}})
+        {'bar.foo.barfoo.foobar.foobarfoo': 'foobarfoo'}
+        """
         items = []
         for k, v in mapping.items():
             new_key = parent_key + sep + k if parent_key else k
-            if isinstance(v, collections.MutableMapping):
-                items.extend(self.flatten_mapping(mapping=v, parent_key=new_key, sep=sep).items())
+            if isinstance(v, dict):
+                items.extend(cls.flatten_mapping(mapping=v, parent_key=new_key, sep=sep).items())
             else:
                 items.append((new_key, v))
         return dict(items)

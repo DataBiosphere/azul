@@ -158,6 +158,7 @@ class MultipartUploadHandler:
         upload_part = self.mp_upload.Part(part.part_number)
         result = upload_part.upload(Body=part.content)
         part.etag = result['ETag']
+        part.content = None
 
 
 @dataclass

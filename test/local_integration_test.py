@@ -123,7 +123,7 @@ class IntegrationTest(unittest.TestCase):
         for format_, validator in [
             (None, self.check_manifest),
             ('tsv', self.check_manifest),
-            ('bdbag', self.check_bdbag)
+            ('bdbag', self.check_bdbag)  # TODO: Add 'full' format https://github.com/databiosphere/azul/issues/1171
         ]:
             with self.subTest(format=format_, filter=manifest_filter):
                 query = {'filters': manifest_filter}
