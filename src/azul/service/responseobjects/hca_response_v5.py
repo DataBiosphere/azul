@@ -100,14 +100,25 @@ class OrganCellCountSummary(JsonObject):
 
     @classmethod
     def for_bucket(cls, bucket):
-        bucket['key'] = Document.translate_field(bucket['key'],
-                                                 path=('contents', 'cell_suspensions', 'organ'),
-                                                 forward=False)
+        key = Document.translate_field(bucket['key'],
+                                       path=('contents', 'cell_suspensions', 'organ'),
+                                       forward=False)
         self = cls()
-        self.organType = [bucket['key']]
+        self.organType = [key]
         self.countOfDocsWithOrganType = bucket['doc_count']
         self.totalCellCountByOrgan = bucket['cell_count']['value']
         return self
+
+
+class OrganType:
+
+    @classmethod
+    def for_bucket(cls, bucket):
+        # Un-translate values that had been translated with translate_fields() to handle Nones in Elasticsearch
+        # The path for the translation directly relates to the field used in transform_summary() for the aggregation
+        return Document.translate_field(bucket['key'],
+                                        path=('contents', 'samples', 'effective_organ'),
+                                        forward=False)
 
 
 class HitEntry(JsonObject):
@@ -551,12 +562,11 @@ class SummaryResponse(BaseSummaryResponse):
     def __init__(self, raw_response):
         super().__init__(raw_response)
 
-        _sum = raw_response['aggregations']['fileFormat']["myTerms"]
-        _organ_group = raw_response['aggregations']['group_by_organ']
+        _file_types = raw_response['aggregations']['fileFormat']["myTerms"]
+        _cell_counts = raw_response['aggregations']['group_by_organ']
         _organ_types = raw_response['aggregations']['organTypes']
 
-        # Create a SummaryRepresentation object
-        kwargs = dict(
+        self.apiResponse = SummaryRepresentation(
             projectCount=self.agg_contents(self.aggregates, 'projectCount', agg_form='value'),
             specimenCount=self.agg_contents(self.aggregates, 'specimenCount', agg_form='value'),
             fileCount=self.agg_contents(self.aggregates, 'fileCount', agg_form='value'),
@@ -564,18 +574,9 @@ class SummaryResponse(BaseSummaryResponse):
             donorCount=self.agg_contents(self.aggregates, 'donorCount', agg_form='value'),
             labCount=self.agg_contents(self.aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(self.aggregates, 'total_cell_count', agg_form='value'),
-            organTypes=[bucket['key'] for bucket in _organ_types['buckets']],
-            fileTypeSummaries=[FileTypeSummary.for_bucket(bucket) for bucket in _sum['buckets']],
-            cellCountSummaries=[OrganCellCountSummary.for_bucket(bucket) for bucket in _organ_group['buckets']])
-
-        # Un-translate values that had been translated with translate_fields() to handle Nones in Elasticsearch
-        # The path for the translation directly relates to the field used in transform_summary() for the aggregation
-        for i, value in enumerate(kwargs['organTypes']):
-            kwargs['organTypes'][i] = Document.translate_field(value,
-                                                               path=('contents', 'samples', 'effective_organ'),
-                                                               forward=False)
-
-        self.apiResponse = SummaryRepresentation(**kwargs)
+            organTypes=list(map(OrganType.for_bucket, _organ_types['buckets'])),
+            fileTypeSummaries=list(map(FileTypeSummary.for_bucket, _file_types['buckets'])),
+            cellCountSummaries=list(map(OrganCellCountSummary.for_bucket, _cell_counts['buckets'])))
 
 
 class KeywordSearchResponse(AbstractResponse, EntryFetcher):
