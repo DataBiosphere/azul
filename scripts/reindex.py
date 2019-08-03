@@ -19,6 +19,7 @@ defaults = AzulClient()
 
 
 class MyFormatter(argparse.ArgumentDefaultsHelpFormatter):
+
     def __init__(self, prog) -> None:
         super().__init__(prog,
                          max_help_position=50,
