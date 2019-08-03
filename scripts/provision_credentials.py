@@ -4,18 +4,17 @@ import json
 import logging
 import os
 import uuid
-from functools import partial
 
 import boto3
-import googleapiclient.discovery
 from botocore.exceptions import ClientError
 from google.oauth2 import service_account
+import googleapiclient.discovery
 from googleapiclient.errors import HttpError
 
 from azul import config
+from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 def parse_google_key(response):
@@ -146,6 +145,7 @@ class CredentialsProvisioner:
 
 
 if __name__ == "__main__":
+    configure_script_logging(logger)
     provision_parser = argparse.ArgumentParser(add_help=False)
     group = provision_parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--build', '-b', action='store_true', dest='build',

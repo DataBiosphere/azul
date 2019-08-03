@@ -6,6 +6,8 @@ import json
 from json.decoder import JSONDecodeError
 import argparse
 
+from azul.logging import configure_script_logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -63,7 +65,7 @@ def get_project_bundle_count(project_name):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    configure_script_logging(logger)
 
     dataset_progress = {
         'prod': {
