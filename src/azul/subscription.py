@@ -34,11 +34,11 @@ def manage_subscriptions(dss_client, subscribe=True):
         matching_subscription = next((new_subscription for new_subscription in new_subscriptions
                                       if new_subscription.items() <= subscription.items()), None)
         if matching_subscription:
-            logging.info('Already subscribed: %r', thaw(subscription))
+            logger.info('Already subscribed: %r', thaw(subscription))
             new_subscriptions.remove(matching_subscription)
         else:
             subscription = thaw(subscription)
-            logging.info('Removing stale subscription: %r', subscription)
+            logger.info('Removing stale subscription: %r', subscription)
             call_client(dss_client.delete_subscription,
                         uuid=subscription['uuid'],
                         replica=subscription['replica'])
@@ -47,7 +47,7 @@ def manage_subscriptions(dss_client, subscribe=True):
         subscription = thaw(subscription)
         response = dss_client.put_subscription(**subscription, hmac_secret_key=key)
         subscription['uuid'] = response['uuid']
-        logging.info('Registered subscription %r.', subscription)
+        logger.info('Registered subscription %r.', subscription)
 
 
 def call_client(method, *args, **kwargs):
