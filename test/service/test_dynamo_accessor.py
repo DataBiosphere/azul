@@ -1,11 +1,10 @@
-import logging
-
+from azul.logging import configure_test_logging
 from azul.service.responseobjects.dynamo_data_access import ConditionalUpdateItemError
 from dynamo_test_case import DynamoTestCase
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class TestDynamoAccessor(DynamoTestCase):

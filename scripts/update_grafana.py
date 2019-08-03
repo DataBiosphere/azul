@@ -5,6 +5,7 @@ from requests.auth import HTTPBasicAuth
 import requests
 
 from azul import config
+from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,5 @@ def update_dashboard(base_url, dashboard):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s',
-                        level=logging.INFO)
+    configure_script_logging(logger)
     main()

@@ -1,6 +1,7 @@
 import argparse
 import ast
 from azul import config
+from azul.logging import configure_script_logging
 from azul.types import JSON
 import boto3
 import logging
@@ -68,6 +69,7 @@ class RedButton:
 
 
 if __name__ == '__main__':
+    configure_script_logging(logger)
     parser = argparse.ArgumentParser(description='Enables or disables the lambdas in the current deployment.')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--enable', dest='enabled', action='store_true', default=None)
