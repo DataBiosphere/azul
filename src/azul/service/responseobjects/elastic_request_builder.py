@@ -317,7 +317,7 @@ class ElasticTransformDump(object):
 
         # fetch one more than needed to see if there's a "next page".
         es_search = es_search.extra(size=pagination['size'] + 1)
-        logging.debug("es_search is " + str(es_search))
+        logger.debug("es_search is " + str(es_search))
         return es_search
 
     @staticmethod
@@ -335,7 +335,7 @@ class ElasticTransformDump(object):
         # ...else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
         count = len(es_hits)
-        logging.debug("count=" + str(count) + " and size=" + str(pagination['size']))
+        logger.debug("count=" + str(count) + " and size=" + str(pagination['size']))
         if 'search_before' in pagination:
             # hits are reverse sorted
             if count > pagination['size']:
