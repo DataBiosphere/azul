@@ -1,4 +1,3 @@
-import logging
 import os
 import unittest
 from unittest import mock
@@ -6,11 +5,12 @@ from unittest import mock
 from moto import mock_sts, mock_sqs
 
 from azul import config
+from azul.logging import configure_test_logging
 from health_check_test_case import HealthCheckTestCase
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class TestServiceHealthCheck(HealthCheckTestCase):

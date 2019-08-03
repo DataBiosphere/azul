@@ -12,6 +12,7 @@ import logging
 from urllib.parse import urlparse
 
 from azul.files import write_file_atomically
+from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class Main:
 
     @classmethod
     def main(cls, argv):
-        logging.basicConfig(format='%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s', level=logging.INFO)
+        configure_script_logging(logger)
         parser = argparse.ArgumentParser(description='Extract and or remove messages from SQS queues')
 
         subparsers = parser.add_subparsers(help='sub-command help', dest='command')

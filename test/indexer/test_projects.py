@@ -1,18 +1,16 @@
-import logging
 import unittest
 
 from more_itertools import one
 
 from azul import config
 from azul.es import ESClientFactory
+from azul.logging import configure_test_logging
 from azul.transformer import Contribution
 from indexer.test_hca_indexer import IndexerTestCase
 
-module_logger = logging.getLogger(__name__)
-
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class TestDataExtractorTestCase(IndexerTestCase):

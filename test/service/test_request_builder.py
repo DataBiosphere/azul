@@ -3,13 +3,14 @@ import json
 import os
 import unittest
 
+from azul.logging import configure_test_logging
 from azul.service import service_config
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump, ElasticTransformDump as EsTd
 from service import WebServiceTestCase
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class TestRequestBuilder(WebServiceTestCase):
