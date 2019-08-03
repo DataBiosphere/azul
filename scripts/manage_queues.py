@@ -63,7 +63,7 @@ class Main:
 
     def list(self):
         sqs = boto3.resource('sqs')
-        logging.info('Listing queues')
+        logger.info('Listing queues')
         all_queues = sqs.queues.all()
         print('\n{:<35s}{:^20s}{:^20s}{:^18s}\n'.format('Queue Name',
                                                         'Messages Available',
@@ -80,7 +80,7 @@ class Main:
     def dump(self):
         sqs = boto3.resource('sqs')
         queue = sqs.get_queue_by_name(QueueName=self.args.queue)
-        logging.info('Writing messages from queue "%s" to file "%s"', queue.url, self.args.path)
+        logger.info('Writing messages from queue "%s" to file "%s"', queue.url, self.args.path)
 
         messages = []
         while True:
@@ -94,12 +94,12 @@ class Main:
         self._dump_messages(messages, queue.url)
         message_batches = list(more_itertools.chunked(messages, 10))
         if self.args.delete:
-            logging.info('Removing messages from queue "%s"', queue.url)
+            logger.info('Removing messages from queue "%s"', queue.url)
             self._delete_messages(message_batches, queue)
         else:
             logger.info('Returning messages to queue "%s"', queue.url)
             self._return_messages(message_batches, queue)
-        logging.info(f'Finished writing {self.args.path!r}')
+        logger.info(f'Finished writing {self.args.path!r}')
 
     def _dump_messages(self, messages, queue_url):
         messages = [self._condense(message) for message in messages]
@@ -109,7 +109,7 @@ class Main:
                 'messages': messages
             }
             json.dump(content, file, indent=4)
-        logging.info('Wrote %i messages', len(messages))
+        logger.info('Wrote %i messages', len(messages))
 
     def _return_messages(self, message_batches, queue):
         for message_batch in message_batches:
@@ -172,7 +172,7 @@ class Main:
             messages = content['messages']
         sqs = boto3.resource('sqs')
         queue = sqs.get_queue_by_name(QueueName=self.args.queue)
-        logging.info('Writing messages from file "%s" to queue "%s"', self.args.path, queue.url)
+        logger.info('Writing messages from file "%s" to queue "%s"', self.args.path, queue.url)
         if orig_queue != queue.url:
             if self.args.force:
                 logger.warning('Messages originating from queue "%s" are being fed into queue "%s"',
