@@ -1,15 +1,15 @@
 #!/usr/bin/python
 import json
-import logging
 import unittest
 
 import requests
 
+from azul.logging import configure_test_logging
 from service import WebServiceTestCase
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class PaginationTestCase(WebServiceTestCase):
@@ -119,7 +119,7 @@ class PaginationTestCase(WebServiceTestCase):
         search_after = json_response['pagination']['search_after']
         search_after_uid = json_response['pagination']['search_after_uid']
         url = "{}?sort=entryId&order=desc&search_after={}&search_after_uid={}".format(self.get_base_url(),
-                                                                            search_after, search_after_uid)
+                                                                                      search_after, search_after_uid)
         content = requests.get(url).content
         json_response_second = json.loads(content)
         self.assert_page2_correct(json_response, json_response_second, "desc")

@@ -7,12 +7,10 @@ import sys
 import boto3
 
 from azul import config
-from azul.deployment import aws
+from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.ERROR, stream=sys.stderr)
-logger.setLevel(logging.INFO)
-
+configure_script_logging(logger)
 app_name, command = sys.argv[1:]
 
 bucket_name = config.terraform_backend_bucket

@@ -11,7 +11,9 @@ import shutil
 import sys
 from typing import List
 
+from azul import config
 from azul.azulclient import AzulClient
+from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
 
@@ -91,10 +93,10 @@ parser.add_argument('--verbose',
 def main(argv: List[str]):
     args = parser.parse_args(argv)
 
-    level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(format="%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s", level=level)
-    logging.getLogger().setLevel(logging.INFO)
-    logging.getLogger('azul').setLevel(level)
+    if args.verbose:
+        config.debug = 1
+
+    configure_script_logging(logger)
 
     azul_client = AzulClient(indexer_url=args.indexer_url,
                              dss_url=args.dss_url,

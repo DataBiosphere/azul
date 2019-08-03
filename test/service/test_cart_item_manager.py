@@ -1,23 +1,20 @@
-import logging
 from unittest import mock
 from unittest.mock import patch
 
 from azul import config
+from azul.logging import configure_test_logging
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 from dynamo_test_case import DynamoTestCase
+from lambdas.service import app
 from service import WebServiceTestCase
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
-    # Late import of Chalice app, otherwise it would interfere with test logging
-    global app
-    from lambdas.service import app
+    configure_test_logging()
 
 
 class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
-
     number_of_documents = 1500
 
     @classmethod

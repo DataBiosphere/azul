@@ -19,6 +19,7 @@ from humancellatlas.data.metadata.helpers.json import as_json
 from azul import config
 from azul.dss import patch_client_for_direct_access
 from azul.files import write_file_atomically
+from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
 
@@ -66,5 +67,5 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format="%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s", level=logging.INFO)
+    configure_script_logging(logger)
     main(sys.argv[1:])
