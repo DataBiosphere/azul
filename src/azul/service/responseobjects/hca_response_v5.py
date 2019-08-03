@@ -282,7 +282,7 @@ class ManifestResponse(AbstractResponse):
                 writer.writerow(row)
 
     def _write_full(self, output: IO[str]) -> None:
-        sources = list(self.manifest_entries.keys())
+        sources = list(self.manifest_entries['contents'].keys())
         writer = csv.DictWriter(output, sources, dialect='excel-tab')
         writer.writeheader()
         for hit in self.es_search.scan():
