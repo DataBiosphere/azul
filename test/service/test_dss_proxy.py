@@ -13,13 +13,14 @@ import responses
 
 from app_test_case import LocalAppTestCase
 from azul import config
+from azul.logging import configure_test_logging
 from retorts import ResponsesHelper
 
 logger = logging.getLogger(__name__)
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 # These are the credentials defined in moto.instance_metadata.responses.InstanceMetadataResponse which, for reasons

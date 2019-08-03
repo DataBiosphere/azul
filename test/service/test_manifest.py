@@ -15,6 +15,7 @@ import requests
 
 from azul import config
 from azul.json_freeze import freeze
+from azul.logging import configure_test_logging
 from azul.service import AbstractService
 from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
@@ -22,13 +23,11 @@ from azul.service.responseobjects.elastic_request_builder import ElasticTransfor
 from azul_test_case import AzulTestCase
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
+from lambdas.service import app
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
-    # Late import of Chalice app, otherwise it would interfere with test logging
-    global app
-    from lambdas.service import app
+    configure_test_logging()
 
 
 class ManifestEndpointTest(AzulTestCase):
@@ -648,13 +647,13 @@ class ManifestGenerationTest(WebServiceTestCase):
                  'EFO:0008931', 'EFO:0008931'),
                 (
                 'library_preparation_protocol.library_construction_approach.ontology_label', 'Smart-seq2', 'Smart-seq2',
-                '', ''),
+                    '', ''),
                 ('library_preparation_protocol.library_construction_approach.text', 'Smart-seq2', 'Smart-seq2',
                  'Smart-seq2', 'Smart-seq2'),
                 ('library_preparation_protocol.library_construction_kit.manufacturer', 'Illumina', 'Illumina', '', ''),
                 (
                 'library_preparation_protocol.library_construction_kit.retail_name', 'Nextera XT kit', 'Nextera XT kit',
-                '', ''),
+                    '', ''),
                 ('library_preparation_protocol.nucleic_acid_source', 'single cell', 'single cell', 'single cell',
                  'single cell'),
                 ('library_preparation_protocol.primer', 'poly-dT', 'poly-dT', 'poly-dT', 'poly-dT'),

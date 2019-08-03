@@ -21,6 +21,7 @@ import requests
 from azul import config, drs
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
+from azul.logging import configure_app_logging
 from azul.security.authenticator import AuthenticationError, Authenticator
 from azul.service import service_config
 from azul.service.manifest import ManifestService
@@ -36,15 +37,10 @@ from azul.service.responseobjects.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.WARNING)
-for top_level_pkg in (__name__, 'azul'):
-    logging.getLogger(top_level_pkg).setLevel(logging.INFO)
 
-app = AzulChaliceApp(app_name=config.service_name, configure_logs=False)
-# FIXME: this should be configurable via environment variable (https://github.com/DataBiosphere/azul/issues/419)
-app.debug = True
-# FIXME: please use module logger instead (https://github.com/DataBiosphere/azul/issues/419)
-app.log.setLevel(logging.DEBUG)
+app = AzulChaliceApp(app_name=config.service_name)
+
+configure_app_logging(app, log)
 
 
 sort_defaults = {
