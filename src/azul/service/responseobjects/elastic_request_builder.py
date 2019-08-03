@@ -570,7 +570,36 @@ class ElasticTransformDump(object):
         if format == 'full':
             source_filter = ['contents.metadata.*']
             entity_type = 'bundles'
-            manifest_config = self.generate_full_manifest_config()
+            es_search = self.create_request(filters,
+                                            self.es_client,
+                                            request_config,
+                                            post_filter=False,
+                                            source_filter=source_filter,
+                                            enable_aggregation=False,
+                                            entity_type=entity_type)
+            map_script = '''
+                for (row in params._source.contents.metadata) {
+                    for (f in row.keySet()) {
+                        params._agg.fields.add(f);
+                    }
+                }
+            '''
+            reduce_script = '''
+                Set fields = new HashSet();
+                for (agg in params._aggs) {
+                    fields.addAll(agg);
+                }
+                return new ArrayList(fields);
+            '''
+            es_search.aggs.metric('fields', 'scripted_metric',
+                                  init_script='params._agg.fields = new HashSet()',
+                                  map_script=map_script,
+                                  combine_script='return new ArrayList(params._agg.fields)',
+                                  reduce_script=reduce_script)
+            es_search.size = 0
+            response = es_search.execute()
+            aggregate = response.aggregations
+            manifest_config = self.generate_full_manifest_config(aggregate)
         elif format == 'bdbag':
             # Terra rejects `.` in column names
             manifest_config = {
@@ -593,41 +622,16 @@ class ElasticTransformDump(object):
                                         source_filter=source_filter,
                                         enable_aggregation=False,
                                         entity_type=entity_type)
+
         manifest = ManifestResponse(es_search, manifest_config, request_config['translation'], format)
 
         return manifest.return_response()
 
-    def generate_full_manifest_config(self) -> JSON:
-        bundles_index = config.es_index_name('bundles')
-        mapping = self.es_client.indices.get_mapping(index=bundles_index)
-        metadata = mapping[bundles_index]['mappings']['doc']['properties']['contents']['properties']['metadata']
-        metadata_mapping = self.metadata_mapping(metadata, None)
-        metadata_config = self.flatten_mapping(mapping=metadata_mapping)
-        return metadata_config
-
-    def metadata_mapping(self, mapping: JSON, key: str) -> JSON:
-        try:
-            return {k: self.metadata_mapping(v, k) for k, v in mapping.get('properties').items()}
-        except AttributeError:
-            return str(key)
-
-    @classmethod
-    def flatten_mapping(cls, mapping, parent_key='', sep='.') -> JSON:
-        """
-        >>> ElasticTransformDump.flatten_mapping(mapping={'foo': {'bar': {'foobar': 'foobar'}}})
-        {'foo.bar.foobar': 'foobar'}
-
-        >>> ElasticTransformDump.flatten_mapping(mapping={'bar': {'foo': {'barfoo': {'foobar': {'foobarfoo': 'foobarfoo'}}}}})
-        {'bar.foo.barfoo.foobar.foobarfoo': 'foobarfoo'}
-        """
-        items = []
-        for k, v in mapping.items():
-            new_key = parent_key + sep + k if parent_key else k
-            if isinstance(v, dict):
-                items.extend(cls.flatten_mapping(mapping=v, parent_key=new_key, sep=sep).items())
-            else:
-                items.append((new_key, v))
-        return dict(items)
+    def generate_full_manifest_config(self, aggregate) -> JSON:
+        manifest_config = {}
+        for value in sorted(aggregate.fields.value):
+            manifest_config[value] = value.split('.')[-1]
+        return {'contents': manifest_config}
 
     def transform_autocomplete_request(
         self,
