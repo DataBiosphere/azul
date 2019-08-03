@@ -18,7 +18,6 @@ def setUpModule():
 
 
 class TestResponse(WebServiceTestCase):
-
     maxDiff = None
     bundles = WebServiceTestCase.bundles + [
         ('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
@@ -617,7 +616,6 @@ class TestResponse(WebServiceTestCase):
                         self.assertIsNotNone(actual_url.path)
                         self.assertEqual('aws', actual_query_vars['replica'])
                         self.assertIsNotNone(actual_query_vars['version'])
-
 
     def test_projects_key_search_response(self):
         """
@@ -1308,7 +1306,6 @@ class TestResponse(WebServiceTestCase):
                                                      ('contains', (1860624000, 2049641000), []),
                                                      ('within', (1734490000, 1860623000), []),
                                                      ('intersects', (1860624100, 2049641000), [])]:
-
             with self.subTest(relation=relation, value=range_value):
                 params = {
                     'filters': json.dumps({'organismAgeRange': {relation: [range_value]}}),
@@ -1321,7 +1318,6 @@ class TestResponse(WebServiceTestCase):
 
 
 class TestResponseSummary(WebServiceTestCase):
-
     maxDiff = None
     bundles = WebServiceTestCase.bundles + [
         ('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),

@@ -17,6 +17,7 @@ from retorts import ResponsesHelper
 
 logger = logging.getLogger(__name__)
 
+
 def setUpModule():
     logging.basicConfig(level=logging.INFO)
 

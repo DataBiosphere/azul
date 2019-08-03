@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class RedButton:
+
     def __init__(self):
         self.lambda_ = boto3.client('lambda')
         self.tag_name = 'azul-original-concurrency-limit'
