@@ -46,11 +46,6 @@ app.debug = True
 # FIXME: please use module logger instead (https://github.com/DataBiosphere/azul/issues/419)
 app.log.setLevel(logging.DEBUG)
 
-# TODO: Write the docstrings so they can support swagger.
-# Please see https://github.com/rochacbruno/flasgger
-# stackoverflow.com/questions/43911510/ \
-# how-to-write-docstring-for-url-parameters
-
 
 sort_defaults = {
     'files': ('fileName', 'asc'),
