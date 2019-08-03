@@ -131,8 +131,14 @@ class SummaryRepresentation(JsonObject):
     """
     Class defining the Summary Response
     """
+    projectCount = IntegerProperty()
+    specimenCount = IntegerProperty()
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
+    donorCount = IntegerProperty()
+    labCount = IntegerProperty()
+    totalCellCount = FloatProperty()
+    organTypes = ListProperty(StringProperty(required=False))
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
 
@@ -552,9 +558,9 @@ class SummaryResponse(BaseSummaryResponse):
         # Create a SummaryRepresentation object
         kwargs = dict(
             projectCount=self.agg_contents(self.aggregates, 'projectCount', agg_form='value'),
-            totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
             specimenCount=self.agg_contents(self.aggregates, 'specimenCount', agg_form='value'),
             fileCount=self.agg_contents(self.aggregates, 'fileCount', agg_form='value'),
+            totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
             donorCount=self.agg_contents(self.aggregates, 'donorCount', agg_form='value'),
             labCount=self.agg_contents(self.aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(self.aggregates, 'total_cell_count', agg_form='value'),
