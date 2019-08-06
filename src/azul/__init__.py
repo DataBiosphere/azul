@@ -21,6 +21,20 @@ class Config:
         else:
             raise ValueError('Expected "0" or "1"', value)
 
+    @property
+    def debug(self) -> int:
+        debug = int(os.environ['AZUL_DEBUG'])
+        self._validate_debug(debug)
+        return debug
+
+    @debug.setter
+    def debug(self, debug: int):
+        self._validate_debug(debug)
+        os.environ['AZUL_DEBUG'] = str(debug)
+
+    def _validate_debug(self, debug):
+        require(debug in (0, 1, 2), "AZUL_DEBUG must be either 0, 1 or 2")
+
     es_endpoint_env_name = 'AZUL_ES_ENDPOINT'
 
     @property
@@ -301,7 +315,7 @@ class Config:
             aggregate = True
         else:
             aggregate = False
-        entity_type = '_' . join(index_name)
+        entity_type = '_'.join(index_name)
         assert entity_type, repr(entity_type)
         return prefix, deployment_stage, entity_type, aggregate
 
@@ -516,6 +530,7 @@ class Config:
     terms_aggregation_size = 99999
 
     null_keyword = '__null__'
+
 
 config = Config()
 
