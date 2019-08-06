@@ -125,7 +125,18 @@ class Document:
         :return: A copy of the original document with values translated according to their type
         """
         if isinstance(source, dict):
-            return {key: cls.translate_fields(val, path=path + (key,), forward=forward) for key, val in source.items()}
+            new_dict = {}
+            for key, val in source.items():
+                # Shadow copy fields should only be present during a reverse translation and we skip over to remove them
+                if key.endswith('_'):
+                    assert not forward
+                else:
+                    new_path = path + (key,)
+                    new_dict[key] = cls.translate_fields(val, path=new_path, forward=forward)
+                    if forward and cls._field_type(new_path) in (int, float):
+                        # Add a non-translated shadow copy of this field's numeric value for sum aggregations
+                        new_dict[key + '_'] = val
+            return new_dict
         elif isinstance(source, list):
             return [cls.translate_fields(val, path=path, forward=forward) for val in source]
         elif isinstance(source, set):

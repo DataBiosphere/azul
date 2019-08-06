@@ -63,6 +63,7 @@ generic with minimal need for project-specific behavior.
     - [8.6 Updating Gitlab](#86-updating-gitlab)
     - [8.7 The Gitlab Build Environment](#87-the-gitlab-build-environment)
 - [9. Kibana](#9-kibana)
+- [10. Making wheels](#10-making-wheels)
 
 
 The Azul project contains the components that together serve as the backend to
@@ -1095,3 +1096,59 @@ options:
   * a deployment selected and
 
   * `environment` sourced.
+
+# 10. Making wheels
+
+Some of Azul's dependencies contain native code that needs to be compiled into
+a binary executable which is then dynamically loaded into the Python
+interpreter process when the package is imported. These dependencies are
+commonly distributed in the form of wheels. A wheel is a Python package
+distribution that contains the pre-compiled binary code for a particular
+operating sytem and processor architecture combination, aka platform. Many such
+packages lack a wheel for the `linux_x86_64` platform that Lambda functions
+execute on. Chalice will attempt to build the wheel on the fly during `chalice
+package` (`make deploy`) but only if invoked on a system with `linux_x86_64`.
+On macOS, Chalice will fail to build a wheel for the `linux_x86_64` platform but
+only prints a warning that's easily missed. The deployed Lambda will likely
+fail with an import error.
+
+If you add a dependency on a package with native code, you need to build the
+wheel manually:
+
+```
+$ docker run -it -v ${azul_home}/:/root/azul python:3.6.8-stretch bash
+
+root:/# pip --version
+pip 19.1.1 from /usr/local/lib/python3.6/site-packages/pip (python 3.6)
+
+root:/# cd /root/azul/lambdas/.wheels/
+
+root:~/azul/lambdas/.wheels# pip wheel jsonobject==0.9.9
+Collecting jsonobject==0.9.9
+  Downloading https://files.pythonhosted.org/packages/13/5d/8cefef3ad423beb44a7b1a4f7572605dfae97ff340d4444381b1db131ae8/jsonobject-0.9.9.tar.gz (389kB)
+     |████████████████████████████████| 399kB 2.6MB/s
+Collecting six (from jsonobject==0.9.9)
+  Downloading https://files.pythonhosted.org/packages/73/fb/00a976f728d0d1fecfe898238ce23f502a721c0ac0ecfedb80e0d88c64e9/six-1.12.0-py2.py3-none-any.whl
+  Saved ./six-1.12.0-py2.py3-none-any.whl
+Skipping six, due to already being wheel.
+Building wheels for collected packages: jsonobject
+  Building wheel for jsonobject (setup.py) ... done
+  Stored in directory: /root/azul/lambdas/.wheels
+Successfully built jsonobject
+
+root:~/azul/lambdas/.wheels# ls -l
+total 1240
+-rw-r--r-- 1 root root 1256059 Aug  5 21:47 jsonobject-0.9.9-cp36-cp36m-linux_x86_64.whl
+-rw-r--r-- 1 root root   10586 Aug  5 21:46 six-1.12.0-py2.py3-none-any.whl
+
+root:~/azul/lambdas/.wheels# rm six-1.12.0-py2.py3-none-any.whl
+
+root:~/azul/lambdas/.wheels# exit
+
+$
+```
+
+Then modify the `wheels` target in `lambdas/*/Makefile` to unzip the wheel into
+the corresponding vendor directory.
+
+Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
