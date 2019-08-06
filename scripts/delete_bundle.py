@@ -1,10 +1,8 @@
 import sys
 import argparse
 
-import logging
 from azul.azulclient import AzulClient
-
-logger = logging.getLogger(__name__)
+from azul.logging import configure_script_logging
 
 
 def main(argv):
@@ -32,6 +30,5 @@ def parse_fqid(s: str):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s',
-                        level=logging.INFO)
+    configure_script_logging()
     main(sys.argv[1:])

@@ -9,12 +9,13 @@ from unittest.mock import patch
 import boto3
 
 from azul import config, subscription
+from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
 
 
 def main(argv):
-    logging.basicConfig(level=logging.INFO)
+    configure_script_logging(logger)
     import argparse
     parser = argparse.ArgumentParser(description='Subscribe indexer lambda to bundle events from DSS')
     parser.add_argument('--unsubscribe', '-U', dest='subscribe', action='store_false', default=True)

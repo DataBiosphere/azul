@@ -5,6 +5,7 @@ from requests.auth import HTTPBasicAuth
 import requests
 
 from azul import config
+from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
 
@@ -15,11 +16,11 @@ def main():
         for dashboard in ['azul', 'data_portal']:
             update_dashboard(base_url, get_dashboard_json_from_terraform(dashboard))
     else:
-        logging.info('Skipping publishing of Grafana dashboard')
+        logger.info('Skipping publishing of Grafana dashboard')
 
 
 def get_dashboard_json_from_terraform(dashboard):
-    logging.info('Extracting dashboard definition for %s', dashboard)
+    logger.info('Extracting dashboard definition for %s', dashboard)
     cmd = f'terraform output grafana_dashboard_{dashboard}'
     completed_process = subprocess.run(cmd,
                                        stdout=subprocess.PIPE,
@@ -30,7 +31,7 @@ def get_dashboard_json_from_terraform(dashboard):
 
 def update_dashboard(base_url, dashboard):
     url = base_url + '/dashboards/db'
-    logging.info('Updating Grafana dashboard definition at %s', url)
+    logger.info('Updating Grafana dashboard definition at %s', url)
     body = {
         "dashboard": dashboard,
         "overwrite": True
@@ -44,10 +45,9 @@ def update_dashboard(base_url, dashboard):
                                  'Accept': 'application/json'
                              })
     response.raise_for_status()
-    logging.debug('Grafana response %s', response.json())
+    logger.debug('Grafana response %s', response.json())
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s',
-                        level=logging.INFO)
+    configure_script_logging(logger)
     main()
