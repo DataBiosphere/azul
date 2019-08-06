@@ -100,11 +100,25 @@ class OrganCellCountSummary(JsonObject):
 
     @classmethod
     def for_bucket(cls, bucket):
+        key = Document.translate_field(bucket['key'],
+                                       path=('contents', 'cell_suspensions', 'organ'),
+                                       forward=False)
         self = cls()
-        self.organType = [bucket['key']]
+        self.organType = [key]
         self.countOfDocsWithOrganType = bucket['doc_count']
         self.totalCellCountByOrgan = bucket['cell_count']['value']
         return self
+
+
+class OrganType:
+
+    @classmethod
+    def for_bucket(cls, bucket):
+        # Un-translate values that had been translated with translate_fields() to handle Nones in Elasticsearch
+        # The path for the translation directly relates to the field used in transform_summary() for the aggregation
+        return Document.translate_field(bucket['key'],
+                                        path=('contents', 'samples', 'effective_organ'),
+                                        forward=False)
 
 
 class HitEntry(JsonObject):
@@ -128,8 +142,14 @@ class SummaryRepresentation(JsonObject):
     """
     Class defining the Summary Response
     """
+    projectCount = IntegerProperty()
+    specimenCount = IntegerProperty()
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
+    donorCount = IntegerProperty()
+    labCount = IntegerProperty()
+    totalCellCount = FloatProperty()
+    organTypes = ListProperty(StringProperty(required=False))
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
 
@@ -542,24 +562,21 @@ class SummaryResponse(BaseSummaryResponse):
     def __init__(self, raw_response):
         super().__init__(raw_response)
 
-        _sum = raw_response['aggregations']['fileFormat']["myTerms"]
-        _organ_group = raw_response['aggregations']['group_by_organ']
+        _file_types = raw_response['aggregations']['fileFormat']["myTerms"]
+        _cell_counts = raw_response['aggregations']['group_by_organ']
         _organ_types = raw_response['aggregations']['organTypes']
 
-        # Create a SummaryRepresentation object
-        kwargs = dict(
+        self.apiResponse = SummaryRepresentation(
             projectCount=self.agg_contents(self.aggregates, 'projectCount', agg_form='value'),
-            totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
             specimenCount=self.agg_contents(self.aggregates, 'specimenCount', agg_form='value'),
             fileCount=self.agg_contents(self.aggregates, 'fileCount', agg_form='value'),
+            totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
             donorCount=self.agg_contents(self.aggregates, 'donorCount', agg_form='value'),
             labCount=self.agg_contents(self.aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(self.aggregates, 'total_cell_count', agg_form='value'),
-            organTypes=[bucket['key'] for bucket in _organ_types['buckets']],
-            fileTypeSummaries=[FileTypeSummary.for_bucket(bucket) for bucket in _sum['buckets']],
-            cellCountSummaries=[OrganCellCountSummary.for_bucket(bucket) for bucket in _organ_group['buckets']])
-
-        self.apiResponse = SummaryRepresentation(**kwargs)
+            organTypes=list(map(OrganType.for_bucket, _organ_types['buckets'])),
+            fileTypeSummaries=list(map(FileTypeSummary.for_bucket, _file_types['buckets'])),
+            cellCountSummaries=list(map(OrganCellCountSummary.for_bucket, _cell_counts['buckets'])))
 
 
 class KeywordSearchResponse(AbstractResponse, EntryFetcher):
@@ -805,10 +822,12 @@ class FileSearchResponse(KeywordSearchResponse):
         def choose_entry(_term):
             if 'key_as_string' in _term:
                 return _term['key_as_string']
-            elif not isinstance(_term['key'], str):
-                return str(_term['key'])
+            elif _term['key'] is None:
+                return None
+            elif isinstance(_term['key'], bool):
+                return str(_term['key']).lower()
             else:
-                return _term['key']
+                return str(_term['key'])
 
         term_list = []
         for term in contents['myTerms']['buckets']:
@@ -817,8 +836,15 @@ class FileSearchResponse(KeywordSearchResponse):
                 term_object_params['projectId'] = [bucket['key'] for bucket in term['myProjectIds']['buckets']]
             term_list.append(TermObj(**term_object_params))
 
-        # Add 'unspecified' term if there is at least one unlabelled document
         untagged_count = contents['untagged']['doc_count']
+
+        # Add the untagged_count to the existing termObj for a None value, or add a new one
+        if untagged_count > 0:
+            for term_obj in term_list:
+                if term_obj.term is None:
+                    term_obj.count += untagged_count
+                    untagged_count = 0
+                    break
         if untagged_count > 0:
             term_list.append(TermObj(term=None, count=untagged_count))
 

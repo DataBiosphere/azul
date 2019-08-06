@@ -7,7 +7,11 @@ config: .chalice/config.json lambda-policy.json
 state: check_branch config
 	python $(azul_home)/scripts/manage_chalice_deployed.py service download
 
-deploy: state
+wheels:
+	rm -rf vendor/jsonobject*
+	unzip $(azul_home)/lambdas/.wheels/jsonobject-0.9.9-cp36-cp36m-linux_x86_64.whl -d vendor
+
+deploy: state wheels
 	python -m azul.changelog vendor
 	python $(azul_home)/scripts/manage_lambda_iam_role.py service lambda-policy.json
 	chalice deploy --stage $(AZUL_DEPLOYMENT_STAGE)

@@ -1165,6 +1165,31 @@ class TestResponse(WebServiceTestCase):
                     for term in response_json['termFacets']['project']['terms']:
                         self.assertEqual(term['projectId'], [test_data['id']])
 
+    def test_translated_facets(self):
+        """
+        Test that response facets values are correctly translated back to correct data types
+        and that the translated None value '__null__' is not present
+        """
+        url = self.base_url + "/repository/samples"
+        params = {'size': 10, 'filters': json.dumps({})}
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        response_json = response.json()
+        facets = response_json['termFacets']
+
+        paired_end_terms = {term['term'] for term in facets['pairedEnd']['terms']}
+        self.assertEqual(paired_end_terms, {'true', 'false'})
+
+        preservation_method_terms = {term['term'] for term in facets['preservationMethod']['terms']}
+        self.assertEqual(preservation_method_terms, {None})
+
+        model_organ_part_terms = {term['term'] for term in facets['modelOrganPart']['terms']}
+        self.assertEqual(model_organ_part_terms, {None})
+
+        for facet in facets.values():
+            for term in facet['terms']:
+                self.assertNotEqual(term['term'], config.null_keyword)
+
     def test_sample(self):
         """
         Test that sample(s) in the response contain values matching values in the source cellLine/organoid/specimen
