@@ -1371,6 +1371,23 @@ class TestResponseSummary(WebServiceTestCase):
             {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0},
         ])
 
+    def test_summary_filter_none(self):
+        # FIXME: filter by None not finding fields that are missing (https://github.com/DataBiosphere/azul/issues/1202)
+        url = self.base_url + '/repository/summary?filters={"pairedEnd": {"is": [null]}}'
+        response = requests.get(url)
+        response.raise_for_status()
+        summary_object = response.json()
+        self.assertEqual(summary_object['donorCount'], 0)
+        self.assertEqual(summary_object['specimenCount'], 0)
+        self.assertEqual(summary_object['projectCount'], 0)
+
+        url = self.base_url + '/repository/summary?filters={"organPart": {"is": [null]}}'
+        response = requests.get(url)
+        response.raise_for_status()
+        summary_object = response.json()
+        self.assertEqual(summary_object['donorCount'], 0)
+        self.assertEqual(summary_object['specimenCount'], 0)
+        self.assertEqual(summary_object['projectCount'], 0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -57,16 +57,18 @@ class ElasticTransformDump(object):
         :param field_mapping: Mapping config json with '{'browserKey': 'es_key'}' format
         :return: Returns translated filters with 'es_keys'
         """
-        iterate_filters = deepcopy(filters)
-        for key, value in iterate_filters.items():
-            if key in field_mapping:
-                # Replace the key in the filter with the name within ElasticSearch
-                corrected_term = field_mapping[key]
-                filters[corrected_term] = filters.pop(key)
+        translated_filters = {}
         for key, value in filters.items():
+            try:
+                # Replace the key in the filter with the name within ElasticSearch
+                key = field_mapping[key]
+            except KeyError:
+                pass  # FIXME: Isn't this an error (https://github.com/DataBiosphere/azul/issues/1205)?
+            # Replace the value in the filter with the value translated for None values
             path = tuple(key.split('.'))
-            filters[key] = cls.translate_filter(value, path)
-        return filters
+            value = cls.translate_filter(value, path)
+            translated_filters[key] = value
+        return translated_filters
 
     @classmethod
     def translate_filter(cls, value: JSON, path: Tuple[str, ...]) -> JSON:
