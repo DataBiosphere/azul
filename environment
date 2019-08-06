@@ -9,6 +9,11 @@ azul_vars=(
     # The path to the root directory of the project
     azul_home
 
+    # Controls the verbosity of application logs. Use 0 for no debug logging
+    # 1 for debug logging by application code and info logging by other code
+    # and 2 for debug logging by all code.
+    AZUL_DEBUG
+
     # The name of the current deployment. This variable controls the name of all
     # cloud resources and is the main vehicle for isolating cloud resources
     # between deployments.
@@ -255,6 +260,7 @@ fi
 
 # Set the global defaults. This is the least specific level.
 
+_set AZUL_DEBUG 0
 _set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.explore.data.humancellatlas.org"
 _set AZUL_DRS_DOMAIN_NAME ""
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"

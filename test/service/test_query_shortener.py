@@ -1,19 +1,17 @@
-import logging
 from unittest import mock
 
 from chalice import BadRequestError, ChaliceViewError
 from moto import mock_s3, mock_sts
 
 from azul import config
+from azul.logging import configure_test_logging
 from azul.service.responseobjects.storage_service import StorageService
 from azul_test_case import AzulTestCase
+from lambdas.service import app
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
-    # Late import of Chalice app, otherwise it would interfere with test logging
-    global app
-    from lambdas.service import app
+    configure_test_logging()
 
 
 class TestQueryShortener(AzulTestCase):
