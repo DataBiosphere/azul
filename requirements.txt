@@ -9,7 +9,7 @@ cryptography==2.4.2
 dataclasses<=0.6
 elasticsearch>=5.0.0,<6.0.0
 elasticsearch-dsl>=5.0.0,<6.0.0
-jsonobject==0.7.1
+jsonobject==0.9.9
 Faker==0.8.11
 future==0.16.0
 hca==4.4.1
