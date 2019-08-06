@@ -1,6 +1,7 @@
 import argparse
 import ast
 from azul import config
+from azul.logging import configure_script_logging
 from azul.types import JSON
 import boto3
 import logging
@@ -9,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class RedButton:
+
     def __init__(self):
         self.lambda_ = boto3.client('lambda')
         self.tag_name = 'azul-original-concurrency-limit'
@@ -34,17 +36,17 @@ class RedButton:
             original_concurrency_limit = ast.literal_eval(lambda_tags[self.tag_name])
 
             if original_concurrency_limit is not None:
-                logging.info(f'Setting concurrency limit for {lambda_name} back to {original_concurrency_limit}.')
+                logger.info(f'Setting concurrency limit for {lambda_name} back to {original_concurrency_limit}.')
                 self.lambda_.put_function_concurrency(FunctionName=lambda_name,
                                                       ReservedConcurrentExecutions=original_concurrency_limit)
             else:
-                logging.info(f'Removed concurrency limit for {lambda_name}.')
+                logger.info(f'Removed concurrency limit for {lambda_name}.')
                 self.lambda_.delete_function_concurrency(FunctionName=lambda_name)
 
             lambda_arn = lambda_settings['Configuration']['FunctionArn']
             self.lambda_.untag_resource(Resource=lambda_arn, TagKeys=[self.tag_name])
         else:
-            logging.warning(f'{lambda_name} is already enabled.')
+            logger.warning(f'{lambda_name} is already enabled.')
 
     def disable_lambda(self, lambda_settings: JSON, lambda_tags: JSON):
         lambda_name = lambda_settings['Configuration']['FunctionName']
@@ -58,15 +60,16 @@ class RedButton:
             else:
                 concurrency_limit = concurrency['ReservedConcurrentExecutions']
 
-            logging.info(f'Setting concurrency limit for {lambda_name} to zero.')
+            logger.info(f'Setting concurrency limit for {lambda_name} to zero.')
             new_tag = {self.tag_name: repr(concurrency_limit)}
             self.lambda_.tag_resource(Resource=lambda_settings['Configuration']['FunctionArn'], Tags=new_tag)
             self.lambda_.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
         else:
-            logging.warning(f'{lambda_name} is already disabled.')
+            logger.warning(f'{lambda_name} is already disabled.')
 
 
 if __name__ == '__main__':
+    configure_script_logging(logger)
     parser = argparse.ArgumentParser(description='Enables or disables the lambdas in the current deployment.')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--enable', dest='enabled', action='store_true', default=None)

@@ -34,7 +34,6 @@ from azul.transformer import Document
 from azul.types import JSON
 
 logger = logging.getLogger(__name__)
-module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
 
 
 class TermObj(JsonObject):
@@ -520,11 +519,6 @@ class EntryFetcher:
     def handle_list(value):
         return [value] if value is not None else []
 
-    def __init__(self):
-        # Setting up logger
-        self.logger = logging.getLogger(
-            'dashboardService.api_response.EntryFetcher')
-
 
 class BaseSummaryResponse(AbstractResponse):
 
@@ -776,14 +770,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
         :param hits: A list of hits from ElasticSearch
         """
-        # Setup the logger
-        self.logger = logging.getLogger(
-            'dashboardService.api_response.KeywordSearchResponse')
         self.entity_type = entity_type
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
-        self.logger.info('Creating the entries in ApiResponse')
+        logger.info('Creating the entries in ApiResponse')
         class_entries = {'hits': [
             self.map_entries(x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
@@ -876,9 +867,6 @@ class FileSearchResponse(KeywordSearchResponse):
         Constructs the object and initializes the apiResponse attribute
         :param hits: A list of hits from ElasticSearch
         """
-        # Setup the logger
-        self.logger = logging.getLogger(
-            'dashboardService.api_response.FileSearchResponse')
         # This should initialize the self.apiResponse attribute of the object
         KeywordSearchResponse.__init__(self, hits, entity_type)
         # Add the paging via **kwargs of dictionary 'pagination'
@@ -901,7 +889,8 @@ class AutoCompleteResponse(EntryFetcher):
         the entry
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        self.logger.debug("Entry to be mapped: \n{}".format(json_pp(entry)))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Entry to be mapped: \n%s', json_pp(entry))
         mapped_entry = {}
         if _type == 'file':
             # Create a file representation
@@ -927,13 +916,10 @@ class AutoCompleteResponse(EntryFetcher):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
-        # Setup the logger
-        self.logger = logging.getLogger(
-            'dashboardService.api_response.AutoCompleteResponse')
         # Overriding the __init__ method of the parent class
         EntryFetcher.__init__(self)
-        self.logger.info("Mapping entries")
-        self.logger.debug("Mapping: \n{}".format(json_pp(mapping)))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Mapping: \n%s', json_pp(mapping))
         class_entries = {'hits': [self.map_entries(
             mapping, x, _type) for x in hits], 'pagination': None}
         self.apiResponse = AutoCompleteRepresentation(**class_entries)

@@ -27,8 +27,9 @@ import azul.indexer
 from app_test_case import LocalAppTestCase
 from azul import config, hmac
 from azul.indexer import IndexWriter
+from azul.logging import configure_test_logging
 from azul.threads import Latch
-from azul.transformer import Aggregate, Contribution, Document
+from azul.transformer import Aggregate, Contribution
 from azul.project.hca.metadata_generator import MetadataGenerator
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class TestHCAIndexer(IndexerTestCase):
@@ -821,9 +822,9 @@ class TestHCAIndexer(IndexerTestCase):
         bundles_index = config.es_index_name('bundles')
         mapping = self.es_client.indices.get_mapping(index=bundles_index)
         self.assertIn('bundle_uuid', mapping[bundles_index]
-                                     ['mappings']['doc']['properties']
-                                     ['contents']['properties']
-                                     ['metadata']['properties'])
+        ['mappings']['doc']['properties']
+        ['contents']['properties']
+        ['metadata']['properties'])
 
         # Ensure that a metadata row exists …
         hits = self._get_all_hits()

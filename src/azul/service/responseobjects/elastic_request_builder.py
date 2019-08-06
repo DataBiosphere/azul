@@ -20,7 +20,6 @@ from azul.transformer import Document
 from azul.types import JSON
 
 logger = logging.getLogger(__name__)
-module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
 
 
 class BadArgumentException(Exception):
@@ -48,7 +47,6 @@ class ElasticTransformDump(object):
         The constructor simply initializes the ElasticSearch client object
         to be used for making requests.
         """
-        self.logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
         self.es_client = ESClientFactory.get()
 
     @classmethod
@@ -317,7 +315,7 @@ class ElasticTransformDump(object):
 
         # fetch one more than needed to see if there's a "next page".
         es_search = es_search.extra(size=pagination['size'] + 1)
-        logging.debug("es_search is " + str(es_search))
+        logger.debug("es_search is " + str(es_search))
         return es_search
 
     @staticmethod
@@ -335,7 +333,7 @@ class ElasticTransformDump(object):
         # ...else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
         count = len(es_hits)
-        logging.debug("count=" + str(count) + " and size=" + str(pagination['size']))
+        logger.debug("count=" + str(count) + " and size=" + str(pagination['size']))
         if 'search_before' in pagination:
             # hits are reverse sorted
             if count > pagination['size']:
@@ -380,18 +378,18 @@ class ElasticTransformDump(object):
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
-        self.logger.info('Transforming /summary request')
+        logger.info('Transforming /summary request')
         config_folder = os.path.dirname(service_config.__file__)
         # Create the path for the request_config_file
         request_config_path = "{}/{}".format(
             config_folder, request_config_file)
         # Get the Json Objects from the mapping_config and the request_config
-        self.logger.debug('Getting the request_config file')
+        logger.debug('Getting the request_config file')
         request_config = self.open_and_return_json(request_config_path)
         if not filters:
             filters = {}
         # Create a request to ElasticSearch
-        self.logger.info('Creating request to ElasticSearch')
+        logger.info('Creating request to ElasticSearch')
         es_search = self.create_request(
             filters, self.es_client,
             request_config,
@@ -438,15 +436,15 @@ class ElasticTransformDump(object):
                 field='{}.keyword'.format(cardinality),
                 precision_threshold="40000")
         # Execute ElasticSearch request
-        self.logger.info('Executing request to ElasticSearch')
+        logger.info('Executing request to ElasticSearch')
         es_response = es_search.execute(ignore_cache=True)
         # Create the SummaryResponse object,
         #  which has the format for the summary request
-        self.logger.info('Creating a SummaryResponse object')
+        logger.info('Creating a SummaryResponse object')
         final_response = SummaryResponse(es_response.to_dict())
-        logger.info("Elasticsearch request: %s", json.dumps(es_search.to_dict(), indent=4))
-        self.logger.info(
-            'Returning the final response for transform_summary()')
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
+            logger.info('Returning the final response for transform_summary()')
         return final_response.apiResponse.to_json()
 
     def transform_request(self,
@@ -505,7 +503,7 @@ class ElasticTransformDump(object):
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         # No faceting (i.e. do the faceting on the filtered query)
-        self.logger.debug('Handling presence or absence of faceting')
+        logger.debug('Handling presence or absence of faceting')
         if post_filter is False:
             # Create request structure
             es_search = self.create_request(
@@ -678,7 +676,7 @@ class ElasticTransformDump(object):
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
         config_folder = os.path.dirname(service_config.__file__)
-        self.logger.info('Transforming /keywords request')
+        logger.info('Transforming /keywords request')
         # Create the path for the mapping config file
         mapping_config_path = "{}/{}".format(
             config_folder, mapping_config_file)
@@ -686,17 +684,14 @@ class ElasticTransformDump(object):
         request_config_path = "{}/{}".format(
             config_folder, request_config_file)
         # Get the Json Objects from the mapping_config and the request_config
-        self.logger.debug(
-            'Getting the request_config and mapping_config file: {}'.format(
-                request_config_path,
-                mapping_config_path))
+        logger.debug('Getting the request_config %s and mapping_config file %s',
+                     request_config_path, mapping_config_path)
         mapping_config = self.open_and_return_json(mapping_config_path)
         request_config = self.open_and_return_json(request_config_path)
         # Get the right autocomplete mapping configuration
-        self.logger.debug("Entry is: {}".format(entry_format))
-        self.logger.debug(
-            "Printing the mapping_config: \n{}".format(
-                json_pp(mapping_config)))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Entry is: %s', entry_format)
+            logger.debug('Printing the mapping_config: \n%s', json_pp(mapping_config))
         mapping_config = mapping_config[entry_format]
         if not filters:
             filters = {}
@@ -711,34 +706,31 @@ class ElasticTransformDump(object):
             search_field,
             entity_type=entity_type)
         # Handle pagination
-        self.logger.info("Handling pagination")
+        logger.info('Handling pagination')
         pagination['sort'] = '_score'
         pagination['order'] = 'desc'
         es_search = self.apply_paging(es_search, pagination)
         # Executing ElasticSearch request
-        self.logger.debug(
-            "Printing ES_SEARCH request dict:\n {}".format(
-                json.dumps(es_search.to_dict())))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Printing ES_SEARCH request dict:\n %s', json.dumps(es_search.to_dict()))
         es_response = es_search.execute(ignore_cache=True)
         es_response_dict = es_response.to_dict()
-        self.logger.debug(
-            "Printing ES_SEARCH response dict:\n {}".format(
-                json.dumps(es_response_dict)))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'Printing ES_SEARCH response dict:\n %s', json.dumps(es_response_dict))
         # Extracting hits
         hits = [x['_source'] for x in es_response_dict['hits']['hits']]
         # Generating pagination
-        self.logger.debug("Generating pagination")
+        logger.debug('Generating pagination')
         paging = self.generate_paging_dict(es_response_dict, pagination)
         # Creating AutocompleteResponse
-        self.logger.info("Creating AutoCompleteResponse")
+        logger.info('Creating AutoCompleteResponse')
         final_response = AutoCompleteResponse(
             mapping_config,
             hits,
             paging,
             _type=entry_format)
         final_response = final_response.apiResponse.to_json()
-        self.logger.info(
-            "Returning the final response for transform_autocomplete_request")
+        logger.info('Returning the final response for transform_autocomplete_request')
         return final_response
 
     def transform_cart_item_request(self,

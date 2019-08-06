@@ -1,5 +1,4 @@
 import json
-import logging
 import unittest
 import urllib.parse
 
@@ -7,6 +6,7 @@ from more_itertools import one
 import requests
 
 from azul import config
+from azul.logging import configure_test_logging
 from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
                                                           KeywordSearchResponse)
 from azul.transformer import Document
@@ -14,11 +14,10 @@ from service import WebServiceTestCase
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class TestResponse(WebServiceTestCase):
-
     maxDiff = None
     bundles = WebServiceTestCase.bundles + [
         ('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
@@ -617,7 +616,6 @@ class TestResponse(WebServiceTestCase):
                         self.assertIsNotNone(actual_url.path)
                         self.assertEqual('aws', actual_query_vars['replica'])
                         self.assertIsNotNone(actual_query_vars['version'])
-
 
     def test_projects_key_search_response(self):
         """
@@ -1229,77 +1227,77 @@ class TestResponse(WebServiceTestCase):
 
     def test_ranged_values(self):
         test_hits = [
-                [
-                    {
-                        "biologicalSex": [
-                            "male",
-                            "female"
-                        ],
-                        "disease": None,
-                        "genusSpecies": [
-                            "Homo sapiens"
-                        ],
-                        "id": [
-                            "HPSI0314i-hoik",
-                            "HPSI0214i-wibj",
-                            "HPSI0314i-sojd",
-                            "HPSI0214i-kucg"
-                        ],
-                        "organismAge": [
-                            "45-49",
-                            "65-69"
-                        ],
-                        "organismAgeRange": [
-                            {
-                                "gte": 2049840000.0,
-                                "lte": 2175984000.0
-                            },
-                            {
-                                "gte": 1419120000.0,
-                                "lte": 1545264000.0
-                            }
-                        ],
-                        "organismAgeUnit": [
-                            "year"
-                        ]
-                    }
-                ],
-                [
-                    {
-                        "biologicalSex": [
-                            "male",
-                            "female"
-                        ],
-                        "disease": None,
-                        "genusSpecies": [
-                            "Homo sapiens"
-                        ],
-                        "id": [
-                            "HPSI0314i-hoik",
-                            "HPSI0214i-wibj",
-                            "HPSI0314i-sojd",
-                            "HPSI0214i-kucg"
-                        ],
-                        "organismAge": [
-                            "40-44",
-                            "55-59"
-                        ],
-                        "organismAgeRange": [
-                            {
-                                "gte": 1734480000.0,
-                                "lte": 1860624000.0
-                            },
-                            {
-                                "gte": 1261440000.0,
-                                "lte": 1387584000.0
-                            }
-                        ],
-                        "organismAgeUnit": [
-                            "year"
-                        ]
-                    }
-                ]
+            [
+                {
+                    "biologicalSex": [
+                        "male",
+                        "female"
+                    ],
+                    "disease": None,
+                    "genusSpecies": [
+                        "Homo sapiens"
+                    ],
+                    "id": [
+                        "HPSI0314i-hoik",
+                        "HPSI0214i-wibj",
+                        "HPSI0314i-sojd",
+                        "HPSI0214i-kucg"
+                    ],
+                    "organismAge": [
+                        "45-49",
+                        "65-69"
+                    ],
+                    "organismAgeRange": [
+                        {
+                            "gte": 2049840000.0,
+                            "lte": 2175984000.0
+                        },
+                        {
+                            "gte": 1419120000.0,
+                            "lte": 1545264000.0
+                        }
+                    ],
+                    "organismAgeUnit": [
+                        "year"
+                    ]
+                }
+            ],
+            [
+                {
+                    "biologicalSex": [
+                        "male",
+                        "female"
+                    ],
+                    "disease": None,
+                    "genusSpecies": [
+                        "Homo sapiens"
+                    ],
+                    "id": [
+                        "HPSI0314i-hoik",
+                        "HPSI0214i-wibj",
+                        "HPSI0314i-sojd",
+                        "HPSI0214i-kucg"
+                    ],
+                    "organismAge": [
+                        "40-44",
+                        "55-59"
+                    ],
+                    "organismAgeRange": [
+                        {
+                            "gte": 1734480000.0,
+                            "lte": 1860624000.0
+                        },
+                        {
+                            "gte": 1261440000.0,
+                            "lte": 1387584000.0
+                        }
+                    ],
+                    "organismAgeUnit": [
+                        "year"
+                    ]
+                }
             ]
+        ]
 
         url = self.base_url + '/repository/projects'
         for relation, range_value, expected_hits in [('contains', (1419130000, 1545263000), test_hits[:1]),
@@ -1308,7 +1306,6 @@ class TestResponse(WebServiceTestCase):
                                                      ('contains', (1860624000, 2049641000), []),
                                                      ('within', (1734490000, 1860623000), []),
                                                      ('intersects', (1860624100, 2049641000), [])]:
-
             with self.subTest(relation=relation, value=range_value):
                 params = {
                     'filters': json.dumps({'organismAgeRange': {relation: [range_value]}}),
@@ -1321,7 +1318,6 @@ class TestResponse(WebServiceTestCase):
 
 
 class TestResponseSummary(WebServiceTestCase):
-
     maxDiff = None
     bundles = WebServiceTestCase.bundles + [
         ('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
