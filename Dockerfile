@@ -13,12 +13,10 @@ RUN mkdir terraform \
         && mv terraform /usr/local/bin/) \
     ; rm -rf terraform
 
-# FIXME: the mention of pip==18.1 is inconsistent with .travis.yml and README
-
 COPY requirements.txt .
 COPY requirements.dev.txt .
 RUN python3.6 -m venv .venv \
     && source .venv/bin/activate \
-    && pip install -U pip==18.1 setuptools==40.1.0 wheel==0.32.3 \
+    && pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3 \
     && pip install -r requirements.dev.txt \
     ; rm requirements.txt requirements.dev.txt
