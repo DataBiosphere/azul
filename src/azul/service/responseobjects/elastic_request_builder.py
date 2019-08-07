@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import collections
 from copy import deepcopy
 import json
 import logging
@@ -21,7 +20,6 @@ from azul.transformer import Document
 from azul.types import JSON
 
 logger = logging.getLogger(__name__)
-module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
 
 
 class BadArgumentException(Exception):
@@ -49,7 +47,6 @@ class ElasticTransformDump(object):
         The constructor simply initializes the ElasticSearch client object
         to be used for making requests.
         """
-        self.logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
         self.es_client = ESClientFactory.get()
 
     @classmethod
@@ -60,16 +57,18 @@ class ElasticTransformDump(object):
         :param field_mapping: Mapping config json with '{'browserKey': 'es_key'}' format
         :return: Returns translated filters with 'es_keys'
         """
-        iterate_filters = deepcopy(filters)
-        for key, value in iterate_filters.items():
-            if key in field_mapping:
-                # Replace the key in the filter with the name within ElasticSearch
-                corrected_term = field_mapping[key]
-                filters[corrected_term] = filters.pop(key)
+        translated_filters = {}
         for key, value in filters.items():
+            try:
+                # Replace the key in the filter with the name within ElasticSearch
+                key = field_mapping[key]
+            except KeyError:
+                pass  # FIXME: Isn't this an error (https://github.com/DataBiosphere/azul/issues/1205)?
+            # Replace the value in the filter with the value translated for None values
             path = tuple(key.split('.'))
-            filters[key] = cls.translate_filter(value, path)
-        return filters
+            value = cls.translate_filter(value, path)
+            translated_filters[key] = value
+        return translated_filters
 
     @classmethod
     def translate_filter(cls, value: JSON, path: Tuple[str, ...]) -> JSON:
@@ -88,6 +87,23 @@ class ElasticTransformDump(object):
             return {cls.translate_filter(val, path) for val in value}
         else:
             return Document.translate_field(value, path)
+
+    @classmethod
+    def translate_facets(cls, facets: JSON, translation: JSON):
+        """
+        Translate facet values from Elasticsearch (eg. '__null__' -> None)
+
+        :param facets: Aggregation data from the es_response
+        :param translation: Mapping of facet names to their full field name (eg. 'fileSize': 'contents.files.size')
+        :return: The facets data with translated values
+        """
+        for key in facets.keys():
+            full_key = translation[key]
+            path = tuple(full_key.split('.'))
+            for bucket in facets[key]['myTerms']['buckets']:
+                bucket['key'] = Document.translate_field(bucket['key'], path, forward=False)
+        return facets
+
 
     @staticmethod
     def create_query(filters):
@@ -137,12 +153,7 @@ class ElasticTransformDump(object):
         # Create the filter aggregate
         aggregate = A('filter', filter_query)
         # Make an inner aggregate that will contain the terms in question
-        # _field = '{}.keyword'.format(facet_config[agg])
-        # HACK
-        if facet_config[agg] != 'pairedEnds':
-            _field = '{}.keyword'.format(facet_config[agg])
-        else:
-            _field = facet_config[agg]
+        _field = f'{facet_config[agg]}.keyword'
         if agg == 'project':
             _sub_field = request_config['translation']['projectId'] + '.keyword'
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size).bucket(
@@ -306,7 +317,7 @@ class ElasticTransformDump(object):
 
         # fetch one more than needed to see if there's a "next page".
         es_search = es_search.extra(size=pagination['size'] + 1)
-        logging.debug("es_search is " + str(es_search))
+        logger.debug("es_search is " + str(es_search))
         return es_search
 
     @staticmethod
@@ -324,7 +335,7 @@ class ElasticTransformDump(object):
         # ...else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
         count = len(es_hits)
-        logging.debug("count=" + str(count) + " and size=" + str(pagination['size']))
+        logger.debug("count=" + str(count) + " and size=" + str(pagination['size']))
         if 'search_before' in pagination:
             # hits are reverse sorted
             if count > pagination['size']:
@@ -369,18 +380,18 @@ class ElasticTransformDump(object):
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
-        self.logger.info('Transforming /summary request')
+        logger.info('Transforming /summary request')
         config_folder = os.path.dirname(service_config.__file__)
         # Create the path for the request_config_file
         request_config_path = "{}/{}".format(
             config_folder, request_config_file)
         # Get the Json Objects from the mapping_config and the request_config
-        self.logger.debug('Getting the request_config file')
+        logger.debug('Getting the request_config file')
         request_config = self.open_and_return_json(request_config_path)
         if not filters:
             filters = {}
         # Create a request to ElasticSearch
-        self.logger.info('Creating request to ElasticSearch')
+        logger.info('Creating request to ElasticSearch')
         es_search = self.create_request(
             filters, self.es_client,
             request_config,
@@ -391,7 +402,7 @@ class ElasticTransformDump(object):
         es_search.aggs.metric(
             'total_size',
             'sum',
-            field='contents.files.size')
+            field='contents.files.size_')
 
         # Add a per_organ aggregate to the ElasticSearch request
         es_search.aggs.bucket(
@@ -402,14 +413,14 @@ class ElasticTransformDump(object):
         ).bucket(
             'cell_count',
             'sum',
-            field='contents.cell_suspensions.total_estimated_cells'
+            field='contents.cell_suspensions.total_estimated_cells_'
         )
 
         # Add a cell_count aggregate to the ElasticSearch request
         es_search.aggs.metric(
             'total_cell_count',
             'sum',
-            field='contents.cell_suspensions.total_estimated_cells'
+            field='contents.cell_suspensions.total_estimated_cells_'
         )
 
         es_search.aggs.bucket(
@@ -420,22 +431,22 @@ class ElasticTransformDump(object):
             ('contents.specimens.document_id', 'specimenCount'),
             ('contents.files.uuid', 'fileCount'),
             ('contents.donors.document_id', 'donorCount'),
-            ('contents.projects.laboratory', 'labCount'),
+            ('contents.projects.laboratory', 'labCount'),   # FIXME Possible +1 error due to '__null__' value (#1188)
             ('contents.projects.document_id', 'projectCount')):
             es_search.aggs.metric(
                 agg_name, 'cardinality',
                 field='{}.keyword'.format(cardinality),
                 precision_threshold="40000")
         # Execute ElasticSearch request
-        self.logger.info('Executing request to ElasticSearch')
+        logger.info('Executing request to ElasticSearch')
         es_response = es_search.execute(ignore_cache=True)
         # Create the SummaryResponse object,
         #  which has the format for the summary request
-        self.logger.info('Creating a SummaryResponse object')
+        logger.info('Creating a SummaryResponse object')
         final_response = SummaryResponse(es_response.to_dict())
-        logger.info("Elasticsearch request: %s", json.dumps(es_search.to_dict(), indent=4))
-        self.logger.info(
-            'Returning the final response for transform_summary()')
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
+            logger.info('Returning the final response for transform_summary()')
         return final_response.apiResponse.to_json()
 
     def transform_request(self,
@@ -494,7 +505,7 @@ class ElasticTransformDump(object):
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         # No faceting (i.e. do the faceting on the filtered query)
-        self.logger.debug('Handling presence or absence of faceting')
+        logger.debug('Handling presence or absence of faceting')
         if post_filter is False:
             # Create request structure
             es_search = self.create_request(
@@ -550,6 +561,8 @@ class ElasticTransformDump(object):
             hits = Document.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
+            facets = self.translate_facets(facets, translation)
+
             paging = self.generate_paging_dict(es_response_dict, pagination)
             # Translate the sort field back to external name
             if paging['sort'] in inverse_translation:
@@ -571,7 +584,36 @@ class ElasticTransformDump(object):
         if format == 'full':
             source_filter = ['contents.metadata.*']
             entity_type = 'bundles'
-            manifest_config = self.generate_metadata_manifest()
+            es_search = self.create_request(filters,
+                                            self.es_client,
+                                            request_config,
+                                            post_filter=False,
+                                            source_filter=source_filter,
+                                            enable_aggregation=False,
+                                            entity_type=entity_type)
+            map_script = '''
+                for (row in params._source.contents.metadata) {
+                    for (f in row.keySet()) {
+                        params._agg.fields.add(f);
+                    }
+                }
+            '''
+            reduce_script = '''
+                Set fields = new HashSet();
+                for (agg in params._aggs) {
+                    fields.addAll(agg);
+                }
+                return new ArrayList(fields);
+            '''
+            es_search.aggs.metric('fields', 'scripted_metric',
+                                  init_script='params._agg.fields = new HashSet()',
+                                  map_script=map_script,
+                                  combine_script='return new ArrayList(params._agg.fields)',
+                                  reduce_script=reduce_script)
+            es_search.size = 0
+            response = es_search.execute()
+            aggregate = response.aggregations
+            manifest_config = self.generate_full_manifest_config(aggregate)
         elif format == 'bdbag':
             # Terra rejects `.` in column names
             manifest_config = {
@@ -594,33 +636,16 @@ class ElasticTransformDump(object):
                                         source_filter=source_filter,
                                         enable_aggregation=False,
                                         entity_type=entity_type)
+
         manifest = ManifestResponse(es_search, manifest_config, request_config['translation'], format)
 
         return manifest.return_response()
 
-    def generate_metadata_manifest(self) -> JSON:
-        bundles_index = config.es_index_name('bundles')
-        mapping = self.es_client.indices.get_mapping(index=bundles_index)
-        metadata = mapping[bundles_index]['mappings']['doc']['properties']['contents']['properties']['metadata']
-        metadata_mapping = self.metadata_mapping(metadata, None)
-        metadata_config = self.flatten_mapping(mapping=metadata_mapping)
-        return metadata_config
-
-    def metadata_mapping(self, mapping: JSON, key: str) -> JSON:
-        try:
-            return {k: self.metadata_mapping(v, k) for k, v in mapping.get('properties').items()}
-        except AttributeError:
-            return str(key)
-
-    def flatten_mapping(self, mapping, parent_key='', sep='.') -> JSON:
-        items = []
-        for k, v in mapping.items():
-            new_key = parent_key + sep + k if parent_key else k
-            if isinstance(v, collections.MutableMapping):
-                items.extend(self.flatten_mapping(mapping=v, parent_key=new_key, sep=sep).items())
-            else:
-                items.append((new_key, v))
-        return dict(items)
+    def generate_full_manifest_config(self, aggregate) -> JSON:
+        manifest_config = {}
+        for value in sorted(aggregate.fields.value):
+            manifest_config[value] = value.split('.')[-1]
+        return {'contents': manifest_config}
 
     def transform_autocomplete_request(
         self,
@@ -653,7 +678,7 @@ class ElasticTransformDump(object):
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
         config_folder = os.path.dirname(service_config.__file__)
-        self.logger.info('Transforming /keywords request')
+        logger.info('Transforming /keywords request')
         # Create the path for the mapping config file
         mapping_config_path = "{}/{}".format(
             config_folder, mapping_config_file)
@@ -661,17 +686,14 @@ class ElasticTransformDump(object):
         request_config_path = "{}/{}".format(
             config_folder, request_config_file)
         # Get the Json Objects from the mapping_config and the request_config
-        self.logger.debug(
-            'Getting the request_config and mapping_config file: {}'.format(
-                request_config_path,
-                mapping_config_path))
+        logger.debug('Getting the request_config %s and mapping_config file %s',
+                     request_config_path, mapping_config_path)
         mapping_config = self.open_and_return_json(mapping_config_path)
         request_config = self.open_and_return_json(request_config_path)
         # Get the right autocomplete mapping configuration
-        self.logger.debug("Entry is: {}".format(entry_format))
-        self.logger.debug(
-            "Printing the mapping_config: \n{}".format(
-                json_pp(mapping_config)))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Entry is: %s', entry_format)
+            logger.debug('Printing the mapping_config: \n%s', json_pp(mapping_config))
         mapping_config = mapping_config[entry_format]
         if not filters:
             filters = {}
@@ -686,34 +708,31 @@ class ElasticTransformDump(object):
             search_field,
             entity_type=entity_type)
         # Handle pagination
-        self.logger.info("Handling pagination")
+        logger.info('Handling pagination')
         pagination['sort'] = '_score'
         pagination['order'] = 'desc'
         es_search = self.apply_paging(es_search, pagination)
         # Executing ElasticSearch request
-        self.logger.debug(
-            "Printing ES_SEARCH request dict:\n {}".format(
-                json.dumps(es_search.to_dict())))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Printing ES_SEARCH request dict:\n %s', json.dumps(es_search.to_dict()))
         es_response = es_search.execute(ignore_cache=True)
         es_response_dict = es_response.to_dict()
-        self.logger.debug(
-            "Printing ES_SEARCH response dict:\n {}".format(
-                json.dumps(es_response_dict)))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'Printing ES_SEARCH response dict:\n %s', json.dumps(es_response_dict))
         # Extracting hits
         hits = [x['_source'] for x in es_response_dict['hits']['hits']]
         # Generating pagination
-        self.logger.debug("Generating pagination")
+        logger.debug('Generating pagination')
         paging = self.generate_paging_dict(es_response_dict, pagination)
         # Creating AutocompleteResponse
-        self.logger.info("Creating AutoCompleteResponse")
+        logger.info('Creating AutoCompleteResponse')
         final_response = AutoCompleteResponse(
             mapping_config,
             hits,
             paging,
             _type=entry_format)
         final_response = final_response.apiResponse.to_json()
-        self.logger.info(
-            "Returning the final response for transform_autocomplete_request")
+        logger.info('Returning the final response for transform_autocomplete_request')
         return final_response
 
     def transform_cart_item_request(self,

@@ -4,7 +4,7 @@ import logging
 import os
 from io import BytesIO
 from tempfile import TemporaryDirectory
-from unittest import mock, skip
+from unittest import mock
 from zipfile import ZipFile
 
 from botocore.exceptions import ClientError
@@ -15,6 +15,7 @@ import requests
 
 from azul import config
 from azul.json_freeze import freeze
+from azul.logging import configure_test_logging
 from azul.service import AbstractService
 from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
@@ -22,13 +23,11 @@ from azul.service.responseobjects.elastic_request_builder import ElasticTransfor
 from azul_test_case import AzulTestCase
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
+from lambdas.service import app
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
-    # Late import of Chalice app, otherwise it would interfere with test logging
-    global app
-    from lambdas.service import app
+    configure_test_logging()
 
 
 class ManifestEndpointTest(AzulTestCase):
@@ -535,7 +534,6 @@ class ManifestGenerationTest(WebServiceTestCase):
                     '__fastq_read2__file_url',
                 ], reader.fieldnames)
 
-    @skip("https://github.com/DataBiosphere/azul/issues/1152")
     @mock_sts
     @mock_s3
     def test_full_metadata(self):
@@ -649,13 +647,13 @@ class ManifestGenerationTest(WebServiceTestCase):
                  'EFO:0008931', 'EFO:0008931'),
                 (
                 'library_preparation_protocol.library_construction_approach.ontology_label', 'Smart-seq2', 'Smart-seq2',
-                '', ''),
+                    '', ''),
                 ('library_preparation_protocol.library_construction_approach.text', 'Smart-seq2', 'Smart-seq2',
                  'Smart-seq2', 'Smart-seq2'),
                 ('library_preparation_protocol.library_construction_kit.manufacturer', 'Illumina', 'Illumina', '', ''),
                 (
                 'library_preparation_protocol.library_construction_kit.retail_name', 'Nextera XT kit', 'Nextera XT kit',
-                '', ''),
+                    '', ''),
                 ('library_preparation_protocol.nucleic_acid_source', 'single cell', 'single cell', 'single cell',
                  'single cell'),
                 ('library_preparation_protocol.primer', 'poly-dT', 'poly-dT', 'poly-dT', 'poly-dT'),
@@ -755,6 +753,36 @@ class ManifestGenerationTest(WebServiceTestCase):
             self.assertIn(freeze(expected_300_fastq1_row), rows)
             self.assertIn(freeze(expected_300_fastq2_row), rows)
             self.assertTrue(all(len(row) == len(expected_fastq1_row) for row in rows))
+
+    @mock_sts
+    @mock_s3
+    def test_full_metadata_missing_fields(self):
+        self.maxDiff = None
+        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
+        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+
+            params = {'filters': json.dumps({'project': {'is': ['Single of human pancreas']}}), 'format': 'full'}
+            response = self.get_manifest(params)
+            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            tsv_file1 = csv.reader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            fieldnames1 = set(next(tsv_file1))
+
+            params = {'filters': json.dumps({'project': {'is': ['Mouse Melanoma']}}), 'format': 'full'}
+            response = self.get_manifest(params)
+            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            tsv_file2 = csv.reader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            fieldnames2 = set(next(tsv_file2))
+
+            intersection = fieldnames1 & fieldnames2
+            symmetric_diff = fieldnames1 ^ fieldnames2
+
+            self.assertGreater(len(intersection), 0)
+            self.assertGreater(len(symmetric_diff), 0)
 
     def test_manifest_format_validation(self):
         url = self.base_url + '/manifest/files?format=invalid-type'

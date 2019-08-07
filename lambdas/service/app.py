@@ -1,8 +1,7 @@
-import ast
 import base64
 import binascii
-import json
 import hashlib
+import json
 import logging.config
 import math
 import os
@@ -15,45 +14,33 @@ from urllib.parse import urlparse
 import boto3
 from botocore.exceptions import ClientError
 # noinspection PyPackageRequirements
-from chalice import BadRequestError, ChaliceViewError, NotFoundError, Response, AuthResponse
+from chalice import AuthResponse, BadRequestError, ChaliceViewError, NotFoundError, Response
 from more_itertools import one
 import requests
 
-from azul import config
+from azul import config, drs
 from azul.chalice import AzulChaliceApp
-from azul import drs
 from azul.health import Health
-from azul.security.authenticator import Authenticator, AuthenticationError
+from azul.logging import configure_app_logging
+from azul.security.authenticator import AuthenticationError, Authenticator
 from azul.service import service_config
+from azul.service.manifest import ManifestService
+from azul.service.repository import EntityNotFoundError, InvalidUUIDError, RepositoryService
 from azul.service.responseobjects.cart_export_job_manager import CartExportJobManager, InvalidExecutionTokenError
-from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.cart_export_service import CartExportService
+from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.collection_data_access import CollectionDataAccess
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
                                                                   ElasticTransformDump as EsTd,
                                                                   IndexNotFoundError)
-from azul.service.manifest import ManifestService
-from azul.service.repository import EntityNotFoundError, InvalidUUIDError, RepositoryService
-from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
-
-ENTRIES_PER_PAGE = 10
+from azul.service.step_function_helper import StateMachineError
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.WARNING)
-for top_level_pkg in (__name__, 'azul'):
-    logging.getLogger(top_level_pkg).setLevel(logging.INFO)
 
-app = AzulChaliceApp(app_name=config.service_name, configure_logs=False)
-# FIXME: this should be configurable via environment variable (https://github.com/DataBiosphere/azul/issues/419)
-app.debug = True
-# FIXME: please use module logger instead (https://github.com/DataBiosphere/azul/issues/419)
-app.log.setLevel(logging.DEBUG)
+app = AzulChaliceApp(app_name=config.service_name)
 
-# TODO: Write the docstrings so they can support swagger.
-# Please see https://github.com/rochacbruno/flasgger
-# stackoverflow.com/questions/43911510/ \
-# how-to-write-docstring-for-url-parameters
+configure_app_logging(app, log)
 
 
 sort_defaults = {
@@ -69,7 +56,7 @@ def _get_pagination(current_request, entity_type):
     default_sort, default_order = sort_defaults[entity_type]
     pagination = {
         "order": query_params.get('order', default_order),
-        "size": int(query_params.get('size', ENTRIES_PER_PAGE)),
+        "size": int(query_params.get('size', '10')),
         "sort": query_params.get('sort', default_sort),
     }
     sa = query_params.get('search_after')
@@ -449,14 +436,6 @@ def get_order():
     return {'order': order_list}
 
 
-def get_format(params):
-    format_ = params.get('format', 'tsv')
-    if format_ in ('tsv', 'bdbag', 'full'):
-        return format_
-    else:
-        raise BadRequestError(f'{format_} is not a valid manifest format.')
-
-
 @app.route('/manifest/files', methods=['GET'], cors=True)
 def start_manifest_generation():
     """
@@ -487,8 +466,6 @@ def start_manifest_generation():
     If the manifest generation is done and the manifest is ready to be downloaded, the response will
     have a 302 status and will redirect to the URL of the manifest.
     """
-    get_format(app.current_request.query_params)
-
     wait_time, location = handle_manifest_generation_request()
     return Response(body='',
                     headers={
@@ -578,14 +555,19 @@ def handle_manifest_generation_request():
     """
     query_params = app.current_request.query_params or {}
     filters = query_params.get('filters')
-    format = query_params.get('format')
+    try:
+        format_ = query_params['format']
+    except KeyError:
+        format_ = 'tsv'
+    if format_ not in ('tsv', 'bdbag', 'full'):
+        raise BadRequestError(f'{format_} is not a valid manifest format.')
     token = query_params.get('token')
     retry_url = self_url()
     manifest_service = ManifestService()
     try:
         return manifest_service.start_or_inspect_manifest_generation(retry_url,
                                                                      token=token,
-                                                                     format=format,
+                                                                     format=format_,
                                                                      filters=filters)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':

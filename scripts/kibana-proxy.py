@@ -32,6 +32,8 @@ import time
 
 import boto3
 
+from azul.logging import configure_script_logging
+
 log = logging.getLogger(__name__)
 
 
@@ -115,6 +117,5 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.WARN)
-    log.setLevel(logging.INFO)
+    configure_script_logging(log)
     main(sys.argv[1:])

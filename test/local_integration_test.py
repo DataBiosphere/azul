@@ -27,6 +27,7 @@ from azul import config
 from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
 from azul.dss import patch_client_for_direct_access
+from azul.logging import configure_test_logging
 from azul.requests import requests_session
 from azul import drs
 
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    configure_test_logging(logger)
 
 
 class IntegrationTest(unittest.TestCase):
@@ -123,6 +124,7 @@ class IntegrationTest(unittest.TestCase):
         for format_, validator in [
             (None, self.check_manifest),
             ('tsv', self.check_manifest),
+            ('full', self.check_manifest),
             ('bdbag', self.check_bdbag)
         ]:
             with self.subTest(format=format_, filter=manifest_filter):

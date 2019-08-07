@@ -1,5 +1,4 @@
 import json
-import logging
 import unittest
 import urllib.parse
 
@@ -7,6 +6,7 @@ from more_itertools import one
 import requests
 
 from azul import config
+from azul.logging import configure_test_logging
 from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
                                                           KeywordSearchResponse)
 from azul.transformer import Document
@@ -14,11 +14,10 @@ from service import WebServiceTestCase
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class TestResponse(WebServiceTestCase):
-
     maxDiff = None
     bundles = WebServiceTestCase.bundles + [
         ('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
@@ -618,7 +617,6 @@ class TestResponse(WebServiceTestCase):
                         self.assertEqual('aws', actual_query_vars['replica'])
                         self.assertIsNotNone(actual_query_vars['version'])
 
-
     def test_projects_key_search_response(self):
         """
         Test building response for projects
@@ -1165,6 +1163,31 @@ class TestResponse(WebServiceTestCase):
                     for term in response_json['termFacets']['project']['terms']:
                         self.assertEqual(term['projectId'], [test_data['id']])
 
+    def test_translated_facets(self):
+        """
+        Test that response facets values are correctly translated back to correct data types
+        and that the translated None value '__null__' is not present
+        """
+        url = self.base_url + "/repository/samples"
+        params = {'size': 10, 'filters': json.dumps({})}
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        response_json = response.json()
+        facets = response_json['termFacets']
+
+        paired_end_terms = {term['term'] for term in facets['pairedEnd']['terms']}
+        self.assertEqual(paired_end_terms, {'true', 'false'})
+
+        preservation_method_terms = {term['term'] for term in facets['preservationMethod']['terms']}
+        self.assertEqual(preservation_method_terms, {None})
+
+        model_organ_part_terms = {term['term'] for term in facets['modelOrganPart']['terms']}
+        self.assertEqual(model_organ_part_terms, {None})
+
+        for facet in facets.values():
+            for term in facet['terms']:
+                self.assertNotEqual(term['term'], config.null_keyword)
+
     def test_sample(self):
         """
         Test that sample(s) in the response contain values matching values in the source cellLine/organoid/specimen
@@ -1204,77 +1227,77 @@ class TestResponse(WebServiceTestCase):
 
     def test_ranged_values(self):
         test_hits = [
-                [
-                    {
-                        "biologicalSex": [
-                            "male",
-                            "female"
-                        ],
-                        "disease": None,
-                        "genusSpecies": [
-                            "Homo sapiens"
-                        ],
-                        "id": [
-                            "HPSI0314i-hoik",
-                            "HPSI0214i-wibj",
-                            "HPSI0314i-sojd",
-                            "HPSI0214i-kucg"
-                        ],
-                        "organismAge": [
-                            "45-49",
-                            "65-69"
-                        ],
-                        "organismAgeRange": [
-                            {
-                                "gte": 2049840000.0,
-                                "lte": 2175984000.0
-                            },
-                            {
-                                "gte": 1419120000.0,
-                                "lte": 1545264000.0
-                            }
-                        ],
-                        "organismAgeUnit": [
-                            "year"
-                        ]
-                    }
-                ],
-                [
-                    {
-                        "biologicalSex": [
-                            "male",
-                            "female"
-                        ],
-                        "disease": None,
-                        "genusSpecies": [
-                            "Homo sapiens"
-                        ],
-                        "id": [
-                            "HPSI0314i-hoik",
-                            "HPSI0214i-wibj",
-                            "HPSI0314i-sojd",
-                            "HPSI0214i-kucg"
-                        ],
-                        "organismAge": [
-                            "40-44",
-                            "55-59"
-                        ],
-                        "organismAgeRange": [
-                            {
-                                "gte": 1734480000.0,
-                                "lte": 1860624000.0
-                            },
-                            {
-                                "gte": 1261440000.0,
-                                "lte": 1387584000.0
-                            }
-                        ],
-                        "organismAgeUnit": [
-                            "year"
-                        ]
-                    }
-                ]
+            [
+                {
+                    "biologicalSex": [
+                        "male",
+                        "female"
+                    ],
+                    "disease": None,
+                    "genusSpecies": [
+                        "Homo sapiens"
+                    ],
+                    "id": [
+                        "HPSI0314i-hoik",
+                        "HPSI0214i-wibj",
+                        "HPSI0314i-sojd",
+                        "HPSI0214i-kucg"
+                    ],
+                    "organismAge": [
+                        "45-49",
+                        "65-69"
+                    ],
+                    "organismAgeRange": [
+                        {
+                            "gte": 2049840000.0,
+                            "lte": 2175984000.0
+                        },
+                        {
+                            "gte": 1419120000.0,
+                            "lte": 1545264000.0
+                        }
+                    ],
+                    "organismAgeUnit": [
+                        "year"
+                    ]
+                }
+            ],
+            [
+                {
+                    "biologicalSex": [
+                        "male",
+                        "female"
+                    ],
+                    "disease": None,
+                    "genusSpecies": [
+                        "Homo sapiens"
+                    ],
+                    "id": [
+                        "HPSI0314i-hoik",
+                        "HPSI0214i-wibj",
+                        "HPSI0314i-sojd",
+                        "HPSI0214i-kucg"
+                    ],
+                    "organismAge": [
+                        "40-44",
+                        "55-59"
+                    ],
+                    "organismAgeRange": [
+                        {
+                            "gte": 1734480000.0,
+                            "lte": 1860624000.0
+                        },
+                        {
+                            "gte": 1261440000.0,
+                            "lte": 1387584000.0
+                        }
+                    ],
+                    "organismAgeUnit": [
+                        "year"
+                    ]
+                }
             ]
+        ]
 
         url = self.base_url + '/repository/projects'
         for relation, range_value, expected_hits in [('contains', (1419130000, 1545263000), test_hits[:1]),
@@ -1283,7 +1306,6 @@ class TestResponse(WebServiceTestCase):
                                                      ('contains', (1860624000, 2049641000), []),
                                                      ('within', (1734490000, 1860623000), []),
                                                      ('intersects', (1860624100, 2049641000), [])]:
-
             with self.subTest(relation=relation, value=range_value):
                 params = {
                     'filters': json.dumps({'organismAgeRange': {relation: [range_value]}}),
@@ -1296,7 +1318,6 @@ class TestResponse(WebServiceTestCase):
 
 
 class TestResponseSummary(WebServiceTestCase):
-
     maxDiff = None
     bundles = WebServiceTestCase.bundles + [
         ('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
@@ -1350,6 +1371,23 @@ class TestResponseSummary(WebServiceTestCase):
             {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0},
         ])
 
+    def test_summary_filter_none(self):
+        # FIXME: filter by None not finding fields that are missing (https://github.com/DataBiosphere/azul/issues/1202)
+        url = self.base_url + '/repository/summary?filters={"pairedEnd": {"is": [null]}}'
+        response = requests.get(url)
+        response.raise_for_status()
+        summary_object = response.json()
+        self.assertEqual(summary_object['donorCount'], 0)
+        self.assertEqual(summary_object['specimenCount'], 0)
+        self.assertEqual(summary_object['projectCount'], 0)
+
+        url = self.base_url + '/repository/summary?filters={"organPart": {"is": [null]}}'
+        response = requests.get(url)
+        response.raise_for_status()
+        summary_object = response.json()
+        self.assertEqual(summary_object['donorCount'], 0)
+        self.assertEqual(summary_object['specimenCount'], 0)
+        self.assertEqual(summary_object['projectCount'], 0)
 
 if __name__ == '__main__':
     unittest.main()
