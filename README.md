@@ -751,8 +751,11 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    git log LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --no-merges
    ```
 
-   You will also need to add the release tag and commit hash which are generated
-   later in this guide.
+   For the version, use the full hash of the latest commit:
+
+   ```
+   git log -1 --format="%H"
+   ```
 
 5. At this point you should determine whether or not you will need to reindex.
    The `CHANGELOG.yml` _should_ contain this information but is notoriously
@@ -764,10 +767,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
 
    where `LAST_RELEASE_TAG` is the previous release of the target branch. If the diff
    contains non-trivial changes reindexing is probably necessary. When in doubt
-   assume yes. Announce your conclusion in the 
-   [#data-wrangling](https://humancellatlas.slack.com/messages/C9ENBPVNW)
-   (this should be done before 5pm Pacific, Monday for staging and Tuesday for
-   production).
+   assume yes.
 
 ### 6.1.3 Finishing up deployment / promotion
 
