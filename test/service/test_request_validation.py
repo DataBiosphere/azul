@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import sys
 
@@ -9,14 +8,13 @@ from unittest import mock
 import requests
 
 import azul.changelog
+from azul.logging import configure_test_logging
 from azul.service import service_config
 from service import WebServiceTestCase
 
-log = logging.getLogger(__name__)
-
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class FacetNameValidationTest(WebServiceTestCase):

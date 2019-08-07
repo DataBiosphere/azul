@@ -27,6 +27,7 @@ from azul import config
 from azul.decorators import memoized_property
 from azul.azulclient import AzulClient
 from azul.dss import patch_client_for_direct_access
+from azul.logging import configure_test_logging
 from azul.requests import requests_session
 from azul import drs
 
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    configure_test_logging(logger)
 
 
 class IntegrationTest(unittest.TestCase):
@@ -99,7 +100,7 @@ class IntegrationTest(unittest.TestCase):
         self.test_notifications, self.expected_fqids = azul_client.test_notifications(self.test_name, self.test_uuid)
         azul_client._index(self.test_notifications)
         # Index some again to test that we can handle duplicate notifications. Note: choices are with replacement
-        azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications)//2))
+        azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
         self.num_bundles = len(self.expected_fqids)
         self.check_bundles_are_indexed(self.test_name, 'files')
 
@@ -123,6 +124,7 @@ class IntegrationTest(unittest.TestCase):
         for format_, validator in [
             (None, self.check_manifest),
             ('tsv', self.check_manifest),
+            ('full', self.check_manifest),
             ('bdbag', self.check_bdbag)
         ]:
             with self.subTest(format=format_, filter=manifest_filter):
@@ -150,7 +152,7 @@ class IntegrationTest(unittest.TestCase):
     def delete_bundles(self, duplicates=False):
         if duplicates:
             # Note: random.choices is with replacement (so the same choice may be made several times
-            notifications = random.choices(self.test_notifications, k=len(self.test_notifications)//2)
+            notifications = random.choices(self.test_notifications, k=len(self.test_notifications) // 2)
         else:
             notifications = self.test_notifications
         for n in notifications:
@@ -160,8 +162,8 @@ class IntegrationTest(unittest.TestCase):
                 logger.warning('Deletion for notification %s failed. Possibly it was never indexed.', n, exc_info=e)
         self.wait_for_queue_level(empty=False)
         self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
-        self.assertTrue(self.project_removed_from_azul(), f"Project '{self.test_name}' was not fully "
-                                                          "removed from index within 5 min. of deletion")
+        self.assertTrue(self.project_removed_from_azul(),
+                        f"Project '{self.test_name}' was not fully removed from index within 5 min. of deletion")
 
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -372,15 +374,15 @@ class DSSIntegrationTest(unittest.TestCase):
         self.maxDiff = None
         for patch in False, True:
             for replica in 'aws', 'gcp':
-                    dss_client = config.dss_client()
-                    if patch:
-                        patch_client_for_direct_access(dss_client)
-                        with mock.patch('boto3.client') as mock_client:
-                            mock_s3 = mock.MagicMock()
-                            mock_s3.get_object.side_effect = ValueError()
-                            mock_client.return_value = mock_s3
-                            self._test_patched_client(patch, query, dss_client, replica, patch_fallback=True)
-                    self._test_patched_client(patch, query, dss_client, replica, patch_fallback=False)
+                dss_client = config.dss_client()
+                if patch:
+                    patch_client_for_direct_access(dss_client)
+                    with mock.patch('boto3.client') as mock_client:
+                        mock_s3 = mock.MagicMock()
+                        mock_s3.get_object.side_effect = ValueError()
+                        mock_client.return_value = mock_s3
+                        self._test_patched_client(patch, query, dss_client, replica, patch_fallback=True)
+                self._test_patched_client(patch, query, dss_client, replica, patch_fallback=False)
 
     def _test_patched_client(self, patch, query, dss_client, replica, patch_fallback):
         with self.subTest(patch=patch, replica=replica, patch_fallback=patch_fallback):
@@ -420,4 +422,3 @@ class DSSIntegrationTest(unittest.TestCase):
                                         version='2018-11-19T232756.056947Z',
                                         replica='aws')
                 self.assertEqual(e.exception.reason, 'not_found')
-

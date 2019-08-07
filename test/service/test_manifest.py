@@ -15,6 +15,7 @@ import requests
 
 from azul import config
 from azul.json_freeze import freeze
+from azul.logging import configure_test_logging
 from azul.service import AbstractService
 from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
@@ -22,10 +23,11 @@ from azul.service.responseobjects.elastic_request_builder import ElasticTransfor
 from azul_test_case import AzulTestCase
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
+from lambdas.service import app
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class ManifestEndpointTest(AzulTestCase):
@@ -39,16 +41,14 @@ class ManifestEndpointTest(AzulTestCase):
         Calling start manifest generation without a token should start an execution and return a response
         with Retry-After and Location in the headers
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import start_manifest_generation
+
         execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
         mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
         format = 'tsv'
         filters = {'file': {'organ': {'is': ['lymph node']}}}
         current_request.query_params = {'filters': json.dumps(filters), 'format': format}
-        response = start_manifest_generation()
+        response = app.start_manifest_generation()
         self.assertEqual(301, response.status_code)
         self.assertIn('Retry-After', response.headers)
         self.assertIn('Location', response.headers)
@@ -67,16 +67,14 @@ class ManifestEndpointTest(AzulTestCase):
         Calling start manifest generation with the browser parameter should return the status code,
         Retry-After, and Location in the body of a 200 response instead of the headers
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import start_manifest_generation_fetch
+
         execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
         mock_uuid.return_value = execution_name
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
         format = 'tsv'
         filters = {'file': {'organ': {'is': ['lymph node']}}}
         current_request.query_params = {'filters': json.dumps(filters), 'format': format}
-        response = start_manifest_generation_fetch()
+        response = app.start_manifest_generation_fetch()
         self.assertEqual(301, response['Status'])
         self.assertIn('Retry-After', response)
         self.assertIn('Location', response)
@@ -92,14 +90,12 @@ class ManifestEndpointTest(AzulTestCase):
         """
         Calling start manifest generation with a token should check the status without starting an execution
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
         step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
-        handle_manifest_generation_request()
+        app.handle_manifest_generation_request()
         step_function_helper.start_execution.assert_not_called()
         step_function_helper.describe_execution.assert_called_once()
 
@@ -109,9 +105,7 @@ class ManifestEndpointTest(AzulTestCase):
         """
         Manifest status check should raise a BadRequestError (400 status code) if execution cannot be found
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -120,7 +114,7 @@ class ManifestEndpointTest(AzulTestCase):
                 'Code': 'ExecutionDoesNotExist'
             }
         }, '')
-        self.assertRaises(BadRequestError, handle_manifest_generation_request)
+        self.assertRaises(BadRequestError, app.handle_manifest_generation_request)
 
     @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
@@ -128,9 +122,7 @@ class ManifestEndpointTest(AzulTestCase):
         """
         Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -139,7 +131,7 @@ class ManifestEndpointTest(AzulTestCase):
                 'Code': 'OtherError'
             }
         }, '')
-        self.assertRaises(ClientError, handle_manifest_generation_request)
+        self.assertRaises(ClientError, app.handle_manifest_generation_request)
 
     @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
@@ -147,25 +139,21 @@ class ManifestEndpointTest(AzulTestCase):
         """
         Manifest status check should return a generic error (500 status code) if the execution errored
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
         step_function_helper.get_manifest_status.side_effect = StateMachineError
-        self.assertRaises(ChaliceViewError, handle_manifest_generation_request)
+        self.assertRaises(ChaliceViewError, app.handle_manifest_generation_request)
 
     @mock.patch('lambdas.service.app.app.current_request')
     def test_manifest_endpoint_invalid_token(self, current_request):
         """
         Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
         """
-        # FIXME: local import for now to delay side effects of the import like logging being configured
-        # https://github.com/DataBiosphere/azul/issues/637
-        from lambdas.service.app import handle_manifest_generation_request
+
         current_request.query_params = {'token': 'Invalid base64'}
-        self.assertRaises(BadRequestError, handle_manifest_generation_request)
+        self.assertRaises(BadRequestError, app.handle_manifest_generation_request)
 
 
 class ManifestGenerationTest(WebServiceTestCase):
@@ -568,8 +556,6 @@ class ManifestGenerationTest(WebServiceTestCase):
                 ('*.file_core.file_format', 'fastq.gz', 'fastq.gz', 'fastq.gz', 'fastq.gz'),
                 ('*.file_core.file_name', 'SRR3562915_2.fastq.gz', 'SRR3562915_1.fastq.gz',
                  '22028_5#300_1.fastq.gz', '22028_5#300_2.fastq.gz'),
-                ('*.provenance.update_date', '2018-11-02T10:35:03.810Z', '2018-11-02T10:35:07.705Z',
-                 '2018-09-14T09:10:48.771Z', '2018-09-14T09:10:48.630Z'),
                 ('bundle_uuid', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                  'f79257a7-dfc6-46d6-ae00-ba4b25313c10', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
                 ('bundle_version', '2018-11-02T113344.698028Z', '2018-11-02T113344.698028Z',
@@ -648,6 +634,10 @@ class ManifestGenerationTest(WebServiceTestCase):
                 ('enrichment_protocol.provenance.document_id', '5bd4ba68-4c0e-4d22-840d-afc025e7badc',
                  '5bd4ba68-4c0e-4d22-840d-afc025e7badc', 'd3287615-b97a-4984-a8cf-30a1c30e4773',
                  'd3287615-b97a-4984-a8cf-30a1c30e4773'),
+                ('file_uuid', '74897eb7-0701-4e4f-9e6b-8b9521b2816b', '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                 'f2b6c6f0-8d25-4aae-b255-1974cc110cfe', 'f6608ce9-a570-4d5d-bd1f-407454958424'),
+                ('file_version', '2018-11-02T113344.450442Z', '2018-11-02T113344.698028Z',
+                 '2018-09-14T123343.720332Z', '2018-09-14T123345.304412Z'),
                 ('library_preparation_protocol.end_bias', 'full length', 'full length', 'full length', 'full length'),
                 ('library_preparation_protocol.input_nucleic_acid_molecule.ontology', 'OBI:0000869', 'OBI:0000869',
                  'OBI:0000869', 'OBI:0000869'),
@@ -657,13 +647,13 @@ class ManifestGenerationTest(WebServiceTestCase):
                  'EFO:0008931', 'EFO:0008931'),
                 (
                 'library_preparation_protocol.library_construction_approach.ontology_label', 'Smart-seq2', 'Smart-seq2',
-                '', ''),
+                    '', ''),
                 ('library_preparation_protocol.library_construction_approach.text', 'Smart-seq2', 'Smart-seq2',
                  'Smart-seq2', 'Smart-seq2'),
                 ('library_preparation_protocol.library_construction_kit.manufacturer', 'Illumina', 'Illumina', '', ''),
                 (
                 'library_preparation_protocol.library_construction_kit.retail_name', 'Nextera XT kit', 'Nextera XT kit',
-                '', ''),
+                    '', ''),
                 ('library_preparation_protocol.nucleic_acid_source', 'single cell', 'single cell', 'single cell',
                  'single cell'),
                 ('library_preparation_protocol.primer', 'poly-dT', 'poly-dT', 'poly-dT', 'poly-dT'),
@@ -763,6 +753,36 @@ class ManifestGenerationTest(WebServiceTestCase):
             self.assertIn(freeze(expected_300_fastq1_row), rows)
             self.assertIn(freeze(expected_300_fastq2_row), rows)
             self.assertTrue(all(len(row) == len(expected_fastq1_row) for row in rows))
+
+    @mock_sts
+    @mock_s3
+    def test_full_metadata_missing_fields(self):
+        self.maxDiff = None
+        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
+        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+
+            params = {'filters': json.dumps({'project': {'is': ['Single of human pancreas']}}), 'format': 'full'}
+            response = self.get_manifest(params)
+            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            tsv_file1 = csv.reader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            fieldnames1 = set(next(tsv_file1))
+
+            params = {'filters': json.dumps({'project': {'is': ['Mouse Melanoma']}}), 'format': 'full'}
+            response = self.get_manifest(params)
+            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            tsv_file2 = csv.reader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            fieldnames2 = set(next(tsv_file2))
+
+            intersection = fieldnames1 & fieldnames2
+            symmetric_diff = fieldnames1 ^ fieldnames2
+
+            self.assertGreater(len(intersection), 0)
+            self.assertGreater(len(symmetric_diff), 0)
 
     def test_manifest_format_validation(self):
         url = self.base_url + '/manifest/files?format=invalid-type'

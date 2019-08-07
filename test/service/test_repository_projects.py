@@ -1,12 +1,11 @@
-import logging
-
 import requests
 
+from azul.logging import configure_test_logging
 from service import WebServiceTestCase
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class RepositoryProjectsEndpointTest(WebServiceTestCase):
