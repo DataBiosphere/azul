@@ -782,7 +782,17 @@ If in doubt ask on #dcp-ops.
 None of these steps can be performed ahead of time. Only perform them once you
 are ready to actually deploy.
 
-1. Now you need to push the current branch to Github. This is needed because
+1. Activate your virtual environment and run
+   ```
+   source environment
+   ```
+   and then select the target deployment stage with
+   ```
+   _select STAGE
+   ```
+   where stage is one of `dev`, `integration`, `staging`, or `prod`
+
+2. Now you need to push the current branch to Github. This is needed because
    the Gitlab build performs a status check update on Github. This would fail
    if Github didn't know the commit.
 
@@ -790,7 +800,7 @@ are ready to actually deploy.
    git push origin
    ```
 
-2. Finally, push to Gitlab.
+3. Finally, push to Gitlab.
 
    ```
    git push gitlab.dev   # for a dev, integration or staging deployment
@@ -802,16 +812,12 @@ are ready to actually deploy.
    
    If reindexing and promoting to staging or production, send a second 
    warning about reindexing to the #data-wrangling channel at this point.
-
-3. Activate your virtual environment and run
-   ```
-   source environment
-   ```
-   and then select the correct deployment stage with
-   ```
-   _select STAGE
-   ```
-   where stage is one of `dev`, `integration`, `staging`, or `prod`
+   
+   Wait until the pipeline on Gitlab succeeds or fails. If the build fails before 
+   the `deploy` stage, no permanent changes were made to the deployment but you 
+   need to investigate the failure. If the pipeline fails at or after the `deploy` 
+   stage, you need triage the failure. If it can't be resolved manually, you need 
+   to reset the branch back to the LAST_RELEASE_TAG and repeat step 2 in this section.
 
 4. Invoke the health and version endpoints.
 
@@ -864,11 +870,6 @@ are ready to actually deploy.
    ```
 
    invocation that it echoes.
-
-   Copy this tag and add it to the release notes (if applicable).
-
-   If the build fails, you may need to revert the offending commits and push
-   again.
 
 6. In the case that you need to reindex run the manual `reindex` job on the 
    Gitlab pipeline representing the most recent build on the current branch.
