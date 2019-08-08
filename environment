@@ -11,7 +11,11 @@ azul_vars=(
 
     # Controls the verbosity of application logs. Use 0 for no debug logging
     # 1 for debug logging by application code and info logging by other code
-    # and 2 for debug logging by all code.
+    # and 2 for debug logging by all code. This also controls app.debug, a
+    # Chalice setting that causes an app to return a traceback in the body of
+    # error responses: Setting AZUL_DEBUG to 0 disables the traceback
+    # (app.debug = False), 1 or higher enable it (app.debug = True).
+    # See https://github.com/aws/chalice#tutorial-error-messages for more.
     AZUL_DEBUG
 
     # The name of the current deployment. This variable controls the name of all
