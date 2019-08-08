@@ -1,36 +1,37 @@
-import argparse
 import ast
-from azul import config
-from azul.logging import configure_script_logging
-from azul.types import JSON
-import boto3
 import logging
+
+import boto3
+
+from azul import config
+from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 
 
-class RedButton:
+class Lambdas:
+    tag_name = 'azul-original-concurrency-limit'
 
     def __init__(self):
         self.lambda_ = boto3.client('lambda')
-        self.tag_name = 'azul-original-concurrency-limit'
 
-    def enable_azul_lambdas(self, enabled: bool):
+    def manage_lambdas(self, enabled: bool):
         paginator = self.lambda_.get_paginator('list_functions')
         lambda_prefixes = [config.qualified_resource_name(lambda_infix) for lambda_infix in config.lambda_names()]
         assert all(lambda_prefixes)
         for lambda_page in paginator.paginate(FunctionVersion='ALL', MaxItems=500):
             for lambda_name in [metadata['FunctionName'] for metadata in lambda_page['Functions']]:
                 if any(lambda_name.startswith(prefix) for prefix in lambda_prefixes):
-                    lambda_settings = self.lambda_.get_function(FunctionName=lambda_name)
-                    lambda_arn = lambda_settings['Configuration']['FunctionArn']
-                    lambda_tags = self.lambda_.list_tags(Resource=lambda_arn)['Tags']
-                    if enabled:
-                        self.enable_lambda(lambda_settings, lambda_tags)
-                    else:
-                        self.disable_lambda(lambda_settings, lambda_tags)
+                    self.manage_lambda(lambda_name, enabled)
 
-    def enable_lambda(self, lambda_settings: JSON, lambda_tags: JSON):
+    def manage_lambda(self, lambda_name: str, enable: bool):
+        lambda_settings = self.lambda_.get_function(FunctionName=lambda_name)
+        lambda_arn = lambda_settings['Configuration']['FunctionArn']
+        lambda_tags = self.lambda_.list_tags(Resource=lambda_arn)['Tags']
+        method = (self._enable_lambda if enable else self._disable_lambda)
+        method(lambda_settings, lambda_tags)
+
+    def _enable_lambda(self, lambda_settings: JSON, lambda_tags: JSON):
         lambda_name = lambda_settings['Configuration']['FunctionName']
         if self.tag_name in lambda_tags.keys():
             original_concurrency_limit = ast.literal_eval(lambda_tags[self.tag_name])
@@ -48,7 +49,7 @@ class RedButton:
         else:
             logger.warning(f'{lambda_name} is already enabled.')
 
-    def disable_lambda(self, lambda_settings: JSON, lambda_tags: JSON):
+    def _disable_lambda(self, lambda_settings: JSON, lambda_tags: JSON):
         lambda_name = lambda_settings['Configuration']['FunctionName']
         if self.tag_name not in lambda_tags.keys():
             try:
@@ -66,14 +67,3 @@ class RedButton:
             self.lambda_.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
         else:
             logger.warning(f'{lambda_name} is already disabled.')
-
-
-if __name__ == '__main__':
-    configure_script_logging(logger)
-    parser = argparse.ArgumentParser(description='Enables or disables the lambdas in the current deployment.')
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--enable', dest='enabled', action='store_true', default=None)
-    group.add_argument('--disable', dest='enabled', action='store_false')
-    args = parser.parse_args()
-    assert args.enabled is not None
-    RedButton().enable_azul_lambdas(args.enabled)
