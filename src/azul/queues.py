@@ -1,9 +1,11 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from itertools import chain
 import os
 import sys
 
 import argparse
 import time
+from typing import Mapping, Any, MutableMapping
 
 import boto3
 import json
@@ -15,13 +17,17 @@ import logging
 
 from urllib.parse import urlparse
 
+from azul.decorators import memoized_property
 from azul.files import write_file_atomically
+from azul.lambdas import Lambdas
 from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
 
+Queue = Any  # place-holder for boto3's SQS queue resource
 
-class Main:
+
+class Queues:
 
     @classmethod
     def main(cls, argv):
@@ -76,14 +82,33 @@ class Main:
 
         args = p.parse_args(argv)
 
-        main = Main(args)
-        if args.command:
-            getattr(main, args.command)()
+        if args.command in ('list', 'purge', 'purge_all'):
+            queues = Queues()
+            if args.command == 'list':
+                queues.list()
+            elif args.command == 'purge':
+                queues.purge(args.queue)
+            elif args.command == 'purge_all':
+                queues.purge_all()
+            else:
+                assert False, args.command
+        elif args.command in ('dump', 'dump_all'):
+            queues = Queues(delete=args.delete, json_body=args.json_body)
+            if args.command == 'dump':
+                queues.dump(args.queue, args.path)
+            elif args.command == 'dump_all':
+                queues.dump_all()
+            else:
+                assert False, args.command
+        elif args.command == 'feed':
+            queues = Queues(delete=args.delete)
+            queues.feed(args.path, args.queue, force=args.force)
         else:
             p.print_usage()
 
-    def __init__(self, args):
-        self.args = args
+    def __init__(self, delete=False, json_body=True):
+        self._delete = delete
+        self._json_body = json_body
 
     def list(self):
         logger.info('Listing queues')
@@ -98,10 +123,10 @@ class Main:
                                                         queue.attributes['ApproximateNumberOfMessagesNotVisible'],
                                                         queue.attributes['ApproximateNumberOfMessagesDelayed']))
 
-    def dump(self):
+    def dump(self, queue_name, path):
         sqs = boto3.resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName=self.args.queue)
-        self._dump(queue, self.args.path)
+        queue = sqs.get_queue_by_name(QueueName=queue_name)
+        self._dump(queue, path)
 
     def dump_all(self):
         for queue_name, queue in self._azul_queues():
@@ -120,7 +145,7 @@ class Main:
                 messages.extend(message_batch)
         self._dump_messages(messages, queue.url, path)
         message_batches = list(more_itertools.chunked(messages, 10))
-        if self.args.delete:
+        if self._delete:
             logger.info('Removing messages from queue "%s"', queue.url)
             self._delete_messages(message_batches, queue)
         else:
@@ -163,7 +188,7 @@ class Main:
             'MessageId': message.message_id,
             'ReceiptHandle': message.receipt_handle,
             'MD5OfBody': message.md5_of_body,
-            'Body': json.loads(message.body) if self.args.json_body else message.body,
+            'Body': json.loads(message.body) if self._json_body else message.body,
             'Attributes': message.attributes,
         }
 
@@ -200,16 +225,16 @@ class Main:
         return any(config.unqualified_resource_name_or_none(queue_name, suffix)[1] == config.deployment_stage
                    for suffix in ('', '.fifo'))
 
-    def feed(self):
-        with open(self.args.path) as file:
+    def feed(self, path, queue_name, force=False):
+        with open(path) as file:
             content = json.load(file)
             orig_queue = content['queue']
             messages = content['messages']
         sqs = boto3.resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName=self.args.queue)
-        logger.info('Writing messages from file "%s" to queue "%s"', self.args.path, queue.url)
+        queue = sqs.get_queue_by_name(QueueName=queue_name)
+        logger.info('Writing messages from file "%s" to queue "%s"', path, queue.url)
         if orig_queue != queue.url:
-            if self.args.force:
+            if force:
                 logger.warning('Messages originating from queue "%s" are being fed into queue "%s"',
                                orig_queue, queue.url)
             else:
@@ -218,13 +243,13 @@ class Main:
         message_batches = list(more_itertools.chunked(messages, 10))
 
         def _cleanup():
-            if self.args.delete:
+            if self._delete:
                 remaining_messages = list(chain.from_iterable(message_batches))
                 if len(remaining_messages) < len(messages):
-                    self._dump_messages(messages, orig_queue, self.args.path)
+                    self._dump_messages(messages, orig_queue, path)
                 else:
                     assert len(remaining_messages) == len(messages)
-                    logger.info('No messages were submitted, not touching local file "%s"', self.args.path)
+                    logger.info('No messages were submitted, not touching local file "%s"', path)
 
         while message_batches:
             message_batch = message_batches[0]
@@ -237,36 +262,34 @@ class Main:
                 raise
             message_batches.pop(0)
 
-        if self.args.delete:
+        if self._delete:
             if message_batches:
                 _cleanup()
             else:
-                logger.info('All messages were submitted, removing local file "%s"', self.args.path)
-                os.unlink(self.args.path)
+                logger.info('All messages were submitted, removing local file "%s"', path)
+                os.unlink(path)
 
-    def purge(self):
+    def purge(self, queue_name):
         sqs = boto3.resource('sqs')
-        queue_name = self.args.queue
         queue = sqs.get_queue_by_name(QueueName=queue_name)
-        self._purge(queue_name, queue)
+        self._purge_queues({queue_name: queue})
 
     def purge_all(self):
-        for queue_name, queue in self._azul_queues():
-            self._purge(queue_name, queue)
+        self._purge_queues(dict(self._azul_queues()))
 
-    def _purge(self, queue_name, queue):
-        # The `write` lambda recirculates messages into the same queue it is
-        # reading from so we need to disable SQS push before purging the queue
-        if queue_name == config.token_queue_name:
-            self._manage_sqs_push(queue, enable=False)
-            self._wait_for_queue_idle(queue)
+    def _purge_queues(self, queues: MutableMapping[str, Queue]):
+        self._manage_lambdas(queues, enable=False)
+        with ThreadPoolExecutor(max_workers=len(queues)) as tpe:
+            futures = [tpe.submit(self._purge_queue, queue) for queue in queues.values()]
+            self._handle_futures(futures)
+        self._manage_lambdas(queues, enable=True)
+
+    def _purge_queue(self, queue: Queue):
         logger.info('Purging queue "%s"', queue.url)
         queue.purge()
-        if queue_name == config.token_queue_name:
-            self._wait_for_queue_empty(queue)
-            self._manage_sqs_push(queue, enable=True)
+        self._wait_for_queue_empty(queue)
 
-    def _wait_for_queue_idle(self, queue):
+    def _wait_for_queue_idle(self, queue: Queue):
         while True:
             num_inflight_messages = int(queue.attributes['ApproximateNumberOfMessagesNotVisible'])
             if num_inflight_messages == 0:
@@ -275,22 +298,19 @@ class Main:
             time.sleep(3)
             queue.reload()
 
-    def _wait_for_queue_empty(self, queue):
+    def _wait_for_queue_empty(self, queue: Queue):
+        # Gotta have some fun some of the time
+        attribute_names = tuple(map('ApproximateNumberOfMessages'.__add__, ('', 'Delayed', 'NotVisible')))
         while True:
-            num_messages = (
-                int(queue.attributes['ApproximateNumberOfMessagesNotVisible']) +
-                int(queue.attributes['ApproximateNumberOfMessagesDelayed']) +
-                int(queue.attributes['ApproximateNumberOfMessages'])
-            )
+            num_messages = sum(map(int, map(queue.attributes.get, attribute_names)))
             if num_messages == 0:
                 break
             logger.info('Queue "%s" still has %i messages', queue.url, num_messages)
             time.sleep(3)
             queue.reload()
 
-    def _manage_sqs_push(self, queue, enable):
+    def _manage_sqs_push(self, function_name, queue, enable: bool):
         lambda_ = boto3.client('lambda')
-        function_name = config.indexer_name + '-write'
         response = lambda_.list_event_source_mappings(FunctionName=function_name,
                                                       EventSourceArn=queue.attributes['QueueArn'])
         mapping = one(response['EventSourceMappings'])
@@ -322,6 +342,39 @@ class Main:
             time.sleep(3)
             mapping = lambda_.get_event_source_mapping(UUID=mapping['UUID'])
 
+    def _manage_lambdas(self, queues: Mapping[str, Queue], enable: bool):
+        """
+        Enable or disable the readers and writers of the given queues
+        """
+        with ThreadPoolExecutor(max_workers=len(queues)) as tpe:
+            futures = []
+            for queue_name, queue in queues.items():
+                if queue_name == config.notify_queue_name:
+                    futures.append(tpe.submit(self._manage_lambda, config.indexer_name, enable))
+                    futures.append(tpe.submit(self._manage_sqs_push, config.indexer_name + '-index', queue, enable))
+                elif queue_name == config.token_queue_name:
+                    futures.append(tpe.submit(self._manage_sqs_push, config.indexer_name + '-write', queue, enable))
+            self._handle_futures(futures)
+            futures = [tpe.submit(self._wait_for_queue_idle, queue) for queue in queues.values()]
+            self._handle_futures(futures)
+
+    def _manage_lambda(self, function_name, enable: bool):
+        self._lambdas.manage_lambda(function_name, enable)
+
+    @memoized_property
+    def _lambdas(self):
+        return Lambdas()
+
+    def _handle_futures(self, futures):
+        errors = []
+        for future in as_completed(futures):
+            e = future.exception()
+            if e:
+                errors.append(e)
+                logger.error('Exception in worker thread', exc_info=e)
+        if errors:
+            raise RuntimeError(errors)
+
 
 if __name__ == '__main__':
-    Main.main(sys.argv[1:])
+    Queues.main(sys.argv[1:])
