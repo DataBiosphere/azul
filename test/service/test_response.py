@@ -1372,22 +1372,28 @@ class TestResponseSummary(WebServiceTestCase):
         ])
 
     def test_summary_filter_none(self):
-        # FIXME: filter by None not finding fields that are missing (https://github.com/DataBiosphere/azul/issues/1202)
+        # This request should match the 94f2ba52 bundle which has no 'paired_end' field and not match the
+        # dcccb551 or aaa96233 bundles which have 'pared_end' set to True
         url = self.base_url + '/repository/summary?filters={"pairedEnd": {"is": [null]}}'
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
-        self.assertEqual(summary_object['donorCount'], 0)
-        self.assertEqual(summary_object['specimenCount'], 0)
-        self.assertEqual(summary_object['projectCount'], 0)
+        self.assertEqual(summary_object['donorCount'], 1)
+        self.assertEqual(summary_object['specimenCount'], 1)
+        self.assertEqual(summary_object['projectCount'], 1)
+        self.assertEqual(summary_object['totalCellCount'], 0.0)
 
+        # This request should match bundles 94f2ba52 and dcccb551 but not aaa96233 which has a 'organ_part' value.
+        # Bundle 94f2ba52 has a Specimen with 'organ' but no 'organ_part'
+        # Bundle dcccb551 has Specimens with 'organ_part' however the Organoid with no 'model_organ_part' is the Sample
         url = self.base_url + '/repository/summary?filters={"organPart": {"is": [null]}}'
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
-        self.assertEqual(summary_object['donorCount'], 0)
-        self.assertEqual(summary_object['specimenCount'], 0)
-        self.assertEqual(summary_object['projectCount'], 0)
+        self.assertEqual(summary_object['donorCount'], 5)
+        self.assertEqual(summary_object['specimenCount'], 5)
+        self.assertEqual(summary_object['projectCount'], 2)
+        self.assertEqual(summary_object['totalCellCount'], 6210.0)
 
 if __name__ == '__main__':
     unittest.main()

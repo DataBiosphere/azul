@@ -65,28 +65,12 @@ class ElasticTransformDump(object):
             except KeyError:
                 pass  # FIXME: Isn't this an error (https://github.com/DataBiosphere/azul/issues/1205)?
             # Replace the value in the filter with the value translated for None values
+            assert isinstance(value, dict)
+            assert isinstance(one(value.values()), list)
             path = tuple(key.split('.'))
-            value = cls.translate_filter(value, path)
+            value = {key: [Document.translate_field(v, path) for v in val] for key, val in value.items()}
             translated_filters[key] = value
         return translated_filters
-
-    @classmethod
-    def translate_filter(cls, value: JSON, path: Tuple[str, ...]) -> JSON:
-        """
-        Translate a single filter's value to query against Elasticsearch
-        :param value: A single filter value eg. {'is': {[None]}}
-        :param path: A tuple with the path of the field eg. ('contents', 'protocols', 'paired_end')
-
-        :return: The translated value
-        """
-        if isinstance(value, dict):
-            return {key: cls.translate_filter(val, path) for key, val in value.items()}
-        elif isinstance(value, list):
-            return [cls.translate_filter(val, path) for val in value]
-        elif isinstance(value, set):
-            return {cls.translate_filter(val, path) for val in value}
-        else:
-            return Document.translate_field(value, path)
 
     @classmethod
     def translate_facets(cls, facets: JSON, translation: JSON):
@@ -104,9 +88,8 @@ class ElasticTransformDump(object):
                 bucket['key'] = Document.translate_field(bucket['key'], path, forward=False)
         return facets
 
-
-    @staticmethod
-    def create_query(filters):
+    @classmethod
+    def create_query(cls, filters):
         """
         Creates a query object based on the filters argument
         :param filters: filter parameter from the /files endpoint with
@@ -117,9 +100,15 @@ class ElasticTransformDump(object):
         for facet, values in filters.items():
             relation, value = one(values.items())
             if relation == 'is':
-                # None values in filters have been translated eg. {'is': ['__null__']}
-                # so we can just do a 'terms' query instead of handling Nones with an 'exists' query
-                filter_list.append(Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}))
+                # Note that at this point None values in filters have already been translated eg. {'is': ['__null__']}
+                # and if the filter has a None our query needs to find fields with None values as well as missing fields
+                if Document.translate_field(None, path=tuple(facet.split('.'))) in value:
+                    filter_list.append(Q('bool', should=[
+                        Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}),
+                        Q('bool', must_not=[Q('exists', field=facet)])
+                    ]))
+                else:
+                    filter_list.append(Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}))
             elif relation in {'contains', 'within', 'intersects'}:
                 for min_value, max_value in value:
                     range_value = {

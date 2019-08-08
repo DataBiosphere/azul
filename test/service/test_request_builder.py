@@ -229,8 +229,27 @@ class TestRequestBuilder(WebServiceTestCase):
                         {
                             "constant_score": {
                                 "filter": {
-                                    "terms": {
-                                        "contents.protocols.library_construction_approach.keyword": "__null__"
+                                    "bool": {
+                                        "should": [
+                                            {
+                                                "terms": {
+                                                    "contents.protocols.library_construction_approach.keyword": [
+                                                        "__null__"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "bool": {
+                                                    "must_not": [
+                                                        {
+                                                            "exists": {
+                                                                "field": "contents.protocols.library_construction_approach"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
                                     }
                                 }
                             }
@@ -244,7 +263,7 @@ class TestRequestBuilder(WebServiceTestCase):
         }
 
         # Create a filter for missing values
-        sample_filter = {"libraryConstructionApproach": {"is": None}}
+        sample_filter = {"libraryConstructionApproach": {"is": [None]}}
 
         # Create ElasticTransformDump instance
         es_ts_instance = EsTd()
@@ -279,8 +298,25 @@ class TestRequestBuilder(WebServiceTestCase):
                         {
                             "constant_score": {
                                 "filter": {
-                                    "terms": {
-                                        "contents.projects.laboratory.keyword": "__null__"
+                                    "bool": {
+                                        "should": [
+                                            {
+                                                "terms": {
+                                                    "contents.projects.laboratory.keyword": ["__null__"]
+                                                }
+                                            },
+                                            {
+                                                "bool": {
+                                                    "must_not": [
+                                                        {
+                                                            "exists": {
+                                                                "field": "contents.projects.laboratory"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
                                     }
                                 }
                             }
@@ -289,7 +325,7 @@ class TestRequestBuilder(WebServiceTestCase):
                             "constant_score": {
                                 "filter": {
                                     "terms": {
-                                        "contents.projects.institutions.keyword": ["test"]
+                                        "contents.projects.institutions.keyword": ["Hogwarts"]
                                     }
                                 }
                             }
@@ -297,8 +333,25 @@ class TestRequestBuilder(WebServiceTestCase):
                         {
                             "constant_score": {
                                 "filter": {
-                                    "terms": {
-                                        "contents.specimens.disease.keyword": ["__null__"]
+                                    "bool": {
+                                        "should": [
+                                            {
+                                                "terms": {
+                                                    "contents.specimens.disease.keyword": ["__null__", "Dragon Pox"]
+                                                }
+                                            },
+                                            {
+                                                "bool": {
+                                                    "must_not": [
+                                                        {
+                                                            "exists": {
+                                                                "field": "contents.specimens.disease"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
                                     }
                                 }
                             }
@@ -313,9 +366,9 @@ class TestRequestBuilder(WebServiceTestCase):
 
         # Create a filter for missing values
         sample_filter = {
-            "laboratory": {"is": None},
-            "institution": {"is": ["test"]},
-            "disease": {"is": [None]},
+            "laboratory": {"is": [None]},
+            "institution": {"is": ["Hogwarts"]},
+            "disease": {"is": [None, "Dragon Pox"]},
         }
 
         # Create ElasticTransformDump instance
