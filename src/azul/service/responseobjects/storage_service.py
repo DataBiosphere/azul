@@ -24,6 +24,9 @@ class StorageService:
     def client(self):
         return boto3.client('s3')
 
+    def head(self, object_key: str) -> dict:
+        return self.client.head_object(Bucket=self.bucket_name, Key=object_key)
+
     def get(self, object_key: str) -> bytes:
         return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read()
 
