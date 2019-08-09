@@ -1,10 +1,13 @@
 import csv
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
 import json
 import logging
 import os
 from io import BytesIO
 from tempfile import TemporaryDirectory
 from unittest import mock
+from urllib.parse import urlparse
 from zipfile import ZipFile
 
 from botocore.exceptions import ClientError
@@ -12,11 +15,14 @@ from chalice import BadRequestError, ChaliceViewError
 from more_itertools import first
 from moto import mock_s3, mock_sts
 import requests
+from typing import List
+
 
 from azul import config
 from azul.json_freeze import freeze
 from azul.logging import configure_test_logging
 from azul.service import AbstractService
+from azul.service.responseobjects.hca_response_v5 import ManifestResponse
 from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
@@ -24,6 +30,8 @@ from azul_test_case import AzulTestCase
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
 from lambdas.service import app
+
+logger = logging.getLogger(__name__)
 
 
 def setUpModule():
@@ -161,10 +169,25 @@ class ManifestGenerationTest(WebServiceTestCase):
     def setUp(self):
         super().setUp()
         self._setup_indices()
+        self._setup_git_commit()
 
     def tearDown(self):
         self._teardown_indices()
+        self._teardown_git_commit()
         super().tearDown()
+
+    def _setup_git_commit(self):
+        """
+        Set git variables required to generate the object key of format='full' type manifests
+        """
+        assert 'azul_git_commit' not in os.environ
+        assert 'azul_git_dirty' not in os.environ
+        os.environ['azul_git_commit'] = '9347432ab0da43c73409ac7fd3edfe29cf3ae678'
+        os.environ['azul_git_dirty'] = 'False'
+
+    def _teardown_git_commit(self):
+        os.environ.pop('azul_git_commit', None)
+        os.environ.pop('azul_git_dirty', None)
 
     def get_manifest(self, params, stream=False):
         filters = AbstractService.parse_filters(params.get('filters'))
@@ -783,6 +806,125 @@ class ManifestGenerationTest(WebServiceTestCase):
 
             self.assertGreater(len(intersection), 0)
             self.assertGreater(len(symmetric_diff), 0)
+
+    @mock_sts
+    @mock_s3
+    @mock.patch('azul.service.responseobjects.hca_response_v5.ManifestResponse._get_seconds_until_expire')
+    def test_metadata_cache_expiration(self, get_seconds):
+        self.maxDiff = None
+        self._index_canned_bundle(('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z'))
+        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
+        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+
+            def log_messages_from_manifest_request(seconds_until_expire: int) -> List[str]:
+                get_seconds.return_value = seconds_until_expire
+                params = {
+                    'filters': json.dumps({'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}),
+                    'format': 'full'
+                }
+                from azul.service.responseobjects.hca_response_v5 import logger as logger_
+                with self.assertLogs(logger=logger_, level='INFO') as logs:
+                    response = self.get_manifest(params)
+                    self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                    logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
+                    return logs.output
+
+            # On the first request the cached manifest doesn't exist yet
+            logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
+            self.assertTrue(any('Cached manifest not found' in message) for message in logs_output)
+
+            # If the cached manifest has a long time till it expires then no log message expected
+            logs_output = log_messages_from_manifest_request(seconds_until_expire=3600)
+            self.assertEqual(set(['Cached manifest' in message for message in logs_output]), {False})
+
+            # If the cached manifest has a short time till it expires then a log message is expected
+            logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
+            self.assertTrue(any('Cached manifest about to expire' in message) for message in logs_output)
+
+    @mock_sts
+    @mock_s3
+    @mock.patch('azul.service.responseobjects.hca_response_v5.ManifestResponse._get_seconds_until_expire')
+    def test_full_metadata_cache(self, get_seconds):
+        get_seconds.return_value = 3600
+        self.maxDiff = None
+        self._index_canned_bundle(('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z'))
+        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-09-14T133314.453337Z'))
+        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
+        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+
+            for single_part in False, True:
+                with self.subTest(is_single_part=single_part):
+                    with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
+
+                        project_ids = ['67bc798b-a34a-4104-8cab-cad648471f69', '6615efae-fca8-4dd2-a223-9cfcf30fe94d']
+                        file_names = defaultdict(list)
+
+                        # Run the generation of manifests twice to verify generated file names are the same when re-run
+                        for project_id in project_ids * 2:
+                            params = {'filters': json.dumps({'projectId': {'is': [project_id]}}), 'format': 'full'}
+                            response = self.get_manifest(params)
+                            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                            file_name = urlparse(response.url).path
+                            file_names[project_id].append(file_name)
+
+                        self.assertEqual(file_names.keys(), set(project_ids))
+                        self.assertEqual([2, 2], list(map(len, file_names.values())))
+                        self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
+
+    def test_get_seconds_until_expire(self):
+        """
+        Verify a header with valid x-amz-expiration and LastModified values returns the correct expiration value
+        """
+        with mock.patch('time.time', new=lambda: 1547691253.07010):
+            dt_now = datetime.now(timezone.utc)
+            for hours_last_modified in range(0, 25, 6):
+                with self.subTest(hours_last_modified=hours_last_modified):
+                    hours_till_expiration = (config.manifest_expiration * 24) - hours_last_modified
+                    expire_date = (dt_now + timedelta(hours=hours_till_expiration)).strftime("%a, %d %b %Y %H:%M:%S %Z")
+                    header = {
+                        'x-amz-expiration': f'expiry-date="{expire_date}", rule-id="Test Rule"',
+                        'LastModified': dt_now - timedelta(hours=hours_last_modified)
+                    }
+                    seconds_remaining = ManifestResponse._get_seconds_until_expire(header)
+                    self.assertAlmostEqual(seconds_remaining, 60 * 60 * hours_till_expiration, delta=1)
+
+    def test_get_seconds_until_expire_logs(self):
+        """
+        Verify a header with mismatched x-amz-expiration and LastModified values produces an error log message
+        """
+        with mock.patch('time.time', new=lambda: 1547691253.07010):
+            dt_now = datetime.now(timezone.utc)
+
+            def log_messages_from_get_seconds(expire_date: datetime, last_modified: datetime) -> List[str]:
+                expire_date_string = expire_date.strftime("%a, %d %b %Y %H:%M:%S %Z")
+                header = {
+                    'x-amz-expiration': f'expiry-date="{expire_date_string}", rule-id="Test Rule"',
+                    'LastModified': last_modified
+                }
+                from azul.service.responseobjects.hca_response_v5 import logger as logger_
+                with self.assertLogs(logger=logger_, level='ERROR') as logs:
+                    ManifestResponse._get_seconds_until_expire(header)
+                    logger_.error('Dummy log message so assertLogs() does not fail if no other error log is generated')
+                    return logs.output
+
+            hours_until_expire = 8
+            expire_date = dt_now + timedelta(hours=hours_until_expire)
+            last_modified = dt_now - timedelta(hours=((config.manifest_expiration * 24) - hours_until_expire))
+            # Verify no error message is logged when expire_date and last_modified match
+            logs_output = log_messages_from_get_seconds(expire_date, last_modified)
+            self.assertEqual(set(['x-amz-expiration' in message for message in logs_output]), {False})
+            # Verify an error message is logged when expire_date and last_modified don't match
+            last_modified = last_modified - timedelta(hours=1)
+            logs_output = log_messages_from_get_seconds(expire_date, last_modified)
+            self.assertTrue(any('x-amz-expiration' in message) for message in logs_output)
 
     def test_manifest_format_validation(self):
         url = self.base_url + '/manifest/files?format=invalid-type'
