@@ -90,7 +90,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             self._mock_other_lambdas(helper, up=True)
-            # If Health werent't lazy, it would fail due the lack of mocks for SQS.
+            # If Health weren't lazy, it would fail due the lack of mocks for SQS.
             response = requests.get(self.base_url + '/health/other_lambdas')
             # The use of subTests ensures that we see the result of both
             # assertions. In the case of the health endpoint, the body of a 503

@@ -136,6 +136,16 @@ emit({
                 f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_item_state_machine_name}:*",
                 f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_export_state_machine_name}"
             ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "apigateway:GET"
+            ],
+            "Resource": [
+                f"arn:aws:apigateway:{aws.region_name}::"
+                f"/restapis/{aws.api_gateway_id(config.service_name)}/stages/{config.deployment_stage}/exports/oas30"
+            ]
         }
     ]
 })

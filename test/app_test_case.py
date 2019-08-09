@@ -10,8 +10,7 @@ from chalice.config import Config as ChaliceConfig
 from chalice.local import LocalDevServer
 import requests
 
-from azul import config
-from azul.modules import load_module
+from azul.modules import load_app_module
 from azul_test_case import AzulTestCase
 from retorts import TestKeyManager
 
@@ -68,8 +67,7 @@ class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
         # Load the application module without modifying `sys.path` and without adding it to `sys.modules`. This
         # simplifies tear down and isolates the app modules from different lambdas loaded by different concrete
         # subclasses. It does, however, violate this one invariant: `sys.modules[module.__name__] == module`
-        path = os.path.join(config.project_root, 'lambdas', cls.lambda_name(), 'app.py')
-        cls.app_module = load_module(path, '__main__')
+        cls.app_module = load_app_module(cls.lambda_name())
 
     @classmethod
     def tearDownClass(cls):
@@ -94,7 +92,7 @@ class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
                 break
 
     def _ping(self):
-        return requests.get(self.base_url)
+        return requests.get(f"{self.base_url}/health/basic")
 
     def chalice_config(self):
         return ChaliceConfig()
