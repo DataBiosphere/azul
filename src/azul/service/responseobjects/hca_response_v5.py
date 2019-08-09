@@ -1,4 +1,5 @@
 import abc
+from botocore.exceptions import ClientError
 from collections import ChainMap, OrderedDict, defaultdict
 from copy import deepcopy
 import csv
@@ -9,7 +10,9 @@ from itertools import chain
 import logging
 import os
 from tempfile import TemporaryDirectory, mkstemp
-from typing import IO, List, MutableMapping, Mapping, Any
+import re
+from typing import Any, List, Mapping, MutableMapping, IO, Optional
+import unicodedata
 from uuid import uuid4
 
 from bdbag import bdbag_api
@@ -214,6 +217,8 @@ class ManifestResponse(AbstractResponse):
 
     column_joiner = ' || '
 
+    name_object_suffix = '.name'
+
     def _extract_fields(self, entities: List[JSON], column_mapping: JSON, row: MutableMapping[str, str]):
         stripped_joiner = self.column_joiner.strip()
 
@@ -303,11 +308,22 @@ class ManifestResponse(AbstractResponse):
                 if self.format == 'tsv':
                     self._write_tsv(text_buffer)
                 elif self.format == 'full':
-                    self._write_full(text_buffer)
+                    project_short_name = self._write_full(text_buffer)
+                    if project_short_name:
+                        self._create_name_object(object_key, project_short_name)
                 else:
                     raise NotImplementedError(f'Multipart upload not implemented for `{self.format}`')
 
         return object_key
+
+    def _create_name_object(self, manifest_object_key, project_short_name):
+        assert project_short_name
+        file_name_prefix = unicodedata.normalize('NFKD', project_short_name)
+        file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
+        filename = f'{file_name_prefix} {timestamp}.tsv'
+        self.storage_service.put(object_key=manifest_object_key + self.name_object_suffix,
+                                 data=filename.encode())
 
     def _push_content_single_part(self) -> str:
         """
@@ -334,7 +350,9 @@ class ManifestResponse(AbstractResponse):
                 return object_key
             else:
                 output = StringIO()
-                self._write_full(output)
+                project_short_name = self._write_full(output)
+                if project_short_name:
+                    self._create_name_object(object_key, project_short_name)
                 return self.storage_service.put(object_key=object_key,
                                                 data=output.getvalue().encode(),
                                                 content_type='text/tab-separated-values')
@@ -355,16 +373,20 @@ class ManifestResponse(AbstractResponse):
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
 
-    def _write_full(self, output: IO[str]) -> None:
+    def _write_full(self, output: IO[str]) -> Optional[str]:
         sources = list(self.manifest_entries['contents'].keys())
         writer = csv.DictWriter(output, sources, dialect='excel-tab')
         writer.writeheader()
+        project_short_names = set()
         for hit in self.es_search.scan():
             doc = hit['contents'].to_dict()
             for metadata in list(doc['metadata']):
+                if len(project_short_names) < 2:
+                    project_short_names.add(metadata['project.project_core.project_short_name'])
                 row = dict.fromkeys(sources)
                 row.update(metadata)
                 writer.writerow(row)
+        return project_short_names.pop() if len(project_short_names) == 1 else None
 
     def _create_bdbag_archive(self) -> str:
         with TemporaryDirectory() as temp_path:
@@ -539,9 +561,18 @@ class ManifestResponse(AbstractResponse):
         else:
             object_key = self._push_content()
             file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
+        if self.format == 'full':
+            name_object_key = object_key + self.name_object_suffix
+            try:
+                file_name = self.storage_service.get(name_object_key).decode()
+            except ClientError as e:
+                if e.response['Error']['Code'] == 'NoSuchKey':
+                    logger.warning("Name object '%s' doesn't exist. "
+                                   "Generating pre-signed URL without Content-Disposition header.", name_object_key)
+                else:
+                    raise e
         presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
-
         return Response(body='', headers=headers, status_code=302)
 
 
