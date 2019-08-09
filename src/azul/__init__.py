@@ -72,6 +72,21 @@ class Config:
         return os.environ['AZUL_S3_BUCKET']
 
     @property
+    def manifest_expiration(self) -> int:
+        """
+        Number of days before a manifest will be deleted from the storage bucket
+        """
+        return 1
+
+    @property
+    def manifest_expiration_margin(self) -> float:
+        """
+        Minimum duration (in seconds) before a manifest in the storage bucket
+        is considered too close to expiration for use
+        """
+        return 60 * 15
+
+    @property
     def url_redirect_full_domain_name(self) -> str:
         return os.environ['AZUL_URL_REDIRECT_FULL_DOMAIN_NAME']
 

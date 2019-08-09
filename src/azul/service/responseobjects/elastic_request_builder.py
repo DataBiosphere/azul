@@ -1,16 +1,19 @@
 #!/usr/bin/python
 from copy import deepcopy
+import hashlib
 import json
 import logging
 from more_itertools import one
 import os
 from typing import List, Tuple
+import uuid
 
 import elasticsearch
 from elasticsearch_dsl import A, Q, Search
 
 from azul import config
 from azul.es import ESClientFactory
+from azul.json_freeze import freeze, sort_frozen
 from azul.service import service_config
 from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse, FileSearchResponse,
                                                           KeywordSearchResponse, ManifestResponse,
@@ -557,6 +560,18 @@ class ElasticTransformDump(object):
 
         return final_response
 
+    def _generate_manifest_object_key(self, filters: dict) -> str:
+        """
+        Generate and return a UUID string generated using the latest git commit and filters
+
+        :param filters: Filter parameter eg. {'organ': {'is': ['Brain']}}
+        :return: String representation of a UUID
+        """
+        git_commit = config.lambda_git_status['commit']
+        manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
+        filter_string = repr(sort_frozen(freeze(filters)))
+        return str(uuid.uuid5(manifest_namespace, git_commit + filter_string))
+
     def transform_manifest(self, format: str, filters: JSON):
         config_folder = os.path.dirname(service_config.__file__)
         request_config_path = "{}/{}".format(config_folder, 'request_config.json')
@@ -622,7 +637,13 @@ class ElasticTransformDump(object):
                                         enable_aggregation=False,
                                         entity_type=entity_type)
 
-        manifest = ManifestResponse(es_search, manifest_config, request_config['translation'], format)
+        object_key = self._generate_manifest_object_key(filters) if format == 'full' else None
+
+        manifest = ManifestResponse(es_search,
+                                    manifest_config,
+                                    request_config['translation'],
+                                    format,
+                                    object_key=object_key)
 
         return manifest.return_response()
 
