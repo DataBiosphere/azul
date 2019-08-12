@@ -11,7 +11,7 @@
                 "samples": [
                     {
                         "entity_type": "specimens",
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -23,14 +23,14 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
                 "specimens": [
                     {
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -41,8 +41,8 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
@@ -50,6 +50,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "selected_cell_type": [],
                         "organ": [
                             "pancreas"
@@ -73,39 +74,45 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }
                     }
                 ],
                 "organoids": [],
                 "files": [
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_2.fastq.gz",
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
+                        "size_": 190330156,
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read2",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     },
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
+                        "size_": 195142097,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read1",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     }
                 ],
                 "protocols": [
@@ -116,7 +123,7 @@
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": true
+                        "paired_end": 1
                     }
                 ],
                 "projects": [
@@ -142,7 +149,7 @@
                                 "email": "lauhuema@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "external curator"
                             },
                             {
@@ -150,16 +157,16 @@
                                 "email": "hewgreen@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "Human Cell Atlas wrangler"
                             },
                             {
                                 "contact_name": "Martin, Enge",
                                 "email": "martin.enge@gmail.com",
                                 "institution": "University",
-                                "laboratory": null,
-                                "corresponding_contributor": null,
-                                "project_role": null
+                                "laboratory": "__null__",
+                                "corresponding_contributor": -1,
+                                "project_role": "__null__"
                             }
                         ],
                         "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -183,9 +190,10 @@
                 {
                     "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "bundle_version": "2018-11-02T113344.698028Z",
-                    "*.provenance.update_date": "2018-11-02T10:35:03.810Z",
                     "*.file_core.file_name": "SRR3562915_2.fastq.gz",
                     "*.file_core.file_format": "fastq.gz",
+                    "file_uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                    "file_version": "2018-11-02T113344.450442Z",
                     "sequence_file.read_index": "read2",
                     "sequence_file.read_length": "75",
                     "sequence_file.insdc_run": "SRR3562915",
@@ -273,7 +281,8 @@
                 {
                     "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "bundle_version": "2018-11-02T113344.698028Z",
-                    "*.provenance.update_date": "2018-11-02T10:35:07.705Z",
+                    "file_uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                    "file_version": "2018-11-02T113344.698028Z",
                     "*.file_core.file_name": "SRR3562915_1.fastq.gz",
                     "*.file_core.file_format": "fastq.gz",
                     "sequence_file.read_index": "read1",
@@ -382,7 +391,7 @@
                 "samples": [
                     {
                         "entity_type": "specimens",
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -394,14 +403,14 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
                 "specimens": [
                     {
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -412,8 +421,8 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
@@ -431,8 +440,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0,
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
                         "biological_sex": "female"
                     }
                 ],
@@ -441,6 +452,7 @@
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "selected_cell_type": [],
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "organ": [
                             "pancreas"
                         ],
@@ -452,17 +464,19 @@
                 "files": [
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
+                        "size_": 195142097,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read1",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     }
                 ],
                 "protocols": [
@@ -473,7 +487,7 @@
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": true
+                        "paired_end": 1
                     }
                 ],
                 "projects": [
@@ -503,23 +517,23 @@
                                 "email": "lauhuema@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "external curator"
                             },
                             {
                                 "contact_name": "Martin, Enge",
                                 "email": "martin.enge@gmail.com",
                                 "institution": "University",
-                                "laboratory": null,
-                                "corresponding_contributor": null,
-                                "project_role": null
+                                "laboratory": "__null__",
+                                "corresponding_contributor": -1,
+                                "project_role": "__null__"
                             },
                             {
                                 "contact_name": "Matthew,,Green",
                                 "email": "hewgreen@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "Human Cell Atlas wrangler"
                             }
                         ],
@@ -552,7 +566,7 @@
                 "samples": [
                     {
                         "entity_type": "specimens",
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -564,14 +578,14 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
                 "specimens": [
                     {
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -582,8 +596,8 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
@@ -601,8 +615,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0,
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
                         "biological_sex": "female"
                     }
                 ],
@@ -611,6 +627,7 @@
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "selected_cell_type": [],
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "organ": [
                             "pancreas"
                         ],
@@ -622,17 +639,19 @@
                 "files": [
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_2.fastq.gz",
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
+                        "size_": 190330156,
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read2",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     }
                 ],
                 "protocols": [
@@ -643,7 +662,7 @@
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": true
+                        "paired_end": 1
                     }
                 ],
                 "projects": [
@@ -673,23 +692,23 @@
                                 "email": "lauhuema@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "external curator"
                             },
                             {
                                 "contact_name": "Martin, Enge",
                                 "email": "martin.enge@gmail.com",
                                 "institution": "University",
-                                "laboratory": null,
-                                "corresponding_contributor": null,
-                                "project_role": null
+                                "laboratory": "__null__",
+                                "corresponding_contributor": -1,
+                                "project_role": "__null__"
                             },
                             {
                                 "contact_name": "Matthew,,Green",
                                 "email": "hewgreen@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "Human Cell Atlas wrangler"
                             }
                         ],
@@ -722,7 +741,7 @@
                 "samples": [
                     {
                         "entity_type": "specimens",
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -734,14 +753,14 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
                 "specimens": [
                     {
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -752,8 +771,8 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
@@ -771,8 +790,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0,
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
                         "biological_sex": "female"
                     }
                 ],
@@ -781,6 +802,7 @@
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "selected_cell_type": [],
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "organ": [
                             "pancreas"
                         ],
@@ -792,31 +814,35 @@
                 "files": [
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_2.fastq.gz",
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
+                        "size_": 190330156,
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read2",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     },
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
+                        "size_": 195142097,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read1",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     }
                 ],
                 "protocols": [
@@ -827,7 +853,7 @@
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": true
+                        "paired_end": 1
                     }
                 ],
                 "projects": [
@@ -857,23 +883,23 @@
                                 "email": "lauhuema@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "external curator"
                             },
                             {
                                 "contact_name": "Martin, Enge",
                                 "email": "martin.enge@gmail.com",
                                 "institution": "University",
-                                "laboratory": null,
-                                "corresponding_contributor": null,
-                                "project_role": null
+                                "laboratory": "__null__",
+                                "corresponding_contributor": -1,
+                                "project_role": "__null__"
                             },
                             {
                                 "contact_name": "Matthew,,Green",
                                 "email": "hewgreen@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "Human Cell Atlas wrangler"
                             }
                         ],
@@ -906,7 +932,7 @@
                 "samples": [
                     {
                         "entity_type": "specimens",
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -918,14 +944,14 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
                 "specimens": [
                     {
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -936,8 +962,8 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
@@ -955,8 +981,10 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0,
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
                         "biological_sex": "female"
                     }
                 ],
@@ -965,6 +993,7 @@
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "selected_cell_type": [],
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "organ": [
                             "pancreas"
                         ],
@@ -976,31 +1005,35 @@
                 "files": [
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_2.fastq.gz",
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
+                        "size_": 190330156,
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read2",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     },
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
+                        "size_": 195142097,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read1",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     }
                 ],
                 "protocols": [
@@ -1011,7 +1044,7 @@
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": true
+                        "paired_end": 1
                     }
                 ],
                 "projects": [
@@ -1041,23 +1074,23 @@
                                 "email": "lauhuema@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "external curator"
                             },
                             {
                                 "contact_name": "Martin, Enge",
                                 "email": "martin.enge@gmail.com",
                                 "institution": "University",
-                                "laboratory": null,
-                                "corresponding_contributor": null,
-                                "project_role": null
+                                "laboratory": "__null__",
+                                "corresponding_contributor": -1,
+                                "project_role": "__null__"
                             },
                             {
                                 "contact_name": "Matthew,,Green",
                                 "email": "hewgreen@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "Human Cell Atlas wrangler"
                             }
                         ],
@@ -1089,7 +1122,7 @@
                             "specimens"
                         ],
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -1113,10 +1146,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -1126,7 +1159,7 @@
                 "specimens": [
                     {
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -1147,10 +1180,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -1163,6 +1196,7 @@
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "selected_cell_type": [],
                         "organ": [
                             "pancreas"
@@ -1196,43 +1230,45 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ]
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }]
                     }
                 ],
                 "organoids": [],
                 "files": [
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_2.fastq.gz",
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
+                        "size_": 190330156,
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read2",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     },
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
+                        "size_": 195142097,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read1",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     }
                 ],
                 "protocols": [
@@ -1244,7 +1280,7 @@
                             "Illumina NextSeq 500"
                         ],
                         "paired_end": [
-                            true
+                            1
                         ]
                     }
                 ],
@@ -1279,7 +1315,8 @@
                 {
                     "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "bundle_version": "2018-11-02T113344.698028Z",
-                    "*.provenance.update_date": "2018-11-02T10:35:03.810Z",
+                    "file_uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                    "file_version": "2018-11-02T113344.450442Z",
                     "*.file_core.file_name": "SRR3562915_2.fastq.gz",
                     "*.file_core.file_format": "fastq.gz",
                     "sequence_file.read_index": "read2",
@@ -1369,7 +1406,8 @@
                 {
                     "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "bundle_version": "2018-11-02T113344.698028Z",
-                    "*.provenance.update_date": "2018-11-02T10:35:07.705Z",
+                    "file_uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                    "file_version": "2018-11-02T113344.698028Z",
                     "*.file_core.file_name": "SRR3562915_1.fastq.gz",
                     "*.file_core.file_format": "fastq.gz",
                     "sequence_file.read_index": "read1",
@@ -1486,7 +1524,7 @@
                             "specimens"
                         ],
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -1510,10 +1548,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -1523,7 +1561,7 @@
                 "specimens": [
                     {
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -1544,10 +1582,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -1576,12 +1614,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }],
                         "biological_sex": [
                             "female"
                         ]
@@ -1594,6 +1630,7 @@
                         ],
                         "selected_cell_type": [],
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "organ": [
                             "pancreas"
                         ],
@@ -1605,17 +1642,19 @@
                 "files": [
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
+                        "size_": 195142097,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read1",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     }
                 ],
                 "protocols": [
@@ -1627,7 +1666,7 @@
                             "Illumina NextSeq 500"
                         ],
                         "paired_end": [
-                            true
+                            1
                         ]
                     }
                 ],
@@ -1683,7 +1722,7 @@
                             "specimens"
                         ],
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -1707,10 +1746,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -1720,7 +1759,7 @@
                 "specimens": [
                     {
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -1741,10 +1780,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -1773,12 +1812,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }],
                         "biological_sex": [
                             "female"
                         ]
@@ -1791,6 +1828,7 @@
                         ],
                         "selected_cell_type": [],
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "organ": [
                             "pancreas"
                         ],
@@ -1802,17 +1840,19 @@
                 "files": [
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_2.fastq.gz",
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
+                        "size_": 190330156,
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read2",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     }
                 ],
                 "protocols": [
@@ -1824,7 +1864,7 @@
                             "Illumina NextSeq 500"
                         ],
                         "paired_end": [
-                            true
+                            1
                         ]
                     }
                 ],
@@ -1877,7 +1917,7 @@
                 "samples": [
                     {
                         "entity_type": "specimens",
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -1889,15 +1929,15 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
                 "specimens": [
                     {
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -1918,10 +1958,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -1950,12 +1990,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }],
                         "biological_sex": [
                             "female"
                         ]
@@ -1968,6 +2006,7 @@
                         ],
                         "selected_cell_type": [],
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "organ": [
                             "pancreas"
                         ],
@@ -1979,6 +2018,7 @@
                 "files": [
                     {
                         "size": 385472253,
+                        "size_": 385472253,
                         "file_format": "fastq.gz",
                         "count": 2
                     }
@@ -1992,7 +2032,7 @@
                             "Illumina NextSeq 500"
                         ],
                         "paired_end": [
-                            true
+                            1
                         ]
                     }
                 ],
@@ -2048,7 +2088,7 @@
                             "specimens"
                         ],
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -2072,10 +2112,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -2085,7 +2125,7 @@
                 "specimens": [
                     {
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -2106,10 +2146,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -2138,12 +2178,10 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }],
                         "biological_sex": [
                             "female"
                         ]
@@ -2156,6 +2194,7 @@
                         ],
                         "selected_cell_type": [],
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "organ": [
                             "pancreas"
                         ],
@@ -2167,6 +2206,7 @@
                 "files": [
                     {
                         "size": 385472253,
+                        "size_": 385472253,
                         "file_format": "fastq.gz",
                         "count": 2
                     }
@@ -2180,7 +2220,7 @@
                             "Illumina NextSeq 500"
                         ],
                         "paired_end": [
-                            true
+                            1
                         ]
                     }
                 ],
@@ -2211,7 +2251,7 @@
                                 "email": "hewgreen@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "Human Cell Atlas wrangler"
                             },
                             {
@@ -2219,16 +2259,16 @@
                                 "email": "lauhuema@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "project_role": "external curator"
                             },
                             {
                                 "contact_name": "Martin, Enge",
                                 "email": "martin.enge@gmail.com",
                                 "institution": "University",
-                                "laboratory": null,
-                                "corresponding_contributor": null,
-                                "project_role": null
+                                "laboratory": "__null__",
+                                "corresponding_contributor": -1,
+                                "project_role": "__null__"
                             }
                         ],
                         "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -2263,7 +2303,7 @@
                 "samples": [
                     {
                         "entity_type": "specimens",
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -2274,15 +2314,15 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen",
                         "effective_organ": "pancreas"
                     }
                 ],
                 "specimens": [
                     {
-                        "has_input_biomaterial": null,
+                        "has_input_biomaterial": "__null__",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
@@ -2293,8 +2333,8 @@
                         "organ_part": [
                             "islet of Langerhans"
                         ],
-                        "storage_method": null,
-                        "preservation_method": null,
+                        "storage_method": "__null__",
+                        "preservation_method": "__null__",
                         "_type": "specimen"
                     }
                 ],
@@ -2302,6 +2342,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "selected_cell_type": [],
                         "organ": [
                             "pancreas"
@@ -2325,39 +2366,45 @@
                         ],
                         "organism_age": "38",
                         "organism_age_unit": "year",
-                        "min_organism_age_in_seconds": 1198368000.0,
-                        "max_organism_age_in_seconds": 1198368000.0
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }
                     }
                 ],
                 "organoids": [],
                 "files": [
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_2.fastq.gz",
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
+                        "size_": 190330156,
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read2",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     },
                     {
                         "content-type": "application/gzip; dcp-type=data",
-                        "indexed": false,
+                        "indexed": 0,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
+                        "size_": 195142097,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
                         "_type": "file",
                         "read_index": "read1",
-                        "lane_index": null
+                        "lane_index": -9223372036854775808,
+                        "lane_index_": null
                     }
                 ],
                 "protocols": [
@@ -2368,7 +2415,7 @@
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": true
+                        "paired_end": 1
                     }
                 ],
                 "projects": [
@@ -2391,7 +2438,7 @@
                         "contributors": [
                             {
                                 "contact_name": "Laura,,Huerta",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "email": "lauhuema@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
@@ -2399,15 +2446,15 @@
                             },
                             {
                                 "contact_name": "Martin, Enge",
-                                "corresponding_contributor": null,
+                                "corresponding_contributor": -1,
                                 "email": "martin.enge@gmail.com",
                                 "institution": "University",
-                                "laboratory": null,
-                                "project_role": null
+                                "laboratory": "__null__",
+                                "project_role": "__null__"
                             },
                             {
                                 "contact_name": "Matthew,,Green",
-                                "corresponding_contributor": false,
+                                "corresponding_contributor": 0,
                                 "email": "hewgreen@ebi.ac.uk",
                                 "institution": "Farmers Trucks",
                                 "laboratory": "John Dear",
@@ -2454,7 +2501,7 @@
                             "specimens"
                         ],
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -2475,10 +2522,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -2491,7 +2538,7 @@
                 "specimens": [
                     {
                         "has_input_biomaterial": [
-                            null
+                            "__null__"
                         ],
                         "_source": [
                             "specimen_from_organism"
@@ -2512,10 +2559,10 @@
                             "islet of Langerhans"
                         ],
                         "storage_method": [
-                            null
+                            "__null__"
                         ],
                         "preservation_method": [
-                            null
+                            "__null__"
                         ],
                         "_type": [
                             "specimen"
@@ -2526,6 +2573,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
                         "selected_cell_type": [],
                         "organ": [
                             "pancreas"
@@ -2559,18 +2607,17 @@
                         "organism_age_unit": [
                             "year"
                         ],
-                        "min_organism_age_in_seconds": [
-                            1198368000.0
-                        ],
-                        "max_organism_age_in_seconds": [
-                            1198368000.0
-                        ]
+                        "organism_age_range": [{
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }]
                     }
                 ],
                 "organoids": [],
                 "files": [
                     {
                         "size": 385472253,
+                        "size_": 385472253,
                         "file_format": "fastq.gz",
                         "count": 2
                     }
@@ -2584,7 +2631,7 @@
                             "Illumina NextSeq 500"
                         ],
                         "paired_end": [
-                            true
+                            1
                         ]
                     }
                 ],

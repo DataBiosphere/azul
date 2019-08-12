@@ -6,6 +6,8 @@ import json
 from json.decoder import JSONDecodeError
 import argparse
 
+from azul.logging import configure_script_logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,9 +23,9 @@ def get_project_name(document_id):
 def get_project_bundle_count(project_name):
     url = f'{service_base_url}/repository/files'
     params = {
-        'filters' : json.dumps({'project': {'is': [project_name]}}),
-        'order' : 'desc',
-        'sort' : 'entryId',
+        'filters': json.dumps({'project': {'is': [project_name]}}),
+        'order': 'desc',
+        'sort': 'entryId',
         'size': 1000
     }
     found_analysis_bundle_ids = set()
@@ -50,9 +52,9 @@ def get_project_bundle_count(project_name):
         total_entities = response_json['pagination']['total']
         total_pages = response_json['pagination']['pages']
 
-        logging.info(f'All Bundles: {len(all_bundle_ids)}, Analysis Bundles: {len(found_analysis_bundle_ids)}'
-                     f' Size: {len(hit_list)} Page: {page}/{total_pages}'
-                     f' Total: {total_entities} URL: {response.url}')
+        logger.info(f'All Bundles: {len(all_bundle_ids)}, Analysis Bundles: {len(found_analysis_bundle_ids)}'
+                    f' Size: {len(hit_list)} Page: {page}/{total_pages}'
+                    f' Total: {total_entities} URL: {response.url}')
 
         if search_after is None and search_after_uid is None:
             break
@@ -63,7 +65,7 @@ def get_project_bundle_count(project_name):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    configure_script_logging(logger)
 
     dataset_progress = {
         'prod': {
@@ -155,12 +157,12 @@ if __name__ == '__main__':
         dataset_name = dataset['dataset_name']
         beta_project_id = dataset['project_uuid']
         expected_count = dataset['expected_count']
-        logging.info(f'#{accountable_id}')
+        logger.info(f'#{accountable_id}')
 
         try:
             beta_project_name = get_project_name(beta_project_id)
         except JSONDecodeError:
-            logging.info('Bundle Not Found')
+            logger.info('Bundle Not Found')
             missing_projects.append(f'#{accountable_id} {beta_project_id}')
             continue
 
@@ -170,8 +172,8 @@ if __name__ == '__main__':
         primary_bundle_count = total_bundle_count - analysis_bundle_count
 
         bundle_log = f'#{accountable_id: >4}:{dataset_name[:10]: <10} {beta_project_id} Primary Bundles:' \
-                     f' {total_bundle_count-analysis_bundle_count:<5}/{expected_count:<5}' \
-                     f' Analysis Bundles: {analysis_bundle_count}'
+            f' {total_bundle_count - analysis_bundle_count:<5}/{expected_count:<5}' \
+            f' Analysis Bundles: {analysis_bundle_count}'
 
         if primary_bundle_count == expected_count:
             complete_projects.append(bundle_log)
@@ -181,6 +183,6 @@ if __name__ == '__main__':
     miscounted_projects_str = "\n".join(missing_projects)
     complete_projects = "\n".join(complete_projects)
     miscounted_bundle_projects = "\n".join(miscounted_bundle_projects)
-    logging.info(f'\n\nComplete Projects:\n{complete_projects}'
-                 f'\n\nMissing Bundle Projects:\n{miscounted_bundle_projects}'
-                 f'\n\nMissing Projects:\n{miscounted_projects_str}')
+    logger.info(f'\n\nComplete Projects:\n{complete_projects}'
+                f'\n\nMissing Bundle Projects:\n{miscounted_bundle_projects}'
+                f'\n\nMissing Projects:\n{miscounted_projects_str}')

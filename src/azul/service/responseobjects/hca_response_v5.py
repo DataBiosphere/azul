@@ -30,11 +30,10 @@ from azul.service.responseobjects.buffer import FlushableBuffer
 from azul.service.responseobjects.utilities import json_pp
 from azul.json_freeze import freeze, thaw
 from azul.strings import to_camel_case
-from azul.transformer import SetAccumulator
+from azul.transformer import Document
 from azul.types import JSON
 
 logger = logging.getLogger(__name__)
-module_logger = logger  # FIXME: inline (https://github.com/DataBiosphere/azul/issues/419)
 
 
 class TermObj(JsonObject):
@@ -100,11 +99,25 @@ class OrganCellCountSummary(JsonObject):
 
     @classmethod
     def for_bucket(cls, bucket):
+        key = Document.translate_field(bucket['key'],
+                                       path=('contents', 'cell_suspensions', 'organ'),
+                                       forward=False)
         self = cls()
-        self.organType = [bucket['key']]
+        self.organType = [key]
         self.countOfDocsWithOrganType = bucket['doc_count']
         self.totalCellCountByOrgan = bucket['cell_count']['value']
         return self
+
+
+class OrganType:
+
+    @classmethod
+    def for_bucket(cls, bucket):
+        # Un-translate values that had been translated with translate_fields() to handle Nones in Elasticsearch
+        # The path for the translation directly relates to the field used in transform_summary() for the aggregation
+        return Document.translate_field(bucket['key'],
+                                        path=('contents', 'samples', 'effective_organ'),
+                                        forward=False)
 
 
 class HitEntry(JsonObject):
@@ -128,8 +141,14 @@ class SummaryRepresentation(JsonObject):
     """
     Class defining the Summary Response
     """
+    projectCount = IntegerProperty()
+    specimenCount = IntegerProperty()
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
+    donorCount = IntegerProperty()
+    labCount = IntegerProperty()
+    totalCellCount = FloatProperty()
+    organTypes = ListProperty(StringProperty(required=False))
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
 
@@ -231,7 +250,12 @@ class ManifestResponse(AbstractResponse):
         with MultipartUploadHandler(object_key, content_type) as multipart_upload:
             with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
                 text_buffer = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
-                self._write_tsv(text_buffer)
+                if self.format == 'tsv':
+                    self._write_tsv(text_buffer)
+                elif self.format == 'full':
+                    self._write_full(text_buffer)
+                else:
+                    raise NotImplementedError(f'Multipart upload not implemented for `{self.format}`')
 
         return object_key
 
@@ -256,7 +280,7 @@ class ManifestResponse(AbstractResponse):
                 os.remove(bdbag_path)
         elif self.format == 'full':
             output = StringIO()
-            self._write_metadata(output)
+            self._write_full(output)
             return self.storage_service.put(object_key=f'metadata/{uuid4()}.tsv',
                                             data=output.getvalue().encode(),
                                             content_type='text/tab-separated-values')
@@ -267,7 +291,7 @@ class ManifestResponse(AbstractResponse):
         writer = csv.DictWriter(output, self.ordered_column_names, dialect='excel-tab')
         writer.writeheader()
         for hit in self.es_search.scan():
-            doc = hit.to_dict()
+            doc = Document.translate_fields(hit.to_dict(), forward=False)
             for bundle in list(doc['bundles']):
                 doc['bundles'] = [bundle]
                 row = {}
@@ -276,8 +300,8 @@ class ManifestResponse(AbstractResponse):
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
 
-    def _write_metadata(self, output: IO[str]) -> None:
-        sources = list(self.manifest_entries.keys())
+    def _write_full(self, output: IO[str]) -> None:
+        sources = list(self.manifest_entries['contents'].keys())
         writer = csv.DictWriter(output, sources, dialect='excel-tab')
         writer.writeheader()
         for hit in self.es_search.scan():
@@ -320,7 +344,7 @@ class ManifestResponse(AbstractResponse):
 
         # For each outer file entity_type in the response …
         for hit in self.es_search.scan():
-            doc = hit.to_dict()
+            doc = Document.translate_fields(hit.to_dict(), forward=False)
 
             # Extract fields from inner entities other than bundles or files
             other_cells = {}
@@ -452,7 +476,7 @@ class ManifestResponse(AbstractResponse):
         return dss_url
 
     def return_response(self):
-        if config.disable_multipart_manifests or self.format in ('bdbag', 'full'):
+        if config.disable_multipart_manifests or self.format == 'bdbag':
             object_key = self._push_content_single_part()
             file_name = None
         else:
@@ -495,11 +519,6 @@ class EntryFetcher:
     def handle_list(value):
         return [value] if value is not None else []
 
-    def __init__(self):
-        # Setting up logger
-        self.logger = logging.getLogger(
-            'dashboardService.api_response.EntryFetcher')
-
 
 class BaseSummaryResponse(AbstractResponse):
 
@@ -518,14 +537,9 @@ class BaseSummaryResponse(AbstractResponse):
         """
         # Return the specified content of the aggregate. Otherwise return
         # an empty string
-        try:
-            contents = aggs_dict[agg_name][agg_form]
-            if agg_form == "buckets":
-                contents = len(contents)
-        except Exception:
-            # FIXME: Eliminate this except clause (https://github.com/DataBiosphere/azul/issues/421)
-            logger.warning('Exception occurred trying to extract aggregation bucket', exc_info=True)
-            contents = -1
+        contents = aggs_dict[agg_name][agg_form]
+        if agg_form == "buckets":
+            contents = len(contents)
         return contents
 
     def __init__(self, raw_response):
@@ -542,24 +556,21 @@ class SummaryResponse(BaseSummaryResponse):
     def __init__(self, raw_response):
         super().__init__(raw_response)
 
-        _sum = raw_response['aggregations']['fileFormat']["myTerms"]
-        _organ_group = raw_response['aggregations']['group_by_organ']
+        _file_types = raw_response['aggregations']['fileFormat']["myTerms"]
+        _cell_counts = raw_response['aggregations']['group_by_organ']
         _organ_types = raw_response['aggregations']['organTypes']
 
-        # Create a SummaryRepresentation object
-        kwargs = dict(
+        self.apiResponse = SummaryRepresentation(
             projectCount=self.agg_contents(self.aggregates, 'projectCount', agg_form='value'),
-            totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
             specimenCount=self.agg_contents(self.aggregates, 'specimenCount', agg_form='value'),
             fileCount=self.agg_contents(self.aggregates, 'fileCount', agg_form='value'),
+            totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
             donorCount=self.agg_contents(self.aggregates, 'donorCount', agg_form='value'),
             labCount=self.agg_contents(self.aggregates, 'labCount', agg_form='value'),
             totalCellCount=self.agg_contents(self.aggregates, 'total_cell_count', agg_form='value'),
-            organTypes=[bucket['key'] for bucket in _organ_types['buckets']],
-            fileTypeSummaries=[FileTypeSummary.for_bucket(bucket) for bucket in _sum['buckets']],
-            cellCountSummaries=[OrganCellCountSummary.for_bucket(bucket) for bucket in _organ_group['buckets']])
-
-        self.apiResponse = SummaryRepresentation(**kwargs)
+            organTypes=list(map(OrganType.for_bucket, _organ_types['buckets'])),
+            fileTypeSummaries=list(map(FileTypeSummary.for_bucket, _file_types['buckets'])),
+            cellCountSummaries=list(map(OrganCellCountSummary.for_bucket, _cell_counts['buckets'])))
 
 
 class KeywordSearchResponse(AbstractResponse, EntryFetcher):
@@ -687,6 +698,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "genusSpecies": donor.get("genus_species", None),
             "organismAge": donor.get("organism_age", None),
             "organismAgeUnit": donor.get("organism_age_unit", None),
+            "organismAgeRange": donor.get("organism_age_range", None),
             "biologicalSex": donor.get("biological_sex", None),
             "disease": donor.get("disease", None)
         }
@@ -758,14 +770,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
         :param hits: A list of hits from ElasticSearch
         """
-        # Setup the logger
-        self.logger = logging.getLogger(
-            'dashboardService.api_response.KeywordSearchResponse')
         self.entity_type = entity_type
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
-        self.logger.info('Creating the entries in ApiResponse')
+        logger.info('Creating the entries in ApiResponse')
         class_entries = {'hits': [
             self.map_entries(x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
@@ -804,8 +813,12 @@ class FileSearchResponse(KeywordSearchResponse):
         def choose_entry(_term):
             if 'key_as_string' in _term:
                 return _term['key_as_string']
+            elif _term['key'] is None:
+                return None
+            elif isinstance(_term['key'], bool):
+                return str(_term['key']).lower()
             else:
-                return _term['key']
+                return str(_term['key'])
 
         term_list = []
         for term in contents['myTerms']['buckets']:
@@ -814,8 +827,15 @@ class FileSearchResponse(KeywordSearchResponse):
                 term_object_params['projectId'] = [bucket['key'] for bucket in term['myProjectIds']['buckets']]
             term_list.append(TermObj(**term_object_params))
 
-        # Add 'unspecified' term if there is at least one unlabelled document
         untagged_count = contents['untagged']['doc_count']
+
+        # Add the untagged_count to the existing termObj for a None value, or add a new one
+        if untagged_count > 0:
+            for term_obj in term_list:
+                if term_obj.term is None:
+                    term_obj.count += untagged_count
+                    untagged_count = 0
+                    break
         if untagged_count > 0:
             term_list.append(TermObj(term=None, count=untagged_count))
 
@@ -847,9 +867,6 @@ class FileSearchResponse(KeywordSearchResponse):
         Constructs the object and initializes the apiResponse attribute
         :param hits: A list of hits from ElasticSearch
         """
-        # Setup the logger
-        self.logger = logging.getLogger(
-            'dashboardService.api_response.FileSearchResponse')
         # This should initialize the self.apiResponse attribute of the object
         KeywordSearchResponse.__init__(self, hits, entity_type)
         # Add the paging via **kwargs of dictionary 'pagination'
@@ -872,7 +889,8 @@ class AutoCompleteResponse(EntryFetcher):
         the entry
         :return: A HitEntry Object with the appropriate fields mapped
         """
-        self.logger.debug("Entry to be mapped: \n{}".format(json_pp(entry)))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Entry to be mapped: \n%s', json_pp(entry))
         mapped_entry = {}
         if _type == 'file':
             # Create a file representation
@@ -898,13 +916,10 @@ class AutoCompleteResponse(EntryFetcher):
         :param mapping: A JSON with the mapping for the field
         :param hits: A list of hits from ElasticSearch
         """
-        # Setup the logger
-        self.logger = logging.getLogger(
-            'dashboardService.api_response.AutoCompleteResponse')
         # Overriding the __init__ method of the parent class
         EntryFetcher.__init__(self)
-        self.logger.info("Mapping entries")
-        self.logger.debug("Mapping: \n{}".format(json_pp(mapping)))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Mapping: \n%s', json_pp(mapping))
         class_entries = {'hits': [self.map_entries(
             mapping, x, _type) for x in hits], 'pagination': None}
         self.apiResponse = AutoCompleteRepresentation(**class_entries)

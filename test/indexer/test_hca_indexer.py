@@ -2,6 +2,7 @@ import os
 import re
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 import logging
 
 import elasticsearch
@@ -26,6 +27,7 @@ import azul.indexer
 from app_test_case import LocalAppTestCase
 from azul import config, hmac
 from azul.indexer import IndexWriter
+from azul.logging import configure_test_logging
 from azul.threads import Latch
 from azul.transformer import Aggregate, Contribution
 from azul.project.hca.metadata_generator import MetadataGenerator
@@ -36,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 def setUpModule():
-    logging.basicConfig(level=logging.INFO)
+    configure_test_logging()
 
 
 class TestHCAIndexer(IndexerTestCase):
@@ -655,7 +657,7 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual({'Prof. Ido Amit', 'Human Cell Atlas Data Coordination Platform'},
                                  contributor_values['laboratory'])
                 self.assertEqual({False, True}, contributor_values['corresponding_contributor'])
-                self.assertEqual({'Human Cell Atlas wrangler', None},
+                self.assertEqual({'Human Cell Atlas wrangler', config.null_keyword},
                                  contributor_values['project_role'])
 
     def test_diseases_field(self):
@@ -700,7 +702,7 @@ class TestHCAIndexer(IndexerTestCase):
 
             for organoid in contents['organoids']:
                 self.assertEqual(['Brain'] if aggregate else 'Brain', organoid['model_organ'])
-                self.assertEqual([None] if aggregate else None, organoid['model_organ_part'])
+                self.assertEqual([config.null_keyword] if aggregate else config.null_keyword, organoid['model_organ_part'])
 
         projects = 1
         bundles = 1
@@ -793,14 +795,14 @@ class TestHCAIndexer(IndexerTestCase):
                     cell_lines_model_organ = {cl['model_organ'] for cl in contents['cell_lines']}
                 self.assertEqual(cell_lines_model_organ, {'blood (parent_cell_line)', 'blood (child_cell_line)'})
                 self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (child_cell_line)'])
-                self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [None])
+                self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [config.null_keyword])
 
     def test_metadata_generator(self):
         index_bundle = ('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
         manifest, metadata = self._load_canned_bundle(index_bundle)
         generator = MetadataGenerator()
         uuid, version = index_bundle
-        generator.add_bundle(uuid, version, list(metadata.values()))
+        generator.add_bundle(uuid, version, manifest, list(metadata.values()))
         metadata_rows = generator.dump()
         expected_metadata_contributions = 8
         self.assertEqual(expected_metadata_contributions, len(metadata_rows))
@@ -813,7 +815,6 @@ class TestHCAIndexer(IndexerTestCase):
             else:
                 self.assertIn(metadata_row['*.file_core.file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
 
-    @unittest.skip("https://github.com/DataBiosphere/azul/issues/1152")
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
 
@@ -821,9 +822,9 @@ class TestHCAIndexer(IndexerTestCase):
         bundles_index = config.es_index_name('bundles')
         mapping = self.es_client.indices.get_mapping(index=bundles_index)
         self.assertIn('bundle_uuid', mapping[bundles_index]
-                                     ['mappings']['doc']['properties']
-                                     ['contents']['properties']
-                                     ['metadata']['properties'])
+        ['mappings']['doc']['properties']
+        ['contents']['properties']
+        ['metadata']['properties'])
 
         # Ensure that a metadata row exists …
         hits = self._get_all_hits()
@@ -860,6 +861,58 @@ class TestHCAIndexer(IndexerTestCase):
                                          }
                                      })
         self.assertEqual(1, hits["hits"]["total"])
+
+    def test_variable_metadata_format_indexable(self):
+        """
+        Index different formats for a single field in metadata and ensure dynamic mapper in
+        elasticsearch does not set a field type for incoming data.
+        """
+        multiple_cell_line_bundle = ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z')
+        manifest_multiple_cell_lines, metadata_multiple_cell_lines = self._load_canned_bundle(multiple_cell_line_bundle)
+
+        manifest_single_cell_line, metadata_single_cell_line = self._load_canned_bundle(self.new_bundle)
+
+        # Patch bundles to obtain desired response from Elasticsearch dynamic type setter
+        entity = 'cell_line_0.json'
+
+        metadata_single_cell_line[entity] = deepcopy(metadata_multiple_cell_lines[entity])
+        metadata_single_cell_line[entity]['date_established'] = '2014-10-24'
+        metadata_single_cell_line[entity]['provenance'] = {
+            'document_id': 'e7e0f358-a681-4412-8888-318234f90ca9',
+            'submission_date': '2019-05-15T09:36:02.702Z',
+            'update_date': '2019-05-15T09:36:11.640Z'
+        }
+        manifest_single_cell_line.append({
+            'content-type': 'application/json; dcp-type=\'metadata/biomaterial\'',
+            'crc32c': '44fe9793',
+            'indexed': True,
+            'name': 'cell_line_0.json',
+            's3_etag': 'c3f292e01d299b4be3fd1f460842fc1d',
+            'sha1': '6b13668c7446caa5ea1964e855faf196c7dc2bbb',
+            'sha256': 'f5632ece248ccd7f9c0cfa2c08d41ee87ebcc280842404b22df366d08ad1e541',
+            'size': 1791,
+            'uuid': 'e7e0f358-a681-4412-8888-318234f90ca9',
+            'version': '2018-11-04T103611.640000Z'
+        })
+
+        metadata_multiple_cell_lines[entity]['date_established'] = '2015-01-09'
+        metadata_multiple_cell_lines['cell_line_1.json']['date_established'] = '2014-11-09'
+
+        self._index_bundle(self.new_bundle, manifest_single_cell_line, metadata_single_cell_line)
+
+        hits = self._get_all_hits()
+        bundles_index = config.es_index_name('bundles')
+        bundles_hit_1 = one(hit['_source'] for hit in hits if hit['_index'] == bundles_index)
+        self.assertEqual('2014-10-24',
+                         bundles_hit_1['contents']['metadata'][0]['cell_line.date_established'])
+
+        self._index_bundle(multiple_cell_line_bundle, manifest_multiple_cell_lines, metadata_multiple_cell_lines)
+        hits = self._get_all_hits()
+        bundle_hits = [hit['_source'] for hit in hits if hit['_index'] == bundles_index]
+        bundle_hits.remove(bundles_hit_1)
+        bundles_hit_2 = one(bundle_hits)
+        self.assertEqual('2014-11-09||2015-01-09',
+                         bundles_hit_2['contents']['metadata'][0]['cell_line.date_established'])
 
 
 class TestValidNotificationRequests(LocalAppTestCase):
