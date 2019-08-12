@@ -599,8 +599,9 @@ class ElasticTransformDump(object):
                                   map_script=map_script,
                                   combine_script='return new ArrayList(params._agg.fields)',
                                   reduce_script=reduce_script)
-            es_search.size = 0
+            es_search = es_search.extra(size=0)
             response = es_search.execute()
+            assert len(response.hits) == 0
             aggregate = response.aggregations
             manifest_config = self.generate_full_manifest_config(aggregate)
         elif format == 'bdbag':
