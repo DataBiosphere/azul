@@ -435,6 +435,14 @@ def get_search():
           in: integer
           type: string
           description: Size of the page being returned
+        - name: order
+          in: query
+          type: string
+          description: Whether it should be in ascending or descending order
+        - name: sort
+          in: query
+          type: string
+          description: Which field to sort by
         - name: search_after
           in: query
           type: string
@@ -651,6 +659,10 @@ def dss_files(uuid):
           in: query
           type: string
           description: The desired name of the file. If absent, the UUID of the file will be used.
+        - name: requestIndex
+          in: query
+          type: int
+          description: Number of attempts made through the endpoint to fetch  the desired file.
         - name: wait
           in: query
           type: int
@@ -706,6 +718,10 @@ def fetch_dss_files(uuid):
           in: query
           type: string
           description: The desired name of the file. If absent, the UUID of the file will be used.
+        - name: requestIndex
+          in: query
+          type: int
+          description: Number of attempts made through the endpoint to fetch  the desired file.
         - name: wait
           in: query
           type: int
@@ -1107,6 +1123,11 @@ def update_cart(cart_id):
 def get_items_in_cart(cart_id):
     """
     Get a list of items in a cart
+     parameters:
+        - name: resume_token
+          in: query
+          type: string
+          description: Reserved. Do not pass explicitly.
 
     The default cart is accessible under its the actual cart UUID or by passing
     "default" as the cart ID. If the default cart does not exist, the endpoint
