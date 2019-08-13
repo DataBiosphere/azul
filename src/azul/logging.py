@@ -11,12 +11,15 @@ def configure_app_logging(app: AzulChaliceApp, *loggers):
 
 def configure_script_logging(*loggers):
     assert len(logging.getLogger().handlers) == 0, 'Logging is already configured.'
-    logging.basicConfig(format="%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s")
-    _configure_log_levels(*loggers)
+    _configure_non_app_logging(loggers)
 
 
 def configure_test_logging(*loggers):
-    logging.basicConfig()
+    _configure_non_app_logging(loggers)
+
+
+def _configure_non_app_logging(loggers):
+    logging.basicConfig(format="%(asctime)s %(levelname)-7s %(threadName)-7s: %(message)s")
     _configure_log_levels(*loggers)
 
 
