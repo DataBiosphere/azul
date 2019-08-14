@@ -1,0 +1,555 @@
+# A word on the syntactic conventions used in this file. We use a quoted strings
+# for names that we define. Most YAML editors highlight quoted strings, making
+# the distinction between meta domain (OpenAPI) and problem domain (our API)
+# obvious.
+
+openapi: 3.0.2
+info:
+  title: "Portal Registration API"
+  version: "0.2"
+  description: >
+
+    This is a specification of a REST API for registering third-party portals
+    with Azul, the HCA Data Browser backend service. We distinguish two main
+    concepts: portals and integrations. A _portal_ is a third-party website or
+    service to which the HCA Data Browser can direct its visitors. An
+    _integration_ is a blueprint describing when and how visitors are
+    redirected and what information is passed along. The can be multiple
+    integrations per portal.
+
+    Portals use this API to register with Azul and specify how they wish to
+    integrate with the Data Browser. The Data Browser uses this API to
+    enumerate the integrations that are available and applicable to a
+    particular UI context.
+
+    # Static Integration
+
+    A portal that offers visualizations for specific HCA datasets—or
+    _projects_, in HCA terminology—analyses the data in those projects ahead of
+    time and publishes the visualization results on specific web pages, one
+    page per project. It then registers with Azul and defines one integration
+    for each such page. Each integration associates the URL of that portal page
+    with the UUID of the corresponding HCA project. When the Data Browser
+    renders a project, it queries this API for integrations matching that
+    project and the current context within the UI. Projects for which a portal
+    integration exists are decorated with a link pointing to the corresponding
+    page in the portal.
+
+    # Manifest Integration
+
+    Manifest integration with Azul is for portals that index all data in the
+    HCA and that offer visualization of user-defined subsets of that data. It
+    can also be used by portals that fetch HCA data on demand at the time a
+    visitor requests the integration, like portals the let the visitor initiate
+    analysis workflows on the data entities listed in the manifest. These
+    portals can register with Azul and define a manifest integration for
+    specific types of biological, experimental or analytical entities like
+    samples or data files. As visitors use the Data Browser to interactively
+    refine a selection of these entities, the Data Browser uses this API to
+    query for portals with manifest integrations for the types of entities
+    currently selected and renders UI elements with which the visitor can
+    initiate a transfer to the respective portal. Once a visitor initiates the
+    transfer, the Data Browser first requests Azul to prepare a manifest and
+    when that is complete, transfers the visitor to the portal, passing along a
+    URL to the prepared manifest. The manifest contains references to the
+    selected entities along with all or some of the associated metadata,
+    depending on the manifest format specified in the integration. The portal
+    can display analysis results or other visualizations for the entities
+    referenced in the manifest.
+
+tags:
+  - name: "Portals"
+    description: "Operations on registered portals"
+  - name: "Integrations"
+    description: "Operations on integrations with a registered portal"
+servers:
+  - url: "/"
+components:
+  schemas:
+    "integration_type":
+      type: string
+      enum:
+        - "get"
+        - "get_entity"
+        - "get_entities"
+        - "get_manifest"
+      description: >
+
+        The kind of integration.
+
+        * `get` - A GET request is made to a portal endpoint but no payload
+          is sent. This integration type associates a specific set of concrete
+          entities with a static URL at the portal. Any Data Browser page
+          listing the specified entities will include a link pointing to
+          the specified URL.
+
+        * `get_entity` - The portal endpoint is invoked with a GET request to a
+          portal URL parameterized with a single identifier referencing an
+          entity of the type denoted in the `entity_type` property of the
+          integration. Any Data Browser page listing entities of that type will
+          include a link/button pointing at the portal URL. When a visitor
+          clicks that link/button while only a single entity is selected, the
+          identifier of that entity will be interpolated into the specified
+          portal URL template and the user agent will be redirected to
+          resulting URL.
+
+        * `get_entities` - The portal endpoint is invoked with a GET request to
+          a portal URL parameterized with a list of entity identifiers. All
+          referenced entities will be of the type denoted in the `entity_type`
+          property of the integration. Any Data Browser page listing entities
+          of that type will include a link/button pointing at the portal URL.
+          When a visitor clicks that link/button, identifiers of the currently
+          selected entities will be interpolated into the specified portal URL
+          template and the user agent will be redirected to resulting URL. This
+          integration type is subject to a limit of at most TBD entities.
+
+        * `get_manifest` - The portal endpoint is invoked with a GET request to
+          the specified portal URL parameterized with a URL to a manifest
+          listing entity identifiers and, depending on the manifest format,
+          certain associated metadata. All referenced entities will be of the
+          type denoted in the `entity_type` property of the integration. Any
+          Data Browser page listing entities of that type will include a
+          link/button pointing at the portal URL. When a visitor clicks that
+          link/button, a new manifest will be populated with identifiers of—and
+          metadata about—the currently selected entities, the manifest URL will
+          be interpolated into the specified portal URL template and the user
+          agent will be redirected to the resulting URL. There is no limit on
+          the number of entities in the manifest. The manifest expires in one
+          day.
+
+    "entity_type":
+      type: string
+      enum:
+        - "project"
+        - "sample"
+        - "file"
+        - "bundle"
+      description: >
+
+        The type of the entity to which an integration applies. For the
+        `manifest` integration, this property defines the type of entity
+        represented by each row. At some point Azul will support less
+        restrictive combinations of `integration_type` and `entity_type` but at
+        present, only the combinations listed below are valid.
+
+        * `project` - use with the `integration_type` of `entities`
+
+        * `file` - use with the `integration_type` of `manifest` and
+          `manifest_type` of `full` or `compact`
+
+        * `bundle` - use with the `integration_type` of `manifest` and
+          `manifest_type` of `terra.bdbag`
+
+    "Portal":
+      type: object
+      required:
+        - "portal_name"
+        - "portal_id"
+      properties:
+        "portal_id":
+          readOnly: true
+          description: "The unique identifier of the portal"
+          type: string
+          format: uuid
+        "portal_name":
+          description: "The name of the portal for use in UI elements like links or buttons"
+          type: string
+          maxLength: 50
+        "portal_icon":
+          type: string
+          description: "A URL to an image that can be used to symbolize the portal in a UI"
+        "contact_email":
+          type: string
+          format: email
+          description: "The email address to which questions about the portal can be directed"
+        "organization_name":
+          type: string
+          description: "A name of the organisation owning the portal"
+        "portal_description":
+          type: string
+          description: "A brief description of the portals and its capabilities"
+    "Integration":
+      type: object
+      required:
+        - "integration_id"
+        - "integration_type"
+        - "entity_type"
+      properties:
+        "integration_id":
+          readOnly: true
+          description: "The unique identifier of the integration"
+          type: string
+          format: uuid
+        "integration_type":
+          $ref: "#/components/schemas/integration_type"
+        "entity_type":
+          $ref: "#/components/schemas/entity_type"
+        "title":
+          type: string
+          description: >
+
+            A brief textual description of the response returned by the portal
+            when a visitor initiates this integration. The HCA Data Browser may
+            use this text when rendering a UI element related to this
+            integration.
+
+      discriminator:
+        propertyName: "integration_type"
+        mapping:
+          "get": "#/components/schemas/GetIntegration"
+          "get_entity": "#/components/schemas/GetEntityIntegration"
+          "get_entities": "#/components/schemas/GetEntitiesIntegration"
+          "get_manifest": "#/components/schemas/GetManifestIntegration"
+      oneOf:
+        - $ref: "#/components/schemas/GetIntegration"
+        - $ref: "#/components/schemas/GetEntityIntegration"
+        - $ref: "#/components/schemas/GetEntitiesIntegration"
+        - $ref: "#/components/schemas/GetManifestIntegration"
+
+    "GetIntegration":
+      type: object
+      required:
+        - "entity_ids"
+        - "portal_url"
+      properties:
+        "entity_ids":
+          description: "A list of Azul entity identifiers to restrict the integration to"
+          type: array
+          items:
+            type: string
+            format: uuid
+        "portal_url":
+          type: string
+          description: "The URL of the portal endpoint that will be requested when the visitor initiates this integration"
+
+    "GetEntityIntegration":
+      type: object
+      required:
+        - "portal_url_template"
+      properties:
+        "portal_url_template":
+          type: string
+          description: >
+
+            A template for the URL of the portal endpoint to hit when the visitor
+            initiates this integration. The template will be parsed according to
+            RFC 6570 and the first occurrence of the `entity_id` variable will
+            be substituted with the identifier of the entity selected by the
+            visitor.
+
+        "allow_head":
+          type: boolean
+          description: >
+
+            If `true`, a client may use a HEAD request for the expanded portal
+            URL to determine if the entity in the request are supported. The
+            portal must quickly respond with status 200, if a GET request for
+            the same URL is expected to yield 200 status response.
+
+    "GetEntitiesIntegration":
+      type: object
+      required:
+        - "portal_url_template"
+      properties:
+        "portal_url_template":
+          type: string
+          description: >
+
+            A template for the URL of the portal endpoint to hit when the visitor
+            initiates this integration. The template will be parsed according to
+            RFC 6570 and the first occurrence of the `entity_ids` variable will
+            be substituted with a list of identifiers of the entities selected
+            by the visitor.
+
+        "allow_head":
+          type: boolean
+          description: >
+
+            If `true`, a client may use a HEAD request for the expanded portal
+            URL to determine if the entities in the request are supported. The
+            portal must quickly respond with status 200, if a GET request for
+            the same URL is expected to yield 200 status response. Note that the
+            if URL references multiple entities it is up to the portal to decide
+            if a 200 code is adequate if only some of those entities are
+            supported.
+
+    "GetManifestIntegration":
+      type: object
+      required:
+        - "manifest_type"
+        - "portal_url_template"
+      properties:
+        "manifest_type":
+          type: string
+          enum:
+            - "full"
+            - "compact"
+            - "terra.bdbag"
+          description: >
+
+            The format of the manifest. TODO flesh this out
+
+            * `full` - a full metdata TSV
+
+            * `compact` - a compact metadata TSV
+
+            * `terra.bdbag` - a BDBag in Terra format
+
+        "portal_url_template":
+          type: string
+          description: >
+
+            A template for the URL of the portal endpoint to hit when the visitor
+            initiates this integration. The template will be parsed according to
+            RFC 6570 and the first occurrence of the `manifest_url` variable
+            will be replaced with the URL to the manifest listing the entities
+            selected by the visitor.
+
+    "PortalWithIntegrations":
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Portal"
+        - type: object
+          required:
+            - "integrations"
+          properties:
+            "integrations":
+              type: "array"
+              items:
+                $ref: "#/components/schemas/Integration"
+
+paths:
+  /portal:
+    get:
+      summary: "List portal registrations"
+      tags:
+        - Portals
+      responses:
+        "200":
+          description: >
+            A list of registered portals
+          content:
+            "application/json":
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Portal"
+    post:
+      summary: Register a new portal
+      tags:
+        - Portals
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/Portal"
+        description: >
+          Portal definition
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Portal"
+        "400":
+          description: "Invalid request"
+  "/portal/{portal_id}":
+    parameters:
+      - name: "portal_id"
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - "Portals"
+      summary: "Retrieve a portal registration"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Portal"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Portal not found"
+    put:
+      tags:
+        - Portals
+      summary: "Update an existing portal registration"
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Portal"
+        description: "The updated portal definition"
+        required: true
+      responses:
+        "200":
+          description: "The updated portal definition"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portal"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Portal not found"
+    delete:
+      tags:
+        - "Portals"
+      summary: "Unregister a portal"
+      description: ""
+      responses:
+        "204":
+          description: "Portal deleted"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Portal not found"
+  "/portal/{portal_id}/integration":
+    parameters:
+      - name: "portal_id"
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - "Integrations"
+      summary: "List integrations with a portal"
+      description: ""
+      responses:
+        "200":
+          description: "A list of integrations with the given portal"
+          content:
+            "application/json":
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Integration"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Portal not found"
+    post:
+      tags:
+        - "Integrations"
+      summary: "Create a new integration with a portal"
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Integration"
+        description: "Integration definition"
+        required: true
+      responses:
+        "200":
+          description: "The newly created integration definition"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Integration"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Portal not found"
+  "/portal/{portal_id}/integration/{integration_id}":
+    parameters:
+      - name: "portal_id"
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: "integration_id"
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - "Integrations"
+      summary: "Retrieve an integration with a portal"
+      description: ""
+      responses:
+        "200":
+          description: "The integration definition"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Integration"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Portal or integration not found"
+    put:
+      tags:
+        - "Integrations"
+      summary: "Update an integration with a portal"
+      description: ""
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/Integration"
+        description: "The updated definition"
+        required: true
+      responses:
+        "200":
+          description: "The updated integration definition"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Integration"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Portal or integration not found"
+    delete:
+      tags:
+        - "Integrations"
+      summary: "Delete an integration with a portal"
+      description: ""
+      responses:
+        "204":
+          description: "Integration deleted"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Portal or integration not found"
+  "/integrations":
+    get:
+      summary: "List integrations accross portals"
+      tags:
+        - "Integrations"
+      description: ""
+      parameters:
+        - in: query
+          name: "entity_type"
+          schema:
+            $ref: "#/components/schemas/entity_type"
+        - in: query
+          name: "integration_type"
+          schema:
+            $ref: "#/components/schemas/integration_type"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PortalWithIntegrations"
+        "400":
+          description: Invalid request
