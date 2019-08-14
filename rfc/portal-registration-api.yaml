@@ -1,0 +1,319 @@
+swagger: "2.0"
+info:
+  title: Portal Registration API
+  version: "0.1"
+  description: >
+    This is a specification of a REST API for registering third-party portals with Azul, the HCA Data Browser backend service. We distinguish two main concepts: portals and integrations. A _portal_ is a third-party website or service to which the HCA Data Browser can direct its visitors. An _integration_ is a blueprint describing when and how visitors are redirected and what information is passed along. The can be multiple integrations per portal.
+
+    Portals use this API to register with Azul and specify how they wish to integrate with the Data Browser. The Data Browser uses this API to enumerate the integrations that are available and applicable to a particular UI context.
+
+    # Example: Static Integration
+
+    A portal that offers visualizations for specific HCA datasets—or _projects_, in HCA terminology—analyses the data in those projects ahead of time and publishes the visualization results on specific web pages, one page per project. It then registers with Azul and defines one integration for each such page. Each integration associates the URL of that portal page with the UUID of the corresponding HCA project. When the Data Browser renders a project, it queries this API for integrations matching the projects to be rendered. Projects for which an portal integration exists are decorated with a link pointing to the corresponding page in the portal.
+
+    # Example: Manifest Integration
+
+    Manifest integration with Azul is for portals that index all data in the HCA and that offer visualization of user-defined subsets of that data. These portals can register with Azul and define a manifest integration for specific types of biological, experimental or analytical entities like samples or data files. As visitors use the Data Browser to interactively refine a selection of these entities, the Data Browser uses this API to query for portals with manifest integrations for the types of entities currently selected and renders UI elements with which the visitor can initiate a transfer to the respective portal. Once a visitor initiates the transfer, the Data Browser first requests Azul to prepare a manifest and when that is complete, trtansfers the visitor to the portal, passing along a URL to the prepared manifest. The manifest contains references to the selected entities along with all or some of the associated metadata, depending on the manifest format specified in the integration. The portal can display analysis results or other visualizations for the entities referenced in the manifest.
+basePath: /
+tags:
+  - name: Portals
+    description: Operations on registered portals
+  - name: Integrations
+    description: Operations on integrations with a registered portal
+schemes:
+  - https
+
+# By listing definitions first we can sink YAML anchors into it and use them later. That
+# means there are two mechanisms of reuse at play. Swagger's $ref and YAML's anchors. The
+# latter has the advantage that it optionally merges objects while $ref always replaces.
+
+definitions:
+  Portal:
+    type: object
+    required:
+      - portal_name
+    properties:
+      portal_id:
+        description: The unique identifier of the portal
+        type: string
+        format: uuid
+      portal_name:
+        description: The name of the portal for use in UI elements like links or buttons.
+        type: string
+        maxLength: 50
+      portal_icon:
+        type: string
+        description: A URL to an image to symbolize the portal in a UI
+  Integration:
+    type: object
+    required:
+      - payload_type
+      - portal_url
+      - http_method
+      - entity_type
+    properties:
+      integration_id:
+        description: The unique identifier of the integration
+        type: string
+        format: uuid
+      payload_type: &payload_type
+        type: string
+        enum:
+          - none
+          - entities
+          - manifest.full
+          - manifest.compact
+          - manifest.terra.bdbag
+        description: >
+          A description of the payload sent to the registered portal
+
+          * `none` - A request is made to the portal endpoint URL but no payload is sent. This payload type is typically used in conjunction with the `entities` property of the integration object in order to map one or more discrete Azul entities to a static URL at the registered portal.
+
+          * `entities` - a list of entity UUIDs. All referenced entities must be of the type denoted in the `entity_type` property.
+
+          * `manifest.full` - a full metdata TSV
+
+          * `manifest.compact` - a compact metadata TSV
+
+          * `manifest.terra.bdbag` - a BDBag in Terra format
+      portal_url:
+        type: string
+        description: >
+          The URL of the portal endpoing (if `payload_type` is `none`), or a template for URLs of portal endpoints to hit when the user initiates this integration. A URL template will be parsed according to RFC 6570 and any occurrence of the `payload` variable will be replaced with the payload.
+      http_method:
+        type: string
+        description: The HTTP method to use when requesting the portal endpoint
+        enum:
+          - GET
+      entity_type: &entity_type
+        type: string
+        description: >
+          The type of entities to which an integration applies. For the manifest payloads, this property defines the type of entity represented by each row. At some point Azul will support less retrictive combinations of `payload_type` and `entity_type` but at present, only the combinations listed below are valid.
+
+          * `project` - use with entities
+
+          * `file` - use with manifest.full or manifest.compact
+
+          * `bundle` - use manifest.terra.bdbag 
+        enum:
+          - project
+          - file
+          - bundle
+      entities:
+        description: >
+          An optional list of Azul entity identifiers to restrict the integration to
+        type: array
+        items:
+          type: string
+          format: uuid
+paths:
+  /portal:
+    get:
+      summary: List portal registrations
+      tags:
+        - Portals
+      responses:
+        200:
+          description: A list of registered portals
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Portal"
+    post:
+      summary: Register a new portal
+      tags:
+        - Portals
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Portal definition
+          required: true
+          schema:
+            $ref: "#/definitions/Portal"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Portal"
+        400:
+          description: Invalid request
+  /portal/{portal_id}:
+    parameters:
+      - name: portal_id
+        in: path
+        required: true
+        type: string
+        format: uuid
+    get:
+      tags:
+        - Portals
+      summary: Retrieve a portal registration
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Portal"
+        400:
+          description: Invalid request
+        404:
+          description: Portal not found
+    put:
+      tags:
+        - Portals
+      summary: Update an existing portal registration
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: The updated portal definition
+          required: true
+          schema:
+            $ref: "#/definitions/Portal"
+      responses:
+        200:
+          description: The updated portal definition
+          schema:
+            $ref: "#/definitions/Portal"
+        400:
+          description: Invalid request
+        404:
+          description: Portal not found
+    delete:
+      tags:
+        - Portals
+      summary: Unregister a portal
+      description: ""
+      responses:
+        400:
+          description: Invalid request
+        404:
+          description: Portal not found
+  /portal/{portal_id}/integration:
+    parameters:
+      - name: portal_id
+        in: path
+        required: true
+        type: string
+        format: uuid
+    get:
+      tags:
+        - Integrations
+      summary: List integrations with a portal
+      description: ""
+      responses:
+        200:
+          description: A list of integrations with the given portal
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Integration"
+        400:
+          description: Invalid request
+        404:
+          description: Portal not found
+    post:
+      tags:
+        - Integrations
+      summary: Create a new integration with a portal
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Integration definition
+          required: true
+          schema:
+            $ref: "#/definitions/Integration"
+      responses:
+        200:
+          description: The newly created integration definition
+          schema:
+            $ref: "#/definitions/Integration"
+        400:
+          description: Invalid request
+        404:
+          description: Portal not found
+  /portal/{portal_id}/integration/{integration_id}:
+    parameters:
+      - name: portal_id
+        in: path
+        required: true
+        type: string
+        format: uuid
+      - name: integration_id
+        in: path
+        required: true
+        type: string
+        format: uuid
+    get:
+      tags:
+        - Integrations
+      summary: Retrieve an integration with a portal
+      description: ""
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The integration definition
+          schema:
+            $ref: "#/definitions/Integration"
+        400:
+          description: Invalid request
+        404:
+          description: Portal or integration not found
+    put:
+      tags:
+        - Integrations
+      summary: Update an integration with a portal
+      description: ""
+      parameters:
+        - in: body
+          name: body
+          description: The updated definition
+          required: true
+          schema:
+            $ref: "#/definitions/Integration"
+      responses:
+        200:
+          description: The updated integration definition
+          schema:
+            $ref: "#/definitions/Integration"
+        400:
+          description: Invalid request
+        404:
+          description: Portal or integration not found
+  /integrations:
+    get:
+      summary: List integrations accross portals
+      tags:
+        - Integrations
+      description: ""
+      parameters:
+        - in: query
+          name: entity_type
+          <<: *entity_type
+        - in: query
+          name: payload_type
+          <<: *payload_type
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Integration"
+        400:
+          description: Invalid request
