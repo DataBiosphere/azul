@@ -135,9 +135,12 @@ end.
 2. Install the development prerequisites:
 
    ```
-   pip install -U setuptools==40.1.0 wheel==0.32.3
+   pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3
    pip install -r requirements.dev.txt
    ```
+
+   Newer versions of pip are incompatible with some of our requirements, hence
+   the pin on the 10.0.1 version.
 
 3. Activate the `dev` deployment:
 
@@ -748,8 +751,11 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    git log LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --no-merges
    ```
 
-   You will also need to add the release tag and commit hash which are generated
-   later in this guide.
+   For the version, use the full hash of the latest commit:
+
+   ```
+   git log -1 --format="%H"
+   ```
 
 5. At this point you should determine whether or not you will need to reindex.
    The `CHANGELOG.yml` _should_ contain this information but is notoriously
@@ -761,10 +767,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
 
    where `LAST_RELEASE_TAG` is the previous release of the target branch. If the diff
    contains non-trivial changes reindexing is probably necessary. When in doubt
-   assume yes. Announce your conclusion in the 
-   [#data-wrangling](https://humancellatlas.slack.com/messages/C9ENBPVNW)
-   (this should be done before 5pm Pacific, Monday for staging and Tuesday for
-   production).
+   assume yes.
 
 ### 6.1.3 Finishing up deployment / promotion
 
@@ -779,7 +782,17 @@ If in doubt ask on #dcp-ops.
 None of these steps can be performed ahead of time. Only perform them once you
 are ready to actually deploy.
 
-1. Now you need to push the current branch to Github. This is needed because
+1. Activate your virtual environment and run
+   ```
+   source environment
+   ```
+   and then select the target deployment stage with
+   ```
+   _select STAGE
+   ```
+   where stage is one of `dev`, `integration`, `staging`, or `prod`
+
+2. Now you need to push the current branch to Github. This is needed because
    the Gitlab build performs a status check update on Github. This would fail
    if Github didn't know the commit.
 
@@ -787,7 +800,7 @@ are ready to actually deploy.
    git push origin
    ```
 
-2. Finally, push to Gitlab.
+3. Finally, push to Gitlab.
 
    ```
    git push gitlab.dev   # for a dev, integration or staging deployment
@@ -799,16 +812,12 @@ are ready to actually deploy.
    
    If reindexing and promoting to staging or production, send a second 
    warning about reindexing to the #data-wrangling channel at this point.
-
-3. Activate your virtual environment and run
-   ```
-   source environment
-   ```
-   and then select the correct deployment stage with
-   ```
-   _select STAGE
-   ```
-   where stage is one of `dev`, `integration`, `staging`, or `prod`
+   
+   Wait until the pipeline on Gitlab succeeds or fails. If the build fails before 
+   the `deploy` stage, no permanent changes were made to the deployment but you 
+   need to investigate the failure. If the pipeline fails at or after the `deploy` 
+   stage, you need triage the failure. If it can't be resolved manually, you need 
+   to reset the branch back to the LAST_RELEASE_TAG and repeat step 2 in this section.
 
 4. Invoke the health and version endpoints.
 
@@ -861,11 +870,6 @@ are ready to actually deploy.
    ```
 
    invocation that it echoes.
-
-   Copy this tag and add it to the release notes (if applicable).
-
-   If the build fails, you may need to revert the offending commits and push
-   again.
 
 6. In the case that you need to reindex run the manual `reindex` job on the 
    Gitlab pipeline representing the most recent build on the current branch.
