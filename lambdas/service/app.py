@@ -603,7 +603,7 @@ def handle_manifest_generation_request():
     the view function to handle
     """
     query_params = app.current_request.query_params or {}
-    filters = query_params.get('filters')
+    filters = query_params.get('filters') or {}
     try:
         format_ = query_params['format']
     except KeyError:
@@ -782,22 +782,22 @@ def fetch_dss_files(uuid):
 
 
 def _dss_files(uuid, fetch=True):
-    params = app.current_request.query_params
+    query_params = app.current_request.query_params
     url = config.dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
-    file_name = params.pop('fileName', None)
-    wait = params.pop('wait', None)
-    request_index = params.pop('requestIndex', 0)
-    dss_response = requests.get(url, params=params, allow_redirects=False)
+    file_name = query_params.pop('fileName', None)
+    wait = query_params.pop('wait', None)
+    request_index = query_params.pop('requestIndex', 0)
+    dss_response = requests.get(url, params=query_params, allow_redirects=False)
     if dss_response.status_code == 301:
         retry_after = min(int(dss_response.headers.get('Retry-After')),
                           int(1.3 ** request_index))
-        params['requestIndex'] = request_index + 1
+        query_params['requestIndex'] = request_index + 1
         location = dss_response.headers['Location']
         location = urllib.parse.urlparse(location)
         query = urllib.parse.parse_qs(location.query, strict_parsing=True)
-        params = {k: one(v) for k, v in query.items()}
+        query_params = {k: one(v) for k, v in query.items()}
         if file_name is not None:
-            params['fileName'] = file_name
+            query_params['fileName'] = file_name
         if wait is not None:
             if wait == '0':
                 pass
@@ -811,11 +811,11 @@ def _dss_files(uuid, fetch=True):
                 retry_after = round(retry_after - server_side_sleep)
             else:
                 raise BadRequestError(f"Invalid value '{wait}' for 'wait' parameter")
-            params['wait'] = wait
+            query_params['wait'] = wait
         response = {
             "Status": 301,
             **({"Retry-After": retry_after} if retry_after else {}),
-            "Location": file_url(uuid, fetch=fetch, **params)
+            "Location": file_url(uuid, fetch=fetch, **query_params)
         }
     elif dss_response.status_code == 302:
         location = dss_response.headers['Location']
@@ -863,13 +863,13 @@ def self_url(endpoint_path=None):
 def authenticate_via_fusillade():
     request = app.current_request
     authenticator = Authenticator()
-    query = request.query_params or {}
+    query_params = request.query_params or {}
     if authenticator.is_client_authenticated(request.headers):
         return Response(body='', status_code=200)
     else:
         return Response(body='',
                         status_code=302,
-                        headers=dict(Location=Authenticator.get_fusillade_login_url(query.get('redirect_uri'))))
+                        headers=dict(Location=Authenticator.get_fusillade_login_url(query_params.get('redirect_uri'))))
 
 
 @app.route('/auth/callback', methods=['GET'], cors=True)
@@ -1151,8 +1151,8 @@ def get_items_in_cart(cart_id):
     """
     cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
-    request_data = app.current_request.query_params or {}
-    resume_token = request_data.get('resume_token')
+    query_params = app.current_request.query_params or {}
+    resume_token = query_params.get('resume_token')
     try:
         page = CartItemManager().get_paginable_cart_items(user_id, cart_id, resume_token=resume_token)
         return {
@@ -1614,8 +1614,8 @@ def get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.
     """
-    params = app.current_request.query_params or {}
-    file_version = params.get('version')
+    query_params = app.current_request.query_params or {}
+    file_version = query_params.get('version')
     filters = {
         "fileId": {"is": [file_uuid]},
         **({"fileVersion": {"is": [file_version]}} if file_version else {})
