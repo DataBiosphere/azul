@@ -149,6 +149,7 @@ class TestDssProxy(LocalAppTestCase):
                             location = request_azul(url=azul_url.url, expect_status=301)
 
                             azul_url.args['token'] = dss_token
+                            azul_url.args['requestIndex'] = '1'
                             self.assertUrlEqual(azul_url, location)
 
                             helper.add(responses.Response(method='GET',
