@@ -23,10 +23,8 @@ class FacetNameValidationTest(WebServiceTestCase):
     def lambda_name(cls) -> str:
         return "service"
 
-    filter_facet_message = {"Code": "BadRequestError",
-                            "Message": "BadRequestError: Unable to filter by undefined facet bad-facet."}
-    sort_facet_message = {"Code": "BadRequestError",
-                          "Message": "BadRequestError: Unable to sort by undefined facet bad-facet."}
+    facet_message = {'Code': 'BadRequestError',
+                     'Message': 'BadRequestError: Invalid parameter `bad-facet`'}
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
@@ -53,7 +51,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_bad_multiple_filter_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
@@ -63,7 +61,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_mixed_multiple_filter_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
@@ -73,7 +71,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
@@ -85,7 +83,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.sort_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_and_filter_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
@@ -97,7 +95,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertTrue(response.json() in [self.sort_facet_message, self.filter_facet_message])
+        self.assertTrue(response.json() in [self.facet_message, self.facet_message])
 
     def test_valid_sort_facet_but_bad_filter_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
@@ -109,7 +107,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_but_valid_filter_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
@@ -121,7 +119,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.sort_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_bad_single_filter_facet_of_file(self):
         url = self.base_url + '/repository/files'
@@ -131,7 +129,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_bad_multiple_filter_facet_of_file(self):
         url = self.base_url + '/repository/files'
@@ -141,7 +139,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_mixed_multiple_filter_facet_of_file(self):
         url = self.base_url + '/repository/files'
@@ -151,7 +149,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_of_file(self):
         url = self.base_url + '/repository/files'
@@ -163,7 +161,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.sort_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_and_filter_facet_of_file(self):
         url = self.base_url + '/repository/files'
@@ -173,7 +171,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertTrue(response.json() in [self.sort_facet_message, self.filter_facet_message])
+        self.assertTrue(response.json() in [self.facet_message, self.facet_message])
 
     def test_bad_sort_facet_but_valid_filter_facet_of_file(self):
         url = self.base_url + '/repository/files'
@@ -185,7 +183,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.sort_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_valid_sort_facet_but_bad_filter_facet_of_file(self):
 
@@ -198,7 +196,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertEqual(self.filter_facet_message, response.json())
+        self.assertEqual(self.facet_message, response.json())
 
     def test_single_entity_error_responses(self):
         entity_types = ['files', 'projects']
@@ -218,3 +216,22 @@ class FacetNameValidationTest(WebServiceTestCase):
         actual_field_order = response.json()['order']
         expected_field_order = Plugin.load().service_config().order_config
         self.assertEqual(expected_field_order, actual_field_order)
+
+    def test_bad_query_params(self):
+        entity_types = ['files', 'bundles', 'samples']
+        for entity_type in entity_types:
+            url = self.base_url + f'/repository/{entity_type}'
+            with self.subTest(test='extra parameter', entity_type=entity_type):
+                params = {
+                    'some_nonexistent_filter': 1,
+                }
+                response = requests.get(url, params=params)
+                self.assertEqual(400, response.status_code, response.json())
+                self.assertEqual('BadRequestError', response.json()['Code'])
+            with self.subTest(test='malformed parameter', entity_type=entity_type):
+                params = {
+                    'size': 'foo',
+                }
+                response = requests.get(url, params=params)
+                self.assertEqual(400, response.status_code, response.json())
+                self.assertEqual('BadRequestError', response.json()['Code'])
