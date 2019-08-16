@@ -5,7 +5,7 @@ import azul
 import azul.azulclient
 import azul.collections
 import azul.json_freeze
-from azul.modules import load_module
+from azul.modules import load_module, load_app_module
 import azul.openapi
 import azul.service.responseobjects.elastic_request_builder
 import azul.strings
@@ -29,6 +29,7 @@ def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(azul.azulclient))
     tests.addTests(doctest.DocTestSuite(azul.service.responseobjects.elastic_request_builder))
     tests.addTests(doctest.DocTestSuite(retorts))
+    tests.addTests(doctest.DocTestSuite(load_app_module('service')))
     root = azul.config.project_root
     tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/envhook.py', 'envhook')))
     tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/check_branch.py', 'check_branch')))

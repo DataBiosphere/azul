@@ -7,7 +7,7 @@ import math
 import os
 import re
 import time
-from typing import Optional
+from typing import Optional, Callable, Mapping, Any
 import urllib
 from urllib.parse import urlparse
 
@@ -43,14 +43,13 @@ app = AzulChaliceApp(app_name=config.service_name)
 
 configure_app_logging(app, log)
 
-
 openapi_spec = {
     'info': {
         'description': 'This should probably be really long',
         # Version should be updated in any PR tagged API with a major version
         # update for breaking changes, and a minor version otherwise
         'version': '1.0'
-},
+    },
     'tags': [
         {
             'name': 'Health',
@@ -187,8 +186,138 @@ def version():
     }
 
 
+def validate_repository_search(params, **validators):
+    validate_params(params, **{
+        'filters': validate_filters,
+        'order': str,
+        'search_after': str,
+        'search_after_uid': str,
+        'search_before': str,
+        'search_before_uid': str,
+        'size': int,
+        'sort': validate_facet,
+        **validators
+    })
+
+
+def validate_filters(filters):
+    """
+    >>> validate_filters('{"fileName": {"is": ["foo.txt"]}}')
+
+    >>> validate_filters('"')
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The `filters` parameter is not valid JSON
+
+    >>> validate_filters('""')
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The `filters` parameter must be a dictionary.
+
+    >>> validate_filters('{"disease": ["H syndrome"]}') # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: \
+    The `filters` parameter entry for `disease` must be a single-item dictionary.
+
+    >>> validate_filters('{"disease": {"is": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry for \
+    `disease` is not a list.
+
+    >>> validate_filters('{"disease": {"was": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The relation in the `filters` parameter entry for `disease` must be \
+    one of ('is', 'contains', 'within', 'intersects')
+    """
+    try:
+        filters = json.loads(filters)
+    except Exception:
+        raise BadRequestError(f'The `filters` parameter is not valid JSON')
+    if type(filters) is not dict:
+        raise BadRequestError(f'The `filters` parameter must be a dictionary.')
+    for facet, filter_ in filters.items():
+        validate_facet(facet)
+        try:
+            relation, value = one(filter_.items())
+        except Exception:
+            raise BadRequestError(f'The `filters` parameter entry for `{facet}` must be a single-item dictionary.')
+        else:
+            valid_relations = ('is', 'contains', 'within', 'intersects')
+            if relation in valid_relations:
+                if not isinstance(value, list):
+                    raise BadRequestError(
+                        msg=f'The value of the `{relation}` relation in the `filters` parameter '
+                            f'entry for `{facet}` is not a list.')
+            else:
+                raise BadRequestError(f'The relation in the `filters` parameter entry for `{facet}`'
+                                      f' must be one of {valid_relations}')
+
+
+def validate_facet(value):
+    """
+    >>> validate_facet('fileName')
+
+    >>> validate_facet('fooBar')
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: Invalid parameter `fooBar`
+    """
+    translation = Plugin.load().service_config().translation
+    if value not in translation:
+        raise BadRequestError(msg=f'Invalid parameter `{value}`')
+
+
+def validate_params(query_params: Mapping[str, str],
+                    allow_extra_params: bool = False,
+                    **validators: Callable[[Any], Any]) -> None:
+    """
+    Validates request query parameters for web-service API.
+
+    :param query_params: Parameters to be validated.
+
+    :param allow_extra_params: When False, only parameters specified via '**validators' are accepted, and validation
+                               fails if additional parameters are present. When True, additional parameters are allowed
+                               but their value is not validated.
+
+    :param validators: A dictionary mapping the name of a parameter to a function that will be used to validate the
+                       parameter. The callable will be called with a single argument, the parameter value to be
+                       validated, and is expected to raise ValueError or TypeError if the value is invalid.
+                       Only these exceptions will yield a 4xx status response, all other exceptions will yield
+                       a 500 status response.
+
+    >>> validate_params({'order': 'asc'}, order=str)
+
+    >>> validate_params({'size': 'foo'}, size=int)
+    Traceback (most recent call last):
+        ...
+    chalice.app.BadRequestError: BadRequestError: Invalid input type for `size`
+
+    >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str)
+    Traceback (most recent call last):
+        ...
+    chalice.app.BadRequestError: BadRequestError: Invalid query parameter `foo`
+
+    >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str, allow_extra_params=True)
+    """
+    for param_name, param_value in query_params.items():
+        try:
+            validator = validators[param_name]
+        except KeyError:
+            if not allow_extra_params:
+                raise BadRequestError(msg=f'Invalid query parameter `{param_name}`')
+        else:
+            try:
+                validator(param_value)
+            except (TypeError, ValueError):
+                raise BadRequestError(f'Invalid input type for `{param_name}`')
+
+
 def repository_search(entity_type: str, item_id: str):
     query_params = app.current_request.query_params or {}
+    validate_repository_search(query_params)
     filters = query_params.get('filters')
     try:
         pagination = _get_pagination(app.current_request, entity_type)
@@ -401,6 +530,7 @@ def get_summary():
     :return: Returns a jsonified Summary API response
     """
     query_params = app.current_request.query_params or {}
+    validate_params(query_params, filters=str)
     filters = query_params.get('filters')
     service = RepositoryService()
     try:
@@ -465,6 +595,7 @@ def get_search():
     to the endpoint
     """
     query_params = app.current_request.query_params or {}
+    validate_repository_search(query_params, q=str, type=str, field=str)
     filters = query_params.get('filters')
     _query = query_params.get('q', '')
     entity_type = query_params.get('type', 'files')
@@ -603,7 +734,8 @@ def handle_manifest_generation_request():
     the view function to handle
     """
     query_params = app.current_request.query_params or {}
-    filters = query_params.get('filters') or {}
+    validate_params(query_params, filters=str, format=str, token=str)
+    filters = query_params.get('filters')
     try:
         format_ = query_params['format']
     except KeyError:
@@ -783,6 +915,7 @@ def fetch_dss_files(uuid):
 
 def _dss_files(uuid, fetch=True):
     query_params = app.current_request.query_params
+    validate_params(query_params, True, fileName=str, wait=int, requestIndex=int)
     url = config.dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
     file_name = query_params.pop('fileName', None)
     wait = query_params.pop('wait', None)
@@ -864,6 +997,7 @@ def authenticate_via_fusillade():
     request = app.current_request
     authenticator = Authenticator()
     query_params = request.query_params or {}
+    validate_params(query_params, redirect_uri=str)
     if authenticator.is_client_authenticated(request.headers):
         return Response(body='', status_code=200)
     else:
@@ -1152,6 +1286,7 @@ def get_items_in_cart(cart_id):
     cart_id = None if cart_id == 'default' else cart_id
     user_id = get_user_id()
     query_params = app.current_request.query_params or {}
+    validate_params(query_params, resume_token=str)
     resume_token = query_params.get('resume_token')
     try:
         page = CartItemManager().get_paginable_cart_items(user_id, cart_id, resume_token=resume_token)
@@ -1492,6 +1627,7 @@ def handle_cart_export_request(cart_id: str = None):
     assert_jwt_ttl(config.cart_export_min_access_token_ttl)
     user_id = get_user_id()
     query_params = app.current_request.query_params or {}
+    validate_params(query_params, token=str)
     token = query_params.get('token')
     bearer_token = app.current_request.context['authorizer']['token']
     job_manager = CartExportJobManager()
@@ -1615,6 +1751,7 @@ def get_data_object(file_uuid):
     Return a DRS data object dictionary for a given DSS file UUID and version.
     """
     query_params = app.current_request.query_params or {}
+    validate_params(query_params, version=str)
     file_version = query_params.get('version')
     filters = {
         "fileId": {"is": [file_uuid]},
