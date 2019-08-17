@@ -57,6 +57,13 @@ class AWS:
     def dynamo(self, endpoint_url, region_name):
         return boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
 
+    def api_gateway_export(self, gateway_id):
+        response = self.apigateway.get_export(restApiId=gateway_id,
+                                              stageName=config.deployment_stage,
+                                              exportType='oas30',
+                                              accepts='application/json')
+        return json.load(response['body'])
+
     def api_gateway_id(self, function_name: str, validate=True) -> Optional[str]:
         try:
             response = self.lambda_.get_policy(FunctionName=function_name)
@@ -86,9 +93,11 @@ class AWS:
         es_domain_status = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
         return es_domain_status['DomainStatus']['Endpoint'], 443
 
-    @property
-    def lambda_env(self) -> Mapping[str, str]:
-        return config.lambda_env(self.es_endpoint)
+    def lambda_env(self, function_name) -> Mapping[str, str]:
+        return {
+            **config.lambda_env(self.es_endpoint),
+            'api_gateway_id': self.api_gateway_id(function_name, validate=True)
+        }
 
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"

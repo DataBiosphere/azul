@@ -92,7 +92,7 @@ class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
                 break
 
     def _ping(self):
-        return requests.get(self.base_url)
+        return requests.get(f"{self.base_url}/health/basic")
 
     def chalice_config(self):
         return ChaliceConfig()

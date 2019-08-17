@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging.config
 import math
+import os
 import re
 import time
 from typing import Optional
@@ -21,6 +22,7 @@ from azul import config, drs, RequirementError
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul.logging import configure_app_logging
+from azul.openapi import annotated_specs
 from azul.plugin import Plugin
 from azul.security.authenticator import AuthenticationError, Authenticator
 from azul.service.manifest import ManifestService
@@ -41,6 +43,21 @@ app = AzulChaliceApp(app_name=config.service_name)
 
 configure_app_logging(app, log)
 
+
+openapi_spec = {
+    'info': {
+        'description': 'This should probably be really long',
+        # Version should be updated in any PR tagged API with a major version
+        # update for breaking changes, and a minor version otherwise
+        'version': '1.0'
+},
+    'tags': [
+        {
+            'name': 'Health',
+            'description': 'For checking on service health'
+        }
+    ]
+}
 
 sort_defaults = {
     'files': ('fileName', 'asc'),
@@ -105,12 +122,41 @@ def jwt_auth(auth_request) -> AuthResponse:
     return AuthResponse(routes=['*'], principal_id='user', context=context)
 
 
+pkg_root = os.path.dirname(os.path.abspath(__file__))
+
+
 @app.route('/', cors=True)
-def hello():
-    return {'Hello': 'World!'}
+def swagger_ui():
+    local_path = os.path.join(pkg_root, 'vendor')
+    dir_name = local_path if os.path.exists(local_path) else pkg_root
+    with open(os.path.join(dir_name, 'static', 'swagger-ui.html')) as f:
+        openapi_ui_html = f.read()
+    return Response(status_code=200,
+                    headers={"Content-Type": "text/html"},
+                    body=openapi_ui_html)
 
 
-@app.route('/health', methods=['GET'], cors=True)
+@app.route('/openapi', methods=['GET'], cors=True)
+def openapi():
+    gateway_id = os.environ['api_gateway_id']
+    spec = annotated_specs(gateway_id, app, openapi_spec)
+    return Response(status_code=200,
+                    headers={"content-type": "application/json"},
+                    body=spec)
+
+
+@app.route('/health', methods=['GET'], cors=True, spec={
+    'parameters': [
+        {
+            'in': 'query',
+            'name': 'foo',
+            'description': 'This is not a real parameter',
+            'required': False,
+            'schema': {'$ref': "#/components/schemas/Empty"}
+        }
+    ],
+    'tags': ['Health']
+})
 @app.route('/health/{keys}', methods=['GET'], cors=True)
 def health(keys: Optional[str] = None):
     if keys == 'basic':
