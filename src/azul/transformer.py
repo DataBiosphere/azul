@@ -139,8 +139,6 @@ class Document:
             return new_dict
         elif isinstance(source, list):
             return [cls.translate_fields(val, path=path, forward=forward) for val in source]
-        elif isinstance(source, set):
-            return {cls.translate_fields(val, path=path, forward=forward) for val in source}
         else:
             return cls.translate_field(source, path=path, forward=forward)
 
