@@ -516,8 +516,7 @@ class ElasticTransformDump(object):
             logger.info("Elasticsearch request: %r", es_search.to_dict())
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()
-            hits = [x['_source']
-                    for x in es_response_dict['hits']['hits']]
+            hits = [hit['_source'] for hit in es_response_dict['hits']['hits']]
             hits = Document.translate_fields(hits, forward=False)
             final_response = KeywordSearchResponse(hits, entity_type)
         else:
@@ -542,11 +541,10 @@ class ElasticTransformDump(object):
             # return one fewer hit.
             list_adjustment = 1 if len(es_hits) > pagination['size'] else 0
             if 'search_before' in pagination:
-                hits = [x['_source'] for x in
-                        reversed(es_hits[0:len(es_hits) - list_adjustment])]
+                hits = reversed(es_hits[0:len(es_hits) - list_adjustment])
             else:
-                hits = [x['_source'] for x in es_hits[0:len(es_hits) - list_adjustment]]
-
+                hits = es_hits[0:len(es_hits) - list_adjustment]
+            hits = [hit['_source'] for hit in hits]
             hits = Document.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
