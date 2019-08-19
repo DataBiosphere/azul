@@ -527,7 +527,6 @@ class ElasticTransformDump(object):
             # Apply paging
             es_search = self.apply_paging(es_search, pagination)
             # Execute ElasticSearch request
-
             try:
                 es_response = es_search.execute(ignore_cache=True)
             except elasticsearch.NotFoundError as e:
