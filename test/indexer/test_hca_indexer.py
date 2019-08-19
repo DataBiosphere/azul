@@ -818,13 +818,11 @@ class TestHCAIndexer(IndexerTestCase):
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
 
-        # Check that the dynamic mapping for the field is present
+        # Check that the dynamic mapping has the metadata field disabled
         bundles_index = config.es_index_name('bundles')
         mapping = self.es_client.indices.get_mapping(index=bundles_index)
-        self.assertIn('bundle_uuid', mapping[bundles_index]
-        ['mappings']['doc']['properties']
-        ['contents']['properties']
-        ['metadata']['properties'])
+        contents = mapping[bundles_index]['mappings']['doc']['properties']['contents']
+        self.assertFalse(contents['properties']['metadata']['enabled'])
 
         # Ensure that a metadata row exists …
         hits = self._get_all_hits()
@@ -835,21 +833,15 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertEqual(self.old_bundle, (metadata_row['bundle_uuid'], metadata_row['bundle_version']))
 
         # … but that it can't be used for queries
-        try:
-            self.es_client.search(index=bundles_index,
-                                  body={
-                                      "query": {
-                                          "match": {
-                                              "contents.metadata.bundle_uuid": self.old_bundle[0]
-                                          }
-                                      }
-                                  })
-        # Fields mapped with indexed=False cannot be used in queries
-        except RequestError as e:
-            self.assertEqual(400, e.status_code)
-            self.assertEqual('search_phase_execution_exception', e.error)
-        else:
-            self.fail()
+        hits = self.es_client.search(index=bundles_index,
+                                     body={
+                                         "query": {
+                                             "match": {
+                                                 "contents.metadata.bundle_uuid": self.old_bundle[0]
+                                             }
+                                         }
+                                     })
+        self.assertEqual(0, hits["hits"]["total"])
 
         # We can, however, find documents by the mention of the bundle UUID outside of `metadata`.
         hits = self.es_client.search(index=bundles_index,
