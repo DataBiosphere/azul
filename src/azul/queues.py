@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, Mapping, MutableMapping
+from typing import Any, Mapping
 from urllib.parse import urlparse
 
 import boto3
@@ -33,7 +33,7 @@ class Queues:
                                                         'Messages Available',
                                                         'Messages in Flight',
                                                         'Messages Delayed'))
-        queues = self._azul_queues()
+        queues = self.azul_queues()
         for queue_name, queue in queues:
             print('{:<35s}{:^20s}{:^20s}{:^18s}'.format(queue_name,
                                                         queue.attributes['ApproximateNumberOfMessages'],
@@ -46,7 +46,7 @@ class Queues:
         self._dump(queue, path)
 
     def dump_all(self):
-        for queue_name, queue in self._azul_queues():
+        for queue_name, queue in self.azul_queues():
             self._dump(queue, queue_name + '.json')
 
     def _dump(self, queue, path):
@@ -130,7 +130,7 @@ class Queues:
                 pass
         return result
 
-    def _azul_queues(self):
+    def azul_queues(self):
         sqs = boto3.resource('sqs')
         all_queues = sqs.queues.all()
         for queue in all_queues:
@@ -189,17 +189,20 @@ class Queues:
     def purge(self, queue_name):
         sqs = boto3.resource('sqs')
         queue = sqs.get_queue_by_name(QueueName=queue_name)
-        self._purge_queues({queue_name: queue})
+        self.purge_queues_safely({queue_name: queue})
 
     def purge_all(self):
-        self._purge_queues(dict(self._azul_queues()))
+        self.purge_queues_safely(dict(self.azul_queues()))
 
-    def _purge_queues(self, queues: MutableMapping[str, Queue]):
-        self._manage_lambdas(queues, enable=False)
+    def purge_queues_safely(self, queues: Mapping[str, Queue]):
+        self.manage_lambdas(queues, enable=False)
+        self.purge_queues_unsafely(queues)
+        self.manage_lambdas(queues, enable=True)
+
+    def purge_queues_unsafely(self, queues: Mapping[str, Queue]):
         with ThreadPoolExecutor(max_workers=len(queues)) as tpe:
             futures = [tpe.submit(self._purge_queue, queue) for queue in queues.values()]
             self._handle_futures(futures)
-        self._manage_lambdas(queues, enable=True)
 
     def _purge_queue(self, queue: Queue):
         logger.info('Purging queue "%s"', queue.url)
@@ -259,7 +262,7 @@ class Queues:
             time.sleep(3)
             mapping = lambda_.get_event_source_mapping(UUID=mapping['UUID'])
 
-    def _manage_lambdas(self, queues: Mapping[str, Queue], enable: bool):
+    def manage_lambdas(self, queues: Mapping[str, Queue], enable: bool):
         """
         Enable or disable the readers and writers of the given queues
         """

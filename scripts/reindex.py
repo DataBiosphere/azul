@@ -14,6 +14,7 @@ from typing import List
 from azul import config
 from azul.azulclient import AzulClient
 from azul.logging import configure_script_logging
+from azul.queues import Queues
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,10 @@ parser.add_argument('--index',
                     default=False,
                     action='store_true',
                     help='Index all matching bundles in the configured DSS instance.')
+parser.add_argument('--purge',
+                    default=False,
+                    action='store_true',
+                    help='Purge the queues before taking any action on the index.')
 parser.add_argument('--dryrun', '--dry-run',
                     default=False,
                     action='store_true',
@@ -104,9 +109,23 @@ def main(argv: List[str]):
                              prefix=args.prefix,
                              num_workers=args.num_workers,
                              dryrun=args.dryrun)
+    if args.purge:
+        queue_manager = Queues()
+        queues = dict(queue_manager.azul_queues())
+        logger.info('Disabling lambdas...')
+        queue_manager.manage_lambdas(queues, enable=False)
+        logger.info('Purging queues...')
+        queue_manager.purge_queues_unsafely(queues)
+    else:
+        queue_manager, queues = None, None
     if args.delete:
+        logger.info('Deleting indices...')
         azul_client.delete_all_indices()
+    if args.purge:
+        logger.info('Reenabling lambdas...')
+        queue_manager.manage_lambdas(queues, enable=True)
     if args.index:
+        logger.info('Queuing notifications for reindex...')
         if args.partition_prefix_length:
             azul_client.remote_reindex(args.partition_prefix_length)
         else:
