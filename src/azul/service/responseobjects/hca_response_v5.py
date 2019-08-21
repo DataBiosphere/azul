@@ -292,8 +292,9 @@ class ManifestResponse(AbstractResponse):
         writer.writeheader()
         for hit in self.es_search.scan():
             doc = Document.translate_fields(hit.to_dict(), forward=False)
-            for bundle in list(doc['bundles']):
-                doc['bundles'] = [bundle]
+            assert isinstance(doc, dict)
+            for bundle in list(doc['bundles']):  # iterate over copy …
+                doc['bundles'] = [bundle]        # … to facilitate this in-place modifaction
                 row = {}
                 for doc_path, column_mapping in self.manifest_entries.items():
                     entities = self._get_entities(doc_path, doc)
