@@ -13,7 +13,7 @@ from humancellatlas.data.metadata import api
 
 from azul import config
 from azul.json_freeze import freeze, thaw
-from azul.types import JSON
+from azul.types import JSON, AnyJSON
 
 MIN_INT = -sys.maxsize - 1
 
@@ -114,7 +114,7 @@ class Document:
             raise ValueError(f'Field type not found for path {path}')
 
     @classmethod
-    def translate_fields(cls, source: JSON, path: Tuple[str, ...] = (), forward: bool = True):
+    def translate_fields(cls, source: AnyJSON, path: Tuple[str, ...] = (), forward: bool = True) -> AnyJSON:
         """
         Traverse a document to translate field values for insert into Elasticsearch, or to translate back
         response data. This is done to support None/null values since Elasticsearch does not index these values.
@@ -139,8 +139,6 @@ class Document:
             return new_dict
         elif isinstance(source, list):
             return [cls.translate_fields(val, path=path, forward=forward) for val in source]
-        elif isinstance(source, set):
-            return {cls.translate_fields(val, path=path, forward=forward) for val in source}
         else:
             return cls.translate_field(source, path=path, forward=forward)
 
