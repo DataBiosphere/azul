@@ -74,7 +74,7 @@ class AWS:
                     return None
             return api_gateway_id
 
-    def api_getway_endpoint(self, function_name: str, api_gateway_stage: str) -> Optional[str]:
+    def api_gateway_endpoint(self, function_name: str, api_gateway_stage: str) -> Optional[str]:
         api_gateway_id = self.api_gateway_id(function_name)
         if api_gateway_id is None:
             return None
@@ -91,7 +91,7 @@ class AWS:
         return config.lambda_env(self.es_endpoint)
 
     def get_lambda_arn(self, function_name, suffix):
-        return f"arn:aws:lambda:{aws.region_name}:{aws.account}:function:{function_name}-{suffix}"
+        return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
 
     @memoized_property
     def permissions_boundary_arn(self) -> str:
