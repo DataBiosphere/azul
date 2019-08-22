@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def setUpModule():
-    configure_test_logging()
+    configure_test_logging(logger)
 
 
 # These are the credentials defined in moto.instance_metadata.responses.InstanceMetadataResponse which, for reasons
