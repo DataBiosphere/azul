@@ -105,7 +105,8 @@ class ElasticTransformDump:
                         'relation': relation
                     }
                     filter_list.append(Q('range', **{facet: range_value}))
-
+            else:
+                assert False
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=f) for f in filter_list]
 
