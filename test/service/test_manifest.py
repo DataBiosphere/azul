@@ -37,7 +37,7 @@ def setUpModule():
     configure_test_logging(logger)
 
 
-class ManifestEndpointTest(AzulTestCase):
+class TestManifestService(AzulTestCase):
 
     @mock_sts
     @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
@@ -129,7 +129,6 @@ class ManifestEndpointTest(AzulTestCase):
         """
         Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
         """
-
         current_request.query_params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -163,7 +162,7 @@ class ManifestEndpointTest(AzulTestCase):
         self.assertRaises(BadRequestError, app.handle_manifest_generation_request)
 
 
-class ManifestGenerationTest(WebServiceTestCase):
+class TestManifestEndpoints(WebServiceTestCase):
 
     def setUp(self):
         super().setUp()
