@@ -22,7 +22,6 @@ from azul import config
 from azul.json_freeze import freeze
 from azul.logging import configure_test_logging
 from azul.service import AbstractService
-from azul.service.responseobjects.hca_response_v5 import ManifestResponse
 from azul.service.step_function_helper import StateMachineError
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
@@ -35,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 def setUpModule():
-    configure_test_logging()
+    configure_test_logging(logger)
 
 
 class ManifestEndpointTest(AzulTestCase):
@@ -186,8 +185,8 @@ class ManifestGenerationTest(WebServiceTestCase):
         os.environ['azul_git_dirty'] = 'False'
 
     def _teardown_git_commit(self):
-        os.environ.pop('azul_git_commit', None)
-        os.environ.pop('azul_git_dirty', None)
+        os.environ.pop('azul_git_commit')
+        os.environ.pop('azul_git_dirty')
 
     def get_manifest(self, params, stream=False):
         filters = AbstractService.parse_filters(params.get('filters'))
@@ -835,15 +834,15 @@ class ManifestGenerationTest(WebServiceTestCase):
 
             # On the first request the cached manifest doesn't exist yet
             logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
-            self.assertTrue(any('Cached manifest not found' in message) for message in logs_output)
+            self.assertTrue(any('Cached manifest not found' in message for message in logs_output))
 
             # If the cached manifest has a long time till it expires then no log message expected
             logs_output = log_messages_from_manifest_request(seconds_until_expire=3600)
-            self.assertEqual(set(['Cached manifest' in message for message in logs_output]), {False})
+            self.assertFalse(any('Cached manifest' in message for message in logs_output))
 
             # If the cached manifest has a short time till it expires then a log message is expected
             logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
-            self.assertTrue(any('Cached manifest about to expire' in message) for message in logs_output)
+            self.assertTrue(any('Cached manifest about to expire' in message for message in logs_output))
 
     @mock_sts
     @mock_s3
@@ -879,54 +878,33 @@ class ManifestGenerationTest(WebServiceTestCase):
                         self.assertEqual([2, 2], list(map(len, file_names.values())))
                         self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
 
-    def test_get_seconds_until_expire(self):
-        """
-        Verify a header with valid x-amz-expiration and LastModified values returns the correct expiration value
-        """
-        with mock.patch('time.time', new=lambda: 1547691253.07010):
-            dt_now = datetime.now(timezone.utc)
-            for hours_last_modified in range(0, 25, 6):
-                with self.subTest(hours_last_modified=hours_last_modified):
-                    hours_till_expiration = (config.manifest_expiration * 24) - hours_last_modified
-                    expire_date = (dt_now + timedelta(hours=hours_till_expiration)).strftime("%a, %d %b %Y %H:%M:%S %Z")
-                    header = {
-                        'x-amz-expiration': f'expiry-date="{expire_date}", rule-id="Test Rule"',
-                        'LastModified': dt_now - timedelta(hours=hours_last_modified)
-                    }
-                    seconds_remaining = ManifestResponse._get_seconds_until_expire(header)
-                    self.assertAlmostEqual(seconds_remaining, 60 * 60 * hours_till_expiration, delta=1)
-
-    def test_get_seconds_until_expire_logs(self):
-        """
-        Verify a header with mismatched x-amz-expiration and LastModified values produces an error log message
-        """
-        with mock.patch('time.time', new=lambda: 1547691253.07010):
-            dt_now = datetime.now(timezone.utc)
-
-            def log_messages_from_get_seconds(expire_date: datetime, last_modified: datetime) -> List[str]:
-                expire_date_string = expire_date.strftime("%a, %d %b %Y %H:%M:%S %Z")
-                header = {
-                    'x-amz-expiration': f'expiry-date="{expire_date_string}", rule-id="Test Rule"',
-                    'LastModified': last_modified
-                }
-                from azul.service.responseobjects.hca_response_v5 import logger as logger_
-                with self.assertLogs(logger=logger_, level='ERROR') as logs:
-                    ManifestResponse._get_seconds_until_expire(header)
-                    logger_.error('Dummy log message so assertLogs() does not fail if no other error log is generated')
-                    return logs.output
-
-            hours_until_expire = 8
-            expire_date = dt_now + timedelta(hours=hours_until_expire)
-            last_modified = dt_now - timedelta(hours=((config.manifest_expiration * 24) - hours_until_expire))
-            # Verify no error message is logged when expire_date and last_modified match
-            logs_output = log_messages_from_get_seconds(expire_date, last_modified)
-            self.assertEqual(set(['x-amz-expiration' in message for message in logs_output]), {False})
-            # Verify an error message is logged when expire_date and last_modified don't match
-            last_modified = last_modified - timedelta(hours=1)
-            logs_output = log_messages_from_get_seconds(expire_date, last_modified)
-            self.assertTrue(any('x-amz-expiration' in message) for message in logs_output)
-
     def test_manifest_format_validation(self):
         url = self.base_url + '/manifest/files?format=invalid-type'
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.content)
+
+
+class TestManifestResponse(AzulTestCase):
+
+    def test_get_seconds_until_expire(self):
+        """
+        Verify a header with valid Expiration and LastModified values returns the correct expiration value
+        """
+        from azul.service.responseobjects import hca_response_v5
+        margin = hca_response_v5.ManifestResponse._date_diff_margin
+        for object_age, expect_error in [(0, False),
+                                         (margin - 1, False),
+                                         (margin, False),
+                                         (margin + 1, True)]:
+            with self.subTest(object_age=object_age, expect_error=expect_error):
+                with mock.patch.object(hca_response_v5, 'datetime') as mock_datetime:
+                    now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+                    mock_datetime.now.return_value = now
+                    with self.assertLogs(logger=hca_response_v5.logger, level='DEBUG') as logs:
+                        headers = {
+                            'Expiration': 'expiry-date="Wed, 01 Jan 2020 00:00:00 UTC", rule-id="Test Rule"',
+                            'LastModified': now - timedelta(days=float(config.manifest_expiration),
+                                                            seconds=object_age)
+                        }
+                        self.assertEqual(0, hca_response_v5.ManifestResponse._get_seconds_until_expire(headers))
+                    self.assertIs(expect_error, any('does not match' in log for log in logs.output))
