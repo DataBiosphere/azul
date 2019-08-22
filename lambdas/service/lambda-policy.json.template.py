@@ -49,6 +49,7 @@ emit({
             "Action": [
                 "s3:PutObject",
                 "s3:GetObject",
+                "s3:HeadObject",
                 "s3:PutObjectAcl"
             ],
             "Resource": [
@@ -69,9 +70,12 @@ emit({
         {
             "Effect": "Allow",
             "Action": [
-                "s3:ListBucket"
+                "s3:ListBucket"  # Without this, GetObject and HeadObject yield 403 for missing keys, not 404
             ],
-            "Resource": f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
+            "Resource": [
+                f"arn:aws:s3:::{config.s3_bucket}",
+                f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
+            ]
         },
         {
             "Effect": "Allow",
