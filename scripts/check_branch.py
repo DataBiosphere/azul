@@ -63,6 +63,11 @@ def main(argv):
                         action='store_true',
                         help="Print the deployment matching the current branch or exit "
                              "with non-zero status code if no such deployment exists.")
+    parser.add_argument('--personal',
+                        default=False,
+                        action='store_true',
+                        help="Exit with non-zero status code if current deployment is a "
+                             "main deployment.")
     args = parser.parse_args(argv)
     branch = current_branch()
     if args.print:
@@ -74,6 +79,9 @@ def main(argv):
     else:
         stage = config.deployment_stage
         check_branch(branch, stage)
+    if args.personal:
+        if config.deployment_stage in config.main_deployments_by_branch.values():
+            raise RuntimeError(f"Selected deployment '{stage}' is not a personal deployment.")
 
 
 if __name__ == "__main__":
