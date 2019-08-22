@@ -1,36 +1,36 @@
 import abc
-from collections import OrderedDict, defaultdict, ChainMap
+from collections import ChainMap, OrderedDict, defaultdict
 from copy import deepcopy
-from datetime import datetime, timedelta, timezone
-import os
 import csv
-from tempfile import TemporaryDirectory, mkstemp
-from io import TextIOWrapper, StringIO
+from datetime import datetime, timedelta, timezone
+import email.utils
+from io import StringIO, TextIOWrapper
 from itertools import chain
 import logging
-from typing import List, MutableMapping, IO
-
+import os
+from tempfile import TemporaryDirectory, mkstemp
+from typing import IO, List, MutableMapping, Mapping, Any
 from uuid import uuid4
 
+from bdbag import bdbag_api
 from chalice import Response
 from jsonobject.api import JsonObject
-from jsonobject.properties import (FloatProperty,
+from jsonobject.properties import (DefaultProperty,
+                                   FloatProperty,
                                    IntegerProperty,
-                                   DefaultProperty,
                                    ListProperty,
                                    ObjectProperty,
                                    StringProperty)
-from bdbag import bdbag_api
 from more_itertools import one
-from werkzeug.http import parse_date, parse_dict_header
-from azul import config
-from azul import drs
-from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
-                                                          StorageService,
-                                                          AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
-from azul.service.responseobjects.buffer import FlushableBuffer
-from azul.service.responseobjects.utilities import json_pp
+from werkzeug.http import parse_dict_header
+
+from azul import config, drs
 from azul.json_freeze import freeze, thaw
+from azul.service.responseobjects.buffer import FlushableBuffer
+from azul.service.responseobjects.storage_service import (AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
+                                                          MultipartUploadHandler,
+                                                          StorageService)
+from azul.service.responseobjects.utilities import json_pp
 from azul.strings import to_camel_case
 from azul.transformer import Document
 from azul.types import JSON
@@ -253,29 +253,31 @@ class ManifestResponse(AbstractResponse):
         else:
             return header
 
+    _date_diff_margin = 10  # seconds
+
     @classmethod
-    def _get_seconds_until_expire(cls, header: dict) -> float:
+    def _get_seconds_until_expire(cls, headers: Mapping[str, Any]) -> float:
         """
         Get the number of seconds before a cached manifest is past its expiration.
 
-        :param header: A storage service object header dict
+        :param headers: A storage service object header dict
         :return: time to expiration in seconds
         """
         # example x-amz-expiration = 'expiry-date="Fri, 21 Dec 2012 00:00:00 GMT", rule-id="Rule for testfile.txt"'
-        date_time_now = datetime.now(timezone.utc)
-        x_amz_expiration = parse_dict_header(header['x-amz-expiration'])
-        expiry_date = parse_date(x_amz_expiration['expiry-date']).replace(tzinfo=date_time_now.tzinfo)
-        seconds_until_expire = (expiry_date - date_time_now).total_seconds()
-        # Verify value calculated from 'x-amz-expiration' matches value calculated from 'LastModified'
-        last_modified = header['LastModified']
-        assert isinstance(last_modified, datetime)
-        expected_expiry_date = last_modified + timedelta(days=config.manifest_expiration)
-        expected_value = (expected_expiry_date - date_time_now).total_seconds()
-        date_diff_margin = 10  # seconds
-        if abs(seconds_until_expire - expected_value) > date_diff_margin:
-            expected_expiry_date = date_time_now + timedelta(seconds=seconds_until_expire)
-            logger.error('x-amz-expiration %s != calculated %s', expiry_date, expected_expiry_date)
-        return seconds_until_expire
+        now = datetime.now(timezone.utc)
+        x_amz_expiration = parse_dict_header(headers['x-amz-expiration'])
+        expiry_datetime = email.utils.parsedate_to_datetime(x_amz_expiration['expiry-date'])
+        expiry_seconds = (expiry_datetime - now).total_seconds()
+        # Verify that 'x-amz-expiration' matches value calculated from 'LastModified'
+        last_modified = headers['LastModified']
+        expected_expiry_date: datetime = last_modified + timedelta(days=config.manifest_expiration)
+        expected_expiry_seconds = (expected_expiry_date - now).total_seconds()
+        if abs(expiry_seconds - expected_expiry_seconds) > cls._date_diff_margin:
+            logger.error('The value of the `x-amz-expiration` header (%s) does not match expected value (%s)',
+                         x_amz_expiration, expected_expiry_date)
+        else:
+            logger.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
+        return expiry_seconds
 
     def _can_use_cached_manifest(self, object_key: str) -> bool:
         """
