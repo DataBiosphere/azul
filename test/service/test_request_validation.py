@@ -48,7 +48,6 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_single_filter_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
         params = {
-            'from': 1,
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}}),
         }
@@ -59,7 +58,6 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_multiple_filter_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
         params = {
-            'from': 1,
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}, 'bad-facet2': {'is': ['fake-val2']}}),
         }
@@ -70,7 +68,6 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_mixed_multiple_filter_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
         params = {
-            'from': 1,
             'size': 1,
             'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-facet': {'is': ['fake-val']}}),
         }
@@ -81,7 +78,6 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_sort_facet_of_sample(self):
         url = self.base_url + '/repository/samples'
         params = {
-            'from': 1,
             'size': 1,
             'filters': json.dumps({}),
             'sort': 'bad-facet',
@@ -130,7 +126,6 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_single_filter_facet_of_file(self):
         url = self.base_url + '/repository/files'
         params = {
-            'from': 1,
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val2']}}),
         }
@@ -141,7 +136,6 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_multiple_filter_facet_of_file(self):
         url = self.base_url + '/repository/files'
         params = {
-            'from': 1,
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}, 'bad-facet2': {'is': ['fake-val2']}}),
         }
@@ -152,7 +146,6 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_mixed_multiple_filter_facet_of_file(self):
         url = self.base_url + '/repository/files'
         params = {
-            'from': 1,
             'size': 1,
             'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-facet': {'is': ['fake-val']}}),
         }
