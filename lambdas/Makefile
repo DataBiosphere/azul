@@ -12,4 +12,8 @@ clean:
 	$(MAKE) -C indexer clean
 	$(MAKE) -C service clean
 
-.PHONY: all indexer service clean
+delete:
+	$(MAKE) -C indexer delete 
+	$(MAKE) -C service delete
+
+.PHONY: all indexer service clean delete
