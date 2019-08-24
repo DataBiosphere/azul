@@ -81,8 +81,9 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                         self.assertEqual(200, response.status_code)
                         self.assertEqual(expected_response, response.json())
 
+    @responses.activate
     def test_laziness(self):
-        # Note the absence of mock decorators on this test.
+        # Note the absence of moto decorators on this test.
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             self._mock_other_lambdas(helper, up=True)

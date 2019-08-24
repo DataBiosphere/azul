@@ -12,6 +12,7 @@ import azul.threads
 import azul.time
 import azul.transformer
 import azul.vendored.frozendict
+import retorts
 
 
 def load_tests(loader, tests, ignore):
@@ -25,6 +26,7 @@ def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(azul.vendored.frozendict))
     tests.addTests(doctest.DocTestSuite(azul.azulclient))
     tests.addTests(doctest.DocTestSuite(azul.service.responseobjects.elastic_request_builder))
+    tests.addTests(doctest.DocTestSuite(retorts))
     root = azul.config.project_root
     tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/envhook.py', 'envhook')))
     tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/check_branch.py', 'check_branch')))
