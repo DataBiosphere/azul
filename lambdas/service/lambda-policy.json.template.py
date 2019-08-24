@@ -77,6 +77,16 @@ emit({
                 f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
             ]
         },
+        # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"  # Without this, GetObject and HeadObject yield 403 for missing keys, not 404
+            ],
+            "Resource": [
+                f"arn:aws:s3:::{config.dss_checkout_bucket}"
+            ]
+        },
         {
             "Effect": "Allow",
             "Action": [
