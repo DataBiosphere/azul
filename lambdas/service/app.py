@@ -18,7 +18,7 @@ from chalice import AuthResponse, BadRequestError, ChaliceViewError, NotFoundErr
 from more_itertools import one
 import requests
 
-from azul import config, drs
+from azul import config, drs, RequirementError
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul.logging import configure_app_logging
@@ -111,23 +111,26 @@ def hello():
     return {'Hello': 'World!'}
 
 
-@app.route('/health/basic', methods=['GET'], cors=True)
-def basic_health():
-    return {
-        'up': True,
-    }
-
-
 @app.route('/health', methods=['GET'], cors=True)
 @app.route('/health/{keys}', methods=['GET'], cors=True)
 def health(keys: Optional[str] = None):
-    health = Health('service')
-    kwargs = {} if keys is None else dict(keys=keys.split(','))
-    body = health.as_json(**kwargs)
-    return Response(
-        body=json.dumps(body),
-        status_code=200 if body['up'] else 503
-    )
+    if keys == 'basic':
+        return {
+            'up': True,
+        }
+    else:
+        health = Health('service')
+        if keys is None:
+            if app.current_request.context['path'].endswith('/'):
+                keys = ()
+        else:
+            keys = keys.split(',')
+        try:
+            body = health.as_json(keys)
+        except RequirementError:
+            raise BadRequestError('Invalid health keys')
+        return Response(body=json.dumps(body),
+                        status_code=200 if body['up'] else 503)
 
 
 @app.route('/version', methods=['GET'], cors=True)

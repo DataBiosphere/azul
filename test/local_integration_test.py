@@ -105,15 +105,16 @@ class IntegrationTest(unittest.TestCase):
         self.check_bundles_are_indexed(self.test_name, 'files')
 
     def _test_other_endpoints(self):
-        for health_key in ('',
-                           '/elastic_search',
-                           '/queues',
-                           '/api_endpoints',
-                           '/other_lambdas',
+        for health_key in ('',  # default keys for lambda
+                           '/',  # all keys
                            '/basic',
-                           '/progress'):
-            self.check_endpoint_is_working(config.service_endpoint(), '/health' + health_key)
-            self.check_endpoint_is_working(config.indexer_endpoint(), '/health' + health_key)
+                           '/elasticsearch',
+                           '/queues',
+                           '/progress',
+                           '/api_endpoints',
+                           '/other_lambdas'):
+            for endpoint in config.service_endpoint(), config.indexer_endpoint():
+                self.check_endpoint_is_working(endpoint, '/health' + health_key)
         self.check_endpoint_is_working(config.service_endpoint(), '/')
         self.check_endpoint_is_working(config.service_endpoint(), '/version')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
