@@ -15,11 +15,11 @@ import uuid
 import boto3
 # noinspection PyPackageRequirements
 import chalice
-from chalice import Response
+from chalice import Response, BadRequestError
 from dataclasses import asdict, dataclass, replace
 from more_itertools import chunked, partition
 
-from azul import config, hmac
+from azul import config, hmac, RequirementError
 from azul.azulclient import AzulClient
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
@@ -47,23 +47,26 @@ def version():
     }
 
 
-@app.route('/health/basic', methods=['GET'], cors=True)
-def basic_health():
-    return {
-        'up': True,
-    }
-
-
 @app.route('/health', methods=['GET'], cors=True)
 @app.route('/health/{keys}', methods=['GET'], cors=True)
 def health(keys: Optional[str] = None):
-    health = Health('indexer')
-    kwargs = {} if keys is None else dict(keys=keys.split(','))
-    body = health.as_json(**kwargs)
-    return Response(
-        body=json.dumps(body),
-        status_code=200 if body['up'] else 503
-    )
+    if keys == 'basic':
+        return {
+            'up': True,
+        }
+    else:
+        health = Health('indexer')
+        if keys is None:
+            if app.current_request.context['path'].endswith('/'):
+                keys = ()
+        else:
+            keys = keys.split(',')
+        try:
+            body = health.as_json(keys)
+        except RequirementError:
+            raise BadRequestError('Invalid health keys')
+        return Response(body=json.dumps(body),
+                        status_code=200 if body['up'] else 503)
 
 
 @app.route('/', cors=True)

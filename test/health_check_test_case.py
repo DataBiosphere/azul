@@ -28,19 +28,22 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                  '/repository/samples?size=1',
                  '/repository/bundles?size=1']
 
-    def _other_lambda_names(self) -> List[str]:
-        return [
-            lambda_name
-            for lambda_name in config.lambda_names()
-            if lambda_name != self.lambda_name()
-        ]
+    def test_basic(self):
+        response = requests.get(self.base_url + '/health/basic')
+        self.assertEqual(200, response.status_code)
+        self.assertEqual({'up': True}, response.json())
+
+    def test_validation(self):
+        for path in ['/foo', '/elasticsearch,', '/,elasticsearch', '/,', '/1']:
+            response = requests.get(self.base_url + '/health' + path)
+            self.assertEqual(400, response.status_code)
 
     @mock_sts
     @mock_sqs
     def test_health_all_ok(self):
         self._create_mock_queues()
         endpoint_states = self._make_endpoint_states(self.endpoints)
-        response = self._test(endpoint_states, lambdas_up=True, path='/health/all')
+        response = self._test(endpoint_states, lambdas_up=True, path='/health/')
         health_object = response.json()
         self.assertEqual(200, response.status_code)
         self.assertEqual({
@@ -89,8 +92,13 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             self._mock_other_lambdas(helper, up=True)
             # If Health werent't lazy, it would fail due the lack of mocks for SQS.
             response = requests.get(self.base_url + '/health/other_lambdas')
-            self.assertEqual(200, response.status_code)
-            expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
+            # The use of subTests ensures that we see the result of both
+            # assertions. In the case of the health endpoint, the body of a 503
+            # may carry a body with additional information.
+            with self.subTest('status_code'):
+                self.assertEqual(200, response.status_code)
+            with self.subTest('response'):
+                expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
             self.assertEqual(expected_response, response.json())
 
     def _expected_queues(self, up: bool) -> JSON:
@@ -120,11 +128,21 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                         'up': up
                     } if up else {
                         'up': up,
-                        'error': f'503 Server Error: Service Unavailable for url: {config.service_endpoint()}{endpoint}'
+                        'error': (
+                            "HTTPError('503 Server Error: "
+                            "Service Unavailable for url: "
+                            f"{config.service_endpoint() + endpoint}',)")
                     } for endpoint, up in endpoint_states.items()
                 })
             }
         }
+
+    def _other_lambda_names(self) -> List[str]:
+        return [
+            lambda_name
+            for lambda_name in config.lambda_names()
+            if lambda_name != self.lambda_name()
+        ]
 
     def _expected_other_lambdas(self, up: bool) -> JSON:
         return {
@@ -173,7 +191,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         for lambda_name in self._other_lambda_names():
             helper.add(responses.Response(method='GET',
                                           url=config.lambda_endpoint(lambda_name) + '/health/basic',
-                                          status=200 if up else 503,
+                                          status=200 if up else 500,
                                           json={'up': up}))
 
     def _create_mock_queues(self):
