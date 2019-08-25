@@ -242,60 +242,53 @@ class ManifestResponse(AbstractResponse):
             column_value = self.column_joiner.join(sorted(set(column_value)))
             row[column_name] = column_value
 
-    def _get_header(self, object_key):
-        try:
-            header = self.storage_service.head(object_key=object_key)
-        except self.storage_service.client.exceptions.ClientError as e:
-            if int(e.response['Error']['Code']) == 404:
-                return None
-            else:
-                raise e
-        else:
-            return header
-
     _date_diff_margin = 10  # seconds
 
     @classmethod
-    def _get_seconds_until_expire(cls, headers: Mapping[str, Any]) -> float:
+    def _get_seconds_until_expire(cls, head_response: Mapping[str, Any]) -> float:
         """
         Get the number of seconds before a cached manifest is past its expiration.
 
-        :param headers: A storage service object header dict
+        :param head_response: A storage service object header dict
         :return: time to expiration in seconds
         """
-        # example x-amz-expiration = 'expiry-date="Fri, 21 Dec 2012 00:00:00 GMT", rule-id="Rule for testfile.txt"'
+        # example Expiration: 'expiry-date="Fri, 21 Dec 2012 00:00:00 GMT", rule-id="Rule for testfile.txt"'
         now = datetime.now(timezone.utc)
-        x_amz_expiration = parse_dict_header(headers['x-amz-expiration'])
-        expiry_datetime = email.utils.parsedate_to_datetime(x_amz_expiration['expiry-date'])
+        expiration = parse_dict_header(head_response['Expiration'])
+        expiry_datetime = email.utils.parsedate_to_datetime(expiration['expiry-date'])
         expiry_seconds = (expiry_datetime - now).total_seconds()
-        # Verify that 'x-amz-expiration' matches value calculated from 'LastModified'
-        last_modified = headers['LastModified']
+        # Verify that 'Expiration' matches value calculated from 'LastModified'
+        last_modified = head_response['LastModified']
         expected_expiry_date: datetime = last_modified + timedelta(days=config.manifest_expiration)
         expected_expiry_seconds = (expected_expiry_date - now).total_seconds()
         if abs(expiry_seconds - expected_expiry_seconds) > cls._date_diff_margin:
-            logger.error('The value of the `x-amz-expiration` header (%s) does not match expected value (%s)',
-                         x_amz_expiration, expected_expiry_date)
+            logger.error('The actual object expiration (%s) does not match expected value (%s)',
+                         expiration, expected_expiry_date)
         else:
             logger.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
         return expiry_seconds
 
     def _can_use_cached_manifest(self, object_key: str) -> bool:
         """
-        Check if a S3 object was previously created and still exists in the bucket and won't be expiring soon.
+        Check if the manifest was previously created, still exists in the bucket and won't be expiring soon.
 
         :param object_key: S3 object key (eg. 'manifests/e0fabf97-7abb-5111-af97-810f1e736c71.tsv'
         """
-        header = self._get_header(object_key)
-        if header:
-            seconds_until_expire = self._get_seconds_until_expire(header)
+        try:
+            response = self.storage_service.head(object_key)
+        except self.storage_service.client.exceptions.ClientError as e:
+            if int(e.response['Error']['Code']) == 404:
+                logger.info('Cached manifest not found: %s', object_key)
+                return False
+            else:
+                raise e
+        else:
+            seconds_until_expire = self._get_seconds_until_expire(response)
             if seconds_until_expire > config.manifest_expiration_margin:
                 return True
             else:
-                logger.info('Cached manifest about to expire: ' + object_key + ', ' + self.storage_service.bucket_name)
+                logger.info('Cached manifest about to expire: %s', object_key)
                 return False
-        else:
-            logger.info('Cached manifest not found: ' + object_key + ', ' + self.storage_service.bucket_name)
-            return False
 
     def _push_content(self) -> str:
         """
