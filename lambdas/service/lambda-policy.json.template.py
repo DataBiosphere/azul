@@ -57,16 +57,6 @@ emit({
                 f"arn:aws:s3:::{config.url_redirect_full_domain_name}/*"
             ]
         },
-        # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-            ],
-            "Resource": [
-                f"arn:aws:s3:::{config.dss_checkout_bucket}/*",
-            ]
-        },
         {
             "Effect": "Allow",
             "Action": [
@@ -75,6 +65,16 @@ emit({
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}",
                 f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
+            ]
+        },
+        # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+            ],
+            "Resource": [
+                f"arn:aws:s3:::{config.dss_checkout_bucket}/*",
             ]
         },
         # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
