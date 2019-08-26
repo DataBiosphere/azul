@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 def setUpModule():
-    configure_test_logging()
+    configure_test_logging(logger)
 
 
 class TestHCAIndexer(IndexerTestCase):
