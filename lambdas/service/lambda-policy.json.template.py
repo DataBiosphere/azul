@@ -49,11 +49,22 @@ emit({
             "Action": [
                 "s3:PutObject",
                 "s3:GetObject",
+                "s3:HeadObject",
                 "s3:PutObjectAcl"
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}/*",
                 f"arn:aws:s3:::{config.url_redirect_full_domain_name}/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"  # Without this, GetObject and HeadObject yield 403 for missing keys, not 404
+            ],
+            "Resource": [
+                f"arn:aws:s3:::{config.s3_bucket}",
+                f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
             ]
         },
         # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
@@ -66,12 +77,15 @@ emit({
                 f"arn:aws:s3:::{config.dss_checkout_bucket}/*",
             ]
         },
+        # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
         {
             "Effect": "Allow",
             "Action": [
-                "s3:ListBucket"
+                "s3:ListBucket"  # Without this, GetObject and HeadObject yield 403 for missing keys, not 404
             ],
-            "Resource": f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
+            "Resource": [
+                f"arn:aws:s3:::{config.dss_checkout_bucket}"
+            ]
         },
         {
             "Effect": "Allow",
