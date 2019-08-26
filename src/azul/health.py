@@ -1,35 +1,43 @@
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
-from typing import Tuple
+from typing import Tuple, List, Optional, Iterable
 
 import boto3
 import requests
 from botocore.exceptions import ClientError
 
-from azul import config
+from azul import config, require
 from azul.decorators import memoized_property
 from azul.es import ESClientFactory
 from azul.types import JSON
 
 
 class Health:
-    keys = {
-        'all': (
-            'elasticsearch',
-            'queues',
-            'progress',
-            'api_endpoints',
-            'other_lambdas',
-        ),
-        'indexer': (
+    """
+    Encapsulates information about the health status of an Azul deployment. All
+    aspects of health are exposed as lazily loaded properties. Instantiating the
+    class does not examine any resources, only accessing the individual
+    properties does, or using the `to_json` method.
+    """
+
+    all_keys = {
+        'elasticsearch',
+        'queues',
+        'progress',
+        'api_endpoints',
+        'other_lambdas',
+    }
+
+    keys_by_service = {
+        'indexer': {
             'elasticsearch',
             'queues',
             'progress'
-        ),
-        'service': (
+        },
+        'service': {
             'elasticsearch',
             'api_endpoints',
-        )
+        }
     }
     endpoints = [f'/repository/{entity_type}?size=1'
                  for entity_type in ('projects', 'samples', 'files', 'bundles')]
@@ -37,12 +45,17 @@ class Health:
     def __init__(self, lambda_name):
         self.lambda_name = lambda_name
 
-    def as_json(self, keys=None) -> JSON:
+    def as_json(self, keys: Optional[Iterable[str]] = None) -> JSON:
         if keys is None:
-            keys = self.keys[self.lambda_name]
-        elif keys == ['all']:
-            keys = self.keys['all']
-        json = {k: getattr(self, k) for k in keys if k in self.keys['all']}
+            keys = self.keys_by_service[self.lambda_name]
+            assert keys.issubset(self.all_keys)
+        else:
+            keys = set(keys)
+            if keys:
+                require(keys.issubset(self.all_keys))
+            else:
+                keys = self.all_keys
+        json = {k: getattr(self, k) for k in keys}
         json['up'] = all(v['up'] for v in json.values())
         return json
 
@@ -94,7 +107,7 @@ class Health:
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            return url, {'up': False, 'error': str(e)}
+            return url, {'up': False, 'error': repr(e)}
         else:
             return url, {'up': True}
 
@@ -114,16 +127,18 @@ class Health:
 
     @memoized_property
     def up(self):
-        return all(getattr(self, k)['up'] for k in self.default_keys)
+        return all(getattr(self, k)['up'] for k in self.all_keys)
 
     @lru_cache()
     def _lambda(self, lambda_name) -> JSON:
         try:
-            up = requests.get(f'{config.lambda_endpoint(lambda_name)}/health/basic').json()['up']
-        except BaseException as e:
+            response = requests.get(config.lambda_endpoint(lambda_name) + '/health/basic')
+            response.raise_for_status()
+            up = response.json()['up']
+        except Exception as e:
             return {
                 'up': False,
-                'error': str(e)
+                'error': repr(e)
             }
         else:
             return {

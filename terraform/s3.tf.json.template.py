@@ -14,7 +14,7 @@ emit({
                         "enabled": True,
                         "prefix": "manifests/",
                         "expiration": {
-                            "days": 1
+                            "days": config.manifest_expiration
                         }
                     }
                 },

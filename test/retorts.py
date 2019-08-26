@@ -6,6 +6,7 @@ import os
 from subprocess import call
 from tempfile import gettempdir
 import time
+from unittest import mock
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -57,6 +58,12 @@ class ResponsesHelper:
         self.request_mock.add_passthru(prefix)
 
     def __enter__(self):
+        patcher = getattr(self.request_mock, '_patcher', None)
+        # noinspection PyUnresolvedReferences,PyProtectedMember
+        assert patcher is not None and mock._is_started(patcher), ('This helper only works with `responses` already'
+                                                                   'active. The easiest way to achieve that is to use '
+                                                                   'the `@responses.activate` decorator or one or more '
+                                                                   'of the moto decorators.')
         self.mock_responses = []
         self.passthru_prefixes = self.request_mock.passthru_prefixes
         return self
