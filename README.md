@@ -65,6 +65,8 @@ generic with minimal need for project-specific behavior.
     - [8.7 The Gitlab Build Environment](#87-the-gitlab-build-environment)
 - [9. Kibana](#9-kibana)
 - [10. Making wheels](#10-making-wheels)
+- [11. Development tools](#11-development-tools)
+    - [11.1 OpenAPI development](#111-openapi-development)
 
 
 The Azul project contains the components that together serve as the backend to
@@ -1205,3 +1207,28 @@ Then modify the `wheels` target in `lambdas/*/Makefile` to unzip the wheel into
 the corresponding vendor directory.
 
 Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
+
+# 11. Development tools
+
+## 11.1 OpenAPI development
+
+To assist with adding documentation to the Azul Service OpenAPI page
+(https://service.dev.explore.data.humancellatlas.org/), we use a script that
+validates the specifications.
+
+To run the script, activate your virtual environment, then run
+```
+python scripts/apidev.py
+```
+The script gives you a url where your current version of the documentation
+is visible. Change the docs in `azul/service/app.py`, save, and refresh the page and
+your changes will appear immediately along with any warnings or errors they introduce.
+
+The script pulls the skeleton for what it displays from the currently activated
+deployment. If you add new endpoints or change endpoint parameters, this won't be
+reflected nor validated by the script. To remedy this run
+```
+make -C lambdas/service deploy  # deploy to service only
+```
+with your personal deployment selected. Then refresh the web page from the
+script.
