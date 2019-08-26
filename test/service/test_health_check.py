@@ -65,7 +65,6 @@ class TestServiceHealthCheck(HealthCheckTestCase):
             self.assertEqual(documents_, health_object)
 
 
-# FIXME: This is inelegant: https://github.com/DataBiosphere/azul/issues/652
 del HealthCheckTestCase
 
 if __name__ == "__main__":

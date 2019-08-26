@@ -51,26 +51,7 @@ class TestIndexerHealthCheck(HealthCheckTestCase):
             **self._expected_progress()
         }, health_object)
 
-    @mock_sts
-    @mock_sqs
-    def test_elasticsearch_down(self):
-        self._create_mock_queues()
-        mock_endpoint = ('nonexisting-index.com', 80)
-        endpoint_states = self._make_endpoint_states(self.endpoints)
-        with mock.patch.dict(os.environ, **config.es_endpoint_env(mock_endpoint)):
-            response = self._test(endpoint_states, lambdas_up=True)
-            health_object = response.json()
-            self.assertEqual(503, response.status_code)
-            documents_ = {
-                'up': False,
-                **self._expected_elasticsearch(False),
-                **self._expected_queues(True),
-                **self._expected_progress()
-            }
-            self.assertEqual(documents_, health_object)
 
-
-# FIXME: This is inelegant: https://github.com/DataBiosphere/azul/issues/652
 del HealthCheckTestCase
 
 if __name__ == "__main__":

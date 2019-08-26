@@ -1,34 +1,36 @@
 import abc
-from collections import OrderedDict, defaultdict, ChainMap
+from collections import ChainMap, OrderedDict, defaultdict
 from copy import deepcopy
-import os
 import csv
-from tempfile import TemporaryDirectory, mkstemp
-from io import TextIOWrapper, StringIO
+from datetime import datetime, timedelta, timezone
+import email.utils
+from io import StringIO, TextIOWrapper
 from itertools import chain
 import logging
-from typing import List, MutableMapping, IO
-
+import os
+from tempfile import TemporaryDirectory, mkstemp
+from typing import IO, List, MutableMapping, Mapping, Any
 from uuid import uuid4
 
+from bdbag import bdbag_api
 from chalice import Response
 from jsonobject.api import JsonObject
-from jsonobject.properties import (FloatProperty,
+from jsonobject.properties import (DefaultProperty,
+                                   FloatProperty,
                                    IntegerProperty,
-                                   DefaultProperty,
                                    ListProperty,
                                    ObjectProperty,
                                    StringProperty)
-from bdbag import bdbag_api
 from more_itertools import one
-from azul import config
-from azul import drs
-from azul.service.responseobjects.storage_service import (MultipartUploadHandler,
-                                                          StorageService,
-                                                          AWS_S3_DEFAULT_MINIMUM_PART_SIZE)
-from azul.service.responseobjects.buffer import FlushableBuffer
-from azul.service.responseobjects.utilities import json_pp
+from werkzeug.http import parse_dict_header
+
+from azul import config, drs
 from azul.json_freeze import freeze, thaw
+from azul.service.responseobjects.buffer import FlushableBuffer
+from azul.service.responseobjects.storage_service import (AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
+                                                          MultipartUploadHandler,
+                                                          StorageService)
+from azul.service.responseobjects.utilities import json_pp
 from azul.strings import to_camel_case
 from azul.transformer import Document
 from azul.types import JSON
@@ -196,19 +198,21 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
-    def __init__(self, es_search, manifest_entries, mapping, format):
+    def __init__(self, es_search, manifest_entries, mapping, format, object_key=None):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
         :param es_search: The Elasticsearch DSL Search object
-        :param mapping: The mapping between the columns to values within ES
         :param manifest_entries: The columns that will be present in the tsv
+        :param mapping: The mapping between the columns to values within ES
+        :param object_key: A UUID string to use as the manifest's object key
         """
         self.es_search = es_search
         self.manifest_entries = OrderedDict(manifest_entries)
         self.mapping = mapping
         self.storage_service = StorageService()
         self.format = format
+        self.object_key = object_key if object_key is not None else uuid4()
 
         sources = list(self.manifest_entries.keys())
         self.ordered_column_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
@@ -238,14 +242,65 @@ class ManifestResponse(AbstractResponse):
             column_value = self.column_joiner.join(sorted(set(column_value)))
             row[column_name] = column_value
 
+    _date_diff_margin = 10  # seconds
+
+    @classmethod
+    def _get_seconds_until_expire(cls, head_response: Mapping[str, Any]) -> float:
+        """
+        Get the number of seconds before a cached manifest is past its expiration.
+
+        :param head_response: A storage service object header dict
+        :return: time to expiration in seconds
+        """
+        # example Expiration: 'expiry-date="Fri, 21 Dec 2012 00:00:00 GMT", rule-id="Rule for testfile.txt"'
+        now = datetime.now(timezone.utc)
+        expiration = parse_dict_header(head_response['Expiration'])
+        expiry_datetime = email.utils.parsedate_to_datetime(expiration['expiry-date'])
+        expiry_seconds = (expiry_datetime - now).total_seconds()
+        # Verify that 'Expiration' matches value calculated from 'LastModified'
+        last_modified = head_response['LastModified']
+        expected_expiry_date: datetime = last_modified + timedelta(days=config.manifest_expiration)
+        expected_expiry_seconds = (expected_expiry_date - now).total_seconds()
+        if abs(expiry_seconds - expected_expiry_seconds) > cls._date_diff_margin:
+            logger.error('The actual object expiration (%s) does not match expected value (%s)',
+                         expiration, expected_expiry_date)
+        else:
+            logger.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
+        return expiry_seconds
+
+    def _can_use_cached_manifest(self, object_key: str) -> bool:
+        """
+        Check if the manifest was previously created, still exists in the bucket and won't be expiring soon.
+
+        :param object_key: S3 object key (eg. 'manifests/e0fabf97-7abb-5111-af97-810f1e736c71.tsv'
+        """
+        try:
+            response = self.storage_service.head(object_key)
+        except self.storage_service.client.exceptions.ClientError as e:
+            if int(e.response['Error']['Code']) == 404:
+                logger.info('Cached manifest not found: %s', object_key)
+                return False
+            else:
+                raise e
+        else:
+            seconds_until_expire = self._get_seconds_until_expire(response)
+            if seconds_until_expire > config.manifest_expiration_margin:
+                return True
+            else:
+                logger.info('Cached manifest about to expire: %s', object_key)
+                return False
+
     def _push_content(self) -> str:
         """
         Push the content to S3 with multipart upload
 
         :return: S3 object key
         """
-        object_key = f'manifests/{uuid4()}.tsv'
+        object_key = f'manifests/{self.object_key}.tsv'
         content_type = 'text/tab-separated-values'
+
+        if self.format == 'full' and self._can_use_cached_manifest(object_key):
+            return object_key
 
         with MultipartUploadHandler(object_key, content_type) as multipart_upload:
             with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
@@ -268,22 +323,26 @@ class ManifestResponse(AbstractResponse):
         if self.format == 'tsv':
             output = StringIO()
             self._write_tsv(output)
-            return self.storage_service.put(object_key=f'manifests/{uuid4()}.tsv',
+            return self.storage_service.put(object_key=f'manifests/{self.object_key}.tsv',
                                             data=output.getvalue().encode(),
                                             content_type='text/tab-separated-values')
         elif self.format == 'bdbag':
             bdbag_path = self._create_bdbag_archive()
             try:
-                object_key = f'manifests/{uuid4()}.zip'
+                object_key = f'manifests/{self.object_key}.zip'
                 return self.storage_service.upload(bdbag_path, object_key)
             finally:
                 os.remove(bdbag_path)
         elif self.format == 'full':
-            output = StringIO()
-            self._write_full(output)
-            return self.storage_service.put(object_key=f'metadata/{uuid4()}.tsv',
-                                            data=output.getvalue().encode(),
-                                            content_type='text/tab-separated-values')
+            object_key = f'metadata/{self.object_key}.tsv'
+            if self._can_use_cached_manifest(object_key):
+                return object_key
+            else:
+                output = StringIO()
+                self._write_full(output)
+                return self.storage_service.put(object_key=object_key,
+                                                data=output.getvalue().encode(),
+                                                content_type='text/tab-separated-values')
         else:
             assert False
 
