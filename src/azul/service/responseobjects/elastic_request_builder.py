@@ -1,11 +1,8 @@
-#!/usr/bin/python
-from copy import deepcopy
-import hashlib
 import json
 import logging
 from more_itertools import one
 import os
-from typing import List, Tuple
+from typing import List
 import uuid
 
 import elasticsearch
@@ -438,7 +435,6 @@ class ElasticTransformDump(object):
 
     def transform_request(self,
                           request_config_file='request_config.json',
-                          mapping_config_file='mapping_config.json',
                           filters=None,
                           pagination=None,
                           post_filter=False,
@@ -453,8 +449,6 @@ class ElasticTransformDump(object):
         Defaults to None
         :param request_config_file: Path containing the requests config to be
         used for aggregates. Relative to the 'config' folder.
-        :param mapping_config_file: Path containing the mapping to the API
-        response fields. Relative to the 'config' folder.
         :param pagination: Pagination to be used for the API
         :param post_filter: Flag to indicate whether to do a post_filter
         call instead of the regular query.
@@ -462,17 +456,8 @@ class ElasticTransformDump(object):
         the ElasticSearch index to search
         :return: Returns the transformed request
         """
-        # Use this as the base to construct the paths
-        # stackoverflow.com/questions/247770/retrieving-python-module-path
-        # Use that to get the path of the config module
-
         config_folder = os.path.dirname(service_config.__file__)
-        # Create the path for the mapping config file
-        mapping_config_path = "{}/{}".format(
-            config_folder, mapping_config_file)
-        # Create the path for the config_path
-        request_config_path = "{}/{}".format(
-            config_folder, request_config_file)
+        request_config_path = f"{config_folder}/{request_config_file}"
 
         # Get the Json Objects from the mapping_config and the request_config
         # FIXME: cache the json (or, even better, convert to Python module
@@ -758,7 +743,6 @@ class ElasticTransformDump(object):
         if not filters:
             filters = {}
 
-        field_mappings = request_config['translation']
         cart_item_config = request_config['cart-item']
         source_filter = cart_item_config['bundles'] + cart_item_config[entity_type]
 
