@@ -14,7 +14,6 @@ class Indexer(BaseIndexer):
 
     def mapping(self) -> JSON:
         return {
-            "date_detection": False,  # TODO: https://github.com/DataBiosphere/azul/issues/1173
             "numeric_detection": False,
             "dynamic_templates": [
                 {
@@ -35,10 +34,9 @@ class Indexer(BaseIndexer):
                 },
                 {
                     "exclude_metadata_field": {
-                        "path_match": "contents.metadata.*",
+                        "path_match": "contents.metadata",
                         "mapping": {
-                            "type": "{dynamic_type}",
-                            "index": False
+                            "enabled": False
                         }
                     }
                 },
