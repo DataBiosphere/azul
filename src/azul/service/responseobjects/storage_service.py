@@ -4,7 +4,6 @@ from functools import lru_cache
 from logging import getLogger
 from typing import Optional
 import boto3
-import os
 from azul import config
 
 logger = getLogger(__name__)
