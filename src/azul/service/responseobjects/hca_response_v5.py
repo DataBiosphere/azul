@@ -425,6 +425,7 @@ class ManifestResponse(AbstractResponse):
                 qualifier = f"fastq_{file['read_index']}"
 
             # For each bundle containing the current file …
+            bundle: JSON
             for bundle in doc['bundles']:
                 bundle_fqid = bundle['uuid'], bundle['version'].replace('.', '_')
 
@@ -484,6 +485,7 @@ class ManifestResponse(AbstractResponse):
         for bundle in bundles.values():
             row = {}
             for qualifier, groups in bundle.items():
+                group: JSON
                 for i, group in enumerate(groups):
                     for entity, cells in group.items():
                         if entity == 'bundle':
@@ -606,6 +608,7 @@ class BaseSummaryResponse(AbstractResponse):
         # Separate the raw_response into hits and aggregates
         self.hits = raw_response['hits']
         self.aggregates = raw_response['aggregations']
+        self.apiResponse = None
 
 
 class SummaryResponse(BaseSummaryResponse):

@@ -25,14 +25,19 @@ class frozendict(Mapping):
 
     They are also immutable:
 
+    >>> # noinspection PyUnresolvedReferences
     >>> fd1['a'] = 3
     Traceback (most recent call last):
     ...
     TypeError: 'frozendict' object does not support item assignment
+
+    >>> # noinspection PyUnresolvedReferences
     >>> del fd1['a']
     Traceback (most recent call last):
     ...
     TypeError: 'frozendict' object does not support item deletion
+
+    >>> # noinspection PyUnresolvedReferences
     >>> fd1.keys().remove('a')
     Traceback (most recent call last):
     ...

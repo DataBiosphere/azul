@@ -641,7 +641,7 @@ class SimpleAggregator(EntityAggregator):
         for field, value in entity.items():
             try:
                 accumulator = aggregate[field]
-            except:
+            except Exception:
                 accumulator = self._get_accumulator(field)
                 aggregate[field] = accumulator
             if accumulator is not None:
@@ -705,7 +705,7 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
             aggregate_contents[entity_type] = entities
         return aggregate_contents
 
-    def _select_latest(self, contributions: Iterable[Contribution]) -> MutableMapping[EntityType, Entities]:
+    def _select_latest(self, contributions: Sequence[Contribution]) -> MutableMapping[EntityType, Entities]:
         """
         Collect the latest version of each inner entity from multiple given documents.
 
