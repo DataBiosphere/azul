@@ -114,14 +114,6 @@ class CollectionDataAccess:
             raise (exception_class or ClientError)(uuid)
 
     @staticmethod
-    def make_content_item(uuid:str, version:str, type:str):
-        return {
-            "type": type,
-            "uuid": uuid,
-            "version": version
-        }
-
-    @staticmethod
     def endpoint_url(*request_path):
         return f'{config.dss_endpoint}/{"/".join(request_path)}'
 
