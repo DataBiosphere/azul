@@ -14,9 +14,9 @@ class TestCartExportService(TestCase):
     def test_get_content_with_no_resume_token_returning_results_without_next_resume_token(self, dynamodb_client):
         mock_entity_1 = dict(EntityId='entity1', EntityType='foo', EntityVersion='bar')
         mock_entity_2 = dict(EntityId='entity2', EntityType='foo', EntityVersion='bar')
-        expected_content_item_1 = CollectionDataAccess.make_content_item(mock_entity_1['EntityId'],
-                                                                         mock_entity_1['EntityVersion'],
-                                                                         'file')
+        expected_content_item_1 = dict(type='file',
+                                       uuid=mock_entity_1['EntityId'],
+                                       version=mock_entity_1['EntityVersion'])
 
         def mock_get_paginable_cart_items(**kwargs):
             self.assertIsNone(kwargs['resume_token'])
@@ -53,9 +53,9 @@ class TestCartExportService(TestCase):
         mock_resume_token = 'abc'
         mock_entity_1 = dict(EntityId='entity1', EntityType='foo', EntityVersion='bar')
         mock_entity_2 = dict(EntityId='entity2', EntityType='foo', EntityVersion='bar')
-        expected_content_item_1 = CollectionDataAccess.make_content_item(mock_entity_1['EntityId'],
-                                                                         mock_entity_1['EntityVersion'],
-                                                                         'file')
+        expected_content_item_1 = dict(type='file',
+                                       uuid=mock_entity_1['EntityId'],
+                                       version=mock_entity_1['EntityVersion'])
 
         def mock_get_paginable_cart_items(**kwargs):
             self.assertIsNotNone(kwargs['resume_token'])
