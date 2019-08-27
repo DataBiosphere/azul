@@ -209,7 +209,7 @@ class Document:
         result = {
             '_index' if bulk else 'index': self.document_index,
             '_type' if bulk else 'doc_type': self.type,
-            **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source(), forward=True)}),
+            **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source())}),
             '_id' if bulk else 'id': self.document_id
         }
         if self.version_type is None:
@@ -302,7 +302,6 @@ class Transformer(ABC):
     @abstractmethod
     def field_types(cls) -> Mapping[str, type]:
         raise NotImplementedError()
-
 
     @abstractmethod
     def transform(self,
