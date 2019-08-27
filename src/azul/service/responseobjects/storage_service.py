@@ -31,8 +31,7 @@ class StorageService:
 
     def put(self, object_key: str, data: bytes, content_type: Optional[str] = None, **kwargs) -> str:
         params = {'Bucket': self.bucket_name, 'Key': object_key, 'Body': data, **kwargs}
-
-        if content_type:
+        if content_type is not None:
             params['ContentType'] = content_type
         self.client.put_object(**params)
         return object_key
@@ -163,7 +162,7 @@ class MultipartUploadHandler:
 
 @dataclass
 class Part:
-    etag: str  # If ETag is defined, the content is already pushed to S3.
+    etag: Optional[str]  # If ETag is defined, the content is already pushed to S3.
     part_number: int
     content: bytes
 
