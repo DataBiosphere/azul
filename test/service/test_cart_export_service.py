@@ -115,11 +115,9 @@ class TestCartExportService(TestCase):
         expected_get_content_result = dict(resume_token='rt1',
                                            items=[1, 2, 3, 4])  # NOTE: This is just for the test.
         service = CartExportService()
-        with self.assertRaises(ExpiredAccessTokenError), \
-             patch.object(service, 'get_content', side_effect=[expected_get_content_result]), \
-             ResponsesHelper() as helper:
-            helper.add(responses.Response(responses.PATCH,
-                                          CollectionDataAccess.endpoint_url('collections', expected_collection['uuid']),
-                                          status=401,
-                                          json=dict(code='abc')))
-            service.export('export1', 'user1', 'cart1', 'at1', expected_collection['uuid'], 'ver1', 'rt0')
+        with self.assertRaises(ExpiredAccessTokenError):
+            with patch.object(service, 'get_content', side_effect=[expected_get_content_result]):
+                with ResponsesHelper() as helper:
+                    url = CollectionDataAccess.endpoint_url('collections', expected_collection['uuid'])
+                    helper.add(responses.Response(responses.PATCH, url, status=401, json=dict(code='abc')))
+                    service.export('export1', 'user1', 'cart1', 'at1', expected_collection['uuid'], 'ver1', 'rt0')
