@@ -1,15 +1,8 @@
-from typing import Any, Mapping, Union, Tuple
-
-from azul.types import AnyJSON
+from azul.types import AnyJSON, AnyMutableJSON
 from azul.vendored.frozendict import frozendict
 
-AnyFrozenJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], Tuple[Any, ...]]
-AnyFrozenJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyFrozenJSON2], Tuple[AnyFrozenJSON2, ...]]
-AnyFrozenJSON = Union[str, int, float, bool, None, Mapping[str, AnyFrozenJSON1], Tuple[AnyFrozenJSON1, ...]]
-FrozenJSON = Mapping[str, AnyFrozenJSON]
 
-
-def freeze(x: Union[AnyJSON, AnyFrozenJSON]) -> AnyFrozenJSON:
+def freeze(x: AnyJSON) -> AnyJSON:
     """
     Return a copy of the argument JSON structure with every `dict` in that structure converted to a `frozendict` and
     every list converted to a tuple.
@@ -38,7 +31,7 @@ def freeze(x: Union[AnyJSON, AnyFrozenJSON]) -> AnyFrozenJSON:
         assert False, f'Cannot handle values of type {type(x)}'
 
 
-def thaw(x: Union[AnyFrozenJSON, AnyJSON]) -> AnyJSON:
+def thaw(x: AnyJSON) -> AnyMutableJSON:
     """
     Return a copy of the argument JSON structure with every `frozendict` in that structure converted to a `dict` and
     every tuple converted to a list.
@@ -63,7 +56,7 @@ def thaw(x: Union[AnyFrozenJSON, AnyJSON]) -> AnyJSON:
         assert False, f'Cannot handle values of type {type(x)}'
 
 
-def sort_frozen(x: AnyFrozenJSON) -> AnyFrozenJSON:
+def sort_frozen(x: AnyJSON) -> AnyJSON:
     """
     Attempt to recursively sort a frozen JSON structure. Not all JSON structures are supported. The restrictions are
     noted below. This method is really only useful when comparing Elasticsearch documents. Elasticsearches semantics
@@ -95,23 +88,45 @@ def sort_frozen(x: AnyFrozenJSON) -> AnyFrozenJSON:
         # values. The values may of heterogeneous types and therefore can't be compared.
         return tuple(sorted((k, sort_frozen(v)) for k, v in x.items()))
     elif isinstance(x, tuple):
-        return tuple(sorted((sort_frozen(v) for v in x), key=K))
+        return tuple(sorted((sort_frozen(v) for v in x), key=TupleKey))
     elif isinstance(x, (bool, str, int, float)) or x is None:
         return x
     else:
         assert False, f'Cannot handle values of type {type(x)}'
 
 
-class K(object):
+class TupleKey(object):
+    """
+    Tuples are compared element-wise so (None,) < (True,) involves None < True
+    which fails. To solve this, we wrap all tuple elements. Note that this
+    means recursively wrapping tuple elements that are tuples themselves.
+
+    >>> # noinspection PyTypeChecker
+    ... (None,) < (True,)
+    Traceback (most recent call last):
+    ...
+    TypeError: '<' not supported between instances of 'NoneType' and 'bool'
+
+    >>> TupleKey((None,)) < TupleKey((True,))
+    True
+
+    From https://docs.python.org/3.6/reference/datamodel.html#object.__hash__
+
+    > A class that overrides __eq__() and does not define __hash__() will have
+    > its __hash__() implicitly set to None.
+
+    Just making sure
+
+    >>> {TupleKey((True,)):1}
+    Traceback (most recent call last):
+    ...
+    TypeError: unhashable type: 'TupleKey'
+    """
     __slots__ = ['obj']
 
     def __init__(self, obj):
-        # Tuples are compared element-wise so (None,) < (True,) will involve
-        # None < True which would fail. To solve this, we wrap all tuple
-        # elements. Note that this recursively wraps tuple elements that are
-        # tuples themselves.
         if isinstance(obj, tuple):
-            obj = tuple(K(e) for e in obj)
+            obj = tuple(TupleKey(e) for e in obj)
         self.obj = obj
 
     def __lt__(self, other):
@@ -131,5 +146,3 @@ class K(object):
 
     def __ge__(self, other):
         raise NotImplementedError()
-
-    __hash__ = None
