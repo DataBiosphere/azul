@@ -474,25 +474,6 @@ class FrequencySetAccumulator(Accumulator):
         return [item for item, count in self.value.most_common(self.max_size)]
 
 
-class PrioritySetAccumulator(SetAccumulator):
-    """
-    An accumulator that accepts (priority, value) tuples and
-    returns a set of those values whose priority is equal to the maximum priority observed.
-    """
-
-    def __init__(self, max_size=None) -> None:
-        super().__init__()
-        self.priority = None
-
-    def accumulate(self, value) -> bool:
-        priority, value = value
-        if self.priority is None or self.priority < priority:
-            self.priority = priority
-            self.value = set()
-        if self.priority == priority:
-            super().accumulate(value)
-
-
 class LastValueAccumulator(Accumulator):
     """
     An accumulator that accepts any number of values and returns the value most recently seen.
