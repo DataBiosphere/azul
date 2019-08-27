@@ -179,18 +179,13 @@ class AutoCompleteRepresentation(JsonObject):
         default=None)
 
 
-class AbstractResponse(object):
+class AbstractResponse(object, metaclass=abc.ABCMeta):
     """
     Abstract class to be used for each /files API response.
     """
-    __metaclass__ = abc.ABCMeta
-    DSS_URL = os.getenv("DSS_URL",
-                        "https://dss.staging.data.humancellatlas.org/v1")
-
     @abc.abstractmethod
     def return_response(self):
-        raise NotImplementedError(
-            'users must define return_response to use this base class')
+        raise NotImplementedError()
 
 
 class ManifestResponse(AbstractResponse):
