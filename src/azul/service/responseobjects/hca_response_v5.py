@@ -198,7 +198,7 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
-    def __init__(self, es_search, manifest_entries, mapping, format, object_key=None):
+    def __init__(self, es_search, manifest_entries, mapping, format_, object_key=None):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
@@ -211,7 +211,7 @@ class ManifestResponse(AbstractResponse):
         self.manifest_entries = OrderedDict(manifest_entries)
         self.mapping = mapping
         self.storage_service = StorageService()
-        self.format = format
+        self.format = format_
         self.object_key = object_key if object_key is not None else uuid4()
 
         sources = list(self.manifest_entries.keys())

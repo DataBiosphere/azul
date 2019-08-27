@@ -150,9 +150,9 @@ class ElasticTransformDump(object):
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size)
         aggregate.bucket('untagged', 'missing', field=_field)
         if agg == "fileFormat":
-            fileSizeField = request_config['translation']['fileSize']
-            aggregate.aggs['myTerms'].metric('size_by_type', 'sum', field=fileSizeField)
-            aggregate.aggs['untagged'].metric('size_by_type', 'sum', field=fileSizeField)
+            file_size_field = request_config['translation']['fileSize']
+            aggregate.aggs['myTerms'].metric('size_by_type', 'sum', field=file_size_field)
+            aggregate.aggs['untagged'].metric('size_by_type', 'sum', field=file_size_field)
         # If the aggregate in question didn't have any filter on the API
         #  call, skip it. Otherwise insert the popped
         # value back in
@@ -553,7 +553,7 @@ class ElasticTransformDump(object):
         filter_string = repr(sort_frozen(freeze(filters)))
         return str(uuid.uuid5(manifest_namespace, git_commit + filter_string))
 
-    def transform_manifest(self, format: str, filters: JSON):
+    def transform_manifest(self, format_: str, filters: JSON):
         config_folder = os.path.dirname(service_config.__file__)
         request_config_path = "{}/{}".format(config_folder, 'request_config.json')
         request_config = self.open_and_return_json(request_config_path)
@@ -561,7 +561,7 @@ class ElasticTransformDump(object):
         manifest_config = request_config['manifest']
         entity_type = 'files'
 
-        if format == 'full':
+        if format_ == 'full':
             source_filter = ['contents.metadata.*']
             entity_type = 'bundles'
             es_search = self.create_request(filters,
@@ -595,7 +595,7 @@ class ElasticTransformDump(object):
             assert len(response.hits) == 0
             aggregate = response.aggregations
             manifest_config = self.generate_full_manifest_config(aggregate)
-        elif format == 'bdbag':
+        elif format_ == 'bdbag':
             # Terra rejects `.` in column names
             manifest_config = {
                 path: {
@@ -618,12 +618,12 @@ class ElasticTransformDump(object):
                                         enable_aggregation=False,
                                         entity_type=entity_type)
 
-        object_key = self._generate_manifest_object_key(filters) if format == 'full' else None
+        object_key = self._generate_manifest_object_key(filters) if format_ == 'full' else None
 
         manifest = ManifestResponse(es_search,
                                     manifest_config,
                                     request_config['translation'],
-                                    format,
+                                    format_,
                                     object_key=object_key)
 
         return manifest.return_response()
