@@ -20,7 +20,7 @@ from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse, 
                                                           SummaryResponse)
 from azul.service.responseobjects.utilities import json_pp
 from azul.transformer import Document
-from azul.types import JSON
+from azul.types import JSON, MutableJSON
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +53,10 @@ class ElasticTransformDump(object):
         self.es_client = ESClientFactory.get()
 
     @classmethod
-    def translate_filters(cls, filters: JSON, field_mapping: JSON) -> JSON:
+    def translate_filters(cls, filters: JSON, field_mapping: JSON) -> MutableJSON:
         """
         Function for translating the filters
+
         :param filters: Raw filters from the filters param. That is, in 'browserForm'
         :param field_mapping: Mapping config json with '{'browserKey': 'es_key'}' format
         :return: Returns translated filters with 'es_keys'
@@ -76,20 +77,18 @@ class ElasticTransformDump(object):
         return translated_filters
 
     @classmethod
-    def translate_facets(cls, facets: JSON, translation: JSON):
+    def translate_facets(cls, facets: MutableJSON, translation: JSON):
         """
         Translate facet values from Elasticsearch (eg. '__null__' -> None)
 
         :param facets: Aggregation data from the es_response
         :param translation: Mapping of facet names to their full field name (eg. 'fileSize': 'contents.files.size')
-        :return: The facets data with translated values
         """
-        for key in facets.keys():
-            full_key = translation[key]
-            path = tuple(full_key.split('.'))
-            for bucket in facets[key]['myTerms']['buckets']:
+        for facet_name, aggregations in facets.items():
+            bucket: MutableJSON
+            for bucket in aggregations['myTerms']['buckets']:
+                path = tuple(translation[facet_name].split('.'))
                 bucket['key'] = Document.translate_field(bucket['key'], path, forward=False)
-        return facets
 
     @classmethod
     def create_query(cls, filters):
@@ -548,7 +547,7 @@ class ElasticTransformDump(object):
             hits = Document.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
-            facets = self.translate_facets(facets, translation)
+            self.translate_facets(facets, translation)
 
             paging = self.generate_paging_dict(es_response_dict, pagination)
             # Translate the sort field back to external name
@@ -560,7 +559,7 @@ class ElasticTransformDump(object):
 
         return final_response
 
-    def _generate_manifest_object_key(self, filters: dict) -> str:
+    def _generate_manifest_object_key(self, filters: JSON) -> str:
         """
         Generate and return a UUID string generated using the latest git commit and filters
 

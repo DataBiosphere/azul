@@ -33,7 +33,7 @@ from azul.service.responseobjects.storage_service import (AWS_S3_DEFAULT_MINIMUM
 from azul.service.responseobjects.utilities import json_pp
 from azul.strings import to_camel_case
 from azul.transformer import Document
-from azul.types import JSON
+from azul.types import JSON, MutableJSON, AnyMutableJSON
 
 logger = logging.getLogger(__name__)
 
@@ -639,8 +639,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     Not to be confused with the 'keywords' endpoint
     """
 
-    def _merge(self, dict_1, dict_2, identifier):
-        merged_dict = defaultdict(list)
+    def _merge(self, dict_1: MutableJSON, dict_2: MutableJSON, identifier):
+        merged_dict: MutableMapping[str, List[AnyMutableJSON]] = defaultdict(list)
         dict_id = dict_1.pop(identifier)
         dict_2.pop(identifier)
         for key, value in chain(dict_1.items(), dict_2.items()):
@@ -652,7 +652,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 cleaned_list = list(filter(None, chain(value, merged_dict[key])))
                 if len(cleaned_list) > 0 and isinstance(cleaned_list[0], dict):
                     # Make each dict hashable so we can deduplicate the list
-                    merged_dict[key] = thaw(list(set(freeze(cleaned_list))))
+                    merged_dict[key] = list(map(thaw, set(map(freeze, cleaned_list))))
                 else:
                     merged_dict[key] = list(set(cleaned_list))
             elif value is None:

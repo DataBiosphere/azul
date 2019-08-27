@@ -5,7 +5,7 @@ import sys
 from functools import lru_cache
 
 from more_itertools import one
-from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple, ClassVar
+from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple, ClassVar, Sequence
 
 from dataclasses import dataclass, fields
 
@@ -13,7 +13,7 @@ from humancellatlas.data.metadata import api
 
 from azul import config
 from azul.json_freeze import freeze, thaw
-from azul.types import JSON, AnyJSON
+from azul.types import JSON, AnyJSON, AnyMutableJSON
 
 MIN_INT = -sys.maxsize - 1
 
@@ -71,9 +71,8 @@ class Document:
                 return None
         return types_mapping
 
-
     @classmethod
-    def translate_field(cls, value: Any, path: Tuple[str, ...] = (), forward: bool = True) -> Any:
+    def translate_field(cls, value: AnyJSON, path: Tuple[str, ...] = (), forward: bool = True) -> Any:
         """
         Translate a single value for insert into or after fetching from Elasticsearch.
 
@@ -114,7 +113,7 @@ class Document:
             raise ValueError(f'Field type not found for path {path}')
 
     @classmethod
-    def translate_fields(cls, source: AnyJSON, path: Tuple[str, ...] = (), forward: bool = True) -> AnyJSON:
+    def translate_fields(cls, source: AnyJSON, path: Tuple[str, ...] = (), forward: bool = True) -> AnyMutableJSON:
         """
         Traverse a document to translate field values for insert into Elasticsearch, or to translate back
         response data. This is done to support None/null values since Elasticsearch does not index these values.
@@ -740,6 +739,7 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
             for contribution in contributions:
                 for entity_type, entities in contribution.contents.items():
                     collated_entities = contents[entity_type]
+                    entity: JSON
                     for entity in entities:
                         entity_id = entity['document_id']  # FIXME: the key 'document_id' is HCA specific
                         bundle_version, _ = collated_entities.get(entity_id, ('', None))
