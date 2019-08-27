@@ -46,4 +46,4 @@ check_trufflehog:
 trufflehog: check_trufflehog
 	trufflehog --regex --rules .trufflehog.json --entropy=False file:///$$azul_home
 
-.PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test trufflehog check_trufflehog
+.PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test trufflehog check_trufflehog delete
