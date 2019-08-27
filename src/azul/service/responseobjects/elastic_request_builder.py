@@ -213,21 +213,18 @@ class ElasticTransformDump(object):
             for agg, translation in facet_config.items():
                 # Create a bucket aggregate for the 'agg'.
                 # Call create_aggregate() to return the appropriate aggregate query
-                es_search.aggs.bucket(
-                    agg,
-                    ElasticTransformDump.create_aggregate(
-                        filters, facet_config, agg, req_config))
+                es_search.aggs.bucket(agg,
+                                      ElasticTransformDump.create_aggregate(filters, facet_config, agg, req_config))
 
         return es_search
 
     @staticmethod
-    def create_autocomplete_request(
-        filters,
-        es_client,
-        req_config,
-        _query,
-        search_field,
-        entity_type='files'):
+    def create_autocomplete_request(filters,
+                                    es_client,
+                                    req_config,
+                                    _query,
+                                    search_field,
+                                    entity_type='files'):
         """
         This function will create an ElasticSearch request based on
          the filters passed to the function
@@ -363,11 +360,10 @@ class ElasticTransformDump(object):
 
         return page_field
 
-    def transform_summary(
-        self,
-        request_config_file='request_config.json',
-        filters=None,
-        entity_type=None):
+    def transform_summary(self,
+                          request_config_file='request_config.json',
+                          filters=None,
+                          entity_type=None):
         # Use this as the base to construct the paths
         # stackoverflow.com/questions/247770/retrieving-python-module-path
         # Use that to get the path of the config module
@@ -422,8 +418,9 @@ class ElasticTransformDump(object):
             ('contents.specimens.document_id', 'specimenCount'),
             ('contents.files.uuid', 'fileCount'),
             ('contents.donors.document_id', 'donorCount'),
-            ('contents.projects.laboratory', 'labCount'),   # FIXME Possible +1 error due to '__null__' value (#1188)
-            ('contents.projects.document_id', 'projectCount')):
+            ('contents.projects.laboratory', 'labCount'),  # FIXME Possible +1 error due to '__null__' value (#1188)
+            ('contents.projects.document_id', 'projectCount')
+        ):
             es_search.aggs.metric(
                 agg_name, 'cardinality',
                 field='{}.keyword'.format(cardinality),
@@ -652,15 +649,14 @@ class ElasticTransformDump(object):
             manifest_config[value] = value.split('.')[-1]
         return {'contents': manifest_config}
 
-    def transform_autocomplete_request(
-        self,
-        pagination,
-        request_config_file='request_config.json',
-        mapping_config_file='autocomplete_mapping_config.json',
-        filters=None,
-        _query='',
-        search_field='fileId',
-        entry_format='file'):
+    def transform_autocomplete_request(self,
+                                       pagination,
+                                       request_config_file='request_config.json',
+                                       mapping_config_file='autocomplete_mapping_config.json',
+                                       filters=None,
+                                       _query='',
+                                       search_field='fileId',
+                                       entry_format='file'):
         """
         This function does the whole transformation process. It
         takes the path of the config file, the filters, and pagination,

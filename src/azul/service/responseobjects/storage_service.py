@@ -35,9 +35,7 @@ class StorageService:
 
         if content_type:
             params['ContentType'] = content_type
-
         self.client.put_object(**params)
-
         return object_key
 
     def upload(self, file_name, object_key):
