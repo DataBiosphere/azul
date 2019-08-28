@@ -24,7 +24,7 @@ index: check_branch
 	python scripts/reindex.py --index --partition-prefix-length=2
 
 reindex: check_branch
-	python scripts/reindex.py --delete --index --partition-prefix-length=2
+	python scripts/reindex.py --delete --index --purge --partition-prefix-length=2
 
 clean:
 	rm -rf .cache .config
