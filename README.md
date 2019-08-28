@@ -409,6 +409,33 @@ python scripts/manage_queues.py purge_all
 make delete
 ```
 
+## 2.8 Deleting a deployment
+
+1. `cd` to the project root, then
+   ```
+   source environment
+   ```
+
+2. Select the deployment to be delete
+   ```
+   _select test.local
+   ```
+
+3. Unsubscribe
+   ```
+   make unsubscribe
+   ```
+   
+4. Delete lambdas
+   ```
+   make -C lambdas delete
+   ```
+   
+5. Destroy cloud infrastructure
+   ```
+   make -C terraform destroy
+   ```
+
 # 3. Running indexer or service locally
 
 1. As usual, activate the virtual environment and `source environment` if you

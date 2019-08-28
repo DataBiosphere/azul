@@ -24,7 +24,7 @@ index: check_branch
 	python scripts/reindex.py --index --partition-prefix-length=2
 
 reindex: check_branch
-	python scripts/reindex.py --delete --index --partition-prefix-length=2
+	python scripts/reindex.py --delete --index --purge --partition-prefix-length=2
 
 clean:
 	rm -rf .cache .config
@@ -46,4 +46,4 @@ check_trufflehog:
 trufflehog: check_trufflehog
 	trufflehog --regex --rules .trufflehog.json --entropy=False file:///$$azul_home
 
-.PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test trufflehog check_trufflehog
+.PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test trufflehog check_trufflehog delete

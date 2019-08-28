@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from email.utils import parsedate_to_datetime
+import email.utils
 import time
 from typing import Optional
 
@@ -93,7 +93,7 @@ def parse_http_date(http_date: str, base_time: Optional[float] = None) -> float:
     try:
         http_date = int(http_date)
     except ValueError:
-        http_date = parsedate_to_datetime(http_date)
+        http_date = email.utils.parsedate_to_datetime(http_date)
         return http_date.timestamp()
     else:
         return base_time + float(http_date)

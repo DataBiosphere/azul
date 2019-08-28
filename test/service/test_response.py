@@ -38,7 +38,9 @@ class TestResponse(WebServiceTestCase):
         super().tearDownClass()
 
     def get_hits(self, entity_type: str, entity_id: str):
-        """Fetches hits from es instance searching for a particular entity ID"""
+        """
+        Fetches hits from ES instance searching for a particular entity ID
+        """
         body = {
             "query": {
                 "term": {

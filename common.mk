@@ -36,6 +36,9 @@ endif
 check_branch:
 	python $(azul_home)/scripts/check_branch.py
 
+check_branch_personal:
+	python $(azul_home)/scripts/check_branch.py --personal
+
 ifeq ($(shell git push --dry-run 2> /dev/null && echo yes),yes)
 ifeq ($(shell git secrets --list | grep -- --aws-provider),)
 $(error Please install and configure git-secrets. See README.md for details)
@@ -45,7 +48,7 @@ $(error Looks like the git-secrets hooks are not installed. Please run 'git secr
 endif
 endif
 
-.PHONY: check_branch
+.PHONY: check_branch check_branch_personal
 
 %: %.template.py .FORCE
 	python $< $@
