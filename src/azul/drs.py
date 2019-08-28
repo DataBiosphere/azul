@@ -54,7 +54,7 @@ def drs_http_object_path(file_uuid: str) -> str:
 
 def _endpoint(base_url: Optional[str]) -> Tuple[str, str]:
     if base_url is None:
-        base_url = config.service_endpoint()
+        base_url = config.drs_endpoint()
     base_url = urlsplit(base_url)
     return base_url.scheme, base_url.netloc
 
