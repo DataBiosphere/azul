@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 """
 Command line utility to trigger indexing of bundles from DSS into Azul
 """
@@ -112,20 +110,20 @@ def main(argv: List[str]):
     if args.purge:
         queue_manager = Queues()
         queues = dict(queue_manager.azul_queues())
-        logger.info('Disabling lambdas...')
+        logger.info('Disabling lambdas ...')
         queue_manager.manage_lambdas(queues, enable=False)
-        logger.info('Purging queues...')
+        logger.info('Purging queues ...')
         queue_manager.purge_queues_unsafely(queues)
     else:
         queue_manager, queues = None, None
     if args.delete:
-        logger.info('Deleting indices...')
+        logger.info('Deleting indices ...')
         azul_client.delete_all_indices()
     if args.purge:
-        logger.info('Reenabling lambdas...')
+        logger.info('Re-enabling lambdas ...')
         queue_manager.manage_lambdas(queues, enable=True)
     if args.index:
-        logger.info('Queuing notifications for reindex...')
+        logger.info('Queuing notifications for reindexing ...')
         if args.partition_prefix_length:
             azul_client.remote_reindex(args.partition_prefix_length)
         else:
