@@ -61,6 +61,71 @@ Code Style
 .. [#] Note: If we were to adopt trailing commas, we would also have to
        abandon our preference of aligned indent.
 
+* Except for log messages (see below), we don't use the ``%`` operator or the
+  ``str.format()`` method. We use ``f''`` strings or string concatenation. When
+  chosing between the latter two, we use the one that yields the shortest
+  expression. When both alternatives yield an expression of equal lengths, we
+  prefer string concatenation::
+  
+    f'{a}{b}'  # Simple concatenation of variables
+    a + b      # tends to be longer with f'' strings
+    
+    a + str(b) # {} calls str implicitly so f'' strings win
+    f'{a}{b}'  # if any of the variables is not a string
+
+    a + ' ' + b + '.tsv'  # When multiple literal strings are involved
+    f'{a} {b}.tsv'        # f'' strings usually yield shorter expressions
+    
+* We use ``str.join()`` when joining more than three elements with the same
+  character or when the elements are already in an iterable form::
+  
+    f'{a},{b},{c},{d}'     # while this is shorter
+    ','.join((a, b, c, d)) # this is more readable
+  
+    f'{a[0],a[1]}  # this is noisy and tedious
+    ','.join(a)    # this is not
+  
+
+Logging
+*******
+
+* Loggers are instantiated in every module that needs to log
+
+* Loggers are always instantiated as follows::
+
+    log = logging.getLogger(__name__) # is preferred for new code
+    logger = logging.getLogger(__name__) # this is ok in old code
+  
+* At program entry points we use the appropriate configuration method from
+  `azul.logging`. Program entry points are 
+  
+  - in scripts::
+
+      if __name__ == '__main__':
+          configure_script_logging(log)
+
+  - in test modules::
+
+      def setUpModule():
+          configure_test_logging(log)
+
+  - in ``app.py``::
+
+      log = logging.getLogger(__name__)
+      app = AzulChaliceApp(app_name=config.indexer_name)
+      configure_app_logging(app, log)
+
+* We don't use ``f''`` strings or string concatenation when interpolating
+  dynamic values into log messages::
+
+    log.info(f'Foo is {bar}')  # don't do this
+    log.info('Foo is %s', bar)  # do this
+  
+* Computationally expensive interpolations should be guarded::
+
+    if log.isEnabledFor(logging.DEBUG):
+        log.debug('Foo is %s', json.dump(giant, indent=4)
+
 
 Imports
 *******
