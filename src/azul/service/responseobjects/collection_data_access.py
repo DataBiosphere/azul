@@ -112,15 +112,6 @@ class CollectionDataAccess:
             logger.info('Request %s: Remote Error Code: %s', request_id, error_data.get('code'))
             logger.info('Request %s: Remote Traceback: %s', request_id, error_data.get('stacktrace'))
             raise (exception_class or ClientError)(uuid)
-        return response
-
-    @staticmethod
-    def make_content_item(uuid:str, version:str, type:str):
-        return {
-            "type": type,
-            "uuid": uuid,
-            "version": version
-        }
 
     @staticmethod
     def endpoint_url(*request_path):
