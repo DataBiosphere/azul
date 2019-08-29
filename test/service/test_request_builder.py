@@ -305,6 +305,9 @@ class TestRequestBuilder(WebServiceTestCase):
                     "terms": {
                         "field": "facet1.translation.keyword",
                         "size": 99999
+                    },
+                    "meta": {
+                        "path": ["facet1", "translation"]
                     }
                 },
                 "untagged": {

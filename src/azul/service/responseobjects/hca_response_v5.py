@@ -103,12 +103,9 @@ class OrganCellCountSummary(JsonObject):
     totalCellCountByOrgan = FloatProperty()
 
     @classmethod
-    def for_bucket(cls, bucket):
-        key = Document.translate_field(bucket['key'],
-                                       path=('contents', 'cell_suspensions', 'organ'),
-                                       forward=False)
+    def for_bucket(cls, bucket: MutableMapping[str, str]):
         self = cls()
-        self.organType = [key]
+        self.organType = [bucket['key']]
         self.countOfDocsWithOrganType = bucket['doc_count']
         self.totalCellCountByOrgan = bucket['cell_count']['value']
         return self
@@ -117,12 +114,8 @@ class OrganCellCountSummary(JsonObject):
 class OrganType:
 
     @classmethod
-    def for_bucket(cls, bucket):
-        # Un-translate values that had been translated with translate_fields() to handle Nones in Elasticsearch
-        # The path for the translation directly relates to the field used in transform_summary() for the aggregation
-        return Document.translate_field(bucket['key'],
-                                        path=('contents', 'samples', 'effective_organ'),
-                                        forward=False)
+    def for_bucket(cls, bucket: MutableMapping[str, str]):
+        return bucket['key']
 
 
 class HitEntry(JsonObject):
@@ -614,21 +607,26 @@ class BaseSummaryResponse(AbstractResponse):
         return self.apiResponse
 
     @staticmethod
-    def agg_contents(aggs_dict, agg_name, agg_form="buckets"):
+    def agg_contents(aggs_dict, agg_name, agg_form='buckets', function=None):
         """
         Helper function for parsing aggregate dictionary and returning the
         contents of the aggregation
+
         :param aggs_dict: ES dictionary response containing the aggregates
         :param agg_name: Name of aggregate to inspect
-        :param agg_form: Part of the aggregate to return.
+        :param function: Function to transform each aggregate
+        :param agg_form: Part of the aggregate to return
         :return: Returns the agg_form within the aggregate agg_name
         """
-        # Return the specified content of the aggregate. Otherwise return
-        # an empty string
-        contents = aggs_dict[agg_name][agg_form]
-        if agg_form == "buckets":
-            contents = len(contents)
-        return contents
+        agg = aggs_dict
+        # Select the agg_name element from aggs_dict
+        for name_part in agg_name.split('.'):
+            agg = agg[name_part]
+        # If given a function apply it to each value, else return the value
+        if function is not None:
+            return list(map(function, agg[agg_form]))
+        else:
+            return agg[agg_form]
 
     def __init__(self, raw_response):
         # Separate the raw_response into hits and aggregates
@@ -645,21 +643,19 @@ class SummaryResponse(BaseSummaryResponse):
     def __init__(self, raw_response):
         super().__init__(raw_response)
 
-        _file_types = raw_response['aggregations']['fileFormat']["myTerms"]
-        _cell_counts = raw_response['aggregations']['group_by_organ']
-        _organ_types = raw_response['aggregations']['organTypes']
-
+        aggs = self.aggregates
         self.apiResponse = SummaryRepresentation(
-            projectCount=self.agg_contents(self.aggregates, 'projectCount', agg_form='value'),
-            specimenCount=self.agg_contents(self.aggregates, 'specimenCount', agg_form='value'),
-            fileCount=self.agg_contents(self.aggregates, 'fileCount', agg_form='value'),
-            totalFileSize=self.agg_contents(self.aggregates, 'total_size', agg_form='value'),
-            donorCount=self.agg_contents(self.aggregates, 'donorCount', agg_form='value'),
-            labCount=self.agg_contents(self.aggregates, 'labCount', agg_form='value'),
-            totalCellCount=self.agg_contents(self.aggregates, 'total_cell_count', agg_form='value'),
-            organTypes=list(map(OrganType.for_bucket, _organ_types['buckets'])),
-            fileTypeSummaries=list(map(FileTypeSummary.for_bucket, _file_types['buckets'])),
-            cellCountSummaries=list(map(OrganCellCountSummary.for_bucket, _cell_counts['buckets'])))
+            projectCount=self.agg_contents(aggs, 'projectCount', agg_form='value'),
+            specimenCount=self.agg_contents(aggs, 'specimenCount', agg_form='value'),
+            fileCount=self.agg_contents(aggs, 'fileCount', agg_form='value'),
+            totalFileSize=self.agg_contents(aggs, 'total_size', agg_form='value'),
+            donorCount=self.agg_contents(aggs, 'donorCount', agg_form='value'),
+            labCount=self.agg_contents(aggs, 'labCount', agg_form='value'),
+            totalCellCount=self.agg_contents(aggs, 'total_cell_count', agg_form='value'),
+            organTypes=self.agg_contents(aggs, 'organTypes', function=OrganType.for_bucket),
+            fileTypeSummaries=self.agg_contents(aggs, 'fileFormat.myTerms', function=FileTypeSummary.for_bucket),
+            cellCountSummaries=self.agg_contents(aggs, 'group_by_organ', function=OrganCellCountSummary.for_bucket)
+        )
 
 
 class KeywordSearchResponse(AbstractResponse, EntryFetcher):
