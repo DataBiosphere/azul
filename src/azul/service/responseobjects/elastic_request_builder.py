@@ -1,16 +1,19 @@
 #!/usr/bin/python
 from copy import deepcopy
+import hashlib
 import json
 import logging
 from more_itertools import one
 import os
 from typing import List, Tuple
+import uuid
 
 import elasticsearch
 from elasticsearch_dsl import A, Q, Search
 
 from azul import config
 from azul.es import ESClientFactory
+from azul.json_freeze import freeze, sort_frozen
 from azul.service import service_config
 from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse, FileSearchResponse,
                                                           KeywordSearchResponse, ManifestResponse,
@@ -433,9 +436,8 @@ class ElasticTransformDump(object):
         #  which has the format for the summary request
         logger.info('Creating a SummaryResponse object')
         final_response = SummaryResponse(es_response.to_dict())
-        if logger.isEnabledFor(logging.INFO):
-            logger.info('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
-            logger.info('Returning the final response for transform_summary()')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
         return final_response.apiResponse.to_json()
 
     def transform_request(self,
@@ -513,11 +515,9 @@ class ElasticTransformDump(object):
 
         if pagination is None:
             # It's a single file search
-            logger.info("Elasticsearch request: %r", es_search.to_dict())
             es_response = es_search.execute(ignore_cache=True)
             es_response_dict = es_response.to_dict()
-            hits = [x['_source']
-                    for x in es_response_dict['hits']['hits']]
+            hits = [hit['_source'] for hit in es_response_dict['hits']['hits']]
             hits = Document.translate_fields(hits, forward=False)
             final_response = KeywordSearchResponse(hits, entity_type)
         else:
@@ -528,7 +528,6 @@ class ElasticTransformDump(object):
             # Apply paging
             es_search = self.apply_paging(es_search, pagination)
             # Execute ElasticSearch request
-
             try:
                 es_response = es_search.execute(ignore_cache=True)
             except elasticsearch.NotFoundError as e:
@@ -542,11 +541,10 @@ class ElasticTransformDump(object):
             # return one fewer hit.
             list_adjustment = 1 if len(es_hits) > pagination['size'] else 0
             if 'search_before' in pagination:
-                hits = [x['_source'] for x in
-                        reversed(es_hits[0:len(es_hits) - list_adjustment])]
+                hits = reversed(es_hits[0:len(es_hits) - list_adjustment])
             else:
-                hits = [x['_source'] for x in es_hits[0:len(es_hits) - list_adjustment]]
-
+                hits = es_hits[0:len(es_hits) - list_adjustment]
+            hits = [hit['_source'] for hit in hits]
             hits = Document.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
@@ -561,6 +559,18 @@ class ElasticTransformDump(object):
         final_response = final_response.apiResponse.to_json()
 
         return final_response
+
+    def _generate_manifest_object_key(self, filters: dict) -> str:
+        """
+        Generate and return a UUID string generated using the latest git commit and filters
+
+        :param filters: Filter parameter eg. {'organ': {'is': ['Brain']}}
+        :return: String representation of a UUID
+        """
+        git_commit = config.lambda_git_status['commit']
+        manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
+        filter_string = repr(sort_frozen(freeze(filters)))
+        return str(uuid.uuid5(manifest_namespace, git_commit + filter_string))
 
     def transform_manifest(self, format: str, filters: JSON):
         config_folder = os.path.dirname(service_config.__file__)
@@ -627,7 +637,13 @@ class ElasticTransformDump(object):
                                         enable_aggregation=False,
                                         entity_type=entity_type)
 
-        manifest = ManifestResponse(es_search, manifest_config, request_config['translation'], format)
+        object_key = self._generate_manifest_object_key(filters) if format == 'full' else None
+
+        manifest = ManifestResponse(es_search,
+                                    manifest_config,
+                                    request_config['translation'],
+                                    format,
+                                    object_key=object_key)
 
         return manifest.return_response()
 
