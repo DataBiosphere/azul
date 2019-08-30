@@ -3,11 +3,12 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 import json
 import logging
+from more_itertools import one
 import os
 from io import BytesIO
 from tempfile import TemporaryDirectory
 from unittest import mock
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from zipfile import ZipFile
 
 from botocore.exceptions import ClientError
@@ -594,13 +595,13 @@ class TestManifestEndpoints(WebServiceTestCase):
                  '2018-11-02T113344.698028Z',
                  '2018-09-14T133314.453337Z',
                  '2018-09-14T133314.453337Z'),
-                
+
                 ('cell_suspension.biomaterial_core.biomaterial_description',
                  'Single cell from human pancreas',
                  'Single cell from human pancreas',
                  '',
                  ''),
-                
+
                 ('cell_suspension.biomaterial_core.insdc_biomaterial', 'SRS1459312', 'SRS1459312', '', ''),
                 ('cell_suspension.biomaterial_core.ncbi_taxon_id', '9606', '9606', '10090||10091', '10090||10091'),
 
@@ -615,7 +616,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                  'NCBITaxon:9606',
                  'NCBITaxon:10090',
                  'NCBITaxon:10090'),
-                
+
                 ('cell_suspension.genus_species.ontology_label', 'Homo sapiens', 'Homo sapiens', '', ''),
                 ('cell_suspension.genus_species.text', 'Homo sapiens', 'Homo sapiens', 'Mus musculus', 'Mus musculus'),
                 ('cell_suspension.plate_based_sequencing.plate_id', '', '', '827', '827'),
@@ -665,13 +666,13 @@ class TestManifestEndpoints(WebServiceTestCase):
                  'https://doi.org/10.1101/108043',
                  '',
                  ''),
-                
+
                 ('dissociation_protocol.provenance.document_id',
                  '31e708d3-79df-49b8-a3df-b1d694963468',
                  '31e708d3-79df-49b8-a3df-b1d694963468',
                  '40056e47-131d-4c6e-a884-a927bfccf8ce',
                  '40056e47-131d-4c6e-a884-a927bfccf8ce'),
-                
+
                 ('donor_organism.biomaterial_core.biomaterial_name', '', '', 'Mouse_day8_rep12', 'Mouse_day8_rep12'),
                 ('donor_organism.biomaterial_core.ncbi_taxon_id', '9606', '9606', '10090', '10090'),
                 ('donor_organism.death.cause_of_death', 'stroke', 'stroke', '', ''),
@@ -1090,6 +1091,46 @@ class TestManifestEndpoints(WebServiceTestCase):
         url = self.base_url + '/manifest/files?format=invalid-type'
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.content)
+
+    @mock_sts
+    @mock_s3
+    def test_manifest_content_disposition_header(self):
+        from azul.service.responseobjects import hca_response_v5
+        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        with mock.patch.object(hca_response_v5, 'datetime') as mock_response:
+            mock_date = datetime(1985, 10, 25, 1, 21)
+            mock_response.now.return_value = mock_date
+            storage_service = StorageService()
+            storage_service.create_bucket()
+            for filters, expected_name, name_object in (
+                    ({'project': {'is': ['Single of human pancreas']}}, 'Single of human pancreas ', True),
+                    # When requesting a full metadata TSV is with a filter for two or more projects, the
+                    # Content-Disposition header shouldn't be set to the contents .name file.
+                    ({'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                     'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721', False),
+                    # If the filter is doesn't specify any parameter for projectId, the Content-Disposition
+                    # header shouldn't be set to the contents .name file.
+                    ({}, 'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3', False)):
+                for single_part in True, False:
+                    with self.subTest(filters=filters, single_part=single_part):
+                        with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
+                            assert config.disable_multipart_manifests is single_part
+                            params = {
+                                'filters': json.dumps(filters),
+                                'format': 'full'
+                            }
+                            filters = AbstractService.parse_filters(params.get('filters'))
+                            estd = ElasticTransformDump()
+                            url = estd.transform_manifest(params.get('format', 'full'), filters).headers['Location']
+                            query = urlparse(url).query
+                            content_dispositions = parse_qs(query).get('response-content-disposition')
+                            if single_part and not name_object:
+                                self.assertIsNone(content_dispositions)
+                            else:
+                                expected_date = '1985-10-25 01.21' if name_object else ''
+                                expected_value = f'attachment;filename={expected_name}{expected_date}.tsv'
+                                actual_value = one(content_dispositions)
+                                self.assertEqual(actual_value, expected_value)
 
 
 class TestManifestResponse(AzulTestCase):
