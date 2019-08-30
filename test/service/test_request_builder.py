@@ -1,11 +1,10 @@
 import difflib
 import json
-import os
 import unittest
 
 from azul.logging import configure_test_logging
-from azul.service import service_config
-from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump, ElasticTransformDump as EsTd
+from azul.plugin import Plugin, ServiceConfig
+from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 from service import WebServiceTestCase
 
 
@@ -14,8 +13,8 @@ def setUpModule():
 
 
 class TestRequestBuilder(WebServiceTestCase):
-    request_config = {
-        "translation": {
+    request_config = ServiceConfig(
+        translation={
             "entity_id": "entity_id",
             "entity_version": "entity_version",
             "projectId": "contents.projects.document_id",
@@ -26,7 +25,7 @@ class TestRequestBuilder(WebServiceTestCase):
             "donorId": "contents.specimens.donor_biomaterial_id",
             "genusSpecies": "contents.specimens.genus_species"
         },
-        "autocomplete-translation": {
+        autocomplete_translation={
             "files": {
                 "entity_id": "entity_id",
                 "entity_version": "entity_version"
@@ -35,15 +34,12 @@ class TestRequestBuilder(WebServiceTestCase):
                 "donor": "donor_uuid"
             }
         },
-        "manifest": [
-            "File ID:Version",
-            "Assay Id",
-            "Analysis Id",
-            "Project Id"
-        ],
-        "facets": [
-        ]
-    }
+        manifest={},
+        facets=[],
+        autocomplete_mapping_config={},
+        cart_item={},
+        order_config=[]
+    )
 
     @staticmethod
     def compare_dicts(actual_output, expected_output):
@@ -416,8 +412,7 @@ class TestRequestBuilder(WebServiceTestCase):
         }
 
         sample_filter = {}
-        request_config_path = os.path.join(os.path.dirname(service_config.__file__), 'request_config.json')
-        request_config = ElasticTransformDump.open_and_return_json(request_config_path)
+        request_config = Plugin.load().request_config()
         # Create a request object
         agg_field = 'facet1'
         aggregation = EsTd.create_aggregate(

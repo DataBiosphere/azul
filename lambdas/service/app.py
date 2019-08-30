@@ -4,7 +4,6 @@ import hashlib
 import json
 import logging.config
 import math
-import os
 import re
 import time
 from typing import Optional
@@ -22,8 +21,8 @@ from azul import config, drs, RequirementError
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul.logging import configure_app_logging
+from azul.plugin import Plugin
 from azul.security.authenticator import AuthenticationError, Authenticator
-from azul.service import service_config
 from azul.service.manifest import ManifestService
 from azul.service.repository import EntityNotFoundError, InvalidUUIDError, RepositoryService
 from azul.service.responseobjects.cart_export_job_manager import CartExportJobManager, InvalidExecutionTokenError
@@ -427,15 +426,9 @@ def get_search():
 @app.route('/repository/files/order', methods=['GET'], cors=True)
 def get_order():
     """
-    Get the order of the facets from the order_config file
-    :return: A dictionary with a list containing the order of the facets
+    Return the ordering on facets
     """
-    # Setup logging
-    logger = logging.getLogger("dashboardService.webservice.get_order")
-    # Open the order_config file and get the order list
-    logger.info("Getting t")
-    with open('{}/order_config'.format(os.path.dirname(service_config.__file__))) as order:
-        order_list = [line.rstrip('\n') for line in order]
+    order_list = Plugin.load().order_config()
     return {'order': order_list}
 
 
