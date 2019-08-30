@@ -1,7 +1,7 @@
+from itertools import chain
 import json
 import logging
 from more_itertools import one
-import os
 from typing import List
 import uuid
 
@@ -11,7 +11,7 @@ from elasticsearch_dsl import A, Q, Search
 from azul import config
 from azul.es import ESClientFactory
 from azul.json_freeze import freeze, sort_frozen
-from azul.service import service_config
+from azul.plugin import Plugin, ServiceConfig
 from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse, FileSearchResponse,
                                                           KeywordSearchResponse, ManifestResponse,
                                                           SummaryResponse)
@@ -123,10 +123,10 @@ class ElasticTransformDump(object):
         return Q('bool', must=query_list)
 
     @staticmethod
-    def create_aggregate(filters, facet_config, agg, request_config):
+    def create_aggregate(filters, facet_config, agg, request_config: ServiceConfig):
         """
         Creates the aggregation to be used in ElasticSearch
-        :param request_config: A dictionary describing facets and field name mappings
+        :param request_config: A ServiceConfig instance describing facets and field name mappings
         :param filters: Translated filters from 'files/' endpoint call
         :param facet_config: Configuration for the facets (i.e. facets
         on which to construct the aggregate) in '{browser:es_key}' form
@@ -143,14 +143,14 @@ class ElasticTransformDump(object):
         # Make an inner aggregate that will contain the terms in question
         _field = f'{facet_config[agg]}.keyword'
         if agg == 'project':
-            _sub_field = request_config['translation']['projectId'] + '.keyword'
+            _sub_field = request_config.translation['projectId'] + '.keyword'
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size).bucket(
                              'myProjectIds', 'terms', field=_sub_field, size=config.terms_aggregation_size)
         else:
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size)
         aggregate.bucket('untagged', 'missing', field=_field)
         if agg == "fileFormat":
-            file_size_field = request_config['translation']['fileSize']
+            file_size_field = request_config.translation['fileSize']
             aggregate.aggs['myTerms'].metric('size_by_type', 'sum', field=file_size_field)
             aggregate.aggs['untagged'].metric('size_by_type', 'sum', field=file_size_field)
         # If the aggregate in question didn't have any filter on the API
@@ -163,7 +163,7 @@ class ElasticTransformDump(object):
     @staticmethod
     def create_request(filters,
                        es_client,
-                       req_config,
+                       request_config: ServiceConfig,
                        post_filter: bool = False,
                        source_filter: List[str] = None,
                        enable_aggregation: bool = True,
@@ -175,7 +175,7 @@ class ElasticTransformDump(object):
         Assumes to be translated into es_key terms
         :param es_client: The ElasticSearch client object used
          to configure the Search object
-        :param req_config: The
+        :param request_config: The
         {'translation: {'browserKey': 'es_key'}, 'facets': ['facet1', ...]}
         config
         :param post_filter: Flag for doing either post_filter or regular
@@ -189,8 +189,8 @@ class ElasticTransformDump(object):
         :return: Returns the Search object that can be used for executing
         the request
         """
-        field_mapping = req_config['translation']
-        facet_config = {key: field_mapping[key] for key in req_config['facets']}
+        field_mapping = request_config.translation
+        facet_config = {key: field_mapping[key] for key in request_config.facets}
         es_search = Search(using=es_client, index=config.es_index_name(entity_type, aggregate=True))
         filters = ElasticTransformDump.translate_filters(filters, field_mapping)
 
@@ -211,14 +211,14 @@ class ElasticTransformDump(object):
                 # Create a bucket aggregate for the 'agg'.
                 # Call create_aggregate() to return the appropriate aggregate query
                 es_search.aggs.bucket(agg,
-                                      ElasticTransformDump.create_aggregate(filters, facet_config, agg, req_config))
+                                      ElasticTransformDump.create_aggregate(filters, facet_config, agg, request_config))
 
         return es_search
 
     @staticmethod
     def create_autocomplete_request(filters,
                                     es_client,
-                                    req_config,
+                                    request_config: ServiceConfig,
                                     _query,
                                     search_field,
                                     entity_type='files'):
@@ -228,7 +228,7 @@ class ElasticTransformDump(object):
         :param filters: The 'filters' parameter from '/keywords'.
         :param es_client: The ElasticSearch client object used to
          configure the Search object
-        :param req_config: The
+        :param request_config: The
         {'translation': {'browserKey': 'es_key'}, 'facets': ['facet1', ...]}
          config
         :param _query: The query (string) to use for querying.
@@ -239,7 +239,7 @@ class ElasticTransformDump(object):
         executing the request
         """
         # Get the field mapping and facet configuration from the config
-        field_mapping = req_config['autocomplete-translation'][entity_type]
+        field_mapping = request_config.autocomplete_translation[entity_type]
         # Create the Search Object
         es_search = Search(
             using=es_client,
@@ -259,18 +259,6 @@ class ElasticTransformDump(object):
         es_search = es_search.query(
             Q('prefix', **{'{}'.format(search_field): _query}))
         return es_search
-
-    @staticmethod
-    def open_and_return_json(file_path):
-        """
-        Opens and returns the contents of the json file given in file_path
-        :param file_path: Path of a json file to be opened
-        :return: Returns an obj with the contents of the json file
-        """
-        with open(file_path, 'r') as file_:
-            loaded_file = json.load(file_)
-            file_.close()
-        return loaded_file
 
     @staticmethod
     def apply_paging(es_search, pagination):
@@ -358,20 +346,9 @@ class ElasticTransformDump(object):
         return page_field
 
     def transform_summary(self,
-                          request_config_file='request_config.json',
                           filters=None,
                           entity_type=None):
-        # Use this as the base to construct the paths
-        # stackoverflow.com/questions/247770/retrieving-python-module-path
-        # Use that to get the path of the config module
-        logger.info('Transforming /summary request')
-        config_folder = os.path.dirname(service_config.__file__)
-        # Create the path for the request_config_file
-        request_config_path = "{}/{}".format(
-            config_folder, request_config_file)
-        # Get the Json Objects from the mapping_config and the request_config
-        logger.debug('Getting the request_config file')
-        request_config = self.open_and_return_json(request_config_path)
+        request_config = Plugin.load().request_config()
         if not filters:
             filters = {}
         # Create a request to ElasticSearch
@@ -434,7 +411,6 @@ class ElasticTransformDump(object):
         return final_response.apiResponse.to_json()
 
     def transform_request(self,
-                          request_config_file='request_config.json',
                           filters=None,
                           pagination=None,
                           post_filter=False,
@@ -447,8 +423,6 @@ class ElasticTransformDump(object):
         from the output.
         :param filters: Filter parameter from the API to be used in the query.
         Defaults to None
-        :param request_config_file: Path containing the requests config to be
-        used for aggregates. Relative to the 'config' folder.
         :param pagination: Pagination to be used for the API
         :param post_filter: Flag to indicate whether to do a post_filter
         call instead of the regular query.
@@ -456,16 +430,11 @@ class ElasticTransformDump(object):
         the ElasticSearch index to search
         :return: Returns the transformed request
         """
-        config_folder = os.path.dirname(service_config.__file__)
-        request_config_path = f"{config_folder}/{request_config_file}"
-
-        # Get the Json Objects from the mapping_config and the request_config
-        # FIXME: cache the json (or, even better, convert to Python module
-        request_config = self.open_and_return_json(request_config_path)
+        request_config = Plugin.load().request_config()
         if not filters:
             filters = {}
 
-        translation = request_config['translation']
+        translation = request_config.translation
         inverse_translation = {v: k for k, v in translation.items()}
 
         for facet in filters.keys():
@@ -554,11 +523,9 @@ class ElasticTransformDump(object):
         return str(uuid.uuid5(manifest_namespace, git_commit + filter_string))
 
     def transform_manifest(self, format_: str, filters: JSON):
-        config_folder = os.path.dirname(service_config.__file__)
-        request_config_path = "{}/{}".format(config_folder, 'request_config.json')
-        request_config = self.open_and_return_json(request_config_path)
+        request_config = Plugin.load().request_config()
         source_filter = None
-        manifest_config = request_config['manifest']
+        manifest_config = request_config.manifest
         entity_type = 'files'
 
         if format_ == 'full':
@@ -622,7 +589,7 @@ class ElasticTransformDump(object):
 
         manifest = ManifestResponse(es_search,
                                     manifest_config,
-                                    request_config['translation'],
+                                    request_config.translation,
                                     format_,
                                     object_key=object_key)
 
@@ -636,8 +603,6 @@ class ElasticTransformDump(object):
 
     def transform_autocomplete_request(self,
                                        pagination,
-                                       request_config_file='request_config.json',
-                                       mapping_config_file='autocomplete_mapping_config.json',
                                        filters=None,
                                        _query='',
                                        search_field='fileId',
@@ -649,10 +614,6 @@ class ElasticTransformDump(object):
         Excluding pagination will exclude pagination from the output.
         :param filters: Filter parameter from the API to be used in
         the query. Defaults to None
-        :param request_config_file: Path containing the requests
-        config to be used for aggregates. Relative to the config' folder.
-        :param mapping_config_file: Path containing the mapping to the
-        API response fields. Relative to the 'config' folder.
         :param pagination: Pagination to be used for the API
         :param _query: String query to use on the search.
         :param search_field: Field to perform the search on.
@@ -660,22 +621,9 @@ class ElasticTransformDump(object):
         entry format to use.
         :return: Returns the transformed request
         """
-        # Use this as the base to construct the paths
-        # stackoverflow.com/questions/247770/retrieving-python-module-path
-        # Use that to get the path of the config module
-        config_folder = os.path.dirname(service_config.__file__)
-        logger.info('Transforming /keywords request')
-        # Create the path for the mapping config file
-        mapping_config_path = "{}/{}".format(
-            config_folder, mapping_config_file)
-        # Create the path for the config_path
-        request_config_path = "{}/{}".format(
-            config_folder, request_config_file)
-        # Get the Json Objects from the mapping_config and the request_config
-        logger.debug('Getting the request_config %s and mapping_config file %s',
-                     request_config_path, mapping_config_path)
-        mapping_config = self.open_and_return_json(mapping_config_path)
-        request_config = self.open_and_return_json(request_config_path)
+        plugin = Plugin.load()
+        mapping_config = plugin.autocomplete_mapping_config()
+        request_config = plugin.request_config()
         # Get the right autocomplete mapping configuration
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Entry is: %s', entry_format)
@@ -723,7 +671,6 @@ class ElasticTransformDump(object):
 
     def transform_cart_item_request(self,
                                     entity_type,
-                                    request_config_file='request_config.json',
                                     filters=None,
                                     search_after=None,
                                     size=1000):
@@ -731,20 +678,17 @@ class ElasticTransformDump(object):
         Create a query using the given filter used for cart item requests
 
         :param entity_type: type of entities to write to the cart
-        :param request_config_file: File containing path mappings for ES
         :param filters: Filters to apply to entities
         :param search_after: String indicating the start of the page to search
         :param size: Maximum size of each page returned
         :return: A page of ES hits matching the filters and the search_after pagination string
         """
-        config_folder = os.path.dirname(service_config.__file__)
-        request_config_path = "{}/{}".format(config_folder, request_config_file)
-        request_config = self.open_and_return_json(request_config_path)
+        request_config = Plugin.load().request_config()
         if not filters:
             filters = {}
 
-        cart_item_config = request_config['cart-item']
-        source_filter = cart_item_config['bundles'] + cart_item_config[entity_type]
+        cart_item_config = request_config.cart_item
+        source_filter = list(chain(cart_item_config['bundles'], cart_item_config[entity_type]))
 
         es_search = self.create_request(filters,
                                         self.es_client,
