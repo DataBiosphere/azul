@@ -14,7 +14,7 @@ def setUpModule():
 
 
 class TestRequestBuilder(WebServiceTestCase):
-    request_config = ServiceConfig(
+    service_config = ServiceConfig(
         translation={
             "entity_id": "entity_id",
             "entity_version": "entity_version",
@@ -285,7 +285,7 @@ class TestRequestBuilder(WebServiceTestCase):
         self._test_create_request(expected_output, sample_filter)
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
-        es_td = ElasticTransformDump(self.request_config)
+        es_td = ElasticTransformDump(self.service_config)
         es_search = es_td._create_request(sample_filter,
                                           es_td.es_client,
                                           post_filter=post_filter)

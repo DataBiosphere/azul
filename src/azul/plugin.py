@@ -59,7 +59,7 @@ class Plugin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def request_config(self) -> ServiceConfig:
+    def service_config(self) -> ServiceConfig:
         """
         Returns service configuration in a legacy format. This used to be defined in a JSON file called
         request_config.json, hence the name.
@@ -71,14 +71,14 @@ class Plugin(ABC):
         Returns service autocomplete mapping configuration in a legacy format. This used to be defined in a JSON file
         called `autocomplete_mapping_config.json`, hence the name.
         """
-        return self.request_config().autocomplete_mapping_config
+        return self.service_config().autocomplete_mapping_config
 
     def order_config(self) -> Sequence[str]:
         """
         Returns service order configuration in a legacy format. This used to be defined in a text file
         called `order_config`, hence the name.
         """
-        return self.request_config().order_config
+        return self.service_config().order_config
 
     @classmethod
     def load(cls) -> 'Plugin':
