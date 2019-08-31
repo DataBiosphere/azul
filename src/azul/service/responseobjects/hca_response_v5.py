@@ -1,4 +1,5 @@
 import abc
+from botocore.exceptions import ClientError
 from collections import ChainMap, OrderedDict, defaultdict
 from copy import deepcopy
 import csv
@@ -9,7 +10,9 @@ from itertools import chain
 import logging
 import os
 from tempfile import TemporaryDirectory, mkstemp
-from typing import IO, List, MutableMapping, Mapping, Any
+import re
+from typing import Any, List, Mapping, MutableMapping, IO, Optional
+import unicodedata
 from uuid import uuid4
 
 from bdbag import bdbag_api
@@ -33,7 +36,7 @@ from azul.service.responseobjects.storage_service import (AWS_S3_DEFAULT_MINIMUM
 from azul.service.responseobjects.utilities import json_pp
 from azul.strings import to_camel_case
 from azul.transformer import Document
-from azul.types import JSON
+from azul.types import JSON, MutableJSON, AnyMutableJSON
 
 logger = logging.getLogger(__name__)
 
@@ -179,18 +182,13 @@ class AutoCompleteRepresentation(JsonObject):
         default=None)
 
 
-class AbstractResponse(object):
+class AbstractResponse(object, metaclass=abc.ABCMeta):
     """
     Abstract class to be used for each /files API response.
     """
-    __metaclass__ = abc.ABCMeta
-    DSS_URL = os.getenv("DSS_URL",
-                        "https://dss.staging.data.humancellatlas.org/v1")
-
     @abc.abstractmethod
     def return_response(self):
-        raise NotImplementedError(
-            'users must define return_response to use this base class')
+        raise NotImplementedError()
 
 
 class ManifestResponse(AbstractResponse):
@@ -198,7 +196,7 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
-    def __init__(self, es_search, manifest_entries, mapping, format, object_key=None):
+    def __init__(self, es_search, manifest_entries, mapping, format_, object_key=None):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
@@ -211,13 +209,15 @@ class ManifestResponse(AbstractResponse):
         self.manifest_entries = OrderedDict(manifest_entries)
         self.mapping = mapping
         self.storage_service = StorageService()
-        self.format = format
+        self.format = format_
         self.object_key = object_key if object_key is not None else uuid4()
 
         sources = list(self.manifest_entries.keys())
         self.ordered_column_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
 
     column_joiner = ' || '
+
+    name_object_suffix = '.name'
 
     def _extract_fields(self, entities: List[JSON], column_mapping: JSON, row: MutableMapping[str, str]):
         stripped_joiner = self.column_joiner.strip()
@@ -308,11 +308,22 @@ class ManifestResponse(AbstractResponse):
                 if self.format == 'tsv':
                     self._write_tsv(text_buffer)
                 elif self.format == 'full':
-                    self._write_full(text_buffer)
+                    project_short_name = self._write_full(text_buffer)
+                    if project_short_name:
+                        self._create_name_object(object_key, project_short_name)
                 else:
                     raise NotImplementedError(f'Multipart upload not implemented for `{self.format}`')
 
         return object_key
+
+    def _create_name_object(self, manifest_object_key, project_short_name):
+        assert project_short_name
+        file_name_prefix = unicodedata.normalize('NFKD', project_short_name)
+        file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
+        filename = f'{file_name_prefix} {timestamp}.tsv'
+        self.storage_service.put(object_key=manifest_object_key + self.name_object_suffix,
+                                 data=filename.encode())
 
     def _push_content_single_part(self) -> str:
         """
@@ -339,7 +350,9 @@ class ManifestResponse(AbstractResponse):
                 return object_key
             else:
                 output = StringIO()
-                self._write_full(output)
+                project_short_name = self._write_full(output)
+                if project_short_name:
+                    self._create_name_object(object_key, project_short_name)
                 return self.storage_service.put(object_key=object_key,
                                                 data=output.getvalue().encode(),
                                                 content_type='text/tab-separated-values')
@@ -360,16 +373,20 @@ class ManifestResponse(AbstractResponse):
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
 
-    def _write_full(self, output: IO[str]) -> None:
+    def _write_full(self, output: IO[str]) -> Optional[str]:
         sources = list(self.manifest_entries['contents'].keys())
         writer = csv.DictWriter(output, sources, dialect='excel-tab')
         writer.writeheader()
+        project_short_names = set()
         for hit in self.es_search.scan():
             doc = hit['contents'].to_dict()
             for metadata in list(doc['metadata']):
+                if len(project_short_names) < 2:
+                    project_short_names.add(metadata['project.project_core.project_short_name'])
                 row = dict.fromkeys(sources)
                 row.update(metadata)
                 writer.writerow(row)
+        return project_short_names.pop() if len(project_short_names) == 1 else None
 
     def _create_bdbag_archive(self) -> str:
         with TemporaryDirectory() as temp_path:
@@ -425,6 +442,7 @@ class ManifestResponse(AbstractResponse):
                 qualifier = f"fastq_{file['read_index']}"
 
             # For each bundle containing the current file …
+            bundle: JSON
             for bundle in doc['bundles']:
                 bundle_fqid = bundle['uuid'], bundle['version'].replace('.', '_')
 
@@ -484,6 +502,7 @@ class ManifestResponse(AbstractResponse):
         for bundle in bundles.values():
             row = {}
             for qualifier, groups in bundle.items():
+                group: JSON
                 for i, group in enumerate(groups):
                     for entity, cells in group.items():
                         if entity == 'bundle':
@@ -542,9 +561,18 @@ class ManifestResponse(AbstractResponse):
         else:
             object_key = self._push_content()
             file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
+        if self.format == 'full':
+            name_object_key = object_key + self.name_object_suffix
+            try:
+                file_name = self.storage_service.get(name_object_key).decode()
+            except ClientError as e:
+                if e.response['Error']['Code'] == 'NoSuchKey':
+                    logger.warning("Name object '%s' doesn't exist. "
+                                   "Generating pre-signed URL without Content-Disposition header.", name_object_key)
+                else:
+                    raise e
         presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
         headers = {'Content-Type': 'application/json', 'Location': presigned_url}
-
         return Response(body='', headers=headers, status_code=302)
 
 
@@ -606,6 +634,7 @@ class BaseSummaryResponse(AbstractResponse):
         # Separate the raw_response into hits and aggregates
         self.hits = raw_response['hits']
         self.aggregates = raw_response['aggregations']
+        self.apiResponse = None
 
 
 class SummaryResponse(BaseSummaryResponse):
@@ -639,8 +668,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     Not to be confused with the 'keywords' endpoint
     """
 
-    def _merge(self, dict_1, dict_2, identifier):
-        merged_dict = defaultdict(list)
+    def _merge(self, dict_1: MutableJSON, dict_2: MutableJSON, identifier):
+        merged_dict: MutableMapping[str, List[AnyMutableJSON]] = defaultdict(list)
         dict_id = dict_1.pop(identifier)
         dict_2.pop(identifier)
         for key, value in chain(dict_1.items(), dict_2.items()):
@@ -652,7 +681,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 cleaned_list = list(filter(None, chain(value, merged_dict[key])))
                 if len(cleaned_list) > 0 and isinstance(cleaned_list[0], dict):
                     # Make each dict hashable so we can deduplicate the list
-                    merged_dict[key] = thaw(list(set(freeze(cleaned_list))))
+                    merged_dict[key] = list(map(thaw, set(map(freeze, cleaned_list))))
                 else:
                     merged_dict[key] = list(set(cleaned_list))
             elif value is None:
