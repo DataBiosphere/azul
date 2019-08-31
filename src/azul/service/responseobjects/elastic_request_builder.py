@@ -576,8 +576,7 @@ class ElasticTransformDump:
         entry format to use.
         :return: Returns the transformed request
         """
-        plugin = Plugin.load()
-        mapping_config = plugin.autocomplete_mapping_config()
+        mapping_config = self.service_config.autocomplete_mapping_config
         # Get the right autocomplete mapping configuration
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Entry is: %s', entry_format)
@@ -638,8 +637,8 @@ class ElasticTransformDump:
         if not filters:
             filters = {}
 
-        cart_item_config = self.service_config.cart_item
-        source_filter = list(chain(cart_item_config['bundles'], cart_item_config[entity_type]))
+        source_filter = list(chain(self.service_config.cart_item['bundles'],
+                                   self.service_config.cart_item[entity_type]))
 
         es_search = self._create_request(filters,
                                          self.es_client,

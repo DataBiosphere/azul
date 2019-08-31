@@ -8,12 +8,16 @@ from azul.types import JSON
 
 
 class ServiceConfig(NamedTuple):
+    # Except otherwise noted the attributes were previously held in a JSON file
+    # called `request_config.json`
     translation: Mapping[str, str]
     autocomplete_translation: Mapping[str, Mapping[str, str]]
     manifest: Mapping[str, Mapping[str, str]]
     cart_item: Mapping[str, Sequence[str]]
     facets: Sequence[str]
+    # This used to be defined in a JSON file called `autocomplete_mapping_config.json`
     autocomplete_mapping_config: Mapping[str, Mapping[str, Union[str, Sequence[str]]]]
+    # This used to be defined in a text file called `order_config`
     order_config: Sequence[str]
 
 
@@ -61,24 +65,9 @@ class Plugin(ABC):
     @abstractmethod
     def service_config(self) -> ServiceConfig:
         """
-        Returns service configuration in a legacy format. This used to be defined in a JSON file called
-        request_config.json, hence the name.
+        Returns service configuration in a legacy format.
         """
         raise NotImplementedError()
-
-    def autocomplete_mapping_config(self) -> JSON:
-        """
-        Returns service autocomplete mapping configuration in a legacy format. This used to be defined in a JSON file
-        called `autocomplete_mapping_config.json`, hence the name.
-        """
-        return self.service_config().autocomplete_mapping_config
-
-    def order_config(self) -> Sequence[str]:
-        """
-        Returns service order configuration in a legacy format. This used to be defined in a text file
-        called `order_config`, hence the name.
-        """
-        return self.service_config().order_config
 
     @classmethod
     def load(cls) -> 'Plugin':

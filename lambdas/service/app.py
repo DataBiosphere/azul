@@ -428,8 +428,7 @@ def get_order():
     """
     Return the ordering on facets
     """
-    order_list = Plugin.load().order_config()
-    return {'order': order_list}
+    return {'order': Plugin.load().service_config().order_config}
 
 
 @app.route('/manifest/files', methods=['GET'], cors=True)
