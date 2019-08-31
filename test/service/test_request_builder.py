@@ -3,7 +3,7 @@ import json
 import unittest
 
 from azul.logging import configure_test_logging
-from azul.plugin import Plugin, ServiceConfig
+from azul.plugin import ServiceConfig
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
 from service import WebServiceTestCase
 
@@ -285,12 +285,10 @@ class TestRequestBuilder(WebServiceTestCase):
         self._test_create_request(expected_output, sample_filter)
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
-        request_config = self.request_config
-        estd = EsTd()
-        es_search = estd._create_request(sample_filter,
-                                         estd.es_client,
-                                         request_config,
-                                         post_filter=post_filter)
+        es_td = EsTd(self.request_config)
+        es_search = es_td._create_request(sample_filter,
+                                          es_td.es_client,
+                                          post_filter=post_filter)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
@@ -319,12 +317,11 @@ class TestRequestBuilder(WebServiceTestCase):
             }
         }
         sample_filter = {}
-        request_config = Plugin.load().request_config()
         agg_field = 'facet1'
-        aggregation = EsTd()._create_aggregate(sample_filter,
-                                               facet_config={agg_field: f'{agg_field}.translation'},
-                                               agg=agg_field,
-                                               request_config=request_config)
+        es_td = EsTd()
+        aggregation = es_td._create_aggregate(sample_filter,
+                                              facet_config={agg_field: f'{agg_field}.translation'},
+                                              agg=agg_field)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
