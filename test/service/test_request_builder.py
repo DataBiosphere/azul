@@ -4,7 +4,7 @@ import unittest
 
 from azul.logging import configure_test_logging
 from azul.plugin import ServiceConfig
-from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 from service import WebServiceTestCase
 
 
@@ -285,7 +285,7 @@ class TestRequestBuilder(WebServiceTestCase):
         self._test_create_request(expected_output, sample_filter)
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
-        es_td = EsTd(self.request_config)
+        es_td = ElasticTransformDump(self.request_config)
         es_search = es_td._create_request(sample_filter,
                                           es_td.es_client,
                                           post_filter=post_filter)
@@ -318,7 +318,7 @@ class TestRequestBuilder(WebServiceTestCase):
         }
         sample_filter = {}
         agg_field = 'facet1'
-        es_td = EsTd()
+        es_td = ElasticTransformDump()
         aggregation = es_td._create_aggregate(sample_filter,
                                               facet_config={agg_field: f'{agg_field}.translation'},
                                               agg=agg_field)
