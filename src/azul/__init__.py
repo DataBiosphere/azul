@@ -242,6 +242,12 @@ class Config:
     def service_endpoint(self) -> str:
         return self.lambda_endpoint('service')
 
+    def drs_endpoint(self):
+        if self.drs_domain:
+            return "https://" + self.drs_domain
+        else:
+            return self.service_endpoint()
+
     def lambda_names(self) -> List[str]:
         return ['indexer', 'service']
 
