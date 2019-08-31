@@ -8,6 +8,7 @@ from azul.service.responseobjects.elastic_request_builder import ElasticTransfor
 from service import WebServiceTestCase
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 
@@ -43,7 +44,9 @@ class TestRequestBuilder(WebServiceTestCase):
 
     @staticmethod
     def compare_dicts(actual_output, expected_output):
-        """"Print the two outputs along with a diff of the two"""
+        """"
+        Print the two outputs along with a diff of the two
+        """
         print("Comparing the two dictionaries built.")
         print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
         for i, s in enumerate(difflib.ndiff(actual_output, expected_output)):
@@ -57,9 +60,7 @@ class TestRequestBuilder(WebServiceTestCase):
     def test_create_request(self):
         """
         Tests creation of a simple request
-        :return: True or False depending on the assertion
         """
-        # Load files required for this test
         expected_output = {
             "post_filter": {
                 "bool": {
@@ -82,73 +83,29 @@ class TestRequestBuilder(WebServiceTestCase):
                 "match_all": {}
             }
         }
-        # Create a simple filter to test on
         sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
         # Need to work on a couple cases:
         # - The empty case
         # - The 1 filter case
         # - The complex multiple filters case
-
-        # Create ElasticTransformDump instance
-        es_ts_instance = EsTd()
-        # Create a request object
-        es_search = EsTd.create_request(
-            sample_filter,
-            es_ts_instance.es_client,
-            self.request_config,
-            post_filter=True)
-        # Convert objects to be compared to strings
-        expected_output = json.dumps(
-            expected_output,
-            sort_keys=True)
-        actual_output = json.dumps(
-            es_search.to_dict(),
-            sort_keys=True)
-
-        self.compare_dicts(actual_output, expected_output)
-
-        # Testing first case with 1 filter
-        self.assertEqual(actual_output, expected_output)
+        self._test_create_request(expected_output, sample_filter)
 
     def test_create_request_empty(self):
         """
         Tests creation of an empty request. That is, no filter
-        :return: True or false depending on the test
         """
-        # Testing with default (that is, no) filter
-        # Load files required for this test
         expected_output = {
             "query": {
                 "bool": {}
             }
         }
-
-        # Create empty filter
-        # TODO: Need some form of handler for the query language
         sample_filter = {}
-        # Create ElasticTransformDump instance
-        es_ts_instance = EsTd()
-        # Create a request object
-        es_search = EsTd.create_request(
-            sample_filter,
-            es_ts_instance.es_client,
-            self.request_config)
-        # Convert objects to be compared to strings
-        expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
-
-        self.compare_dicts(actual_output, expected_output)
-
-        # Testing first case with 1 filter
-        self.assertEqual(actual_output, expected_output)
+        self._test_create_request(expected_output, sample_filter, post_filter=False)
 
     def test_create_request_complex(self):
         """
         Tests creation of a complex request.
-        :return: True or false depending on the test
         """
-        # Testing with default (that is, no) filter
-        # Load files required for this test
         expected_output = {
             "post_filter": {
                 "bool": {
@@ -182,8 +139,6 @@ class TestRequestBuilder(WebServiceTestCase):
                 "match_all": {}
             }
         }
-
-        # Create sample filter
         sample_filter = {
             "entity_id":
                 {
@@ -194,30 +149,12 @@ class TestRequestBuilder(WebServiceTestCase):
                     "is": ["1993-07-19T23:50:09"]
                 }
         }
-
-        # Create ElasticTransformDump instance
-        es_ts_instance = EsTd()
-        # Create a request object
-        es_search = EsTd.create_request(
-            sample_filter,
-            es_ts_instance.es_client,
-            self.request_config,
-            post_filter=True)
-        # Convert objects to be compared to strings
-        expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
-
-        self.compare_dicts(actual_output, expected_output)
-
-        # Testing first case with 1 filter
-        self.assertEqual(actual_output, expected_output)
+        self._test_create_request(expected_output, sample_filter)
 
     def test_create_request_missing_values(self):
         """
         Tests creation of a request for facets that do not have a value
         """
-        # Load files required for this test
-        request_config = self.request_config
         expected_output = {
             "post_filter": {
                 "bool": {
@@ -239,7 +176,9 @@ class TestRequestBuilder(WebServiceTestCase):
                                                     "must_not": [
                                                         {
                                                             "exists": {
-                                                                "field": "contents.protocols.library_construction_approach"
+                                                                "field": "contents."
+                                                                         "protocols."
+                                                                         "library_construction_approach"
                                                             }
                                                         }
                                                     ]
@@ -257,36 +196,14 @@ class TestRequestBuilder(WebServiceTestCase):
                 "match_all": {}
             }
         }
-
         # Create a filter for missing values
         sample_filter = {"libraryConstructionApproach": {"is": [None]}}
-
-        # Create ElasticTransformDump instance
-        es_ts_instance = EsTd()
-        # Create a request object
-        es_search = EsTd.create_request(
-            sample_filter,
-            es_ts_instance.es_client,
-            request_config,
-            post_filter=True)
-        # Convert objects to be compared to strings
-        expected_output = json.dumps(
-            expected_output,
-            sort_keys=True)
-        actual_output = json.dumps(
-            es_search.to_dict(),
-            sort_keys=True)
-
-        self.compare_dicts(actual_output, expected_output)
-
-        # Testing first case with 1 filter
-        self.assertEqual(actual_output, expected_output)
+        self._test_create_request(expected_output, sample_filter)
 
     def test_create_request_terms_and_missing_values(self):
         """
         Tests creation of a request for a combination of facets that do and do not have a value
         """
-        # Load files required for this test
         expected_output = {
             "post_filter": {
                 "bool": {
@@ -359,36 +276,27 @@ class TestRequestBuilder(WebServiceTestCase):
                 "match_all": {}
             }
         }
-
         # Create a filter for missing values
         sample_filter = {
             "laboratory": {"is": [None]},
             "institution": {"is": ["Hogwarts"]},
             "disease": {"is": [None, "Dragon Pox"]},
         }
+        self._test_create_request(expected_output, sample_filter)
 
-        # Create ElasticTransformDump instance
+    def _test_create_request(self, expected_output, sample_filter, post_filter=True):
+        request_config = self.request_config
         es_ts_instance = EsTd()
-        # Create a request object
-        es_search = EsTd.create_request(
-            sample_filter,
-            es_ts_instance.es_client,
-            self.request_config,
-            post_filter=True)
-        # Convert objects to be compared to strings
-        expected_output = json.dumps(
-            expected_output,
-            sort_keys=True)
-        actual_output = json.dumps(
-            es_search.to_dict(),
-            sort_keys=True)
-
+        es_search = EsTd.create_request(sample_filter,
+                                        es_ts_instance.es_client,
+                                        request_config,
+                                        post_filter=post_filter)
+        expected_output = json.dumps(expected_output, sort_keys=True)
+        actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
-
-        # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
-    def test_create_request_aggregate(self):
+    def test_create_aggregate(self):
         """
         Tests creation of an ES aggregate
         """
@@ -410,28 +318,16 @@ class TestRequestBuilder(WebServiceTestCase):
                 }
             }
         }
-
         sample_filter = {}
         request_config = Plugin.load().request_config()
-        # Create a request object
         agg_field = 'facet1'
-        aggregation = EsTd.create_aggregate(
-            sample_filter,
-            facet_config={agg_field: f'{agg_field}.translation'},
-            agg=agg_field,
-            request_config=request_config
-        )
-        # Convert objects to be compared to strings
-        expected_output = json.dumps(
-            expected_output,
-            sort_keys=True)
-        actual_output = json.dumps(
-            aggregation.to_dict(),
-            sort_keys=True)
-
+        aggregation = EsTd.create_aggregate(sample_filter,
+                                            facet_config={agg_field: f'{agg_field}.translation'},
+                                            agg=agg_field,
+                                            request_config=request_config)
+        expected_output = json.dumps(expected_output, sort_keys=True)
+        actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
-
-        # Testing first case with 1 filter
         self.assertEqual(actual_output, expected_output)
 
 
