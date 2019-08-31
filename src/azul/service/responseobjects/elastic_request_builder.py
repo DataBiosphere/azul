@@ -34,7 +34,7 @@ class IndexNotFoundError(Exception):
         super().__init__(f'{missing_index} is not a valid uuid.')
 
 
-class ElasticTransformDump(object):
+class ElasticTransformDump:
     """
     This class works as the highest abstraction, serving as the top layer
     between the webservice and ElasticSearch
