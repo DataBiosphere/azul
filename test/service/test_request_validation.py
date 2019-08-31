@@ -223,5 +223,5 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.json())
         actual_field_order = response.json()['order']
-        expected_field_order = Plugin.load().order_config()
+        expected_field_order = Plugin.load().service_config().order_config
         self.assertEqual(expected_field_order, actual_field_order)
