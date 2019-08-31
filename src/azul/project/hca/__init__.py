@@ -108,7 +108,7 @@ class Plugin(azul.plugin.Plugin):
             }
         ] if prefix else []
 
-    def request_config(self) -> azul.plugin.ServiceConfig:
+    def service_config(self) -> azul.plugin.ServiceConfig:
         return azul.plugin.ServiceConfig(
             translation={
                 "fileFormat": "contents.files.file_format",
