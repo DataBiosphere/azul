@@ -133,8 +133,10 @@ components:
       type: object
       required:
         - "portal_name"
+        - "portal_id"
       properties:
         "portal_id":
+          readOnly: true
           description: "The unique identifier of the portal"
           type: string
           format: uuid
@@ -165,10 +167,12 @@ components:
       allOf:
         - type: object
           required:
+            - "integration_id"
             - "integration_type"
             - "entity_type"
           properties:
             "integration_id":
+              readOnly: true
               description: "The unique identifier of the integration"
               type: string
               format: uuid
