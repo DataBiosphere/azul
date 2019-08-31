@@ -7,7 +7,7 @@ import uuid
 from azul import config
 from azul.es import ESClientFactory
 from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
-from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 from azul.service.step_function_helper import StepFunctionHelper
 from azul.service.user_service import UserService, UpdateError
 
@@ -325,12 +325,11 @@ class CartItemManager:
         Query ES for one page of items matching the entity type and filters and return
         the number of items written and the search_after for the next page
         """
-        hits, next_search_after = EsTd().transform_cart_item_request(
-            entity_type=entity_type,
-            filters=filters,
-            search_after=search_after,
-            size=batch_size
-        )
+        es_td = ElasticTransformDump()
+        hits, next_search_after = es_td.transform_cart_item_request(entity_type=entity_type,
+                                                                    filters=filters,
+                                                                    search_after=search_after,
+                                                                    size=batch_size)
         self.dynamo_accessor.batch_write(config.dynamo_cart_item_table_name,
                                          [self.transform_hit_to_cart_item(hit, entity_type, cart_id) for hit in hits])
         return len(hits), next_search_after

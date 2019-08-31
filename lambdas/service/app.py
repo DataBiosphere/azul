@@ -30,7 +30,7 @@ from azul.service.responseobjects.cart_export_service import CartExportService
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.collection_data_access import CollectionDataAccess
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
-                                                                  ElasticTransformDump as EsTd,
+                                                                  ElasticTransformDump,
                                                                   IndexNotFoundError)
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
@@ -587,7 +587,8 @@ def generate_manifest(event, context):
                       'tsv' (default) or 'bdbag'
     :return: The URL to the generated manifest
     """
-    response = EsTd().transform_manifest(event['format'], event['filters'])
+    es_td = ElasticTransformDump()
+    response = es_td.transform_manifest(event['format'], event['filters'])
     return {'Location': response.headers['Location']}
 
 
@@ -1219,7 +1220,8 @@ def add_all_results_to_cart(cart_id):
         filters = json.loads(filters or '{}')
     except json.JSONDecodeError:
         raise BadRequestError('Invalid filters given')
-    hits, search_after = EsTd().transform_cart_item_request(entity_type, filters=filters, size=1)
+    es_td = ElasticTransformDump()
+    hits, search_after = es_td.transform_cart_item_request(entity_type, filters=filters, size=1)
     item_count = hits.total
 
     token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, entity_type, filters, item_count, 10000)
@@ -1552,7 +1554,7 @@ def get_data_object(file_uuid):
         "fileId": {"is": [file_uuid]},
         **({"fileVersion": {"is": [file_version]}} if file_version else {})
     }
-    es_td = EsTd()
+    es_td = ElasticTransformDump()
     pagination = _get_pagination(app.current_request, entity_type='files')
     response = es_td.transform_request(filters=filters,
                                        pagination=pagination,
