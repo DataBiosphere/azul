@@ -286,11 +286,11 @@ class TestRequestBuilder(WebServiceTestCase):
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
         request_config = self.request_config
-        es_ts_instance = EsTd()
-        es_search = EsTd.create_request(sample_filter,
-                                        es_ts_instance.es_client,
-                                        request_config,
-                                        post_filter=post_filter)
+        estd = EsTd()
+        es_search = estd._create_request(sample_filter,
+                                         estd.es_client,
+                                         request_config,
+                                         post_filter=post_filter)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
@@ -321,10 +321,10 @@ class TestRequestBuilder(WebServiceTestCase):
         sample_filter = {}
         request_config = Plugin.load().request_config()
         agg_field = 'facet1'
-        aggregation = EsTd.create_aggregate(sample_filter,
-                                            facet_config={agg_field: f'{agg_field}.translation'},
-                                            agg=agg_field,
-                                            request_config=request_config)
+        aggregation = EsTd()._create_aggregate(sample_filter,
+                                               facet_config={agg_field: f'{agg_field}.translation'},
+                                               agg=agg_field,
+                                               request_config=request_config)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
