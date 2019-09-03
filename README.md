@@ -927,7 +927,11 @@ are ready to actually deploy.
 
    invocation that it echoes.
 
-6. In the case that you need to reindex run the manual `reindex` job on the 
+6. In Zenhub, move all tickets from the pipeline representing the source
+   deployment of the promotion to the pipeline representing the target
+   deployment.
+
+7. In the case that you need to reindex run the manual `reindex` job on the
    Gitlab pipeline representing the most recent build on the current branch.
 
 ## 6.2 Big red button
