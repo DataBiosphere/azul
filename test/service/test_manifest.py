@@ -1128,7 +1128,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                                 self.assertIsNone(content_dispositions)
                             else:
                                 expected_date = '1985-10-25 01.21' if name_object else ''
-                                expected_value = f'attachment;filename={expected_name}{expected_date}.tsv'
+                                expected_value = f'attachment;filename="{expected_name}{expected_date}.tsv"'
                                 actual_value = one(content_dispositions)
                                 self.assertEqual(actual_value, expected_value)
 
