@@ -775,7 +775,22 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    previous release tag for the TARGET branch. Then run:
 
    ```
-   git log LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --no-merges
+   git log LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --graph
+   ```
+   Edit this output so that the commits within merged branches are removed, along with
+   merge commits between deployments. For example
+   ```
+   *  C  <-- merge commit
+   |\
+   | *  B
+   |/
+   *  A
+   *  Merge branch 'develop' into integration
+   ```
+   should be changed to look like
+   ```
+   *  C  <-- merge commit
+   *  A
    ```
 
    For the version, use the full hash of the latest commit:
