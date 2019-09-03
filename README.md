@@ -374,9 +374,16 @@ make subscribe
 
 By default, the creation of that subscription is enabled (see
 `AZUL_SUBSCRIBE_TO_DSS` in `environment`). All shared deployments in
-`deployments/` inherit that default. If you don't want a personal deployment to
-subscribe to the configured DSS instance you should set `AZUL_SUBSCRIBE_TO_DSS`
-to 0. Subscription requires credentials to a service account that has the
+`deployments/` inherit that default.
+
+Personal deployments should not be permanently subscribed to any DSS instance
+because they are more likely to be broken, causing unnecessary load on the DSS
+instance when it retries sending notifications to a broken personal Azul
+deployment. To temporarily subscribe a personal deployment, set
+`AZUL_SUBSCRIBE_TO_DSS` to 1 and run `make subscribe`. When you are done, run
+`make unsubscribe` and set `AZUL_SUBSCRIBE_TO_DSS` back to 0.
+
+Subscription requires credentials to a service account that has the
 required privileges to create another service account under which the
 subscription is then made. This indirection exists to faciliate shared
 deployments without having to share any one person's Google credentials. The
