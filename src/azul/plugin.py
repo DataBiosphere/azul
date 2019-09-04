@@ -1,10 +1,24 @@
 from abc import ABC, abstractmethod
 import importlib
-from typing import Type
+from typing import Type, Sequence, NamedTuple, Mapping, Union
 
 from azul import config
 from azul.indexer import BaseIndexer
 from azul.types import JSON
+
+
+class ServiceConfig(NamedTuple):
+    # Except otherwise noted the attributes were previously held in a JSON file
+    # called `request_config.json`
+    translation: Mapping[str, str]
+    autocomplete_translation: Mapping[str, Mapping[str, str]]
+    manifest: Mapping[str, Mapping[str, str]]
+    cart_item: Mapping[str, Sequence[str]]
+    facets: Sequence[str]
+    # This used to be defined in a JSON file called `autocomplete_mapping_config.json`
+    autocomplete_mapping_config: Mapping[str, Mapping[str, Union[str, Sequence[str]]]]
+    # This used to be defined in a text file called `order_config`
+    order_config: Sequence[str]
 
 
 class Plugin(ABC):
@@ -37,6 +51,7 @@ class Plugin(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def dss_deletion_subscription_query(self, prefix: str) -> JSON:
         """
         The query to use for subscribing Azul to bundle deletions in the DSS.
@@ -44,6 +59,13 @@ class Plugin(ABC):
         :param prefix: a prefix that restricts the set of bundles to subscribe to. This parameter is used to subset
                        or partition the set of bundles in the DSS. The returned query should only match bundles whose
                        UUID starts with the given prefix.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def service_config(self) -> ServiceConfig:
+        """
+        Returns service configuration in a legacy format.
         """
         raise NotImplementedError()
 
