@@ -3,11 +3,12 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 import json
 import logging
+from more_itertools import one
 import os
 from io import BytesIO
 from tempfile import TemporaryDirectory
 from unittest import mock
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from zipfile import ZipFile
 
 from botocore.exceptions import ClientError
@@ -310,7 +311,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                 zip_fh.extractall(zip_dir)
                 self.assertTrue(all(['manifest' == first(name.split('/')) for name in zip_fh.namelist()]))
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
-            service = config.api_lambda_domain('service')
+            domain = config.drs_domain or config.api_lambda_domain('service')
             dss = config.dss_endpoint
             with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
                 reader = csv.DictReader(fh, delimiter='\t')
@@ -367,7 +368,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                         '__bam_0__file_version': '2018-10-10T031035.284782Z',
                         '__bam_0__file_sha256': 'e3cd90d79f520c0806dddb1ca0c5a11fbe26ac0c0be983ba5098d6769f78294c',
                         '__bam_0__file_content_type': 'application/gzip; dcp-type=data',
-                        '__bam_0__dos_url': f'dos://{service}/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z',
+                        '__bam_0__dos_url': f'dos://{domain}/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z',
                         '__bam_0__file_url': f'{dss}/files/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z&replica=gcp',
                         '__bam_1__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_rsem.bam',
                         '__bam_1__file_format': 'bam',
@@ -377,7 +378,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                         '__bam_1__file_version': '2018-10-10T031035.971561Z',
                         '__bam_1__file_sha256': 'f25053412d65429cefc0157c0d18ae12d4bf4c4113a6af7a1820b62246c075a4',
                         '__bam_1__file_content_type': 'application/gzip; dcp-type=data',
-                        '__bam_1__dos_url': f'dos://{service}/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z',
+                        '__bam_1__dos_url': f'dos://{domain}/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z',
                         '__bam_1__file_url': f'{dss}/files/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z&replica=gcp',
                         '__fastq_read1__file_name': 'R1.fastq.gz',
                         '__fastq_read1__file_format': 'fastq.gz',
@@ -388,7 +389,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                         '__fastq_read1__file_sha256': 'fe6d4fdfea2ff1df97500dcfe7085ac3abfb760026bff75a34c20fb97a4b2b29',
                         '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
                         '__fastq_read1__file_url': f'{dss}/files/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z&replica=gcp',
-                        '__fastq_read1__dos_url': f'dos://{service}/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z',
+                        '__fastq_read1__dos_url': f'dos://{domain}/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z',
                         '__fastq_read2__file_name': 'R2.fastq.gz',
                         '__fastq_read2__file_format': 'fastq.gz',
                         '__fastq_read2__read_index': 'read2',
@@ -398,7 +399,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                         '__fastq_read2__file_sha256': 'c305bee37b3c3735585e11306272b6ab085f04cd22ea8703957b4503488cfeba',
                         '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
                         '__fastq_read2__file_url': f'{dss}/files/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z&replica=gcp',
-                        '__fastq_read2__dos_url': f'dos://{service}/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z',
+                        '__fastq_read2__dos_url': f'dos://{domain}/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z',
                     }),
                     freeze({
                         'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344_698028Z',
@@ -464,7 +465,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                         '__fastq_read1__file_version': '2018-11-02T113344.698028Z',
                         '__fastq_read1__file_sha256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
                         '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
-                        '__fastq_read1__dos_url': f'dos://{service}/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z',
+                        '__fastq_read1__dos_url': f'dos://{domain}/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z',
                         '__fastq_read1__file_url': f'{dss}/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z&replica=gcp',
                         '__fastq_read2__file_name': 'SRR3562915_2.fastq.gz',
                         '__fastq_read2__file_format': 'fastq.gz',
@@ -474,7 +475,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                         '__fastq_read2__file_version': '2018-11-02T113344.450442Z',
                         '__fastq_read2__file_sha256': '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
                         '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
-                        '__fastq_read2__dos_url': f'dos://{service}/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z',
+                        '__fastq_read2__dos_url': f'dos://{domain}/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z',
                         '__fastq_read2__file_url': f'{dss}/files/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z&replica=gcp',
                     })
                 }, set(freeze(row) for row in reader))
@@ -594,13 +595,13 @@ class TestManifestEndpoints(WebServiceTestCase):
                  '2018-11-02T113344.698028Z',
                  '2018-09-14T133314.453337Z',
                  '2018-09-14T133314.453337Z'),
-                
+
                 ('cell_suspension.biomaterial_core.biomaterial_description',
                  'Single cell from human pancreas',
                  'Single cell from human pancreas',
                  '',
                  ''),
-                
+
                 ('cell_suspension.biomaterial_core.insdc_biomaterial', 'SRS1459312', 'SRS1459312', '', ''),
                 ('cell_suspension.biomaterial_core.ncbi_taxon_id', '9606', '9606', '10090||10091', '10090||10091'),
 
@@ -615,7 +616,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                  'NCBITaxon:9606',
                  'NCBITaxon:10090',
                  'NCBITaxon:10090'),
-                
+
                 ('cell_suspension.genus_species.ontology_label', 'Homo sapiens', 'Homo sapiens', '', ''),
                 ('cell_suspension.genus_species.text', 'Homo sapiens', 'Homo sapiens', 'Mus musculus', 'Mus musculus'),
                 ('cell_suspension.plate_based_sequencing.plate_id', '', '', '827', '827'),
@@ -665,13 +666,13 @@ class TestManifestEndpoints(WebServiceTestCase):
                  'https://doi.org/10.1101/108043',
                  '',
                  ''),
-                
+
                 ('dissociation_protocol.provenance.document_id',
                  '31e708d3-79df-49b8-a3df-b1d694963468',
                  '31e708d3-79df-49b8-a3df-b1d694963468',
                  '40056e47-131d-4c6e-a884-a927bfccf8ce',
                  '40056e47-131d-4c6e-a884-a927bfccf8ce'),
-                
+
                 ('donor_organism.biomaterial_core.biomaterial_name', '', '', 'Mouse_day8_rep12', 'Mouse_day8_rep12'),
                 ('donor_organism.biomaterial_core.ncbi_taxon_id', '9606', '9606', '10090', '10090'),
                 ('donor_organism.death.cause_of_death', 'stroke', 'stroke', '', ''),
@@ -1090,6 +1091,46 @@ class TestManifestEndpoints(WebServiceTestCase):
         url = self.base_url + '/manifest/files?format=invalid-type'
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.content)
+
+    @mock_sts
+    @mock_s3
+    def test_manifest_content_disposition_header(self):
+        from azul.service.responseobjects import hca_response_v5
+        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        with mock.patch.object(hca_response_v5, 'datetime') as mock_response:
+            mock_date = datetime(1985, 10, 25, 1, 21)
+            mock_response.now.return_value = mock_date
+            storage_service = StorageService()
+            storage_service.create_bucket()
+            for filters, expected_name, name_object in (
+                    ({'project': {'is': ['Single of human pancreas']}}, 'Single of human pancreas ', True),
+                    # When requesting a full metadata TSV is with a filter for two or more projects, the
+                    # Content-Disposition header shouldn't be set to the contents .name file.
+                    ({'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                     'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721', False),
+                    # If the filter is doesn't specify any parameter for projectId, the Content-Disposition
+                    # header shouldn't be set to the contents .name file.
+                    ({}, 'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3', False)):
+                for single_part in True, False:
+                    with self.subTest(filters=filters, single_part=single_part):
+                        with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
+                            assert config.disable_multipart_manifests is single_part
+                            params = {
+                                'filters': json.dumps(filters),
+                                'format': 'full'
+                            }
+                            filters = AbstractService.parse_filters(params.get('filters'))
+                            estd = ElasticTransformDump()
+                            url = estd.transform_manifest(params.get('format', 'full'), filters).headers['Location']
+                            query = urlparse(url).query
+                            content_dispositions = parse_qs(query).get('response-content-disposition')
+                            if single_part and not name_object:
+                                self.assertIsNone(content_dispositions)
+                            else:
+                                expected_date = '1985-10-25 01.21' if name_object else ''
+                                expected_value = f'attachment;filename={expected_name}{expected_date}.tsv'
+                                actual_value = one(content_dispositions)
+                                self.assertEqual(actual_value, expected_value)
 
 
 class TestManifestResponse(AzulTestCase):
