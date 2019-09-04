@@ -49,15 +49,12 @@ trufflehog: check_trufflehog
 check_clean:
 	git diff --exit-code  && git diff --cached --exit-code
 
-check_pushed:
-	 test "$$(git rev-parse @{U})" == "$$(git rev-parse @{0})"
-
-check_autosquash: check_clean check_pushed
+check_autosquash:
 	set -x \
 	; _azul_target_branch="$${TRAVIS_BRANCH:=develop}" \
 	; _azul_merge_base=$$(git merge-base HEAD "$${_azul_target_branch}") \
 	; if GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"; then \
-	    git reset --hard @{u} \
+	    git reset --hard ORIG_HEAD \
 	    ; true \
 	; else \
 	    git rebase --abort \
