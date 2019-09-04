@@ -52,7 +52,13 @@ check_clean:
 autosquash:
 	set -x ; \
 	_azul_target_branch="$${TRAVIS_BRANCH:=develop}" ; \
-	_azul_merge_base=$$(git merge-base HEAD "$${_azul_target_branch}"); \
-	GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"
+	_azul_merge_base=$$(git merge-base HEAD "$${_azul_target_branch}") ; \
+	if GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"; then \
+	    git reset --hard @{1} ; \
+	    false ; \
+	else \
+	    git reset --hard @{1} ; \
+	    true \
+	fi
 
 .PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test trufflehog check_trufflehog delete
