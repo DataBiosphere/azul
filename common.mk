@@ -12,9 +12,9 @@ ifneq ($(shell python -c "import sys; print(sys.version_info[0:2] == (3,6))"),Tr
 $(error Looks like Python 3.6 is not installed or active in the current virtualenv)
 endif
 
-ifneq ($(shell python -c "exec('try: import chalice\nexcept: print(False)\nelse: print(True)')"),True)
-$(error Looks like some or all requirements is missing. Please run 'pip install -r requirements.dev.txt')
-endif
+# ifneq ($(shell python -c "exec('try: import chalice\nexcept: print(False)\nelse: print(True)')"),True)
+# $(error Looks like some or all requirements is missing. Please run 'pip install -r requirements.dev.txt')
+# endif
 
 # ifneq ($(shell python -c "from chalice import chalice_version as v; \
 #                           from pkg_resources import parse_version as p; \
