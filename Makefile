@@ -50,6 +50,7 @@ check_clean:
 	git diff --exit-code  && git diff --cached --exit-code
 
 autosquash:
+	set -x ; \
 	_azul_target_branch="$${TRAVIS_BRANCH:=develop}" ; \
 	_azul_merge_base=$$(git merge-base HEAD "$${_azul_target_branch}") ; \
 	GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"
