@@ -29,5 +29,5 @@ script:
   - make autosquash
 
 after_success:
-  # - coveralls
-  # - codecov
+  - echo coveralls
+  - echo codecov
