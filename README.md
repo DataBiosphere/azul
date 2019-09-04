@@ -374,9 +374,16 @@ make subscribe
 
 By default, the creation of that subscription is enabled (see
 `AZUL_SUBSCRIBE_TO_DSS` in `environment`). All shared deployments in
-`deployments/` inherit that default. If you don't want a personal deployment to
-subscribe to the configured DSS instance you should set `AZUL_SUBSCRIBE_TO_DSS`
-to 0. Subscription requires credentials to a service account that has the
+`deployments/` inherit that default.
+
+Personal deployments should not be permanently subscribed to any DSS instance
+because they are more likely to be broken, causing unnecessary load on the DSS
+instance when it retries sending notifications to a broken personal Azul
+deployment. To temporarily subscribe a personal deployment, set
+`AZUL_SUBSCRIBE_TO_DSS` to 1 and run `make subscribe`. When you are done, run
+`make unsubscribe` and set `AZUL_SUBSCRIBE_TO_DSS` back to 0.
+
+Subscription requires credentials to a service account that has the
 required privileges to create another service account under which the
 subscription is then made. This indirection exists to faciliate shared
 deployments without having to share any one person's Google credentials. The
@@ -728,11 +735,18 @@ least once already._
 
    to ensure that your connection is working.
 
-If you have been given write access the `prod` deployment, you need to repeat
-these steps for our production Gitlab instance. For the name of the `git` remote
-use `gitlab.prod` instead of `gitlab.dev` in step 4 above. The hostname of that
-instance is the same as that of the Gitlab instance for the lesser deployments,
-without `.dev`.
+If you have been given write access to our production Gitlab instance, you need
+to repeat these steps for that instance as well. For the name of the `git`
+remote use `gitlab.prod` instead of `gitlab.dev` in step 4 above. The hostname
+of that instance is the same as that of the Gitlab instance for the lesser
+deployments, without `.dev`. 
+
+Note that access to the production instance of Gitlab does not necessarily
+imply access to production AWS account which that Gitlab instance deploys to.
+So while you may be able to run certain `make` targets like `make reindex` or
+`make terraform` against the development AWS account (with `dev`, `integration`
+or `staging` selected), you may not be able to do the same for the production
+AWS account (with `prod` selected).
 
 
 ### 6.1.2 Prepare for promotion
@@ -913,7 +927,11 @@ are ready to actually deploy.
 
    invocation that it echoes.
 
-6. In the case that you need to reindex run the manual `reindex` job on the 
+6. In Zenhub, move all tickets from the pipeline representing the source
+   deployment of the promotion to the pipeline representing the target
+   deployment.
+
+7. In the case that you need to reindex run the manual `reindex` job on the
    Gitlab pipeline representing the most recent build on the current branch.
 
 ## 6.2 Big red button
