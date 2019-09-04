@@ -5,7 +5,7 @@ from typing import Callable, Mapping, Any
 import uuid
 
 from azul.service import AbstractService
-from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump as EsTd
+from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 
 FileUrlFunc = Callable[[str, Mapping[str, Any]], str]
 
@@ -23,7 +23,7 @@ class InvalidUUIDError(Exception):
 class RepositoryService(AbstractService):
 
     def __init__(self):
-        self.es_td = EsTd()
+        self.es_td = ElasticTransformDump()
 
     def _get_data(self, entity_type, pagination, filters, file_url_func):
         # FIXME: which of these args are really optional? (looks like none of them)

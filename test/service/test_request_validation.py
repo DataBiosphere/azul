@@ -9,7 +9,7 @@ import requests
 
 import azul.changelog
 from azul.logging import configure_test_logging
-from azul.service import service_config
+from azul.plugin import Plugin
 from service import WebServiceTestCase
 
 
@@ -27,7 +27,6 @@ class FacetNameValidationTest(WebServiceTestCase):
                             "Message": "BadRequestError: Unable to filter by undefined facet bad-facet."}
     sort_facet_message = {"Code": "BadRequestError",
                           "Message": "BadRequestError: Unable to sort by undefined facet bad-facet."}
-    service_config_dir = os.path.dirname(service_config.__file__)
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
@@ -223,9 +222,6 @@ class FacetNameValidationTest(WebServiceTestCase):
         url = self.base_url + '/repository/files/order'
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.json())
-
-        order_config_filepath = '{}/order_config'.format(self.service_config_dir)
-        with open(order_config_filepath, 'r') as order_settings_file:
-            actual_field_order = [entity_field for entity_field in response.json()['order']]
-            expected_field_order = [entity_field.strip() for entity_field in order_settings_file.readlines()]
-            self.assertEqual(expected_field_order, actual_field_order, "Field order is not configured correctly")
+        actual_field_order = response.json()['order']
+        expected_field_order = Plugin.load().service_config().order_config
+        self.assertEqual(expected_field_order, actual_field_order)

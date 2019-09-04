@@ -4,7 +4,6 @@ import hashlib
 import json
 import logging.config
 import math
-import os
 import re
 import time
 from typing import Optional
@@ -22,8 +21,8 @@ from azul import config, drs, RequirementError
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul.logging import configure_app_logging
+from azul.plugin import Plugin
 from azul.security.authenticator import AuthenticationError, Authenticator
-from azul.service import service_config
 from azul.service.manifest import ManifestService
 from azul.service.repository import EntityNotFoundError, InvalidUUIDError, RepositoryService
 from azul.service.responseobjects.cart_export_job_manager import CartExportJobManager, InvalidExecutionTokenError
@@ -31,7 +30,7 @@ from azul.service.responseobjects.cart_export_service import CartExportService
 from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
 from azul.service.responseobjects.collection_data_access import CollectionDataAccess
 from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
-                                                                  ElasticTransformDump as EsTd,
+                                                                  ElasticTransformDump,
                                                                   IndexNotFoundError)
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
@@ -427,16 +426,9 @@ def get_search():
 @app.route('/repository/files/order', methods=['GET'], cors=True)
 def get_order():
     """
-    Get the order of the facets from the order_config file
-    :return: A dictionary with a list containing the order of the facets
+    Return the ordering on facets
     """
-    # Setup logging
-    logger = logging.getLogger("dashboardService.webservice.get_order")
-    # Open the order_config file and get the order list
-    logger.info("Getting t")
-    with open('{}/order_config'.format(os.path.dirname(service_config.__file__))) as order:
-        order_list = [line.rstrip('\n') for line in order]
-    return {'order': order_list}
+    return {'order': Plugin.load().service_config().order_config}
 
 
 @app.route('/manifest/files', methods=['GET'], cors=True)
@@ -594,7 +586,8 @@ def generate_manifest(event, context):
                       'tsv' (default) or 'bdbag'
     :return: The URL to the generated manifest
     """
-    response = EsTd().transform_manifest(event['format'], event['filters'])
+    es_td = ElasticTransformDump()
+    response = es_td.transform_manifest(event['format'], event['filters'])
     return {'Location': response.headers['Location']}
 
 
@@ -1226,7 +1219,8 @@ def add_all_results_to_cart(cart_id):
         filters = json.loads(filters or '{}')
     except json.JSONDecodeError:
         raise BadRequestError('Invalid filters given')
-    hits, search_after = EsTd().transform_cart_item_request(entity_type, filters=filters, size=1)
+    es_td = ElasticTransformDump()
+    hits, search_after = es_td.transform_cart_item_request(entity_type, filters=filters, size=1)
     item_count = hits.total
 
     token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, entity_type, filters, item_count, 10000)
@@ -1559,7 +1553,7 @@ def get_data_object(file_uuid):
         "fileId": {"is": [file_uuid]},
         **({"fileVersion": {"is": [file_version]}} if file_version else {})
     }
-    es_td = EsTd()
+    es_td = ElasticTransformDump()
     pagination = _get_pagination(app.current_request, entity_type='files')
     response = es_td.transform_request(filters=filters,
                                        pagination=pagination,
