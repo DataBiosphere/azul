@@ -24,7 +24,9 @@ script:
   # Setting BOTO_CONFIG seems to override that.
   - export BOTO_CONFIG=/dev/null
   - make trufflehog
-  - make test
+  # - make test
+  - make check_clean
+  - make check_squashable
 
 after_success:
   - coveralls

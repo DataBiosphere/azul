@@ -46,4 +46,12 @@ check_trufflehog:
 trufflehog: check_trufflehog
 	trufflehog --regex --rules .trufflehog.json --entropy=False file:///$$azul_home
 
+check_clean:
+	git diff --exit-code  && git diff --cached --exit-code
+
+autosquash:
+	_azul_target_branch="$${TRAVIS_BRANCH:=develop}" ; \
+	_azul_merge_base=$$(git merge-base HEAD "$${_azul_target_branch}") ; \
+	GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"
+
 .PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test trufflehog check_trufflehog delete
