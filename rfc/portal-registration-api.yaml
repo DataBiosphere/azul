@@ -245,6 +245,18 @@ components:
             RFC 6570 and the first occurrence of the `manifest_url` variable
             will be replaced with the URL to the manifest listing the entities
             selected by the user.
+    "PortalWithIntegrations":
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Portal"
+        - type: object
+          required:
+            - "integrations"
+          properties:
+            "integrations":
+              type: "array"
+              items:
+                $ref: "#/components/schemas/Integration"
 
 paths:
   /portal:
@@ -478,6 +490,6 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Integration"
+                  $ref: "#/components/schemas/PortalWithIntegrations"
         "400":
           description: Invalid request
