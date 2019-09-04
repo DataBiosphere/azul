@@ -775,7 +775,22 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    previous release tag for the TARGET branch. Then run:
 
    ```
-   git log LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --no-merges
+   git log LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --graph
+   ```
+   Edit this output so that the commits within merged branches are removed, along with
+   merge commits between deployments. For example
+   ```
+   *  C  <-- merge commit
+   |\
+   | *  B
+   |/
+   *  A
+   *  Merge branch 'develop' into integration
+   ```
+   should be changed to look like
+   ```
+   *  C  <-- merge commit
+   *  A
    ```
 
    For the version, use the full hash of the latest commit:
@@ -900,11 +915,6 @@ are ready to actually deploy.
 
 6. In the case that you need to reindex run the manual `reindex` job on the 
    Gitlab pipeline representing the most recent build on the current branch.
-
-7. Once reindexing is complete announce this in the #data-wranging Slack
-   channel. Reindexing is complete when the health endpoint has shown that
-   the number of `unindexed_bundles` and `unindexed_documents` is zero and
-   has remained zero for at least five minutes.
 
 ## 6.2 Big red button
 
