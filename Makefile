@@ -49,16 +49,20 @@ trufflehog: check_trufflehog
 check_clean:
 	git diff --exit-code  && git diff --cached --exit-code
 
-check_autosquash:
+check_pushed:
+	 test "$$(git rev-parse @{U})" == "$$(git rev-parse @{0})"
+
+check_autosquash: check_clean check_pushed
 	set -x \
 	; _azul_target_branch="$${TRAVIS_BRANCH:=develop}" \
 	; _azul_merge_base=$$(git merge-base HEAD "$${_azul_target_branch}") \
 	; if GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"; then \
-	    git reset --hard @{1} \
+	    git reset --hard @{u} \
 	    ; true \
 	; else \
 	    git rebase --abort \
 	    ; false \
 	; fi
 
-.PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test trufflehog check_trufflehog delete
+.PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test \
+        trufflehog check_trufflehog delete check_clean check_pushed check_autosquash
