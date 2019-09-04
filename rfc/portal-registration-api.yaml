@@ -335,6 +335,8 @@ paths:
       summary: "Unregister a portal"
       description: ""
       responses:
+        "204":
+          description: "Portal deleted"
         "400":
           description: "Invalid request"
         "404":
@@ -437,6 +439,18 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Integration"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Portal or integration not found"
+    delete:
+      tags:
+        - "Integrations"
+      summary: "Delete an integration with a portal"
+      description: ""
+      responses:
+        "204":
+          description: "Integration deleted"
         "400":
           description: "Invalid request"
         "404":
