@@ -49,16 +49,16 @@ trufflehog: check_trufflehog
 check_clean:
 	git diff --exit-code  && git diff --cached --exit-code
 
-autosquash:
+check_autosquash:
 	set -x ; \
 	_azul_target_branch="$${TRAVIS_BRANCH:=develop}" ; \
 	_azul_merge_base=$$(git merge-base HEAD "$${_azul_target_branch}") ; \
 	if GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"; then \
 	    git reset --hard @{1} ; \
-	    false ; \
+	    true ; \
 	else \
-	    git reset --hard @{1} ; \
-	    true \
+	    git rebase --abort ; \
+	    false \
 	fi
 
 .PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test trufflehog check_trufflehog delete
