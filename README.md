@@ -1127,6 +1127,14 @@ access can push code to intentionally or accidentally expose those variables,
 push access is tied to shell access which is what one would normally need to
 modify those files.
 
+## 8.8. Cleaning up hung test containers
+
+When cancelling the `make test` job on Gitlab, test containers will be left
+running. To clean those up, ssh into the instance as described in
+[gitlab.tf.json.template.py] and run ``docker exec gitlab-dind docker ps -qa |
+xargs docker exec gitlab-dind docker kill`` and again but with ``rm`` instead
+of ``kill``.
+
 # 9. Kibana
 
 Kibana is a web UI for interactively querying and managing an Elasticsearch
