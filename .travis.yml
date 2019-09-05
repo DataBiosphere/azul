@@ -25,6 +25,8 @@ script:
   - export BOTO_CONFIG=/dev/null
   - make trufflehog
   - make test
+  - make check_clean
+  - make check_autosquash
 
 after_success:
   - coveralls

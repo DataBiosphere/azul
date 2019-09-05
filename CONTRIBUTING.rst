@@ -512,8 +512,9 @@ Pull Requests
 
 * … we don't eagerly squash them. Changes that address the outcome of a review
   should appear as separate commit. We prefix the title of those commits with
-  ``SQ:`` an follow that with the title of an earlier commit that the current
-  commit should be squashed with.
+  ``fixup! `` and follow that with the title of an earlier commit that the
+  current commit should be squashed with. A convenient way to create those
+  commits is by using the ``--fixup`` option to ``git commit``.
   
 * The author of a PR may request reviews from anyone at any time. Once the
   author considers a PR ready to land (be merged into the base branch), the
@@ -525,10 +526,13 @@ Pull Requests
   assignee may push to the PR branch. If a PR is assigned to no one, only the
   author may push to the PR branch.
 
-* We may amend commits on PR branches, but only between primary reviews. We 
+* We may amend commits on PR branches, but only between primary reviews. We
   don't amend a commit that's already been reviewed. Instead we create a new
-  ``SQ: …`` commit for addressing the reviewers comments. Before asking for
-  another review we may amend that commit.
+  ``fixup!`` commit for addressing the reviewers comments.
+  
+  Before asking for another review we may amend that commit. In fact, amending
+  a `!fixup` commit between reviews is preferred in order to avoid continuous
+  chains of redundant fixup commits referring to the same main commit.
   
   Considering that we also require frequent rebasing, this rule makes for a
   more transparent review process. The reviewers can ignore force pushes
@@ -539,19 +543,19 @@ Pull Requests
   
 * At times it may be necessary to temporarily add a commit to a PR branch e.g.,
   to facilitate testing. These commits should be removed prior to landing the
-  PR and their title is prefixed with ``DELETE ME:``.
+  PR and their title is prefixed with ``drop! ``.
   
 * The reviewer may ask the author to consolidate long PR branches in order to
   simplify conflict resolution during rebasing. Consolidation means squashing
-  ``SQ:`` commits so they disappear from the history. ``DELETE ME:`` commits
+  ``fixup!`` commits so they disappear from the history. ``drop!`` commits
   may be retained during consolidation.
 
 * Most PRs land squashed down into a single commit. A PR with more than one
   significant commit is referred to as a *multi-commit PR*. Prior to landing
   such a PR, the primary reviewer may decide to consolidate its branch.
   Alternatively, the primary reviewer may ask the PR author to do so in a final
-  rejection of the PR. The final consolidation eliminates both ``SQ:`` and
-  ``DELETE ME:`` commits.
+  rejection of the PR. The final consolidation eliminates both ``fixup!`` and
+  ``drop!`` commits.
 
 * We usually don't request a review before all status checks are green. In
   certain cases a preliminary review of a work in progress is permissable but
