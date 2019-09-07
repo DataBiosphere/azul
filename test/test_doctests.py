@@ -6,6 +6,7 @@ import azul.azulclient
 import azul.collections
 import azul.json_freeze
 from azul.modules import load_module
+import azul.openapi
 import azul.service.responseobjects.elastic_request_builder
 import azul.strings
 import azul.threads
@@ -19,6 +20,7 @@ def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(azul))
     tests.addTests(doctest.DocTestSuite(azul.collections))
     tests.addTests(doctest.DocTestSuite(azul.json_freeze))
+    tests.addTests(doctest.DocTestSuite(azul.openapi))
     tests.addTests(doctest.DocTestSuite(azul.strings))
     tests.addTests(doctest.DocTestSuite(azul.threads))
     tests.addTests(doctest.DocTestSuite(azul.time))
