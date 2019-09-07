@@ -56,7 +56,7 @@ class StorageService:
             Params={
                 'Bucket': self.bucket_name,
                 'Key': key,
-                **({} if file_name is None else {'ResponseContentDisposition': 'attachment;filename=' + file_name})
+                **({} if file_name is None else {'ResponseContentDisposition': f'attachment;filename="{file_name}"'})
             })
 
     def create_bucket(self, bucket_name: str = None):
