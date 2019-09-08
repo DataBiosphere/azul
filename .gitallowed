@@ -5,14 +5,6 @@
 # file actually trigger Trufflehog. If they do, use [] around one of the
 # characters in the ignored pattern in this file.
 
-# Expired STS credentials. It is included in an iPython notebook that was
-# since deleted but is still present in the history.
-REDACTED
-
-# This pair of credentials was issued to a contractor. It was invalidated.
-AWS_SECRET_ACCESS_KEY=REDACTED
-AWS_ACCESS_KEY_ID=REDACTED
-
 # This overrides one of the default patterns used by the AWS provider for
 # `git secrets. We don't mind exposing account IDs.
 AWS_ACCOUNT_ID=861229788715
