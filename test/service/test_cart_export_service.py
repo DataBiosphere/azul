@@ -14,9 +14,9 @@ class TestCartExportService(TestCase):
     def test_get_content_with_no_resume_token_returning_results_without_next_resume_token(self, dynamodb_client):
         mock_entity_1 = dict(EntityId='entity1', EntityType='foo', EntityVersion='bar')
         mock_entity_2 = dict(EntityId='entity2', EntityType='foo', EntityVersion='bar')
-        expected_content_item_1 = CollectionDataAccess.make_content_item(mock_entity_1['EntityId'],
-                                                                         mock_entity_1['EntityVersion'],
-                                                                         'file')
+        expected_content_item_1 = dict(type='file',
+                                       uuid=mock_entity_1['EntityId'],
+                                       version=mock_entity_1['EntityVersion'])
 
         def mock_get_paginable_cart_items(**kwargs):
             self.assertIsNone(kwargs['resume_token'])
@@ -53,9 +53,9 @@ class TestCartExportService(TestCase):
         mock_resume_token = 'abc'
         mock_entity_1 = dict(EntityId='entity1', EntityType='foo', EntityVersion='bar')
         mock_entity_2 = dict(EntityId='entity2', EntityType='foo', EntityVersion='bar')
-        expected_content_item_1 = CollectionDataAccess.make_content_item(mock_entity_1['EntityId'],
-                                                                         mock_entity_1['EntityVersion'],
-                                                                         'file')
+        expected_content_item_1 = dict(type='file',
+                                       uuid=mock_entity_1['EntityId'],
+                                       version=mock_entity_1['EntityVersion'])
 
         def mock_get_paginable_cart_items(**kwargs):
             self.assertIsNotNone(kwargs['resume_token'])
@@ -115,11 +115,9 @@ class TestCartExportService(TestCase):
         expected_get_content_result = dict(resume_token='rt1',
                                            items=[1, 2, 3, 4])  # NOTE: This is just for the test.
         service = CartExportService()
-        with self.assertRaises(ExpiredAccessTokenError), \
-             patch.object(service, 'get_content', side_effect=[expected_get_content_result]), \
-             ResponsesHelper() as helper:
-            helper.add(responses.Response(responses.PATCH,
-                                          CollectionDataAccess.endpoint_url('collections', expected_collection['uuid']),
-                                          status=401,
-                                          json=dict(code='abc')))
-            service.export('export1', 'user1', 'cart1', 'at1', expected_collection['uuid'], 'ver1', 'rt0')
+        with self.assertRaises(ExpiredAccessTokenError):
+            with patch.object(service, 'get_content', side_effect=[expected_get_content_result]):
+                with ResponsesHelper() as helper:
+                    url = CollectionDataAccess.endpoint_url('collections', expected_collection['uuid'])
+                    helper.add(responses.Response(responses.PATCH, url, status=401, json=dict(code='abc')))
+                    service.export('export1', 'user1', 'cart1', 'at1', expected_collection['uuid'], 'ver1', 'rt0')

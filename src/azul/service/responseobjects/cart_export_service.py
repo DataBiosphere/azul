@@ -57,7 +57,7 @@ class CartExportService:
         # a cart does not contain bundles and collections, the type of each
         # content item will be hard-coded to "file".
         content_items = [
-            CollectionDataAccess.make_content_item(cart_item['EntityId'], cart_item['EntityVersion'], 'file')
+            dict(type='file', uuid=cart_item['EntityId'], version=cart_item['EntityVersion'])
             for cart_item in page['items']
         ]
 
