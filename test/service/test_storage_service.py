@@ -71,7 +71,7 @@ class StorageServiceTest(AzulTestCase):
                         # Unfortunately, moto does not support emulating S3's mechanism of specifying response headers
                         # via request parameters (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html,
                         # section Request Parameters).
-                        self.assertEqual(response.headers['Content-Disposition'], f'attachment;filename={file_name}')
+                        self.assertEqual(response.headers['Content-Disposition'], f'attachment;filename="{file_name}"')
                 self.assertEqual(sample_content, response.text)
 
     @mock_s3
