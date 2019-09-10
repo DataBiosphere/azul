@@ -158,7 +158,6 @@ class ElasticTransformDump:
 
     def _create_request(self,
                         filters,
-                        es_client,
                         post_filter: bool = False,
                         source_filter: List[str] = None,
                         enable_aggregation: bool = True,
@@ -168,8 +167,6 @@ class ElasticTransformDump:
         the filters and facet_config passed into the function
         :param filters: The 'filters' parameter.
         Assumes to be translated into es_key terms
-        :param es_client: The ElasticSearch client object used
-         to configure the Search object
         :param post_filter: Flag for doing either post_filter or regular
         querying (i.e. faceting or not)
         :param List source_filter: A list of "foo.bar" field paths (see
@@ -183,7 +180,7 @@ class ElasticTransformDump:
         """
         field_mapping = self.service_config.translation
         facet_config = {key: field_mapping[key] for key in self.service_config.facets}
-        es_search = Search(using=es_client, index=config.es_index_name(entity_type, aggregate=True))
+        es_search = Search(using=self.es_client, index=config.es_index_name(entity_type, aggregate=True))
         filters = self._translate_filters(filters, field_mapping)
 
         es_query = self._create_query(filters)
@@ -324,10 +321,7 @@ class ElasticTransformDump:
             filters = {}
         # Create a request to ElasticSearch
         logger.info('Creating request to ElasticSearch')
-        es_search = self._create_request(
-            filters, self.es_client,
-            post_filter=False,
-            entity_type=entity_type)
+        es_search = self._create_request(filters, post_filter=False, entity_type=entity_type)
 
         # Add a total_size aggregate to the ElasticSearch request
         es_search.aggs.metric(
@@ -416,10 +410,10 @@ class ElasticTransformDump:
 
         if post_filter is False:
             # No faceting (i.e. do the faceting on the filtered query)
-            es_search = self._create_request(filters, self.es_client, post_filter=False)
+            es_search = self._create_request(filters, post_filter=False)
         else:
             # It's a full faceted search
-            es_search = self._create_request(filters, self.es_client, post_filter=post_filter, entity_type=entity_type)
+            es_search = self._create_request(filters, post_filter=post_filter, entity_type=entity_type)
 
         if pagination is None:
             # It's a single file search
@@ -489,7 +483,6 @@ class ElasticTransformDump:
             source_filter = ['contents.metadata.*']
             entity_type = 'bundles'
             es_search = self._create_request(filters,
-                                             self.es_client,
                                              post_filter=False,
                                              source_filter=source_filter,
                                              enable_aggregation=False,
@@ -534,7 +527,6 @@ class ElasticTransformDump:
                              for field_name in field_mapping.values()]
 
         es_search = self._create_request(filters,
-                                         self.es_client,
                                          post_filter=False,
                                          source_filter=source_filter,
                                          enable_aggregation=False,
@@ -641,7 +633,6 @@ class ElasticTransformDump:
                                    self.service_config.cart_item[entity_type]))
 
         es_search = self._create_request(filters,
-                                         self.es_client,
                                          entity_type=entity_type,
                                          post_filter=False,
                                          source_filter=source_filter,

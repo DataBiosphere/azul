@@ -286,9 +286,7 @@ class TestRequestBuilder(WebServiceTestCase):
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
         es_td = ElasticTransformDump(self.service_config)
-        es_search = es_td._create_request(sample_filter,
-                                          es_td.es_client,
-                                          post_filter=post_filter)
+        es_search = es_td._create_request(sample_filter, post_filter=post_filter)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
