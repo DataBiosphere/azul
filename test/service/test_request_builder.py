@@ -303,26 +303,29 @@ class TestRequestBuilder(WebServiceTestCase):
             "aggs": {
                 "myTerms": {
                     "terms": {
-                        "field": "facet1.translation.keyword",
+                        "field": "path.to.foo.keyword",
                         "size": 99999
                     },
                     "meta": {
-                        "path": ["facet1", "translation"]
+                        "path": ["path", "to", "foo"]
                     }
                 },
                 "untagged": {
                     "missing": {
-                        "field": "facet1.translation.keyword"
+                        "field": "path.to.foo.keyword"
                     }
                 }
             }
         }
         sample_filter = {}
-        agg_field = 'facet1'
-        es_td = ElasticTransformDump()
-        aggregation = es_td._create_aggregate(sample_filter,
-                                              facet_config={agg_field: f'{agg_field}.translation'},
-                                              agg=agg_field)
+        service_config = self.service_config._replace(
+            translation={'foo': 'path.to.foo'},
+            facets=['foo']
+        )
+        es_td = ElasticTransformDump(service_config)
+        es_search = es_td._create_request(sample_filter, post_filter=True)
+        es_td._annotate_aggs_for_translation(es_search)
+        aggregation = es_search.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)

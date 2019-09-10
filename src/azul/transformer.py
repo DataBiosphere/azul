@@ -9,8 +9,6 @@ from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Opt
 
 from dataclasses import dataclass, fields
 
-from elasticsearch_dsl.aggs import FieldBucketData
-
 from humancellatlas.data.metadata import api
 
 from azul import config
@@ -142,22 +140,6 @@ class Document:
             return [cls.translate_fields(val, path=path, forward=forward) for val in source]
         else:
             return cls.translate_field(source, path=path, forward=forward)
-
-    @classmethod
-    def untranslate_aggregates(cls, es_response):
-        """
-        Reverse translate aggregated field values using the ES field name stored in the 'meta' field
-        """
-        for aggregation in es_response.aggregations:
-            for key in dir(aggregation):
-                agg = aggregation[key]
-                if isinstance(agg, FieldBucketData) and 'meta' in agg and 'path' in agg['meta']:
-                    path = tuple(agg['meta']['path'])
-                    for bucket in agg['buckets']:
-                        bucket['key'] = Document.translate_field(bucket['key'], path=path, forward=False)
-                else:
-                    pass
-        return None
 
     @classmethod
     def index_name(cls, entity_type: EntityType) -> str:

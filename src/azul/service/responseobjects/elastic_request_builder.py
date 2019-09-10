@@ -1,13 +1,16 @@
 from itertools import chain
 import json
 import logging
+
+from elasticsearch_dsl.response import Response, AggResponse
+from elasticsearch_dsl.response.aggs import FieldBucketData, BucketData, FieldBucket, Bucket
 from more_itertools import one
 from typing import List, Optional
 import uuid
 
 import elasticsearch
 from elasticsearch_dsl import A, Q, Search
-from elasticsearch_dsl.aggs import Filter, Terms
+from elasticsearch_dsl.aggs import Terms, Agg
 
 from azul import config
 from azul.es import ESClientFactory
@@ -142,36 +145,53 @@ class ElasticTransformDump:
         # value back in
         if excluded_filter is not None:
             filters[facet_config[agg]] = excluded_filter
-        # Store a copy of the ES field name aggregated in each Terms aggregate's 'meta' field
-        self.add_meta_field_to_aggregate(aggregate)
         return aggregate
 
-    @classmethod
-    def add_meta_field_to_aggregates(cls, aggregates):
+    def _annotate_aggs_for_translation(self, es_search: Search):
         """
-        Update the aggregates to add a meta field to each containing the path of the ES field being aggregated
+        Annotate the agregations in the given Elasticsearch search request so we can later translate substitutes for
+        None in the aggregations part of the response.
         """
-        # We can't iterate over the values of an AggsProxy directly but we can iterate over the keys
-        for agg_name in aggregates:
-            cls.add_meta_field_to_aggregate(aggregates[agg_name])
 
-    @classmethod
-    def add_meta_field_to_aggregate(cls, aggregate):
+        def annotate(agg: Agg):
+            if isinstance(agg, Terms):
+                path = agg.field.split('.')
+                if path[-1] == 'keyword':
+                    path.pop()
+                if not hasattr(agg, 'meta'):
+                    agg.meta = {}
+                agg.meta['path'] = path
+            if hasattr(agg, 'aggs'):
+                subs = agg.aggs
+                for sub_name in subs:
+                    annotate(subs[sub_name])
+
+        for agg_name in es_search.aggs:
+            annotate(es_search.aggs[agg_name])
+
+    def _translate_response_aggs(self, es_response: Response):
         """
-        Update the aggregate to add a meta field containing the path of the ES field being aggregated
+        Translate substitutes for None in the aggregations part of an Elasticsearch response.
         """
-        if isinstance(aggregate, Filter):
-            for agg_name in aggregate:
-                agg = aggregate[agg_name]
-                if isinstance(agg, Terms):
-                    path = agg.field.split('.')
-                    if path[-1] == 'keyword':
-                        del(path[-1])
-                    if 'meta' in agg._params:
-                        agg.meta['path'] = path
-                    else:
-                        agg.meta = {'path': path}
-        return None
+
+        def translate(agg: AggResponse):
+            if isinstance(agg, FieldBucketData):
+                path = agg.meta['path']
+                path = tuple(path)
+                for bucket in agg:
+                    bucket['key'] = Document.translate_field(bucket['key'], path, forward=False)
+                    translate(bucket)
+            elif isinstance(agg, BucketData):
+                for attr in dir(agg):
+                    value = getattr(agg, attr)
+                    if isinstance(value, AggResponse):
+                        translate(value)
+            elif isinstance(agg, (FieldBucket, Bucket)):
+                for sub in agg:
+                    translate(sub)
+
+        for agg in es_response.aggs:
+            translate(agg)
 
     def _create_request(self,
                         filters,
@@ -214,8 +234,6 @@ class ElasticTransformDump:
 
         if enable_aggregation:
             for agg, translation in facet_config.items():
-                # Create a bucket aggregate for the 'agg'.
-                # Call create_aggregate() to return the appropriate aggregate query
                 es_search.aggs.bucket(agg, self._create_aggregate(filters, facet_config, agg))
 
         return es_search
@@ -336,17 +354,15 @@ class ElasticTransformDump:
                           entity_type=None):
         if not filters:
             filters = {}
-        # Create a request to ElasticSearch
-        logger.info('Creating request to ElasticSearch')
         es_search = self._create_request(filters, post_filter=False, entity_type=entity_type)
 
-        # Add a total_size aggregate to the ElasticSearch request
+        # Add a total file size aggregate
         es_search.aggs.metric(
             'total_size',
             'sum',
             field='contents.files.size_')
 
-        # Add a cell_count aggregate per organ to the ElasticSearch request
+        # Add a cell count aggregate per organ
         es_search.aggs.bucket(
             'group_by_organ',
             'terms',
@@ -358,14 +374,14 @@ class ElasticTransformDump:
             field='contents.cell_suspensions.total_estimated_cells_'
         )
 
-        # Add a cell_count aggregate to the ElasticSearch request
+        # Add a total cell count aggregate
         es_search.aggs.metric(
             'total_cell_count',
             'sum',
             field='contents.cell_suspensions.total_estimated_cells_'
         )
 
-        # Add an organ aggregate to the ElasticSearch request
+        # Add an organ aggregate to the Elasticsearch request
         es_search.aggs.bucket(
             'organTypes',
             'terms',
@@ -385,16 +401,9 @@ class ElasticTransformDump:
                 field='{}.keyword'.format(cardinality),
                 precision_threshold="40000")
 
-        # Store a copy of the ES field name aggregated in each Terms aggregate's 'meta' field
-        self.add_meta_field_to_aggregates(es_search.aggs)
-
-        # Execute ElasticSearch request
-        logger.info('Executing request to ElasticSearch')
+        self._annotate_aggs_for_translation(es_search)
         es_response = es_search.execute(ignore_cache=True)
-        Document.untranslate_aggregates(es_response)
-        # Create the SummaryResponse object,
-        #  which has the format for the summary request
-        logger.info('Creating a SummaryResponse object')
+        self._translate_response_aggs(es_response)
         final_response = SummaryResponse(es_response.to_dict())
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
@@ -443,8 +452,9 @@ class ElasticTransformDump:
 
         if pagination is None:
             # It's a single file search
+            self._annotate_aggs_for_translation(es_search)
             es_response = es_search.execute(ignore_cache=True)
-            Document.untranslate_aggregates(es_response)
+            self._translate_response_aggs(es_response)
             es_response_dict = es_response.to_dict()
             hits = [hit['_source'] for hit in es_response_dict['hits']['hits']]
             hits = Document.translate_fields(hits, forward=False)
@@ -454,15 +464,13 @@ class ElasticTransformDump:
             # Translate the sort field if there is any translation available
             if pagination['sort'] in translation:
                 pagination['sort'] = translation[pagination['sort']]
-            # Apply paging
             es_search = self._apply_paging(es_search, pagination)
-            # Execute ElasticSearch request
+            self._annotate_aggs_for_translation(es_search)
             try:
                 es_response = es_search.execute(ignore_cache=True)
             except elasticsearch.NotFoundError as e:
                 raise IndexNotFoundError(e.info["error"]["index"])
-
-            Document.untranslate_aggregates(es_response)
+            self._translate_response_aggs(es_response)
             es_response_dict = es_response.to_dict()
             # Extract hits and facets (aggregations)
             es_hits = es_response_dict['hits']['hits']
