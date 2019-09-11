@@ -59,6 +59,11 @@ emit(None if not config.enable_monitoring else {
                         "request_interval": "30",
                         "tags": {
                             "Name": full_name
+                        },
+                        # This is necessary only because of a Terraform bug:
+                        # https://github.com/hashicorp/terraform/issues/22171
+                        "lifecycle": {
+                            "create_before_destroy": True
                         }
                     }
                 }
