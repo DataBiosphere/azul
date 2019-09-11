@@ -11,7 +11,7 @@ import logging
 import os
 from tempfile import TemporaryDirectory, mkstemp
 import re
-from typing import Any, List, Mapping, MutableMapping, IO, Optional
+from typing import Any, List, Mapping, MutableMapping, IO, Optional, Callable, TypeVar
 import unicodedata
 from uuid import uuid4
 
@@ -79,7 +79,7 @@ class FileTypeSummary(JsonObject):
     totalSize = IntegerProperty()
 
     @classmethod
-    def for_bucket(cls, bucket):
+    def for_bucket(cls, bucket: JSON) -> 'FileTypeSummary':
         self = cls()
         self.count = bucket['doc_count']
         self.totalSize = int(bucket['size_by_type']['value'])  # Casting to integer since ES returns a double
@@ -87,7 +87,7 @@ class FileTypeSummary(JsonObject):
         return self
 
     @classmethod
-    def for_aggregate(cls, aggregate_file):
+    def for_aggregate(cls, aggregate_file: JSON) -> 'FileTypeSummary':
         self = cls()
         self.count = aggregate_file['count']
         self.totalSize = aggregate_file['size']
@@ -103,7 +103,7 @@ class OrganCellCountSummary(JsonObject):
     totalCellCountByOrgan = FloatProperty()
 
     @classmethod
-    def for_bucket(cls, bucket: MutableMapping[str, str]):
+    def for_bucket(cls, bucket: JSON) -> 'OrganCellCountSummary':
         self = cls()
         self.organType = [bucket['key']]
         self.countOfDocsWithOrganType = bucket['doc_count']
@@ -114,7 +114,7 @@ class OrganCellCountSummary(JsonObject):
 class OrganType:
 
     @classmethod
-    def for_bucket(cls, bucket: MutableMapping[str, str]):
+    def for_bucket(cls, bucket: JSON):
         return bucket['key']
 
 
@@ -601,60 +601,35 @@ class EntryFetcher:
         return [value] if value is not None else []
 
 
-class BaseSummaryResponse(AbstractResponse):
+T = TypeVar('T')
+
+
+class SummaryResponse(AbstractResponse):
+    def __init__(self, raw_response):
+        super().__init__()
+        self.aggregations = raw_response['aggregations']
 
     def return_response(self):
-        return self.apiResponse
+        def agg_value(path: str) -> JSON:
+            agg = self.aggregations
+            for name in path.split('.'):
+                agg = agg[name]
+            return agg
 
-    @staticmethod
-    def agg_contents(aggs_dict, agg_name, agg_form='buckets', function=None):
-        """
-        Helper function for parsing aggregate dictionary and returning the
-        contents of the aggregation
+        def agg_values(path: str, function: Callable[[JSON], T]) -> List[T]:
+            return list(map(function, agg_value(path)))
 
-        :param aggs_dict: ES dictionary response containing the aggregates
-        :param agg_name: Name of aggregate to inspect
-        :param function: Function to transform each aggregate
-        :param agg_form: Part of the aggregate to return
-        :return: Returns the agg_form within the aggregate agg_name
-        """
-        agg = aggs_dict
-        # Select the agg_name element from aggs_dict
-        for name_part in agg_name.split('.'):
-            agg = agg[name_part]
-        # If given a function apply it to each value, else return the value
-        if function is not None:
-            return list(map(function, agg[agg_form]))
-        else:
-            return agg[agg_form]
-
-    def __init__(self, raw_response):
-        # Separate the raw_response into hits and aggregates
-        self.hits = raw_response['hits']
-        self.aggregates = raw_response['aggregations']
-        self.apiResponse = None
-
-
-class SummaryResponse(BaseSummaryResponse):
-    """
-    Build response for the summary endpoint
-    """
-
-    def __init__(self, raw_response):
-        super().__init__(raw_response)
-
-        aggs = self.aggregates
-        self.apiResponse = SummaryRepresentation(
-            projectCount=self.agg_contents(aggs, 'projectCount', agg_form='value'),
-            specimenCount=self.agg_contents(aggs, 'specimenCount', agg_form='value'),
-            fileCount=self.agg_contents(aggs, 'fileCount', agg_form='value'),
-            totalFileSize=self.agg_contents(aggs, 'total_size', agg_form='value'),
-            donorCount=self.agg_contents(aggs, 'donorCount', agg_form='value'),
-            labCount=self.agg_contents(aggs, 'labCount', agg_form='value'),
-            totalCellCount=self.agg_contents(aggs, 'total_cell_count', agg_form='value'),
-            organTypes=self.agg_contents(aggs, 'organTypes', function=OrganType.for_bucket),
-            fileTypeSummaries=self.agg_contents(aggs, 'fileFormat.myTerms', function=FileTypeSummary.for_bucket),
-            cellCountSummaries=self.agg_contents(aggs, 'group_by_organ', function=OrganCellCountSummary.for_bucket)
+        return SummaryRepresentation(
+            projectCount=agg_value('projectCount.value'),
+            specimenCount=agg_value('specimenCount.value'),
+            fileCount=agg_value('fileCount.value'),
+            totalFileSize=agg_value('total_size.value'),
+            donorCount=agg_value('donorCount.value'),
+            labCount=agg_value('labCount.value'),
+            totalCellCount=agg_value('total_cell_count.value'),
+            organTypes=agg_values('organTypes.buckets', OrganType.for_bucket),
+            fileTypeSummaries=agg_values('fileFormat.myTerms.buckets', FileTypeSummary.for_bucket),
+            cellCountSummaries=agg_values('group_by_organ.buckets', OrganCellCountSummary.for_bucket)
         )
 
 
