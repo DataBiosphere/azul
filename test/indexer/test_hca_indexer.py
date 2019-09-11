@@ -528,6 +528,32 @@ class TestHCAIndexer(IndexerTestCase):
                 file_document_ids.add(file['hca_ingest']['document_id'])
         self.assertEqual(file_document_ids, file_uuids)
 
+    def test_indexing_matrix_related_files(self):
+        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        self.maxDiff = None
+        hits = self._get_all_hits()
+        zarrs = []
+        for hit in hits:
+            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            if entity_type == 'files':
+                file = one(hit['_source']['contents']['files'])
+                if len(file['related_files']) > 0:
+                    self.assertEqual(file['file_format'], 'matrix')
+                    zarrs.append(hit)
+                elif file['file_format'] == 'matrix':
+                    # Matrix of Loom or CSV format possibly
+                    self.assertNotIn('.zarr', file['name'])
+            elif not aggregate:
+                for file in hit['_source']['contents']['files']:
+                    self.assertEqual(file['related_files'], [])
+
+        self.assertEqual(len(zarrs), 2)  # One contribution, one aggregate
+        for zarr_file in zarrs:
+            zarr_file = one(zarr_file['_source']['contents']['files'])
+            related_files = zarr_file['related_files']
+            self.assertNotIn(zarr_file['name'], {f['name'] for f in related_files})
+            self.assertEqual(len(related_files), 12)
+
     def test_indexing_with_skipped_matrix_file(self):
         # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
         self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
