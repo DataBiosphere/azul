@@ -173,6 +173,15 @@ components:
           $ref: "#/components/schemas/integration_type"
         "entity_type":
           $ref: "#/components/schemas/entity_type"
+        "title":
+          type: string
+          description: >
+
+            A brief textual description of the response returned by the portal
+            when a visitor initiates this integration. The HCA Data Browser may
+            use this text when rendering a UI element related to this
+            integration.
+
       discriminator:
         propertyName: "integration_type"
         mapping:
