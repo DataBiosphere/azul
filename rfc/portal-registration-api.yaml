@@ -40,7 +40,7 @@ info:
     Manifest integration with Azul is for portals that index all data in the
     HCA and that offer visualization of user-defined subsets of that data. It
     can also be used by portals that fetch HCA data on demand at the time a
-    user requests the integration, like portals the let the user initiate
+    visitor requests the integration, like portals the let the visitor initiate
     analysis workflows on the data entities listed in the manifest. These
     portals can register with Azul and define a manifest integration for
     specific types of biological, experimental or analytical entities like
@@ -87,7 +87,7 @@ components:
           referenced entities will be of the type denoted in the `entity_type`
           property of the integration. Any Data Browser page listing entities
           of that type will include a link/button pointing at the portal URL.
-          When a user clicks that link/button, identifiers of the currently
+          When a visitor clicks that link/button, identifiers of the currently
           selected entities will be interpolated into the specified portal URL
           template and the user agent will be redirected to resulting URL. This
           integration type is subject to a limit of at most TBD entities.
@@ -98,7 +98,7 @@ components:
           certain associated metadata. All referenced entities will be of the
           type denoted in the `entity_type` property of the integration. Any
           Data Browser page listing entities of that type will include a
-          link/button pointing at the portal URL. When a user clicks that
+          link/button pointing at the portal URL. When a visitor clicks that
           link/button, a new manifest will be populated with identifiers of—and
           metadata about—the currently selected entities, the manifest URL will
           be interpolated into the specified portal URL template and the user
@@ -198,7 +198,7 @@ components:
             format: uuid
         "portal_url":
           type: string
-          description: "The URL of the portal endpoint that will be requested when the user initiates this integration"
+          description: "The URL of the portal endpoint that will be requested when the visitor initiates this integration"
     "GetEntitiesIntegration":
       type: object
       required:
@@ -208,11 +208,11 @@ components:
           type: string
           description: >
 
-            A template for the URL of the portal endpoint to hit when the user
+            A template for the URL of the portal endpoint to hit when the visitor
             initiates this integration. The template will be parsed according to
             RFC 6570 and the first occurrence of the `entity_ids` variable will
             be substituted with a list of identifiers of the entities selected
-            by the user.
+            by the visitor.
 
     "GetManifestIntegration":
       type: object
@@ -240,11 +240,12 @@ components:
           type: string
           description: >
 
-            A template for the URL of the portal endpoint to hit when the user
+            A template for the URL of the portal endpoint to hit when the visitor
             initiates this integration. The template will be parsed according to
             RFC 6570 and the first occurrence of the `manifest_url` variable
             will be replaced with the URL to the manifest listing the entities
-            selected by the user.
+            selected by the visitor.
+
     "PortalWithIntegrations":
       type: object
       allOf:
