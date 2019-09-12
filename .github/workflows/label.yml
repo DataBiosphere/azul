@@ -1,0 +1,13 @@
+name: Labeler
+on: [issues]
+
+jobs:
+  label:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: HumanCellAtlas/azul-github-labeler-action
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        label: 
