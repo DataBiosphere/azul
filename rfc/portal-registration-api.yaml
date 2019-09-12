@@ -190,6 +190,7 @@ components:
           "get_manifest": "#/components/schemas/GetManifestIntegration"
       oneOf:
         - $ref: "#/components/schemas/GetIntegration"
+        - $ref: "#/components/schemas/GetEntityIntegration"
         - $ref: "#/components/schemas/GetEntitiesIntegration"
         - $ref: "#/components/schemas/GetManifestIntegration"
 
@@ -208,6 +209,22 @@ components:
         "portal_url":
           type: string
           description: "The URL of the portal endpoint that will be requested when the visitor initiates this integration"
+
+    "GetEntityIntegration":
+      type: object
+      required:
+        - "portal_url_template"
+      properties:
+        "portal_url_template":
+          type: string
+          description: >
+
+            A template for the URL of the portal endpoint to hit when the visitor
+            initiates this integration. The template will be parsed according to
+            RFC 6570 and the first occurrence of the `entity_id` variable will
+            be substituted with the identifier of the entity selected by the
+            visitor.
+
     "GetEntitiesIntegration":
       type: object
       required:
