@@ -225,6 +225,15 @@ components:
             be substituted with the identifier of the entity selected by the
             visitor.
 
+        "allow_head":
+          type: boolean
+          description: >
+
+            If `true`, a client may use a HEAD request for the expanded portal
+            URL to determine if the entity in the request are supported. The
+            portal must quickly respond with status 200, if a GET request for
+            the same URL is expected to yield 200 status response.
+
     "GetEntitiesIntegration":
       type: object
       required:
@@ -239,6 +248,18 @@ components:
             RFC 6570 and the first occurrence of the `entity_ids` variable will
             be substituted with a list of identifiers of the entities selected
             by the visitor.
+
+        "allow_head":
+          type: boolean
+          description: >
+
+            If `true`, a client may use a HEAD request for the expanded portal
+            URL to determine if the entities in the request are supported. The
+            portal must quickly respond with status 200, if a GET request for
+            the same URL is expected to yield 200 status response. Note that the
+            if URL references multiple entities it is up to the portal to decide
+            if a 200 code is adequate if only some of those entities are
+            supported.
 
     "GetManifestIntegration":
       type: object
