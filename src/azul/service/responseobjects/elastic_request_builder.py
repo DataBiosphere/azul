@@ -1,12 +1,16 @@
 from itertools import chain
 import json
 import logging
+
+from elasticsearch_dsl.response import Response, AggResponse
+from elasticsearch_dsl.response.aggs import FieldBucketData, BucketData, FieldBucket, Bucket
 from more_itertools import one
 from typing import List, Optional
 import uuid
 
 import elasticsearch
 from elasticsearch_dsl import A, Q, Search
+from elasticsearch_dsl.aggs import Terms, Agg
 
 from azul import config
 from azul.es import ESClientFactory
@@ -72,19 +76,6 @@ class ElasticTransformDump:
             value = {key: [Document.translate_field(v, path) for v in val] for key, val in value.items()}
             translated_filters[key] = value
         return translated_filters
-
-    def _translate_facets(self, facets: MutableJSON, translation: JSON):
-        """
-        Translate facet values from Elasticsearch (eg. '__null__' -> None)
-
-        :param facets: Aggregation data from the es_response
-        :param translation: Mapping of facet names to their full field name (eg. 'fileSize': 'contents.files.size')
-        """
-        for facet_name, aggregations in facets.items():
-            bucket: MutableJSON
-            for bucket in aggregations['myTerms']['buckets']:
-                path = tuple(translation[facet_name].split('.'))
-                bucket['key'] = Document.translate_field(bucket['key'], path, forward=False)
 
     def _create_query(self, filters):
         """
@@ -156,9 +147,54 @@ class ElasticTransformDump:
             filters[facet_config[agg]] = excluded_filter
         return aggregate
 
+    def _annotate_aggs_for_translation(self, es_search: Search):
+        """
+        Annotate the agregations in the given Elasticsearch search request so we can later translate substitutes for
+        None in the aggregations part of the response.
+        """
+
+        def annotate(agg: Agg):
+            if isinstance(agg, Terms):
+                path = agg.field.split('.')
+                if path[-1] == 'keyword':
+                    path.pop()
+                if not hasattr(agg, 'meta'):
+                    agg.meta = {}
+                agg.meta['path'] = path
+            if hasattr(agg, 'aggs'):
+                subs = agg.aggs
+                for sub_name in subs:
+                    annotate(subs[sub_name])
+
+        for agg_name in es_search.aggs:
+            annotate(es_search.aggs[agg_name])
+
+    def _translate_response_aggs(self, es_response: Response):
+        """
+        Translate substitutes for None in the aggregations part of an Elasticsearch response.
+        """
+
+        def translate(agg: AggResponse):
+            if isinstance(agg, FieldBucketData):
+                path = agg.meta['path']
+                path = tuple(path)
+                for bucket in agg:
+                    bucket['key'] = Document.translate_field(bucket['key'], path, forward=False)
+                    translate(bucket)
+            elif isinstance(agg, BucketData):
+                for attr in dir(agg):
+                    value = getattr(agg, attr)
+                    if isinstance(value, AggResponse):
+                        translate(value)
+            elif isinstance(agg, (FieldBucket, Bucket)):
+                for sub in agg:
+                    translate(sub)
+
+        for agg in es_response.aggs:
+            translate(agg)
+
     def _create_request(self,
                         filters,
-                        es_client,
                         post_filter: bool = False,
                         source_filter: List[str] = None,
                         enable_aggregation: bool = True,
@@ -168,8 +204,6 @@ class ElasticTransformDump:
         the filters and facet_config passed into the function
         :param filters: The 'filters' parameter.
         Assumes to be translated into es_key terms
-        :param es_client: The ElasticSearch client object used
-         to configure the Search object
         :param post_filter: Flag for doing either post_filter or regular
         querying (i.e. faceting or not)
         :param List source_filter: A list of "foo.bar" field paths (see
@@ -183,7 +217,7 @@ class ElasticTransformDump:
         """
         field_mapping = self.service_config.translation
         facet_config = {key: field_mapping[key] for key in self.service_config.facets}
-        es_search = Search(using=es_client, index=config.es_index_name(entity_type, aggregate=True))
+        es_search = Search(using=self.es_client, index=config.es_index_name(entity_type, aggregate=True))
         filters = self._translate_filters(filters, field_mapping)
 
         es_query = self._create_query(filters)
@@ -200,8 +234,6 @@ class ElasticTransformDump:
 
         if enable_aggregation:
             for agg, translation in facet_config.items():
-                # Create a bucket aggregate for the 'agg'.
-                # Call create_aggregate() to return the appropriate aggregate query
                 es_search.aggs.bucket(agg, self._create_aggregate(filters, facet_config, agg))
 
         return es_search
@@ -322,20 +354,15 @@ class ElasticTransformDump:
                           entity_type=None):
         if not filters:
             filters = {}
-        # Create a request to ElasticSearch
-        logger.info('Creating request to ElasticSearch')
-        es_search = self._create_request(
-            filters, self.es_client,
-            post_filter=False,
-            entity_type=entity_type)
+        es_search = self._create_request(filters, post_filter=False, entity_type=entity_type)
 
-        # Add a total_size aggregate to the ElasticSearch request
+        # Add a total file size aggregate
         es_search.aggs.metric(
             'total_size',
             'sum',
             field='contents.files.size_')
 
-        # Add a per_organ aggregate to the ElasticSearch request
+        # Add a cell count aggregate per organ
         es_search.aggs.bucket(
             'group_by_organ',
             'terms',
@@ -347,15 +374,19 @@ class ElasticTransformDump:
             field='contents.cell_suspensions.total_estimated_cells_'
         )
 
-        # Add a cell_count aggregate to the ElasticSearch request
+        # Add a total cell count aggregate
         es_search.aggs.metric(
             'total_cell_count',
             'sum',
             field='contents.cell_suspensions.total_estimated_cells_'
         )
 
+        # Add an organ aggregate to the Elasticsearch request
         es_search.aggs.bucket(
-            'organTypes', 'terms', field='contents.samples.effective_organ.keyword', size=config.terms_aggregation_size
+            'organTypes',
+            'terms',
+            field='contents.samples.effective_organ.keyword',
+            size=config.terms_aggregation_size
         )
 
         for cardinality, agg_name in (
@@ -369,16 +400,14 @@ class ElasticTransformDump:
                 agg_name, 'cardinality',
                 field='{}.keyword'.format(cardinality),
                 precision_threshold="40000")
-        # Execute ElasticSearch request
-        logger.info('Executing request to ElasticSearch')
+
+        self._annotate_aggs_for_translation(es_search)
         es_response = es_search.execute(ignore_cache=True)
-        # Create the SummaryResponse object,
-        #  which has the format for the summary request
-        logger.info('Creating a SummaryResponse object')
+        self._translate_response_aggs(es_response)
         final_response = SummaryResponse(es_response.to_dict())
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
-        return final_response.apiResponse.to_json()
+        return final_response.return_response().to_json()
 
     def transform_request(self,
                           filters=None,
@@ -416,14 +445,16 @@ class ElasticTransformDump:
 
         if post_filter is False:
             # No faceting (i.e. do the faceting on the filtered query)
-            es_search = self._create_request(filters, self.es_client, post_filter=False)
+            es_search = self._create_request(filters, post_filter=False)
         else:
             # It's a full faceted search
-            es_search = self._create_request(filters, self.es_client, post_filter=post_filter, entity_type=entity_type)
+            es_search = self._create_request(filters, post_filter=post_filter, entity_type=entity_type)
 
         if pagination is None:
             # It's a single file search
+            self._annotate_aggs_for_translation(es_search)
             es_response = es_search.execute(ignore_cache=True)
+            self._translate_response_aggs(es_response)
             es_response_dict = es_response.to_dict()
             hits = [hit['_source'] for hit in es_response_dict['hits']['hits']]
             hits = Document.translate_fields(hits, forward=False)
@@ -433,14 +464,13 @@ class ElasticTransformDump:
             # Translate the sort field if there is any translation available
             if pagination['sort'] in translation:
                 pagination['sort'] = translation[pagination['sort']]
-            # Apply paging
             es_search = self._apply_paging(es_search, pagination)
-            # Execute ElasticSearch request
+            self._annotate_aggs_for_translation(es_search)
             try:
                 es_response = es_search.execute(ignore_cache=True)
             except elasticsearch.NotFoundError as e:
                 raise IndexNotFoundError(e.info["error"]["index"])
-
+            self._translate_response_aggs(es_response)
             es_response_dict = es_response.to_dict()
             # Extract hits and facets (aggregations)
             es_hits = es_response_dict['hits']['hits']
@@ -456,7 +486,6 @@ class ElasticTransformDump:
             hits = Document.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
-            self._translate_facets(facets, translation)
 
             paging = self._generate_paging_dict(es_response_dict, pagination)
             # Translate the sort field back to external name
@@ -489,7 +518,6 @@ class ElasticTransformDump:
             source_filter = ['contents.metadata.*']
             entity_type = 'bundles'
             es_search = self._create_request(filters,
-                                             self.es_client,
                                              post_filter=False,
                                              source_filter=source_filter,
                                              enable_aggregation=False,
@@ -534,7 +562,6 @@ class ElasticTransformDump:
                              for field_name in field_mapping.values()]
 
         es_search = self._create_request(filters,
-                                         self.es_client,
                                          post_filter=False,
                                          source_filter=source_filter,
                                          enable_aggregation=False,
@@ -641,7 +668,6 @@ class ElasticTransformDump:
                                    self.service_config.cart_item[entity_type]))
 
         es_search = self._create_request(filters,
-                                         self.es_client,
                                          entity_type=entity_type,
                                          post_filter=False,
                                          source_filter=source_filter,

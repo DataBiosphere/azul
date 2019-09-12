@@ -820,7 +820,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    unreliable. Try running
 
    ```
-   git diff LAST_RELEASE_TAG..HEAD src/azul/project/ src/azul/indexer.py src/azul/plugin.py
+   git diff LAST_RELEASE_TAG..HEAD src/azul/project/ src/azul/indexer.py src/azul/plugin.py src/azul/transformer.py
    ```
 
    where `LAST_RELEASE_TAG` is the previous release of the target branch. If the diff
