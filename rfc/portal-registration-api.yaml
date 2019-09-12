@@ -158,32 +158,32 @@ components:
           type: string
           description: "A brief description of the portals and its capabilities"
     "Integration":
+      type: object
+      required:
+        - "integration_id"
+        - "integration_type"
+        - "entity_type"
+      properties:
+        "integration_id":
+          readOnly: true
+          description: "The unique identifier of the integration"
+          type: string
+          format: uuid
+        "integration_type":
+          $ref: "#/components/schemas/integration_type"
+        "entity_type":
+          $ref: "#/components/schemas/entity_type"
       discriminator:
         propertyName: "integration_type"
         mapping:
           "get": "#/components/schemas/GetIntegration"
           "get_entities": "#/components/schemas/GetEntitiesIntegration"
           "get_manifest": "#/components/schemas/GetManifestIntegration"
-      allOf:
-        - type: object
-          required:
-            - "integration_id"
-            - "integration_type"
-            - "entity_type"
-          properties:
-            "integration_id":
-              readOnly: true
-              description: "The unique identifier of the integration"
-              type: string
-              format: uuid
-            "integration_type":
-              $ref: "#/components/schemas/integration_type"
-            "entity_type":
-              $ref: "#/components/schemas/entity_type"
-        - oneOf:
-            - $ref: "#/components/schemas/GetManifestIntegration"
-            - $ref: "#/components/schemas/GetIntegration"
-            - $ref: "#/components/schemas/GetEntitiesIntegration"
+      oneOf:
+        - $ref: "#/components/schemas/GetIntegration"
+        - $ref: "#/components/schemas/GetEntitiesIntegration"
+        - $ref: "#/components/schemas/GetManifestIntegration"
+
     "GetIntegration":
       type: object
       required:
