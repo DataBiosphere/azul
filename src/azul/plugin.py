@@ -15,13 +15,16 @@ from azul import config
 from azul.indexer import BaseIndexer
 from azul.types import JSON
 
+ManifestConfig = Mapping[str, Mapping[str, str]]
+Translation = Mapping[str, str]
+
 
 class ServiceConfig(NamedTuple):
     # Except otherwise noted the attributes were previously held in a JSON file
     # called `request_config.json`
-    translation: Mapping[str, str]
+    translation: Translation
     autocomplete_translation: Mapping[str, Mapping[str, str]]
-    manifest: Mapping[str, Mapping[str, str]]
+    manifest: ManifestConfig
     cart_item: Mapping[str, Sequence[str]]
     facets: Sequence[str]
     # This used to be defined in a JSON file called `autocomplete_mapping_config.json`

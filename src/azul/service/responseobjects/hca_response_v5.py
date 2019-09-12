@@ -40,6 +40,7 @@ from uuid import uuid4
 
 from bdbag import bdbag_api
 from chalice import Response
+from elasticsearch_dsl import Search
 from jsonobject.api import JsonObject
 from jsonobject.properties import (
     DefaultProperty,
@@ -59,6 +60,10 @@ from azul import (
 from azul.json_freeze import (
     freeze,
     thaw,
+)
+from azul.plugin import (
+    ManifestConfig,
+    Translation,
 )
 from azul.service.responseobjects.buffer import FlushableBuffer
 from azul.service.responseobjects.storage_service import (
@@ -227,7 +232,12 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
-    def __init__(self, es_search, manifest_entries, mapping, format_, object_key=None):
+    def __init__(self,
+                 es_search: Search,
+                 manifest_entries: ManifestConfig,
+                 mapping: Translation,
+                 format_: str,
+                 object_key: str = None):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
