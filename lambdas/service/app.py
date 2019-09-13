@@ -1599,6 +1599,7 @@ def get_data_object(file_uuid):
         "fileId": {"is": [file_uuid]},
         **({"fileVersion": {"is": [file_version]}} if file_version else {})
     }
+    app.log.info('DRS Request: file_uuid=%s, file_version=%s', file_uuid, file_version)
     es_td = ElasticTransformDump()
     pagination = _get_pagination(app.current_request, entity_type='files')
     response = es_td.transform_request(filters=filters,
@@ -1610,8 +1611,14 @@ def get_data_object(file_uuid):
         data_obj = file_to_drs(doc)
         assert data_obj['id'] == file_uuid
         assert file_version is None or data_obj['version'] == file_version
+        app.log.info('DRS Response: 200 %s', {
+            'name': data_obj['name'],
+            'size': data_obj['size'],
+            'urls': [url['url'] for url in data_obj['urls']]
+        })
         return Response({'data_object': data_obj}, status_code=200)
     else:
+        app.log.info('DRS Response: 404')
         return Response({'msg': "Data object not found."}, status_code=404)
 
 
