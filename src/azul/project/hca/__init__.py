@@ -33,14 +33,6 @@ class Plugin(azul.plugin.Plugin):
                         *(
                             [
                                 {
-                                    "range": {
-                                        "manifest.version": {
-                                            "gte": "2018-11-27"
-                                        }
-                                    }
-                                }
-                            ] if config.dss_endpoint == "https://dss.integration.data.humancellatlas.org/v1" else [
-                                {
                                     "bool": {
                                         "should": [
                                             {
