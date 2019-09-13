@@ -76,6 +76,26 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         else:
             self.fail()
 
+    def test_drs_logs(self):
+        def log_messages_from_drs_request(file_uuid, file_version):
+            from lambdas.service.app import app
+            with self.assertLogs(logger=app.log, level='INFO') as logs:
+                try:
+                    self._get_data_object(file_uuid, file_version)
+                except requests.exceptions.HTTPError:
+                    pass
+                return logs.output
+
+        file_uuid, file_version = ('7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb', '2018-11-02T113344.698028Z')
+        logs_output = log_messages_from_drs_request(file_uuid=file_uuid, file_version=file_version)
+        self.assertTrue(any(f'DRS Request: file_uuid={file_uuid}' in message for message in logs_output))
+        self.assertTrue(any('DRS Response: 200' in message for message in logs_output))
+
+        file_uuid, file_version = ('NOT_A_GOOD_IDEA', None)
+        logs_output = log_messages_from_drs_request(file_uuid=file_uuid, file_version=file_version)
+        self.assertTrue(any(f'DRS Request: file_uuid={file_uuid}' in message for message in logs_output))
+        self.assertTrue(any('DRS Response: 404' in message for message in logs_output))
+
 
 if __name__ == "__main__":
     unittest.main()
