@@ -303,6 +303,44 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
+    def test_manifest_zarr(self):
+        """
+        Test that when downloading a manifest with a zarr, all of the files are added into the manifest even
+        if they are not listed in the service response.
+        """
+        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        search_params = {
+            'filters': json.dumps({"fileFormat": {"is": ["matrix", "mtx"]}}),
+        }
+        download_params = {
+            **search_params,
+            'format': 'tsv'
+        }
+
+        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
+        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+
+            response = requests.get(self.base_url + '/repository/files', params=search_params)
+            hits = response.json()['hits']
+            self.assertEqual(len(hits), 1)
+            for single_part in False, True:
+                with self.subTest(is_single_part=single_part):
+                    with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
+                        response = self.get_manifest(download_params)
+                        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                        # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+                        lines = response.content.decode('utf-8').splitlines()
+                        tsv_file = csv.DictReader(lines, delimiter='\t')
+                        rows = list(tsv_file)
+                        self.assertEqual(len(rows), 13)  # 12 related file, one original
+                        self.assertEqual(len(rows), len({row['file_uuid'] for row in rows}), 'Rows are not unique')
+
+    @mock_sts
+    @mock_s3
     def test_terra_bdbag_manifest(self):
         """
         moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit

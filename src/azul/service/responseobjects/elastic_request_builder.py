@@ -566,6 +566,7 @@ class ElasticTransformDump:
     def _manifest_params_tsv(self) -> Tuple[ManifestConfig, List[str], str]:
         manifest_config = self.service_config.manifest
         source_filter = self._default_source_filter(manifest_config)
+        source_filter.append('contents.files.related_files')
         return manifest_config, source_filter, 'files'
 
     def _manifest_params_full(self, filters: JSON) -> Tuple[ManifestConfig, List[str], str]:

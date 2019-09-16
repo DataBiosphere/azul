@@ -31,6 +31,7 @@ from typing import (
     Mapping,
     MutableMapping,
     IO,
+    Iterable,
     Optional,
     Callable,
     TypeVar,
@@ -413,6 +414,14 @@ class ManifestResponse(AbstractResponse):
                     entities = self._get_entities(doc_path, doc)
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
+                writer.writerows(self._get_related_rows(doc, row))
+
+    def _get_related_rows(self, doc: dict, row: dict) -> Iterable[dict]:
+        file_ = one(doc['contents']['files'])
+        for related in file_['related_files']:
+            new_row = row.copy()
+            new_row.update({'file_' + k: v for k, v in related.items()})
+            yield new_row
 
     def _write_full(self, output: IO[str]) -> Optional[str]:
         sources = list(self.manifest_entries['contents'].keys())
