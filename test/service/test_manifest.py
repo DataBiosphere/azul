@@ -291,7 +291,9 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     def _assert_tsv(self, expected, actual):
         expected_field_names, *expected_rows = map(list, zip(*expected))
-        tsv_file = csv.reader(actual.iter_lines(decode_unicode=True), delimiter='\t')
+        # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+        lines = actual.content.decode('utf-8').splitlines()
+        tsv_file = csv.reader(lines, delimiter='\t')
         actual_field_names = next(tsv_file)
         rows = freeze(list(tsv_file))
         self.assertEqual(expected_field_names, actual_field_names)
@@ -1036,13 +1038,17 @@ class TestManifestEndpoints(WebServiceTestCase):
             params = {'filters': json.dumps({'project': {'is': ['Single of human pancreas']}}), 'format': 'full'}
             response = self.get_manifest(params)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
-            tsv_file1 = csv.reader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+            lines = response.content.decode('utf-8').splitlines()
+            tsv_file1 = csv.reader(lines, delimiter='\t')
             fieldnames1 = set(next(tsv_file1))
 
             params = {'filters': json.dumps({'project': {'is': ['Mouse Melanoma']}}), 'format': 'full'}
             response = self.get_manifest(params)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
-            tsv_file2 = csv.reader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+            lines = response.content.decode('utf-8').splitlines()
+            tsv_file2 = csv.reader(lines, delimiter='\t')
             fieldnames2 = set(next(tsv_file2))
 
             intersection = fieldnames1 & fieldnames2
