@@ -315,6 +315,40 @@ def validate_params(query_params: Mapping[str, str],
                 raise BadRequestError(f'Invalid input type for `{param_name}`')
 
 
+@app.route('/integrations', methods=['GET'], cors=True)
+def get_integrations():
+    query_params = app.current_request.query_params or {}
+    validate_params(query_params, entity_type=str, integration_type=str)
+    try:
+        entity_type = query_params['entity_type']
+        integration_type = query_params['integration_type']
+    except KeyError:
+        raise BadRequestError('Parameters entity_type and integration_type must be given')
+    body = _fetch_integrations(entity_type, integration_type)
+    return Response(status_code=200,
+                    headers={"content-type": "application/json"},
+                    body=json.dumps(body))
+
+
+def _fetch_integrations(entity_type, integration_type):
+    plugin = Plugin.load()
+    portals_db = plugin.portal_integrations_db()
+    results = []
+    for portal in portals_db:
+        integrations = []
+        for integration in portal['integrations']:
+            if integration['entity_type'] == entity_type and integration['integration_type'] == integration_type:
+                integration_copy = {key: val for key, val in integration.items() if key != 'entity_ids'}
+                if 'entity_ids' in integration:
+                    integration_copy['entity_ids'] = integration['entity_ids'][config.dss_deployment_stage]
+                integrations.append(integration_copy)
+        if len(integrations) > 0:
+            portal_copy = {key: val for key, val in portal.items() if key != 'integrations'}
+            portal_copy['integrations'] = integrations
+            results.append(portal_copy)
+    return results
+
+
 def repository_search(entity_type: str, item_id: str):
     query_params = app.current_request.query_params or {}
     validate_repository_search(query_params)

@@ -312,3 +312,166 @@ class Plugin(azul.plugin.Plugin):
                 "protocol"
             ]
         )
+
+    def portal_integrations_db(self) -> JSON:
+        """
+        A hardcoded example database for use during development of the integrations API implementation
+        """
+        return [
+            {
+                "portal_id": "7bc432a6-0fcf-4c19-b6e6-4cb6231279b3",
+                "portal_name": "Terra Portal",
+                "portal_icon": "https://app.terra.bio/static/media/logo.c5ed3676.svg",
+                "contact_email": "",
+                "organization_name": "Broad Institute",
+                "portal_description": "Terra is a cloud-native platform for biomedical researchers to access data, run analysis tools, and collaborate.",
+                "integrations": [
+                    {
+                        "integration_id": "b87b7f30-2e60-4ca5-9a6f-00ebfcd35f35",
+                        "integration_type": "get_manifest",
+                        "entity_type": "file",
+                        "title": "Populate a Terra workspace with data files matching the current filter selection",
+                        "manifest_type": "full",
+                        "portal_url_template": "https://app.terra.bio/#import-data?url={manifest_url}"
+                    }
+                ]
+            },
+            {
+                "portal_id": "9852dece-443d-42e8-869c-17b9a86d447e",
+                "portal_name": "Single Cell Portal",
+                "portal_icon": "https://singlecell.broadinstitute.org/single_cell/assets/SCP-logo-5d31abc1f355f68c809a100d74c886af016bd0aba246bcfad92f0b50b5ce2cd8.png",
+                "contact_email": "",
+                "organization_name": "Broad Institute",
+                "portal_description": "Reducing barriers and accelerating single-cell research.",
+                "integrations": [
+                    {
+                        "integration_id": "977854a0-2eea-4fec-9459-d4807fe79f0c",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Visualize in SCP",
+                        "entity_ids": {
+                            "staging": ["8b01ff5a-2157-4c4a-96bb-2c686a7ef8b0", "81b5f43d-3c20-4575-9efa-bfb0b070a6e3"],
+                            "integration": [],
+                            "prod": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
+                        },
+                        "portal_url": "https://singlecell.broadinstitute.org/single_cell/study/SCP495"
+                    },
+                    # https://docs.google.com/document/d/1HBOPe6h_RjxltfbPenKsNmoN3MVAtkhVKJ_LGG1DBkA/edit#
+                    # https://github.com/HumanCellAtlas/data-browser/issues/545#issuecomment-528092658
+                    # {
+                    #     "integration_id": "f62f5202-55c3-4dfa-bedd-ba4d2c4fb6c9",
+                    #     "integration_type": "get_entity",
+                    #     "entity_type": "project",
+                    #     "title": "",
+                    #     "allow_head": False,
+                    #     "portal_url_template": "https://singlecell.broadinstitute.org/hca-project/{entity_id}"
+                    # }
+                ]
+            },
+            {
+                "portal_id": "f58bdc5e-98cd-4df4-80a4-7372dc035e87",
+                "portal_name": "Single Cell Expression Atlas",
+                "portal_icon": "https://www.ebi.ac.uk/gxa/sc/resources/images/logos/sc_atlas_logo.png",
+                "contact_email": "",
+                "organization_name": "European Bioinformatics Institute (EMBL-EBI)",
+                "portal_description": "Single Cell Expression Atlas supports research in single cell transcriptomics.",
+                "integrations": [
+                    {
+                        "integration_id": "e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Single-cell RNA-seq analysis of human tissue ischaemic sensitivity",
+                        "entity_ids": {
+                            "staging": ["8b01ff5a-2157-4c4a-96bb-2c686a7ef8b0", "81b5f43d-3c20-4575-9efa-bfb0b070a6e3"],
+                            "integration": [],
+                            "prod": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
+                        },
+                        "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-EHCA-1/results/tsne"
+                    },
+                    {
+                        "integration_id": "dbfe9394-a326-4574-9632-fbadb51a7b1a",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Single-cell transcriptome analysis of precursors of human CD4+ cytotoxic T lymphocytes",
+                        "entity_ids": {
+                            "staging": ["519b58ef-6462-4ed3-8c0d-375b54f53c31"],
+                            "integration": ["0ec2b05f-ddbe-4e5a-b30f-e81f4b1e330c"],
+                            "prod": ["90bd6933-40c0-48d4-8d76-778c103bf545"]
+                        },
+                        "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-106540/results/tsne"
+                    },
+                    {
+                        "integration_id": "081a6a90-29b6-4100-9c42-17a50014ea03",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Reconstructing the human first trimester fetal-maternal interface using single cell transcriptomics - 10x data",
+                        "entity_ids": {
+                            "staging": [],
+                            "integration": [],
+                            "prod": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"]
+                        },
+                        "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-MTAB-6701/results/tsne"
+                    },
+                    {
+                        "integration_id": "f0886c45-e339-4f22-8f6b-a715db1943e3",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Reconstructing the human first trimester fetal-maternal interface using single cell transcriptomics - Smartseq 2 data",
+                        "entity_ids": {
+                            "staging": [],
+                            "integration": [],
+                            "prod": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"]
+                        },
+                        "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-MTAB-6678/results/tsne"
+                    },
+                    {
+                        "integration_id": "f13ddf2d-d913-492b-9ea8-2de4b1881c26",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Single cell transcriptome analysis of human pancreas",
+                        "entity_ids": {
+                            "staging": ["b1f3afcb-f061-4862-b6c2-ace971595d22", "08e7b6ba-5825-47e9-be2d-7978533c5f8c"],
+                            "integration": [],
+                            "prod": ["cddab57b-6868-4be4-806f-395ed9dd635a"]
+                        },
+                        "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/results/tsne"
+                    },
+                    {
+                        "integration_id": "5ef44133-e71f-4f52-893b-3b200d5fb99b",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Single-cell RNA-seq analysis of 1,732 cells throughout a 125-day differentiation protocol that converted H1 human embryonic stem cells to a variety of ventrally-derived cell types",
+                        "entity_ids": {
+                            "staging": ["019a935b-ea35-4d83-be75-e1a688179328"],
+                            "integration": [],
+                            "prod": ["2043c65a-1cf8-4828-a656-9e247d4e64f1"]
+                        },
+                        "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-93593/results/tsne"
+                    },
+                    {
+                        "integration_id": "d43464c0-38c6-402d-bdec-8972d71005c5 ",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Single-cell RNA-seq analysis of human pancreas from healthy individuals and type 2 diabetes patients",
+                        "entity_ids": {
+                            "staging": ["a5ae0428-476c-46d2-a9f2-aad955b149aa"],
+                            "integration": [],
+                            "prod": ["ae71be1d-ddd8-4feb-9bed-24c3ddb6e1ad"]
+                        },
+                        "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-MTAB-5061/results/tsne"
+                    },
+                    {
+                        "integration_id": "60912ae7-e88f-48bf-8b33-27daccade2b6",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Single-cell RNA-seq analysis of 20 organs and tissues from individual mice creates a Tabula muris",
+                        "entity_ids": {
+                            "staging": ["2cd14cf5-f8e0-4c97-91a2-9e8957f41ea8"],
+                            "integration": [],
+                            "prod": ["e0009214-c0a0-4a7b-96e2-d6a83e966ce0"]
+                        },
+                        "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-ENAD-15/results/tsne"
+                    },
+                ],
+            }
+        ]
