@@ -858,6 +858,35 @@ class TestHCAIndexer(IndexerTestCase):
             else:
                 self.assertIn(metadata_row['file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
 
+    def test_related_files_field_exclusion(self):
+        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+
+        # Check that the dynamic mapping has the related_files field disabled
+        index = config.es_index_name('files')
+        mapping = self.es_client.indices.get_mapping(index=index)
+        contents = mapping[index]['mappings']['doc']['properties']['contents']
+        self.assertFalse(contents['properties']['files']['properties']['related_files']['enabled'])
+
+        # Ensure that related_files exists
+        hits = self._get_all_hits()
+        for hit in hits:
+            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            if aggregate and entity_type == 'files':
+                file = one(hit['_source']['contents']['files'])
+                self.assertIn('related_files', file)
+
+        # … but that it can't be used for queries
+        zattrs_file = "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr!.zattrs"
+        hits = self.es_client.search(index=index,
+                                     body={
+                                         "query": {
+                                             "match": {
+                                                 "contents.files.related_files.name": zattrs_file
+                                             }
+                                         }
+                                     })
+        self.assertEqual(0, hits["hits"]["total"])
+
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
         bundles_index = config.es_index_name('bundles')
