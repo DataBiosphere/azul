@@ -860,12 +860,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
-
-        # Check that the dynamic mapping has the metadata field disabled
         bundles_index = config.es_index_name('bundles')
-        mapping = self.es_client.indices.get_mapping(index=bundles_index)
-        contents = mapping[bundles_index]['mappings']['doc']['properties']['contents']
-        self.assertFalse(contents['properties']['metadata']['enabled'])
 
         # Ensure that a metadata row exists …
         hits = self._get_all_hits()
@@ -886,7 +881,12 @@ class TestHCAIndexer(IndexerTestCase):
                                      })
         self.assertEqual(0, hits["hits"]["total"])
 
-        # We can, however, find documents by the mention of the bundle UUID outside of `metadata`.
+        # Check that the dynamic mapping has the metadata field disabled
+        mapping = self.es_client.indices.get_mapping(index=bundles_index)
+        contents = mapping[bundles_index]['mappings']['doc']['properties']['contents']
+        self.assertFalse(contents['properties']['metadata']['enabled'])
+
+        # Ensure we can find the bundle UUID outside of `metadata`.
         hits = self.es_client.search(index=bundles_index,
                                      body={
                                          "query": {
