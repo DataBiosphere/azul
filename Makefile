@@ -50,16 +50,19 @@ check_clean:
 	git diff --exit-code  && git diff --cached --exit-code
 
 check_autosquash:
-	@_azul_target_branch="$${TRAVIS_BRANCH:=develop}" \
-	; _azul_merge_base=$$(git merge-base HEAD "$${_azul_target_branch}") \
-	; if GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"; then \
-	    git reset --hard ORIG_HEAD \
-	    ; echo "The current branch is automatically squashable" \
-	    ; true \
+	@if [[ -z "$${TRAVIS_BRANCH}" || "$${TRAVIS_BRANCH}" == "develop" ]]; then \
+	    _azul_merge_base=$$(git merge-base HEAD develop) \
+	    ; if GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$${_azul_merge_base}"; then \
+	        git reset --hard ORIG_HEAD \
+	        ; echo "The current branch is automatically squashable" \
+	        ; true \
+	    ; else \
+	        git rebase --abort \
+	        ; echo "The current branch doesn't appear to be automatically squashable" \
+	        ; false \
+	    ; fi \
 	; else \
-	    git rebase --abort \
-	    ; echo "The current branch doesn't appear to be automatically squashable" \
-	    ; false \
+	    echo "Can only check squashability against default branch on Travis" \
 	; fi
 
 .PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test \
