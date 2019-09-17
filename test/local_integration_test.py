@@ -64,7 +64,7 @@ class IntegrationTest(unittest.TestCase):
     Finally, the tests send deletion notifications for these new bundle UUIDs which should remove all
     trace of the integration test from the index.
     """
-    prefix_length = 3
+    prefix_length = 3 if config.deployment_stage != 'integration' else 0
 
     def setUp(self):
         super().setUp()
