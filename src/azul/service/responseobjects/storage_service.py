@@ -51,6 +51,7 @@ class StorageService:
         :param file_name: the file name to be returned as part of a Content-Disposition header in the response to a
                           request to the signed URL. If None, no such header will be present in the response.
         """
+        assert file_name is None or '"' not in file_name
         return self.client.generate_presigned_url(
             ClientMethod=self.client.get_object.__name__,
             Params={
