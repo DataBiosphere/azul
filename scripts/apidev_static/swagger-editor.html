@@ -38,26 +38,27 @@
   }
 
   </style>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/swagger-api/swagger-editor/dist/swagger-editor.css" integrity="sha384-aCldT17rjjsR6S5mbExNY+OMqoGyVU0Um8aiZVfqviGGVPbCpczpo9yj292JyXSZ" crossorigin="anonymous">
-  <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/swagger-api/swagger-editor/dist/favicon-32x32.png" sizes="32x32" integrity="sha384-hXkYX0sxBdWEtT/7FmPJG6TNr14mXf42PGd+R7r0/+xwayRTAniji8SRLNqG0y4i"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/swagger-api/swagger-editor@v3.6.35/dist/swagger-editor.css" integrity="sha384-9bUyg6nkd8g1UeZrXrcRbuIvkNf8dYPunEfur8mS3ywjkldw+N2xnMAGm2pFDh/I" crossorigin="anonymous">
+  <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/swagger-api/swagger-editor@v3.6.35/dist/favicon-32x32.png" integrity="sha384-hXkYX0sxBdWEtT/7FmPJG6TNr14mXf42PGd+R7r0/+xwayRTAniji8SRLNqG0y4i" crossorigin="anonymous" sizes="32x32"/>
 </head>
 
 <body>
   <div id="swagger-editor"></div>
-  <script src="https://cdn.jsdelivr.net/gh/swagger-api/swagger-editor/dist/swagger-editor-bundle.js" integrity="sha384-cwhESfubJtm1ozw6Rrzm49Q8/BA2XZcJ4offFa/bHEts8ifnnKnNJGMVeTdXuQ1h" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/gh/swagger-api/swagger-editor/dist/swagger-editor-standalone-preset.js" integrity="sha384-ApSagJ9tdyRiB0/BJUz47nDAkuzESW5JHSOmjSPe1welUGiFHZTWSdSH+1N2auJS" crossorigin="anonymous"></script>  <script>
-  window.onload = function() {
-    // Build a system
-    const editor = SwaggerEditorBundle({
-      dom_id: '#swagger-editor',
-      layout: 'StandaloneLayout',
-      presets: [
-        SwaggerEditorStandalonePreset
-      ]
-    })
+  <script src="https://cdn.jsdelivr.net/gh/swagger-api/swagger-editor@v3.6.35/dist/swagger-editor-bundle.js" integrity="sha384-LUkAp8S2i5NtLn8ANtljSITfZuZjhbO84qy2kUTXrigVnrJ7yjVycIl2mBaKCtPJ" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/gh/swagger-api/swagger-editor@v3.6.35/dist/swagger-editor-standalone-preset.js" integrity="sha384-ikgzUgEg1HK1umCSIL3YJJXxarDzMXWDT/1E/HSSsKjPqXGL64V9qbkY43+zUnsF" crossorigin="anonymous"></script>
+  <script>
+    window.onload = function() {
+      // Build a system
+      const editor = SwaggerEditorBundle({
+        dom_id: '#swagger-editor',
+        layout: 'StandaloneLayout',
+        presets: [
+          SwaggerEditorStandalonePreset
+        ]
+      })
 
-    window.editor = editor
-  }
+      window.editor = editor
+    }
   </script>
 
   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="position:absolute;width:0;height:0">
