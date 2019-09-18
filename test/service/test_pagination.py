@@ -101,7 +101,7 @@ class PaginationTestCase(WebServiceTestCase):
         passes from and size variables.
         :return:
         """
-        content = requests.get("{}?sort=entryId&from=1&size=10&order=desc".format(self.get_base_url())).content
+        content = requests.get("{}?sort=entryId&size=10&order=desc".format(self.get_base_url())).content
         json_response = json.loads(content)
         self.assert_page1_correct(json_response)
 
