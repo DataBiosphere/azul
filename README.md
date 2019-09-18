@@ -1232,9 +1232,20 @@ The script gives you a url where your current version of the documentation
 is visible. Change the docs in `azul/service/app.py`, save, and refresh the page and
 your changes will appear immediately along with any warnings or errors they introduce.
 
-The script pulls the skeleton for what it displays from the currently activated
-deployment. If you add new endpoints or change endpoint parameters, this won't be
-reflected nor validated by the script. To remedy this run
+Some changes to `app.py` won't take effect with this script unless the changes
+are deployed in the active deployment. Specifically, changes to
+
+- the global OpenAPI spec
+- the OpenAPI spec within the `spec` parameter to the `route` decorator
+- the *body* of pre-existing route functions
+
+will **not** require redeployment. Any other changes **will**, such as
+
+- adding/removing routes
+- adding/removing parameters to the route functions
+- most anything else
+
+To redeploy, run
 ```
 make -C lambdas/service deploy  # deploy to service only
 ```
