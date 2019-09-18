@@ -65,6 +65,8 @@ generic with minimal need for project-specific behavior.
     - [8.7 The Gitlab Build Environment](#87-the-gitlab-build-environment)
 - [9. Kibana](#9-kibana)
 - [10. Making wheels](#10-making-wheels)
+- [11. Development tools](#11-development-tools)
+    - [11.1 OpenAPI development](#111-openapi-development)
 
 
 The Azul project contains the components that together serve as the backend to
@@ -374,9 +376,16 @@ make subscribe
 
 By default, the creation of that subscription is enabled (see
 `AZUL_SUBSCRIBE_TO_DSS` in `environment`). All shared deployments in
-`deployments/` inherit that default. If you don't want a personal deployment to
-subscribe to the configured DSS instance you should set `AZUL_SUBSCRIBE_TO_DSS`
-to 0. Subscription requires credentials to a service account that has the
+`deployments/` inherit that default.
+
+Personal deployments should not be permanently subscribed to any DSS instance
+because they are more likely to be broken, causing unnecessary load on the DSS
+instance when it retries sending notifications to a broken personal Azul
+deployment. To temporarily subscribe a personal deployment, set
+`AZUL_SUBSCRIBE_TO_DSS` to 1 and run `make subscribe`. When you are done, run
+`make unsubscribe` and set `AZUL_SUBSCRIBE_TO_DSS` back to 0.
+
+Subscription requires credentials to a service account that has the
 required privileges to create another service account under which the
 subscription is then made. This indirection exists to faciliate shared
 deployments without having to share any one person's Google credentials. The
@@ -728,11 +737,18 @@ least once already._
 
    to ensure that your connection is working.
 
-If you have been given write access the `prod` deployment, you need to repeat
-these steps for our production Gitlab instance. For the name of the `git` remote
-use `gitlab.prod` instead of `gitlab.dev` in step 4 above. The hostname of that
-instance is the same as that of the Gitlab instance for the lesser deployments,
-without `.dev`.
+If you have been given write access to our production Gitlab instance, you need
+to repeat these steps for that instance as well. For the name of the `git`
+remote use `gitlab.prod` instead of `gitlab.dev` in step 4 above. The hostname
+of that instance is the same as that of the Gitlab instance for the lesser
+deployments, without `.dev`. 
+
+Note that access to the production instance of Gitlab does not necessarily
+imply access to production AWS account which that Gitlab instance deploys to.
+So while you may be able to run certain `make` targets like `make reindex` or
+`make terraform` against the development AWS account (with `dev`, `integration`
+or `staging` selected), you may not be able to do the same for the production
+AWS account (with `prod` selected).
 
 
 ### 6.1.2 Prepare for promotion
@@ -775,7 +791,22 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    previous release tag for the TARGET branch. Then run:
 
    ```
-   git log LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --no-merges
+   git log LAST_RELEASE_TAG..HEAD --format="%C(auto) %h %s" --graph
+   ```
+   Edit this output so that the commits within merged branches are removed, along with
+   merge commits between deployments. For example
+   ```
+   *  C  <-- merge commit
+   |\
+   | *  B
+   |/
+   *  A
+   *  Merge branch 'develop' into integration
+   ```
+   should be changed to look like
+   ```
+   *  C  <-- merge commit
+   *  A
    ```
 
    For the version, use the full hash of the latest commit:
@@ -789,7 +820,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    unreliable. Try running
 
    ```
-   git diff LAST_RELEASE_TAG..HEAD src/azul/project/ src/azul/indexer.py src/azul/plugin.py
+   git diff LAST_RELEASE_TAG..HEAD src/azul/project/ src/azul/indexer.py src/azul/plugin.py src/azul/transformer.py
    ```
 
    where `LAST_RELEASE_TAG` is the previous release of the target branch. If the diff
@@ -898,13 +929,12 @@ are ready to actually deploy.
 
    invocation that it echoes.
 
-6. In the case that you need to reindex run the manual `reindex` job on the 
-   Gitlab pipeline representing the most recent build on the current branch.
+6. In Zenhub, move all tickets from the pipeline representing the source
+   deployment of the promotion to the pipeline representing the target
+   deployment.
 
-7. Once reindexing is complete announce this in the #data-wranging Slack
-   channel. Reindexing is complete when the health endpoint has shown that
-   the number of `unindexed_bundles` and `unindexed_documents` is zero and
-   has remained zero for at least five minutes.
+7. In the case that you need to reindex run the manual `reindex` job on the
+   Gitlab pipeline representing the most recent build on the current branch.
 
 ## 6.2 Big red button
 
@@ -1097,6 +1127,14 @@ access can push code to intentionally or accidentally expose those variables,
 push access is tied to shell access which is what one would normally need to
 modify those files.
 
+## 8.8. Cleaning up hung test containers
+
+When cancelling the `make test` job on Gitlab, test containers will be left
+running. To clean those up, ssh into the instance as described in
+[gitlab.tf.json.template.py] and run ``docker exec gitlab-dind docker ps -qa |
+xargs docker exec gitlab-dind docker kill`` and again but with ``rm`` instead
+of ``kill``.
+
 # 9. Kibana
 
 Kibana is a web UI for interactively querying and managing an Elasticsearch
@@ -1177,3 +1215,28 @@ Then modify the `wheels` target in `lambdas/*/Makefile` to unzip the wheel into
 the corresponding vendor directory.
 
 Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
+
+# 11. Development tools
+
+## 11.1 OpenAPI development
+
+To assist with adding documentation to the Azul Service OpenAPI page
+(https://service.dev.explore.data.humancellatlas.org/), we use a script that
+validates the specifications.
+
+To run the script, activate your virtual environment, then run
+```
+python scripts/apidev.py
+```
+The script gives you a url where your current version of the documentation
+is visible. Change the docs in `azul/service/app.py`, save, and refresh the page and
+your changes will appear immediately along with any warnings or errors they introduce.
+
+The script pulls the skeleton for what it displays from the currently activated
+deployment. If you add new endpoints or change endpoint parameters, this won't be
+reflected nor validated by the script. To remedy this run
+```
+make -C lambdas/service deploy  # deploy to service only
+```
+with your personal deployment selected. Then refresh the web page from the
+script.
