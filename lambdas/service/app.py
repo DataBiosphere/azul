@@ -977,7 +977,7 @@ def _dss_files(uuid, fetch=True):
     return response
 
 
-def file_url(uuid, fetch=True, **params):
+def file_url(uuid: str, fetch: bool = True, **params: str):
     uuid = urllib.parse.quote(uuid, safe="")
     view_function = fetch_dss_files if fetch else dss_files
     url = self_url(endpoint_path=view_function.path.format(uuid=uuid))
