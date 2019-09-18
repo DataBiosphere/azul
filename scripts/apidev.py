@@ -29,7 +29,7 @@ def main():
     httpd = HTTPServer((host, port), SimpleHTTPRequestHandler)
     address = f"{server_url}/{os.path.relpath(web_page)}?url={server_url}/{os.path.relpath(parent_dir)}/{spec_file}"
     print(f'Open {address} in browser to validate changes.')
-    print('If you changed/added any routes, make sure to deploy afterwords (also update API version)!')
+    print('If you changed/added any routes, make sure to deploy afterwards (also update API version)!')
     print('This is because the specs are pulled from API Gateway which needs '
           'to be up to date with any new routes')
 
@@ -53,7 +53,7 @@ class UpdateHandler(FileSystemEventHandler):
     def on_modified(self, event):
         if event.src_path == self.tracked_file:
             self.service = load_app_module('service')
-            write_specs(self.gateway_id, self.service.app, self.service.api_info)
+            write_specs(self.gateway_id, self.service.app, self.service.openapi_spec)
             print('Spec updated')
 
 
