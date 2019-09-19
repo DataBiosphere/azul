@@ -1,5 +1,4 @@
-import os
-from unittest import TestCase, mock
+from unittest import TestCase
 
 import boto3.session
 
