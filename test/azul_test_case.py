@@ -118,7 +118,7 @@ class AzulTestCase(TestCase):
         super().tearDownClass()
 
     @classmethod
-    def _make_fake_notification(cls, bundle_fqid) -> JSON:
+    def _fake_notification(cls, bundle_fqid) -> JSON:
         bundle_uuid, bundle_version = bundle_fqid
         return {
             "query": {

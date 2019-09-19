@@ -4,7 +4,6 @@ from functools import (
     lru_cache,
 )
 from itertools import chain
-import json
 import time
 from typing import (
     Iterable,
@@ -270,13 +269,13 @@ class HealthController:
     def all_keys(cls) -> Set[str]:
         return {p.key for p in cls.all_properties}
 
-    def archive_fail_messages(self):
+    def archive_fail_messages(self, receive_message_wait_time=5):
         client = boto3.client('dynamodb')
         fail_queue = boto3.resource('sqs').get_queue_by_name(QueueName=config.fail_queue_name)
         while True:
             received_messages = fail_queue.receive_messages(AttributeNames=['All'],
                                                             MaxNumberOfMessages=10,
-                                                            WaitTimeSeconds=20,
+                                                            WaitTimeSeconds=receive_message_wait_time,
                                                             VisibilityTimeout=300)
             if received_messages:
                 message_batch = [
@@ -299,8 +298,9 @@ class HealthController:
                 items = {config.dynamo_failure_message_table_name: message_batch}
                 response = client.batch_write_item(RequestItems=items)
                 unprocessed_items = response['UnprocessedItems']
-                if unprocessed_items and unprocessed_items[config.dynamo_failure_message_table_name]:
-                    raise ConnectionError('Unable to process and write all messages to dynamo db.')
+                if unprocessed_items:
+                    assert len(unprocessed_items) == 1 and unprocessed_items[config.dynamo_failure_message_table_name]
+                    raise ConnectionError('Unable to write all messages to DynamoDB table.')
                 else:
                     fail_queue.delete_messages(Entries=[
                         {
