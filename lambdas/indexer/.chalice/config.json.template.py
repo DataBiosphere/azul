@@ -34,6 +34,9 @@ emit({
                     "lambda_memory_size": 3008,
                     "lambda_timeout": config.aggregation_lambda_timeout(retry=True)
                 },
+                "failuremessages": {
+                    'lambda_timeout': config.indexer_lambda_timeout
+                },
                 config.indexer_cache_health_lambda_basename: {
                     "lambda_memory_size": 128,
                     "lambda_timeout": config.health_lambda_timeout,

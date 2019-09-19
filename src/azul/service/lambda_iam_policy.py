@@ -156,6 +156,15 @@ policy = {
         {
             "Effect": "Allow",
             "Action": [
+                "dynamodb:Query"
+            ],
+            "Resource": [
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_failure_message_table_name}",
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
                 "ssm:GetParameter"
             ],
             "Resource": [

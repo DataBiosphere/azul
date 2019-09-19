@@ -77,6 +77,22 @@ emit_tf(
                                 "type": "S"
                             }
                         ]
+                    },
+                    "failed_messages_table": {
+                        "name": config.dynamo_failure_message_table_name,
+                        "billing_mode": "PAY_PER_REQUEST",
+                        "hash_key": "MessageType",
+                        "range_key": "SentTimeMessageId",
+                        "attribute": [
+                            {
+                                "name": "MessageType",
+                                "type": "S"
+                            },
+                            {
+                                "name": "SentTimeMessageId",
+                                "type": "S"
+                            }
+                        ]
                     }
                 }
             }

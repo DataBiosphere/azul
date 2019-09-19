@@ -1,9 +1,11 @@
 from functools import cached_property
+import json
 import logging
 from typing import (
     Optional,
 )
 
+import boto3
 # noinspection PyPackageRequirements
 import chalice
 
@@ -14,6 +16,7 @@ from azul.chalice import AzulChaliceApp
 from azul.health import HealthController
 from azul.indexer.index_controller import IndexController
 from azul.logging import configure_app_logging
+from azul.queues import Queues
 
 log = logging.getLogger(__name__)
 
@@ -124,3 +127,23 @@ def aggregate(event: chalice.app.SQSEvent):
                     batch_size=IndexController.document_batch_size)
 def aggregate_retry(event: chalice.app.SQSEvent):
     app.index_controller.aggregate(event, retry=True)
+
+
+@app.schedule('rate(5 minutes)')
+def retrieve_fail_messages(event: chalice.app.CloudWatchEvent):
+    """
+    Get all the messages from the fail queue and save them in the the DynamoDB failure message table.
+    """
+    assert event is not None  # avoid linter warning
+    messages = Queues().receive_all_messages(config.fail_queue_name)
+    database = boto3.resource('dynamodb')
+    table = database.Table(config.dynamo_failure_message_table_name)
+    with table.batch_writer() as writer:
+        for message in messages:
+            body = json.loads(message.body)
+            item = {
+                'MessageType': 'bundle_notification' if 'notification' in body.keys() else 'other',
+                'SentTimeMessageId': f"{message.attributes['SentTimestamp']}-{message.message_id}",
+                'Body': message.body
+            }
+            writer.put_item(Item=item)

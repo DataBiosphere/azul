@@ -69,6 +69,16 @@ class Queues:
 
     def _dump(self, queue, path):
         logger.info('Writing messages from queue "%s" to file "%s"', queue.url, path)
+        messages = self._receive_all_messages(queue)
+        self._dump_messages(messages, queue.url, path)
+        logger.info(f'Finished writing {path !r}')
+
+    def receive_all_messages(self, queue_name):
+        sqs = boto3.resource('sqs')
+        queue = sqs.get_queue_by_name(QueueName=queue_name)
+        return self._receive_all_messages(queue)
+
+    def _receive_all_messages(self, queue):
         messages = []
         while True:
             message_batch = queue.receive_messages(AttributeNames=['All'],
@@ -78,7 +88,6 @@ class Queues:
                 break
             else:
                 messages.extend(message_batch)
-        self._dump_messages(messages, queue.url, path)
         message_batches = list(more_itertools.chunked(messages, 10))
         if self._delete:
             logger.info('Removing messages from queue "%s"', queue.url)
@@ -86,7 +95,7 @@ class Queues:
         else:
             logger.info('Returning messages to queue "%s"', queue.url)
             self._return_messages(message_batches, queue)
-        logger.info(f'Finished writing {path !r}')
+        return messages
 
     def _dump_messages(self, messages, queue_url, path):
         messages = [self._condense(message) for message in messages]

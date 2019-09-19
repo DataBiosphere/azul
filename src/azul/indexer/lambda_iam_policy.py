@@ -98,6 +98,26 @@ policy = {
         {
             "Effect": "Allow",
             "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+            ],
+            "Resource": [
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:{config.fail_queue_name}"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:BatchWriteItem",
+                "dynamodb:DescribeTable"
+            ],
+            "Resource": [
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_failure_message_table_name}",
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
                 "ssm:GetParameter"
             ],
             "Resource": [
