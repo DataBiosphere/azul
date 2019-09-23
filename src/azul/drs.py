@@ -19,7 +19,7 @@ def object_url(file_uuid: str,
                      current deployment will be used.
     """
     scheme, netloc = _endpoint(base_url)
-    return urlunsplit(SplitResult(scheme='dos',
+    return urlunsplit(SplitResult(scheme='drs',
                                   netloc=netloc,
                                   path=file_uuid,
                                   query=_url_query(file_version),

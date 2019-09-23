@@ -5,3 +5,4 @@
 /lambda-policy.json
 /vendor/*
 !/vendor/azul
+!/vendor/static

@@ -1,4 +1,7 @@
 import importlib.util
+import os
+
+from azul import config
 
 
 def load_module(path: str, module_name: str):
@@ -17,3 +20,8 @@ def load_module(path: str, module_name: str):
     assert path == module.__file__
     assert module.__name__ == module_name
     return module
+
+
+def load_app_module(lambda_name):
+    path = os.path.join(config.project_root, 'lambdas', lambda_name, 'app.py')
+    return load_module(path, '__main__')

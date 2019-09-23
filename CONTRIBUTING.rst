@@ -61,6 +61,71 @@ Code Style
 .. [#] Note: If we were to adopt trailing commas, we would also have to
        abandon our preference of aligned indent.
 
+* Except for log messages (see below), we don't use the ``%`` operator or the
+  ``str.format()`` method. We use ``f''`` strings or string concatenation. When
+  chosing between the latter two, we use the one that yields the shortest
+  expression. When both alternatives yield an expression of equal lengths, we
+  prefer string concatenation::
+  
+    f'{a}{b}'  # Simple concatenation of variables
+    a + b      # tends to be longer with f'' strings
+    
+    a + str(b) # {} calls str implicitly so f'' strings win
+    f'{a}{b}'  # if any of the variables is not a string
+
+    a + ' ' + b + '.tsv'  # When multiple literal strings are involved
+    f'{a} {b}.tsv'        # f'' strings usually yield shorter expressions
+    
+* We use ``str.join()`` when joining more than three elements with the same
+  character or when the elements are already in an iterable form::
+  
+    f'{a},{b},{c},{d}'     # while this is shorter
+    ','.join((a, b, c, d)) # this is more readable
+  
+    f'{a[0],a[1]}  # this is noisy and tedious
+    ','.join(a)    # this is not
+  
+
+Logging
+*******
+
+* Loggers are instantiated in every module that needs to log
+
+* Loggers are always instantiated as follows::
+
+    log = logging.getLogger(__name__) # is preferred for new code
+    logger = logging.getLogger(__name__) # this is ok in old code
+  
+* At program entry points we use the appropriate configuration method from
+  `azul.logging`. Program entry points are 
+  
+  - in scripts::
+
+      if __name__ == '__main__':
+          configure_script_logging(log)
+
+  - in test modules::
+
+      def setUpModule():
+          configure_test_logging(log)
+
+  - in ``app.py``::
+
+      log = logging.getLogger(__name__)
+      app = AzulChaliceApp(app_name=config.indexer_name)
+      configure_app_logging(app, log)
+
+* We don't use ``f''`` strings or string concatenation when interpolating
+  dynamic values into log messages::
+
+    log.info(f'Foo is {bar}')  # don't do this
+    log.info('Foo is %s', bar)  # do this
+  
+* Computationally expensive interpolations should be guarded::
+
+    if log.isEnabledFor(logging.DEBUG):
+        log.debug('Foo is %s', json.dump(giant, indent=4)
+
 
 Imports
 *******
@@ -447,8 +512,9 @@ Pull Requests
 
 * … we don't eagerly squash them. Changes that address the outcome of a review
   should appear as separate commit. We prefix the title of those commits with
-  ``SQ:`` an follow that with the title of an earlier commit that the current
-  commit should be squashed with.
+  ``fixup! `` and follow that with the title of an earlier commit that the
+  current commit should be squashed with. A convenient way to create those
+  commits is by using the ``--fixup`` option to ``git commit``.
   
 * The author of a PR may request reviews from anyone at any time. Once the
   author considers a PR ready to land (be merged into the base branch), the
@@ -460,10 +526,13 @@ Pull Requests
   assignee may push to the PR branch. If a PR is assigned to no one, only the
   author may push to the PR branch.
 
-* We may amend commits on PR branches, but only between primary reviews. We 
+* We may amend commits on PR branches, but only between primary reviews. We
   don't amend a commit that's already been reviewed. Instead we create a new
-  ``SQ: …`` commit for addressing the reviewers comments. Before asking for
-  another review we may amend that commit.
+  ``fixup!`` commit for addressing the reviewers comments.
+  
+  Before asking for another review we may amend that commit. In fact, amending
+  a `!fixup` commit between reviews is preferred in order to avoid continuous
+  chains of redundant fixup commits referring to the same main commit.
   
   Considering that we also require frequent rebasing, this rule makes for a
   more transparent review process. The reviewers can ignore force pushes
@@ -474,19 +543,19 @@ Pull Requests
   
 * At times it may be necessary to temporarily add a commit to a PR branch e.g.,
   to facilitate testing. These commits should be removed prior to landing the
-  PR and their title is prefixed with ``DELETE ME:``.
+  PR and their title is prefixed with ``drop! ``.
   
 * The reviewer may ask the author to consolidate long PR branches in order to
   simplify conflict resolution during rebasing. Consolidation means squashing
-  ``SQ:`` commits so they disappear from the history. ``DELETE ME:`` commits
+  ``fixup!`` commits so they disappear from the history. ``drop!`` commits
   may be retained during consolidation.
 
 * Most PRs land squashed down into a single commit. A PR with more than one
   significant commit is referred to as a *multi-commit PR*. Prior to landing
   such a PR, the primary reviewer may decide to consolidate its branch.
   Alternatively, the primary reviewer may ask the PR author to do so in a final
-  rejection of the PR. The final consolidation eliminates both ``SQ:`` and
-  ``DELETE ME:`` commits.
+  rejection of the PR. The final consolidation eliminates both ``fixup!`` and
+  ``drop!`` commits.
 
 * We usually don't request a review before all status checks are green. In
   certain cases a preliminary review of a work in progress is permissable but

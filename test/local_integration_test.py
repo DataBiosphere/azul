@@ -21,6 +21,7 @@ from more_itertools import one, first
 from io import BytesIO, TextIOWrapper
 from zipfile import ZipFile
 
+from openapi_spec_validator import validate_spec
 from requests import HTTPError
 
 from azul import config
@@ -63,7 +64,7 @@ class IntegrationTest(unittest.TestCase):
     Finally, the tests send deletion notifications for these new bundle UUIDs which should remove all
     trace of the integration test from the index.
     """
-    prefix_length = 3
+    prefix_length = 3 if config.deployment_stage != 'integration' else 0
 
     def setUp(self):
         super().setUp()
@@ -116,6 +117,7 @@ class IntegrationTest(unittest.TestCase):
             for endpoint in config.service_endpoint(), config.indexer_endpoint():
                 self.check_endpoint_is_working(endpoint, '/health' + health_key)
         self.check_endpoint_is_working(config.service_endpoint(), '/')
+        self.check_endpoint_is_working(config.service_endpoint(), '/openapi')
         self.check_endpoint_is_working(config.service_endpoint(), '/version')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
         self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
@@ -339,6 +341,21 @@ class IntegrationTest(unittest.TestCase):
             params['search_after'] = search_after
             params['search_after_uid'] = pagination['search_after_uid']
         return entities
+
+
+class OpenAPIIntegrationTest(unittest.TestCase):
+
+    def test_openapi(self):
+        service = config.service_endpoint()
+        response = requests.get(service + '/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['content-type'], 'text/html')
+        self.assertGreater(len(response.content), 0)
+        # validate OpenAPI spec
+        response = requests.get(service + '/openapi')
+        response.raise_for_status()
+        spec = response.json()
+        validate_spec(spec)
 
 
 class DSSIntegrationTest(unittest.TestCase):

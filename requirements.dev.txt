@@ -11,4 +11,6 @@ pyyaml==3.12
 responses==0.10.2
 furl==2.0.0
 PyGithub==1.43.5
+openapi-spec-validator==0.2.8
+watchdog==0.9.0
 -r requirements.txt
