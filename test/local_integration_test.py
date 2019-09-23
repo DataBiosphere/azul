@@ -128,8 +128,10 @@ class IntegrationTest(unittest.TestCase):
         for format_, validator in [
             (None, self.check_manifest),
             ('tsv', self.check_manifest),
+            ('compact', self.check_manifest),
             ('full', self.check_manifest),
-            ('bdbag', self.check_bdbag)
+            ('bdbag', self.check_terra_bdbag),
+            ('terra.bdbag', self.check_terra_bdbag)
         ]:
             with self.subTest(format=format_, filter=manifest_filter):
                 query = {'filters': manifest_filter}
@@ -192,7 +194,7 @@ class IntegrationTest(unittest.TestCase):
     def check_manifest(self, response: bytes):
         self._check_manifest(BytesIO(response), 'bundle_uuid')
 
-    def check_bdbag(self, response: bytes):
+    def check_terra_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'participants.tsv')
