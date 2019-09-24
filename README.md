@@ -54,6 +54,7 @@ generic with minimal need for project-specific behavior.
         - [6.1.2 Prepare for promotion](#612-prepare-for-promotion)
         - [6.1.3 Finishing up deployment / promotion](#613-finishing-up-deployment--promotion)
     - [6.2 Big red button](#62-big-red-button)
+    - [6.3 Copying bundles](#63-copying-bundles)
 - [7. Scale testing](#7-scale-testing)
 - [8. Continuous deployment and integration](#8-continuous-deployment-and-integration)
     - [8.1 The Sandbox Deployment](#81-the-sandbox-deployment)
@@ -953,6 +954,116 @@ Once your issue has been resolved, you can resume Azul's services by running
 ```
 python scripts/enable_lambdas.py --enable
 ```
+
+
+## 6.3 Copying bundles
+
+In order to copy bundles from one DSS instance to another, you can use
+`scripts/copy_bundles.py`. The script copies specific bundles or all bundles
+listed in a given manifest. It iterates over all source bundles, and all files
+in each source bundle. It copies the files by determining the native URL
+(`s3://…` ) of the DSS blob object for each file and passing that native URL to
+the destination DSS' `PUT /files` endpoint as the source URL parameter for that
+request. This means that it is actually the destination DSS that physically
+copies the files. Once all files in a bundle were copied, the script requests
+the `PUT /bundles` endpoint to create a copy of the source bundle.
+
+The script is idempotent, meaning you can run it repeatedly without harm,
+mostly thanks to the fact that the DSS' `PUT /files` and `PUT /bundles`
+endpoints are idempotent. If a script invocation resulted in a transient error,
+running the script again will retry all DSS requests, both successful requests
+and requests that failed in the previous invocation.
+
+In order to determine the native URL of the source blob, the script needs
+direct read access to the source DSS bucket. This is because blobs are an
+implementation detail of the DSS and obtaining their native URL is not
+supported by the DSS. 
+
+Furthermore, The destination DSS requires the source object to carry tags
+containing the four checksums of the blob. Some blobs in some DSS instances
+have those tags, some don't. It is unclear the tags are supposed to be present
+on all blob objects or if their presence is incidental. To work around this,
+the script can optionally create those tags when the destination DSS complains
+that they are missing. To enable the creation of checksum tags on source blob
+objects, use the `---fix-tags` option. Please be aware that `--fix-tags`
+entails modifying object tags in the source (!) bucket.
+
+The destination DSS instance requires read access to the blobs in the source
+DSS bucket. The `integration` and `staging` instances can read each other's
+buckets so copies can be made between those two instances. To copy bundles from
+a DSS instance that is in a different AWS account compared to the destination
+instance, from prod to integration, for example, you will likely need to modify
+the source DSS bucket's bucket policy.
+
+You should never copy **to** the HCA `prod` instance of the DSS.
+
+Here is a complete example for copying bundles from `prod` to `integration`.
+
+1) Ask someone with admin access to the DSS `prod` bucket (`org-hca-dss-prod`)
+   to add the following statements to the bucket policy of said bucket. The
+   first statement gives the destination DSS read access to the source DSS
+   instance. The second statement gives you read access to that bucket (needed
+   for direct access) and permission to set tags on objects (needed for
+   `--fix-tags`).
+
+   ```json
+   [
+       {
+           "Sid": "copy-bundles",
+           "Effect": "Allow",
+           "Principal": {
+               "AWS": [
+                   "arn:aws:iam::861229788715:role/dss-integration",
+                   "arn:aws:iam::861229788715:role/dss-s3-copy-sfn-integration",
+                   "arn:aws:iam::861229788715:role/dss-s3-copy-write-metadata-sfn-integration"
+               ]
+           },
+           "Action": [
+               "s3:GetObject",
+               "s3:GetObjectTagging"
+           ],
+           "Resource": "arn:aws:s3:::org-hca-dss-prod/*"
+       },
+       {
+           "Sid": "direct-read-access-and-retag-blobs",
+           "Effect": "Allow",
+           "Principal": {
+               "AWS": [
+                   "arn:aws:iam::861229788715:role/dcp-admin",
+                   "arn:aws:iam::861229788715:role/dcp-developer"
+               ]
+           },
+           "Action": [
+               "s3:GetObject",
+               "s3:GetObjectTagging",
+               "s3:PutObjectTagging"
+           ],
+           "Resource": [
+               "arn:aws:s3:::org-hca-dss-prod/*"
+           ]
+       }
+   ]
+   ```
+
+2) Select the `integration` deployment:
+
+   ```
+   _select integration
+   ```
+
+3) Run
+
+   ```
+   python scripts/copy_bundles --map-version 1.374856 \
+                               --fix-tags \
+                               --source https://dss.data.humancellatlas.org/v1 \
+                               --destination https://dss.integration.data.humancellatlas.org/v1 \
+                               --manifest /path/to/manifest.tsv
+   ```
+
+   The `--map-version` option adds a specific duration to the version of each
+   copied file and bundle. Run `python scripts/copy_bundles --help` for details.
+
 
 # 7. Scale testing
 

@@ -5,6 +5,7 @@ import azul
 import azul.azulclient
 import azul.collections
 import azul.json_freeze
+from azul.logging import configure_test_logging
 from azul.modules import load_module, load_app_module
 import azul.openapi
 import azul.service.responseobjects.elastic_request_builder
@@ -16,7 +17,12 @@ import azul.vendored.frozendict
 import retorts
 
 
-def load_tests(loader, tests, ignore):
+# noinspection PyPep8Naming
+def setupModule():
+    configure_test_logging()
+
+
+def load_tests(_loader, tests, _ignore):
     tests.addTests(doctest.DocTestSuite(azul))
     tests.addTests(doctest.DocTestSuite(azul.collections))
     tests.addTests(doctest.DocTestSuite(azul.json_freeze))
@@ -33,6 +39,7 @@ def load_tests(loader, tests, ignore):
     root = azul.config.project_root
     tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/envhook.py', 'envhook')))
     tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/check_branch.py', 'check_branch')))
+    tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/copy_bundles.py', 'copy_bundles')))
     return tests
 
 
