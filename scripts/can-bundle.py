@@ -47,12 +47,14 @@ def main(argv):
                         help="Dump the return value of metadata-api's as_json function (default off).")
     args = parser.parse_args(argv)
 
-    dss_client = config.dss_client(dss_endpoint=args.dss_url)
+    dss_client = config.dss_client(dss_endpoint=args.dss_url,
+                                   adapter_args=dict(pool_maxsize=config.num_dss_workers))
     patch_client_for_direct_access(dss_client)
     version, manifest, metadata_files = download_bundle_metadata(client=dss_client,
                                                                  replica=args.replica,
                                                                  uuid=args.uuid,
-                                                                 version=args.version)
+                                                                 version=args.version,
+                                                                 num_workers=config.num_dss_workers)
     logger.info('Downloaded bundle %s version %s from replica %s.', args.uuid, version, args.replica)
 
     api_json = as_json(Bundle(args.uuid, version, manifest, metadata_files)) if args.api_json else None

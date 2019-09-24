@@ -4,9 +4,12 @@ import logging
 import os
 import tempfile
 import types
+from typing import Mapping, Optional, Any
 from unittest.mock import MagicMock, patch
 
 import boto3
+from hca.dss import DSSClient
+from requests import Session
 
 from azul import config
 
@@ -78,6 +81,39 @@ def patch_client_for_direct_access(client):
 
     client.get_file = types.MethodType(new_get_file, client)
     client.get_bundle = new_get_bundle()
+
+
+class AzulDSSClient(DSSClient):
+    """
+    An DSSClient with Azul-specific extensions and fixes.
+    """
+
+    def __init__(self, *args, adapter_args: Optional[Mapping[str, Any]] = None, **kwargs):
+        """
+        Pass adapter_args=dict(pool_maxsize=self.num_workers) in order to avoid the resource warnings
+
+        :param args: positional arguments to pass to DSSClient constructor
+        :param adapter_args: optional keyword arguments to request's HTTPAdapter class
+        :param kwargs: keyword arguments to pass to DSSClient constructor
+        """
+        self._adapter_args = adapter_args  # yes, this must come first
+        super().__init__(*args, **kwargs)
+
+    def _set_retry_policy(self, session: Session):
+        if self._adapter_args is None:
+            super()._set_retry_policy(session)
+        else:
+            from requests.sessions import HTTPAdapter
+
+            class MyHTTPAdapter(HTTPAdapter):
+
+                # noinspection PyMethodParameters
+                def __init__(self_, *args, **kwargs):
+                    kwargs.update(self._adapter_args)
+                    super().__init__(*args, **kwargs)
+
+            with patch('hca.util.HTTPAdapter', new=MyHTTPAdapter):
+                super()._set_retry_policy(session)
 
 
 @contextmanager
