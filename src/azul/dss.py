@@ -4,83 +4,124 @@ import logging
 import os
 import tempfile
 import types
-from typing import Mapping, Optional, Any
+from typing import Mapping, Optional, Any, Union
 from unittest.mock import MagicMock, patch
 
 import boto3
+from botocore.response import StreamingBody
 from hca.dss import DSSClient
 from requests import Session
 
 from azul import config
+from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 
 
-def patch_client_for_direct_access(client):
+class MiniDSS:
+
+    def __init__(self, dss_endpoint=None, **s3_client_kwargs) -> None:
+        super().__init__()
+        self.s3 = boto3.client('s3', **s3_client_kwargs)
+        self.bucket = config.dss_main_bucket(dss_endpoint)
+
+    def get_bundle(self, uuid: str, version: str, replica: str) -> JSON:
+        assert replica == 'aws' and version is not None
+        logger.debug('Loading bundle %s, version %s from bucket %s', uuid, version)
+        bundle_key = f'bundles/{uuid}.{version}'
+        try:
+            bundle = json.load(self._get_object(bundle_key))
+        except Exception:
+            logger.warning('Error accessing bundle %s in DSS bucket %s directly.',
+                           bundle_key, self.bucket, exc_info=True)
+            raise
+        # Massage manifest format to match results from DSS
+        for f in bundle['files']:
+            f['s3_etag'] = f.pop('s3-etag')
+        return bundle
+
+    def get_file(self, uuid: str, version: str, replica: str) -> Union[StreamingBody, JSON]:
+        assert replica == 'aws' and version is not None
+        logger.debug('Loading file %s, version %s', uuid, version)
+        file_object = self._get_file_object(uuid, version)
+        blob_key = self._get_blob_key(file_object)
+        blob = self._get_blob(blob_key, file_object)
+        return blob
+
+    def get_native_file_url(self, uuid: str, version: str, replica: str) -> str:
+        assert replica == 'aws' and version is not None
+        file_object = self._get_file_object(uuid, version)
+        blob_key = self._get_blob_key(file_object)
+        return f's3://{self.bucket}/{blob_key}'
+
+    def _get_file_object(self, uuid: str, version: str) -> JSON:
+        file_key = f'files/{uuid}.{version}'
+        try:
+            return json.load(self._get_object(file_key))
+        except Exception:
+            logger.warning('Error accessing file %s in DSS bucket %s directly.',
+                           file_key, self.bucket, exc_info=True)
+            raise
+
+    def _get_blob_key(self, file_object: JSON) -> str:
+        try:
+            return 'blobs/' + '.'.join(file_object[k] for k in ('sha256', 'sha1', 's3-etag', 'crc32c'))
+        except Exception:
+            logger.warning('Error determining blob key from file %r in DSS bucket %s directly.',
+                           file_object, self.bucket, exc_info=True)
+            raise
+
+    def _get_blob(self, blob_key: str, file_object: JSON) -> Union[JSON, StreamingBody]:
+        try:
+            blob = self._get_object(blob_key)
+            content_type, _, rest = file_object['content-type'].partition(';')
+            if content_type == 'application/json':
+                blob = json.load(blob)
+            return blob
+        except Exception:
+            logger.warning('Error accessing blob %s in DSS bucket %s directly.',
+                           blob_key, self.bucket, exc_info=True)
+            raise
+
+    def _get_object(self, key: str) -> StreamingBody:
+        logger.debug('Loading object %s from bucket %s', key, self.bucket)
+        return self.s3.get_object(Bucket=self.bucket, Key=key)['Body']
+
+
+def patch_client_for_direct_access(client: DSSClient):
     old_get_file = client.get_file
     old_get_bundle = client.get_bundle
-    s3 = boto3.client('s3')
-    dss_bucket = config.dss_main_bucket
+    mini_dss = MiniDSS()
 
     def new_get_file(self, uuid, replica, version=None):
         assert client is self
-        if replica == 'aws' and version is not None:
-            file_key = None
-            try:
-                file_key = f'files/{uuid}.{version}'
-                logger.debug('Loading file %s from bucket %s', file_key, dss_bucket)
-                file = json.load(s3.get_object(Bucket=dss_bucket, Key=file_key)['Body'])
-            except Exception:
-                logger.warning('Error accessing file %s in DSS bucket %s directly. '
-                               'Falling back to official method.',
-                               file_key, dss_bucket, exc_info=True)
-            else:
-                blob_key = None
-                try:
-                    content_type, _, rest = file['content-type'].partition(';')
-                    assert content_type == 'application/json', content_type
-                    blob_key = 'blobs/' + '.'.join(file[k] for k in ('sha256', 'sha1', 's3-etag', 'crc32c'))
-                    logger.debug('Loading blob %s from bucket %s', blob_key, dss_bucket)
-                    blob = json.load(s3.get_object(Bucket=dss_bucket, Key=blob_key)['Body'])
-                except Exception:
-                    logger.warning('Error accessing blob %s in DSS bucket %s directly. '
-                                   'Falling back to official method.',
-                                   blob_key, dss_bucket, exc_info=True)
-                else:
-                    return blob
+        try:
+            blob = mini_dss.get_file(uuid, version, replica)
+        except Exception:
+            logger.warning('Failed getting file %s, version %s directly. '
+                           'Falling back to official method')
+            return old_get_file(uuid=uuid, version=version, replica=replica)
         else:
-            logger.warning('Conditions to access DSS bucket directly are not met. '
-                           'Falling back to official method.')
-        return old_get_file(uuid=uuid, version=version, replica=replica)
+            return blob
 
-    class new_get_bundle:
-
+    class NewGetBundle:
         def _request(self, kwargs, **other_kwargs):
             uuid, version, replica = kwargs['uuid'], kwargs['version'], kwargs['replica']
-            if replica == 'aws' and version is not None:
-                try:
-                    bundle_key = f'bundles/{uuid}.{version}'
-                    logger.debug('Loading bundle %s from bucket %s', bundle_key, dss_bucket)
-                    bundle = json.load(s3.get_object(Bucket=dss_bucket, Key=bundle_key)['Body'])
-                except Exception:
-                    logger.warning('Error accessing object %s in DSS bucket %s directly. '
-                                   'Falling back to official method.',
-                                   bundle_key, dss_bucket, exc_info=True)
-                else:
-                    # Massage manifest format to match results from dss
-                    for f in bundle['files']:
-                        f['s3_etag'] = f.pop('s3-etag')
-                    mock_response = MagicMock()
-                    mock_response.json = lambda: {'bundle': bundle, 'version': version, 'uuid': uuid}
-                    mock_response.links.__getitem__.side_effect = KeyError()
-                    return mock_response
+            try:
+                bundle = mini_dss.get_bundle(uuid, version, replica)
+                response = MagicMock()
+                response.json = lambda: {'bundle': bundle, 'version': version, 'uuid': uuid}
+                response.links.__getitem__.side_effect = KeyError()
+            except Exception:
+                logger.warning('Failed getting bundle file %s, version %s directly. '
+                               'Falling back to official method', uuid, version)
+                return old_get_bundle._request(kwargs, **other_kwargs)
             else:
-                logger.warning('Conditions to access DSS bucket directly are not met. '
-                               'Falling back to official method.')
-            return old_get_bundle._request(kwargs, **other_kwargs)
+                return response
 
+    new_get_bundle = NewGetBundle()
     client.get_file = types.MethodType(new_get_file, client)
-    client.get_bundle = new_get_bundle()
+    client.get_bundle = new_get_bundle
 
 
 class AzulDSSClient(DSSClient):

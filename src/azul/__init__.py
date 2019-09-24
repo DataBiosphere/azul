@@ -148,21 +148,23 @@ class Config:
 
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 
-    @property
-    def dss_checkout_bucket(self):
-        return self._dss_bucket('checkout')
+    def dss_checkout_bucket(self, dss_endpoint: Optional[str] = None):
+        if dss_endpoint is None:
+            dss_endpoint = self.dss_endpoint
+        return self._dss_bucket(dss_endpoint, qualifier='checkout')
 
-    def _dss_bucket(self, qualifier=None):
-        stage = self.dss_deployment_stage
+    def _dss_bucket(self, dss_endpoint: str, qualifier=None):
+        stage = self._dss_deployment_stage(dss_endpoint)
         # For domain_part, DSS went from `humancellatlas` to `hca` in 9/2018 and started reverting back to
         # `humancellatlas` in 12/2018. As I write this, only `dev` is back on `humancellatlas`
         domain_part = 'hca' if stage == 'prod' else 'humancellatlas'
         qualifier = [qualifier] if qualifier else []
         return '-'.join(['org', domain_part, 'dss', *qualifier, stage])
 
-    @property
-    def dss_main_bucket(self):
-        return self._dss_bucket()
+    def dss_main_bucket(self, dss_endpoint: Optional[str] = None):
+        if dss_endpoint is None:
+            dss_endpoint = self.dss_endpoint
+        return self._dss_bucket(dss_endpoint)
 
     @property
     def num_dss_workers(self) -> int:
