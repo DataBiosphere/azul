@@ -1,7 +1,10 @@
+from contextlib import contextmanager
 import json
 import logging
+import os
+import tempfile
 import types
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import boto3
 
@@ -75,3 +78,20 @@ def patch_client_for_direct_access(client):
 
     client.get_file = types.MethodType(new_get_file, client)
     client.get_bundle = new_get_bundle()
+
+
+@contextmanager
+def shared_dss_credentials():
+    """
+    A context manager that patches the process environment so that the DSS client is coaxed into using credentials
+    for the Google service account that represents the Azul indexer lambda. This can be handy if a) other Google
+    credentials with write access to DSS aren't available or b) you want to act on behalf of the Azul indexer,
+    or rather *as* the indexer.
+    """
+    sm = boto3.client('secretsmanager')
+    creds = sm.get_secret_value(SecretId=config.secrets_manager_secret_name('indexer', 'google_service_account'))
+    with tempfile.NamedTemporaryFile(mode='w+') as f:
+        f.write(creds['SecretString'])
+        f.flush()
+        with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
+            yield
