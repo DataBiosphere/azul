@@ -4,7 +4,7 @@ import logging
 import os
 import tempfile
 import types
-from typing import Mapping, Optional, Any, Union
+from typing import Mapping, Optional, Any, Union, NamedTuple
 from unittest.mock import MagicMock, patch
 
 import boto3
@@ -53,6 +53,47 @@ class MiniDSS:
         file_object = self._get_file_object(uuid, version)
         blob_key = self._get_blob_key(file_object)
         return f's3://{self.bucket}/{blob_key}'
+
+    class Checksums(NamedTuple):
+        # must be in the order they occur in a blob key
+        sha256: str
+        sha1: str
+        s3_etag: str
+        crc32c: str
+
+        @classmethod
+        def from_blob_key(cls, blob_key: str):
+            return cls(*blob_key.split('/')[-1].split('.'))
+
+        def to_tags(self):
+            return {f'hca-dss-{k}': v for k, v in self._asdict().items()}
+
+    def retag_blob(self, uuid: str, version: str, replica: str):
+        assert replica == 'aws' and version is not None
+        logger.debug('Updating checksum tags on blob for file %s, version %s', uuid, version)
+        file_object = self._get_file_object(uuid, version)
+        blob_key = self._get_blob_key(file_object)
+        checksums = self.Checksums.from_blob_key(blob_key)
+        tags = self._get_object_tags(blob_key)
+        new_tags = {**tags, **checksums.to_tags()}
+        if tags == new_tags:
+            logger.debug('Checksum tags on blob for file %s, version %s are already up-to-date.', uuid, version)
+        else:
+            self._put_object_tags(blob_key, new_tags)
+
+    def _get_object_tags(self, blob_key: str):
+        logger.debug('Getting tags for blob %s in bucket %s', blob_key, self.bucket)
+        tagging = self.s3.get_object_tagging(Bucket=self.bucket, Key=blob_key)
+        tag_set = tagging['TagSet']
+        tags = {tag['Key']: tag['Value'] for tag in tag_set}
+        return tags
+
+    def _put_object_tags(self, key: str, tags: Mapping[str, str]):
+        logger.debug('Putting tags for object %s in bucket %s', key, self.bucket)
+        new_tag_set = [{'Key': k, 'Value': v} for k, v in tags.items()]
+        self.s3.put_object_tagging(Bucket=self.bucket,
+                                   Key=key,
+                                   Tagging={'TagSet': new_tag_set})
 
     def _get_file_object(self, uuid: str, version: str) -> JSON:
         file_key = f'files/{uuid}.{version}'
