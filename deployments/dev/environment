@@ -11,7 +11,7 @@
 # at the project root.
 
 _set AZUL_DEPLOYMENT_STAGE dev
-_set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
+_set AZUL_DSS_ENDPOINT "https://dss.integration.data.humancellatlas.org/v1"
 _set AZUL_DRS_DOMAIN_NAME "drs.dev.data.humancellatlas.org"
 
 _set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.data.humancellatlas.org"
