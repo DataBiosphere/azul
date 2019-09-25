@@ -834,7 +834,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
-        logger.info('Creating the entries in ApiResponse')
         class_entries = {'hits': [
             self.map_entries(x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)
