@@ -7,7 +7,7 @@ import math
 import os
 import re
 import time
-from typing import Optional, Callable, Mapping, Any
+from typing import Optional, Callable, Mapping, Any, cast, Sequence
 import urllib
 from urllib.parse import urlparse
 
@@ -36,6 +36,7 @@ from azul.service.responseobjects.elastic_request_builder import (BadArgumentExc
                                                                   IndexNotFoundError)
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
+from azul.types import JSON
 
 log = logging.getLogger(__name__)
 
@@ -332,20 +333,17 @@ def get_integrations():
 
 def _fetch_integrations(entity_type, integration_type):
     plugin = Plugin.load()
-    portals_db = plugin.portal_integrations_db()
+    portals = plugin.portal_integrations_db()
     results = []
-    for portal in portals_db:
-        integrations = []
-        for integration in portal['integrations']:
-            if integration['entity_type'] == entity_type and integration['integration_type'] == integration_type:
-                integration_copy = {key: val for key, val in integration.items() if key != 'entity_ids'}
-                if 'entity_ids' in integration:
-                    integration_copy['entity_ids'] = integration['entity_ids'][config.dss_deployment_stage]
-                integrations.append(integration_copy)
+    for portal in portals:
+        integrations = [
+            {k: v if k != 'entity_ids' else v[config.dss_deployment_stage] for k, v in integration.items()}
+            for integration in cast(Sequence[JSON], portal['integrations'])
+            if integration['entity_type'] == entity_type and integration['integration_type'] == integration_type
+        ]
         if len(integrations) > 0:
-            portal_copy = {key: val for key, val in portal.items() if key != 'integrations'}
-            portal_copy['integrations'] = integrations
-            results.append(portal_copy)
+            portal = {k: v if k != 'integrations' else integrations for k, v in portal.items()}
+            results.append(portal)
     return results
 
 

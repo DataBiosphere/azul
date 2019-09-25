@@ -5,6 +5,7 @@ import urllib.parse
 from more_itertools import one
 import requests
 
+from app_test_case import LocalAppTestCase
 from azul import config
 from azul.logging import configure_test_logging
 from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
@@ -1398,27 +1399,28 @@ class TestResponseSummary(WebServiceTestCase):
         self.assertEqual(summary_object['totalCellCount'], 6210.0)
 
 
-class TestIntegrationRepsonse(WebServiceTestCase):
+class TestPortalIntegrationResponse(LocalAppTestCase):
+
+    @classmethod
+    def lambda_name(cls) -> str:
+        return "service"
+
     maxDiff = None
 
     def test_integrations(self):
-        def request_integration(integration_type, entity_type):
-            url = self.base_url + f'/integrations?integration_type={integration_type}&entity_type={entity_type}'
-            response = requests.get(url)
-            response.raise_for_status()
-            return response.json()
-
         test_cases = [
             ('get_manifest', 'file', 1),
             ('get', 'project', 9),
         ]
-        for integration_type, entity_type, num_integrations in test_cases:
+        for integration_type, entity_type, num_integrations_expected in test_cases:
             with self.subTest(integration_type=integration_type,
-                              entity_type=entity_type,
-                              num_integrations=num_integrations):
-                response_json = request_integration(integration_type, entity_type)
-                integration_count = sum(len(portal['integrations']) for portal in response_json)
-                self.assertEqual(integration_count, num_integrations)
+                              entity_type=entity_type):
+                url = self.base_url + f'/integrations?integration_type={integration_type}&entity_type={entity_type}'
+                response = requests.get(url)
+                response.raise_for_status()
+                response_json = response.json()
+                num_integrations = sum(len(portal['integrations']) for portal in response_json)
+                self.assertEqual(num_integrations, num_integrations_expected)
                 self.assertTrue(all(isinstance(integration.get('entity_ids', []), list)
                                 for portal in response_json
                                 for integration in portal['integrations']))
