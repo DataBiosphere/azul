@@ -14,6 +14,7 @@ from azul.transformer import Document
 from service import WebServiceTestCase
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 
@@ -275,96 +276,97 @@ class TestResponse(WebServiceTestCase):
 
         n=1: Tests the FileSearchResponse object, using 'search_after' pagination.
         """
-        responses = [
+        hits = [
             {
-                "hits": [
+                "bundles": [
                     {
-                        "bundles": [
-                            {
-                                "bundleUuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
-                                "bundleVersion": "2018-11-02T113344.698028Z"
-                            }
-                        ],
-                        "cellLines": [
+                        "bundleUuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                        "bundleVersion": "2018-11-02T113344.698028Z"
+                    }
+                ],
+                "cellLines": [
 
-                        ],
-                        "cellSuspensions": [
-                            {
-                                "organ": ["pancreas"],
-                                "organPart": ["islet of Langerhans"],
-                                "selectedCellType": [],
-                                "totalCells": 1
-                            }
-                        ],
-                        "donorOrganisms": [
-                            {
-                                "biologicalSex": ["female"],
-                                "disease": None,
-                                "genusSpecies": ["Australopithecus"],
-                                "id": ["DID_scRSq06"],
-                                "organismAge": ["38"],
-                                "organismAgeUnit": ["year"],
-                                "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
-                            }
-                        ],
-                        "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                        "files": [
-                            {
-                                "format": "fastq.gz",
-                                "name": "SRR3562915_1.fastq.gz",
-                                "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
-                                "size": 195142097,
-                                "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
-                                "version": "2018-11-02T113344.698028Z"
-                            }
-                        ],
-                        "organoids": [
+                ],
+                "cellSuspensions": [
+                    {
+                        "organ": ["pancreas"],
+                        "organPart": ["islet of Langerhans"],
+                        "selectedCellType": [],
+                        "totalCells": 1
+                    }
+                ],
+                "donorOrganisms": [
+                    {
+                        "biologicalSex": ["female"],
+                        "disease": None,
+                        "genusSpecies": ["Australopithecus"],
+                        "id": ["DID_scRSq06"],
+                        "organismAge": ["38"],
+                        "organismAgeUnit": ["year"],
+                        "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
+                    }
+                ],
+                "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                "files": [
+                    {
+                        "format": "fastq.gz",
+                        "name": "SRR3562915_1.fastq.gz",
+                        "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                        "size": 195142097,
+                        "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                        "version": "2018-11-02T113344.698028Z"
+                    }
+                ],
+                "organoids": [
 
-                        ],
-                        "projects": [
-                            {
-                                "laboratory": ["John Dear"],
-                                "projectShortname": ["Single of human pancreas"],
-                                "projectTitle": ["Single cell transcriptome patterns."]
-                            }
-                        ],
-                        "protocols": [
-                            {
-                                "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                                "libraryConstructionApproach": ["Smart-seq2"],
-                                "pairedEnd": [True],
-                                "workflow": [],
-                                "assayType": [],
-                            }
-                        ],
-                        "samples": [
-                            {
-                                "sampleEntityType": ["specimens"],
-                                "effectiveOrgan": ['pancreas'],
-                                "disease": ["normal"],
-                                "id": ["DID_scRSq06_pancreas"],
-                                "organ": ["pancreas"],
-                                "organPart": ["islet of Langerhans"],
-                                "preservationMethod": [None],
-                                "source": [
-                                    "specimen_from_organism",
-                                ]
-                            }
-                        ],
-                        "specimens": [
-                            {
-                                "disease": ["normal"],
-                                "id": ["DID_scRSq06_pancreas"],
-                                "organ": ["pancreas"],
-                                "organPart": ["islet of Langerhans"],
-                                "preservationMethod": [None],
-                                "source": [
-                                    "specimen_from_organism",
-                                ]
-                            }
+                ],
+                "projects": [
+                    {
+                        "laboratory": ["John Dear"],
+                        "projectShortname": ["Single of human pancreas"],
+                        "projectTitle": ["Single cell transcriptome patterns."]
+                    }
+                ],
+                "protocols": [
+                    {
+                        "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                        "libraryConstructionApproach": ["Smart-seq2"],
+                        "pairedEnd": [True],
+                        "workflow": [],
+                        "assayType": [],
+                    }
+                ],
+                "samples": [
+                    {
+                        "sampleEntityType": ["specimens"],
+                        "effectiveOrgan": ['pancreas'],
+                        "disease": ["normal"],
+                        "id": ["DID_scRSq06_pancreas"],
+                        "organ": ["pancreas"],
+                        "organPart": ["islet of Langerhans"],
+                        "preservationMethod": [None],
+                        "source": [
+                            "specimen_from_organism",
                         ]
                     }
                 ],
+                "specimens": [
+                    {
+                        "disease": ["normal"],
+                        "id": ["DID_scRSq06_pancreas"],
+                        "organ": ["pancreas"],
+                        "organPart": ["islet of Langerhans"],
+                        "preservationMethod": [None],
+                        "source": [
+                            "specimen_from_organism",
+                        ]
+                    }
+                ]
+            }
+        ]
+        responses = [
+            {
+                "hits": hits,
                 "pagination": {
                     "count": 2,
                     "order": "desc",
@@ -380,93 +382,7 @@ class TestResponse(WebServiceTestCase):
                 "termFacets": {}
             },
             {
-                "hits": [
-                    {
-                        "bundles": [
-                            {
-                                "bundleUuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
-                                "bundleVersion": "2018-11-02T113344.698028Z"
-                            }
-                        ],
-                        "cellLines": [
-
-                        ],
-                        "cellSuspensions": [
-                            {
-                                "organ": ["pancreas"],
-                                "organPart": ["islet of Langerhans"],
-                                "selectedCellType": [],
-                                "totalCells": 1
-                            }
-                        ],
-                        "donorOrganisms": [
-                            {
-                                "biologicalSex": ["female"],
-                                "disease": None,
-                                "genusSpecies": ["Australopithecus"],
-                                "id": ["DID_scRSq06"],
-                                "organismAge": ["38"],
-                                "organismAgeUnit": ["year"],
-                                "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
-                            }
-                        ],
-                        "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                        "files": [
-                            {
-                                "format": "fastq.gz",
-                                "name": "SRR3562915_1.fastq.gz",
-                                "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
-                                "size": 195142097,
-                                "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
-                                "version": "2018-11-02T113344.698028Z"
-                            }
-                        ],
-                        "organoids": [
-                        ],
-                        "projects": [
-                            {
-                                "laboratory": ["John Dear"],
-                                "projectShortname": ["Single of human pancreas"],
-                                "projectTitle": ["Single cell transcriptome patterns."]
-                            }
-                        ],
-                        "protocols": [
-                            {
-                                "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                                "libraryConstructionApproach": ["Smart-seq2"],
-                                "pairedEnd": [True],
-                                "workflow": [],
-                                "assayType": [],
-                            }
-                        ],
-                        "samples": [
-                            {
-                                "sampleEntityType": ["specimens"],
-                                "effectiveOrgan": ['pancreas'],
-                                "disease": ["normal"],
-                                "id": ["DID_scRSq06_pancreas"],
-                                "organ": ["pancreas"],
-                                "organPart": ["islet of Langerhans"],
-                                "preservationMethod": [None],
-                                "source": [
-                                    "specimen_from_organism",
-                                ]
-                            }
-                        ],
-                        "specimens": [
-                            {
-                                "disease": ["normal"],
-                                "id": ["DID_scRSq06_pancreas"],
-                                "organ": ["pancreas"],
-                                "organPart": ["islet of Langerhans"],
-                                "preservationMethod": [None],
-                                "source": [
-                                    "specimen_from_organism",
-                                ]
-                            }
-                        ]
-                    }
-                ],
+                "hits": hits,
                 "pagination": {
                     "count": 2,
                     "order": "desc",
@@ -698,12 +614,41 @@ class TestResponse(WebServiceTestCase):
                                 }
                             ],
                             "laboratory": ["John Dear"],
-                            "projectDescription": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                            "projectDescription": "As organisms age, cells accumulate genetic and epigenetic changes "
+                                                  "that eventually lead to impaired organ function or catastrophic "
+                                                  "failure such as cancer. Here we describe a single-cell "
+                                                  "transcriptome analysis of 2544 human pancreas cells from donors, "
+                                                  "spanning six decades of life. We find that islet cells from older "
+                                                  "donors have increased levels of disorder as measured both by noise "
+                                                  "in the transcriptome and by the number of cells which display "
+                                                  "inappropriate hormone expression, revealing a transcriptional "
+                                                  "instability associated with aging. By analyzing the spectrum of "
+                                                  "somatic mutations in single cells from previously-healthy donors, "
+                                                  "we find a specific age-dependent mutational signature "
+                                                  "characterized by C to A and C to G transversions, indicators of "
+                                                  "oxidative stress, which is absent in single cells from human brain "
+                                                  "tissue or in a tumor cell line. Cells carrying a high load of such "
+                                                  "mutations also express higher levels of stress and senescence "
+                                                  "markers, including FOS, JUN, and the cytoplasmic superoxide "
+                                                  "dismutase SOD1, markers previously linked to pancreatic diseases "
+                                                  "with substantial age-dependent risk, such as type 2 diabetes "
+                                                  "mellitus and adenocarcinoma. Thus, our single-cell approach "
+                                                  "unveils gene expression changes and somatic mutations acquired in "
+                                                  "aging human tissue, and identifies molecular pathways induced by "
+                                                  "these genetic changes that could influence human disease. Also, "
+                                                  "our results demonstrate the feasibility of using single-cell "
+                                                  "RNA-seq data from primary cells to derive meaningful insights into "
+                                                  "the genetic processes that operate on aging human tissue and to "
+                                                  "determine which molecular mechanisms are coordinated with these "
+                                                  "processes. Examination of single cells from primary human pancreas "
+                                                  "tissue",
                             "projectShortname": "Single of human pancreas",
                             "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
                                 {
-                                    "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                    "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals "
+                                                        "Transcriptional Signatures of Aging and Somatic Mutation "
+                                                        "Patterns.",
                                     "publicationUrl": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                                 }
                             ]
@@ -829,12 +774,41 @@ class TestResponse(WebServiceTestCase):
                                 }
                             ],
                             "laboratory": ["John Dear"],
-                            "projectDescription": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                            "projectDescription": "As organisms age, cells accumulate genetic and epigenetic changes "
+                                                  "that eventually lead to impaired organ function or catastrophic "
+                                                  "failure such as cancer. Here we describe a single-cell "
+                                                  "transcriptome analysis of 2544 human pancreas cells from donors, "
+                                                  "spanning six decades of life. We find that islet cells from older "
+                                                  "donors have increased levels of disorder as measured both by noise "
+                                                  "in the transcriptome and by the number of cells which display "
+                                                  "inappropriate hormone expression, revealing a transcriptional "
+                                                  "instability associated with aging. By analyzing the spectrum of "
+                                                  "somatic mutations in single cells from previously-healthy donors, "
+                                                  "we find a specific age-dependent mutational signature "
+                                                  "characterized by C to A and C to G transversions, indicators of "
+                                                  "oxidative stress, which is absent in single cells from human brain "
+                                                  "tissue or in a tumor cell line. Cells carrying a high load of such "
+                                                  "mutations also express higher levels of stress and senescence "
+                                                  "markers, including FOS, JUN, and the cytoplasmic superoxide "
+                                                  "dismutase SOD1, markers previously linked to pancreatic diseases "
+                                                  "with substantial age-dependent risk, such as type 2 diabetes "
+                                                  "mellitus and adenocarcinoma. Thus, our single-cell approach "
+                                                  "unveils gene expression changes and somatic mutations acquired in "
+                                                  "aging human tissue, and identifies molecular pathways induced by "
+                                                  "these genetic changes that could influence human disease. Also, "
+                                                  "our results demonstrate the feasibility of using single-cell "
+                                                  "RNA-seq data from primary cells to derive meaningful insights into "
+                                                  "the genetic processes that operate on aging human tissue and to "
+                                                  "determine which molecular mechanisms are coordinated with these "
+                                                  "processes. Examination of single cells from primary human pancreas "
+                                                  "tissue",
                             "projectShortname": "Single of human pancreas",
                             "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
                                 {
-                                    "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                    "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals "
+                                                        "Transcriptional Signatures of Aging and Somatic Mutation "
+                                                        "Patterns.",
                                     "publicationUrl": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                                 }
                             ]
@@ -1020,7 +994,17 @@ class TestResponse(WebServiceTestCase):
                             "insdcProjectAccessions": ["SRP000000"],
                             "insdcStudyAccessions": ["PRJNA000000"],
                             "laboratory": ["Department of Biology"],
-                            "projectDescription": "Contains a small file set from the dataset: 4k PBMCs from a Healthy Donor, a Single Cell Gene Expression Dataset by Cell Ranger 2.1.0. Peripheral blood mononuclear cells (PBMCs) were taken from a healthy donor (same donor as pbmc8k). PBMCs are primary cells with relatively small amounts of RNA (~1pg RNA/cell). Data/Analysis can be found here https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc4k and all data is licensed under the creative commons attribution license (https://creativecommons.org/licenses/by/4.0/). This test also contains extensive metadata for browser testing. Metadata is fabricated.",
+                            "projectDescription": "Contains a small file set from the dataset: 4k PBMCs from a "
+                                                  "Healthy Donor, a Single Cell Gene Expression Dataset by Cell "
+                                                  "Ranger 2.1.0. Peripheral blood mononuclear cells (PBMCs) were "
+                                                  "taken from a healthy donor (same donor as pbmc8k). PBMCs are "
+                                                  "primary cells with relatively small amounts of RNA (~1pg "
+                                                  "RNA/cell). Data/Analysis can be found here "
+                                                  "https://support.10xgenomics.com/single-cell-gene-expression/datasets"
+                                                  "/2.1.0/pbmc4k and all data is licensed under the creative commons "
+                                                  "attribution license (https://creativecommons.org/licenses/by/4.0/). "
+                                                  "This test also contains extensive metadata for browser testing. "
+                                                  "Metadata is fabricated.",
                             "projectShortname": "staging/10x/2019-02-14T18:29:38Z",
                             "projectTitle": "10x 1 Run Integration Test",
                             "publications": [
@@ -1123,14 +1107,14 @@ class TestResponse(WebServiceTestCase):
                 response = requests.get(url, params=params)
                 response.raise_for_status()
                 response_json = response.json()
-                organismAgeUnits = {
+                organism_age_units = {
                     oau
                     for hit in response_json['hits']
                     for donor in hit['donorOrganisms']
                     for oau in donor['organismAgeUnit']
                 }
                 # Assert that the organismAgeUnits values found in the response only match what was filtered for
-                self.assertEqual(organismAgeUnits, set(test_data))
+                self.assertEqual(organism_age_units, set(test_data))
 
     def test_filter_by_projectId(self):
         """
@@ -1339,7 +1323,9 @@ class TestResponseSummary(WebServiceTestCase):
 
     def test_summary_response(self):
         """
-        Verify the /repository/summary response with 2 sequencing bundles and 1 imaging bundle that has no cell suspension
+        Verify the /repository/summary response with two sequencing bundles and
+        one imaging bundle that has no cell suspension.
+
         - bundle=aaa96233…, fileCount=2, donorCount=1, totalCellCount=1.0, organType=pancreas
         - bundle=dcccb551…, fileCount=19, donorCount=4, totalCellCount=6210.0, organType=Brain
         - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain
