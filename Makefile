@@ -12,10 +12,10 @@ deploy:
 	$(MAKE) -C lambdas
 
 subscribe: check_branch
-	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py --shared; fi
+	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py; fi
 
-unsubscribe:
-	python scripts/subscribe.py --unsubscribe --shared
+unsubscribe: check_branch
+	python scripts/subscribe.py --unsubscribe
 
 delete: check_branch
 	python scripts/reindex.py --delete
@@ -65,5 +65,11 @@ check_autosquash:
 	    echo "Can only check squashability against default branch on Travis" \
 	; fi
 
-.PHONY: all hello terraform deploy subscribe everything reindex clean test travis integration_test \
-        trufflehog check_trufflehog delete check_clean check_autosquash
+.PHONY: all hello \
+        terraform deploy subscribe unsubscribe \
+        delete index reindex \
+        clean \
+        tag \
+        test integration_test \
+        check_trufflehog trufflehog \
+        check_clean check_autosquash
