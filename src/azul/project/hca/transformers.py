@@ -459,7 +459,7 @@ class TransformerVisitor(api.EntityVisitor):
                     self.protocols[protocol.document_id] = protocol
         elif isinstance(entity, api.File):
             # noinspection PyDeprecation
-            if entity.file_format == 'unknown' and '.zarr!' in entity.manifest_entry.name:
+            if '.zarr!' in entity.manifest_entry.name and not entity.manifest_entry.name.endswith('.zattrs'):
                 # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
                 #
                 return
@@ -485,7 +485,7 @@ class FileTransformer(Transformer):
         project = self._get_project(bundle)
         for file in bundle.files.values():
             # noinspection PyDeprecation
-            if file.file_format == 'unknown' and '.zarr!' in file.manifest_entry.name:
+            if '.zarr!' in file.manifest_entry.name and not file.manifest_entry.name.endswith('.zattrs'):
                 # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
                 #
                 continue
