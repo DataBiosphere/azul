@@ -760,6 +760,7 @@ def handle_manifest_generation_request():
         raise BadRequestError(e.args)
 
 
+# noinspection PyUnusedLocal
 @app.lambda_function(name=config.manifest_lambda_basename)
 def generate_manifest(event, context):
     """
@@ -976,7 +977,7 @@ def _dss_files(uuid, fetch=True):
     return response
 
 
-def file_url(uuid, fetch=True, **params):
+def file_url(uuid: str, fetch: bool = True, **params: str):
     uuid = urllib.parse.quote(uuid, safe="")
     view_function = fetch_dss_files if fetch else dss_files
     url = self_url(endpoint_path=view_function.path.format(uuid=uuid))
@@ -1431,6 +1432,7 @@ def add_all_results_to_cart(cart_id):
     return {'count': item_count, 'statusUrl': status_url}
 
 
+# noinspection PyUnusedLocal
 @app.lambda_function(name=config.cart_item_write_lambda_basename)
 def cart_item_write_batch(event, context):
     """Write a single batch to Dynamo and return pagination information for next batch to write"""
@@ -1660,6 +1662,7 @@ def handle_cart_export_request(cart_id: str = None):
     }
 
 
+# noinspection PyUnusedLocal
 @app.lambda_function(name=config.cart_export_dss_push_lambda_basename)
 def cart_export_send_to_collection_api(event, context):
     """
