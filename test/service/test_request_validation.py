@@ -19,10 +19,6 @@ def setUpModule():
 
 class FacetNameValidationTest(WebServiceTestCase):
 
-    @classmethod
-    def lambda_name(cls) -> str:
-        return "service"
-
     facet_message = {'Code': 'BadRequestError',
                      'Message': 'BadRequestError: Invalid parameter `bad-facet`'}
 
