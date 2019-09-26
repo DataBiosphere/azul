@@ -994,7 +994,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
         }
         for endpoint in ['/', '/delete']:
             with self.subTest(endpoint=endpoint):
-                response = self._test(body, endpoint='/', valid_auth=False)
+                response = self._test(body, endpoint=endpoint, valid_auth=False)
                 self.assertEqual(401, response.status_code)
 
     def _test(self, body, endpoint, valid_auth):
