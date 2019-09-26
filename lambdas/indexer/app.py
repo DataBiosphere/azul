@@ -102,18 +102,12 @@ def post_notification():
     notification = app.current_request.json_body
     log.info("Received notification %r", notification)
     validate_request_syntax(notification)
-    params = app.current_request.query_params
 
     if not config.test_mode or notification.get('test_name', None):
-        if params and params.get('sync', 'False').lower() == 'true':
-            indexer_cls = plugin.indexer_class()
-            indexer = indexer_cls()
-            indexer.index(notification)
-        else:
-            message = dict(action='add', notification=notification)
-            notify_queue = queue(config.notify_queue_name)
-            notify_queue.send_message(MessageBody=json.dumps(message))
-            log.info("Queued notification %r", notification)
+        message = dict(action='add', notification=notification)
+        notify_queue = queue(config.notify_queue_name)
+        notify_queue.send_message(MessageBody=json.dumps(message))
+        log.info("Queued notification %r", notification)
         return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
     else:
         test_mode_error = f'Ignored notification {notification}. This indexer is currently in TEST MODE.'
