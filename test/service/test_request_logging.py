@@ -12,7 +12,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestRequestResponse(LocalAppTestCase):
+class TestRequestLogging(LocalAppTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
