@@ -93,18 +93,27 @@ def hello():
     return {'Hello': 'World!'}
 
 
+@app.route('/delete', methods=['POST'])
 @app.route('/', methods=['POST'])
 def post_notification():
     """
-    Receive a notification event and either queue it for asynchronous indexing or process it synchronously.
+    Receive a notification event and queue it for indexing or deletion.
     """
     hmac.verify(current_request=app.current_request)
     notification = app.current_request.json_body
     log.info("Received notification %r", notification)
     validate_request_syntax(notification)
+    if app.current_request.context['path'] == '/':
+        return process_notification('add', notification)
+    elif app.current_request.context['path'] in ('/delete', '/delete/'):
+        return process_notification('delete', notification)
+    else:
+        assert False
 
+
+def process_notification(action: str, notification: JSON):
     if not config.test_mode or notification.get('test_name', None):
-        message = dict(action='add', notification=notification)
+        message = dict(action=action, notification=notification)
         notify_queue = queue(config.notify_queue_name)
         notify_queue.send_message(MessageBody=json.dumps(message))
         log.info("Queued notification %r", notification)
@@ -142,23 +151,6 @@ def validate_request_syntax(notification):
 
     if not bundle_version:
         raise chalice.BadRequestError('Invalid syntax: bundle_version can not be empty')
-
-
-@app.route('/delete', methods=['POST'])
-def delete_notification():
-    """
-    Receive a deletion event and process it asynchronously
-    """
-    hmac.verify(current_request=app.current_request)
-    notification = app.current_request.json_body
-    validate_request_syntax(notification)
-    log.info("Received deletion notification %r", notification)
-    message = dict(action='delete', notification=notification)
-    notify_queue = queue(config.notify_queue_name)
-    notify_queue.send_message(MessageBody=json.dumps(message))
-    log.info("Queued notification %r", notification)
-
-    return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
 
 
 # Work around https://github.com/aws/chalice/issues/856
