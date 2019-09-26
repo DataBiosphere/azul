@@ -70,6 +70,7 @@ components:
       type: string
       enum:
         - "get"
+        - "get_entity"
         - "get_entities"
         - "get_manifest"
       description: >
@@ -81,6 +82,16 @@ components:
           entities with a static URL at the portal. Any Data Browser page
           listing the specified entities will include a link pointing to
           the specified URL.
+
+        * `get_entity` - The portal endpoint is invoked with a GET request to a
+          portal URL parameterized with a single identifier referencing an
+          entity of the type denoted in the `entity_type` property of the
+          integration. Any Data Browser page listing entities of that type will
+          include a link/button pointing at the portal URL. When a visitor
+          clicks that link/button while only a single entity is selected, the
+          identifier of that entity will be interpolated into the specified
+          portal URL template and the user agent will be redirected to
+          resulting URL.
 
         * `get_entities` - The portal endpoint is invoked with a GET request to
           a portal URL parameterized with a list of entity identifiers. All
@@ -186,6 +197,7 @@ components:
         propertyName: "integration_type"
         mapping:
           "get": "#/components/schemas/GetIntegration"
+          "get_entity": "#/components/schemas/GetEntityIntegration"
           "get_entities": "#/components/schemas/GetEntitiesIntegration"
           "get_manifest": "#/components/schemas/GetManifestIntegration"
       oneOf:
