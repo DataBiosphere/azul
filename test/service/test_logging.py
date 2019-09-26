@@ -1,54 +1,36 @@
-import json
-import re
+from logging import INFO, DEBUG
+
 import requests
 
-from service import WebServiceTestCase
-
+from app_test_case import LocalAppTestCase
 from azul.chalice import log
 from azul.logging import configure_test_logging
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 
 
-class TestRequestResponse(WebServiceTestCase):
+class TestRequestResponse(LocalAppTestCase):
 
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls._setup_indices()
+    def lambda_name(cls) -> str:
+        return "service"
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._teardown_indices()
-        super().tearDownClass()
-
-    def _get_request_logs(self, level, endpoint, params={}):
-        with self.assertLogs(logger=log, level=level) as logs:
-            url = self.base_url + endpoint
-            requests.get(url, params=params)
-            return logs.output
-
-    def test_request_logs_debug_off(self):
-        logs = self._get_request_logs(level='INFO', endpoint='/health/basic')
-        self.assertEqual(1, sum(1 for msg in logs if re.search(r"^INFO.*Received GET request to '/health/basic'", msg)))
-        self.assertEqual(1, sum(1 for msg in logs if re.search(r"^INFO.*Returning 200 response.*set AZUL_DEBUG", msg)))
-
-    def test_request_logs_debug_on(self):
-        logs = self._get_request_logs(level='DEBUG', endpoint='/health/basic')
-        log_started_count = 0
-        log_ended_count = 0
-        for msg in logs:
-            if re.search(r"^INFO.*Received GET request to '/health/basic'", msg):
-                log_started_count += 1
-            if re.search(r"^DEBUG.*Returning 200 response.*See next line", msg):
-                log_ended_count += 1
-                match = re.search(r'See next line.*\n({.*})$', msg)
-                self.assertGreater(len(match.group(1)), 2)
-                response = json.loads(match.group(1))
-                self.assertIsInstance(response, dict)
-                self.assertIn('up', response)
-        self.assertEqual(log_started_count, 1)
-        self.assertEqual(log_ended_count, 1)
-
+    def test_request_logs(self):
+        for level, response_log in [
+            (INFO, 'Returning 200 response. To log headers and body, set AZUL_DEBUG to 1.'),
+            (DEBUG, 'Returning 200 response without headers. '
+                    'See next line for the first 1024 characters of the body.\n'
+                    '{"up": true}')
+        ]:
+            with self.subTest(level=level):
+                with self.assertLogs(logger=log, level=level) as logs:
+                    url = self.base_url + '/health/basic'
+                    requests.get(url)
+                logs = [(r.levelno, r.getMessage()) for r in logs.records]
+                self.assertEqual(logs, [
+                    (INFO, "Received GET request to '/health/basic' without parameters."),
+                    (level, response_log)
+                ])
