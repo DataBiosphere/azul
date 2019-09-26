@@ -702,7 +702,8 @@ class TestHCAIndexer(IndexerTestCase):
 
             for organoid in contents['organoids']:
                 self.assertEqual(['Brain'] if aggregate else 'Brain', organoid['model_organ'])
-                self.assertEqual([config.null_keyword] if aggregate else config.null_keyword, organoid['model_organ_part'])
+                self.assertEqual([config.null_keyword] if aggregate else config.null_keyword,
+                                 organoid['model_organ_part'])
 
         projects = 1
         bundles = 1
@@ -996,6 +997,39 @@ class TestValidNotificationRequests(LocalAppTestCase):
             with self.subTest(endpoint=endpoint):
                 response = self._test(body, endpoint=endpoint, valid_auth=False)
                 self.assertEqual(401, response.status_code)
+
+    @mock_sts
+    @mock_sqs
+    def test_index_test_mode(self):
+        self._create_mock_notify_queue()
+        testless_notification = {
+            "match": {
+                "bundle_uuid": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
+                "bundle_version": "2018-03-28T13:55:26.044Z"
+            }
+        }
+        test_name_in_notification = {
+            "match": {
+                "bundle_uuid": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
+                "bundle_version": "2018-03-28T13:55:26.044Z"
+            },
+            "test_name": "integration-test_bb2365b9-5a5b-436f-92e3-4fc6d86a9efd_bb2365b9"
+        }
+        for endpoint in '/', '/delete':
+            for test_mode in 0, 1:
+                for body in testless_notification, test_name_in_notification:
+                    with self.subTest(test_mode=test_mode, endpoint=endpoint):
+                        with patch.dict(os.environ, TEST_MODE=str(test_mode)):
+                            response = self._test(body, endpoint=endpoint, valid_auth=True)
+                            if 'test_name' not in body and test_mode == 1:
+                                self.assertEqual(500, response.status_code)
+                                self.assertEqual({
+                                    "Code": "ChaliceViewError",
+                                    "Message": f"ChaliceViewError: Ignored notification {testless_notification}."
+                                               f" This indexer is currently in TEST MODE."
+                                }, response.json())
+                            else:
+                                self.assertEqual(202, response.status_code)
 
     def _test(self, body, endpoint, valid_auth):
         with ResponsesHelper() as helper:
