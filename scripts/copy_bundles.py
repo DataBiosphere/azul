@@ -1,3 +1,5 @@
+from threading import RLock
+
 import argparse
 import csv
 from datetime import datetime
@@ -97,17 +99,27 @@ class CopyBundle(DeferredTaskExecutor):
         self.args = self._parse_args(argv)
         self.source = MiniDSS(dss_endpoint=urlunparse(self.args.source),
                               config=Config(max_pool_connections=self.num_workers))
-        self.destination = self._new_dss_client()
+        self._destination = None
+        self._destination_expiration = None
+        self._destination_lock = RLock()
 
-    def _new_dss_client(self):
-        return config.dss_client(dss_endpoint=urlunparse(self.args.destination),
-                                 adapter_args=dict(pool_maxsize=self.num_workers))
+    @property
+    def destination(self):
+        with self._destination_lock:
+            if self._destination is None or self._destination_expiration < time.time():
+                dss_client_timeout = 30 * 60  # DSS session credentials timeout after 1 hour
+                logger.info('Allocating new DSS client for %s to expire in %d seconds',
+                            config.dss_endpoint, dss_client_timeout)
+                self._destination = config.dss_client(dss_endpoint=urlunparse(self.args.destination),
+                                                      adapter_args=dict(pool_maxsize=self.num_workers))
+                self._destination_expiration = time.time() + dss_client_timeout
+            return self._destination
 
     def _run(self):
         if self.args.bundles:
             bundle_fqids = {(uuid, version)
-                            for uuid, _, version in (fqid.partition('.')
-                                                     for fqid in self.args.bundles)}
+                            for uuid, _, version in [fqid.partition('.')
+                                                     for fqid in self.args.bundles]}
         else:
             with open(self.args.manifest) as f:
                 manifest = csv.DictReader(f, delimiter='\t')
