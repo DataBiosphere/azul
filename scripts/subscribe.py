@@ -1,14 +1,10 @@
 #! /usr/bin/env python3
 
 import logging
-import os
 import sys
-import tempfile
-from unittest.mock import patch
-
-import boto3
 
 from azul import config, subscription
+from azul.dss import shared_dss_credentials
 from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
@@ -19,23 +15,23 @@ def main(argv):
     import argparse
     parser = argparse.ArgumentParser(description='Subscribe indexer lambda to bundle events from DSS')
     parser.add_argument('--unsubscribe', '-U', dest='subscribe', action='store_false', default=True)
-    parser.add_argument('--shared', '-s', dest='shared', action='store_true', default=False,
-                        help='Fetch credentials to a shared Google service account from AWS Secrets Manager. This '
-                             'option allows you to not have Google Cloud access as long as someone else with access '
-                             'provisions the credentials for you.')
+    parser.add_argument('--personal', '-p', dest='shared', action='store_false', default=True,
+                        help="Do not use the shared credentials of the Google service account that represents the "
+                             "current deployment, but instead use personal credentials for authenticating to the DSS. "
+                             "When specifying this option you will need to a) run `hca dss login` prior to running "
+                             "this script or b) set GOOGLE_APPLICATION_CREDENTIALS to point to another service "
+                             "account's credentials. Note that this implies that the resulting DSS subscription will "
+                             "be owned by a) you or b) the other service account and that only a) you or b) someone "
+                             "in possession of those credentials can modify the subscription in the future. This is "
+                             "typically not what you'd want.")
     options = parser.parse_args(argv)
     dss_client = config.dss_client()
 
     if options.shared:
-        sm = boto3.client('secretsmanager')
-        creds = sm.get_secret_value(SecretId=config.secrets_manager_secret_name('indexer', 'google_service_account'))
-        with tempfile.NamedTemporaryFile(mode='w+') as f:
-            f.write(creds['SecretString'])
-            f.flush()
-            with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
-                subscription.manage_subscriptions(dss_client, subscribe=options.subscribe)
+        with shared_dss_credentials():
+            subscription.manage_subscriptions(dss_client, subscribe=options.subscribe)
     else:
-        raise NotImplementedError("https://github.com/DataBiosphere/azul/issues/110")
+        subscription.manage_subscriptions(dss_client, subscribe=options.subscribe)
 
 
 if __name__ == '__main__':

@@ -1,40 +1,41 @@
-from unittest import mock
-import boto3
 from collections import deque
+from contextlib import contextmanager
+import csv
+import gzip
+from io import BytesIO, TextIOWrapper
+import json
 import logging
+import os
 import random
+import re
+import time
+from typing import Any, IO, Mapping, Optional
+import unittest
+from unittest import mock
+from urllib.parse import urlencode
+import uuid
+from zipfile import ZipFile
 
+import boto3
 from furl import furl
 from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
-import requests
-import time
-from typing import Any, Mapping, Set, Optional, IO
-import unittest
-from urllib.parse import urlencode
-import uuid
-import os
-import csv
-import gzip
-import json
-from more_itertools import one, first
-from io import BytesIO, TextIOWrapper
-from zipfile import ZipFile
-
+from more_itertools import first, one
 from openapi_spec_validator import validate_spec
+import requests
 from requests import HTTPError
 
-from azul import config
-from azul.decorators import memoized_property
+from azul import config, drs
 from azul.azulclient import AzulClient
-from azul.dss import patch_client_for_direct_access
+from azul.decorators import memoized_property
+from azul.dss import MiniDSS, patch_client_for_direct_access
 from azul.logging import configure_test_logging
 from azul.requests import requests_session
-from azul import drs
 
 logger = logging.getLogger(__name__)
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(logger)
 
@@ -64,7 +65,7 @@ class IntegrationTest(unittest.TestCase):
     Finally, the tests send deletion notifications for these new bundle UUIDs which should remove all
     trace of the integration test from the index.
     """
-    prefix_length = 3 if config.deployment_stage != 'integration' else 0
+    prefix_length = 1 if config.dss_deployment_stage == 'integration' else 3
 
     def setUp(self):
         super().setUp()
@@ -392,18 +393,31 @@ class DSSIntegrationTest(unittest.TestCase):
         self.maxDiff = None
         for patch in False, True:
             for replica in 'aws', 'gcp':
-                dss_client = config.dss_client()
                 if patch:
+                    with self._failing_s3_get_object():
+                        dss_client = config.dss_client()
+                        patch_client_for_direct_access(dss_client)
+                        self._test_patched_client(patch, query, dss_client, replica, fallback=True)
+                    dss_client = config.dss_client()
                     patch_client_for_direct_access(dss_client)
-                    with mock.patch('boto3.client') as mock_client:
-                        mock_s3 = mock.MagicMock()
-                        mock_s3.get_object.side_effect = ValueError()
-                        mock_client.return_value = mock_s3
-                        self._test_patched_client(patch, query, dss_client, replica, patch_fallback=True)
-                self._test_patched_client(patch, query, dss_client, replica, patch_fallback=False)
+                    self._test_patched_client(patch, query, dss_client, replica, fallback=False)
+                else:
+                    dss_client = config.dss_client()
+                    self._test_patched_client(patch, query, dss_client, replica, fallback=False)
 
-    def _test_patched_client(self, patch, query, dss_client, replica, patch_fallback):
-        with self.subTest(patch=patch, replica=replica, patch_fallback=patch_fallback):
+    class SpecialError(Exception):
+        pass
+
+    @contextmanager
+    def _failing_s3_get_object(self):
+        with mock.patch('boto3.client') as mock_client:
+            mock_s3 = mock.MagicMock()
+            mock_s3.get_object.side_effect = self.SpecialError()
+            mock_client.return_value = mock_s3
+            yield
+
+    def _test_patched_client(self, patch, query, dss_client, replica, fallback):
+        with self.subTest(patch=patch, replica=replica, fallback=fallback):
             response = dss_client.post_search(es_query=query, replica=replica, per_page=10)
             bundle_uuid, _, bundle_version = response['results'][0]['bundle_fqid'].partition('.')
             with mock.patch('azul.dss.logger') as log:
@@ -416,18 +430,43 @@ class DSSIntegrationTest(unittest.TestCase):
                 self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))
                 for f in manifest:
                     self.assertIn('s3_etag', f)
+                # Extract the log method name and the first three words of log message logged
+                # Note that the PyCharm debugger will call certain dunder methods on the variable, leading to failed
+                actual = [(m, ' '.join(re.split(r'[\s,]', a[0])[:3])) for m, a, k in log.mock_calls]
                 if patch:
                     if replica == 'aws':
-                        # Extract the log method name and the first two words of log message logged
-                        actual = [(m, ' '.join(a[0].split()[:2])) for m, a, k in log.mock_calls]
-                        actual.remove(('debug', 'Loading bundle'))
-                        expected = [('debug', 'Loading file'), ('debug', 'Loading blob')] * len(metadata)
-                        self.assertSequenceEqual(sorted(actual), sorted(expected))
+                        if fallback:
+                            expected = [
+                                           ('debug', 'Loading bundle %s'),
+                                           ('debug', 'Loading object %s'),
+                                           ('warning', 'Error accessing bundle'),
+                                           ('warning', 'Failed getting bundle')
+                                       ] + [
+                                           ('debug', 'Loading file %s'),
+                                           ('debug', 'Loading object %s'),
+                                           ('warning', 'Error accessing file'),
+                                           ('warning', 'Failed getting file')
+                                       ] * len(metadata)
+                        else:
+                            expected = [
+                                           ('debug', 'Loading bundle %s'),
+                                           ('debug', 'Loading object %s')
+                                       ] + [
+                                           ('debug', 'Loading file %s'),
+                                           ('debug', 'Loading object %s'),  # file
+                                           ('debug', 'Loading object %s')  # blob
+                                       ] * len(metadata)
+
                     else:
-                        actual = log.mock_calls[1:]  # remove log for get_bundle
-                        self.assertListEqual(actual, [mock.call.warning(mock.ANY)] * len(metadata))
+                        # On `gcp` the precondition check fails right away, preventing any attempts of direct access
+                        expected = [
+                                       ('warning', 'Failed getting bundle')
+                                   ] + [
+                                       ('warning', 'Failed getting file')
+                                   ] * len(metadata)
                 else:
-                    self.assertListEqual(log.mock_calls, [])
+                    expected = []
+                self.assertSequenceEqual(sorted(expected), sorted(actual))
 
     def test_get_file_fail(self):
         for patch in True, False:
@@ -440,3 +479,21 @@ class DSSIntegrationTest(unittest.TestCase):
                                         version='2018-11-19T232756.056947Z',
                                         replica='aws')
                 self.assertEqual(e.exception.reason, 'not_found')
+
+    def test_mini_dss_failures(self):
+        uuid = 'acafefed-beef-4bad-babe-feedfa11afe1'
+        version = '2018-11-19T232756.056947Z'
+        with self._failing_s3_get_object():
+            mini_dss = MiniDSS()
+            with self.assertRaises(self.SpecialError):
+                mini_dss._get_file_object(uuid, version)
+            with self.assertRaises(KeyError):
+                mini_dss._get_blob_key({})
+            with self.assertRaises(self.SpecialError):
+                mini_dss._get_blob('/blobs/foo', {'content-type': 'application/json'})
+            with self.assertRaises(self.SpecialError):
+                mini_dss.get_bundle(uuid, version, 'aws')
+            with self.assertRaises(self.SpecialError):
+                mini_dss.get_file(uuid, version, 'aws')
+            with self.assertRaises(self.SpecialError):
+                mini_dss.get_native_file_url(uuid, version, 'aws')

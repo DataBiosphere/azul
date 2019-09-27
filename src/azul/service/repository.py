@@ -1,13 +1,17 @@
 from concurrent.futures import ThreadPoolExecutor
 
 from more_itertools import one
-from typing import Callable, Mapping, Any
+from typing_extensions import Protocol
 import uuid
 
 from azul.service import AbstractService
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 
-FileUrlFunc = Callable[[str, Mapping[str, Any]], str]
+
+class FileUrlFunc(Protocol):
+
+    def __call__(self, uuid: str, fetch: bool = True, **params: str) -> str:
+        pass
 
 
 class EntityNotFoundError(Exception):

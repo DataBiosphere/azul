@@ -1,6 +1,6 @@
 import os
 import re
-from typing import List, Mapping, Optional, Tuple
+from typing import List, Mapping, Optional, Tuple, Any
 
 from hca.dss import DSSClient
 from urllib3 import Timeout
@@ -148,21 +148,23 @@ class Config:
 
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 
-    @property
-    def dss_checkout_bucket(self):
-        return self._dss_bucket('checkout')
+    def dss_checkout_bucket(self, dss_endpoint: Optional[str] = None):
+        if dss_endpoint is None:
+            dss_endpoint = self.dss_endpoint
+        return self._dss_bucket(dss_endpoint, qualifier='checkout')
 
-    def _dss_bucket(self, qualifier=None):
-        stage = self.dss_deployment_stage
+    def _dss_bucket(self, dss_endpoint: str, qualifier=None):
+        stage = self._dss_deployment_stage(dss_endpoint)
         # For domain_part, DSS went from `humancellatlas` to `hca` in 9/2018 and started reverting back to
         # `humancellatlas` in 12/2018. As I write this, only `dev` is back on `humancellatlas`
         domain_part = 'hca' if stage == 'prod' else 'humancellatlas'
         qualifier = [qualifier] if qualifier else []
         return '-'.join(['org', domain_part, 'dss', *qualifier, stage])
 
-    @property
-    def dss_main_bucket(self):
-        return self._dss_bucket()
+    def dss_main_bucket(self, dss_endpoint: Optional[str] = None):
+        if dss_endpoint is None:
+            dss_endpoint = self.dss_endpoint
+        return self._dss_bucket(dss_endpoint)
 
     @property
     def num_dss_workers(self) -> int:
@@ -423,9 +425,13 @@ class Config:
     def subscribe_to_dss(self):
         return self._boolean(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
 
-    def dss_client(self, dss_endpoint: str = None) -> DSSClient:
+    def dss_client(self,
+                   dss_endpoint: Optional[str] = None,
+                   adapter_args: Optional[Mapping[str, Any]] = None) -> DSSClient:
+        # FIXME: This should move to dss.py to eliminate the circular import
+        from azul.dss import AzulDSSClient
         swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
-        client = DSSClient(swagger_url=swagger_url)
+        client = AzulDSSClient(swagger_url=swagger_url, adapter_args=adapter_args)
         client.timeout_policy = Timeout(connect=10, read=40)
         return client
 

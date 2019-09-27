@@ -1,0 +1,10 @@
+name: Add `orange` label to new issues
+on: [issues]
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: HumanCellAtlas/azul-github-labeler-action@releases/v1
+      with:
+        repo-token: "${{secrets.GITHUB_TOKEN}}"
+        label: orange

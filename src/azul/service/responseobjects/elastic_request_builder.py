@@ -105,7 +105,8 @@ class ElasticTransformDump:
                         'relation': relation
                     }
                     filter_list.append(Q('range', **{facet: range_value}))
-
+            else:
+                assert False
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=f) for f in filter_list]
 
@@ -295,7 +296,6 @@ class ElasticTransformDump:
 
         # fetch one more than needed to see if there's a "next page".
         es_search = es_search.extra(size=pagination['size'] + 1)
-        logger.debug("es_search is " + str(es_search))
         return es_search
 
     def _generate_paging_dict(self, es_response, pagination):
@@ -312,7 +312,6 @@ class ElasticTransformDump:
         # ...else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
         count = len(es_hits)
-        logger.debug("count=" + str(count) + " and size=" + str(pagination['size']))
         if 'search_before' in pagination:
             # hits are reverse sorted
             if count > pagination['size']:
