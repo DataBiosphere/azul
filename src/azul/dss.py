@@ -27,7 +27,7 @@ class MiniDSS:
 
     def get_bundle(self, uuid: str, version: str, replica: str) -> JSON:
         assert replica == 'aws' and version is not None
-        logger.debug('Loading bundle %s, version %s from bucket %s', uuid, version)
+        logger.debug('Loading bundle %s, version %s.', uuid, version)
         bundle_key = f'bundles/{uuid}.{version}'
         try:
             bundle = json.load(self._get_object(bundle_key))
@@ -42,7 +42,7 @@ class MiniDSS:
 
     def get_file(self, uuid: str, version: str, replica: str) -> Union[StreamingBody, JSON]:
         assert replica == 'aws' and version is not None
-        logger.debug('Loading file %s, version %s', uuid, version)
+        logger.debug('Loading file %s, version %s.', uuid, version)
         file_object = self._get_file_object(uuid, version)
         blob_key = self._get_blob_key(file_object)
         blob = self._get_blob(blob_key, file_object)
@@ -70,7 +70,7 @@ class MiniDSS:
 
     def retag_blob(self, uuid: str, version: str, replica: str):
         assert replica == 'aws' and version is not None
-        logger.debug('Updating checksum tags on blob for file %s, version %s', uuid, version)
+        logger.debug('Updating checksum tags on blob for file %s, version %s.', uuid, version)
         file_object = self._get_file_object(uuid, version)
         blob_key = self._get_blob_key(file_object)
         checksums = self.Checksums.from_blob_key(blob_key)
@@ -82,14 +82,14 @@ class MiniDSS:
             self._put_object_tags(blob_key, new_tags)
 
     def _get_object_tags(self, blob_key: str):
-        logger.debug('Getting tags for blob %s in bucket %s', blob_key, self.bucket)
+        logger.debug('Getting tags for blob %s in bucket %s.', blob_key, self.bucket)
         tagging = self.s3.get_object_tagging(Bucket=self.bucket, Key=blob_key)
         tag_set = tagging['TagSet']
         tags = {tag['Key']: tag['Value'] for tag in tag_set}
         return tags
 
     def _put_object_tags(self, key: str, tags: Mapping[str, str]):
-        logger.debug('Putting tags for object %s in bucket %s', key, self.bucket)
+        logger.debug('Putting tags for object %s in bucket %s.', key, self.bucket)
         new_tag_set = [{'Key': k, 'Value': v} for k, v in tags.items()]
         self.s3.put_object_tagging(Bucket=self.bucket,
                                    Key=key,
@@ -140,7 +140,7 @@ def patch_client_for_direct_access(client: DSSClient):
             blob = mini_dss.get_file(uuid, version, replica)
         except Exception:
             logger.warning('Failed getting file %s, version %s directly. '
-                           'Falling back to official method')
+                           'Falling back to official method', uuid, version)
             return old_get_file(uuid=uuid, version=version, replica=replica)
         else:
             return blob
