@@ -351,7 +351,7 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Visualize in SCP",
                         "entity_ids": {
                             "staging": ["8b01ff5a-2157-4c4a-96bb-2c686a7ef8b0", "81b5f43d-3c20-4575-9efa-bfb0b070a6e3"],
-                            "integration": [],
+                            "integration": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"],
                             "prod": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
                         },
                         "portal_url": "https://singlecell.broadinstitute.org/single_cell/study/SCP495"
@@ -383,7 +383,7 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Single-cell RNA-seq analysis of human tissue ischaemic sensitivity",
                         "entity_ids": {
                             "staging": ["8b01ff5a-2157-4c4a-96bb-2c686a7ef8b0", "81b5f43d-3c20-4575-9efa-bfb0b070a6e3"],
-                            "integration": [],
+                            "integration": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"],
                             "prod": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
                         },
                         "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-EHCA-1/results/tsne"
@@ -395,7 +395,7 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Single-cell transcriptome analysis of precursors of human CD4+ cytotoxic T lymphocytes",
                         "entity_ids": {
                             "staging": ["519b58ef-6462-4ed3-8c0d-375b54f53c31"],
-                            "integration": ["0ec2b05f-ddbe-4e5a-b30f-e81f4b1e330c"],
+                            "integration": ["90bd6933-40c0-48d4-8d76-778c103bf545"],
                             "prod": ["90bd6933-40c0-48d4-8d76-778c103bf545"]
                         },
                         "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-106540/results/tsne"
@@ -407,7 +407,7 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Reconstructing the human first trimester fetal-maternal interface using single cell transcriptomics - 10x data",
                         "entity_ids": {
                             "staging": [],
-                            "integration": [],
+                            "integration": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"],
                             "prod": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"]
                         },
                         "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-MTAB-6701/results/tsne"
@@ -419,7 +419,7 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Reconstructing the human first trimester fetal-maternal interface using single cell transcriptomics - Smartseq 2 data",
                         "entity_ids": {
                             "staging": [],
-                            "integration": [],
+                            "integration": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"],
                             "prod": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"]
                         },
                         "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-MTAB-6678/results/tsne"
@@ -431,7 +431,7 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Single cell transcriptome analysis of human pancreas",
                         "entity_ids": {
                             "staging": ["b1f3afcb-f061-4862-b6c2-ace971595d22", "08e7b6ba-5825-47e9-be2d-7978533c5f8c"],
-                            "integration": [],
+                            "integration": ["cddab57b-6868-4be4-806f-395ed9dd635a"],
                             "prod": ["cddab57b-6868-4be4-806f-395ed9dd635a"]
                         },
                         "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/results/tsne"
@@ -443,7 +443,7 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Single-cell RNA-seq analysis of 1,732 cells throughout a 125-day differentiation protocol that converted H1 human embryonic stem cells to a variety of ventrally-derived cell types",
                         "entity_ids": {
                             "staging": ["019a935b-ea35-4d83-be75-e1a688179328"],
-                            "integration": [],
+                            "integration": ["2043c65a-1cf8-4828-a656-9e247d4e64f1"],
                             "prod": ["2043c65a-1cf8-4828-a656-9e247d4e64f1"]
                         },
                         "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-93593/results/tsne"
@@ -455,7 +455,7 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Single-cell RNA-seq analysis of human pancreas from healthy individuals and type 2 diabetes patients",
                         "entity_ids": {
                             "staging": ["a5ae0428-476c-46d2-a9f2-aad955b149aa"],
-                            "integration": [],
+                            "integration": ["ae71be1d-ddd8-4feb-9bed-24c3ddb6e1ad"],
                             "prod": ["ae71be1d-ddd8-4feb-9bed-24c3ddb6e1ad"]
                         },
                         "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-MTAB-5061/results/tsne"
@@ -467,7 +467,7 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Single-cell RNA-seq analysis of 20 organs and tissues from individual mice creates a Tabula muris",
                         "entity_ids": {
                             "staging": ["2cd14cf5-f8e0-4c97-91a2-9e8957f41ea8"],
-                            "integration": [],
+                            "integration": ["e0009214-c0a0-4a7b-96e2-d6a83e966ce0"],
                             "prod": ["e0009214-c0a0-4a7b-96e2-d6a83e966ce0"]
                         },
                         "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-ENAD-15/results/tsne"
