@@ -1,5 +1,6 @@
 import json
 import unittest
+from unittest import mock
 import urllib.parse
 
 from more_itertools import one
@@ -1395,23 +1396,122 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
 
     maxDiff = None
 
-    def test_integrations(self):
+    # Mocked db content for the tests
+    _portal_integrations_db = [
+        {
+            "portal_id": "9852dece-443d-42e8-869c-17b9a86d447e",
+            "integrations": [
+                {
+                    "integration_id": "b87b7f30-2e60-4ca5-9a6f-00ebfcd35f35",
+                    "integration_type": "get_manifest",
+                    "entity_type": "file",
+                    "manifest_type": "full",
+                },
+                {
+                    "integration_id": "977854a0-2eea-4fec-9459-d4807fe79f0c",
+                    "integration_type": "get",
+                    "entity_type": "project",
+                    "entity_ids": {
+                        "prod": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
+                    }
+                }
+            ]
+        },
+        {
+            "portal_id": "f58bdc5e-98cd-4df4-80a4-7372dc035e87",
+            "integrations": [
+                {
+                    "integration_id": "e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138",
+                    "integration_type": "get",
+                    "entity_type": "project",
+                    "entity_ids": {
+                        "prod": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
+                    }
+                },
+                {
+                    "integration_id": "dbfe9394-a326-4574-9632-fbadb51a7b1a",
+                    "integration_type": "get",
+                    "entity_type": "project",
+                    "entity_ids": {
+                        "prod": ["90bd6933-40c0-48d4-8d76-778c103bf545"]
+                    }
+                },
+                {
+                    "integration_id": "f13ddf2d-d913-492b-9ea8-2de4b1881c26",
+                    "integration_type": "get",
+                    "entity_type": "project",
+                    "entity_ids": {
+                        "prod": ["cddab57b-6868-4be4-806f-395ed9dd635a"]
+                    }
+                }
+            ]
+        }
+    ]
+
+    def _get_integrations(self, params: dict) -> dict:
+        url = self.base_url + '/integrations'
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    @classmethod
+    def _extract_integration_ids(cls, response_json):
+        return [integration['integration_id']
+                for portal in response_json
+                for integration in portal['integrations']]
+
+    @mock.patch('azul.project.hca.Plugin.portal_integrations_db')
+    def test_integrations(self, portal_integrations_db):
+        """
+        Verify requests specifying `integration_type` and `entity_type` only return integrations matching those types
+        """
         test_cases = [
-            ('get_manifest', 'file', 1),
-            ('get', 'project', 21),
+            ('get_manifest', 'file', ['b87b7f30-2e60-4ca5-9a6f-00ebfcd35f35']),
+            ('get', 'bundle', []),
+            ('get', 'project', ['977854a0-2eea-4fec-9459-d4807fe79f0c',
+                                'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138',
+                                'dbfe9394-a326-4574-9632-fbadb51a7b1a',
+                                'f13ddf2d-d913-492b-9ea8-2de4b1881c26'])
         ]
-        for integration_type, entity_type, num_integrations_expected in test_cases:
-            with self.subTest(integration_type=integration_type,
-                              entity_type=entity_type):
-                url = self.base_url + f'/integrations?integration_type={integration_type}&entity_type={entity_type}'
-                response = requests.get(url)
-                response.raise_for_status()
-                response_json = response.json()
-                num_integrations = sum(len(portal['integrations']) for portal in response_json)
-                self.assertEqual(num_integrations, num_integrations_expected)
-                self.assertTrue(all(isinstance(integration.get('entity_ids', []), list)
-                                    for portal in response_json
-                                    for integration in portal['integrations']))
+        portal_integrations_db.return_value = self._portal_integrations_db
+        with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
+            for integration_type, entity_type, expected_integration_ids in test_cases:
+                params = dict(integration_type=integration_type, entity_type=entity_type)
+                # noinspection PyArgumentList
+                with self.subTest(**params):
+                    response_json = self._get_integrations(params)
+                    found_integration_ids = self._extract_integration_ids(response_json)
+                    self.assertEqual(len(expected_integration_ids), len(found_integration_ids))
+                    self.assertEqual(set(expected_integration_ids), set(found_integration_ids))
+                    self.assertTrue(all(isinstance(integration.get('entity_ids', []), list)
+                                        for portal in response_json
+                                        for integration in portal['integrations']))
+
+    @mock.patch('azul.project.hca.Plugin.portal_integrations_db')
+    def test_integrations_by_entity_ids(self, portal_integrations_db):
+        """
+        Verify requests specifying `entity_ids` only return integrations matching those entity_ids
+        """
+        test_cases = [
+            # One project entity id specified by one integration
+            (['cddab57b-6868-4be4-806f-395ed9dd635a'],
+             ['f13ddf2d-d913-492b-9ea8-2de4b1881c26']),
+            # Two project entity ids specified by two different integrations
+            (['cddab57b-6868-4be4-806f-395ed9dd635a', '90bd6933-40c0-48d4-8d76-778c103bf545'],
+             ['f13ddf2d-d913-492b-9ea8-2de4b1881c26', 'dbfe9394-a326-4574-9632-fbadb51a7b1a']),
+            # One project entity id specified by two different integrations
+            (['c4077b3c-5c98-4d26-a614-246d12c2e5d7'],
+             ['977854a0-2eea-4fec-9459-d4807fe79f0c', 'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138'])
+        ]
+        portal_integrations_db.return_value = self._portal_integrations_db
+        with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
+            for entity_ids, integration_ids in test_cases:
+                params = dict(integration_type='get', entity_type='project', entity_ids=','.join(entity_ids))
+                # noinspection PyArgumentList
+                with self.subTest(**params):
+                    response_json = self._get_integrations(params)
+                    found_integration_ids = self._extract_integration_ids(response_json)
+                    self.assertEqual(set(integration_ids), set(found_integration_ids))
 
 
 if __name__ == '__main__':
