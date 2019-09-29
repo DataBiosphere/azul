@@ -172,7 +172,6 @@ components:
       type: object
       required:
         - "integration_id"
-        - "integration_type"
         - "entity_type"
       properties:
         "integration_id":
@@ -180,8 +179,6 @@ components:
           description: "The unique identifier of the integration"
           type: string
           format: uuid
-        "integration_type":
-          $ref: "#/components/schemas/integration_type"
         "entity_type":
           $ref: "#/components/schemas/entity_type"
         "title":
@@ -209,9 +206,12 @@ components:
     "GetIntegration":
       type: object
       required:
+        - "integration_type"
         - "entity_ids"
         - "portal_url"
       properties:
+        "integration_type":
+          $ref: "#/components/schemas/integration_type"      
         "entity_ids":
           description: "A list of Azul entity identifiers to restrict the integration to"
           type: array
@@ -225,8 +225,11 @@ components:
     "GetEntityIntegration":
       type: object
       required:
+        - "integration_type"
         - "portal_url_template"
       properties:
+        "integration_type":
+          $ref: "#/components/schemas/integration_type"      
         "portal_url_template":
           type: string
           description: >
@@ -249,8 +252,11 @@ components:
     "GetEntitiesIntegration":
       type: object
       required:
+        - "integration_type"
         - "portal_url_template"
       properties:
+        "integration_type":
+          $ref: "#/components/schemas/integration_type"
         "portal_url_template":
           type: string
           description: >
@@ -276,9 +282,12 @@ components:
     "GetManifestIntegration":
       type: object
       required:
+        - "integration_type"
         - "manifest_type"
         - "portal_url_template"
       properties:
+        "integration_type":
+          $ref: "#/components/schemas/integration_type"
         "manifest_type":
           type: string
           enum:
