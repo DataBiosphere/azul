@@ -1,4 +1,5 @@
 from abc import ABCMeta
+from contextlib import contextmanager
 import os
 from typing import List, Mapping
 from unittest import TestSuite, mock
@@ -78,8 +79,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                 with ResponsesHelper() as helper:
                     helper.add_passthru(self.base_url)
                     self._mock_other_lambdas(helper, up=True)
-                    self._mock_service_endpoints(helper, endpoint_states)
-                    with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+                    with self._mock_service_endpoints(helper, endpoint_states):
                         response = requests.get(self.base_url + '/health/' + keys)
                         self.assertEqual(200, response.status_code)
                         self.assertEqual(expected_response, response.json())
@@ -176,16 +176,19 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             self._mock_other_lambdas(helper, lambdas_up)
-            self._mock_service_endpoints(helper, endpoint_states)
-            with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+            with self._mock_service_endpoints(helper, endpoint_states):
                 return requests.get(self.base_url + path)
 
+    @contextmanager
     def _mock_service_endpoints(self, helper: ResponsesHelper, endpoint_states: Mapping[str, bool]) -> None:
         for endpoint, endpoint_up in endpoint_states.items():
             helper.add(responses.Response(method='HEAD',
                                           url=config.service_endpoint() + endpoint,
                                           status=200 if endpoint_up else 503,
                                           json={}))
+        # boto3.resource('sqs') requires an AWS region to be set
+        with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+            yield
 
     def _mock_other_lambdas(self, helper: ResponsesHelper, up: bool):
         for lambda_name in self._other_lambda_names():
