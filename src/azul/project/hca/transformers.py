@@ -542,23 +542,22 @@ class CellSuspensionTransformer(Transformer):
                             metadata_files=metadata_files)
         project = self._get_project(bundle)
         for cell_suspension in bundle.biomaterials.values():
-            if not isinstance(cell_suspension, api.CellSuspension):
-                continue
-            samples: MutableMapping[str, Sample] = dict()
-            self._find_ancestor_samples(cell_suspension, samples)
-            visitor = TransformerVisitor()
-            cell_suspension.accept(visitor)
-            cell_suspension.ancestors(visitor)
-            contents = dict(samples=[self._sample(s) for s in samples.values()],
-                            specimens=[self._specimen(s) for s in visitor.specimens.values()],
-                            cell_suspensions=[self._cell_suspension(cell_suspension)],
-                            cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
-                            donors=[self._donor(d) for d in visitor.donors.values()],
-                            organoids=[self._organoid(o) for o in visitor.organoids.values()],
-                            files=[self._file(f) for f in visitor.files.values()],
-                            protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
-                            projects=[self._project(project)])
-            yield self._contribution(bundle, contents, cell_suspension.document_id, deleted)
+            if isinstance(cell_suspension, api.CellSuspension):
+                samples: MutableMapping[str, Sample] = dict()
+                self._find_ancestor_samples(cell_suspension, samples)
+                visitor = TransformerVisitor()
+                cell_suspension.accept(visitor)
+                cell_suspension.ancestors(visitor)
+                contents = dict(samples=[self._sample(s) for s in samples.values()],
+                                specimens=[self._specimen(s) for s in visitor.specimens.values()],
+                                cell_suspensions=[self._cell_suspension(cell_suspension)],
+                                cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
+                                donors=[self._donor(d) for d in visitor.donors.values()],
+                                organoids=[self._organoid(o) for o in visitor.organoids.values()],
+                                files=[self._file(f) for f in visitor.files.values()],
+                                protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+                                projects=[self._project(project)])
+                yield self._contribution(bundle, contents, cell_suspension.document_id, deleted)
 
 
 class SampleTransformer(Transformer):
