@@ -662,8 +662,8 @@ def start_manifest_generation():
         - name: format
           in: query
           type: string
-          description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
-          manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
+          description: The desired format of the output. Possible values are `compact` (the default) for a tab-separated
+          manifest and `terra.bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
           latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
           samples (aka specimens). The format of the manifests inside the BDBag is documented here:
           https://software.broadinstitute.org/firecloud/documentation/article?id=10954
@@ -701,8 +701,8 @@ def start_manifest_generation_fetch():
         - name: format
           in: query
           type: string
-          description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
-          manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
+          description: The desired format of the output. Possible values are `compact` (the default) for a tab-separated
+          manifest and `terra.bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
           latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
           samples (aka specimens). The format of the manifests inside the BDBag is documented here:
           https://software.broadinstitute.org/firecloud/documentation/article?id=10954
@@ -771,8 +771,8 @@ def handle_manifest_generation_request():
     try:
         format_ = query_params['format']
     except KeyError:
-        format_ = 'tsv'
-    if format_ not in ('tsv', 'bdbag', 'full'):
+        format_ = 'compact'
+    if format_ not in ('compact', 'tsv', 'terra.bdbag', 'bdbag', 'full'):
         raise BadRequestError(f'{format_} is not a valid manifest format.')
     token = query_params.get('token')
     retry_url = self_url()
@@ -802,7 +802,7 @@ def generate_manifest(event, context):
         Valid params:
             - filters: dict containing filters to use in ES request
             - format: str to specify manifest output format, values are
-                      'tsv' (default) or 'bdbag'
+                      'compact' (default) or 'terra.bdbag'
     :return: The URL to the generated manifest
     """
     es_td = ElasticTransformDump()
