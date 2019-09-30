@@ -1,5 +1,6 @@
 import base64
 import binascii
+import chalice
 import hashlib
 import json
 import logging.config
@@ -41,7 +42,6 @@ from azul.types import JSON
 log = logging.getLogger(__name__)
 
 app = AzulChaliceApp(app_name=config.service_name)
-
 configure_app_logging(app, log)
 
 openapi_spec = {
@@ -163,6 +163,15 @@ def health(keys: Optional[str] = None):
         return {
             'up': True,
         }
+    elif keys == 'cached':
+        storage_service = StorageService()
+        health_object = json.loads(storage_service.get('health/service'))
+        max_age = 2 * 60
+        if time.time() - health_object['time'] > max_age:
+            return Response(status_code=500,
+                            body=json.dumps({'Message': 'Cached health object is stale'}))
+        else:
+            body = health_object['health']
     else:
         health = Health('service')
         if keys is None:
@@ -174,8 +183,17 @@ def health(keys: Optional[str] = None):
             body = health.as_json(keys)
         except RequirementError:
             raise BadRequestError('Invalid health keys')
-        return Response(body=json.dumps(body),
-                        status_code=200 if body['up'] else 503)
+    return Response(body=json.dumps(body),
+                    status_code=200 if body['up'] else 503)
+
+
+@app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
+def generate_health_object(event_: chalice.app.CloudWatchEvent):
+    storage_service = StorageService()
+    health = Health('service')
+    health = health.as_json()
+    health_object = dict(time=time.time(), health=health)
+    storage_service.put(object_key='health/service', data=json.dumps(health_object))
 
 
 @app.route('/version', methods=['GET'], cors=True)

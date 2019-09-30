@@ -25,6 +25,7 @@ from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul.logging import configure_app_logging
 from azul.plugin import Plugin
+from azul.service.responseobjects.storage_service import StorageService
 from azul.time import RemainingLambdaContextTime
 from azul.transformer import EntityReference
 from azul.types import JSON
@@ -54,6 +55,15 @@ def health(keys: Optional[str] = None):
         return {
             'up': True,
         }
+    elif keys == 'cached':
+        storage_service = StorageService()
+        health_object = json.loads(storage_service.get('health/indexer'))
+        max_age = 2 * 60
+        if time.time() - health_object['time'] > max_age:
+            return Response(status_code=500,
+                            body=json.dumps({'Message': 'Cached health object is stale'}))
+        else:
+            body = health_object['health']
     else:
         health = Health('indexer')
         if keys is None:
@@ -65,8 +75,17 @@ def health(keys: Optional[str] = None):
             body = health.as_json(keys)
         except RequirementError:
             raise BadRequestError('Invalid health keys')
-        return Response(body=json.dumps(body),
-                        status_code=200 if body['up'] else 503)
+    return Response(body=json.dumps(body),
+                    status_code=200 if body['up'] else 503)
+
+
+@app.schedule('rate(1 minute)', name=config.indexer_cache_health_lambda_basename)
+def generate_health_object(event_: chalice.app.CloudWatchEvent):
+    storage_service = StorageService()
+    health = Health('indexer')
+    health = health.as_json()
+    health_object = dict(time=time.time(), health=health)
+    storage_service.put(object_key='health/indexer', data=json.dumps(health_object))
 
 
 @app.route('/', cors=True)
