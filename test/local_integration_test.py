@@ -71,7 +71,6 @@ class IntegrationTest(AlwaysTearDownTestCase):
 
     def setUp(self):
         super().setUp()
-        self.set_lambda_test_mode(True)
         self.bundle_uuid_prefix = ''.join([str(random.choice('abcdef0123456789')) for _ in range(self.prefix_length)])
         self.expected_fqids = set()
         self.test_notifications = set()
@@ -81,6 +80,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.test_uuid = str(uuid.uuid4())
         self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
         self.num_bundles = 0
+        self.set_lambda_test_mode(True)
 
     def tearDown(self):
         self.set_lambda_test_mode(False)
@@ -177,7 +177,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         client = boto3.client('lambda')
         indexer_lambda_config = client.get_function_configuration(FunctionName=config.indexer_name)
         environment = indexer_lambda_config['Environment']
-        environment['Variables']['TEST_MODE'] = '1' if mode else '0'
+        environment['Variables']['AZUL_TEST_MODE'] = '1' if mode else '0'
         client.update_function_configuration(FunctionName=config.indexer_name, Environment=environment)
 
     @memoized_property

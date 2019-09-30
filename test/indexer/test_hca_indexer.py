@@ -1019,7 +1019,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
             for test_mode in 0, 1:
                 for body in testless_notification, test_name_in_notification:
                     with self.subTest(test_mode=test_mode, endpoint=endpoint):
-                        with patch.dict(os.environ, TEST_MODE=str(test_mode)):
+                        with patch.dict(os.environ, AZUL_TEST_MODE=str(test_mode)):
                             response = self._test(body, endpoint=endpoint, valid_auth=True)
                             if 'test_name' not in body and test_mode == 1:
                                 self.assertEqual(500, response.status_code)
