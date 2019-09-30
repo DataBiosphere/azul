@@ -29,6 +29,10 @@ emit({
                 "nudge": {
                     "lambda_memory_size": 128,
                     "lambda_timeout": config.indexer_lambda_timeout,
+                },
+                config.indexer_cache_health_lambda_basename: {
+                    "lambda_memory_size": 128,
+                    "lambda_timeout": config.indexer_lambda_timeout,
                 }
             }
         }

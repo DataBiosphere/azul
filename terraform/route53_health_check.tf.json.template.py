@@ -11,7 +11,7 @@ emit(None if not config.enable_monitoring else {
                         "fqdn": config.api_lambda_domain(name),
                         "port": 443,
                         "type": "HTTPS",
-                        "resource_path": "/health",
+                        "resource_path": "/health/cached",
                         "failure_threshold": "3",
                         "request_interval": "30",
                         "tags": {
