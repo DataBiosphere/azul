@@ -170,10 +170,10 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'laboratory': list(laboratories),
             'institutions': list(institutions),
             'contact_names': list(contact_names),
-            'contributors': [self._contact(c) for c in project.contributors],
+            'contributors': list(map(self._contact, project.contributors)),
             'document_id': str(project.document_id),
             'publication_titles': list(publication_titles),
-            'publications': [self._publication(p) for p in project.publications],
+            'publications': list(map(self._publication, project.publications)),
             'insdc_project_accessions': list(project.insdc_project_accessions),
             'geo_series_accessions': list(project.geo_series_accessions),
             'array_express_accessions': list(project.array_express_accessions),
@@ -511,15 +511,14 @@ class FileTransformer(Transformer):
             file.ancestors(visitor)
             samples: MutableMapping[str, Sample] = dict()
             self._find_ancestor_samples(file, samples)
-            contents = dict(samples=[self._sample(s) for s in samples.values()],
-                            specimens=[self._specimen(s) for s in visitor.specimens.values()],
-                            cell_suspensions=[self._cell_suspension(cs) for cs in
-                                              visitor.cell_suspensions.values()],
-                            cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
-                            donors=[self._donor(d) for d in visitor.donors.values()],
-                            organoids=[self._organoid(o) for o in visitor.organoids.values()],
+            contents = dict(samples=list(map(self._sample, samples.values())),
+                            specimens=list(map(self._specimen, visitor.specimens.values())),
+                            cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
+                            cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
+                            donors=list(map(self._donor, visitor.donors.values())),
+                            organoids=list(map(self._organoid, visitor.organoids.values())),
                             files=[self._file(file)],
-                            protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+                            protocols=list(map(self._protocol, visitor.protocols.values())),
                             projects=[self._project(project)])
             yield self._contribution(bundle, contents, file.document_id, deleted)
 
@@ -548,14 +547,14 @@ class CellSuspensionTransformer(Transformer):
                 visitor = TransformerVisitor()
                 cell_suspension.accept(visitor)
                 cell_suspension.ancestors(visitor)
-                contents = dict(samples=[self._sample(s) for s in samples.values()],
-                                specimens=[self._specimen(s) for s in visitor.specimens.values()],
+                contents = dict(samples=list(map(self._sample, samples.values())),
+                                specimens=list(map(self._specimen, visitor.specimens.values())),
                                 cell_suspensions=[self._cell_suspension(cell_suspension)],
-                                cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
-                                donors=[self._donor(d) for d in visitor.donors.values()],
-                                organoids=[self._organoid(o) for o in visitor.organoids.values()],
-                                files=[self._file(f) for f in visitor.files.values()],
-                                protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+                                cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
+                                donors=list(map(self._donor, visitor.donors.values())),
+                                organoids=list(map(self._organoid, visitor.organoids.values())),
+                                files=list(map(self._file, visitor.files.values())),
+                                protocols=list(map(self._protocol, visitor.protocols.values())),
                                 projects=[self._project(project)])
                 yield self._contribution(bundle, contents, cell_suspension.document_id, deleted)
 
@@ -585,14 +584,13 @@ class SampleTransformer(Transformer):
             sample.accept(visitor)
             sample.ancestors(visitor)
             contents = dict(samples=[self._sample(sample)],
-                            specimens=[self._specimen(s) for s in visitor.specimens.values()],
-                            cell_suspensions=[self._cell_suspension(cs) for cs in
-                                              visitor.cell_suspensions.values()],
-                            cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
-                            donors=[self._donor(d) for d in visitor.donors.values()],
-                            organoids=[self._organoid(o) for o in visitor.organoids.values()],
-                            files=[self._file(f) for f in visitor.files.values()],
-                            protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+                            specimens=list(map(self._specimen, visitor.specimens.values())),
+                            cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
+                            cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
+                            donors=list(map(self._donor, visitor.donors.values())),
+                            organoids=list(map(self._organoid, visitor.organoids.values())),
+                            files=list(map(self._file, visitor.files.values())),
+                            protocols=list(map(self._protocol, visitor.protocols.values())),
                             projects=[self._project(project)])
             yield self._contribution(bundle, contents, sample.document_id, deleted)
 
@@ -629,14 +627,14 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
             self._find_ancestor_samples(file, samples)
         project = self._get_project(bundle)
 
-        contents = dict(samples=[self._sample(s) for s in samples.values()],
-                        specimens=[self._specimen(s) for s in visitor.specimens.values()],
-                        cell_suspensions=[self._cell_suspension(cs) for cs in visitor.cell_suspensions.values()],
-                        cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
-                        donors=[self._donor(d) for d in visitor.donors.values()],
-                        organoids=[self._organoid(o) for o in visitor.organoids.values()],
-                        files=[self._file(f) for f in visitor.files.values()],
-                        protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+        contents = dict(samples=list(map(self._sample, samples.values())),
+                        specimens=list(map(self._specimen, visitor.specimens.values())),
+                        cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
+                        cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
+                        donors=list(map(self._donor, visitor.donors.values())),
+                        organoids=list(map(self._organoid, visitor.organoids.values())),
+                        files=list(map(self._file, visitor.files.values())),
+                        protocols=list(map(self._protocol, visitor.protocols.values())),
                         projects=[self._project(project)])
 
         yield self._contribution(bundle, contents, self._get_entity_id(bundle, project), deleted)
