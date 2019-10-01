@@ -436,15 +436,16 @@ make delete
    make unsubscribe
    ```
    
-4. Delete lambdas
+4. Destroy cloud infrastructure
+   ```
+   make -C terraform destroy
+   ```
+
+5. Delete lambdas
    ```
    make -C lambdas delete
    ```
    
-5. Destroy cloud infrastructure
-   ```
-   make -C terraform destroy
-   ```
 
 # 3. Running service locally
 
