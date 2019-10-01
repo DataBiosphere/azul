@@ -576,14 +576,6 @@ class TestManifestEndpoints(WebServiceTestCase):
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
             expected = [
-                ('*.file_core.file_format', 'fastq.gz', 'fastq.gz', 'fastq.gz', 'fastq.gz'),
-
-                ('*.file_core.file_name',
-                 'SRR3562915_2.fastq.gz',
-                 'SRR3562915_1.fastq.gz',
-                 '22028_5#300_1.fastq.gz',
-                 '22028_5#300_2.fastq.gz'),
-
                 ('bundle_uuid',
                  'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                  'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
@@ -755,6 +747,30 @@ class TestManifestEndpoints(WebServiceTestCase):
                  '5bd4ba68-4c0e-4d22-840d-afc025e7badc',
                  'd3287615-b97a-4984-a8cf-30a1c30e4773',
                  'd3287615-b97a-4984-a8cf-30a1c30e4773'),
+
+                ('file_format',
+                 'fastq.gz',
+                 'fastq.gz',
+                 'fastq.gz',
+                 'fastq.gz'),
+
+                ('file_name',
+                 'SRR3562915_2.fastq.gz',
+                 'SRR3562915_1.fastq.gz',
+                 '22028_5#300_1.fastq.gz',
+                 '22028_5#300_2.fastq.gz'),
+
+                ('file_sha256',
+                 '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
+                 '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
+                 '3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582',
+                 'cda141411815a9e8e4c3145f6b855a295352fd18f7db449d3797d8de38fb052a'),
+
+                ('file_size',
+                 '190330156',
+                 '195142097',
+                 '64718465',
+                 '65008198'),
 
                 ('file_uuid',
                  '74897eb7-0701-4e4f-9e6b-8b9521b2816b',

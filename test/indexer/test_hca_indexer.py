@@ -810,11 +810,11 @@ class TestHCAIndexer(IndexerTestCase):
         for metadata_row in metadata_rows:
             self.assertEqual(uuid, metadata_row['bundle_uuid'])
             self.assertEqual(version, metadata_row['bundle_version'])
-            if metadata_row['*.file_core.file_format'] == 'matrix':
+            if metadata_row['file_format'] == 'matrix':
                 expected_file_name = '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/'
-                self.assertEqual(expected_file_name, metadata_row['*.file_core.file_name'])
+                self.assertEqual(expected_file_name, metadata_row['file_name'])
             else:
-                self.assertIn(metadata_row['*.file_core.file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
+                self.assertIn(metadata_row['file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
 
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
