@@ -1,9 +1,9 @@
 import shlex
 
 from azul import config
-from azul.template import emit
+from azul.deployment import emit_tf
 
-emit({
+emit_tf({
     "resource": [
         {
             "google_service_account": {

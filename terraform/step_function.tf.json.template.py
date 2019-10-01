@@ -1,8 +1,7 @@
 import json
 
 from azul import config
-from azul.deployment import aws
-from azul.template import emit
+from azul.deployment import aws, emit_tf
 
 
 def cart_item_states():
@@ -30,7 +29,7 @@ def cart_item_states():
     }
 
 
-emit({
+emit_tf({
     "resource": {
         "aws_iam_role": {
             "state_machine_iam_role": {

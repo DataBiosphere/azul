@@ -1,10 +1,9 @@
 import json
 
-from azul.template import emit
 from azul import config
-from azul.deployment import aws
+from azul.deployment import aws, emit_tf
 
-emit({
+emit_tf({
     "resource": [
         *([] if config.share_es_domain else [{
             "aws_cloudwatch_metric_alarm": {

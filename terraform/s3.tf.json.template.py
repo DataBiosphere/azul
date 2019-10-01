@@ -1,7 +1,7 @@
 from azul import config
-from azul.template import emit
+from azul.deployment import emit_tf
 
-emit({
+emit_tf({
     "resource": [
         {
             "aws_s3_bucket": {
