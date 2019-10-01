@@ -124,7 +124,7 @@ class BaseIndexer(ABC):
 
     def _get_bundle(self, bundle_uuid, bundle_version):
         now = time.time()
-        dss_client = config.dss_client()
+        dss_client = config.dss_client(adapter_args=dict(pool_maxsize=config.num_dss_workers))
         patch_client_for_direct_access(dss_client)
         _, manifest, metadata_files = download_bundle_metadata(client=dss_client,
                                                                replica='aws',

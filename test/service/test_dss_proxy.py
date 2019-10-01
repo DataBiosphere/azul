@@ -124,7 +124,7 @@ class TestDssProxy(LocalAppTestCase):
                                 expect_retry_after = None if wait or expect_status == 302 else retry_after
                                 before = time.monotonic()
                                 with mock.patch('time.time', new=lambda: 1547691253.07010), \
-                                     mock.patch.object(type(config), 'dss_checkout_bucket', bucket_name):
+                                     mock.patch.object(type(config), 'dss_checkout_bucket', return_value=bucket_name):
                                     response = requests.get(url, allow_redirects=False)
                                 if wait and expect_status == 301:
                                     self.assertLessEqual(retry_after, time.monotonic() - before)
@@ -149,6 +149,7 @@ class TestDssProxy(LocalAppTestCase):
                             location = request_azul(url=azul_url.url, expect_status=301)
 
                             azul_url.args['token'] = dss_token
+                            azul_url.args['requestIndex'] = '1'
                             self.assertUrlEqual(azul_url, location)
 
                             helper.add(responses.Response(method='GET',

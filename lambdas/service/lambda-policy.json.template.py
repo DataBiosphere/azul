@@ -74,7 +74,7 @@ emit({
                 "s3:GetObject",
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.dss_checkout_bucket}/*",
+                f"arn:aws:s3:::{config.dss_checkout_bucket()}/*",
             ]
         },
         # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
@@ -84,7 +84,7 @@ emit({
                 "s3:ListBucket"  # Without this, GetObject and HeadObject yield 403 for missing keys, not 404
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.dss_checkout_bucket}"
+                f"arn:aws:s3:::{config.dss_checkout_bucket()}"
             ]
         },
         {
