@@ -324,7 +324,8 @@ class Plugin(azul.plugin.Plugin):
                 "portal_icon": "https://app.terra.bio/static/media/logo.c5ed3676.svg",
                 "contact_email": "",
                 "organization_name": "Broad Institute",
-                "portal_description": "Terra is a cloud-native platform for biomedical researchers to access data, run analysis tools, and collaborate.",
+                "portal_description": "Terra is a cloud-native platform for biomedical researchers to access data, "
+                                      "run analysis tools, and collaborate.",
                 "integrations": [
                     {
                         "integration_id": "b87b7f30-2e60-4ca5-9a6f-00ebfcd35f35",
@@ -339,7 +340,8 @@ class Plugin(azul.plugin.Plugin):
             {
                 "portal_id": "9852dece-443d-42e8-869c-17b9a86d447e",
                 "portal_name": "Single Cell Portal",
-                "portal_icon": "https://singlecell.broadinstitute.org/single_cell/assets/SCP-logo-5d31abc1f355f68c809a100d74c886af016bd0aba246bcfad92f0b50b5ce2cd8.png",
+                "portal_icon": "https://singlecell.broadinstitute.org/single_cell/assets/"
+                               "SCP-logo-5d31abc1f355f68c809a100d74c886af016bd0aba246bcfad92f0b50b5ce2cd8.png",
                 "contact_email": "",
                 "organization_name": "Broad Institute",
                 "portal_description": "Reducing barriers and accelerating single-cell research.",
@@ -372,9 +374,15 @@ class Plugin(azul.plugin.Plugin):
                 "portal_id": "f58bdc5e-98cd-4df4-80a4-7372dc035e87",
                 "portal_name": "Single Cell Expression Atlas",
                 "portal_icon": "https://www.ebi.ac.uk/gxa/sc/resources/images/logos/sc_atlas_logo.png",
-                "contact_email": "",
-                "organization_name": "European Bioinformatics Institute (EMBL-EBI)",
-                "portal_description": "Single Cell Expression Atlas supports research in single cell transcriptomics.",
+                "contact_email": "Irene Papatheodorou irenep@ebi.ac.uk",
+                "organization_name": "European Bioinformatics Institute",
+                "portal_description": "Single Cell Expression Atlas annotates publicly available single cell "
+                                      "RNA-Seq experiments with ontology identifiers and re-analyses them using "
+                                      "standardised pipelines available through SCXA-Workflows, our collection of "
+                                      "RNA-Seq analysis pipelines, which is available at "
+                                      "https://github.com/ebi-gene-expression-group/scxa-workflows . The browser "
+                                      "enables visualisation of clusters of cells, their annotations and supports "
+                                      "searches for gene expression within and across studies.",
                 "integrations": [
                     {
                         "integration_id": "e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138",
@@ -392,7 +400,8 @@ class Plugin(azul.plugin.Plugin):
                         "integration_id": "dbfe9394-a326-4574-9632-fbadb51a7b1a",
                         "integration_type": "get",
                         "entity_type": "project",
-                        "title": "Single-cell transcriptome analysis of precursors of human CD4+ cytotoxic T lymphocytes",
+                        "title": "Single-cell transcriptome analysis of precursors of human CD4+ "
+                                 "cytotoxic T lymphocytes",
                         "entity_ids": {
                             "staging": ["519b58ef-6462-4ed3-8c0d-375b54f53c31"],
                             "integration": ["90bd6933-40c0-48d4-8d76-778c103bf545"],
@@ -404,7 +413,8 @@ class Plugin(azul.plugin.Plugin):
                         "integration_id": "081a6a90-29b6-4100-9c42-17a50014ea03",
                         "integration_type": "get",
                         "entity_type": "project",
-                        "title": "Reconstructing the human first trimester fetal-maternal interface using single cell transcriptomics - 10x data",
+                        "title": "Reconstructing the human first trimester fetal-maternal interface using single cell "
+                                 "transcriptomics - 10x data",
                         "entity_ids": {
                             "staging": [],
                             "integration": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"],
@@ -416,7 +426,8 @@ class Plugin(azul.plugin.Plugin):
                         "integration_id": "f0886c45-e339-4f22-8f6b-a715db1943e3",
                         "integration_type": "get",
                         "entity_type": "project",
-                        "title": "Reconstructing the human first trimester fetal-maternal interface using single cell transcriptomics - Smartseq 2 data",
+                        "title": "Reconstructing the human first trimester fetal-maternal interface using single cell "
+                                 "transcriptomics - Smartseq 2 data",
                         "entity_ids": {
                             "staging": [],
                             "integration": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"],
@@ -440,7 +451,9 @@ class Plugin(azul.plugin.Plugin):
                         "integration_id": "5ef44133-e71f-4f52-893b-3b200d5fb99b",
                         "integration_type": "get",
                         "entity_type": "project",
-                        "title": "Single-cell RNA-seq analysis of 1,732 cells throughout a 125-day differentiation protocol that converted H1 human embryonic stem cells to a variety of ventrally-derived cell types",
+                        "title": "Single-cell RNA-seq analysis of 1,732 cells throughout a 125-day differentiation "
+                                 "protocol that converted H1 human embryonic stem cells to a variety of "
+                                 "ventrally-derived cell types",
                         "entity_ids": {
                             "staging": ["019a935b-ea35-4d83-be75-e1a688179328"],
                             "integration": ["2043c65a-1cf8-4828-a656-9e247d4e64f1"],
@@ -452,7 +465,8 @@ class Plugin(azul.plugin.Plugin):
                         "integration_id": "d43464c0-38c6-402d-bdec-8972d71005c5 ",
                         "integration_type": "get",
                         "entity_type": "project",
-                        "title": "Single-cell RNA-seq analysis of human pancreas from healthy individuals and type 2 diabetes patients",
+                        "title": "Single-cell RNA-seq analysis of human pancreas from healthy individuals and type 2 "
+                                 "diabetes patients",
                         "entity_ids": {
                             "staging": ["a5ae0428-476c-46d2-a9f2-aad955b149aa"],
                             "integration": ["ae71be1d-ddd8-4feb-9bed-24c3ddb6e1ad"],
@@ -464,7 +478,8 @@ class Plugin(azul.plugin.Plugin):
                         "integration_id": "60912ae7-e88f-48bf-8b33-27daccade2b6",
                         "integration_type": "get",
                         "entity_type": "project",
-                        "title": "Single-cell RNA-seq analysis of 20 organs and tissues from individual mice creates a Tabula muris",
+                        "title": "Single-cell RNA-seq analysis of 20 organs and tissues from individual mice creates "
+                                 "a Tabula muris",
                         "entity_ids": {
                             "staging": ["2cd14cf5-f8e0-4c97-91a2-9e8957f41ea8"],
                             "integration": ["e0009214-c0a0-4a7b-96e2-d6a83e966ce0"],
