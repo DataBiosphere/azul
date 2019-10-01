@@ -11,7 +11,7 @@
 # at the project root.
 
 _set AZUL_DEPLOYMENT_STAGE <yourname>
-_set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
+_set AZUL_DSS_ENDPOINT "https://dss.integration.data.humancellatlas.org/v1"
 _set AZUL_SUBSCRIBE_TO_DSS 0
 
 # Your personal deployment uses a subdomain of the `dev` deployment's domain.
