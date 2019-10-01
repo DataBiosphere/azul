@@ -17,7 +17,7 @@ parent_dir = os.path.realpath(os.path.dirname(__file__))
 def write_specs(gateway_id, app, openapi_spec):
     specs = annotated_specs(gateway_id, app, openapi_spec)
     with open(os.path.join(parent_dir, spec_file), 'w') as f:
-        json.dump(specs, f)
+        json.dump(specs, f, indent=4)
 
 
 def main():
