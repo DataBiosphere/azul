@@ -94,10 +94,9 @@ class AWS:
         return es_domain_status['DomainStatus']['Endpoint'], 443
 
     def lambda_env(self, function_name) -> Mapping[str, str]:
-        return {
-            **config.lambda_env(self.es_endpoint),
-            'api_gateway_id': self.api_gateway_id(function_name, validate=True)
-        }
+        gateway_id = self.api_gateway_id(function_name, validate=True)
+        env = config.lambda_env(self.es_endpoint)
+        return env if gateway_id is None else {**env, 'api_gateway_id': gateway_id}
 
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
