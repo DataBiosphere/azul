@@ -130,12 +130,12 @@ def aggregate_retry(event: chalice.app.SQSEvent):
 
 
 @app.schedule('rate(5 minutes)')
-def retrieve_fail_messages(event: chalice.app.CloudWatchEvent):
+def retrieve_fail_messages(event_: chalice.app.CloudWatchEvent):
     """
     Get all the messages from the fail queue and save them in the the DynamoDB failure message table.
     """
-    assert event is not None  # avoid linter warning
-    messages = Queues().receive_all_messages(config.fail_queue_name)
+    queues = Queues()
+    messages = queues.receive_all_messages(config.fail_queue_name)
     database = boto3.resource('dynamodb')
     table = database.Table(config.dynamo_failure_message_table_name)
     with table.batch_writer() as writer:
