@@ -86,5 +86,15 @@ emit({
                 f"arn:aws:s3:::{config.dss_main_bucket()}/*",
             ]
         },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+            ],
+            "Resource": [
+                f"arn:aws:s3:::{config.s3_bucket}/health/*",
+            ]
+        },
     ]
 })
