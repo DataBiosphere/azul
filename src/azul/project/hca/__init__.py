@@ -1,4 +1,5 @@
-from typing import Type
+from typing import Sequence, Type
+from urllib.parse import quote
 
 from azul import config
 from azul.indexer import BaseIndexer
@@ -313,7 +314,7 @@ class Plugin(azul.plugin.Plugin):
             ]
         )
 
-    def portal_integrations_db(self) -> JSON:
+    def portal_integrations_db(self) -> Sequence[JSON]:
         """
         A hardcoded example database for use during development of the integrations API implementation
         """
@@ -488,5 +489,42 @@ class Plugin(azul.plugin.Plugin):
                         "portal_url": "https://www.ebi.ac.uk/gxa/sc/experiments/E-ENAD-15/results/tsne"
                     },
                 ],
+            },
+            {
+                "portal_id": "2e05f611-16fb-4bf3-b860-aa500f0256de",
+                "portal_name": "Xena",
+                "portal_icon": "https://xenabrowser.net/03340e094d1f3edc51bc3d1a2a589b65.png",
+                "contact_email": "",
+                "organization_name": "UCSC",
+                "portal_description": "",
+                "integrations": [
+                    {
+                        "integration_id": integration_id,
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": title,
+                        "entity_ids": {
+                            "staging": [],
+                            "integration": [project_uuid],
+                            "prod": [project_uuid]
+                        },
+                        "portal_url": "https://singlecell.xenabrowser.net/datapages/?cohort=" + quote(title)
+                    } for integration_id, project_uuid, title in (
+                        # @formatter:off
+                        ("73aa70fe-e40a-48da-9fa4-bea4c4d2ae74", "4a95101c-9ffc-4f30-a809-f04518a23803", "HCA Human Tissue T cell Activation"),  # noqa E501
+                        ("c36e46c2-34d6-4129-853b-60256bc0af8d", "8185730f-4113-40d3-9cc3-929271784c2b", "HCA Adult Retina (Wong)"),  # noqa E501
+                        ("dedb2f00-b92f-4f81-8633-6f58edcbf3f7", "005d611a-14d5-4fbf-846e-571a1f874f70", "HCA HPSI human cerebral organoids"),  # noqa E501
+                        ("ced58994-05c2-4a2d-87b1-fff4faf2ca93", "cc95ff89-2e68-4a08-a234-480eca21ce79", "HCA Census of Immune Cells"),  # noqa E501
+                        ("65e1465e-0641-4770-abbb-fde8bc0582aa", "4d6f6c96-2a83-43d8-8fe1-0f53bffd4674", "HCA Single Cell Liver Landscape"),  # noqa E501
+                        ("39c69c7d-a245-4460-a045-6bd055564cca", "c4077b3c-5c98-4d26-a614-246d12c2e5d7", "HCA Tissue stability"),  # noqa E501
+                        ("9cd98133-1a86-4937-94dc-4e9a68a36192", "091cf39b-01bc-42e5-9437-f419a66c8a45", "HCA Human Hematopoietic Profiling"),  # noqa E501
+                        ("0f760ab0-2f81-40c8-a838-6a6c508bdd59", "f83165c5-e2ea-4d15-a5cf-33f3550bffde", "HCA Fetal Maternal Interface"),  # noqa E501
+                        ("23ce54c0-58b5-4617-9b61-53ac020c1087", "cddab57b-6868-4be4-806f-395ed9dd635a", "HCA Human Pancreas"),  # noqa E501
+                        ("980577ba-02d5-4edb-9662-24f2d1dc351a", "2043c65a-1cf8-4828-a656-9e247d4e64f1", "HCA Human Interneuron Development"),  # noqa E501
+                        ("1dae24a2-998e-47d3-a570-26c36f2b073e", "abe1a013-af7a-45ed-8c26-f3793c24a1f4", "HCA Kidney Single Cell Atlas"),  # noqa E501
+                        ("66cff7c4-8e79-4e84-a269-2c0970b49392", "f8aa201c-4ff1-45a4-890e-840d63459ca2", "HCA Human Colonic Mesenchyme IBD")  # noqa E501
+                        # @formatter:on
+                    )
+                ]
             }
         ]
