@@ -4,9 +4,8 @@ from typing import List
 from dataclasses import dataclass
 
 from azul import config
-from azul.deployment import aws
+from azul.deployment import aws, emit_tf
 from azul.objects import InternMeta
-from azul.template import emit
 
 
 @dataclass(frozen=True)
@@ -63,7 +62,7 @@ zones_by_domain = {
     for domain in lambda_.domains
 }
 
-emit({
+emit_tf({
     "data": [
         {
             "aws_route53_zone": {

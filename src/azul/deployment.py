@@ -8,6 +8,8 @@ from more_itertools import one
 
 from azul import Netloc, config
 from azul.decorators import memoized_property
+from azul.template import emit
+from azul.types import JSON
 
 
 class AWS:
@@ -94,10 +96,9 @@ class AWS:
         return es_domain_status['DomainStatus']['Endpoint'], 443
 
     def lambda_env(self, function_name) -> Mapping[str, str]:
-        return {
-            **config.lambda_env(self.es_endpoint),
-            'api_gateway_id': self.api_gateway_id(function_name, validate=True)
-        }
+        gateway_id = self.api_gateway_id(function_name, validate=True)
+        env = config.lambda_env(self.es_endpoint)
+        return env if gateway_id is None else {**env, 'api_gateway_id': gateway_id}
 
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
@@ -135,3 +136,22 @@ class AWS:
 aws = AWS()
 
 del AWS
+
+
+def _sanitize_tf(tf_config: JSON) -> JSON:
+    """
+    Avoid errors like
+
+        Error: Missing block label
+
+          on api_gateway.tf.json line 12:
+          12:     "resource": []
+
+        At least one object property is required, whose name represents the resource
+        block's type.
+    """
+    return {k: v for k, v in tf_config.items() if v}
+
+
+def emit_tf(tf_config: Optional[JSON]):
+    return emit(tf_config) if tf_config is None else emit(_sanitize_tf(tf_config))

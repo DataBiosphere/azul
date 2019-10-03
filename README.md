@@ -436,15 +436,16 @@ make delete
    make unsubscribe
    ```
    
-4. Delete lambdas
+4. Destroy cloud infrastructure
+   ```
+   make -C terraform destroy
+   ```
+
+5. Delete lambdas
    ```
    make -C lambdas delete
    ```
    
-5. Destroy cloud infrastructure
-   ```
-   make -C terraform destroy
-   ```
 
 # 3. Running service locally
 
@@ -1036,11 +1037,11 @@ Here is a complete example for copying bundles from `prod` to `integration`.
 3) Run
 
    ```
-   python scripts/copy_bundles --map-version 1.374856 \
-                               --fix-tags \
-                               --source https://dss.data.humancellatlas.org/v1 \
-                               --destination https://dss.integration.data.humancellatlas.org/v1 \
-                               --manifest /path/to/manifest.tsv
+   python scripts/copy_bundles.py --map-version 1.374856 \
+                                  --fix-tags \
+                                  --source https://dss.data.humancellatlas.org/v1 \
+                                  --destination https://dss.integration.data.humancellatlas.org/v1 \
+                                  --manifest /path/to/manifest.tsv
    ```
 
    The `--map-version` option adds a specific duration to the version of each

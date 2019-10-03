@@ -1,7 +1,6 @@
-from azul.deployment import aws
-from azul.template import emit
+from azul.deployment import aws, emit_tf
 
-emit({
+emit_tf({
     "provider": [
         {
             "null": {

@@ -1,8 +1,7 @@
-from azul.deployment import aws
-from azul.template import emit
+from azul.deployment import aws, emit_tf
 from azul import config
 
-emit(None if not config.enable_monitoring else {
+emit_tf(None if not config.enable_monitoring else {
     "resource": [
         *[
             {

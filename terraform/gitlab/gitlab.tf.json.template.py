@@ -9,9 +9,8 @@ from typing import Iterable, List, Set
 from azul import config
 from azul.aws_service_model import ServiceActionType
 from azul.collections import dict_merge
-from azul.deployment import aws
+from azul.deployment import aws, emit_tf
 from azul.strings import departition
-from azul.template import emit
 from azul.types import JSON
 
 # This Terraform config creates a single EC2 instance with a bunch of Docker containers running on it:
@@ -234,7 +233,7 @@ def remove_inconsequential_statements(statements: List[JSON]) -> List[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-emit({} if config.terraform_component != 'gitlab' else {
+emit_tf({} if config.terraform_component != 'gitlab' else {
     "data": {
         "aws_availability_zones": {
             "available": {}

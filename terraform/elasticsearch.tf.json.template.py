@@ -1,7 +1,7 @@
 import json
 
 from azul import config
-from azul.template import emit
+from azul.deployment import emit_tf
 
 logs = {
     'index': ('INDEX_SLOW_LOGS', True),
@@ -9,7 +9,7 @@ logs = {
     'error': ('ES_APPLICATION_LOGS', False)
 }
 
-emit(None if config.share_es_domain else {
+emit_tf(None if config.share_es_domain else {
     "resource": [
         *({
             "aws_cloudwatch_log_group": {
