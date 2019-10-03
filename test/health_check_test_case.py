@@ -1,14 +1,19 @@
 from abc import ABCMeta
+from contextlib import contextmanager
 import os
 from typing import List, Mapping
 from unittest import TestSuite, mock
 
 import boto3
-from moto import mock_sqs, mock_sts
+from moto import mock_sqs, mock_sts, mock_s3
+from mock import MagicMock
 import requests
 import responses
+import time
 
 from app_test_case import LocalAppTestCase
+from azul.modules import load_app_module
+from azul.service.responseobjects.storage_service import StorageService
 from azul import config
 from azul.types import JSON
 from es_test_case import ElasticsearchTestCase
@@ -78,11 +83,44 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                 with ResponsesHelper() as helper:
                     helper.add_passthru(self.base_url)
                     self._mock_other_lambdas(helper, up=True)
-                    self._mock_service_endpoints(helper, endpoint_states)
-                    with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+                    with self._mock_service_endpoints(helper, endpoint_states):
                         response = requests.get(self.base_url + '/health/' + keys)
                         self.assertEqual(200, response.status_code)
                         self.assertEqual(expected_response, response.json())
+
+    @mock_s3
+    @mock_sts
+    @mock_sqs
+    def test_cached_health(self):
+        storage_service = StorageService()
+        storage_service.create_bucket()
+        # No health object is available in S3 bucket, yielding an error
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            response = requests.get(self.base_url + '/health/cached')
+            self.assertEqual(500, response.status_code)
+            self.assertEqual({'Code': 'InternalServerError',
+                              'Message': 'An internal server error occurred.'}, response.json())
+
+        # A successful response is obtained when all the systems are functional
+        self._create_mock_queues()
+        endpoint_states = self._make_endpoint_states(self.endpoints)
+        app = load_app_module(self.lambda_name())
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            with self._mock_service_endpoints(helper, endpoint_states):
+                app.generate_health_object(MagicMock(), MagicMock())
+                response = requests.get(self.base_url + '/health/cached')
+                self.assertEqual(200, response.status_code)
+
+        # Another failure is observed when the cache health object is older than 2 minutes
+        future_time = time.time() + 3 * 60
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            with mock.patch('time.time', new=lambda: future_time):
+                response = requests.get(self.base_url + '/health/cached')
+                self.assertEqual(500, response.status_code)
+                self.assertEqual({'Message': 'Cached health object is stale'}, response.json())
 
     @responses.activate
     def test_laziness(self):
@@ -176,16 +214,19 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             self._mock_other_lambdas(helper, lambdas_up)
-            self._mock_service_endpoints(helper, endpoint_states)
-            with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+            with self._mock_service_endpoints(helper, endpoint_states):
                 return requests.get(self.base_url + path)
 
+    @contextmanager
     def _mock_service_endpoints(self, helper: ResponsesHelper, endpoint_states: Mapping[str, bool]) -> None:
         for endpoint, endpoint_up in endpoint_states.items():
             helper.add(responses.Response(method='HEAD',
                                           url=config.service_endpoint() + endpoint,
                                           status=200 if endpoint_up else 503,
                                           json={}))
+        # boto3.resource('sqs') requires an AWS region to be set
+        with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+            yield
 
     def _mock_other_lambdas(self, helper: ResponsesHelper, up: bool):
         for lambda_name in self._other_lambda_names():

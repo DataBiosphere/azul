@@ -1,3 +1,4 @@
+import unittest
 from collections import deque
 from contextlib import contextmanager
 import csv
@@ -10,7 +11,6 @@ import random
 import re
 import time
 from typing import Any, IO, Mapping, Optional
-import unittest
 from unittest import mock
 from urllib.parse import urlencode
 import uuid
@@ -31,6 +31,8 @@ from azul.decorators import memoized_property
 from azul.dss import MiniDSS, patch_client_for_direct_access
 from azul.logging import configure_test_logging
 from azul.requests import requests_session
+from azul import drs
+from azul_test_case import AlwaysTearDownTestCase
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ def setUpModule():
     configure_test_logging(logger)
 
 
-class IntegrationTest(unittest.TestCase):
+class IntegrationTest(AlwaysTearDownTestCase):
     """
     The integration tests work by first setting the lambdas in test mode (this happens in setUp). This
     Sets some environment variable in the indexer lambda that change its behavior slightly, allowing
@@ -128,8 +130,10 @@ class IntegrationTest(unittest.TestCase):
         for format_, validator in [
             (None, self.check_manifest),
             ('tsv', self.check_manifest),
+            ('compact', self.check_manifest),
             ('full', self.check_manifest),
-            ('bdbag', self.check_bdbag)
+            ('bdbag', self.check_terra_bdbag),
+            ('terra.bdbag', self.check_terra_bdbag)
         ]:
             with self.subTest(format=format_, filter=manifest_filter):
                 query = {'filters': manifest_filter}
@@ -192,7 +196,7 @@ class IntegrationTest(unittest.TestCase):
     def check_manifest(self, response: bytes):
         self._check_manifest(BytesIO(response), 'bundle_uuid')
 
-    def check_bdbag(self, response: bytes):
+    def check_terra_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'participants.tsv')

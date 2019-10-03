@@ -25,6 +25,7 @@ from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul.logging import configure_app_logging
 from azul.plugin import Plugin
+from azul.service.responseobjects.storage_service import StorageService
 from azul.time import RemainingLambdaContextTime
 from azul.transformer import EntityReference
 from azul.types import JSON
@@ -54,6 +55,15 @@ def health(keys: Optional[str] = None):
         return {
             'up': True,
         }
+    elif keys == 'cached':
+        storage_service = StorageService()
+        health_object = json.loads(storage_service.get('health/indexer'))
+        max_age = 2 * 60
+        if time.time() - health_object['time'] > max_age:
+            return Response(status_code=500,
+                            body=json.dumps({'Message': 'Cached health object is stale'}))
+        else:
+            body = health_object['health']
     else:
         health = Health('indexer')
         if keys is None:
@@ -65,8 +75,17 @@ def health(keys: Optional[str] = None):
             body = health.as_json(keys)
         except RequirementError:
             raise BadRequestError('Invalid health keys')
-        return Response(body=json.dumps(body),
-                        status_code=200 if body['up'] else 503)
+    return Response(body=json.dumps(body),
+                    status_code=200 if body['up'] else 503)
+
+
+@app.schedule('rate(1 minute)', name=config.indexer_cache_health_lambda_basename)
+def generate_health_object(event_: chalice.app.CloudWatchEvent):
+    storage_service = StorageService()
+    health = Health('indexer')
+    health = health.as_json()
+    health_object = dict(time=time.time(), health=health)
+    storage_service.put(object_key='health/indexer', data=json.dumps(health_object))
 
 
 @app.route('/', cors=True)
@@ -74,27 +93,30 @@ def hello():
     return {'Hello': 'World!'}
 
 
+@app.route('/delete', methods=['POST'])
 @app.route('/', methods=['POST'])
 def post_notification():
     """
-    Receive a notification event and either queue it for asynchronous indexing or process it synchronously.
+    Receive a notification event and queue it for indexing or deletion.
     """
     hmac.verify(current_request=app.current_request)
     notification = app.current_request.json_body
     log.info("Received notification %r", notification)
     validate_request_syntax(notification)
-    params = app.current_request.query_params
+    if app.current_request.context['path'] == '/':
+        return process_notification('add', notification)
+    elif app.current_request.context['path'] in ('/delete', '/delete/'):
+        return process_notification('delete', notification)
+    else:
+        assert False
 
+
+def process_notification(action: str, notification: JSON):
     if not config.test_mode or notification.get('test_name', None):
-        if params and params.get('sync', 'False').lower() == 'true':
-            indexer_cls = plugin.indexer_class()
-            indexer = indexer_cls()
-            indexer.index(notification)
-        else:
-            message = dict(action='add', notification=notification)
-            notify_queue = queue(config.notify_queue_name)
-            notify_queue.send_message(MessageBody=json.dumps(message))
-            log.info("Queued notification %r", notification)
+        message = dict(action=action, notification=notification)
+        notify_queue = queue(config.notify_queue_name)
+        notify_queue.send_message(MessageBody=json.dumps(message))
+        log.info("Queued notification %r", notification)
         return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
     else:
         test_mode_error = f'Ignored notification {notification}. This indexer is currently in TEST MODE.'
@@ -129,23 +151,6 @@ def validate_request_syntax(notification):
 
     if not bundle_version:
         raise chalice.BadRequestError('Invalid syntax: bundle_version can not be empty')
-
-
-@app.route('/delete', methods=['POST'])
-def delete_notification():
-    """
-    Receive a deletion event and process it asynchronously
-    """
-    hmac.verify(current_request=app.current_request)
-    notification = app.current_request.json_body
-    validate_request_syntax(notification)
-    log.info("Received deletion notification %r", notification)
-    message = dict(action='delete', notification=notification)
-    notify_queue = queue(config.notify_queue_name)
-    notify_queue.send_message(MessageBody=json.dumps(message))
-    log.info("Queued notification %r", notification)
-
-    return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
 
 
 # Work around https://github.com/aws/chalice/issues/856

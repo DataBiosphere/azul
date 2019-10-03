@@ -436,22 +436,23 @@ make delete
    make unsubscribe
    ```
    
-4. Delete lambdas
-   ```
-   make -C lambdas delete
-   ```
-   
-5. Destroy cloud infrastructure
+4. Destroy cloud infrastructure
    ```
    make -C terraform destroy
    ```
 
-# 3. Running indexer or service locally
+5. Delete lambdas
+   ```
+   make -C lambdas delete
+   ```
+   
+
+# 3. Running service locally
 
 1. As usual, activate the virtual environment and `source environment` if you
    haven't done so already
 
-2. `cd lambdas/indexer` or `cd lambdas/service`
+2. `cd lambdas/service`
 
 3. Run
 
@@ -460,24 +461,6 @@ make delete
    ```
 
 4. You can now hit the app under `http://127.0.0.1:8000/`
-
-   To hit the indexer (not the service) with multiple notification requests, run
-
-   ```
-   python scripts/reindex.py --workers=1 --sync --indexer-url http://127.0.0.1:8000/
-   ```
-
-   in a separate shell. The `--sync` argument causes the Chalice app to invoke
-   the indexing code directly instead of queuing an SQS message to be consumed
-   by the indexer worker Lambda function in AWS.
-
-   Consider passing `--es-query` to restrict the set of bundles for which
-   notifications are sent, especially if you are using a debugger.
-
-   Instead of using `reindex.py`, you can speed things up by using `curl` to
-   POST directly to the indexer endpoint. But you'd have to know the
-   notification payload format (hint: see reindex.py). Note that the query
-   member of the notification is currently not used by the indexer.
 
 PyCharm recently added a feature that allows you to attach a debugger: From the
 main menu choose *Run*, *Attach to local process* and select the `chalice`
@@ -1054,11 +1037,11 @@ Here is a complete example for copying bundles from `prod` to `integration`.
 3) Run
 
    ```
-   python scripts/copy_bundles --map-version 1.374856 \
-                               --fix-tags \
-                               --source https://dss.data.humancellatlas.org/v1 \
-                               --destination https://dss.integration.data.humancellatlas.org/v1 \
-                               --manifest /path/to/manifest.tsv
+   python scripts/copy_bundles.py --map-version 1.374856 \
+                                  --fix-tags \
+                                  --source https://dss.data.humancellatlas.org/v1 \
+                                  --destination https://dss.integration.data.humancellatlas.org/v1 \
+                                  --manifest /path/to/manifest.tsv
    ```
 
    The `--map-version` option adds a specific duration to the version of each
