@@ -55,12 +55,6 @@ parser.add_argument('--workers',
                     type=int,
                     help='The number of workers that will be sending bundles to the indexer concurrently')
 group2 = parser.add_mutually_exclusive_group()
-group2.add_argument('--sync',
-                    dest='sync',
-                    default=False,
-                    action='store_true',
-                    help='Have the indexer lambda process the notification synchronously instead of queueing it for '
-                         'asynchronous processing by a worker lambda.')
 group2.add_argument('--partition-prefix-length',
                     metavar='NUM',
                     default=0,
@@ -126,8 +120,6 @@ def main(argv: List[str]):
         logger.info('Queuing notifications for reindexing ...')
         if args.partition_prefix_length:
             azul_client.remote_reindex(args.partition_prefix_length)
-        else:
-            azul_client.reindex(args.sync)
 
 
 if __name__ == "__main__":
