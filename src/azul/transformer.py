@@ -738,8 +738,8 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
         """
         Collect the latest version of each inner entity from multiple given documents.
 
-        If two or more contributions contain copies of the same entity, potentially with different contents, the copy
-        from the contribution with the latest bundle version will be selected.
+        If two or more contributions contain copies of the same inner entity, potentially with different contents, the
+        copy from the contribution with the latest bundle version will be selected.
         """
         if len(contributions) == 1:
             return one(contributions).contents
