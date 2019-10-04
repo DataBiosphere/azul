@@ -701,7 +701,7 @@ class GroupingAggregator(SimpleAggregator):
         raise NotImplementedError
 
 
-CollatedEntities = MutableMapping[EntityID, Tuple[BundleVersion, JSON]]
+CollatedEntities = MutableMapping[EntityID, Tuple[BundleUUID, BundleVersion, JSON]]
 
 
 class AggregatingTransformer(Transformer, metaclass=ABCMeta):
@@ -751,10 +751,17 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
                     entity: JSON
                     for entity in entities:
                         entity_id = entity['document_id']  # FIXME: the key 'document_id' is HCA specific
-                        bundle_version, _ = collated_entities.get(entity_id, ('', None))
-                        if bundle_version < contribution.bundle_version:
-                            collated_entities[entity_id] = contribution.bundle_version, entity
+                        cur_bundle_uuid, cur_bundle_version, cur_entity = \
+                            collated_entities.get(entity_id, (None, '', None))
+                        if cur_entity is not None and entity.keys() != cur_entity.keys():
+                            symmetric_difference = set(entity.keys()).symmetric_difference(cur_entity)
+                            logger.warning('Document shape of `%s` entity does not match between bundles %s, version '
+                                           '%s and %s, version %s: %s',
+                                           entity_type, cur_bundle_uuid, cur_bundle_version, contribution.bundle_uuid,
+                                           contribution.bundle_version, symmetric_difference)
+                        if cur_bundle_version < contribution.bundle_version:
+                            collated_entities[entity_id] = contribution.bundle_uuid, contribution.bundle_version, entity
             return {
-                entity_type: [entity for _, entity in entities.values()]
+                entity_type: [entity for _, _, entity in entities.values()]
                 for entity_type, entities in contents.items()
             }
