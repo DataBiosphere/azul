@@ -89,7 +89,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.delete_bundles(duplicates=True)
         super().tearDown()
 
-    def test_webservice_and_indexer(self):
+    def test(self):
         if config.deployment_stage != 'prod':
             self._test_indexing()
             self._test_manifest()
