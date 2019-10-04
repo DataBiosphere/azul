@@ -130,7 +130,7 @@ def aggregate_retry(event: chalice.app.SQSEvent):
 
 
 @app.schedule('rate(5 minutes)')
-def retrieve_fail_messages(event_: chalice.app.CloudWatchEvent):
+def retrieve_fail_messages(_event: chalice.app.CloudWatchEvent):
     """
     Get all the messages from the fail queue and save them in the the DynamoDB failure message table.
     """

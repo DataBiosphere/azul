@@ -103,11 +103,11 @@ class TestServiceHealthCheck(HealthCheckTestCase):
                     "action": "add",
                     "notification": {
                         "query": '{}',
-                        "subscription_id": i['bundle_uuid'],
-                        "transaction_id": i['bundle_uuid'],
-                        "match": i,
+                        "subscription_id": bundles['bundle_uuid'],
+                        "transaction_id": bundles['bundle_uuid'],
+                        "match": bundles,
                     }
-                } for i in expected_failed_bundles]
+                } for bundles in expected_failed_bundles]
                 test_notifications = bundle_notifications + document_notifications
                 with table.batch_writer() as writer:
                     for i, notification in enumerate(test_notifications):
