@@ -475,7 +475,7 @@ class Config:
 
     @property
     def test_mode(self) -> bool:
-        return self._boolean(os.environ.get('TEST_MODE', '0'))
+        return self._boolean(os.environ.get('AZUL_TEST_MODE', '0'))
 
     url_shortener_whitelist = [r'.*humancellatlas\.org']
 
