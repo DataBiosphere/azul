@@ -1477,7 +1477,6 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
         with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
             for integration_type, entity_type, expected_integration_ids in test_cases:
                 params = dict(integration_type=integration_type, entity_type=entity_type)
-                # noinspection PyArgumentList
                 with self.subTest(**params):
                     response_json = self._get_integrations(params)
                     found_integration_ids = self._extract_integration_ids(response_json)
@@ -1507,7 +1506,6 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
         with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
             for entity_ids, integration_ids in test_cases:
                 params = dict(integration_type='get', entity_type='project', entity_ids=','.join(entity_ids))
-                # noinspection PyArgumentList
                 with self.subTest(**params):
                     response_json = self._get_integrations(params)
                     found_integration_ids = self._extract_integration_ids(response_json)

@@ -70,7 +70,10 @@ from azul.service.responseobjects.elastic_request_builder import (
 )
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
-from azul.types import JSON
+from azul.types import (
+    JSON,
+    JSONs,
+)
 
 log = logging.getLogger(__name__)
 
@@ -400,20 +403,28 @@ def validate_params(query_params: Mapping[str, str],
 def get_integrations():
     query_params = app.current_request.query_params or {}
     validate_params(query_params, entity_type=str, integration_type=str, entity_ids=str)
-    entity_ids = query_params.get('entity_ids', '')
-    entity_ids = None if entity_ids == '' else set(entity_ids.split(','))
+    try:
+        entity_ids = query_params['entity_ids']
+    except KeyError:
+        entity_ids = None
+    else:
+        entity_ids = set(entity_ids.split(','))
+        if not entity_ids:
+            raise BadRequestError('Must at least specify one value for parameter `entity_ids`')
     try:
         entity_type = query_params['entity_type']
         integration_type = query_params['integration_type']
     except KeyError:
-        raise BadRequestError('Parameters entity_type and integration_type must be given')
+        # FIXME: Make all /integration params optional or support mandatory params in validate_params()
+        #        https://github.com/DataBiosphere/azul/issues/1353
+        raise BadRequestError('Parameters `entity_type` and `integration_type` must be given')
     body = _fetch_integrations(entity_type, integration_type, entity_ids)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
                     body=json.dumps(body))
 
 
-def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Set[str]) -> Sequence[JSON]:
+def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Set[str]) -> JSONs:
     """
     Return matching portal integrations.
 
