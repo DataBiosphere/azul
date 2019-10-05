@@ -90,7 +90,7 @@ emit({
             "Effect": "Allow",
             "Action": [
                 "s3:GetObject",
-                "s3:PutObject",
+                "s3:PutObject"
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}/health/*",
