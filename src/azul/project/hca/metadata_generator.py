@@ -128,17 +128,19 @@ class MetadataGenerator:
                 'bundle_version': bundle_version,
                 'file_uuid': file_manifest['uuid'],
                 'file_version': file_manifest['version'],
-                "*.file_core.file_name": self._deep_get(file_metadata, ["file_core", "file_name"]),
-                "*.file_core.file_format": self._deep_get(file_metadata, ["file_core", "file_format"])
+                'file_sha256': file_manifest['sha256'],
+                'file_size': file_manifest['size'],
+                "file_name": self._deep_get(file_metadata, ["file_core", "file_name"]),
+                "file_format": self._deep_get(file_metadata, ["file_core", "file_format"]),
             }
 
-            file_segments = obj["*.file_core.file_name"].split('.')
+            file_segments = obj["file_name"].split('.')
 
             if len(file_segments) > 1 and file_segments[-1] in self.default_blocked_file_ext:
                 continue
 
             def handle_zarray(anchor):
-                file_name = obj['*.file_core.file_name']
+                file_name = obj['file_name']
                 try:
                     i = file_name.index(anchor)
                 except ValueError:
@@ -147,7 +149,7 @@ class MetadataGenerator:
                     i += len(anchor) - 1
                     dir_name, file_name = file_name[0:i], file_name[i + 1:]
                     if file_name == '.zattrs':
-                        obj['*.file_core.file_name'] = dir_name + '/'
+                        obj['file_name'] = dir_name + '/'
                         return False
                 return True
 
@@ -155,7 +157,7 @@ class MetadataGenerator:
                 continue
 
 
-            if self.default_format_filter and obj["*.file_core.file_format"] not in self.default_format_filter:
+            if self.default_format_filter and obj["file_format"] not in self.default_format_filter:
                 continue
 
             schema_name = self._get_schema_name_from_object(file_metadata)
