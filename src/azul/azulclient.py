@@ -145,7 +145,9 @@ class AzulClient(object):
                     return notification, None
 
             def handle_future(future):
+                # @formatter:off
                 nonlocal indexed
+                # @formatter:on
                 # Block until future raises or succeeds
                 exception = future.exception()
                 if exception is None:
