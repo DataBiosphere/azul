@@ -39,6 +39,7 @@ test:
   extends: .base
   stage: test
   script:
+    - make pep8
     - make test
 
 deploy:
