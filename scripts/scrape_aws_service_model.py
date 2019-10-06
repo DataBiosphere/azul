@@ -36,7 +36,7 @@ def get(url_path):
         f = tempfile.NamedTemporaryFile(mode='w+', dir=cache_dir_path, encoding='utf-8', delete=False)
         try:
             json.dump(response_json, f, indent=4)
-        except:
+        except BaseException:
             os.unlink(f.name)
             raise
         else:

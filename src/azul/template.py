@@ -18,7 +18,7 @@ def emit(json_doc: Optional[Mapping[str, Any]]):
         f = tempfile.NamedTemporaryFile(mode='w+', dir=os.path.dirname(path), encoding='utf-8', delete=False)
         try:
             json.dump(json_doc, f, indent=4)
-        except:
+        except BaseException:
             os.unlink(f.name)
             raise
         else:

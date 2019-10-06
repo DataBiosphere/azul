@@ -238,7 +238,7 @@ def validate_size(size):
     """
     try:
         size = int(size)
-    except:
+    except BaseException:
         raise BadRequestError(f'Invalid value for parameter `size`')
     else:
         max_size = 1000
