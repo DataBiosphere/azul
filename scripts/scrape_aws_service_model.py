@@ -97,12 +97,12 @@ def headers():
             headers = f.read()
     except FileNotFoundError:
         print(f"""
-            Open the AWS console in your browser, open the IAM console, open your browser's 
-            inspect UI and pretend to edit a policy in the IAM console. In the inspect UI, 
-            select any XHR request to https://console.aws.amazon.com/iam/api and copy the 
-            request headers. Paste into {header_file_path}. Then run program again. When 
-            the authentication token expires, you'll get authentication errors and need to 
-            redo these steps. The headers contain secrets which is why we place this file 
+            Open the AWS console in your browser, open the IAM console, open your browser's
+            inspect UI and pretend to edit a policy in the IAM console. In the inspect UI,
+            select any XHR request to https://console.aws.amazon.com/iam/api and copy the
+            request headers. Paste into {header_file_path}. Then run program again. When
+            the authentication token expires, you'll get authentication errors and need to
+            redo these steps. The headers contain secrets which is why we place this file
             outside the project root.
             """, file=sys.stderr)
         raise
