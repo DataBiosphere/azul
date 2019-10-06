@@ -51,55 +51,65 @@ class TestCartExportJobManager(TestCase):
             "access_token": "Bearer mock_bearer_token"
         })
         sample_events = [
-            {'executionFailedEventDetails': {'cause': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                                             'error': 'FooException'},
-             'id': 6,
-             'previousEventId': 5,
-             'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 8, 105000),
-             'type': 'ExecutionFailed'},
-            {'id': 5,
-             'lambdaFunctionFailedEventDetails': {'cause': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                                                  'error': 'FooException'},
-             'previousEventId': 4,
-             'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 8, 105000),
-             'type': 'LambdaFunctionFailed'},
-            {'id': 4,
-             'previousEventId': 3,
-             'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 6, 494000),
-             'type': 'LambdaFunctionStarted'},
-            {'id': 3,
-             'lambdaFunctionScheduledEventDetails': {
-                 'input': '{"execution_id": "foo", '
-                          '"user_id": "mock-auth|1234", '
-                          '"cart_id": "e8205835-2b28-4a52-89a3-10876cce5e26", '
-                          '"collection_uuid": '
-                          '"38daf48a-46f3-4a9a-9e64-673fe78655fb", '
-                          '"collection_version": "2019-02-19T213905.000000Z", '
-                          '"resume_token": null, "access_token": "Bearer '
-                          'mock_bearer_token"}',
-                 'resource': 'arn:aws:lambda:us-east-1:12345:function:azul-service-test-cartexportpush'},
-             'previousEventId': 2,
-             'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 6, 448000),
-             'type': 'LambdaFunctionScheduled'},
-            {'id': 2,
-             'previousEventId': 0,
-             'stateEnteredEventDetails': {
-                 'input': '{"execution_id": "foo", "user_id": '
-                          '"mock-auth|1234", "cart_id": '
-                          '"e8205835-2b28-4a52-89a3-10876cce5e26", "collection_uuid": '
-                          '"38daf48a-46f3-4a9a-9e64-673fe78655fb", "collection_version": '
-                          '"2019-02-19T213905.000000Z", "resume_token": null, "access_token": '
-                          '"Bearer '
-                          'mock_bearer_token"}',
-                 'name': 'SendToCollectionAPI'},
-             'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 6, 448000),
-             'type': 'TaskStateEntered'},
-            {'executionStartedEventDetails': {'input': initial_mock_input,
-                                              'roleArn': 'arn:aws:iam::12345:role/azul-statemachine-test'},
-             'id': 1,
-             'previousEventId': 0,
-             'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 6, 423000),
-             'type': 'ExecutionStarted'}]
+            {
+                'executionFailedEventDetails': {
+                    'cause': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+                    'error': 'FooException'},
+                'id': 6,
+                'previousEventId': 5,
+                'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 8, 105000),
+                'type': 'ExecutionFailed'},
+            {
+                'id': 5,
+                'lambdaFunctionFailedEventDetails': {
+                    'cause': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+                    'error': 'FooException'},
+                'previousEventId': 4,
+                'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 8, 105000),
+                'type': 'LambdaFunctionFailed'},
+            {
+                'id': 4,
+                'previousEventId': 3,
+                'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 6, 494000),
+                'type': 'LambdaFunctionStarted'},
+            {
+                'id': 3,
+                'lambdaFunctionScheduledEventDetails': {
+                    'input': json.dumps({
+                        'execution_id': 'foo',
+                        'user_id': 'mock-auth|1234',
+                        'cart_id': 'e8205835-2b28-4a52-89a3-10876cce5e26',
+                        'collection_uuid': '38daf48a-46f3-4a9a-9e64-673fe78655fb',
+                        'collection_version': '2019-02-19T213905.000000Z',
+                        'resume_token': None,
+                        'access_token': 'Bearer mock_bearer_token'
+                    }),
+                    'resource': 'arn:aws:lambda:us-east-1:12345:function:azul-service-test-cartexportpush'},
+                'previousEventId': 2,
+                'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 6, 448000),
+                'type': 'LambdaFunctionScheduled'},
+            {
+                'id': 2,
+                'previousEventId': 0,
+                'stateEnteredEventDetails': {
+                    'input': '{"execution_id": "foo", "user_id": '
+                             '"mock-auth|1234", "cart_id": '
+                             '"e8205835-2b28-4a52-89a3-10876cce5e26", "collection_uuid": '
+                             '"38daf48a-46f3-4a9a-9e64-673fe78655fb", "collection_version": '
+                             '"2019-02-19T213905.000000Z", "resume_token": null, "access_token": '
+                             '"Bearer '
+                             'mock_bearer_token"}',
+                    'name': 'SendToCollectionAPI'},
+                'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 6, 448000),
+                'type': 'TaskStateEntered'},
+            {
+                'executionStartedEventDetails': {
+                    'input': initial_mock_input,
+                    'roleArn': 'arn:aws:iam::12345:role/azul-statemachine-test'},
+                'id': 1,
+                'previousEventId': 0,
+                'timestamp': datetime.datetime(2019, 2, 19, 16, 39, 6, 423000),
+                'type': 'ExecutionStarted'}]
         step_function_helper.describe_execution.return_value = dict(
             user_id='mock-auth|1234',
             status="FAILED",
@@ -133,50 +143,71 @@ class TestCartExportJobManager(TestCase):
             "access_token": "Bearer mock_bearer_token"
         })
         sample_events = [
-            {'executionSucceededEventDetails': {'output': '{"execution_id": "foo", '
-                                                          '"access_token": "Bearer '
-                                                          'mock_bearer_token", '
-                                                          '"user_id": "mock-auth|1234", "cart_id": '
-                                                          '"e8205835-2b28-4a52-89a3-10876cce5e26", "collection_uuid": '
-                                                          '"b1342920-9dbd-42eb-a73b-dcf2875b7299", "collection_version": '
-                                                          '"2019-02-19T220352.707018Z", "resumable": false, '
-                                                          '"resume_token": null, "started_at": 1550613819.834767, '
-                                                          '"last_updated_at": 1550613832.8121576, "exported_item_count": '
-                                                          '260, "expected_exported_item_count": 260}'},
-             'id': 25,
-             'previousEventId': 24,
-             'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
-             'type': 'ExecutionSucceeded'},
-            {'id': 24,
-             'previousEventId': 23,
-             'stateExitedEventDetails': {'name': 'SuccessState',
-                                         'output': '{"execution_id": "foo", '
-                                                   '"access_token": "Bearer '
-                                                   'mock_bearer_token", '
-                                                   '"user_id": "mock-auth|1234", "cart_id": '
-                                                   '"e8205835-2b28-4a52-89a3-10876cce5e26", "collection_uuid": '
-                                                   '"b1342920-9dbd-42eb-a73b-dcf2875b7299", "collection_version": '
-                                                   '"2019-02-19T220352.707018Z", "resumable": false, "resume_token": '
-                                                   'null, "started_at": 1550613819.834767, "last_updated_at": '
-                                                   '1550613832.8121576, "exported_item_count": 260, '
-                                                   '"expected_exported_item_count": 260}'},
-             'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
-             'type': 'SucceedStateExited'},
-            {'id': 23,
-             'previousEventId': 22,
-             'stateEnteredEventDetails': {'input': '{"execution_id": "foo", '
-                                                   '"access_token": "Bearer '
-                                                   'mock_bearer_token", '
-                                                   '"user_id": "mock-auth|1234", "cart_id": '
-                                                   '"e8205835-2b28-4a52-89a3-10876cce5e26", "collection_uuid": '
-                                                   '"b1342920-9dbd-42eb-a73b-dcf2875b7299", "collection_version": '
-                                                   '"2019-02-19T220352.707018Z", "resumable": false, "resume_token": '
-                                                   'null, "started_at": 1550613819.834767, "last_updated_at": '
-                                                   '1550613832.8121576, "exported_item_count": 260, '
-                                                   '"expected_exported_item_count": 260}',
-                                          'name': 'SuccessState'},
-             'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
-             'type': 'SucceedStateEntered'}]
+            {
+                'executionSucceededEventDetails': {
+                    'output': json.dumps({
+                        'execution_id': 'foo',
+                        'access_token': 'Bearer mock_bearer_token',
+                        'user_id': 'mock-auth|1234',
+                        'cart_id': 'e8205835-2b28-4a52-89a3-10876cce5e26',
+                        'collection_uuid': 'b1342920-9dbd-42eb-a73b-dcf2875b7299',
+                        'collection_version': '2019-02-19T220352.707018Z',
+                        'resumable': False,
+                        'resume_token': None,
+                        'started_at': 1550613819.834767,
+                        'last_updated_at': 1550613832.8121576,
+                        'exported_item_count': 260,
+                        'expected_exported_item_count': 260
+                    })
+                },
+                'id': 25,
+                'previousEventId': 24,
+                'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
+                'type': 'ExecutionSucceeded'},
+            {
+                'id': 24,
+                'previousEventId': 23,
+                'stateExitedEventDetails': {
+                    'name': 'SuccessState',
+                    'output': json.dumps({
+                        'execution_id': 'foo',
+                        'access_token': 'Bearer mock_bearer_token',
+                        'user_id': 'mock-auth|1234',
+                        'cart_id': 'e8205835-2b28-4a52-89a3-10876cce5e26',
+                        'collection_uuid': 'b1342920-9dbd-42eb-a73b-dcf2875b7299',
+                        'collection_version': '2019-02-19T220352.707018Z',
+                        'resumable': False,
+                        'resume_token': None,
+                        'started_at': 1550613819.834767,
+                        'last_updated_at': 1550613832.8121576,
+                        'exported_item_count': 260,
+                        'expected_exported_item_count': 260
+                    })
+                },
+                'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
+                'type': 'SucceedStateExited'
+            },
+            {
+                'id': 23,
+                'previousEventId': 22,
+                'stateEnteredEventDetails': {
+                    'input': json.dumps({
+                        'execution_id': 'foo',
+                        'access_token': 'Bearer mock_bearer_token',
+                        'user_id': 'mock-auth|1234',
+                        'cart_id': 'e8205835-2b28-4a52-89a3-10876cce5e26',
+                        'collection_uuid': 'b1342920-9dbd-42eb-a73b-dcf2875b7299',
+                        'collection_version': '2019-02-19T220352.707018Z',
+                        'resumable': False,
+                        'resume_token': None,
+                        'started_at': 1550613819.834767,
+                        'last_updated_at': 1550613832.8121576,
+                        'exported_item_count': 260,
+                        'expected_exported_item_count': 260
+                    }),
+                    'name': 'SuccessState'},
+                'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
+                'type': 'SucceedStateEntered'}]
         step_function_helper.describe_execution.return_value = dict(
             user_id='mock-auth|1234',
             status="SUCCEEDED",
@@ -211,36 +242,49 @@ class TestCartExportJobManager(TestCase):
             "access_token": "Bearer mock_bearer_token"
         })
         sample_events = [
-            {'id': 24,
-             'previousEventId': 23,
-             'stateExitedEventDetails': {'name': 'SuccessState',
-                                         'output': '{"execution_id": "foo", '
-                                                   '"access_token": "Bearer '
-                                                   'mock_bearer_token", '
-                                                   '"user_id": "mock-auth|1234", "cart_id": '
-                                                   '"e8205835-2b28-4a52-89a3-10876cce5e26", "collection_uuid": '
-                                                   '"b1342920-9dbd-42eb-a73b-dcf2875b7299", "collection_version": '
-                                                   '"2019-02-19T220352.707018Z", "resumable": false, "resume_token": '
-                                                   'null, "started_at": 1550613819.834767, "last_updated_at": '
-                                                   '1550613832.8121576, "exported_item_count": 260, '
-                                                   '"expected_exported_item_count": 260}'},
-             'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
-             'type': 'SucceedStateExited'},
-            {'id': 23,
-             'previousEventId': 22,
-             'stateEnteredEventDetails': {'input': '{"execution_id": "foo", '
-                                                   '"access_token": "Bearer '
-                                                   'mock_bearer_token", '
-                                                   '"user_id": "mock-auth|1234", "cart_id": '
-                                                   '"e8205835-2b28-4a52-89a3-10876cce5e26", "collection_uuid": '
-                                                   '"b1342920-9dbd-42eb-a73b-dcf2875b7299", "collection_version": '
-                                                   '"2019-02-19T220352.707018Z", "resumable": false, "resume_token": '
-                                                   'null, "started_at": 1550613819.834767, "last_updated_at": '
-                                                   '1550613832.8121576, "exported_item_count": 260, '
-                                                   '"expected_exported_item_count": 260}',
-                                          'name': 'SuccessState'},
-             'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
-             'type': 'SucceedStateEntered'}]
+            {
+                'id': 24,
+                'previousEventId': 23,
+                'stateExitedEventDetails': {
+                    'name': 'SuccessState',
+                    'output': json.dumps({
+                        'execution_id': 'foo',
+                        'access_token': 'Bearer mock_bearer_token',
+                        'user_id': 'mock-auth|1234',
+                        'cart_id': 'e8205835-2b28-4a52-89a3-10876cce5e26',
+                        'collection_uuid': 'b1342920-9dbd-42eb-a73b-dcf2875b7299',
+                        'collection_version': '2019-02-19T220352.707018Z',
+                        'resumable': False,
+                        'resume_token': None,
+                        'started_at': 1550613819.834767,
+                        'last_updated_at': 1550613832.8121576,
+                        'exported_item_count': 260,
+                        'expected_exported_item_count': 260,
+                    })
+                },
+                'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
+                'type': 'SucceedStateExited'},
+            {
+                'id': 23,
+                'previousEventId': 22,
+                'stateEnteredEventDetails': {
+                    'input': json.dumps({
+                        'execution_id': 'foo',
+                        'access_token': 'Bearer mock_bearer_token',
+                        'user_id': 'mock-auth|1234',
+                        'cart_id': 'e8205835-2b28-4a52-89a3-10876cce5e26',
+                        'collection_uuid': 'b1342920-9dbd-42eb-a73b-dcf2875b7299',
+                        'collection_version': '2019-02-19T220352.707018Z',
+                        'resumable': False,
+                        'resume_token': None,
+                        'started_at': 1550613819.834767,
+                        'last_updated_at': 1550613832.8121576,
+                        'exported_item_count': 260,
+                        'expected_exported_item_count': 260,
+                    }),
+                    'name': 'SuccessState'},
+                'timestamp': datetime.datetime(2019, 2, 19, 17, 3, 52, 955000),
+                'type': 'SucceedStateEntered'}]
         step_function_helper.describe_execution.return_value = dict(
             user_id='mock-auth|1234',
             status="RUNNING",
