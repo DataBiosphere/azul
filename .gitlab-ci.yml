@@ -39,6 +39,8 @@ test:
   extends: .base
   stage: test
   script:
+    - make format
+    - make check_clean
     - make pep8
     - make test
 
