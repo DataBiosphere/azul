@@ -274,6 +274,10 @@ class Config:
         return self._boolean(os.environ['AZUL_ENABLE_MONITORING'])
 
     @property
+    def disable_monitoring(self) -> bool:
+        return not self.enable_monitoring
+
+    @property
     def es_instance_type(self) -> str:
         return os.environ['AZUL_ES_INSTANCE_TYPE']
 
