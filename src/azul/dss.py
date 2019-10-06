@@ -146,6 +146,7 @@ def patch_client_for_direct_access(client: DSSClient):
             return blob
 
     class NewGetBundle:
+
         def _request(self, kwargs, **other_kwargs):
             uuid, version, replica = kwargs['uuid'], kwargs['version'], kwargs['replica']
             try:

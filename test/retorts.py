@@ -75,6 +75,7 @@ class ResponsesHelper:
 
 
 class AuthResponseHelper(ResponsesHelper):
+
     def __init__(self, passthru_url: str = None, request_mock: responses.RequestsMock = None) -> None:
         super().__init__(request_mock)
         self.passthru_url = passthru_url
@@ -85,7 +86,7 @@ class AuthResponseHelper(ResponsesHelper):
             self.add_passthru(self.passthru_url)
 
         def encode_int(x):
-            return b64encode(x.to_bytes(ceil(x.bit_length()/8), 'big')).decode('utf-8')
+            return b64encode(x.to_bytes(ceil(x.bit_length() / 8), 'big')).decode('utf-8')
 
         def generate_test_public_keys(request):
             public_key = TestKeyManager.get_public_key()
@@ -141,6 +142,7 @@ class AuthResponseHelper(ResponsesHelper):
 
 
 class TestKeyManager:
+
     @staticmethod
     @lru_cache(1)
     def public_key_path():

@@ -13,6 +13,7 @@ from azul.types import JSON
 
 
 class AWS:
+
     @memoized_property
     def profile(self):
         session = botocore.session.Session()

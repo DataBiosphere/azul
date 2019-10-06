@@ -17,6 +17,7 @@ from retorts import AuthResponseHelper, TestKeyManager
 
 
 class AuthenticatorTestCase(TestCase):
+
     @classmethod
     def tearDownClass(cls):
         super().setUpClass()

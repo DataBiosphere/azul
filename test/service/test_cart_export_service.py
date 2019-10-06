@@ -10,6 +10,7 @@ from retorts import ResponsesHelper
 
 
 class TestCartExportService(TestCase):
+
     @patch('azul.deployment.aws.dynamo')
     def test_get_content_with_no_resume_token_returning_results_without_next_resume_token(self, dynamodb_client):
         mock_entity_1 = dict(EntityId='entity1', EntityType='foo', EntityVersion='bar')

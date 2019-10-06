@@ -176,5 +176,6 @@ class Part:
 
 
 class MultipartUploadError(RuntimeError):
+
     def __init__(self, bucket_name, object_key):
         super(MultipartUploadError, self).__init__(f'{bucket_name}/{object_key}')

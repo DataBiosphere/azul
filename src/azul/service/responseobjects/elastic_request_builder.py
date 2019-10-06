@@ -29,11 +29,13 @@ logger = logging.getLogger(__name__)
 
 
 class BadArgumentException(Exception):
+
     def __init__(self, message):
         super().__init__(message)
 
 
 class IndexNotFoundError(Exception):
+
     def __init__(self, missing_index: str):
         super().__init__(f'{missing_index} is not a valid uuid.')
 
@@ -133,7 +135,7 @@ class ElasticTransformDump:
         if agg == 'project':
             _sub_field = self.service_config.translation['projectId'] + '.keyword'
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size).bucket(
-                             'myProjectIds', 'terms', field=_sub_field, size=config.terms_aggregation_size)
+                'myProjectIds', 'terms', field=_sub_field, size=config.terms_aggregation_size)
         else:
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size)
         aggregate.bucket('untagged', 'missing', field=_field)

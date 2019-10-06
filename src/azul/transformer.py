@@ -459,6 +459,7 @@ class FrequencySetAccumulator(Accumulator):
     >>> a.get()
     []
     """
+
     def __init__(self, max_size) -> None:
         super().__init__()
         self.value = Counter()

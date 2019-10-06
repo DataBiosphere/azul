@@ -18,7 +18,6 @@ from moto import mock_s3, mock_sts
 import requests
 from typing import List
 
-
 from azul import config
 from azul.json_freeze import freeze
 from azul.logging import configure_test_logging
@@ -1095,7 +1094,6 @@ class TestManifestEndpoints(WebServiceTestCase):
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-
                         project_ids = ['67bc798b-a34a-4104-8cab-cad648471f69', '6615efae-fca8-4dd2-a223-9cfcf30fe94d']
                         file_names = defaultdict(list)
 
@@ -1126,15 +1124,16 @@ class TestManifestEndpoints(WebServiceTestCase):
             mock_response.now.return_value = mock_date
             storage_service = StorageService()
             storage_service.create_bucket()
-            for filters, expected_name, name_object in (
-                    ({'project': {'is': ['Single of human pancreas']}}, 'Single of human pancreas ', True),
-                    # When requesting a full metadata TSV is with a filter for two or more projects, the
-                    # Content-Disposition header shouldn't be set to the contents .name file.
-                    ({'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                     'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721', False),
-                    # If the filter is doesn't specify any parameter for projectId, the Content-Disposition
-                    # header shouldn't be set to the contents .name file.
-                    ({}, 'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3', False)):
+            for filters, expected_name, name_object in [
+                ({'project': {'is': ['Single of human pancreas']}}, 'Single of human pancreas ', True),
+                # When requesting a full metadata TSV is with a filter for two or more projects, the
+                # Content-Disposition header shouldn't be set to the contents .name file.
+                ({'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                 'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721', False),
+                # If the filter is doesn't specify any parameter for projectId, the Content-Disposition
+                # header shouldn't be set to the contents .name file.
+                ({}, 'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3', False)
+            ]:
                 for single_part in True, False:
                     with self.subTest(filters=filters, single_part=single_part):
                         with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):

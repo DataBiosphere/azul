@@ -11,6 +11,7 @@ import re
 
 
 class MetadataGenerator:
+
     def __init__(self, order=None, ignore=None, format_filter=None):
         self.all_objects_by_project_id = {}
         self.all_keys = []

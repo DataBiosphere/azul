@@ -1408,8 +1408,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                 num_integrations = sum(len(portal['integrations']) for portal in response_json)
                 self.assertEqual(num_integrations, num_integrations_expected)
                 self.assertTrue(all(isinstance(integration.get('entity_ids', []), list)
-                                for portal in response_json
-                                for integration in portal['integrations']))
+                                    for portal in response_json
+                                    for integration in portal['integrations']))
 
 
 if __name__ == '__main__':

@@ -5,7 +5,6 @@ from docker_container_test_case import DockerContainerTestCase
 
 
 class DynamoTestCase(DockerContainerTestCase):
-
     dynamo_accessor = None
 
     @classmethod

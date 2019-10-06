@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class AuthEndpointTest(AuthLocalAppTestCase):
+
     @classmethod
     def lambda_name(cls) -> str:
         return 'service'

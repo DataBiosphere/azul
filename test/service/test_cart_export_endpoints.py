@@ -12,6 +12,7 @@ from retorts import AuthResponseHelper
 
 
 class CartExportEndpointTest(AuthLocalAppTestCase):
+
     @classmethod
     def lambda_name(cls) -> str:
         return 'service'

@@ -10,15 +10,16 @@ import sys
 
 
 class ProjectTSVUploader:
+
     def __init__(self, deployment):
         deployments = {
             'dev':
                 {
-                 'service_url': 'https://service.dev.explore.data.humancellatlas.org'
+                    'service_url': 'https://service.dev.explore.data.humancellatlas.org'
                 },
             'prod':
                 {
-                 'service_url': 'https://service.explore.data.humancellatlas.org'
+                    'service_url': 'https://service.explore.data.humancellatlas.org'
                 }
         }
 

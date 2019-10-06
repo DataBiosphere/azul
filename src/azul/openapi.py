@@ -20,6 +20,7 @@ def openapi_spec(description: JSON):
     def spec_adder(func):
         func.api_spec = description
         return func
+
     return spec_adder
 
 

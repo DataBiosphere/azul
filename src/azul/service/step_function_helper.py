@@ -7,6 +7,7 @@ class StepFunctionHelper:
     """
     Wrapper around boto3 SFN client to handle resource name generation and state machine executions
     """
+
     def state_machine_arn(self, state_machine_name):
         return f'arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{state_machine_name}'
 
@@ -54,5 +55,6 @@ class StepFunctionHelper:
 
 
 class StateMachineError(BaseException):
+
     def __init__(self, msg):
         self.msg = msg

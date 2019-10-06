@@ -179,6 +179,7 @@ class AbstractResponse(object, metaclass=abc.ABCMeta):
     """
     Abstract class to be used for each /files API response.
     """
+
     @abc.abstractmethod
     def return_response(self):
         raise NotImplementedError()
@@ -359,7 +360,7 @@ class ManifestResponse(AbstractResponse):
             doc = Document.translate_fields(hit.to_dict(), forward=False)
             assert isinstance(doc, dict)
             for bundle in list(doc['bundles']):  # iterate over copy …
-                doc['bundles'] = [bundle]        # … to facilitate this in-place modifaction
+                doc['bundles'] = [bundle]  # … to facilitate this in-place modifaction
                 row = {}
                 for doc_path, column_mapping in self.manifest_entries.items():
                     entities = self._get_entities(doc_path, doc)
@@ -605,6 +606,7 @@ T = TypeVar('T')
 
 
 class SummaryResponse(AbstractResponse):
+
     def __init__(self, raw_response):
         super().__init__()
         self.aggregations = raw_response['aggregations']
