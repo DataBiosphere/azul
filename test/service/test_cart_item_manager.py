@@ -3,7 +3,11 @@ from unittest.mock import patch
 
 from azul import config
 from azul.logging import configure_test_logging
-from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
+from azul.service.responseobjects.cart_item_manager import (
+    CartItemManager,
+    DuplicateItemError,
+    ResourceAccessError,
+)
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 from dynamo_test_case import DynamoTestCase
 from lambdas.service import app

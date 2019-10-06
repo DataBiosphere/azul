@@ -1,7 +1,10 @@
 """
 Chalice application module to receive and process DSS event notifications.
 """
-from collections import Counter, defaultdict
+from collections import (
+    Counter,
+    defaultdict,
+)
 from datetime import datetime
 import http
 from itertools import chain
@@ -9,17 +12,35 @@ import json
 import logging
 import random
 import time
-from typing import List, MutableMapping, Optional
+from typing import (
+    List,
+    MutableMapping,
+    Optional,
+)
 import uuid
 
 import boto3
 # noinspection PyPackageRequirements
 import chalice
-from chalice import Response, BadRequestError
-from dataclasses import asdict, dataclass, replace
-from more_itertools import chunked, partition
+from chalice import (
+    Response,
+    BadRequestError,
+)
+from dataclasses import (
+    asdict,
+    dataclass,
+    replace,
+)
+from more_itertools import (
+    chunked,
+    partition,
+)
 
-from azul import config, hmac, RequirementError
+from azul import (
+    config,
+    hmac,
+    RequirementError,
+)
 from azul.azulclient import AzulClient
 from azul.chalice import AzulChaliceApp
 from azul.health import Health

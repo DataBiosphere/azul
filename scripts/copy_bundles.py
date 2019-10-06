@@ -6,15 +6,27 @@ from datetime import datetime
 import logging
 import sys
 import time
-from typing import Set, Tuple
-from urllib.parse import urlparse, urlunparse
+from typing import (
+    Set,
+    Tuple,
+)
+from urllib.parse import (
+    urlparse,
+    urlunparse,
+)
 
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from hca.util import SwaggerAPIException
 
-from azul import config, require
-from azul.dss import MiniDSS, shared_dss_credentials
+from azul import (
+    config,
+    require,
+)
+from azul.dss import (
+    MiniDSS,
+    shared_dss_credentials,
+)
 from azul.logging import configure_script_logging
 from azul.threads import DeferredTaskExecutor
 from azul.types import MutableJSON

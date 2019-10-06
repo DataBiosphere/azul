@@ -1,11 +1,13 @@
 from typing import Iterable
 
 from azul.indexer import BaseIndexer
-from azul.project.hca.transformers import (FileTransformer,
-                                           CellSuspensionTransformer,
-                                           SampleTransformer,
-                                           ProjectTransformer,
-                                           BundleTransformer)
+from azul.project.hca.transformers import (
+    FileTransformer,
+    CellSuspensionTransformer,
+    SampleTransformer,
+    ProjectTransformer,
+    BundleTransformer,
+)
 from azul.transformer import Transformer
 from azul.types import JSON
 

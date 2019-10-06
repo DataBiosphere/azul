@@ -2,7 +2,10 @@ import logging
 from functools import lru_cache
 
 from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
-from elasticsearch import Elasticsearch, RequestsHttpConnection
+from elasticsearch import (
+    Elasticsearch,
+    RequestsHttpConnection,
+)
 
 from azul import config
 from azul.deployment import aws

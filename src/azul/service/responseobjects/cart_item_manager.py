@@ -9,7 +9,10 @@ from azul.es import ESClientFactory
 from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 from azul.service.step_function_helper import StepFunctionHelper
-from azul.service.user_service import UserService, UpdateError
+from azul.service.user_service import (
+    UserService,
+    UpdateError,
+)
 
 logger = logging.getLogger(__name__)
 

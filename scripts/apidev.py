@@ -1,6 +1,9 @@
 import json
 import os
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import (
+    HTTPServer,
+    SimpleHTTPRequestHandler,
+)
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer

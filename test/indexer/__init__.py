@@ -2,12 +2,18 @@ from copy import deepcopy
 import json
 import os
 import threading
-from typing import List, Tuple
+from typing import (
+    List,
+    Tuple,
+)
 from unittest.mock import patch
 from uuid import uuid4
 
 from azul import config
-from azul.indexer import IndexWriter, Tallies
+from azul.indexer import (
+    IndexWriter,
+    Tallies,
+)
 from azul.plugin import Plugin
 from azul.project.hca import Indexer
 from azul.types import JSON

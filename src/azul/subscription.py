@@ -2,8 +2,14 @@
 
 import logging
 
-from azul import config, deployment
-from azul.json_freeze import freeze, thaw
+from azul import (
+    config,
+    deployment,
+)
+from azul.json_freeze import (
+    freeze,
+    thaw,
+)
 from azul.plugin import Plugin
 
 logger = logging.getLogger(__name__)

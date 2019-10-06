@@ -1,4 +1,7 @@
-from typing import Sequence, Type
+from typing import (
+    Sequence,
+    Type,
+)
 from urllib.parse import quote
 
 from azul import config

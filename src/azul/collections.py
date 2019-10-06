@@ -1,5 +1,8 @@
 from itertools import chain
-from typing import Iterable, Mapping
+from typing import (
+    Iterable,
+    Mapping,
+)
 
 
 def dict_merge(dicts: Iterable[Mapping]) -> Mapping:

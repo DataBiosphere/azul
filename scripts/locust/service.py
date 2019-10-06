@@ -1,7 +1,16 @@
 from contextlib import contextmanager
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import (
+    urlsplit,
+    urlunsplit,
+)
 
-from locust import HttpLocust, TaskSet, TaskSequence, seq_task, task
+from locust import (
+    HttpLocust,
+    TaskSet,
+    TaskSequence,
+    seq_task,
+    task,
+)
 from gevent.pool import Group
 
 

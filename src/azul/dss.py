@@ -4,8 +4,17 @@ import logging
 import os
 import tempfile
 import types
-from typing import Mapping, Optional, Any, Union, NamedTuple
-from unittest.mock import MagicMock, patch
+from typing import (
+    Mapping,
+    Optional,
+    Any,
+    Union,
+    NamedTuple,
+)
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import boto3
 from botocore.response import StreamingBody

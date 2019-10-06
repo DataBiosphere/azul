@@ -3,13 +3,15 @@ from unittest import TestCase
 
 import responses
 
-from azul.service.responseobjects.collection_data_access import (CollectionDataAccess,
-                                                                 ClientError,
-                                                                 CreationError,
-                                                                 RetrievalError,
-                                                                 ServerTimeoutError,
-                                                                 UpdateError,
-                                                                 UnauthorizedClientAccessError)
+from azul.service.responseobjects.collection_data_access import (
+    CollectionDataAccess,
+    ClientError,
+    CreationError,
+    RetrievalError,
+    ServerTimeoutError,
+    UpdateError,
+    UnauthorizedClientAccessError,
+)
 
 from retorts import ResponsesHelper
 

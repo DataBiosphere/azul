@@ -3,7 +3,10 @@
 import logging
 import sys
 
-from azul import config, subscription
+from azul import (
+    config,
+    subscription,
+)
 from azul.dss import shared_dss_credentials
 from azul.logging import configure_script_logging
 

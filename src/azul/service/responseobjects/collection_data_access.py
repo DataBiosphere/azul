@@ -1,6 +1,11 @@
 from logging import getLogger
 from time import sleep
-from typing import Dict, List, Optional, Any
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Any,
+)
 from uuid import uuid4
 import requests
 from azul import config

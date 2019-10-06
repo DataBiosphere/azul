@@ -1,20 +1,42 @@
 import uuid
 from collections import defaultdict
-from concurrent.futures import Future, ThreadPoolExecutor
-from functools import partial, lru_cache
-from itertools import product, groupby
+from concurrent.futures import (
+    Future,
+    ThreadPoolExecutor,
+)
+from functools import (
+    partial,
+    lru_cache,
+)
+from itertools import (
+    product,
+    groupby,
+)
 import json
 import logging
 from pprint import PrettyPrinter
 
 import requests
-from typing import List, Optional, Iterable, Set, Tuple
+from typing import (
+    List,
+    Optional,
+    Iterable,
+    Set,
+    Tuple,
+)
 from urllib.error import HTTPError
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import (
+    parse_qs,
+    urlencode,
+    urlparse,
+)
 
 from more_itertools import chunked
 
-from azul import config, hmac
+from azul import (
+    config,
+    hmac,
+)
 from azul.es import ESClientFactory
 from azul.plugin import Plugin
 from azul.types import JSON

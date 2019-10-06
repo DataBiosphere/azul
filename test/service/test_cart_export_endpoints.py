@@ -3,7 +3,10 @@ from unittest.mock import patch
 import requests
 import responses
 
-from azul.service.responseobjects.cart_export_job_manager import CartExportJobManager, InvalidExecutionTokenError
+from azul.service.responseobjects.cart_export_job_manager import (
+    CartExportJobManager,
+    InvalidExecutionTokenError,
+)
 from azul.service.responseobjects.collection_data_access import CollectionDataAccess
 from azul import config
 
@@ -36,13 +39,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
             )
         )
         export_url = f'{self.base_url}/resources/carts/{mock_cart_uuid}/export'
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[expected_export_token]),\
-                patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
-                response = requests.post(export_url,
-                                         headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                         allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[expected_export_token]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
+                    response = requests.post(export_url,
+                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                             allow_redirects=False)
         self.assertEquals(301, response.status_code)
         self.assertEquals(f'{export_url}?token={expected_export_token}',
                           response.headers['Location'])

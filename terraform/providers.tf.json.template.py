@@ -1,4 +1,7 @@
-from azul.deployment import aws, emit_tf
+from azul.deployment import (
+    aws,
+    emit_tf,
+)
 
 emit_tf({
     "provider": [

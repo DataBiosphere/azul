@@ -3,14 +3,22 @@ from collections import deque
 from contextlib import contextmanager
 import csv
 import gzip
-from io import BytesIO, TextIOWrapper
+from io import (
+    BytesIO,
+    TextIOWrapper,
+)
 import json
 import logging
 import os
 import random
 import re
 import time
-from typing import Any, IO, Mapping, Optional
+from typing import (
+    Any,
+    IO,
+    Mapping,
+    Optional,
+)
 from unittest import mock
 from urllib.parse import urlencode
 import uuid
@@ -20,15 +28,24 @@ import boto3
 from furl import furl
 from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
-from more_itertools import first, one
+from more_itertools import (
+    first,
+    one,
+)
 from openapi_spec_validator import validate_spec
 import requests
 from requests import HTTPError
 
-from azul import config, drs
+from azul import (
+    config,
+    drs,
+)
 from azul.azulclient import AzulClient
 from azul.decorators import memoized_property
-from azul.dss import MiniDSS, patch_client_for_direct_access
+from azul.dss import (
+    MiniDSS,
+    patch_client_for_direct_access,
+)
 from azul.logging import configure_test_logging
 from azul.requests import requests_session
 from azul_test_case import AlwaysTearDownTestCase

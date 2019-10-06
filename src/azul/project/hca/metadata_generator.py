@@ -4,7 +4,10 @@ __author__ = "simonjupp"
 __license__ = "Apache 2.0"
 __date__ = "15/02/2019"
 
-from typing import List, Any
+from typing import (
+    List,
+    Any,
+)
 from more_itertools import one
 from azul.types import JSON
 import re

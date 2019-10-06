@@ -8,32 +8,65 @@ import math
 import os
 import re
 import time
-from typing import Optional, Callable, Mapping, Any, cast, Sequence
+from typing import (
+    Optional,
+    Callable,
+    Mapping,
+    Any,
+    cast,
+    Sequence,
+)
 import urllib.parse
 
 import boto3
 from botocore.exceptions import ClientError
 # noinspection PyPackageRequirements
-from chalice import AuthResponse, BadRequestError, ChaliceViewError, NotFoundError, Response
+from chalice import (
+    AuthResponse,
+    BadRequestError,
+    ChaliceViewError,
+    NotFoundError,
+    Response,
+)
 from more_itertools import one
 import requests
 
-from azul import config, drs, RequirementError
+from azul import (
+    config,
+    drs,
+    RequirementError,
+)
 from azul.chalice import AzulChaliceApp
 from azul.health import Health
 from azul.logging import configure_app_logging
 from azul.openapi import annotated_specs
 from azul.plugin import Plugin
-from azul.security.authenticator import AuthenticationError, Authenticator
+from azul.security.authenticator import (
+    AuthenticationError,
+    Authenticator,
+)
 from azul.service.manifest import ManifestService
-from azul.service.repository import EntityNotFoundError, InvalidUUIDError, RepositoryService
-from azul.service.responseobjects.cart_export_job_manager import CartExportJobManager, InvalidExecutionTokenError
+from azul.service.repository import (
+    EntityNotFoundError,
+    InvalidUUIDError,
+    RepositoryService,
+)
+from azul.service.responseobjects.cart_export_job_manager import (
+    CartExportJobManager,
+    InvalidExecutionTokenError,
+)
 from azul.service.responseobjects.cart_export_service import CartExportService
-from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
+from azul.service.responseobjects.cart_item_manager import (
+    CartItemManager,
+    DuplicateItemError,
+    ResourceAccessError,
+)
 from azul.service.responseobjects.collection_data_access import CollectionDataAccess
-from azul.service.responseobjects.elastic_request_builder import (BadArgumentException,
-                                                                  ElasticTransformDump,
-                                                                  IndexNotFoundError)
+from azul.service.responseobjects.elastic_request_builder import (
+    BadArgumentException,
+    ElasticTransformDump,
+    IndexNotFoundError,
+)
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
 from azul.types import JSON

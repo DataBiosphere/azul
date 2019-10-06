@@ -7,7 +7,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from typing import Mapping, TypeVar, Tuple, MutableMapping
+from typing import (
+    Mapping,
+    TypeVar,
+    Tuple,
+    MutableMapping,
+)
 
 __all__ = ('setenv', 'main')
 

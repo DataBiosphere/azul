@@ -1,4 +1,7 @@
-from enum import Enum, auto
+from enum import (
+    Enum,
+    auto,
+)
 from typing import Set
 
 

@@ -1,7 +1,13 @@
 from unittest import mock
 
-from chalice import BadRequestError, ChaliceViewError
-from moto import mock_s3, mock_sts
+from chalice import (
+    BadRequestError,
+    ChaliceViewError,
+)
+from moto import (
+    mock_s3,
+    mock_sts,
+)
 
 from azul import config
 from azul.logging import configure_test_logging

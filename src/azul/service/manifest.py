@@ -5,11 +5,18 @@ import logging
 import uuid
 
 from botocore.exceptions import ClientError
-from typing import Tuple, Optional, Union
+from typing import (
+    Tuple,
+    Optional,
+    Union,
+)
 
 from azul import config
 from azul.service import AbstractService
-from azul.service.step_function_helper import StateMachineError, StepFunctionHelper
+from azul.service.step_function_helper import (
+    StateMachineError,
+    StepFunctionHelper,
+)
 from azul.types import JSON
 
 logger = logging.getLogger(__name__)
