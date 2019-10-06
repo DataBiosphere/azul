@@ -33,7 +33,7 @@ class CartItemManager:
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
     @staticmethod
-    def convert_resume_token_to_exclusive_start_key(resume_token:str):
+    def convert_resume_token_to_exclusive_start_key(resume_token: str):
         if resume_token is None:
             return None
         return json.loads(base64.b64decode(resume_token).decode('utf-8'))
@@ -44,7 +44,7 @@ class CartItemManager:
             return None
         return base64.b64encode(json.dumps(last_evaluated_key).encode('utf-8')).decode('utf-8')
 
-    def create_cart(self, user_id:str, cart_name:str, default:bool) -> str:
+    def create_cart(self, user_id: str, cart_name: str, default: bool) -> str:
         """
         Add a cart to the cart table and return the ID of the created cart
         An error will be raised if the user already has a cart of the same name or
@@ -175,7 +175,7 @@ class CartItemManager:
         return new_item['CartItemId']
 
     @staticmethod
-    def extract_entity_info(entity_type:str, entity):
+    def extract_entity_info(entity_type: str, entity):
         normalized_entity = dict(uuid=None, version=None)
         content = entity['contents'][entity_type][0]
         if entity_type == 'files':
@@ -189,7 +189,7 @@ class CartItemManager:
         return normalized_entity
 
     @staticmethod
-    def transform_entity_to_cart_item(cart_id:str, entity_type:str, entity_id:str, entity_version:str):
+    def transform_entity_to_cart_item(cart_id: str, entity_type: str, entity_id: str, entity_version: str):
         return {
             'CartItemId': f'{entity_id}:{entity_version or ""}',  # Range Key
             'CartId': cart_id,  # Hash Key

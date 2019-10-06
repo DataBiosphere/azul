@@ -110,7 +110,11 @@ class AuthResponseHelper(ResponsesHelper):
         return context
 
     @staticmethod
-    def generate_test_claims(email:str, identifier:str=None, group:str=None, ttl:int=60, issued_at:float=None):
+    def generate_test_claims(email: str,
+                             identifier: str = None,
+                             group: str = None,
+                             ttl: int = 60,
+                             issued_at: float = None):
         issued_at = issued_at or time.time()
         return {
             "aud": config.access_token_audience_list,
@@ -125,7 +129,11 @@ class AuthResponseHelper(ResponsesHelper):
         }
 
     @staticmethod
-    def generate_test_jwt(email:str, identifier:str=None, group:str=None, ttl:int=60, issued_at:float=None):
+    def generate_test_jwt(email: str,
+                          identifier: str = None,
+                          group: str = None,
+                          ttl: int = 60,
+                          issued_at: float = None):
         return jwt.encode(AuthResponseHelper.generate_test_claims(email, identifier, group, ttl, issued_at),
                           key=TestKeyManager.get_private_key(),
                           algorithm='RS256',

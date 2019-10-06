@@ -11,10 +11,10 @@ logger = getLogger(__name__)
 class CollectionDataAccess:
     DEFAULT_MAX_BACKOFF_TIME = 60
 
-    def __init__(self, access_token:str):
+    def __init__(self, access_token: str):
         self.access_token = access_token
 
-    def get(self, uuid:str, version:str):
+    def get(self, uuid: str, version: str):
         url = self.endpoint_url('collections', uuid)
         query = {
             "version": version,
@@ -25,7 +25,7 @@ class CollectionDataAccess:
         collection = response.json()
         return dict(uuid=uuid, version=version, collection=collection)
 
-    def create(self, uuid:str, name:str, description:str, version:str, items:List[Dict[str, str]]):
+    def create(self, uuid: str, name: str, description: str, version: str, items: List[Dict[str, str]]):
         url = self.endpoint_url('collections')
         query = {
             "uuid": uuid,
@@ -44,7 +44,7 @@ class CollectionDataAccess:
         collection = response.json()
         return dict(uuid=collection['uuid'], version=collection['version'])
 
-    def append(self, uuid:str, version:str, items:List[Dict[str, str]]):
+    def append(self, uuid: str, version: str, items: List[Dict[str, str]]):
         url = self.endpoint_url('collections', uuid)
         query = {
             "version": version,
@@ -58,8 +58,12 @@ class CollectionDataAccess:
         collection = response.json()
         return dict(uuid=collection['uuid'], version=collection['version'])
 
-    def send_request(self, uuid, method:str, url:str, params, payload:Optional[Any]=None, delay:Optional[int]=None,
-                     request_id:Optional[str]=None, expected_status_code:Optional[int]=200, exception_class=None):
+    def send_request(self, uuid, method: str, url: str, params,
+                     payload: Optional[Any] = None,
+                     delay: Optional[int] = None,
+                     request_id: Optional[str] = None,
+                     expected_status_code: Optional[int] = 200,
+                     exception_class=None):
         request_id = request_id or str(uuid4())
         # delay_factor is for automatic retry with exponential backoff.
         if delay is not None:

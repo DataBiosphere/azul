@@ -86,7 +86,7 @@ class AuthEndpointTest(AuthLocalAppTestCase):
         with AuthResponseHelper(self.base_url) as helper:
             response = requests.get(f'{self.base_url}/auth/callback', payload)
         self.assertEqual(200, response.status_code)
-        self.assertEqual(expected_response, {k:v for k, v in response.json().items() if k != 'login_url'})
+        self.assertEqual(expected_response, {k: v for k, v in response.json().items() if k != 'login_url'})
 
     @responses.activate
     def test_handle_callback_from_fusillade_without_some_payload(self):
