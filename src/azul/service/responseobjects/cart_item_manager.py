@@ -221,7 +221,10 @@ class CartItemManager:
                                           key_conditions={'CartId': real_cart_id},
                                           select=['EntityType'])
 
-    def get_paginable_cart_items(self, user_id, cart_id, page_size:int=20, exclusive_start_key=None, resume_token=None):
+    def get_paginable_cart_items(self, user_id, cart_id,
+                                 page_size: int = 20,
+                                 exclusive_start_key=None,
+                                 resume_token=None):
         """
         Get cart items (with pagination).
 
