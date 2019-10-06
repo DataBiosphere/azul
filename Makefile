@@ -38,7 +38,7 @@ tag: check_branch
 	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
 
 integration_test: check_branch
-	python -m unittest -v local_integration_test
+	python -m unittest -v integration_test
 
 check_trufflehog:
 	@hash trufflehog || ( echo 'Please install trufflehog using "pip install trufflehog"' ; false )
