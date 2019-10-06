@@ -312,7 +312,6 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'lane_index': int
         }
 
-
     def _file(self, file: api.File) -> JSON:
         # noinspection PyDeprecation
         return {

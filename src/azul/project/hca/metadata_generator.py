@@ -157,7 +157,6 @@ class MetadataGenerator:
             if handle_zarray('.zarr/') or handle_zarray('.zarr!'):
                 continue
 
-
             if self.default_format_filter and obj["file_format"] not in self.default_format_filter:
                 continue
 
