@@ -26,7 +26,7 @@ class AuthEndpointTest(AuthLocalAppTestCase):
 
     @responses.activate
     def test_authenticate_via_fusillade_redirects_to_fusillade(self):
-        with AuthResponseHelper(self.base_url) as helper:
+        with AuthResponseHelper(self.base_url):
             response = requests.get(f'{self.base_url}/auth', allow_redirects=False)
         self.assertEqual(302, response.status_code)
         self.assertRegex(response.headers['Location'], r'^https://auth(\.[a-z]+|)\.data\.humancellatlas.org/')
@@ -48,14 +48,14 @@ class AuthEndpointTest(AuthLocalAppTestCase):
 
     @responses.activate
     def test_access_info_blocks_access_without_jwt(self):
-        with AuthResponseHelper(self.base_url) as helper:
+        with AuthResponseHelper(self.base_url):
             response = requests.get(f'{self.base_url}/me')
         self.assertEqual(401, response.status_code)
 
     @responses.activate
     def test_access_info_blocks_access_with_invalid_jwt(self):
         invalid_jwt = jwt_encode({'foo': 'bar'}, None, None).decode()
-        with AuthResponseHelper(self.base_url) as helper:
+        with AuthResponseHelper(self.base_url):
             response = requests.get(f'{self.base_url}/me',
                                     headers=dict(Authorization=f'Bearer {invalid_jwt}'))
         self.assertEqual(403, response.status_code)
@@ -66,7 +66,7 @@ class AuthEndpointTest(AuthLocalAppTestCase):
             "iss": f'http://{self.server_thread.address[0]}:12345/'  # This issuer is inaccessible.
         }
         problematic_jwt = jwt_encode(claims, None, None).decode()
-        with AuthResponseHelper(self.base_url) as helper:
+        with AuthResponseHelper(self.base_url):
             response = requests.get(f'{self.base_url}/me',
                                     headers=dict(Authorization=f'Bearer {problematic_jwt}'))
         self.assertEqual(403, response.status_code)
@@ -83,7 +83,7 @@ class AuthEndpointTest(AuthLocalAppTestCase):
                                  expires_in='1234',
                                  decoded_token=dict(foo='bar'),
                                  state='')
-        with AuthResponseHelper(self.base_url) as helper:
+        with AuthResponseHelper(self.base_url):
             response = requests.get(f'{self.base_url}/auth/callback', payload)
         self.assertEqual(200, response.status_code)
         self.assertEqual(expected_response, {k: v for k, v in response.json().items() if k != 'login_url'})
@@ -91,6 +91,6 @@ class AuthEndpointTest(AuthLocalAppTestCase):
     @responses.activate
     def test_handle_callback_from_fusillade_without_some_payload(self):
         payload = dict(id_token='def')
-        with AuthResponseHelper(self.base_url) as helper:
+        with AuthResponseHelper(self.base_url):
             response = requests.get(f'{self.base_url}/auth/callback', payload)
         self.assertEqual(400, response.status_code)
