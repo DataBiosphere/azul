@@ -79,14 +79,20 @@ class TestCartExportService(TestCase):
         expected_get_content_result = dict(resume_token='rt1',
                                            items=[1, 2, 3, 4])  # NOTE: This is just for the test.
         service = CartExportService()
-        with patch.object(service.cart_item_manager, 'get_cart', side_effect=[dict(CartName='abc123')]), \
-             patch.object(service, 'get_content', side_effect=[expected_get_content_result]), \
-             ResponsesHelper() as helper:
-            helper.add(responses.Response(responses.PUT,
-                                          CollectionDataAccess.endpoint_url('collections'),
-                                          status=201,
-                                          json=expected_collection))
-            result = service.export('export1', 'user1', 'cart1', 'at1', expected_collection['uuid'], 'ver1', None)
+        with patch.object(service.cart_item_manager, 'get_cart', side_effect=[dict(CartName='abc123')]):
+            with patch.object(service, 'get_content', side_effect=[expected_get_content_result]):
+                with ResponsesHelper() as helper:
+                    helper.add(responses.Response(responses.PUT,
+                                                  CollectionDataAccess.endpoint_url('collections'),
+                                                  status=201,
+                                                  json=expected_collection))
+                    result = service.export(export_id='export1',
+                                            user_id='user1',
+                                            cart_id='cart1',
+                                            access_token='at1',
+                                            collection_uuid=expected_collection['uuid'],
+                                            collection_version='ver1',
+                                            resume_token=None)
         self.assertEquals(expected_collection, result['collection'])
         self.assertEquals(expected_get_content_result['resume_token'], result['resume_token'])
         self.assertEquals(len(expected_get_content_result['items']), result['exported_item_count'])
@@ -98,12 +104,20 @@ class TestCartExportService(TestCase):
         expected_get_content_result = dict(resume_token='rt1',
                                            items=[1, 2, 3, 4])  # NOTE: This is just for the test.
         service = CartExportService()
-        with patch.object(service, 'get_content', side_effect=[expected_get_content_result]), \
-             ResponsesHelper() as helper:
-            helper.add(responses.Response(responses.PATCH,
-                                          CollectionDataAccess.endpoint_url('collections', expected_collection['uuid']),
-                                          json=expected_collection))
-            result = service.export('export1', 'user1', 'cart1', 'at1', expected_collection['uuid'], 'ver1', 'rt0')
+        with patch.object(service, 'get_content', side_effect=[expected_get_content_result]):
+            with ResponsesHelper() as helper:
+                helper.add(responses.Response(
+                    responses.PATCH,
+                    CollectionDataAccess.endpoint_url('collections', expected_collection['uuid']),
+                    json=expected_collection
+                ))
+                result = service.export(export_id='export1',
+                                        user_id='user1',
+                                        cart_id='cart1',
+                                        access_token='at1',
+                                        collection_uuid=expected_collection['uuid'],
+                                        collection_version='ver1',
+                                        resume_token='rt0')
         self.assertEquals(expected_collection, result['collection'])
         self.assertEquals(expected_get_content_result['resume_token'], result['resume_token'])
         self.assertEquals(len(expected_get_content_result['items']), result['exported_item_count'])
@@ -120,4 +134,10 @@ class TestCartExportService(TestCase):
                 with ResponsesHelper() as helper:
                     url = CollectionDataAccess.endpoint_url('collections', expected_collection['uuid'])
                     helper.add(responses.Response(responses.PATCH, url, status=401, json=dict(code='abc')))
-                    service.export('export1', 'user1', 'cart1', 'at1', expected_collection['uuid'], 'ver1', 'rt0')
+                    service.export(export_id='export1',
+                                   user_id='user1',
+                                   cart_id='cart1',
+                                   access_token='at1',
+                                   collection_uuid=expected_collection['uuid'],
+                                   collection_version='ver1',
+                                   resume_token='rt0')
