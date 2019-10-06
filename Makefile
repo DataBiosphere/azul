@@ -30,6 +30,16 @@ clean:
 	rm -rf .cache .config
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
 
+pep8:
+	flake8 --max-line-length=120 $(azul_home)/src \
+	                             $(azul_home)/scripts \
+	                             $(azul_home)/test \
+	                             $(azul_home)/lambdas/{indexer,service}/app.py \
+	                             $$(find $(azul_home)/terraform{,/gitlab} \
+	                                     $(azul_home)/lambdas/{indexer,service}{,/.chalice} \
+	                                     -maxdepth 1 \
+	                                     -name '*.template.py')
+
 test:
 	PYTHONWARNINGS=ignore:ResourceWarning coverage run -m unittest discover test --verbose
 
@@ -70,6 +80,7 @@ check_autosquash:
         delete index reindex \
         clean \
         tag \
+        pep8 \
         test integration_test \
         check_trufflehog trufflehog \
         check_clean check_autosquash

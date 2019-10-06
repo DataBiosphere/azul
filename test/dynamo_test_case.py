@@ -16,6 +16,6 @@ class DynamoTestCase(DockerContainerTestCase):
             endpoint = f'http://{host}:{port}'
             with mock_sts():
                 cls.dynamo_accessor = DynamoDataAccessor(endpoint, 'us-east-1')
-        except:  # no coverage
+        except BaseException:  # no coverage
             cls._kill_containers()
             raise

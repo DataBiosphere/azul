@@ -2,7 +2,7 @@ import copy
 from typing import List
 
 from azul.deployment import aws
-from azul.types import JSON, MutableJSON
+from azul.types import JSON
 
 
 def openapi_spec(description: JSON):

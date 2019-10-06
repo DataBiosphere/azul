@@ -6,7 +6,7 @@ import git
 from azul import config
 
 """
-Ensure that the currently checked out branch matches the selected deployemnt  
+Ensure that the currently checked out branch matches the selected deployemnt
 """
 
 

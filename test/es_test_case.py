@@ -32,7 +32,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
             os.environ.update(config.es_endpoint_env(es_endpoint))
             cls.es_client = ESClientFactory.get()
             cls._wait_for_es()
-        except:  # no coverage
+        except BaseException:  # no coverage
             cls._kill_containers()
             raise
 

@@ -113,7 +113,7 @@ class AzulClient(object):
                         self.post_bundle(url.geturl(), notification)
                 except HTTPError as e:
                     if i < 3:
-                        logger.warning("Notification %s, Attempt %i: scheduling retry after error %s", notification, i, e)
+                        logger.warning("Notification %s, attempt %i: retrying after error %s", notification, i, e)
                         return notification, tpe.submit(partial(attempt, notification, i + 1))
                     else:
                         logger.warning("Notification %s, attempt %i: giving up after error %s", notification, i, e)

@@ -203,7 +203,7 @@ def index(event: chalice.app.SQSEvent):
                     token_queue.send_message(MessageBody=json.dumps(Token.mint(len(batch)).to_json()))
                     document_queue.send_messages(Entries=[dict(tally.to_message(), Id=str(i))
                                                           for i, tally in enumerate(batch)])
-        except:
+        except BaseException:
             log.warning(f"Worker failed to handle message {message}.", exc_info=True)
             raise
         else:

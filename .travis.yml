@@ -24,6 +24,7 @@ script:
   # Setting BOTO_CONFIG seems to override that.
   - export BOTO_CONFIG=/dev/null
   - make trufflehog
+  - make pep8
   - make test
   - make check_clean
   - make check_autosquash

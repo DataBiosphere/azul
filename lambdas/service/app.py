@@ -9,8 +9,7 @@ import os
 import re
 import time
 from typing import Optional, Callable, Mapping, Any, cast, Sequence
-import urllib
-from urllib.parse import urlparse
+import urllib.parse
 
 import boto3
 from botocore.exceptions import ClientError
@@ -238,7 +237,7 @@ def validate_size(size):
     """
     try:
         size = int(size)
-    except:
+    except BaseException:
         raise BadRequestError(f'Invalid value for parameter `size`')
     else:
         max_size = 1000

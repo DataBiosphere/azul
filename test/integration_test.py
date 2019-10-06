@@ -31,7 +31,6 @@ from azul.decorators import memoized_property
 from azul.dss import MiniDSS, patch_client_for_direct_access
 from azul.logging import configure_test_logging
 from azul.requests import requests_session
-from azul import drs
 from azul_test_case import AlwaysTearDownTestCase
 
 logger = logging.getLogger(__name__)

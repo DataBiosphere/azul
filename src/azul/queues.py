@@ -173,7 +173,7 @@ class Queues:
             entries = [self._reconstitute(message) for message in message_batch]
             try:
                 queue.send_messages(Entries=entries)
-            except:
+            except BaseException:
                 assert message_batches
                 _cleanup()
                 raise

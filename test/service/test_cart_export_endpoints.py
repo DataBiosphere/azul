@@ -80,13 +80,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
         )
         export_url = f'{self.base_url}/resources/carts/{mock_cart_uuid}/export?token={expected_export_token}'
         # NOTE The empty side_effect is to ensure that "initiate" never get called.
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[]), \
-                patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
-                response = requests.get(export_url,
-                                         headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                         allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
+                    response = requests.get(export_url,
+                                            headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                            allow_redirects=False)
         self.assertEquals(301, response.status_code)
         self.assertEquals(export_url, response.headers['Location'])
         self.assertEquals('10', response.headers['Retry-After'])
@@ -99,13 +99,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
         expected_export_token = 'abc123'
         export_url = f'{self.base_url}/resources/carts/{mock_cart_uuid}/export?token={expected_export_token}'
         # NOTE The empty side_effect is to ensure that "initiate" never get called.
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[]), \
-             patch.object(CartExportJobManager, 'get', side_effect=[InvalidExecutionTokenError()]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
-                response = requests.get(export_url,
-                                        headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                        allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[InvalidExecutionTokenError()]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
+                    response = requests.get(export_url,
+                                            headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                            allow_redirects=False)
         self.assertEquals(400, response.status_code)
 
     @responses.activate
@@ -128,13 +128,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
         )
         export_url = f'{self.base_url}/resources/carts/{mock_cart_uuid}/export?token={expected_export_token}'
         # NOTE The empty side_effect is to ensure that "initiate" never get called.
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[]), \
-             patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', ttl=test_jwt_ttl)
-                response = requests.get(export_url,
-                                        headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                        allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', ttl=test_jwt_ttl)
+                    response = requests.get(export_url,
+                                            headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                            allow_redirects=False)
         self.assertEquals(404, response.status_code)
 
     @responses.activate
@@ -159,13 +159,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
         )
         export_url = f'{self.base_url}/resources/carts/{mock_cart_uuid}/export?token={expected_export_token}'
         # NOTE The empty side_effect is to ensure that "initiate" never get called.
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[]), \
-             patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
-                response = requests.get(export_url,
-                                        headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                        allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
+                    response = requests.get(export_url,
+                                            headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                            allow_redirects=False)
         self.assertEquals(200, response.status_code)
         prefix_expected_url = CollectionDataAccess.endpoint_url('collections', mock_collection_uuid)
         self.assertEquals(
@@ -193,13 +193,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
         )
         export_url = f'{self.base_url}/resources/carts/{mock_cart_uuid}/export?token={expected_export_token}'
         # NOTE The empty side_effect is to ensure that "initiate" never get called.
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[]), \
-             patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
-                response = requests.get(export_url,
-                                        headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                        allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
+                    response = requests.get(export_url,
+                                            headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                            allow_redirects=False)
         self.assertEquals(500, response.status_code)
 
     @responses.activate
@@ -222,13 +222,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
         )
         export_url = f'{self.base_url}/resources/carts/{mock_cart_uuid}/export?token={expected_export_token}'
         # NOTE The empty side_effect is to ensure that "initiate" never get called.
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[]), \
-             patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
-                response = requests.get(export_url,
-                                        headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                        allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
+                    response = requests.get(export_url,
+                                            headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                            allow_redirects=False)
         self.assertEquals(410, response.status_code)
 
     @responses.activate
@@ -250,13 +250,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
             )
         )
         export_url = f'{self.base_url}/fetch/resources/carts/{mock_cart_uuid}/export'
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[expected_export_token]), \
-             patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
-                response = requests.post(export_url,
-                                         headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                         allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[expected_export_token]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
+                    response = requests.post(export_url,
+                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                             allow_redirects=False)
         self.assertEquals(200, response.status_code)
         response_body = response.json()
         self.assertEquals(301, response_body['Status'])
@@ -282,13 +282,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
         )
         export_url = f'{self.base_url}/fetch/resources/carts/{mock_cart_uuid}/export?token={expected_export_token}'
         # NOTE The empty side_effect is to ensure that "initiate" never get called.
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[]), \
-             patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
-                response = requests.get(export_url,
-                                        headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                        allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
+                    response = requests.get(export_url,
+                                            headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                            allow_redirects=False)
         self.assertEquals(200, response.status_code)
         response_body = response.json()
         self.assertEquals(301, response_body['Status'])
@@ -317,13 +317,13 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
         )
         export_url = f'{self.base_url}/fetch/resources/carts/{mock_cart_uuid}/export?token={expected_export_token}'
         # NOTE The empty side_effect is to ensure that "initiate" never get called.
-        with patch.object(CartExportJobManager, 'initiate', side_effect=[]), \
-             patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
-            with AuthResponseHelper(self.base_url) as helper:
-                test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
-                response = requests.get(export_url,
-                                        headers=dict(Authorization=f'Bearer {test_jwt}'),
-                                        allow_redirects=False)
+        with patch.object(CartExportJobManager, 'initiate', side_effect=[]):
+            with patch.object(CartExportJobManager, 'get', side_effect=[mock_job]):
+                with AuthResponseHelper(self.base_url) as helper:
+                    test_jwt = helper.generate_test_jwt('something@foo.bar', identifier=mock_user_id, ttl=test_jwt_ttl)
+                    response = requests.get(export_url,
+                                            headers=dict(Authorization=f'Bearer {test_jwt}'),
+                                            allow_redirects=False)
         self.assertEquals(200, response.status_code)
         response_body = response.json()
         self.assertEquals(200, response_body['Status'])

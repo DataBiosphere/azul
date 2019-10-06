@@ -1,4 +1,5 @@
-# Adapted from https://github.com/HumanCellAtlas/hca_bundles_to_csv/blob/b516a3a4de96ea3e97a698e7a603faec48ae97ec/hca_bundle_tools/file_metadata_to_csv.py
+# noqa Adapted from
+# https://github.com/HumanCellAtlas/hca_bundles_to_csv/blob/b516a3a4de96ea3e97a698e7a603faec48ae97ec/hca_bundle_tools/file_metadata_to_csv.py
 __author__ = "simonjupp"
 __license__ = "Apache 2.0"
 __date__ = "15/02/2019"
@@ -155,7 +156,6 @@ class MetadataGenerator:
 
             if handle_zarray('.zarr/') or handle_zarray('.zarr!'):
                 continue
-
 
             if self.default_format_filter and obj["file_format"] not in self.default_format_filter:
                 continue

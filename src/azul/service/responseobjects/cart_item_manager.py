@@ -33,7 +33,7 @@ class CartItemManager:
         return json.loads(base64.urlsafe_b64decode(token).decode('utf-8'))
 
     @staticmethod
-    def convert_resume_token_to_exclusive_start_key(resume_token:str):
+    def convert_resume_token_to_exclusive_start_key(resume_token: str):
         if resume_token is None:
             return None
         return json.loads(base64.b64decode(resume_token).decode('utf-8'))
@@ -44,7 +44,7 @@ class CartItemManager:
             return None
         return base64.b64encode(json.dumps(last_evaluated_key).encode('utf-8')).decode('utf-8')
 
-    def create_cart(self, user_id:str, cart_name:str, default:bool) -> str:
+    def create_cart(self, user_id: str, cart_name: str, default: bool) -> str:
         """
         Add a cart to the cart table and return the ID of the created cart
         An error will be raised if the user already has a cart of the same name or
@@ -144,7 +144,8 @@ class CartItemManager:
                                                 update_values=update_attributes)
 
     def create_cart_item_id(self, cart_id, entity_id, entity_type, bundle_uuid, bundle_version):
-        return hashlib.sha256(f'{cart_id}/{entity_id}/{bundle_uuid}/{bundle_version}/{entity_type}'.encode('utf-8')).hexdigest()
+        item_id = [cart_id, entity_id, bundle_uuid, bundle_version, entity_type]
+        return hashlib.sha256('/'.join(item_id).encode('utf-8')).hexdigest()
 
     def add_cart_item(self, user_id, cart_id, entity_id, entity_type, entity_version):
         """
@@ -175,7 +176,7 @@ class CartItemManager:
         return new_item['CartItemId']
 
     @staticmethod
-    def extract_entity_info(entity_type:str, entity):
+    def extract_entity_info(entity_type: str, entity):
         normalized_entity = dict(uuid=None, version=None)
         content = entity['contents'][entity_type][0]
         if entity_type == 'files':
@@ -189,7 +190,7 @@ class CartItemManager:
         return normalized_entity
 
     @staticmethod
-    def transform_entity_to_cart_item(cart_id:str, entity_type:str, entity_id:str, entity_version:str):
+    def transform_entity_to_cart_item(cart_id: str, entity_type: str, entity_id: str, entity_version: str):
         return {
             'CartItemId': f'{entity_id}:{entity_version or ""}',  # Range Key
             'CartId': cart_id,  # Hash Key
@@ -221,7 +222,10 @@ class CartItemManager:
                                           key_conditions={'CartId': real_cart_id},
                                           select=['EntityType'])
 
-    def get_paginable_cart_items(self, user_id, cart_id, page_size:int=20, exclusive_start_key=None, resume_token=None):
+    def get_paginable_cart_items(self, user_id, cart_id,
+                                 page_size: int = 20,
+                                 exclusive_start_key=None,
+                                 resume_token=None):
         """
         Get cart items (with pagination).
 

@@ -1,6 +1,5 @@
 import datetime
 import json
-import logging
 from unittest import mock
 
 from moto import mock_sts

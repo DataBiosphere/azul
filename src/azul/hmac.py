@@ -8,6 +8,7 @@ from azul.deployment import aws
 
 logger = logging.getLogger(__name__)
 
+
 def verify(current_request):
     try:
         current_request.headers['authorization']
