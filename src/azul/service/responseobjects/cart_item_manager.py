@@ -144,7 +144,8 @@ class CartItemManager:
                                                 update_values=update_attributes)
 
     def create_cart_item_id(self, cart_id, entity_id, entity_type, bundle_uuid, bundle_version):
-        return hashlib.sha256(f'{cart_id}/{entity_id}/{bundle_uuid}/{bundle_version}/{entity_type}'.encode('utf-8')).hexdigest()
+        item_id = [cart_id, entity_id, bundle_uuid, bundle_version, entity_type]
+        return hashlib.sha256('/'.join(item_id).encode('utf-8')).hexdigest()
 
     def add_cart_item(self, user_id, cart_id, entity_id, entity_type, entity_version):
         """
