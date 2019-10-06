@@ -1396,7 +1396,7 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
     def test_integrations(self):
         test_cases = [
             ('get_manifest', 'file', 1),
-            ('get', 'project', 9),
+            ('get', 'project', 21),
         ]
         for integration_type, entity_type, num_integrations_expected in test_cases:
             with self.subTest(integration_type=integration_type,
