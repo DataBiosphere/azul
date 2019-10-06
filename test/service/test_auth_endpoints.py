@@ -29,7 +29,7 @@ class AuthEndpointTest(AuthLocalAppTestCase):
         with AuthResponseHelper(self.base_url) as helper:
             response = requests.get(f'{self.base_url}/auth', allow_redirects=False)
         self.assertEqual(302, response.status_code)
-        self.assertRegex(response.headers['Location'], '^https://auth(\.[a-z]+|)\.data\.humancellatlas.org/')
+        self.assertRegex(response.headers['Location'], r'^https://auth(\.[a-z]+|)\.data\.humancellatlas.org/')
 
     @responses.activate
     def test_access_info_ok(self):
