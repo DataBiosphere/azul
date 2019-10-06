@@ -104,11 +104,11 @@ def setenv():
 
 
 K = TypeVar('K')
-O = TypeVar('O')
-N = TypeVar('N')
+OV = TypeVar('OV')
+NV = TypeVar('NV')
 
 
-def zip_dict(old: Mapping[K, O], new: Mapping[K, N], missing=None) -> MutableMapping[K, Tuple[O, N]]:
+def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> MutableMapping[K, Tuple[OV, NV]]:
     """
     Merge two dictionaries. The resulting dictionary contains an entry for every key in either `old` or `new`. Each
     entry in the result associates a key to two values: the value from `old` for that key followed by the value from
