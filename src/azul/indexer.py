@@ -185,8 +185,10 @@ class BaseIndexer(ABC):
             # Read the aggregates
             old_aggregates = self._read_aggregates(tallies)
             total_tallies = Counter(tallies)
-            total_tallies.update({old_aggregate.entity: old_aggregate.num_contributions
-                                     for old_aggregate in old_aggregates.values()})
+            total_tallies.update({
+                old_aggregate.entity: old_aggregate.num_contributions
+                for old_aggregate in old_aggregates.values()
+            })
             # Read all contributions from Elasticsearch
             contributions = self._read_contributions(total_tallies)
             actual_tallies = Counter(contribution.entity for contribution in contributions)
