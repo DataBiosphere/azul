@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
-from typing import Tuple, List, Optional, Iterable
+from typing import Tuple, Optional, Iterable
 
 import boto3
 import requests

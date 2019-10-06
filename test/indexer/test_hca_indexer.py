@@ -19,7 +19,7 @@ import unittest
 from unittest.mock import patch
 from uuid import uuid4
 
-from elasticsearch import Elasticsearch, RequestError
+from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from more_itertools import one
 
