@@ -39,7 +39,6 @@ test:
   extends: .base
   stage: test
   script:
-    - make clean
     - make test
 
 deploy:
