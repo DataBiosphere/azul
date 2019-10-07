@@ -1,42 +1,79 @@
 import abc
 from botocore.exceptions import ClientError
-from collections import ChainMap, OrderedDict, defaultdict
+from collections import (
+    ChainMap,
+    OrderedDict,
+    defaultdict,
+)
 from copy import deepcopy
 import csv
-from datetime import datetime, timedelta, timezone
+from datetime import (
+    datetime,
+    timedelta,
+    timezone,
+)
 import email.utils
-from io import StringIO, TextIOWrapper
+from io import (
+    StringIO,
+    TextIOWrapper,
+)
 from itertools import chain
 import logging
 import os
-from tempfile import TemporaryDirectory, mkstemp
+from tempfile import (
+    TemporaryDirectory,
+    mkstemp,
+)
 import re
-from typing import Any, List, Mapping, MutableMapping, IO, Optional, Callable, TypeVar
+from typing import (
+    Any,
+    List,
+    Mapping,
+    MutableMapping,
+    IO,
+    Optional,
+    Callable,
+    TypeVar,
+)
 import unicodedata
 from uuid import uuid4
 
 from bdbag import bdbag_api
 from chalice import Response
 from jsonobject.api import JsonObject
-from jsonobject.properties import (DefaultProperty,
-                                   FloatProperty,
-                                   IntegerProperty,
-                                   ListProperty,
-                                   ObjectProperty,
-                                   StringProperty)
+from jsonobject.properties import (
+    DefaultProperty,
+    FloatProperty,
+    IntegerProperty,
+    ListProperty,
+    ObjectProperty,
+    StringProperty,
+)
 from more_itertools import one
 from werkzeug.http import parse_dict_header
 
-from azul import config, drs
-from azul.json_freeze import freeze, thaw
+from azul import (
+    config,
+    drs,
+)
+from azul.json_freeze import (
+    freeze,
+    thaw,
+)
 from azul.service.responseobjects.buffer import FlushableBuffer
-from azul.service.responseobjects.storage_service import (AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
-                                                          MultipartUploadHandler,
-                                                          StorageService)
+from azul.service.responseobjects.storage_service import (
+    AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
+    MultipartUploadHandler,
+    StorageService,
+)
 from azul.service.responseobjects.utilities import json_pp
 from azul.strings import to_camel_case
 from azul.transformer import Document
-from azul.types import JSON, MutableJSON, AnyMutableJSON
+from azul.types import (
+    JSON,
+    MutableJSON,
+    AnyMutableJSON,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +216,7 @@ class AbstractResponse(object, metaclass=abc.ABCMeta):
     """
     Abstract class to be used for each /files API response.
     """
+
     @abc.abstractmethod
     def return_response(self):
         raise NotImplementedError()
@@ -359,7 +397,7 @@ class ManifestResponse(AbstractResponse):
             doc = Document.translate_fields(hit.to_dict(), forward=False)
             assert isinstance(doc, dict)
             for bundle in list(doc['bundles']):  # iterate over copy …
-                doc['bundles'] = [bundle]        # … to facilitate this in-place modifaction
+                doc['bundles'] = [bundle]  # … to facilitate this in-place modifaction
                 row = {}
                 for doc_path, column_mapping in self.manifest_entries.items():
                     entities = self._get_entities(doc_path, doc)
@@ -605,6 +643,7 @@ T = TypeVar('T')
 
 
 class SummaryResponse(AbstractResponse):
+
     def __init__(self, raw_response):
         super().__init__()
         self.aggregations = raw_response['aggregations']

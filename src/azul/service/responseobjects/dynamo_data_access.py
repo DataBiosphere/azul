@@ -1,6 +1,15 @@
-from typing import NamedTuple, List, Any, Optional
+from typing import (
+    NamedTuple,
+    List,
+    Any,
+    Optional,
+)
 
-from boto3.dynamodb.conditions import And, Attr, Key
+from boto3.dynamodb.conditions import (
+    And,
+    Attr,
+    Key,
+)
 
 from azul.deployment import aws
 

@@ -1,6 +1,9 @@
 import json
 import os
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import (
+    HTTPServer,
+    SimpleHTTPRequestHandler,
+)
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -45,6 +48,7 @@ def main():
 
 
 class UpdateHandler(FileSystemEventHandler):
+
     def __init__(self, service, gateway_id):
         self.service = service
         self.gateway_id = gateway_id

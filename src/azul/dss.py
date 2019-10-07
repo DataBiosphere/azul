@@ -4,8 +4,17 @@ import logging
 import os
 import tempfile
 import types
-from typing import Mapping, Optional, Any, Union, NamedTuple
-from unittest.mock import MagicMock, patch
+from typing import (
+    Mapping,
+    Optional,
+    Any,
+    Union,
+    NamedTuple,
+)
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import boto3
 from botocore.response import StreamingBody
@@ -146,6 +155,7 @@ def patch_client_for_direct_access(client: DSSClient):
             return blob
 
     class NewGetBundle:
+
         def _request(self, kwargs, **other_kwargs):
             uuid, version, replica = kwargs['uuid'], kwargs['version'], kwargs['replica']
             try:

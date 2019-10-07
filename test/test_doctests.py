@@ -7,7 +7,10 @@ import azul.collections
 import azul.json
 import azul.json_freeze
 from azul.logging import configure_test_logging
-from azul.modules import load_module, load_app_module
+from azul.modules import (
+    load_module,
+    load_app_module,
+)
 import azul.openapi
 import azul.service.responseobjects.elastic_request_builder
 import azul.strings

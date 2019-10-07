@@ -9,7 +9,10 @@ from azul.es import ESClientFactory
 from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 from azul.service.step_function_helper import StepFunctionHelper
-from azul.service.user_service import UserService, UpdateError
+from azul.service.user_service import (
+    UserService,
+    UpdateError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +169,7 @@ class CartItemManager:
                                                _source_include=['contents.files.uuid',  # data file UUID
                                                                 'contents.files.version',  # data file version
                                                                 'contents.projects.document_id',  # metadata file UUID
-                                                                'contents.samples.document_id',   # metadata file UUID
+                                                                'contents.samples.document_id',  # metadata file UUID
                                                                 ]
                                                )['_source']
             normalized_entity = self.extract_entity_info(entity_type, entity)
@@ -340,10 +343,12 @@ class CartItemManager:
 
 
 class ResourceAccessError(Exception):
+
     def __init__(self, msg):
         self.msg = msg
 
 
 class DuplicateItemError(Exception):
+
     def __init__(self, msg):
         self.msg = msg

@@ -1,6 +1,12 @@
 import os
 import re
-from typing import List, Mapping, Optional, Tuple, Any
+from typing import (
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Any,
+)
 
 from hca.dss import DSSClient
 from urllib3 import Timeout

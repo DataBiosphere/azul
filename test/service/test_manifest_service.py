@@ -7,7 +7,10 @@ from moto import mock_sts
 from azul import config
 from azul.logging import configure_test_logging
 from azul.service.manifest import ManifestService
-from azul.service.step_function_helper import StateMachineError, StepFunctionHelper
+from azul.service.step_function_helper import (
+    StateMachineError,
+    StepFunctionHelper,
+)
 from azul_test_case import AzulTestCase
 
 

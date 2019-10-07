@@ -1,27 +1,51 @@
-from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from collections import (
+    Counter,
+    defaultdict,
+)
 from itertools import groupby
 import logging
 from operator import attrgetter
 import time
-from typing import Iterable, List, Mapping, MutableMapping, MutableSet, Union, Tuple, Optional
+from typing import (
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    MutableSet,
+    Union,
+    Tuple,
+    Optional,
+)
 
-from elasticsearch import ConflictError, ElasticsearchException
-from elasticsearch.helpers import parallel_bulk, scan, streaming_bulk
+from elasticsearch import (
+    ConflictError,
+    ElasticsearchException,
+)
+from elasticsearch.helpers import (
+    parallel_bulk,
+    scan,
+    streaming_bulk,
+)
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
 from azul import config
 from azul.dss import patch_client_for_direct_access
 from azul.es import ESClientFactory
-from azul.transformer import (Aggregate,
-                              AggregatingTransformer,
-                              Contribution,
-                              Document,
-                              DocumentCoordinates,
-                              EntityReference,
-                              Transformer,
-                              BundleUUID)
+from azul.transformer import (
+    Aggregate,
+    AggregatingTransformer,
+    Contribution,
+    Document,
+    DocumentCoordinates,
+    EntityReference,
+    Transformer,
+    BundleUUID,
+)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)

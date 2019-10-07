@@ -1,12 +1,19 @@
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
-from typing import Tuple, Optional, Iterable
+from typing import (
+    Tuple,
+    Optional,
+    Iterable,
+)
 
 import boto3
 import requests
 from botocore.exceptions import ClientError
 
-from azul import config, require
+from azul import (
+    config,
+    require,
+)
 from azul.decorators import memoized_property
 from azul.es import ESClientFactory
 from azul.types import JSON

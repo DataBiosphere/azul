@@ -8,8 +8,10 @@ import requests
 from app_test_case import LocalAppTestCase
 from azul import config
 from azul.logging import configure_test_logging
-from azul.service.responseobjects.hca_response_v5 import (FileSearchResponse,
-                                                          KeywordSearchResponse)
+from azul.service.responseobjects.hca_response_v5 import (
+    FileSearchResponse,
+    KeywordSearchResponse,
+)
 from azul.transformer import Document
 from service import WebServiceTestCase
 
@@ -1408,8 +1410,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                 num_integrations = sum(len(portal['integrations']) for portal in response_json)
                 self.assertEqual(num_integrations, num_integrations_expected)
                 self.assertTrue(all(isinstance(integration.get('entity_ids', []), list)
-                                for portal in response_json
-                                for integration in portal['integrations']))
+                                    for portal in response_json
+                                    for integration in portal['integrations']))
 
 
 if __name__ == '__main__':

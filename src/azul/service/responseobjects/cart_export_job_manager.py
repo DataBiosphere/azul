@@ -1,7 +1,14 @@
-from base64 import urlsafe_b64encode, urlsafe_b64decode
+from base64 import (
+    urlsafe_b64encode,
+    urlsafe_b64decode,
+)
 import binascii
 from datetime import datetime
-from json import dumps as json_dumps, loads as json_loads, decoder
+from json import (
+    dumps as json_dumps,
+    loads as json_loads,
+    decoder,
+)
 import logging
 import uuid
 

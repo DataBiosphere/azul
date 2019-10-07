@@ -30,15 +30,31 @@ clean:
 	rm -rf .cache .config
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
 
+absolute_sources = $(shell echo $(azul_home)/src \
+                                $(azul_home)/scripts \
+                                $(azul_home)/test \
+                                $(azul_home)/lambdas/{indexer,service}/app.py \
+                                $$(find $(azul_home)/terraform{,/gitlab} \
+                                        $(azul_home)/lambdas/{indexer,service}{,/.chalice} \
+                                        -maxdepth 1 \
+                                        -name '*.template.py' \
+                                        -type f ))
+
+relative_sources = $(subst $(azul_home)/,,$(absolute_sources))
+
 pep8:
-	flake8 --max-line-length=120 $(azul_home)/src \
-	                             $(azul_home)/scripts \
-	                             $(azul_home)/test \
-	                             $(azul_home)/lambdas/{indexer,service}/app.py \
-	                             $$(find $(azul_home)/terraform{,/gitlab} \
-	                                     $(azul_home)/lambdas/{indexer,service}{,/.chalice} \
-	                                     -maxdepth 1 \
-	                                     -name '*.template.py')
+	flake8 --max-line-length=120 $(absolute_sources)
+
+# The container path resolution in the recipe below is needed on Gitlab where
+# the build is already running in a container and the container below will be a
+# sibling of the current container.
+
+format:
+	docker run \
+	    --rm \
+	    --volume $$(python scripts/resolve_container_path.py $(azul_home)):/home/developer/azul \
+	    --workdir /home/developer/azul rycus86/pycharm:2019.2.3 \
+	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 test:
 	PYTHONWARNINGS=ignore:ResourceWarning coverage run -m unittest discover test --verbose

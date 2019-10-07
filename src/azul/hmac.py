@@ -25,6 +25,7 @@ def verify(current_request):
     def key_resolver(key_id, algorithm):
         key, _ = aws.get_hmac_key_and_id_cached(key_id)
         return key.encode()
+
     try:
         HTTPSignatureAuth.verify(requests.Request(method, endpoint, headers),
                                  key_resolver=key_resolver)

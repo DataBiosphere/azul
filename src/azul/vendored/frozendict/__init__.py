@@ -1,4 +1,7 @@
-from collections import OrderedDict, Mapping
+from collections import (
+    OrderedDict,
+    Mapping,
+)
 
 
 class frozendict(Mapping):

@@ -41,7 +41,7 @@ group1.add_argument('--query',
                     metavar='JSON',
                     type=json.loads,
                     help=f'The Elasticsearch query to use against DSS to enumerate the bundles to be indexed. '
-                    f'The default is {defaults.query()}')
+                         f'The default is {defaults.query()}')
 group1.add_argument('--prefix',
                     metavar='HEX',
                     default=defaults.prefix,

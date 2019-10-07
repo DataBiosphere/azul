@@ -1,10 +1,16 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    as_completed,
+)
 from itertools import chain
 import json
 import logging
 import os
 import time
-from typing import Any, Mapping
+from typing import (
+    Any,
+    Mapping,
+)
 from urllib.parse import urlparse
 
 import boto3

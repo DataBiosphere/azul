@@ -1,8 +1,18 @@
 from contextlib import contextmanager
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import (
+    urlsplit,
+    urlunsplit,
+)
 
-from locust import HttpLocust, TaskSet, TaskSequence, seq_task, task
+from locust import (
+    HttpLocust,
+    TaskSet,
+    TaskSequence,
+    seq_task,
+    task,
+)
 from gevent.pool import Group
+
 
 # To run:
 #  - make sure locust is installed
@@ -53,6 +63,7 @@ class ServiceTaskSet(TaskSet):
         the `@task()` decorator gives a weight to the frequency of a users request.
         Read: https://docs.locust.io/en/stable/writing-a-locustfile.html#tasks-attribute
         '''
+
         def on_start(self):
             self.files_page()
 
@@ -98,6 +109,7 @@ class ServiceTaskSet(TaskSet):
 
     @task
     class SamplesTaskSet(TaskSet):
+
         def on_start(self):
             self.samples_page()
 

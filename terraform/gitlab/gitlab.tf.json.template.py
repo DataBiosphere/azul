@@ -4,12 +4,19 @@ from itertools import chain
 import json
 import os
 from textwrap import dedent
-from typing import Iterable, List, Set
+from typing import (
+    Iterable,
+    List,
+    Set,
+)
 
 from azul import config
 from azul.aws_service_model import ServiceActionType
 from azul.collections import dict_merge
-from azul.deployment import aws, emit_tf
+from azul.deployment import (
+    aws,
+    emit_tf,
+)
 from azul.strings import departition
 from azul.types import JSON
 

@@ -1,6 +1,9 @@
 import os
 import re
-from collections import Counter, defaultdict
+from collections import (
+    Counter,
+    defaultdict,
+)
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 import logging
@@ -13,8 +16,15 @@ import copy
 import boto3
 import requests
 
-from moto import mock_sqs, mock_sts
-from typing import NamedTuple, Tuple, Mapping
+from moto import (
+    mock_sqs,
+    mock_sts,
+)
+from typing import (
+    NamedTuple,
+    Tuple,
+    Mapping,
+)
 import unittest
 from unittest.mock import patch
 from uuid import uuid4
@@ -25,11 +35,17 @@ from more_itertools import one
 
 import azul.indexer
 from app_test_case import LocalAppTestCase
-from azul import config, hmac
+from azul import (
+    config,
+    hmac,
+)
 from azul.indexer import IndexWriter
 from azul.logging import configure_test_logging
 from azul.threads import Latch
-from azul.transformer import Aggregate, Contribution
+from azul.transformer import (
+    Aggregate,
+    Contribution,
+)
 from azul.project.hca.metadata_generator import MetadataGenerator
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper

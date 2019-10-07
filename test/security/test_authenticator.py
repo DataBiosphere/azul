@@ -1,22 +1,34 @@
 from time import time
-from typing import Dict, Any
+from typing import (
+    Dict,
+    Any,
+)
 from unittest import TestCase
 from unittest.mock import patch
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import (
+    urlparse,
+    parse_qs,
+)
 
 from jwt import encode
 import responses
 
 from azul import config
-from azul.security.authenticator import (Authenticator,
-                                         AuthenticationError,
-                                         InvalidTokenError,
-                                         NonDecodableTokenError,
-                                         InvalidRedirectUriError)
-from retorts import AuthResponseHelper, TestKeyManager
+from azul.security.authenticator import (
+    Authenticator,
+    AuthenticationError,
+    InvalidTokenError,
+    NonDecodableTokenError,
+    InvalidRedirectUriError,
+)
+from retorts import (
+    AuthResponseHelper,
+    TestKeyManager,
+)
 
 
 class AuthenticatorTestCase(TestCase):
+
     @classmethod
     def tearDownClass(cls):
         super().setUpClass()

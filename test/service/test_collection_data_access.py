@@ -3,18 +3,21 @@ from unittest import TestCase
 
 import responses
 
-from azul.service.responseobjects.collection_data_access import (CollectionDataAccess,
-                                                                 ClientError,
-                                                                 CreationError,
-                                                                 RetrievalError,
-                                                                 ServerTimeoutError,
-                                                                 UpdateError,
-                                                                 UnauthorizedClientAccessError)
+from azul.service.responseobjects.collection_data_access import (
+    CollectionDataAccess,
+    ClientError,
+    CreationError,
+    RetrievalError,
+    ServerTimeoutError,
+    UpdateError,
+    UnauthorizedClientAccessError,
+)
 
 from retorts import ResponsesHelper
 
 
 class CollectionDataAccessTestCase(TestCase):
+
     def setUp(self):
         fake_access_token = 'fake_access_token'
         self.cda = CollectionDataAccess(fake_access_token)
@@ -185,6 +188,7 @@ class CollectionDataAccessTestCase(TestCase):
 
 
 class RequestCallback:
+
     def __init__(self, code, content, delay=False):
         self.content = content
         self.code = code

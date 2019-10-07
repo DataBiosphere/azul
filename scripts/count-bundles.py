@@ -172,8 +172,8 @@ if __name__ == '__main__':
         primary_bundle_count = total_bundle_count - analysis_bundle_count
 
         bundle_log = f'#{accountable_id: >4}:{dataset_name[:10]: <10} {beta_project_id} Primary Bundles:' \
-            f' {total_bundle_count - analysis_bundle_count:<5}/{expected_count:<5}' \
-            f' Analysis Bundles: {analysis_bundle_count}'
+                     f' {total_bundle_count - analysis_bundle_count:<5}/{expected_count:<5}' \
+                     f' Analysis Bundles: {analysis_bundle_count}'
 
         if primary_bundle_count == expected_count:
             complete_projects.append(bundle_log)

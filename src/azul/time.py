@@ -1,4 +1,7 @@
-from abc import ABCMeta, abstractmethod
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 import email.utils
 import time
 from typing import Optional

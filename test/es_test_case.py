@@ -5,7 +5,10 @@ from unittest.mock import patch
 
 from azul import config
 from azul.es import ESClientFactory
-from azul.json_freeze import freeze, sort_frozen
+from azul.json_freeze import (
+    freeze,
+    sort_frozen,
+)
 from docker_container_test_case import DockerContainerTestCase
 
 logger = logging.getLogger(__name__)

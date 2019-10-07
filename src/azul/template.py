@@ -2,7 +2,11 @@ import json
 import os
 import sys
 import tempfile
-from typing import Any, Mapping, Optional
+from typing import (
+    Any,
+    Mapping,
+    Optional,
+)
 
 
 def emit(json_doc: Optional[Mapping[str, Any]]):
