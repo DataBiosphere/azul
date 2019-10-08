@@ -4,6 +4,7 @@ import unittest
 import azul
 import azul.azulclient
 import azul.collections
+import azul.dss
 import azul.json
 import azul.json_freeze
 from azul.logging import configure_test_logging
@@ -29,6 +30,7 @@ def setupModule():
 def load_tests(_loader, tests, _ignore):
     tests.addTests(doctest.DocTestSuite(azul))
     tests.addTests(doctest.DocTestSuite(azul.collections))
+    tests.addTests(doctest.DocTestSuite(azul.dss))
     tests.addTests(doctest.DocTestSuite(azul.json))
     tests.addTests(doctest.DocTestSuite(azul.json_freeze))
     tests.addTests(doctest.DocTestSuite(azul.openapi))
