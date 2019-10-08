@@ -11,11 +11,12 @@ from azul.json_freeze import (
     thaw,
 )
 from azul.plugin import Plugin
+from hca.dss import DSSClient
 
 logger = logging.getLogger(__name__)
 
 
-def manage_subscriptions(dss_client, subscribe=True):
+def manage_subscriptions(dss_client: DSSClient, subscribe=True):
     response = call_client(dss_client.get_subscriptions, replica='aws')
     current_subscriptions = freeze(response['subscriptions'])
 

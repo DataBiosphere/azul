@@ -330,6 +330,7 @@ _select () {
 }
 
 export PYTHONPATH="${azul_home}/src:${azul_home}/test"
+export MYPYPATH="${azul_home}/stubs"
 export TF_DATA_DIR="${azul_home}/deployments/.active/.terraform"
 
 # HCA client caches Swagger specs downloaded from the DSS endpoint here
