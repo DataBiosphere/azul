@@ -5,11 +5,7 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
-    Any,
 )
-
-from hca.dss import DSSClient
-from urllib3 import Timeout
 
 Netloc = Tuple[str, int]
 
@@ -434,16 +430,6 @@ class Config:
     @property
     def subscribe_to_dss(self):
         return self._boolean(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
-
-    def dss_client(self,
-                   dss_endpoint: Optional[str] = None,
-                   adapter_args: Optional[Mapping[str, Any]] = None) -> DSSClient:
-        # FIXME: This should move to dss.py to eliminate the circular import
-        from azul.dss import AzulDSSClient
-        swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
-        client = AzulDSSClient(swagger_url=swagger_url, adapter_args=adapter_args)
-        client.timeout_policy = Timeout(connect=10, read=40)
-        return client
 
     service_cache_health_lambda_basename = 'servicecachehealth'
     indexer_cache_health_lambda_basename = 'indexercachehealth'

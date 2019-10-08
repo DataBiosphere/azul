@@ -113,7 +113,7 @@ class IndexerTestCase(ElasticsearchTestCase):
             return deepcopy(manifest), deepcopy(metadata)
 
         notification = cls._make_fake_notification(bundle_fqid)
-        with patch('azul.DSSClient'):
+        with patch('azul.dss.client'):
             indexer = cls.get_hca_indexer()
             with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
                 method = indexer.delete if delete else indexer.index
@@ -127,7 +127,7 @@ class IndexerTestCase(ElasticsearchTestCase):
 
         indexer = cls.get_hca_indexer()
         notification = cls._make_fake_notification(bundle_fqid)
-        with patch('azul.DSSClient'):
+        with patch('azul.dss.client'):
             with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
                 contributions = indexer.transform(notification, delete=False)
                 return indexer.contribute(contributions)
