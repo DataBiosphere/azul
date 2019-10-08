@@ -1,13 +1,28 @@
 from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
 import logging
-from typing import List, Optional, Tuple
+import os
+from typing import (
+    List,
+    Optional,
+    Tuple,
+    Mapping,
+    Any,
+)
+from unittest.mock import patch
 
 from hca.dss import DSSClient
+from requests import Session
 from urllib3 import Timeout
 
 from humancellatlas.data.metadata.api import JSON
 
 logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=1)
+def default_num_workers():
+    return os.cpu_count() * 5
 
 
 def download_bundle_metadata(client: DSSClient,
@@ -16,7 +31,7 @@ def download_bundle_metadata(client: DSSClient,
                              version: Optional[str] = None,
                              directurls: bool = False,
                              presignedurls: bool = False,
-                             num_workers: Optional[int] = None) -> Tuple[str, List[JSON], JSON]:
+                             num_workers: Optional[int] = default_num_workers()) -> Tuple[str, List[JSON], JSON]:
     """
     Download the metadata for a given bundle from the HCA data store (DSS).
 
@@ -39,8 +54,8 @@ def download_bundle_metadata(client: DSSClient,
                           exclusive with the directurls parameter. Note this parameter, similar to the `directurls`,
                           is a temporary parameter, and it's not guaranteed to stay in this place in the future.
 
-    :param num_workers: The size of the thread pool to use for downloading metadata files in parallel. If None, the
-                        default pool size will be used, typically a small multiple of the number of cores on the system
+    :param num_workers: The size of the thread pool to use for downloading metadata files in parallel. If absent, the
+                        default pool size will be used, a small multiple of the number of cores on the system
                         executing this function. If 0, no thread pool will be used and all files will be downloaded
                         sequentially by the current thread.
 
@@ -110,14 +125,55 @@ def download_bundle_metadata(client: DSSClient,
     return bundle['version'], manifest, dict(metadata_files)
 
 
-def dss_client(deployment: str = 'prod') -> DSSClient:
+def dss_client(deployment: str = 'prod', num_workers: int = default_num_workers()) -> DSSClient:
     """
     Return a DSS client to DSS production or the specified DSS deployment.
 
-    :param deployment: The name of a DSS deployment like `dev`, `integration`, `staging` or `prod`.
+    :param deployment: The name of a DSS deployment like `dev`, `integration`,
+                       `staging` or `prod`.
+
+    :param num_workers: The number of threads that will be using this client.
+                        This value used to adequately size the HTTP connection
+                        pool which avoids discarding connections unnecessarily
+                        as indicated by the accompanying `Connection pool is
+                        full, discarding connection` warning.
     """
     deployment = "" if deployment == "prod" else deployment + "."
     swagger_url = f'https://dss.{deployment}data.humancellatlas.org/v1/swagger.json'
-    client = DSSClient(swagger_url=swagger_url)
+    client = _DSSClient(swagger_url=swagger_url,
+                        adapter_args=None if num_workers is None else dict(pool_maxsize=num_workers))
     client.timeout_policy = Timeout(connect=10, read=40)
     return client
+
+
+class _DSSClient(DSSClient):
+    """
+    A DSSClient with certain extensions and fixes.
+    """
+
+    def __init__(self, *args, adapter_args: Optional[Mapping[str, Any]] = None, **kwargs):
+        """
+        Pass `adapter_args=dict(pool_maxsize=num_threads)` in order to avoid the resource warnings.
+
+        :param args: positional arguments to pass to DSSClient constructor
+        :param adapter_args: optional keyword arguments to request's HTTPAdapter class
+        :param kwargs: keyword arguments to pass to DSSClient constructor
+        """
+        self._adapter_args = adapter_args  # yes, this must come first
+        super().__init__(*args, **kwargs)
+
+    def _set_retry_policy(self, session: Session):
+        if self._adapter_args is None:
+            super()._set_retry_policy(session)
+        else:
+            from requests.sessions import HTTPAdapter
+
+            class MyHTTPAdapter(HTTPAdapter):
+
+                # noinspection PyMethodParameters
+                def __init__(self_, *args, **kwargs):
+                    kwargs.update(self._adapter_args)
+                    super().__init__(*args, **kwargs)
+
+            with patch('hca.util.HTTPAdapter', new=MyHTTPAdapter):
+                super()._set_retry_policy(session)

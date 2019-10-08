@@ -23,7 +23,6 @@ from humancellatlas.data.metadata.api import (AgeRange,
                                               CellLine,
                                               CellSuspension,
                                               AnalysisProtocol,
-                                              ImagingTarget,
                                               ImagingProtocol,
                                               LibraryPreparationProtocol,
                                               SequencingProtocol,
@@ -321,6 +320,20 @@ class TestAccessorApi(TestCase):
                           preservation_methods={'fresh'},
                           slice_thickness=[20.0])
 
+    def test_file_core_bundle(self):
+        """
+        A bundle on staging with "content_description" fields in the "file_core"
+        """
+        self._test_bundle(uuid='86e7b58e-b9f0-4020-8b34-c61d6da02d44',
+                          version='2019-09-20T103932.395795Z',
+                          deployment='prod',
+                          diseases={'normal'},
+                          selected_cell_types={'neuron'},
+                          project_roles={'data curator', 'experimental scientist', 'principal investigator'},
+                          age_range=AgeRange(min=2302128000.0, max=2302128000.0),
+                          library_construction_methods={"10x 3' v3 sequencing"},
+                          content_description={'DNA sequence'})
+
     def test_sequencing_process_paired_end(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
@@ -354,7 +367,8 @@ class TestAccessorApi(TestCase):
                        insdc_study_accessions=frozenset(),
                        is_sequencing_bundle=True,
                        slice_thickness=None,
-                       ncbi_taxon_ids=None):
+                       ncbi_taxon_ids=None,
+                       content_description=None):
         bundle = Bundle(uuid, version, manifest, metadata_files)
         biomaterials = bundle.biomaterials.values()
 
@@ -456,6 +470,10 @@ class TestAccessorApi(TestCase):
             self.assertEqual(slice_thickness,
                              [s.slice_thickness for s in bundle.entities.values() if isinstance(s, ImagedSpecimen)])
 
+        if content_description is not None:
+            self.assertSetEqual(content_description,
+                                set(chain.from_iterable(file.content_description for file in bundle.files.values())))
+
     dss_subscription_query = {
         "query": {
             "bool": {
@@ -489,7 +507,8 @@ class TestAccessorApi(TestCase):
     }
 
     def test_many_bundles(self):
-        client = dss_client()
+        num_workers = os.cpu_count() * 16
+        client = dss_client(num_workers=num_workers)
         # noinspection PyUnresolvedReferences
         response = client.post_search.iterate(es_query=self.dss_subscription_query, replica="aws")
         fqids = [r['bundle_fqid'] for r in response]
@@ -500,7 +519,7 @@ class TestAccessorApi(TestCase):
             bundle = Bundle(uuid, version, manifest, metadata_files)
             return as_json(bundle)
 
-        with ThreadPoolExecutor(os.cpu_count() * 16) as tpe:
+        with ThreadPoolExecutor(max_workers=num_workers) as tpe:
             futures = {tpe.submit(to_json, fqid): fqid for fqid in fqids}
             done, not_done = wait(futures.keys())
 
@@ -518,11 +537,11 @@ class TestAccessorApi(TestCase):
         self.assertEqual({}, errors)
 
     def test_large_bundle(self):
-        _, manifest, _ = download_bundle_metadata(client=dss_client('staging'),
+        _, manifest, _ = download_bundle_metadata(client=dss_client('prod'),
                                                   replica='aws',
-                                                  uuid='365c5f87-460a-41bc-a690-70ae6b5dba54',
-                                                  version='2018-10-17T092427.195428Z')
-        self.assertEqual(786, len(manifest))
+                                                  uuid='82164816-64d4-4975-a248-b66c4fdad6f8',
+                                                  version='2019-09-26T054644.254919Z')
+        self.assertEqual(755, len(manifest))
 
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
