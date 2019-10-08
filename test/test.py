@@ -536,14 +536,12 @@ class TestAccessorApi(TestCase):
 
         self.assertEqual({}, errors)
 
-    # TODO: Use bundle from production to fix test broken by missing bundle
-    @skip("Test bundle no longer exists on staging")
     def test_large_bundle(self):
-        _, manifest, _ = download_bundle_metadata(client=dss_client('staging'),
+        _, manifest, _ = download_bundle_metadata(client=dss_client('prod'),
                                                   replica='aws',
-                                                  uuid='365c5f87-460a-41bc-a690-70ae6b5dba54',
-                                                  version='2018-10-17T092427.195428Z')
-        self.assertEqual(786, len(manifest))
+                                                  uuid='82164816-64d4-4975-a248-b66c4fdad6f8',
+                                                  version='2019-09-26T054644.254919Z')
+        self.assertEqual(755, len(manifest))
 
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
