@@ -507,7 +507,8 @@ class TestAccessorApi(TestCase):
     }
 
     def test_many_bundles(self):
-        client = dss_client()
+        num_workers = os.cpu_count() * 16
+        client = dss_client(num_workers=num_workers)
         # noinspection PyUnresolvedReferences
         response = client.post_search.iterate(es_query=self.dss_subscription_query, replica="aws")
         fqids = [r['bundle_fqid'] for r in response]
@@ -518,7 +519,7 @@ class TestAccessorApi(TestCase):
             bundle = Bundle(uuid, version, manifest, metadata_files)
             return as_json(bundle)
 
-        with ThreadPoolExecutor(os.cpu_count() * 16) as tpe:
+        with ThreadPoolExecutor(max_workers=num_workers) as tpe:
             futures = {tpe.submit(to_json, fqid): fqid for fqid in fqids}
             done, not_done = wait(futures.keys())
 
