@@ -425,7 +425,7 @@ class ManifestResponse(AbstractResponse):
             # Extract fields from the sole inner file entity_type
             file = one(doc['contents']['files'])
             file_cells = dict(file_url=self._dss_url(file),
-                              dos_url=self._drs_url(file))
+                              drs_url=self._drs_url(file))
             self._extract_fields([file], file_column_mapping, file_cells)
 
             # Determine the column qualifier. The qualifier will be used to
@@ -483,7 +483,7 @@ class ManifestResponse(AbstractResponse):
         # Add file columns for each qualifier and group
         for qualifier, num_groups in sorted(num_groups_per_qualifier.items()):
             for index in range(num_groups):
-                for column_name in chain(file_column_mapping.keys(), ('dos_url', 'file_url')):
+                for column_name in chain(file_column_mapping.keys(), ('drs_url', 'file_url')):
                     index = None if num_groups == 1 else index
                     column_names[qualify(qualifier, column_name, index=index)] = None
 
@@ -834,7 +834,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
-        logger.info('Creating the entries in ApiResponse')
         class_entries = {'hits': [
             self.map_entries(x) for x in hits], 'pagination': None}
         self.apiResponse = ApiResponse(**class_entries)

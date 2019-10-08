@@ -69,6 +69,13 @@ class Plugin(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
+    def portal_integrations_db(self) -> Sequence[JSON]:
+        """
+        Returns integrations data object
+        """
+        raise NotImplementedError()
+
     @classmethod
     def load(cls) -> 'Plugin':
         """

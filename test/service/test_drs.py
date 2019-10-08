@@ -6,8 +6,11 @@ import responses
 
 from chalice.config import Config as ChaliceConfig
 from azul import drs, config
+from azul.logging import configure_test_logging
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
+
+configure_test_logging()
 
 
 class DataRepositoryServiceEndpointTest(WebServiceTestCase):

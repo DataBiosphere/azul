@@ -83,7 +83,7 @@ emit({
                 "s3:GetObject",
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.dss_main_bucket}/*",
+                f"arn:aws:s3:::{config.dss_main_bucket()}/*",
             ]
         },
     ]
