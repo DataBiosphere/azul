@@ -19,11 +19,12 @@ def manage_subscriptions(dss_client, subscribe=True):
     response = call_client(dss_client.get_subscriptions, replica='aws')
     current_subscriptions = freeze(response['subscriptions'])
 
+    key, key_id = deployment.aws.get_hmac_key_and_id()
+
     if subscribe:
         plugin = Plugin.load()
         base_url = config.indexer_endpoint()
         prefix = config.dss_query_prefix
-        key, key_id = deployment.aws.get_hmac_key_and_id()
         new_subscriptions = [freeze(dict(replica='aws',
                                          es_query=query,
                                          callback_url=base_url + path,
