@@ -507,7 +507,8 @@ class TestAccessorApi(TestCase):
     }
 
     def test_many_bundles(self):
-        client = dss_client()
+        num_workers = os.cpu_count() * 16
+        client = dss_client(num_workers=num_workers)
         # noinspection PyUnresolvedReferences
         response = client.post_search.iterate(es_query=self.dss_subscription_query, replica="aws")
         fqids = [r['bundle_fqid'] for r in response]
@@ -518,7 +519,7 @@ class TestAccessorApi(TestCase):
             bundle = Bundle(uuid, version, manifest, metadata_files)
             return as_json(bundle)
 
-        with ThreadPoolExecutor(os.cpu_count() * 16) as tpe:
+        with ThreadPoolExecutor(max_workers=num_workers) as tpe:
             futures = {tpe.submit(to_json, fqid): fqid for fqid in fqids}
             done, not_done = wait(futures.keys())
 
@@ -535,14 +536,12 @@ class TestAccessorApi(TestCase):
 
         self.assertEqual({}, errors)
 
-    # TODO: Use bundle from production to fix test broken by missing bundle
-    @skip("Test bundle no longer exists on staging")
     def test_large_bundle(self):
-        _, manifest, _ = download_bundle_metadata(client=dss_client('staging'),
+        _, manifest, _ = download_bundle_metadata(client=dss_client('prod'),
                                                   replica='aws',
-                                                  uuid='365c5f87-460a-41bc-a690-70ae6b5dba54',
-                                                  version='2018-10-17T092427.195428Z')
-        self.assertEqual(786, len(manifest))
+                                                  uuid='82164816-64d4-4975-a248-b66c4fdad6f8',
+                                                  version='2019-09-26T054644.254919Z')
+        self.assertEqual(755, len(manifest))
 
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
