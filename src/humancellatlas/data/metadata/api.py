@@ -588,6 +588,7 @@ class File(LinkedEntity):
     from_processes: MutableMapping[UUID4, Process] = field(repr=False)
     to_processes: MutableMapping[UUID4, Process]
     manifest_entry: ManifestEntry
+    content_description: Set[str]
 
     def __init__(self, json: JSON, manifest: Mapping[str, ManifestEntry]):
         super().__init__(json)
@@ -595,6 +596,7 @@ class File(LinkedEntity):
         core = content['file_core']
         self.format = lookup(core, 'format', 'file_format')
         self.manifest_entry = manifest[core['file_name']]
+        self.content_description = {ontology_label(cd) for cd in core.get('content_description', [])}
         self.from_processes = {}
         self.to_processes = {}
 
