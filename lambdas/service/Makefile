@@ -13,12 +13,13 @@ wheels:
 
 deploy: state wheels
 	python -m azul.changelog vendor
-	python $(azul_home)/scripts/manage_lambda_iam_role.py service lambda-policy.json
+	python $(azul_home)/scripts/manage_lambda_iam_role.py create service lambda-policy.json
 	chalice deploy --stage $(AZUL_DEPLOYMENT_STAGE)
 	python $(azul_home)/scripts/manage_chalice_deployed.py service upload
 
 delete: state
 	chalice delete --stage $(AZUL_DEPLOYMENT_STAGE)
+	python $(azul_home)/scripts/manage_lambda_iam_role.py delete service
 	python $(azul_home)/scripts/manage_chalice_deployed.py service upload
 
 local: config
