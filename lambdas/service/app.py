@@ -15,6 +15,7 @@ from typing import (
     Any,
     cast,
     Sequence,
+    Set,
 )
 import urllib.parse
 
@@ -69,7 +70,10 @@ from azul.service.responseobjects.elastic_request_builder import (
 )
 from azul.service.responseobjects.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
-from azul.types import JSON
+from azul.types import (
+    JSON,
+    JSONs,
+)
 
 log = logging.getLogger(__name__)
 
@@ -398,19 +402,37 @@ def validate_params(query_params: Mapping[str, str],
 @app.route('/integrations', methods=['GET'], cors=True)
 def get_integrations():
     query_params = app.current_request.query_params or {}
-    validate_params(query_params, entity_type=str, integration_type=str)
+    validate_params(query_params, entity_type=str, integration_type=str, entity_ids=str)
+    try:
+        entity_ids = query_params['entity_ids']
+    except KeyError:
+        entity_ids = None
+    else:
+        entity_ids = set(entity_ids.split(','))
+        if not entity_ids:
+            raise BadRequestError('Must at least specify one value for parameter `entity_ids`')
     try:
         entity_type = query_params['entity_type']
         integration_type = query_params['integration_type']
     except KeyError:
-        raise BadRequestError('Parameters entity_type and integration_type must be given')
-    body = _fetch_integrations(entity_type, integration_type)
+        # FIXME: Make all /integration params optional or support mandatory params in validate_params()
+        #        https://github.com/DataBiosphere/azul/issues/1353
+        raise BadRequestError('Parameters `entity_type` and `integration_type` must be given')
+    body = _fetch_integrations(entity_type, integration_type, entity_ids)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
                     body=json.dumps(body))
 
 
-def _fetch_integrations(entity_type, integration_type):
+def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Set[str]) -> JSONs:
+    """
+    Return matching portal integrations.
+
+    :param entity_type: The type of the entity to which an integration applies (e.g. project, file, bundle)
+    :param integration_type: The kind of integration (e.g. get, get_entity, get_entities, get_manifest)
+    :param entity_ids: If given results will be limited to this set of entity UUIDs
+    :return: A list of portal dicts that one or more matching integrations
+    """
     plugin = Plugin.load()
     portals = plugin.portal_integrations_db()
     results = []
@@ -420,6 +442,9 @@ def _fetch_integrations(entity_type, integration_type):
             for integration in cast(Sequence[JSON], portal['integrations'])
             if integration['entity_type'] == entity_type and integration['integration_type'] == integration_type
         ]
+        if entity_ids is not None:
+            integrations = [integration for integration in integrations
+                            if 'entity_ids' not in integration or entity_ids.intersection(integration['entity_ids'])]
         if len(integrations) > 0:
             portal = {k: v if k != 'integrations' else integrations for k, v in portal.items()}
             results.append(portal)
