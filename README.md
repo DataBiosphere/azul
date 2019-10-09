@@ -492,6 +492,18 @@ Error inspecting states in the "s3" backend:
 `deployments/.active/.terraform/terraform.tfstate` refers to the correct bucket,
 the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET`. If it doesn't, you may
 have to remove that file or modify it to fix the bucket name.
+##
+If you get the following exception in the indexer lambda:
+```
+An error occurred (AccessDeniedException) when calling the GetParameter operation: User: arn:aws:sts::{account_id}:assumed-role/azul-indexer-{deployment_stage}/azul-indexer-{deployment_stage}-index is not authorized to perform: ssm:GetParameter on resource: arn:aws:ssm:{aws_region}:{account_id}:parameter/dcp/dss/{deployment_stage}/environment: ClientError
+Traceback (most recent call last):  
+    ...
+botocore.exceptions.ClientError: An error occurred (AccessDeniedException) when calling the GetParameter operation: User: arn:aws:sts::{account_id}:assumed-role/azul-indexer-{deployment_stage}/azul-indexer-{deployment_stage}-index is not authorized to perform: ssm:GetParameter on resource: arn:aws:ssm:{aws_region}:{account_id}:parameter/dcp/dss/integration/environment
+```
+
+Check whether the DSS switched buckets. If so, the lambda policy may need to be 
+updated to reflect that change. To fix this, redeploy the lambdas (`make 
+deploy`) in the affected deployment.
 
 # 5. Branch flow & development process
 
