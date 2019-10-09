@@ -1,10 +1,9 @@
 import json
 
-from azul.template import emit
 from azul import config
-from azul.deployment import aws
+from azul.deployment import aws, emit_tf
 
-emit({
+emit_tf({
     "resource": [
         *([] if config.share_es_domain else [{
             "aws_cloudwatch_metric_alarm": {
@@ -29,7 +28,11 @@ emit({
                     "alarm_actions": [
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
-                    ]
+                    ],
+                    "ok_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ],
                 }
             }
         },
@@ -56,7 +59,12 @@ emit({
                     "alarm_actions": [
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
-                    ]
+                    ],
+                    "ok_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ],
+
                 }
             }
         },
@@ -83,7 +91,11 @@ emit({
                     "alarm_actions": [
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
-                    ]
+                    ],
+                    "ok_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ],
                 }
             }
         }]),
@@ -108,6 +120,10 @@ emit({
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
                     ],
+                    "ok_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ],
                     "dimensions": {
                         "HealthCheckId": "${aws_route53_health_check.composite-azul.id}",
                     }
@@ -128,6 +144,10 @@ emit({
                         "description": f"data-browser-{config.deployment_stage} HealthCheckStatus alarm"
                     }),
                     "alarm_actions": [
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                        f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                    ],
+                    "ok_actions": [
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
                         f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
                     ],
@@ -155,6 +175,10 @@ emit({
                             "QueueName": queue
                         },
                         "alarm_actions": [
+                            f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
+                            f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
+                        ],
+                        "ok_actions": [
                             f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
                             f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
                         ],

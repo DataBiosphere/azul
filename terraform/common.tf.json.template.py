@@ -1,7 +1,7 @@
 import os
 
 from azul import config, require
-from azul.template import emit
+from azul.deployment import emit_tf
 
 expected_component_path = os.path.join(os.path.abspath(config.project_root), 'terraform', config.terraform_component)
 actual_component_path = os.path.dirname(os.path.abspath(__file__))
@@ -9,7 +9,7 @@ require(os.path.samefile(expected_component_path, actual_component_path),
         f"The current Terraform component is set to '{config.terraform_component}'. "
         f"You should therefore be in '{expected_component_path}'")
 
-emit({
+emit_tf({
     "data": [
         {
             "aws_caller_identity": {

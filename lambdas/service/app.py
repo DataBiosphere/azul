@@ -1,5 +1,6 @@
 import base64
 import binascii
+import chalice
 import hashlib
 import json
 import logging.config
@@ -41,7 +42,6 @@ from azul.types import JSON
 log = logging.getLogger(__name__)
 
 app = AzulChaliceApp(app_name=config.service_name)
-
 configure_app_logging(app, log)
 
 openapi_spec = {
@@ -163,6 +163,15 @@ def health(keys: Optional[str] = None):
         return {
             'up': True,
         }
+    elif keys == 'cached':
+        storage_service = StorageService()
+        health_object = json.loads(storage_service.get('health/service'))
+        max_age = 2 * 60
+        if time.time() - health_object['time'] > max_age:
+            return Response(status_code=500,
+                            body=json.dumps({'Message': 'Cached health object is stale'}))
+        else:
+            body = health_object['health']
     else:
         health = Health('service')
         if keys is None:
@@ -174,8 +183,17 @@ def health(keys: Optional[str] = None):
             body = health.as_json(keys)
         except RequirementError:
             raise BadRequestError('Invalid health keys')
-        return Response(body=json.dumps(body),
-                        status_code=200 if body['up'] else 503)
+    return Response(body=json.dumps(body),
+                    status_code=200 if body['up'] else 503)
+
+
+@app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
+def generate_health_object(event_: chalice.app.CloudWatchEvent):
+    storage_service = StorageService()
+    health = Health('service')
+    health = health.as_json()
+    health_object = dict(time=time.time(), health=health)
+    storage_service.put(object_key='health/service', data=json.dumps(health_object))
 
 
 @app.route('/version', methods=['GET'], cors=True)
@@ -662,8 +680,8 @@ def start_manifest_generation():
         - name: format
           in: query
           type: string
-          description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
-          manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
+          description: The desired format of the output. Possible values are `compact` (the default) for a tab-separated
+          manifest and `terra.bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
           latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
           samples (aka specimens). The format of the manifests inside the BDBag is documented here:
           https://software.broadinstitute.org/firecloud/documentation/article?id=10954
@@ -701,8 +719,8 @@ def start_manifest_generation_fetch():
         - name: format
           in: query
           type: string
-          description: The desired format of the output. Possible values are `tsv` (the default) for a tab-separated
-          manifest and `bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
+          description: The desired format of the output. Possible values are `compact` (the default) for a tab-separated
+          manifest and `terra.bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
           latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
           samples (aka specimens). The format of the manifests inside the BDBag is documented here:
           https://software.broadinstitute.org/firecloud/documentation/article?id=10954
@@ -771,8 +789,8 @@ def handle_manifest_generation_request():
     try:
         format_ = query_params['format']
     except KeyError:
-        format_ = 'tsv'
-    if format_ not in ('tsv', 'bdbag', 'full'):
+        format_ = 'compact'
+    if format_ not in ('compact', 'tsv', 'terra.bdbag', 'bdbag', 'full'):
         raise BadRequestError(f'{format_} is not a valid manifest format.')
     token = query_params.get('token')
     retry_url = self_url()
@@ -802,7 +820,7 @@ def generate_manifest(event, context):
         Valid params:
             - filters: dict containing filters to use in ES request
             - format: str to specify manifest output format, values are
-                      'tsv' (default) or 'bdbag'
+                      'compact' (default) or 'terra.bdbag'
     :return: The URL to the generated manifest
     """
     es_td = ElasticTransformDump()

@@ -1,8 +1,7 @@
-from azul.deployment import aws
-from azul.template import emit
+from azul.deployment import aws, emit_tf
 from azul import config
 
-emit(None if not config.enable_monitoring else {
+emit_tf(None if not config.enable_monitoring else {
     "resource": [
         *[
             {
@@ -11,13 +10,14 @@ emit(None if not config.enable_monitoring else {
                         "fqdn": config.api_lambda_domain(name),
                         "port": 443,
                         "type": "HTTPS",
-                        "resource_path": "/health",
+                        "resource_path": "/health/cached",
                         "failure_threshold": "3",
                         "request_interval": "30",
                         "tags": {
                             "Name": full_name
                         },
                         "regions": ['us-west-2', 'us-east-1', 'eu-west-1'],
+                        "measure_latency": True,
                         # This is necessary only because of a Terraform bug:
                         # https://github.com/hashicorp/terraform/issues/22171
                         "lifecycle": {
@@ -40,6 +40,7 @@ emit(None if not config.enable_monitoring else {
                         "${aws_route53_health_check." + "indexer" + ".id}",
                         "${aws_route53_health_check." + "service" + ".id}"
                     ],
+                    "measure_latency": True,
                     "cloudwatch_alarm_region": aws.region_name,
                     "tags": {
                         "Name": f"azul-composite-{config.deployment_stage}"
@@ -60,6 +61,7 @@ emit(None if not config.enable_monitoring else {
                         "tags": {
                             "Name": full_name
                         },
+                        "measure_latency": True,
                         # This is necessary only because of a Terraform bug:
                         # https://github.com/hashicorp/terraform/issues/22171
                         "lifecycle": {
@@ -82,6 +84,7 @@ emit(None if not config.enable_monitoring else {
                         "${aws_route53_health_check." + "data-browser" + ".id}",
                         "${aws_route53_health_check." + "data-portal" + ".id}"
                     ],
+                    "measure_latency": True,
                     "cloudwatch_alarm_region": aws.region_name,
                     "tags": {
                         "Name": f"azul-portal-composite-{config.deployment_stage}"

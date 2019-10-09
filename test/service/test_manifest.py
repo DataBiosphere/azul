@@ -54,7 +54,7 @@ class TestManifestService(AzulTestCase):
                 execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
                 mock_uuid.return_value = execution_name
                 step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
-                format_ = 'tsv'
+                format_ = 'compact'
                 filters = {'file': {'organ': {'is': ['lymph node']}}}
                 current_request.query_params = {'filters': json.dumps(filters), 'format': format_}
                 response = app.start_manifest_generation_fetch() if fetch else app.start_manifest_generation()
@@ -167,7 +167,7 @@ class TestManifestEndpoints(WebServiceTestCase):
     def get_manifest(self, params, stream=False):
         filters = AbstractService.parse_filters(params.get('filters'))
         estd = ElasticTransformDump()
-        url = estd.transform_manifest(params.get('format', 'tsv'), filters).headers['Location']
+        url = estd.transform_manifest(params.get('format', 'compact'), filters).headers['Location']
         response = requests.get(url, stream=stream)
         return response
 
@@ -271,7 +271,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                         params = {
                             'filters': json.dumps({}),
-                            'format': 'tsv'
+                            'format': 'compact'
                         }
                         response = self.get_manifest(params)
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
@@ -289,7 +289,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    def test_bdbag_manifest(self):
+    def test_terra_bdbag_manifest(self):
         """
         moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit
         the server (see GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
@@ -303,7 +303,7 @@ class TestManifestEndpoints(WebServiceTestCase):
             storage_service.create_bucket()
             params = {
                 'filters': json.dumps({'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}),
-                'format': 'bdbag',
+                'format': 'terra.bdbag',
             }
             response = self.get_manifest(params, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')

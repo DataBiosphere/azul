@@ -194,7 +194,7 @@ class ManifestResponse(AbstractResponse):
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
         :param es_search: The Elasticsearch DSL Search object
-        :param manifest_entries: The columns that will be present in the tsv
+        :param manifest_entries: The columns that will be present in the manifest
         :param mapping: The mapping between the columns to values within ES
         :param object_key: A UUID string to use as the manifest's object key
         """
@@ -298,8 +298,8 @@ class ManifestResponse(AbstractResponse):
         with MultipartUploadHandler(object_key, content_type) as multipart_upload:
             with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
                 text_buffer = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
-                if self.format == 'tsv':
-                    self._write_tsv(text_buffer)
+                if self.format in ('compact', 'tsv'):
+                    self._write_compact(text_buffer)
                 elif self.format == 'full':
                     project_short_name = self._write_full(text_buffer)
                     if project_short_name:
@@ -324,14 +324,14 @@ class ManifestResponse(AbstractResponse):
 
         :return: S3 object key
         """
-        if self.format == 'tsv':
+        if self.format in ('compact', 'tsv'):
             output = StringIO()
-            self._write_tsv(output)
+            self._write_compact(output)
             return self.storage_service.put(object_key=f'manifests/{self.object_key}.tsv',
                                             data=output.getvalue().encode(),
                                             content_type='text/tab-separated-values')
-        elif self.format == 'bdbag':
-            bdbag_path = self._create_bdbag_archive()
+        elif self.format in ('terra.bdbag', 'bdbag'):
+            bdbag_path = self._create_terra_bdbag_archive()
             try:
                 object_key = f'manifests/{self.object_key}.zip'
                 return self.storage_service.upload(bdbag_path, object_key)
@@ -352,7 +352,7 @@ class ManifestResponse(AbstractResponse):
         else:
             assert False
 
-    def _write_tsv(self, output: IO[str]) -> None:
+    def _write_compact(self, output: IO[str]) -> None:
         writer = csv.DictWriter(output, self.ordered_column_names, dialect='excel-tab')
         writer.writeheader()
         for hit in self.es_search.scan():
@@ -381,13 +381,13 @@ class ManifestResponse(AbstractResponse):
                 writer.writerow(row)
         return project_short_names.pop() if len(project_short_names) == 1 else None
 
-    def _create_bdbag_archive(self) -> str:
+    def _create_terra_bdbag_archive(self) -> str:
         with TemporaryDirectory() as temp_path:
             bag_path = os.path.join(temp_path, 'manifest')
             os.makedirs(bag_path)
             bdbag_api.make_bag(bag_path)
             with open(os.path.join(bag_path, 'data', 'participants.tsv'), 'w') as samples_tsv:
-                self._write_bdbag_samples_tsv(samples_tsv)
+                self._write_terra_bdbag_samples_tsv(samples_tsv)
             bag = bdbag_api.make_bag(bag_path, update=True)  # update TSV checksums
             assert bdbag_api.is_bag(bag_path)
             bdbag_api.validate_bag(bag_path)
@@ -402,7 +402,7 @@ class ManifestResponse(AbstractResponse):
 
     column_path_separator = '__'
 
-    def _write_bdbag_samples_tsv(self, bundle_tsv: IO[str]) -> None:
+    def _write_terra_bdbag_samples_tsv(self, bundle_tsv: IO[str]) -> None:
         """
         Write the BDBag as a local temporary file and return the path to that file.
         """
@@ -548,7 +548,7 @@ class ManifestResponse(AbstractResponse):
         return dss_url
 
     def return_response(self):
-        if config.disable_multipart_manifests or self.format == 'bdbag':
+        if config.disable_multipart_manifests or self.format in ('terra.bdbag', 'bdbag'):
             object_key = self._push_content_single_part()
             file_name = None
         else:
