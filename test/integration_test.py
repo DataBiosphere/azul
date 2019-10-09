@@ -42,10 +42,7 @@ from azul import (
 )
 from azul.azulclient import AzulClient
 from azul.decorators import memoized_property
-from azul.dss import (
-    MiniDSS,
-    patch_client_for_direct_access,
-)
+import azul.dss
 from azul.logging import configure_test_logging
 from azul.requests import requests_session
 from azul_test_case import AlwaysTearDownTestCase
@@ -411,19 +408,17 @@ class DSSIntegrationTest(unittest.TestCase):
             }
         }
         self.maxDiff = None
-        for patch in False, True:
+        for direct in False, True:
             for replica in 'aws', 'gcp':
-                if patch:
+                if direct:
                     with self._failing_s3_get_object():
-                        dss_client = config.dss_client()
-                        patch_client_for_direct_access(dss_client)
-                        self._test_patched_client(patch, query, dss_client, replica, fallback=True)
-                    dss_client = config.dss_client()
-                    patch_client_for_direct_access(dss_client)
-                    self._test_patched_client(patch, query, dss_client, replica, fallback=False)
+                        dss_client = azul.dss.direct_access_client()
+                        self._test_dss_client(direct, query, dss_client, replica, fallback=True)
+                    dss_client = azul.dss.direct_access_client()
+                    self._test_dss_client(direct, query, dss_client, replica, fallback=False)
                 else:
-                    dss_client = config.dss_client()
-                    self._test_patched_client(patch, query, dss_client, replica, fallback=False)
+                    dss_client = azul.dss.client()
+                    self._test_dss_client(direct, query, dss_client, replica, fallback=False)
 
     class SpecialError(Exception):
         pass
@@ -436,8 +431,8 @@ class DSSIntegrationTest(unittest.TestCase):
             mock_client.return_value = mock_s3
             yield
 
-    def _test_patched_client(self, patch, query, dss_client, replica, fallback):
-        with self.subTest(patch=patch, replica=replica, fallback=fallback):
+    def _test_dss_client(self, direct, query, dss_client, replica, fallback):
+        with self.subTest(direct=direct, replica=replica, fallback=fallback):
             response = dss_client.post_search(es_query=query, replica=replica, per_page=10)
             bundle_uuid, _, bundle_version = response['results'][0]['bundle_fqid'].partition('.')
             with mock.patch('azul.dss.logger') as log:
@@ -453,7 +448,7 @@ class DSSIntegrationTest(unittest.TestCase):
                 # Extract the log method name and the first three words of log message logged
                 # Note that the PyCharm debugger will call certain dunder methods on the variable, leading to failed
                 actual = [(m, ' '.join(re.split(r'[\s,]', a[0])[:3])) for m, a, k in log.mock_calls]
-                if patch:
+                if direct:
                     if replica == 'aws':
                         if fallback:
                             expected = [
@@ -489,11 +484,9 @@ class DSSIntegrationTest(unittest.TestCase):
                 self.assertSequenceEqual(sorted(expected), sorted(actual))
 
     def test_get_file_fail(self):
-        for patch in True, False:
-            with self.subTest(path=patch):
-                dss_client = config.dss_client()
-                if patch:
-                    patch_client_for_direct_access(dss_client)
+        for direct in True, False:
+            with self.subTest(direct=direct):
+                dss_client = azul.dss.direct_access_client() if direct else azul.dss.client()
                 with self.assertRaises(SwaggerAPIException) as e:
                     dss_client.get_file(uuid='acafefed-beef-4bad-babe-feedfa11afe1',
                                         version='2018-11-19T232756.056947Z',
@@ -504,7 +497,7 @@ class DSSIntegrationTest(unittest.TestCase):
         uuid = 'acafefed-beef-4bad-babe-feedfa11afe1'
         version = '2018-11-19T232756.056947Z'
         with self._failing_s3_get_object():
-            mini_dss = MiniDSS()
+            mini_dss = azul.dss.MiniDSS()
             with self.assertRaises(self.SpecialError):
                 mini_dss._get_file_object(uuid, version)
             with self.assertRaises(KeyError):

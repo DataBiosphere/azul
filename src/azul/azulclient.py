@@ -37,6 +37,7 @@ from azul import (
     config,
     hmac,
 )
+import azul.dss
 from azul.es import ESClientFactory
 from azul.plugin import Plugin
 from azul.types import JSON
@@ -206,7 +207,7 @@ class AzulClient(object):
     @property
     @lru_cache(maxsize=1)
     def dss_client(self):
-        return config.dss_client(dss_endpoint=self.dss_url)
+        return azul.dss.client(dss_endpoint=self.dss_url)
 
     @property
     @lru_cache(maxsize=1)

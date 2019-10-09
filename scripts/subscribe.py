@@ -4,10 +4,9 @@ import logging
 import sys
 
 from azul import (
-    config,
     subscription,
 )
-from azul.dss import shared_dss_credentials
+import azul.dss
 from azul.logging import configure_script_logging
 
 logger = logging.getLogger(__name__)
@@ -28,10 +27,10 @@ def main(argv):
                              "in possession of those credentials can modify the subscription in the future. This is "
                              "typically not what you'd want.")
     options = parser.parse_args(argv)
-    dss_client = config.dss_client()
+    dss_client = azul.dss.client()
 
     if options.shared:
-        with shared_dss_credentials():
+        with azul.dss.shared_credentials():
             subscription.manage_subscriptions(dss_client, subscribe=options.subscribe)
     else:
         subscription.manage_subscriptions(dss_client, subscribe=options.subscribe)
