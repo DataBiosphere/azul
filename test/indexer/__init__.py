@@ -2,12 +2,18 @@ from copy import deepcopy
 import json
 import os
 import threading
-from typing import List, Tuple
+from typing import (
+    List,
+    Tuple,
+)
 from unittest.mock import patch
 from uuid import uuid4
 
 from azul import config
-from azul.indexer import IndexWriter, Tallies
+from azul.indexer import (
+    IndexWriter,
+    Tallies,
+)
 from azul.plugin import Plugin
 from azul.project.hca import Indexer
 from azul.types import JSON
@@ -107,7 +113,7 @@ class IndexerTestCase(ElasticsearchTestCase):
             return deepcopy(manifest), deepcopy(metadata)
 
         notification = cls._make_fake_notification(bundle_fqid)
-        with patch('azul.DSSClient'):
+        with patch('azul.dss.client'):
             indexer = cls.get_hca_indexer()
             with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
                 method = indexer.delete if delete else indexer.index
@@ -121,7 +127,7 @@ class IndexerTestCase(ElasticsearchTestCase):
 
         indexer = cls.get_hca_indexer()
         notification = cls._make_fake_notification(bundle_fqid)
-        with patch('azul.DSSClient'):
+        with patch('azul.dss.client'):
             with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
                 contributions = indexer.transform(notification, delete=False)
                 return indexer.contribute(contributions)

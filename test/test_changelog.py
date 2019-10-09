@@ -8,6 +8,7 @@ from azul_test_case import AzulTestCase
 
 
 class TestChangeLog(AzulTestCase):
+
     def test_changelog(self):
         changelog = azul.changelog.changelog()
         with TemporaryDirectory() as tmpdir:

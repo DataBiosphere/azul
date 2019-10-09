@@ -12,6 +12,6 @@ def write_file_atomically(path, mode=0o644):
             yield f
         os.chmod(temp_path, mode)
         os.rename(temp_path, path)
-    except:
+    except BaseException:
         os.unlink(temp_path)
         raise

@@ -1,6 +1,10 @@
 import csv
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import (
+    datetime,
+    timedelta,
+    timezone,
+)
 import json
 import logging
 from more_itertools import one
@@ -8,16 +12,24 @@ import os
 from io import BytesIO
 from tempfile import TemporaryDirectory
 from unittest import mock
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import (
+    urlparse,
+    parse_qs,
+)
 from zipfile import ZipFile
 
 from botocore.exceptions import ClientError
-from chalice import BadRequestError, ChaliceViewError
+from chalice import (
+    BadRequestError,
+    ChaliceViewError,
+)
 from more_itertools import first
-from moto import mock_s3, mock_sts
+from moto import (
+    mock_s3,
+    mock_sts,
+)
 import requests
 from typing import List
-
 
 from azul import config
 from azul.json_freeze import freeze
@@ -296,6 +308,171 @@ class TestManifestEndpoints(WebServiceTestCase):
         """
         self.maxDiff = None
         self._index_canned_bundle(("587d74b4-1075-4bbf-b96a-4d1ede0481b2", "2018-09-14T133314.453337Z"))
+        domain = config.drs_domain or config.api_lambda_domain('service')
+        dss = config.dss_endpoint
+
+        bam_b0_0_uuid, bam_b0_0_version = "51c9ad31-5888-47eb-9e0c-02f042373c4e", "2018-10-10T031035.284782Z"
+        bam_b0_1_uuid, bam_b0_1_version = "b1c167da-0825-4c63-9cbc-2aada1ab367c", "2018-10-10T031035.971561Z"
+        fastq_b0_r1_uuid, fastq_b0_r1_version = "c005f647-b3fb-45a8-857a-8f5e6a878ccf", "2018-10-10T023811.612423Z"
+        fastq_b0_r2_uuid, fastq_b0_r2_version = "b764ce7d-3938-4451-b68c-678feebc8f2a", "2018-10-10T023811.851483Z"
+        fastq_b1_r1_uuid, fastq_b1_r1_version = "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb", "2018-11-02T113344.698028Z"
+        fastq_b1_r2_uuid, fastq_b1_r2_version = "74897eb7-0701-4e4f-9e6b-8b9521b2816b", "2018-11-02T113344.450442Z"
+        expected_rows = [
+            {
+                'entity:participant_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2_2018-09-14T133314_453337Z',
+                'bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                'bundle_version': '2018-09-14T133314.453337Z',
+                'cell_suspension__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
+                'cell_suspension__estimated_cell_count': '0',
+                'cell_suspension__selected_cell_type': '',
+                'sequencing_protocol__instrument_manufacturer_model': 'Illumina HiSeq 2500',
+                'sequencing_protocol__paired_end': 'True',
+                'library_preparation_protocol__library_construction_approach': 'Smart-seq2',
+                'project__provenance__document_id': '6615efae-fca8-4dd2-a223-9cfcf30fe94d',
+                'project__contributors__institution': 'Fake Institution',
+                'project__contributors__laboratory': '',
+                'project__project_core__project_short_name': 'integration/Smart-seq2/2018-10-10T02:23:36Z',
+                'project__project_core__project_title': 'Q4_DEMO-Single cell RNA-seq of primary human glioblastomas',
+                'specimen_from_organism__provenance__document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
+                'specimen_from_organism__diseases': 'glioblastoma',
+                'specimen_from_organism__organ': 'brain',
+                'specimen_from_organism__organ_part': 'temporal lobe',
+                'specimen_from_organism__preservation_storage__preservation_method': '',
+                'donor_organism__sex': 'unknown',
+                'donor_organism__biomaterial_core__biomaterial_id': 'Q4_DEMO-donor_MGH30',
+                'donor_organism__provenance__document_id': '242e38d2-c975-47ee-800a-6645b47e92d2',
+                'donor_organism__genus_species': 'Homo sapiens',
+                'donor_organism__diseases': '',
+                'donor_organism__organism_age': '',
+                'donor_organism__organism_age_unit': '',
+                'cell_line__provenance__document_id': '',
+                'cell_line__biomaterial_core__biomaterial_id': '',
+                'organoid__provenance__document_id': '',
+                'organoid__biomaterial_core__biomaterial_id': '',
+                'organoid__model_organ': '',
+                'organoid__model_organ_part': '',
+                '_entity_type': 'specimens',
+                'sample__provenance__document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
+                'sample__biomaterial_core__biomaterial_id': 'Q4_DEMO-sample_SAMN02797092',
+                '__bam_0__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_qc.bam',
+                '__bam_0__file_format': 'bam',
+                '__bam_0__read_index': '',
+                '__bam_0__file_size': '550597',
+                '__bam_0__file_uuid': bam_b0_0_uuid,
+                '__bam_0__file_version': bam_b0_0_version,
+                '__bam_0__file_sha256': 'e3cd90d79f520c0806dddb1ca0c5a11fbe26ac0c0be983ba5098d6769f78294c',
+                '__bam_0__file_content_type': 'application/gzip; dcp-type=data',
+                '__bam_0__drs_url': f'drs://{domain}/{bam_b0_0_uuid}?version={bam_b0_0_version}',
+                '__bam_0__file_url': f'{dss}/files/{bam_b0_0_uuid}?version={bam_b0_0_version}&replica=gcp',
+                '__bam_1__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_rsem.bam',
+                '__bam_1__file_format': 'bam',
+                '__bam_1__read_index': '',
+                '__bam_1__file_size': '3752733',
+                '__bam_1__file_uuid': f'{bam_b0_1_uuid}',
+                '__bam_1__file_version': bam_b0_1_version,
+                '__bam_1__file_sha256': 'f25053412d65429cefc0157c0d18ae12d4bf4c4113a6af7a1820b62246c075a4',
+                '__bam_1__file_content_type': 'application/gzip; dcp-type=data',
+                '__bam_1__drs_url': f'drs://{domain}/{bam_b0_1_uuid}?version={bam_b0_1_version}',
+                '__bam_1__file_url': f'{dss}/files/{bam_b0_1_uuid}?version={bam_b0_1_version}&replica=gcp',
+                '__fastq_read1__file_name': 'R1.fastq.gz',
+                '__fastq_read1__file_format': 'fastq.gz',
+                '__fastq_read1__read_index': 'read1',
+                '__fastq_read1__file_size': '125191',
+                '__fastq_read1__file_uuid': fastq_b0_r1_uuid,
+                '__fastq_read1__file_version': f'{fastq_b0_r1_version}',
+                '__fastq_read1__file_sha256': 'fe6d4fdfea2ff1df97500dcfe7085ac3abfb760026bff75a34c20fb97a4b2b29',
+                '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
+                '__fastq_read1__file_url': f'{dss}/files/{fastq_b0_r1_uuid}?version={fastq_b0_r1_version}&replica=gcp',
+                '__fastq_read1__drs_url': f'drs://{domain}/{fastq_b0_r1_uuid}?version={fastq_b0_r1_version}',
+                '__fastq_read2__file_name': 'R2.fastq.gz',
+                '__fastq_read2__file_format': 'fastq.gz',
+                '__fastq_read2__read_index': 'read2',
+                '__fastq_read2__file_size': '130024',
+                '__fastq_read2__file_uuid': fastq_b0_r2_uuid,
+                '__fastq_read2__file_version': fastq_b0_r2_version,
+                '__fastq_read2__file_sha256': 'c305bee37b3c3735585e11306272b6ab085f04cd22ea8703957b4503488cfeba',
+                '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
+                '__fastq_read2__file_url': f'{dss}/files/{fastq_b0_r2_uuid}?version={fastq_b0_r2_version}&replica=gcp',
+                '__fastq_read2__drs_url': f'drs://{domain}/{fastq_b0_r2_uuid}?version={fastq_b0_r2_version}',
+            },
+            {
+                'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344_698028Z',
+                'bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
+                'bundle_version': '2018-11-02T113344.698028Z',
+                'cell_suspension__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
+                'cell_suspension__estimated_cell_count': '1',
+                'cell_suspension__selected_cell_type': '',
+                'sequencing_protocol__instrument_manufacturer_model': 'Illumina NextSeq 500',
+                'sequencing_protocol__paired_end': 'True',
+                'library_preparation_protocol__library_construction_approach': 'Smart-seq2',
+                'project__provenance__document_id': 'e8642221-4c2c-4fd7-b926-a68bce363c88',
+                'project__contributors__institution': 'Farmers Trucks || University',
+                'project__contributors__laboratory': 'John Dear',
+                'project__project_core__project_short_name': 'Single of human pancreas',
+                'project__project_core__project_title': 'Single cell transcriptome patterns.',
+                'specimen_from_organism__provenance__document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
+                'specimen_from_organism__diseases': 'normal',
+                'specimen_from_organism__organ': 'pancreas',
+                'specimen_from_organism__organ_part': 'islet of Langerhans',
+                'specimen_from_organism__preservation_storage__preservation_method': '',
+                'donor_organism__sex': 'female',
+                'donor_organism__biomaterial_core__biomaterial_id': 'DID_scRSq06',
+                'donor_organism__provenance__document_id': '7b07b9d0-cc0e-4098-9f64-f4a569f7d746',
+                'donor_organism__genus_species': 'Australopithecus',
+                'donor_organism__diseases': 'normal',
+                'donor_organism__organism_age': '38',
+                'donor_organism__organism_age_unit': 'year',
+                'cell_line__provenance__document_id': '',
+                'cell_line__biomaterial_core__biomaterial_id': '',
+                'organoid__provenance__document_id': '',
+                'organoid__biomaterial_core__biomaterial_id': '',
+                'organoid__model_organ': '',
+                'organoid__model_organ_part': '',
+                '_entity_type': 'specimens',
+                'sample__provenance__document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
+                'sample__biomaterial_core__biomaterial_id': 'DID_scRSq06_pancreas',
+                '__bam_0__file_name': '',
+                '__bam_0__file_format': '',
+                '__bam_0__read_index': '',
+                '__bam_0__file_size': '',
+                '__bam_0__file_uuid': '',
+                '__bam_0__file_version': '',
+                '__bam_0__file_sha256': '',
+                '__bam_0__file_content_type': '',
+                '__bam_0__drs_url': '',
+                '__bam_0__file_url': '',
+                '__bam_1__file_name': '',
+                '__bam_1__file_format': '',
+                '__bam_1__read_index': '',
+                '__bam_1__file_size': '',
+                '__bam_1__file_uuid': '',
+                '__bam_1__file_version': '',
+                '__bam_1__file_sha256': '',
+                '__bam_1__file_content_type': '',
+                '__bam_1__drs_url': '',
+                '__bam_1__file_url': '',
+                '__fastq_read1__file_name': 'SRR3562915_1.fastq.gz',
+                '__fastq_read1__file_format': 'fastq.gz',
+                '__fastq_read1__read_index': 'read1',
+                '__fastq_read1__file_size': '195142097',
+                '__fastq_read1__file_uuid': fastq_b1_r1_uuid,
+                '__fastq_read1__file_version': fastq_b1_r1_version,
+                '__fastq_read1__file_sha256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
+                '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
+                '__fastq_read1__drs_url': f'drs://{domain}/{fastq_b1_r1_uuid}?version={fastq_b1_r1_version}',
+                '__fastq_read1__file_url': f'{dss}/files/{fastq_b1_r1_uuid}?version={fastq_b1_r1_version}&replica=gcp',
+                '__fastq_read2__file_name': 'SRR3562915_2.fastq.gz',
+                '__fastq_read2__file_format': 'fastq.gz',
+                '__fastq_read2__read_index': 'read2',
+                '__fastq_read2__file_size': '190330156',
+                '__fastq_read2__file_uuid': fastq_b1_r2_uuid,
+                '__fastq_read2__file_version': fastq_b1_r2_version,
+                '__fastq_read2__file_sha256': '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
+                '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
+                '__fastq_read2__drs_url': f'drs://{domain}/{fastq_b1_r2_uuid}?version={fastq_b1_r2_version}',
+                '__fastq_read2__file_url': f'{dss}/files/{fastq_b1_r2_uuid}?version={fastq_b1_r2_version}&replica=gcp',
+            }
+        ]
         logging.getLogger('test_request_validation').warning('test_manifest is invoked')
         with ResponsesHelper() as helper, TemporaryDirectory() as zip_dir:
             helper.add_passthru(self.base_url)
@@ -311,8 +488,6 @@ class TestManifestEndpoints(WebServiceTestCase):
                 zip_fh.extractall(zip_dir)
                 self.assertTrue(all(['manifest' == first(name.split('/')) for name in zip_fh.namelist()]))
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
-            domain = config.drs_domain or config.api_lambda_domain('service')
-            dss = config.dss_endpoint
             with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
                 reader = csv.DictReader(fh, delimiter='\t')
                 # The order in which the rows appear in the TSV is ultimately
@@ -323,162 +498,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                 # because manifest responses need exhaust the index. Instead,
                 # we do comparison here that's insensitive of the row ordering.
                 # We'll assert the column ordering independently below.
-                self.assertEqual({
-                    freeze({
-                        'entity:participant_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2_2018-09-14T133314_453337Z',
-                        'bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                        'bundle_version': '2018-09-14T133314.453337Z',
-                        'cell_suspension__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
-                        'cell_suspension__estimated_cell_count': '0',
-                        'cell_suspension__selected_cell_type': '',
-                        'sequencing_protocol__instrument_manufacturer_model': 'Illumina HiSeq 2500',
-                        'sequencing_protocol__paired_end': 'True',
-                        'library_preparation_protocol__library_construction_approach': 'Smart-seq2',
-                        'project__provenance__document_id': '6615efae-fca8-4dd2-a223-9cfcf30fe94d',
-                        'project__contributors__institution': 'Fake Institution',
-                        'project__contributors__laboratory': '',
-                        'project__project_core__project_short_name': 'integration/Smart-seq2/2018-10-10T02:23:36Z',
-                        'project__project_core__project_title': 'Q4_DEMO-Single cell RNA-seq of primary human glioblastomas',
-                        'specimen_from_organism__provenance__document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
-                        'specimen_from_organism__diseases': 'glioblastoma',
-                        'specimen_from_organism__organ': 'brain',
-                        'specimen_from_organism__organ_part': 'temporal lobe',
-                        'specimen_from_organism__preservation_storage__preservation_method': '',
-                        'donor_organism__sex': 'unknown',
-                        'donor_organism__biomaterial_core__biomaterial_id': 'Q4_DEMO-donor_MGH30',
-                        'donor_organism__provenance__document_id': '242e38d2-c975-47ee-800a-6645b47e92d2',
-                        'donor_organism__genus_species': 'Homo sapiens',
-                        'donor_organism__diseases': '',
-                        'donor_organism__organism_age': '',
-                        'donor_organism__organism_age_unit': '',
-                        'cell_line__provenance__document_id': '',
-                        'cell_line__biomaterial_core__biomaterial_id': '',
-                        'organoid__provenance__document_id': '',
-                        'organoid__biomaterial_core__biomaterial_id': '',
-                        'organoid__model_organ': '',
-                        'organoid__model_organ_part': '',
-                        '_entity_type': 'specimens',
-                        'sample__provenance__document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
-                        'sample__biomaterial_core__biomaterial_id': 'Q4_DEMO-sample_SAMN02797092',
-                        '__bam_0__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_qc.bam',
-                        '__bam_0__file_format': 'bam',
-                        '__bam_0__read_index': '',
-                        '__bam_0__file_size': '550597',
-                        '__bam_0__file_uuid': '51c9ad31-5888-47eb-9e0c-02f042373c4e',
-                        '__bam_0__file_version': '2018-10-10T031035.284782Z',
-                        '__bam_0__file_sha256': 'e3cd90d79f520c0806dddb1ca0c5a11fbe26ac0c0be983ba5098d6769f78294c',
-                        '__bam_0__file_content_type': 'application/gzip; dcp-type=data',
-                        '__bam_0__drs_url': f'drs://{domain}/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z',
-                        '__bam_0__file_url': f'{dss}/files/51c9ad31-5888-47eb-9e0c-02f042373c4e?version=2018-10-10T031035.284782Z&replica=gcp',
-                        '__bam_1__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_rsem.bam',
-                        '__bam_1__file_format': 'bam',
-                        '__bam_1__read_index': '',
-                        '__bam_1__file_size': '3752733',
-                        '__bam_1__file_uuid': 'b1c167da-0825-4c63-9cbc-2aada1ab367c',
-                        '__bam_1__file_version': '2018-10-10T031035.971561Z',
-                        '__bam_1__file_sha256': 'f25053412d65429cefc0157c0d18ae12d4bf4c4113a6af7a1820b62246c075a4',
-                        '__bam_1__file_content_type': 'application/gzip; dcp-type=data',
-                        '__bam_1__drs_url': f'drs://{domain}/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z',
-                        '__bam_1__file_url': f'{dss}/files/b1c167da-0825-4c63-9cbc-2aada1ab367c?version=2018-10-10T031035.971561Z&replica=gcp',
-                        '__fastq_read1__file_name': 'R1.fastq.gz',
-                        '__fastq_read1__file_format': 'fastq.gz',
-                        '__fastq_read1__read_index': 'read1',
-                        '__fastq_read1__file_size': '125191',
-                        '__fastq_read1__file_uuid': 'c005f647-b3fb-45a8-857a-8f5e6a878ccf',
-                        '__fastq_read1__file_version': '2018-10-10T023811.612423Z',
-                        '__fastq_read1__file_sha256': 'fe6d4fdfea2ff1df97500dcfe7085ac3abfb760026bff75a34c20fb97a4b2b29',
-                        '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
-                        '__fastq_read1__file_url': f'{dss}/files/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z&replica=gcp',
-                        '__fastq_read1__drs_url': f'drs://{domain}/c005f647-b3fb-45a8-857a-8f5e6a878ccf?version=2018-10-10T023811.612423Z',
-                        '__fastq_read2__file_name': 'R2.fastq.gz',
-                        '__fastq_read2__file_format': 'fastq.gz',
-                        '__fastq_read2__read_index': 'read2',
-                        '__fastq_read2__file_size': '130024',
-                        '__fastq_read2__file_uuid': 'b764ce7d-3938-4451-b68c-678feebc8f2a',
-                        '__fastq_read2__file_version': '2018-10-10T023811.851483Z',
-                        '__fastq_read2__file_sha256': 'c305bee37b3c3735585e11306272b6ab085f04cd22ea8703957b4503488cfeba',
-                        '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
-                        '__fastq_read2__file_url': f'{dss}/files/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z&replica=gcp',
-                        '__fastq_read2__drs_url': f'drs://{domain}/b764ce7d-3938-4451-b68c-678feebc8f2a?version=2018-10-10T023811.851483Z',
-                    }),
-                    freeze({
-                        'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344_698028Z',
-                        'bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-                        'bundle_version': '2018-11-02T113344.698028Z',
-                        'cell_suspension__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
-                        'cell_suspension__estimated_cell_count': '1',
-                        'cell_suspension__selected_cell_type': '',
-                        'sequencing_protocol__instrument_manufacturer_model': 'Illumina NextSeq 500',
-                        'sequencing_protocol__paired_end': 'True',
-                        'library_preparation_protocol__library_construction_approach': 'Smart-seq2',
-                        'project__provenance__document_id': 'e8642221-4c2c-4fd7-b926-a68bce363c88',
-                        'project__contributors__institution': 'Farmers Trucks || University',
-                        'project__contributors__laboratory': 'John Dear',
-                        'project__project_core__project_short_name': 'Single of human pancreas',
-                        'project__project_core__project_title': 'Single cell transcriptome patterns.',
-                        'specimen_from_organism__provenance__document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
-                        'specimen_from_organism__diseases': 'normal',
-                        'specimen_from_organism__organ': 'pancreas',
-                        'specimen_from_organism__organ_part': 'islet of Langerhans',
-                        'specimen_from_organism__preservation_storage__preservation_method': '',
-                        'donor_organism__sex': 'female',
-                        'donor_organism__biomaterial_core__biomaterial_id': 'DID_scRSq06',
-                        'donor_organism__provenance__document_id': '7b07b9d0-cc0e-4098-9f64-f4a569f7d746',
-                        'donor_organism__genus_species': 'Australopithecus',
-                        'donor_organism__diseases': 'normal',
-                        'donor_organism__organism_age': '38',
-                        'donor_organism__organism_age_unit': 'year',
-                        'cell_line__provenance__document_id': '',
-                        'cell_line__biomaterial_core__biomaterial_id': '',
-                        'organoid__provenance__document_id': '',
-                        'organoid__biomaterial_core__biomaterial_id': '',
-                        'organoid__model_organ': '',
-                        'organoid__model_organ_part': '',
-                        '_entity_type': 'specimens',
-                        'sample__provenance__document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
-                        'sample__biomaterial_core__biomaterial_id': 'DID_scRSq06_pancreas',
-                        '__bam_0__file_name': '',
-                        '__bam_0__file_format': '',
-                        '__bam_0__read_index': '',
-                        '__bam_0__file_size': '',
-                        '__bam_0__file_uuid': '',
-                        '__bam_0__file_version': '',
-                        '__bam_0__file_sha256': '',
-                        '__bam_0__file_content_type': '',
-                        '__bam_0__drs_url': '',
-                        '__bam_0__file_url': '',
-                        '__bam_1__file_name': '',
-                        '__bam_1__file_format': '',
-                        '__bam_1__read_index': '',
-                        '__bam_1__file_size': '',
-                        '__bam_1__file_uuid': '',
-                        '__bam_1__file_version': '',
-                        '__bam_1__file_sha256': '',
-                        '__bam_1__file_content_type': '',
-                        '__bam_1__drs_url': '',
-                        '__bam_1__file_url': '',
-                        '__fastq_read1__file_name': 'SRR3562915_1.fastq.gz',
-                        '__fastq_read1__file_format': 'fastq.gz',
-                        '__fastq_read1__read_index': 'read1',
-                        '__fastq_read1__file_size': '195142097',
-                        '__fastq_read1__file_uuid': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                        '__fastq_read1__file_version': '2018-11-02T113344.698028Z',
-                        '__fastq_read1__file_sha256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
-                        '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
-                        '__fastq_read1__drs_url': f'drs://{domain}/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z',
-                        '__fastq_read1__file_url': f'{dss}/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z&replica=gcp',
-                        '__fastq_read2__file_name': 'SRR3562915_2.fastq.gz',
-                        '__fastq_read2__file_format': 'fastq.gz',
-                        '__fastq_read2__read_index': 'read2',
-                        '__fastq_read2__file_size': '190330156',
-                        '__fastq_read2__file_uuid': '74897eb7-0701-4e4f-9e6b-8b9521b2816b',
-                        '__fastq_read2__file_version': '2018-11-02T113344.450442Z',
-                        '__fastq_read2__file_sha256': '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
-                        '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
-                        '__fastq_read2__drs_url': f'drs://{domain}/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z',
-                        '__fastq_read2__file_url': f'{dss}/files/74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z&replica=gcp',
-                    })
-                }, set(freeze(row) for row in reader))
+                self.assertEqual(set(map(freeze, expected_rows)), set(map(freeze, reader)))
                 self.assertEqual([
                     'entity:participant_id',
                     'bundle_uuid',
@@ -576,14 +596,6 @@ class TestManifestEndpoints(WebServiceTestCase):
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
             expected = [
-                ('*.file_core.file_format', 'fastq.gz', 'fastq.gz', 'fastq.gz', 'fastq.gz'),
-
-                ('*.file_core.file_name',
-                 'SRR3562915_2.fastq.gz',
-                 'SRR3562915_1.fastq.gz',
-                 '22028_5#300_1.fastq.gz',
-                 '22028_5#300_2.fastq.gz'),
-
                 ('bundle_uuid',
                  'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                  'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
@@ -755,6 +767,30 @@ class TestManifestEndpoints(WebServiceTestCase):
                  '5bd4ba68-4c0e-4d22-840d-afc025e7badc',
                  'd3287615-b97a-4984-a8cf-30a1c30e4773',
                  'd3287615-b97a-4984-a8cf-30a1c30e4773'),
+
+                ('file_format',
+                 'fastq.gz',
+                 'fastq.gz',
+                 'fastq.gz',
+                 'fastq.gz'),
+
+                ('file_name',
+                 'SRR3562915_2.fastq.gz',
+                 'SRR3562915_1.fastq.gz',
+                 '22028_5#300_1.fastq.gz',
+                 '22028_5#300_2.fastq.gz'),
+
+                ('file_sha256',
+                 '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
+                 '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
+                 '3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582',
+                 'cda141411815a9e8e4c3145f6b855a295352fd18f7db449d3797d8de38fb052a'),
+
+                ('file_size',
+                 '190330156',
+                 '195142097',
+                 '64718465',
+                 '65008198'),
 
                 ('file_uuid',
                  '74897eb7-0701-4e4f-9e6b-8b9521b2816b',
@@ -1071,7 +1107,6 @@ class TestManifestEndpoints(WebServiceTestCase):
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-
                         project_ids = ['67bc798b-a34a-4104-8cab-cad648471f69', '6615efae-fca8-4dd2-a223-9cfcf30fe94d']
                         file_names = defaultdict(list)
 
@@ -1102,15 +1137,16 @@ class TestManifestEndpoints(WebServiceTestCase):
             mock_response.now.return_value = mock_date
             storage_service = StorageService()
             storage_service.create_bucket()
-            for filters, expected_name, name_object in (
-                    ({'project': {'is': ['Single of human pancreas']}}, 'Single of human pancreas ', True),
-                    # When requesting a full metadata TSV is with a filter for two or more projects, the
-                    # Content-Disposition header shouldn't be set to the contents .name file.
-                    ({'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                     'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721', False),
-                    # If the filter is doesn't specify any parameter for projectId, the Content-Disposition
-                    # header shouldn't be set to the contents .name file.
-                    ({}, 'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3', False)):
+            for filters, expected_name, name_object in [
+                ({'project': {'is': ['Single of human pancreas']}}, 'Single of human pancreas ', True),
+                # When requesting a full metadata TSV is with a filter for two or more projects, the
+                # Content-Disposition header shouldn't be set to the contents .name file.
+                ({'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                 'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721', False),
+                # If the filter is doesn't specify any parameter for projectId, the Content-Disposition
+                # header shouldn't be set to the contents .name file.
+                ({}, 'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3', False)
+            ]:
                 for single_part in True, False:
                     with self.subTest(filters=filters, single_part=single_part):
                         with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):

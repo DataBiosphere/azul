@@ -1,10 +1,16 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    as_completed,
+)
 from itertools import chain
 import json
 import logging
 import os
 import time
-from typing import Any, Mapping
+from typing import (
+    Any,
+    Mapping,
+)
 from urllib.parse import urlparse
 
 import boto3
@@ -173,7 +179,7 @@ class Queues:
             entries = [self._reconstitute(message) for message in message_batch]
             try:
                 queue.send_messages(Entries=entries)
-            except:
+            except BaseException:
                 assert message_batches
                 _cleanup()
                 raise

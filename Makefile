@@ -30,6 +30,32 @@ clean:
 	rm -rf .cache .config
 	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
 
+absolute_sources = $(shell echo $(azul_home)/src \
+                                $(azul_home)/scripts \
+                                $(azul_home)/test \
+                                $(azul_home)/lambdas/{indexer,service}/app.py \
+                                $$(find $(azul_home)/terraform{,/gitlab} \
+                                        $(azul_home)/lambdas/{indexer,service}{,/.chalice} \
+                                        -maxdepth 1 \
+                                        -name '*.template.py' \
+                                        -type f ))
+
+relative_sources = $(subst $(azul_home)/,,$(absolute_sources))
+
+pep8:
+	flake8 --max-line-length=120 $(absolute_sources)
+
+# The container path resolution in the recipe below is needed on Gitlab where
+# the build is already running in a container and the container below will be a
+# sibling of the current container.
+
+format:
+	docker run \
+	    --rm \
+	    --volume $$(python scripts/resolve_container_path.py $(azul_home)):/home/developer/azul \
+	    --workdir /home/developer/azul rycus86/pycharm:2019.2.3 \
+	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
+
 test:
 	PYTHONWARNINGS=ignore:ResourceWarning coverage run -m unittest discover test --verbose
 
@@ -38,7 +64,7 @@ tag: check_branch
 	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
 
 integration_test: check_branch
-	python -m unittest -v local_integration_test
+	python -m unittest -v integration_test
 
 check_trufflehog:
 	@hash trufflehog || ( echo 'Please install trufflehog using "pip install trufflehog"' ; false )
@@ -70,6 +96,7 @@ check_autosquash:
         delete index reindex \
         clean \
         tag \
+        pep8 \
         test integration_test \
         check_trufflehog trufflehog \
         check_clean check_autosquash

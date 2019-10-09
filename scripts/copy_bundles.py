@@ -6,15 +6,24 @@ from datetime import datetime
 import logging
 import sys
 import time
-from typing import Set, Tuple
-from urllib.parse import urlparse, urlunparse
+from typing import (
+    Set,
+    Tuple,
+)
+from urllib.parse import (
+    urlparse,
+    urlunparse,
+)
 
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from hca.util import SwaggerAPIException
 
-from azul import config, require
-from azul.dss import MiniDSS, shared_dss_credentials
+from azul import (
+    config,
+    require,
+)
+import azul.dss
 from azul.logging import configure_script_logging
 from azul.threads import DeferredTaskExecutor
 from azul.types import MutableJSON
@@ -26,7 +35,7 @@ class CopyBundle(DeferredTaskExecutor):
 
     def main(self):
         if self.args.shared:
-            with shared_dss_credentials():
+            with azul.dss.shared_credentials():
                 errors = self.run()
         else:
             errors = self.run()
@@ -97,8 +106,8 @@ class CopyBundle(DeferredTaskExecutor):
     def __init__(self, argv) -> None:
         super().__init__(num_workers=self.num_workers)
         self.args = self._parse_args(argv)
-        self.source = MiniDSS(dss_endpoint=urlunparse(self.args.source),
-                              config=Config(max_pool_connections=self.num_workers))
+        self.source = azul.dss.MiniDSS(dss_endpoint=urlunparse(self.args.source),
+                                       config=Config(max_pool_connections=self.num_workers))
         self._destination = None
         self._destination_expiration = None
         self._destination_lock = RLock()
@@ -110,8 +119,8 @@ class CopyBundle(DeferredTaskExecutor):
                 dss_client_timeout = 30 * 60  # DSS session credentials timeout after 1 hour
                 logger.info('Allocating new DSS client for %s to expire in %d seconds',
                             config.dss_endpoint, dss_client_timeout)
-                self._destination = config.dss_client(dss_endpoint=urlunparse(self.args.destination),
-                                                      adapter_args=dict(pool_maxsize=self.num_workers))
+                self._destination = azul.dss.client(dss_endpoint=urlunparse(self.args.destination),
+                                                    num_workers=self.num_workers)
                 self._destination_expiration = time.time() + dss_client_timeout
             return self._destination
 

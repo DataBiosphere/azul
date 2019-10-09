@@ -2,7 +2,11 @@ import copy
 import json
 import uuid
 
-from more_itertools import flatten, one, first
+from more_itertools import (
+    flatten,
+    one,
+    first,
+)
 
 from app_test_case import LocalAppTestCase
 from azul import config

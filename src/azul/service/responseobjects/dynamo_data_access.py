@@ -1,6 +1,15 @@
-from typing import NamedTuple, List, Any, Optional
+from typing import (
+    NamedTuple,
+    List,
+    Any,
+    Optional,
+)
 
-from boto3.dynamodb.conditions import And, Attr, Key
+from boto3.dynamodb.conditions import (
+    And,
+    Attr,
+    Key,
+)
 
 from azul.deployment import aws
 
@@ -16,8 +25,12 @@ class DynamoDataAccessor:
     def get_table(self, table_name):
         return self.dynamo_client.Table(table_name)
 
-    def make_query(self, table_name, key_conditions, filters=None, index_name=None,
-                   select=None, limit=None, consistent_read:bool=False,
+    def make_query(self, table_name, key_conditions,
+                   filters=None,
+                   index_name=None,
+                   select=None,
+                   limit=None,
+                   consistent_read: bool = False,
                    exclusive_start_key=None):
         """
         Make a query and get results one page at a time.  This method handles the pagination logic so the caller can

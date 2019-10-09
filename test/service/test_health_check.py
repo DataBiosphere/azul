@@ -2,7 +2,10 @@ import os
 import unittest
 from unittest import mock
 
-from moto import mock_sts, mock_sqs
+from moto import (
+    mock_sts,
+    mock_sqs,
+)
 
 from azul import config
 from azul.logging import configure_test_logging

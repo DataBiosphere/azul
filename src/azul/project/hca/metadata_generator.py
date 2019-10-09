@@ -1,15 +1,20 @@
-# Adapted from https://github.com/HumanCellAtlas/hca_bundles_to_csv/blob/b516a3a4de96ea3e97a698e7a603faec48ae97ec/hca_bundle_tools/file_metadata_to_csv.py
+# noqa Adapted from
+# https://github.com/HumanCellAtlas/hca_bundles_to_csv/blob/b516a3a4de96ea3e97a698e7a603faec48ae97ec/hca_bundle_tools/file_metadata_to_csv.py
 __author__ = "simonjupp"
 __license__ = "Apache 2.0"
 __date__ = "15/02/2019"
 
-from typing import List, Any
+from typing import (
+    List,
+    Any,
+)
 from more_itertools import one
 from azul.types import JSON
 import re
 
 
 class MetadataGenerator:
+
     def __init__(self, order=None, ignore=None, format_filter=None):
         self.all_objects_by_project_id = {}
         self.all_keys = []
@@ -128,17 +133,19 @@ class MetadataGenerator:
                 'bundle_version': bundle_version,
                 'file_uuid': file_manifest['uuid'],
                 'file_version': file_manifest['version'],
-                "*.file_core.file_name": self._deep_get(file_metadata, ["file_core", "file_name"]),
-                "*.file_core.file_format": self._deep_get(file_metadata, ["file_core", "file_format"])
+                'file_sha256': file_manifest['sha256'],
+                'file_size': file_manifest['size'],
+                "file_name": self._deep_get(file_metadata, ["file_core", "file_name"]),
+                "file_format": self._deep_get(file_metadata, ["file_core", "file_format"]),
             }
 
-            file_segments = obj["*.file_core.file_name"].split('.')
+            file_segments = obj["file_name"].split('.')
 
             if len(file_segments) > 1 and file_segments[-1] in self.default_blocked_file_ext:
                 continue
 
             def handle_zarray(anchor):
-                file_name = obj['*.file_core.file_name']
+                file_name = obj['file_name']
                 try:
                     i = file_name.index(anchor)
                 except ValueError:
@@ -147,15 +154,14 @@ class MetadataGenerator:
                     i += len(anchor) - 1
                     dir_name, file_name = file_name[0:i], file_name[i + 1:]
                     if file_name == '.zattrs':
-                        obj['*.file_core.file_name'] = dir_name + '/'
+                        obj['file_name'] = dir_name + '/'
                         return False
                 return True
 
             if handle_zarray('.zarr/') or handle_zarray('.zarr!'):
                 continue
 
-
-            if self.default_format_filter and obj["*.file_core.file_format"] not in self.default_format_filter:
+            if self.default_format_filter and obj["file_format"] not in self.default_format_filter:
                 continue
 
             schema_name = self._get_schema_name_from_object(file_metadata)

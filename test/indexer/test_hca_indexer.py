@@ -1,6 +1,9 @@
 import os
 import re
-from collections import Counter, defaultdict
+from collections import (
+    Counter,
+    defaultdict,
+)
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 import logging
@@ -13,23 +16,36 @@ import copy
 import boto3
 import requests
 
-from moto import mock_sqs, mock_sts
-from typing import NamedTuple, Tuple, Mapping
+from moto import (
+    mock_sqs,
+    mock_sts,
+)
+from typing import (
+    NamedTuple,
+    Tuple,
+    Mapping,
+)
 import unittest
 from unittest.mock import patch
 from uuid import uuid4
 
-from elasticsearch import Elasticsearch, RequestError
+from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from more_itertools import one
 
 import azul.indexer
 from app_test_case import LocalAppTestCase
-from azul import config, hmac
+from azul import (
+    config,
+    hmac,
+)
 from azul.indexer import IndexWriter
 from azul.logging import configure_test_logging
 from azul.threads import Latch
-from azul.transformer import Aggregate, Contribution
+from azul.transformer import (
+    Aggregate,
+    Contribution,
+)
 from azul.project.hca.metadata_generator import MetadataGenerator
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper
@@ -810,11 +826,11 @@ class TestHCAIndexer(IndexerTestCase):
         for metadata_row in metadata_rows:
             self.assertEqual(uuid, metadata_row['bundle_uuid'])
             self.assertEqual(version, metadata_row['bundle_version'])
-            if metadata_row['*.file_core.file_format'] == 'matrix':
+            if metadata_row['file_format'] == 'matrix':
                 expected_file_name = '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/'
-                self.assertEqual(expected_file_name, metadata_row['*.file_core.file_name'])
+                self.assertEqual(expected_file_name, metadata_row['file_name'])
             else:
-                self.assertIn(metadata_row['*.file_core.file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
+                self.assertIn(metadata_row['file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
 
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
@@ -1019,7 +1035,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
             for test_mode in 0, 1:
                 for body in testless_notification, test_name_in_notification:
                     with self.subTest(test_mode=test_mode, endpoint=endpoint):
-                        with patch.dict(os.environ, TEST_MODE=str(test_mode)):
+                        with patch.dict(os.environ, AZUL_TEST_MODE=str(test_mode)):
                             response = self._test(body, endpoint=endpoint, valid_auth=True)
                             if 'test_name' not in body and test_mode == 1:
                                 self.assertEqual(500, response.status_code)

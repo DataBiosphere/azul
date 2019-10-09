@@ -40,7 +40,7 @@ emit_tf({
                     ]
                 }
             },
-            "null_resource":{
+            "null_resource": {
                 "hmac-secret": {
                     "provisioner": [
                         {
@@ -50,7 +50,7 @@ emit_tf({
                                     config.project_root + "/scripts/provision_credentials.py",
                                     "hmac-key",
                                     "--build",
-                                    ]))
+                                ]))
                             }
                         }, {
                             "local-exec": {
@@ -60,7 +60,7 @@ emit_tf({
                                     config.project_root + "/scripts/provision_credentials.py",
                                     "hmac-key",
                                     "--destroy",
-                                    ]))
+                                ]))
                             }
                         }
                     ]
@@ -68,4 +68,4 @@ emit_tf({
             }
         },
     ]
- })
+})

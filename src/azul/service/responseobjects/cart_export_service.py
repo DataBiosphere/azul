@@ -1,7 +1,10 @@
 import logging
 
 from azul.service.responseobjects.cart_item_manager import CartItemManager
-from azul.service.responseobjects.collection_data_access import CollectionDataAccess, UnauthorizedClientAccessError
+from azul.service.responseobjects.collection_data_access import (
+    CollectionDataAccess,
+    UnauthorizedClientAccessError,
+)
 from azul import config
 
 logger = logging.getLogger(__name__)
@@ -13,13 +16,13 @@ class CartExportService:
         self.cart_item_manager = CartItemManager()
 
     def export(self,
-               export_id:str,
-               user_id:str,
-               cart_id:str,
-               access_token:str,
-               collection_uuid:str,
-               collection_version:str,
-               resume_token:str = None):
+               export_id: str,
+               user_id: str,
+               cart_id: str,
+               access_token: str,
+               collection_uuid: str,
+               collection_version: str,
+               resume_token: str = None):
         content = self.get_content(user_id, cart_id, collection_uuid, collection_version, resume_token)
         client = CollectionDataAccess(access_token)
         items = content['items']
@@ -42,7 +45,7 @@ class CartExportService:
                     resume_token=content['resume_token'],
                     exported_item_count=len(items))
 
-    def get_content(self, user_id, cart_id, collection_uuid:str, collection_version:str, resume_token:str = None):
+    def get_content(self, user_id, cart_id, collection_uuid: str, collection_version: str, resume_token: str = None):
         batch_size = min(config.cart_export_max_batch_size, 1000)
 
         if (collection_uuid and not collection_version) or (not collection_uuid and collection_version):

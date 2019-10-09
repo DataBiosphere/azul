@@ -2,7 +2,7 @@ import copy
 from typing import List
 
 from azul.deployment import aws
-from azul.types import JSON, MutableJSON
+from azul.types import JSON
 
 
 def openapi_spec(description: JSON):
@@ -20,6 +20,7 @@ def openapi_spec(description: JSON):
     def spec_adder(func):
         func.api_spec = description
         return func
+
     return spec_adder
 
 

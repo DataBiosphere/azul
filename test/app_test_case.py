@@ -1,4 +1,7 @@
-from abc import ABCMeta, abstractmethod
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 import logging
 from threading import Thread
 import time
@@ -17,6 +20,7 @@ log = logging.getLogger(__name__)
 
 
 class ChaliceServerThread(Thread):
+
     def __init__(self, app, config, host, port):
         super().__init__()
         self.server_wrapper = LocalDevServer(app, config, host, port)
@@ -106,6 +110,7 @@ class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
 
 
 class AuthLocalAppTestCase(LocalAppTestCase, metaclass=ABCMeta):
+
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()

@@ -1,13 +1,22 @@
 from base64 import urlsafe_b64decode
 import logging
 from re import compile
-from typing import Dict, Any
-from urllib.parse import urlencode, urlparse
+from typing import (
+    Dict,
+    Any,
+)
+from urllib.parse import (
+    urlencode,
+    urlparse,
+)
 
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 import jwt
-from jwt.exceptions import DecodeError, PyJWTError
+from jwt.exceptions import (
+    DecodeError,
+    PyJWTError,
+)
 from requests import Session
 
 from azul import config

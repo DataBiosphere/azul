@@ -17,7 +17,7 @@ from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from humancellatlas.data.metadata.helpers.json import as_json
 
 from azul import config
-from azul.dss import patch_client_for_direct_access
+import azul.dss
 from azul.files import write_file_atomically
 from azul.logging import configure_script_logging
 
@@ -47,9 +47,8 @@ def main(argv):
                         help="Dump the return value of metadata-api's as_json function (default off).")
     args = parser.parse_args(argv)
 
-    dss_client = config.dss_client(dss_endpoint=args.dss_url,
-                                   adapter_args=dict(pool_maxsize=config.num_dss_workers))
-    patch_client_for_direct_access(dss_client)
+    dss_client = azul.dss.direct_access_client(dss_endpoint=args.dss_url,
+                                               num_workers=config.num_dss_workers)
     version, manifest, metadata_files = download_bundle_metadata(client=dss_client,
                                                                  replica=args.replica,
                                                                  uuid=args.uuid,

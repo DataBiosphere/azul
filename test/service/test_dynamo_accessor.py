@@ -8,7 +8,6 @@ def setUpModule():
 
 
 class TestDynamoAccessor(DynamoTestCase):
-
     table_name = 'Carts'
 
     def create_tables(self):

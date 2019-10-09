@@ -1,18 +1,25 @@
 from functools import lru_cache
 import json
-from typing import Mapping, Optional
+from typing import (
+    Mapping,
+    Optional,
+)
 
 import boto3
 import botocore.session
 from more_itertools import one
 
-from azul import Netloc, config
+from azul import (
+    Netloc,
+    config,
+)
 from azul.decorators import memoized_property
 from azul.template import emit
 from azul.types import JSON
 
 
 class AWS:
+
     @memoized_property
     def profile(self):
         session = botocore.session.Session()
