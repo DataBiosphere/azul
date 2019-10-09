@@ -1,5 +1,9 @@
+import boto3
+import json as _json  # We must use a different name for the import because 'azul.json' exists already as azul/json.py
+
 import os
 import re
+from functools import lru_cache
 from typing import (
     List,
     Mapping,
@@ -155,11 +159,18 @@ class Config:
             dss_endpoint = self.dss_endpoint
         return self._dss_bucket(dss_endpoint, qualifier='checkout')
 
+    @lru_cache(maxsize=10)
+    # `maxsize` should be greater than or equal to the expected number of
+    # possible values for the `qualifier` argument.
     def _dss_bucket(self, dss_endpoint: str, qualifier=None):
+        ssm = boto3.client('ssm')
         stage = self._dss_deployment_stage(dss_endpoint)
-        domain_part = 'hca' if stage in ('prod', 'staging') else 'humancellatlas'
+        name = f'/dcp/dss/{stage}/environment'
+        dss_parameter = ssm.get_parameter(Name=name)
+        dss_config = _json.loads(dss_parameter['Parameter']['Value'])
         qualifier = [qualifier] if qualifier else []
-        return '-'.join(['org', domain_part, 'dss', *qualifier, stage])
+        bucket_key = '_'.join(['dss', 's3', *qualifier, 'bucket']).upper()
+        return dss_config[bucket_key]
 
     def dss_main_bucket(self, dss_endpoint: Optional[str] = None):
         if dss_endpoint is None:

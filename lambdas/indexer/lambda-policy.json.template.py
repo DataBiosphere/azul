@@ -96,5 +96,14 @@ emit({
                 f"arn:aws:s3:::{config.s3_bucket}/health/*",
             ]
         },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameter"
+            ],
+            "Resource": [
+                f"arn:aws:ssm:{aws.region_name}:{aws.account}:parameter/dcp/*"
+            ]
+        }
     ]
 })
