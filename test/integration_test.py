@@ -57,28 +57,25 @@ def setUpModule():
 
 class IntegrationTest(AlwaysTearDownTestCase):
     """
-    The integration tests work by first setting the lambdas in test mode (this happens in setUp). This
-    Sets some environment variable in the indexer lambda that change its behavior slightly, allowing
-    it to process modified test notifications differently.
+    The integration test first kicks the indexer into test mode by setting some environment variables in the indexer
+    Lambda, instrumenting the production code in the indexer, causing it to process incoming notifications slightly
+    differently. In test mode, the indexer rejects organic notifications originating from the DSS, causing them to be
+    retried later. Only notifications sent by the integration test will be handled during test mode. When handling a
+    test notification, the indexer loads the real bundle referenced by the notification and rewrites the metadata
+    files in the bundle as if the bundle had a different UUID, a current version and belonged to a virtual test
+    project.
 
-    Next, the test queries Azul for all of the bundles that match a certain prefix. In
-    AzulClient.reindex() these bundle are used to construct fake notifications. These fake notifications
-    Have an extra information embedded. They include:
-     - the name of the integration test run,
-     - a new UUID for the project, and
-     - a new unique bundle UUID.
-    When the bundle is processed by the indexer lambda the original bundle uuid is used to fetch the
-    metadata, etc., but these new fields are what's actually stored in Azul. This effectively creates a
-    copy of the bundles, but each copy with a new and different bundle UUID and all copies sharing a
-    synthesized project with a different project UUID. Note that unlike real projects, the shared project
-    will contain a mix of metadata graph shapes since the bundles that contribute to it are selected
-    randomly.
+    Next, the integration test then queries DSS for all of bundles matching a certain randomly chosen UUID prefix and
+    sends a notification for each of these bundles. This and the indexer instrumentation effectively create a copy of
+    the bundles in the prefix, but each copy with a new and different bundle FQID and all copies sharing a virtual
+    project with a new and different project UUID. Note that unlike real projects, the virtual project will contain a
+    mix of metadata graph shapes since the bundles that contribute to it are selected randomly.
 
-    The UUIDs for these new bundles are used within the integration tests to assert that everything is
-    indexed. Health endpoints etc. are also checked.
+    The UUIDs for these new bundles are tracked within the integration test and are used to assert that all bundles
+    are indexed.
 
-    Finally, the tests send deletion notifications for these new bundle UUIDs which should remove all
-    trace of the integration test from the index.
+    Finally, the tests sends deletion notifications for these test bundles. The test then asserts that this removed
+    every trace of the test bundles from the index.
     """
     prefix_length = 1 if config.dss_deployment_stage == 'integration' else 3
 
