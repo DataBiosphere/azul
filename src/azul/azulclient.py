@@ -1,3 +1,5 @@
+import random
+import sys
 import uuid
 from collections import defaultdict
 from concurrent.futures import (
@@ -19,7 +21,6 @@ from pprint import PrettyPrinter
 import requests
 from typing import (
     List,
-    Optional,
     Iterable,
     Set,
     Tuple,
@@ -50,27 +51,18 @@ class AzulClient(object):
     def __init__(self,
                  indexer_url: str = config.indexer_endpoint(),
                  dss_url: str = config.dss_endpoint,
-                 query: Optional[JSON] = None,
                  prefix: str = config.dss_query_prefix,
                  num_workers: int = 16,
                  dryrun: bool = False):
-        assert query is None or not prefix, "Cannot mix `prefix` and `query`"
         self.num_workers = num_workers
-        self._query = query
         self.prefix = prefix
         self.dss_url = dss_url
         self.indexer_url = indexer_url
         self.dryrun = dryrun
 
-    def query(self, prefix=None):
-        if prefix is None:
-            prefix = self.prefix
-        if self._query is None:
-            plugin = Plugin.load()
-            return plugin.dss_subscription_query(prefix)
-        else:
-            assert not prefix
-            return self._query
+    @lru_cache()
+    def query(self):
+        return Plugin.load().dss_subscription_query(self.prefix)
 
     def post_bundle(self, indexer_url, notification):
         """
@@ -93,33 +85,48 @@ class AzulClient(object):
         }
 
     def reindex(self):
-        logger.info('Querying DSS using %s', json.dumps(self.query(), indent=4))
-        bundle_fqids = self._post_dss_search()
-        logger.info("Bundle FQIDs to index: %i", len(bundle_fqids))
+        bundle_fqids = self._list_dss_bundles()
         notifications = [self._make_notification(fqid) for fqid in bundle_fqids]
         self._index(notifications)
 
-    def test_notifications(self, test_name: str, test_uuid: str) -> Tuple[List[JSON], Set[FQID]]:
-        logger.info('Querying DSS using %s', json.dumps(self.query(), indent=4))
-        real_bundle_fqids = self._post_dss_search()
-        logger.info("Bundle FQIDs to index: %i", len(real_bundle_fqids))
+    def test_notifications(self, test_name: str, test_uuid: str, max_bundles: int) -> Tuple[List[JSON], Set[FQID]]:
+        bundle_fqids = self._list_dss_bundles()
+        bundle_fqids = self._prune_test_bundles(bundle_fqids, max_bundles)
         notifications = []
-        effective_bundle_fqids = set()
-        for bundle_fqid in real_bundle_fqids:
+        test_bundle_fqids = set()
+        for bundle_fqid in bundle_fqids:
             new_bundle_uuid = str(uuid.uuid4())
             # Using a new version helps ensure that any aggregation will choose
             # the contribution from the test bundle over that by any other
             # bundle not in the test set.
             # Failing to do this before caused https://github.com/DataBiosphere/azul/issues/1174
             new_bundle_version = azul.dss.new_version()
-            effective_bundle_fqids.add((new_bundle_uuid, new_bundle_version))
+            test_bundle_fqids.add((new_bundle_uuid, new_bundle_version))
             notification = dict(self._make_notification(bundle_fqid),
                                 test_bundle_uuid=new_bundle_uuid,
                                 test_bundle_version=new_bundle_version,
                                 test_name=test_name,
                                 test_uuid=test_uuid)
             notifications.append(notification)
-        return notifications, effective_bundle_fqids
+        return notifications, test_bundle_fqids
+
+    def _prune_test_bundles(self, bundle_fqids, max_bundles):
+        filtered_bundle_fqids = []
+        seed = random.randint(0, sys.maxsize)
+        logger.info('Selecting %i out of %i candidate bundle(s) with random seed %i.',
+                    max_bundles, len(bundle_fqids), seed)
+        random_ = random.Random(x=seed)
+        bundle_fqids = random_.sample(bundle_fqids, len(bundle_fqids))
+        for bundle_uuid, bundle_version in bundle_fqids:
+            if len(filtered_bundle_fqids) < max_bundles:
+                manifest = self.dss_client.get_bundle(uuid=bundle_uuid, version=bundle_version, replica='aws')
+                # Since we now use DSS' GET /bundles/all which doesn't support filtering, we need to filter by hand
+                # FIXME: handle bundles with more than 500 files where project_0.json is not on first page of manifest
+                if any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest['bundle']['files']):
+                    filtered_bundle_fqids.append((bundle_uuid, bundle_version))
+            else:
+                break
+        return filtered_bundle_fqids
 
     def _index(self, notifications: Iterable):
         errors = defaultdict(int)
@@ -180,31 +187,18 @@ class AzulClient(object):
         logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
         logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
 
-    def _post_dss_search(self) -> List[FQID]:
-        """
-        Works around https://github.com/HumanCellAtlas/data-store/issues/1768
-        """
-        kwargs = dict(es_query=self.query(), replica='aws', per_page=500)
-        bundle_fqids, url = [], None
+    def _list_dss_bundles(self) -> List[FQID]:
+        logger.info('Listing bundles in prefix %s.', self.prefix)
+        bundle_fqids = []
+        request = dict(prefix=self.prefix, replica='aws', per_page=500)
         while True:
-            # noinspection PyProtectedMember
-            page = self.dss_client.post_search._request(kwargs, url=url)
-            body = page.json()
-            for result in body['results']:
-                bundle_uuid, _, bundle_version = result['bundle_fqid'].partition('.')
-                bundle_fqids.append((bundle_uuid, bundle_version))
-            try:
-                next_link = page.links['next']
-            except KeyError:
-                total = body['total_hits']
-                if len(bundle_fqids) == total:
-                    return bundle_fqids
-                else:
-                    logger.warning('Result count mismatch: expected %i, actual %i. Restarting bundle listing.',
-                                   total, len(bundle_fqids))
-                    bundle_fqids, url = [], None
+            response = self.dss_client.get_bundles_all(**request)
+            bundle_fqids.extend((bundle['uuid'], bundle['version']) for bundle in response['bundles'])
+            if response['has_more']:
+                request['token'] = response['token']
             else:
-                url = next_link['url']
+                logger.info('Prefix %s contains %i bundle(s).', self.prefix, len(bundle_fqids))
+                return bundle_fqids
 
     @property
     @lru_cache(maxsize=1)
@@ -227,10 +221,8 @@ class AzulClient(object):
         def message(partition_prefix):
             prefix = self.prefix + partition_prefix
             logger.info('Preparing message for partition with prefix %s', prefix)
-            logger.debug('DSS query for partion is\n%s', json.dumps(self.query(), indent=4))
             return dict(action='reindex',
                         dss_url=self.dss_url,
-                        query=self.query(prefix),
                         dryrun=self.dryrun,
                         prefix=prefix)
 
@@ -243,17 +235,12 @@ class AzulClient(object):
     @classmethod
     def do_remote_reindex(cls, message):
         self = cls(dss_url=message['dss_url'],
-                   query=message['query'],
-                   prefix='',
+                   prefix=message['prefix'],
                    dryrun=message['dryrun'])
-        prefix = message['prefix']
-        # Render list of bundle FQIDs before moving on, reducing probability of duplicate notifications on retries
-        bundle_fqids = self._post_dss_search()
-        logger.info("DSS returned %i bundles for prefix %s", len(bundle_fqids), prefix)
-
+        bundle_fqids = self._list_dss_bundles()
         bundle_fqids = cls._filter_obsolete_bundle_versions(bundle_fqids)
-        logger.info("After filtering obsolete versions, %i bundles remain for prefix %s", len(bundle_fqids), prefix)
-
+        logger.info("After filtering obsolete versions, %i bundles remain in prefix %s",
+                    len(bundle_fqids), self.prefix)
         messages = (dict(action='add', notification=self._make_notification(bundle_fqid))
                     for bundle_fqid in bundle_fqids)
         notify_queue = self.queue(config.notify_queue_name)
@@ -263,7 +250,7 @@ class AzulClient(object):
                 notify_queue.send_messages(Entries=[dict(Id=str(i), MessageBody=json.dumps(message))
                                                     for i, message in enumerate(batch)])
             num_messages += len(batch)
-        logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, prefix)
+        logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, self.prefix)
 
     @classmethod
     def _filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[FQID]) -> List[FQID]:

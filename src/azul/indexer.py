@@ -123,25 +123,31 @@ class BaseIndexer(ABC):
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
         manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
-        # If indexing a test bundle we want to change the uuid so that we can delete the bundle after.
-        # We change the version to work around https://github.com/DataBiosphere/azul/issues/1174
-        if dss_notification.get('test_name'):
-            bundle_uuid, bundle_version = self._add_test_modifications(bundle_uuid,
-                                                                       bundle_version,
-                                                                       manifest,
-                                                                       metadata_files,
-                                                                       dss_notification)
-        # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
-        # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
-        self._create_indices()
-        log.info("Transforming metadata for bundle %s.%s", bundle_uuid, bundle_version)
+
         contributions = []
-        for transformer in self.transformers():
-            contributions.extend(transformer.transform(uuid=bundle_uuid,
-                                                       version=bundle_version,
-                                                       deleted=delete,
-                                                       manifest=manifest,
-                                                       metadata_files=metadata_files))
+        # Filter out bundles that don't have project metadata. `project.json` is used in very old v5 bundles which only
+        # occur as cans in tests these days.
+        if 'project_0.json' in metadata_files or 'project.json' in metadata_files:
+            # If indexing a test bundle we want to change the uuid so that we can delete the bundle after.
+            # We change the version to work around https://github.com/DataBiosphere/azul/issues/1174
+            if dss_notification.get('test_name'):
+                bundle_uuid, bundle_version = self._add_test_modifications(bundle_uuid,
+                                                                           bundle_version,
+                                                                           manifest,
+                                                                           metadata_files,
+                                                                           dss_notification)
+            # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
+            # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
+            self._create_indices()
+            log.info('Transforming metadata for bundle %s, version %s.', bundle_uuid, bundle_version)
+            for transformer in self.transformers():
+                contributions.extend(transformer.transform(uuid=bundle_uuid,
+                                                           version=bundle_version,
+                                                           deleted=delete,
+                                                           manifest=manifest,
+                                                           metadata_files=metadata_files))
+        else:
+            log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
         return contributions
 
     def _create_indices(self):
@@ -170,7 +176,6 @@ class BaseIndexer(ABC):
                 dss_file['uuid'] = dss_notification['test_uuid']
                 metadata_files['project_0.json']['project_core']['project_short_name'] = dss_notification['test_name']
                 metadata_files['project_0.json']['provenance']['document_id'] = dss_notification['test_uuid']
-
                 break
         else:
             assert False, "project_0.json doesn't exist for this bundle."

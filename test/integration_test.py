@@ -77,7 +77,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
     Finally, the tests sends deletion notifications for these test bundles. The test then asserts that this removed
     every trace of the test bundles from the index.
     """
-    prefix_length = 1 if config.dss_deployment_stage == 'integration' else 3
+    prefix_length = 2
+    max_bundles = 64
 
     def setUp(self):
         super().setUp()
@@ -109,7 +110,9 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def _test_indexing(self):
         logger.info('Starting test using test name, %s ...', self.test_name)
         azul_client = self.azul_client
-        self.test_notifications, self.expected_fqids = azul_client.test_notifications(self.test_name, self.test_uuid)
+        self.test_notifications, self.expected_fqids = azul_client.test_notifications(test_name=self.test_name,
+                                                                                      test_uuid=self.test_uuid,
+                                                                                      max_bundles=self.max_bundles)
         azul_client._index(self.test_notifications)
         # Index some again to test that we can handle duplicate notifications. Note: choices are with replacement
         azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
