@@ -120,6 +120,8 @@ def main(argv: List[str]):
         logger.info('Queuing notifications for reindexing ...')
         if args.partition_prefix_length:
             azul_client.remote_reindex(args.partition_prefix_length)
+        else:
+            azul_client.reindex()
 
 
 if __name__ == "__main__":
