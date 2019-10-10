@@ -301,12 +301,13 @@ class IntegrationTest(AlwaysTearDownTestCase):
 
         while True:
             hits = self._get_entities_by_project(entity_type, test_name)
-            indexed_fqids.update({
-                f"{entity['bundleUuid']}.{entity['bundleVersion']}"
+            indexed_fqids.update(
+                (entity['bundleUuid'], entity['bundleVersion'])
                 for hit in hits
                 for entity in hit.get('bundles', [])
-                if f"{entity['bundleUuid']}.{entity['bundleVersion']}" in self.expected_fqids
-            })
+                # FIXME: this condition worries me @jessebrennan
+                if (entity['bundleUuid'], entity['bundleVersion']) in self.expected_fqids
+            )
             logger.info('Found %i/%i bundles on try #%i. There are %i files with the project name.',
                         len(indexed_fqids), num_bundles, retries + 1, len(hits))
 

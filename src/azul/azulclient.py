@@ -44,6 +44,8 @@ from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 
+FQID = Tuple[str, str]
+
 
 class AzulClient(object):
 
@@ -80,8 +82,8 @@ class AzulClient(object):
         response.raise_for_status()
         return response.content
 
-    def _make_notification(self, bundle_fqid):
-        bundle_uuid, _, bundle_version = bundle_fqid.partition('.')
+    def _make_notification(self, bundle_fqid: FQID):
+        bundle_uuid, bundle_version = bundle_fqid
         return {
             "query": self.query(),
             "subscription_id": 'cafebabe-feed-4bad-dead-beaf8badf00d',
@@ -99,7 +101,7 @@ class AzulClient(object):
         notifications = [self._make_notification(fqid) for fqid in bundle_fqids]
         self._index(notifications, sync=sync)
 
-    def test_notifications(self, test_name: str, test_uuid: str) -> Tuple[List[dict], Set[str]]:
+    def test_notifications(self, test_name: str, test_uuid: str) -> Tuple[List[JSON], Set[FQID]]:
         logger.info('Querying DSS using %s', json.dumps(self.query(), indent=4))
         real_bundle_fqids = self._post_dss_search()
         logger.info("Bundle FQIDs to index: %i", len(real_bundle_fqids))
@@ -112,7 +114,7 @@ class AzulClient(object):
             # bundle not in the test set.
             # Failing to do this before caused https://github.com/DataBiosphere/azul/issues/1174
             new_bundle_version = azul.dss.new_version()
-            effective_bundle_fqids.add(new_bundle_uuid + '.' + new_bundle_version)
+            effective_bundle_fqids.add((new_bundle_uuid, new_bundle_version))
             notification = dict(self._make_notification(bundle_fqid),
                                 test_bundle_uuid=new_bundle_uuid,
                                 test_bundle_version=new_bundle_version,
@@ -184,7 +186,7 @@ class AzulClient(object):
         logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
         logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
 
-    def _post_dss_search(self) -> List[str]:
+    def _post_dss_search(self) -> List[FQID]:
         """
         Works around https://github.com/HumanCellAtlas/data-store/issues/1768
         """
@@ -195,7 +197,8 @@ class AzulClient(object):
             page = self.dss_client.post_search._request(kwargs, url=url)
             body = page.json()
             for result in body['results']:
-                bundle_fqids.append(result['bundle_fqid'])
+                bundle_uuid, _, bundle_version = result['bundle_fqid'].partition('.')
+                bundle_fqids.append((bundle_uuid, bundle_version))
             try:
                 next_link = page.links['next']
             except KeyError:
@@ -254,8 +257,6 @@ class AzulClient(object):
         bundle_fqids = self._post_dss_search()
         logger.info("DSS returned %i bundles for prefix %s", len(bundle_fqids), prefix)
 
-        # FIXME: Make this more efficient by splitting the FQID into a tuple once.
-        #        Right now, I favor a surgical change that cherry picks easily over one that's efficient.
         bundle_fqids = cls._filter_obsolete_bundle_versions(bundle_fqids)
         logger.info("After filtering obsolete versions, %i bundles remain for prefix %s", len(bundle_fqids), prefix)
 
@@ -271,27 +272,33 @@ class AzulClient(object):
         logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, prefix)
 
     @classmethod
-    def _filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[str]) -> List[str]:
+    def _filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[FQID]) -> List[FQID]:
+        # noinspection PyProtectedMember
         """
         Suppress obsolete bundle versions by only taking the latest version for each bundle UUID.
 
         >>> AzulClient._filter_obsolete_bundle_versions([])
         []
 
-        >>> AzulClient._filter_obsolete_bundle_versions(['c.0', 'a.1', 'b.3'])
-        ['c.0', 'b.3', 'a.1']
+        >>> AzulClient._filter_obsolete_bundle_versions([('c', '0'), ('a', '1'), ('b', '3')])
+        [('c', '0'), ('b', '3'), ('a', '1')]
 
-        >>> AzulClient._filter_obsolete_bundle_versions(['C.0', 'a.1', 'a.0', 'a.2', 'b.1', 'c.2'])
-        ['c.2', 'b.1', 'a.2']
+        >>> AzulClient._filter_obsolete_bundle_versions([('C', '0'), ('a', '1'), ('a', '0'), \
+                                                         ('a', '2'), ('b', '1'), ('c', '2')])
+        [('c', '2'), ('b', '1'), ('a', '2')]
 
-        >>> AzulClient._filter_obsolete_bundle_versions(['a.0', 'A.1'])
-        ['A.1']
+        >>> AzulClient._filter_obsolete_bundle_versions([('a', '0'), ('A', '1')])
+        [('A', '1')]
         """
-        # Sort lexicographically by FQID. I've observed the DSS response to already be in this order
-        bundle_fqids = sorted(bundle_fqids, key=str.lower, reverse=True)
+        # Sort lexicographically by FQID. I've observed the DSS response to
+        # already be in this order
+        bundle_fqids = sorted(bundle_fqids,
+                              key=lambda fqid: (fqid[0].lower(), fqid[1].lower()),
+                              reverse=True)
         # Group by bundle UUID
-        bundle_fqids = groupby(bundle_fqids, key=lambda bundle_fqid: bundle_fqid.partition('.')[0].lower())
-        # Take the first item in each group. Because the oder is reversed, this is the latest version
+        bundle_fqids = groupby(bundle_fqids, key=lambda fqid: fqid[0].lower())
+        # Take the first item in each group. Because the oder is reversed, this
+        # is the latest version
         bundle_fqids = [next(group) for _, group in bundle_fqids]
         return bundle_fqids
 
