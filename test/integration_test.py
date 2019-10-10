@@ -108,9 +108,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
 
     def _test_indexing(self):
         logger.info('Starting test using test name, %s ...', self.test_name)
-        azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
-                                 prefix=self.bundle_uuid_prefix)
-        logger.info('Creating indices and reindexing ...')
+        azul_client = self.azul_client
         self.test_notifications, self.expected_fqids = azul_client.test_notifications(self.test_name, self.test_uuid)
         azul_client._index(self.test_notifications)
         # Index some again to test that we can handle duplicate notifications. Note: choices are with replacement
