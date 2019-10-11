@@ -140,7 +140,7 @@ end.
 
    ```
    pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3
-   pip install -r requirements.dev.txt
+   pip install -Ur requirements.dev.txt
    ```
 
    Newer versions of pip are incompatible with some of our requirements, hence
