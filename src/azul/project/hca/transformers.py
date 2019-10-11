@@ -332,6 +332,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'version': str,
             'document_id': str,
             'file_format': str,
+            'content_description': str,
             '_type': str,
             'read_index': str,
             'lane_index': int
@@ -349,6 +350,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'version': file.manifest_entry.version,
             'document_id': str(file.document_id),
             'file_format': file.file_format,
+            'content_description': list(file.content_description),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -742,7 +744,8 @@ class FileAggregator(GroupingAggregator):
     def _transform_entity(self, entity: JSON) -> JSON:
         return dict(size=((entity['uuid'], entity['version']), entity['size']),
                     file_format=entity['file_format'],
-                    count=((entity['uuid'], entity['version']), 1))
+                    count=((entity['uuid'], entity['version']), 1),
+                    content_description=entity['content_description'])
 
     def _group_keys(self, entity) -> Iterable[Any]:
         return entity['file_format']
@@ -750,6 +753,8 @@ class FileAggregator(GroupingAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'file_format':
             return SingleValueAccumulator()
+        elif field == 'content_description':
+            return SetAccumulator(max_size=100)
         elif field in ('size', 'count'):
             return DistinctAccumulator(SumAccumulator(0))
         else:

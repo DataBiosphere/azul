@@ -30,6 +30,7 @@ class TestResponse(WebServiceTestCase):
         ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
         ('411cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
         ('412cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
+        ('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'),
     ]
 
     @classmethod
@@ -105,6 +106,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                     "files": [
                         {
+                            "content_description": [],
                             "format": "fastq.gz",
                             "name": "SRR3562915_1.fastq.gz",
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
@@ -315,6 +317,7 @@ class TestResponse(WebServiceTestCase):
                 "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                 "files": [
                     {
+                        "content_description": [],
                         "format": "fastq.gz",
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
@@ -1107,6 +1110,26 @@ class TestResponse(WebServiceTestCase):
         }
         samples = one(one(keyword_response['hits'])['samples'])
         self.assertElasticsearchResultsEqual(samples, expected_samples)
+
+    def test_file_response(self):
+        """
+        Test KeywordSearchResponse contains the correct file field values
+        """
+        keyword_response = KeywordSearchResponse(
+            hits=self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
+            entity_type='files'
+        ).return_response().to_json()
+        expected_file = {
+            'content_description': ['RNA sequence'],
+            'format': 'fastq.gz',
+            'name': 'Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz',
+            'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
+            'size': 22819025,
+            'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
+            'version': '2019-10-09T172251.560099Z'
+        }
+        file = one(one(keyword_response['hits'])['files'])
+        self.assertElasticsearchResultsEqual(file, expected_file)
 
     def test_filter_with_none(self):
         """
