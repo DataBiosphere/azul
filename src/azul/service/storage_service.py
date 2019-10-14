@@ -3,10 +3,14 @@ from concurrent.futures import (
     as_completed,
 )
 from dataclasses import dataclass
+from datetime import datetime
 from functools import lru_cache
 from logging import getLogger
+import time
 from typing import Optional
+
 import boto3
+
 from azul import config
 
 logger = getLogger(__name__)
@@ -32,10 +36,17 @@ class StorageService:
     def get(self, object_key: str) -> bytes:
         return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read()
 
-    def put(self, object_key: str, data: bytes, content_type: Optional[str] = None, **kwargs) -> str:
+    def put(self,
+            object_key: str,
+            data: bytes,
+            content_type: Optional[str] = None,
+            filename: Optional[str] = None,
+            **kwargs) -> str:
         params = {'Bucket': self.bucket_name, 'Key': object_key, 'Body': data, **kwargs}
         if content_type is not None:
             params['ContentType'] = content_type
+        if filename is not None:
+            params['Tagging'] = f'FileName={filename}'
         self.client.put_object(**params)
         return object_key
 
@@ -65,6 +76,9 @@ class StorageService:
 
     def create_bucket(self, bucket_name: str = None):
         self.client.create_bucket(Bucket=(bucket_name or self.bucket_name))
+
+    def get_object_tagging(self, key: str):
+        return self.client.get_object_tagging(Bucket=self.bucket_name, Key=key)
 
 
 class MultipartUploadHandler:
@@ -97,6 +111,7 @@ class MultipartUploadHandler:
         self.parts = []
         self.futures = []
         self.thread_pool = None
+        self.filename = None
 
     def __enter__(self):
         api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,
@@ -135,6 +150,22 @@ class MultipartUploadHandler:
                          exc_info=exception)
             self.__abort()
             raise MultipartUploadError(self.bucket_name, self.object_key) from exception
+        else:
+            if self.filename:
+                start_time = datetime.now()
+                while (datetime.now() - start_time).seconds < 60:
+                    try:
+                        tagging = {'TagSet': [{'Key': 'FileName', 'Value': self.filename}]}
+                        self.mp_upload.meta.client.put_object_tagging(Bucket=self.bucket_name,
+                                                                      Key=self.object_key,
+                                                                      Tagging=tagging)
+                    except self.mp_upload.meta.client.exceptions.NoSuchKey:
+                        logger.warning('Object key %s is not found.', self.object_key)
+                        time.sleep(5)
+                    else:
+                        break
+                else:
+                    logger.error('Unable to tag object %s with its filename, %s.', self.filename)
 
         self.mp_upload = None
         self.thread_pool.shutdown()
