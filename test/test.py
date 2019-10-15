@@ -180,24 +180,23 @@ class TestAccessorApi(TestCase):
         return manifest, metadata_files
 
     def _mock_get_bundle(self, file_uuid, file_version, content_type):
-        response = Mock()
-        response.links = {}
-        response.json.return_value = {
-            'bundle': {
-                'version': '2018-09-20T232924.687620Z',
-                'files': [
-                    {
-                        'name': 'name.json',
-                        'uuid': file_uuid,
-                        'version': file_version,
-                        'indexed': True,
-                        'content-type': content_type
-                    }
-                ]
-            }
-        }
         client = Mock()
-        client.get_bundle._request.return_value = response
+        client.get_bundle.paginate.return_value = [
+            {
+                'bundle': {
+                    'version': '2018-09-20T232924.687620Z',
+                    'files': [
+                        {
+                            'name': 'name.json',
+                            'uuid': file_uuid,
+                            'version': file_version,
+                            'indexed': True,
+                            'content-type': content_type
+                        }
+                    ]
+                }
+            }
+        ]
         return client
 
     def test_bad_content(self):

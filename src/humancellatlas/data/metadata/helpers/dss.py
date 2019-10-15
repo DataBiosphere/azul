@@ -73,19 +73,14 @@ def download_bundle_metadata(client: DSSClient,
                   replica=replica,
                   directurls=directurls,
                   presignedurls=presignedurls)
-    url = None
     manifest = []
-    while True:
-        # We can't use get_file.iterate because it only returns the `bundle.files` part of the response and swallows
-        # the `bundle.version`. See https://github.com/HumanCellAtlas/dcp-cli/issues/331
-        # noinspection PyUnresolvedReferences,PyProtectedMember
-        response = client.get_bundle._request(kwargs, url=url)
-        bundle = response.json()['bundle']
+
+    bundle = None
+    # noinspection PyUnresolvedReferences
+    for page in client.get_bundle.paginate(**kwargs):
+        bundle = page['bundle']
         manifest.extend(bundle['files'])
-        try:
-            url = response.links['next']['url']
-        except KeyError:
-            break
+    assert bundle is not None
 
     metadata_files = {f['name']: f for f in manifest if f['indexed']}
 
