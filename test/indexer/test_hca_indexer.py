@@ -41,6 +41,7 @@ from azul import (
 )
 from azul.indexer import IndexWriter
 from azul.logging import configure_test_logging
+from azul.plugin import Plugin
 from azul.threads import Latch
 from azul.transformer import (
     Aggregate,
@@ -102,6 +103,8 @@ class TestHCAIndexer(IndexerTestCase):
                                      size=258)
         self.assertTrue(small_bundle.size < IndexWriter.bulk_threshold < large_bundle.size)
 
+        field_types = Plugin.load().field_types()
+
         for bundle, size in small_bundle, large_bundle:
             with self.subTest(size=size):
                 manifest, metadata = self._load_canned_bundle(bundle)
@@ -114,11 +117,11 @@ class TestHCAIndexer(IndexerTestCase):
                     for hit in hits:
                         entity_type, aggregate = config.parse_es_index_name(hit["_index"])
                         if aggregate:
-                            doc = Aggregate.from_index(hit)
+                            doc = Aggregate.from_index(field_types, hit)
                             self.assertNotEqual(doc.contents, {})
                             num_aggregates += 1
                         else:
-                            doc = Contribution.from_index(hit)
+                            doc = Contribution.from_index(field_types, hit)
                             self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
                             self.assertFalse(doc.bundle_deleted)
                             num_contribs += 1
@@ -132,7 +135,7 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertEqual(len(hits), 2 * size)
                     docs_by_entity_id = defaultdict(list)
                     for hit in hits:
-                        doc = Contribution.from_index(hit)
+                        doc = Contribution.from_index(field_types, hit)
                         docs_by_entity_id[doc.entity.entity_id].append(doc)
                         entity_type, aggregate = config.parse_es_index_name(hit["_index"])
                         # Since there is only one bundle and it was deleted, nothing should be aggregated
