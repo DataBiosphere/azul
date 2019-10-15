@@ -1,4 +1,8 @@
-from typing import TypeVar, Mapping, Union
+from typing import (
+    TypeVar,
+    Mapping,
+    Union,
+)
 from enum import Enum
 
 K = TypeVar('K')
