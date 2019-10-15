@@ -94,7 +94,7 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["female"],
-                            "disease": None,
+                            "disease": ['normal'],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
@@ -191,7 +191,7 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["female"],
-                            "disease": None,
+                            "disease": ['normal'],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
@@ -305,7 +305,7 @@ class TestResponse(WebServiceTestCase):
                 "donorOrganisms": [
                     {
                         "biologicalSex": ["female"],
-                        "disease": None,
+                        "disease": ['normal'],
                         "genusSpecies": ["Australopithecus"],
                         "id": ["DID_scRSq06"],
                         "donorCount": 1,
@@ -572,7 +572,7 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["female"],
-                            "disease": None,
+                            "disease": ['normal'],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
@@ -736,7 +736,7 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["female"],
-                            "disease": None,
+                            "disease": ['normal'],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
@@ -940,7 +940,7 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["male"],
-                            "disease": None,
+                            "disease": ['H syndrome'],
                             "genusSpecies": ["Homo sapiens"],
                             "id": ["donor_ID_1"],
                             "donorCount": 1,
@@ -1259,7 +1259,7 @@ class TestResponse(WebServiceTestCase):
                         "male",
                         "female"
                     ],
-                    "disease": None,
+                    "disease": ['normal'],
                     "genusSpecies": [
                         "Homo sapiens"
                     ],
@@ -1295,7 +1295,7 @@ class TestResponse(WebServiceTestCase):
                         "male",
                         "female"
                     ],
-                    "disease": None,
+                    "disease": ['normal'],
                     "genusSpecies": [
                         "Homo sapiens"
                     ],

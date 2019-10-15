@@ -823,7 +823,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "organismAgeUnit": donor.get("organism_age_unit", None),
             "organismAgeRange": donor.get("organism_age_range", None),
             "biologicalSex": donor.get("biological_sex", None),
-            "disease": donor.get("disease", None)
+            "disease": donor.get("diseases", None)
         }
 
     def make_donors(self, entry):
