@@ -2,18 +2,29 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from functools import lru_cache
 import importlib
 from typing import (
     Type,
     Sequence,
     NamedTuple,
     Mapping,
+    Tuple,
     Union,
 )
 
 from azul import config
 from azul.indexer import BaseIndexer
-from azul.types import JSON
+from azul.transformer import (
+    Document,
+    FieldType,
+    FieldTypes,
+)
+from azul.types import (
+    AnyJSON,
+    AnyMutableJSON,
+    JSON,
+)
 
 ManifestConfig = Mapping[str, Mapping[str, str]]
 Translation = Mapping[str, str]
@@ -48,8 +59,29 @@ class Plugin(ABC):
     def indexer_class(self) -> Type[BaseIndexer]:
         raise NotImplementedError()
 
-    def field_types(self):
+    @lru_cache(maxsize=None)
+    def field_type(self, path: Tuple[str, ...]) -> FieldType:
+        """
+        Get the field type of a field specified by the full field name split on '.'
+        :param path: A tuple of keys to traverse down the field_types dict
+        """
+        field_types = self.field_types()
+        for p in path:
+            try:
+                field_types = field_types[p]
+            except KeyError:
+                raise KeyError(f'Path {path} not represented in field_types')
+            except TypeError:
+                raise TypeError(f'Path {path} not represented in field_types')
+            if field_types is None:
+                return None
+        return field_types
+
+    def field_types(self) -> FieldTypes:
         return self.indexer_class().field_types()
+
+    def translate_fields(self, doc: AnyJSON, forward: bool = True) -> AnyMutableJSON:
+        return Document.translate_fields(doc, self.field_types(), forward)
 
     @abstractmethod
     def dss_subscription_query(self, prefix: str) -> JSON:

@@ -9,11 +9,11 @@ import requests
 from app_test_case import LocalAppTestCase
 from azul import config
 from azul.logging import configure_test_logging
+from azul.plugin import Plugin
 from azul.service.responseobjects.hca_response_v5 import (
     FileSearchResponse,
     KeywordSearchResponse,
 )
-from azul.transformer import Document
 from service import WebServiceTestCase
 
 
@@ -56,7 +56,7 @@ class TestResponse(WebServiceTestCase):
         }
         # Tests are assumed to only ever run with the azul dev index
         results = self.es_client.search(index=config.es_index_name(entity_type, aggregate=True), body=body)
-        return Document.translate_fields([results['hits']['hits'][0]['_source']], forward=False)
+        return Plugin.load().translate_fields([results['hits']['hits'][0]['_source']], forward=False)
 
     def test_key_search_files_response(self):
         """

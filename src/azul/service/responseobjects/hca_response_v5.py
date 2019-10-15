@@ -64,6 +64,7 @@ from azul.json_freeze import (
 )
 from azul.plugin import (
     ManifestConfig,
+    Plugin,
     Translation,
 )
 from azul.service.responseobjects.buffer import FlushableBuffer
@@ -74,7 +75,6 @@ from azul.service.responseobjects.storage_service import (
 )
 from azul.service.responseobjects.utilities import json_pp
 from azul.strings import to_camel_case
-from azul.transformer import Document
 from azul.types import (
     JSON,
     MutableJSON,
@@ -235,9 +235,10 @@ class ManifestResponse(AbstractResponse):
     """
 
     def __init__(self,
-                 es_search: Search,
+                 plugin: Plugin,
                  manifest_entries: ManifestConfig,
                  mapping: Translation,
+                 es_search: Search,
                  format_: str,
                  object_key: str = None):
         """
@@ -248,6 +249,7 @@ class ManifestResponse(AbstractResponse):
         :param mapping: The mapping between the columns to values within ES
         :param object_key: A UUID string to use as the manifest's object key
         """
+        self.plugin = plugin
         self.es_search = es_search
         self.manifest_entries = OrderedDict(manifest_entries)
         self.mapping = mapping
@@ -406,7 +408,7 @@ class ManifestResponse(AbstractResponse):
         writer = csv.DictWriter(output, self.ordered_column_names, dialect='excel-tab')
         writer.writeheader()
         for hit in self.es_search.scan():
-            doc = Document.translate_fields(hit.to_dict(), forward=False)
+            doc = self.plugin.translate_fields(hit.to_dict(), forward=False)
             assert isinstance(doc, dict)
             for bundle in list(doc['bundles']):  # iterate over copy …
                 doc['bundles'] = [bundle]  # … to facilitate this in-place modifaction
@@ -472,7 +474,7 @@ class ManifestResponse(AbstractResponse):
 
         # For each outer file entity_type in the response …
         for hit in self.es_search.scan():
-            doc = Document.translate_fields(hit.to_dict(), forward=False)
+            doc = self.plugin.translate_fields(hit.to_dict(), forward=False)
 
             # Extract fields from inner entities other than bundles or files
             other_cells = {}

@@ -82,9 +82,10 @@ class ElasticTransformDump:
     """
 
     def __init__(self, service_config: Optional[ServiceConfig] = None):
+        self.plugin = Plugin.load()
         self.es_client = ESClientFactory.get()
         if service_config is None:
-            service_config = Plugin.load().service_config()
+            service_config = self.plugin.service_config()
         self.service_config = service_config
 
     def _translate_filters(self, filters: JSON, field_mapping: JSON) -> MutableJSON:
@@ -105,8 +106,8 @@ class ElasticTransformDump:
             # Replace the value in the filter with the value translated for None values
             assert isinstance(value, dict)
             assert isinstance(one(value.values()), list)
-            path = tuple(key.split('.'))
-            value = {key: [Document.translate_field(v, path) for v in val] for key, val in value.items()}
+            field_type = self.plugin.field_type(tuple(key.split('.')))
+            value = {key: [Document.translate_field(v, field_type) for v in val] for key, val in value.items()}
             translated_filters[key] = value
         return translated_filters
 
@@ -123,7 +124,8 @@ class ElasticTransformDump:
             if relation == 'is':
                 # Note that at this point None values in filters have already been translated eg. {'is': ['__null__']}
                 # and if the filter has a None our query needs to find fields with None values as well as missing fields
-                if Document.translate_field(None, path=tuple(facet.split('.'))) in value:
+                field_type = self.plugin.field_type(tuple(facet.split('.')))
+                if Document.translate_field(None, field_type) in value:
                     filter_list.append(Q('bool', should=[
                         Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}),
                         Q('bool', must_not=[Q('exists', field=facet)])
@@ -210,10 +212,9 @@ class ElasticTransformDump:
 
         def translate(agg: AggResponse):
             if isinstance(agg, FieldBucketData):
-                path = agg.meta['path']
-                path = tuple(path)
+                field_type = self.plugin.field_type(tuple(agg.meta['path']))
                 for bucket in agg:
-                    bucket['key'] = Document.translate_field(bucket['key'], path, forward=False)
+                    bucket['key'] = Document.translate_field(bucket['key'], field_type, forward=False)
                     translate(bucket)
             elif isinstance(agg, BucketData):
                 for attr in dir(agg):
@@ -490,7 +491,7 @@ class ElasticTransformDump:
             self._translate_response_aggs(es_response)
             es_response_dict = es_response.to_dict()
             hits = [hit['_source'] for hit in es_response_dict['hits']['hits']]
-            hits = Document.translate_fields(hits, forward=False)
+            hits = self.plugin.translate_fields(hits, forward=False)
             final_response = KeywordSearchResponse(hits, entity_type)
         else:
             # It's a full file search
@@ -516,7 +517,7 @@ class ElasticTransformDump:
             else:
                 hits = es_hits[0:len(es_hits) - list_adjustment]
             hits = [hit['_source'] for hit in hits]
-            hits = Document.translate_fields(hits, forward=False)
+            hits = self.plugin.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
 
@@ -557,9 +558,10 @@ class ElasticTransformDump:
                                          enable_aggregation=False,
                                          entity_type=entity_type)
         object_key = self._generate_manifest_object_key(filters) if format_ == 'full' else None
-        manifest = ManifestResponse(es_search,
+        manifest = ManifestResponse(self.plugin,
                                     manifest_config,
                                     self.service_config.translation,
+                                    es_search,
                                     format_,
                                     object_key=object_key)
         return manifest.return_response()
