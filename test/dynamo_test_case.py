@@ -10,7 +10,7 @@ class DynamoTestCase(DockerContainerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        host, port = cls._create_container('amazon/dynamodb-local', container_port=8000)
+        host, port = cls._create_container('docker.io/amazon/dynamodb-local:1.11.477', container_port=8000)
         try:
             endpoint = f'http://{host}:{port}'
             with mock_sts():
