@@ -76,6 +76,39 @@ class IntegrationTest(AlwaysTearDownTestCase):
 
     Finally, the tests sends deletion notifications for these test bundles. The test then asserts that this removed
     every trace of the test bundles from the index.
+
+    The metadata structure created by the instrumented production code is as follows:
+
+    ┌──────────────────────┐
+    │     Test Project     │          ┌────────────────┐
+    │     title = test     │          │    Project     │
+    │   document_id = b    │          │  title = foo   │
+    │(copy of project with │          │document_id = a │
+    │   document_id = a)   │          └────────────────┘
+    └──────────────────────┘                   │
+                │                              │
+                │                     ┌────────┴────────┐
+                │                     │                 │
+                ▼                     │                 │
+     ┌─────────────────────┐          ▼                 ▼
+     │     Test Bundle     │  ┌──────────────┐  ┌───────────────┐
+     │      uuid = e       │  │    Bundle    │  │    Bundle     │
+     │    version = 100    │  │   uuid = c   │  │   uuid = d    │
+     │(copy of bundle with │  │ version = 1  │  │  version = 2  │
+     │      uuid = 3)      │  └──────────────┘  └───────────────┘
+     └─────────────────────┘          ▲                 ▲
+                ▲                     │                 │
+                │                     │                 │
+                │              ┌────────────┐           │
+                │              │    File    │           │
+                └──────────────│  uuid = f  │───────────┘
+                               └────────────┘
+
+    However, it is important to note that because the selection of test bundles is random, so will be the selection
+    of project_0.json files in those bundles. Since each original project is mapped to the same test project UUID,
+    the test project will have contributions from a diverse set of file project_0.json files.
+
+    The same applies to other types of entities that are shared between bundles.
     """
     prefix_length = 2
     max_bundles = 64
@@ -303,7 +336,6 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 (entity['bundleUuid'], entity['bundleVersion'])
                 for hit in hits
                 for entity in hit.get('bundles', [])
-                # FIXME: this condition worries me @jessebrennan
                 if (entity['bundleUuid'], entity['bundleVersion']) in self.expected_fqids
             )
             logger.info('Found %i/%i bundles on try #%i. There are %i files with the project name.',

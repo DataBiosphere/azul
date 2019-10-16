@@ -128,14 +128,11 @@ class BaseIndexer(ABC):
         # Filter out bundles that don't have project metadata. `project.json` is used in very old v5 bundles which only
         # occur as cans in tests these days.
         if 'project_0.json' in metadata_files or 'project.json' in metadata_files:
-            # If indexing a test bundle we want to change the uuid so that we can delete the bundle after.
-            # We change the version to work around https://github.com/DataBiosphere/azul/issues/1174
-            if dss_notification.get('test_name'):
-                bundle_uuid, bundle_version = self._add_test_modifications(bundle_uuid,
-                                                                           bundle_version,
-                                                                           manifest,
-                                                                           metadata_files,
-                                                                           dss_notification)
+            bundle_uuid, bundle_version = self._add_test_modifications(bundle_uuid,
+                                                                       bundle_version,
+                                                                       manifest,
+                                                                       metadata_files,
+                                                                       dss_notification)
             # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
             # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
             self._create_indices()
@@ -171,15 +168,25 @@ class BaseIndexer(ABC):
         return manifest, metadata_files
 
     def _add_test_modifications(self, bundle_uuid, bundle_version, manifest, metadata_files, dss_notification):
-        for dss_file in manifest:
-            if 'project_0.json' in dss_file['name']:
-                dss_file['uuid'] = dss_notification['test_uuid']
-                metadata_files['project_0.json']['project_core']['project_short_name'] = dss_notification['test_name']
-                metadata_files['project_0.json']['provenance']['document_id'] = dss_notification['test_uuid']
-                break
+        try:
+            test_name = dss_notification['test_name']
+        except KeyError:
+            return bundle_uuid, bundle_version
         else:
-            assert False, "project_0.json doesn't exist for this bundle."
-        return dss_notification['test_bundle_uuid'], dss_notification['test_bundle_version']
+            for file in manifest:
+                if file['name'] == 'project_0.json':
+                    test_uuid = dss_notification['test_uuid']
+                    file['uuid'] = test_uuid
+                    project_json = metadata_files['project_0.json']
+                    project_json['project_core']['project_short_name'] = test_name
+                    project_json['provenance']['document_id'] = test_uuid
+                    break
+            else:
+                assert False
+            # When indexing a test bundle we want to change its UUID so that we can delete it later. We change the
+            # version to ensure that the test bundle will always be selected to contribute to a shared entity (the
+            # test bunde version was set to the current time when the notification is sent).
+            return dss_notification['test_bundle_uuid'], dss_notification['test_bundle_version']
 
     def contribute(self, contributions: List[Contribution]) -> Tallies:
         """
