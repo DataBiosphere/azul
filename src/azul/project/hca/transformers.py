@@ -140,6 +140,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'geo_series_accessions': str,
             'array_express_accessions': str,
             'insdc_study_accessions': str,
+            'supplementary_links': str,
             '_type': str
         }
 
@@ -182,6 +183,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'geo_series_accessions': list(project.geo_series_accessions),
             'array_express_accessions': list(project.array_express_accessions),
             'insdc_study_accessions': list(project.insdc_study_accessions),
+            'supplementary_links': list(project.supplementary_links),
             '_type': 'project'
         }
 

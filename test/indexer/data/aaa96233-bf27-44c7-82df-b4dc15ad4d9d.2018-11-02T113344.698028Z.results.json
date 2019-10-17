@@ -185,6 +185,7 @@
                         "geo_series_accessions": [],
                         "array_express_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "_type": "project"
                     }
                 ],
@@ -506,6 +507,7 @@
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "laboratory": [
                             "John Dear"
                         ],
@@ -682,6 +684,7 @@
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "laboratory": [
                             "John Dear"
                         ],
@@ -875,6 +878,7 @@
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "laboratory": [
                             "John Dear"
                         ],
@@ -1068,6 +1072,7 @@
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "laboratory": [
                             "John Dear"
                         ],
@@ -1320,6 +1325,7 @@
                         "geo_series_accessions": [],
                         "array_express_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "_type": [
                             "project"
                         ]
@@ -1701,6 +1707,7 @@
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "laboratory": [
                             "John Dear"
                         ],
@@ -1900,6 +1907,7 @@
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "laboratory": [
                             "John Dear"
                         ],
@@ -2068,6 +2076,7 @@
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "laboratory": [
                             "John Dear"
                         ],
@@ -2253,6 +2262,7 @@
                         "geo_series_accessions": [],
                         "insdc_project_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "laboratory": [
                             "John Dear"
                         ],
@@ -2497,6 +2507,7 @@
                         "geo_series_accessions": [],
                         "array_express_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "_type": "project"
                     }
                 ]
@@ -2679,6 +2690,7 @@
                         "geo_series_accessions": [],
                         "array_express_accessions": [],
                         "insdc_study_accessions": [],
+                        "supplementary_links": ["https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"],
                         "_type": [
                             "project"
                         ]
