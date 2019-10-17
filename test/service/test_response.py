@@ -654,6 +654,9 @@ class TestResponse(WebServiceTestCase):
                                                         "Patterns.",
                                     "publicationUrl": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                                 }
+                            ],
+                            "supplementaryLinks": [
+                                "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                             ]
                         }
                     ],
@@ -814,6 +817,9 @@ class TestResponse(WebServiceTestCase):
                                                         "Patterns.",
                                     "publicationUrl": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                                 }
+                            ],
+                            "supplementaryLinks": [
+                                'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results'
                             ]
                         }
                     ],
@@ -1015,7 +1021,8 @@ class TestResponse(WebServiceTestCase):
                                     "publicationTitle": "A title of a publication goes here.",
                                     "publicationUrl": "https://europepmc.org"
                                 }
-                            ]
+                            ],
+                            "supplementaryLinks": [],
                         }
                     ],
                     "protocols": [
