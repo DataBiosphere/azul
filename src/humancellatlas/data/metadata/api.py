@@ -172,6 +172,7 @@ class Project(Entity):
     geo_series_accessions: Set[str]
     array_express_accessions: Set[str]
     insdc_study_accessions: Set[str]
+    supplementary_links: Set[str]
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
@@ -187,6 +188,7 @@ class Project(Entity):
         self.geo_series_accessions = set(content.get('geo_series_accessions', []))
         self.array_express_accessions = set(content.get('array_express_accessions', []))
         self.insdc_study_accessions = set(content.get('insdc_study_accessions', []))
+        self.supplementary_links = set(content.get('supplementary_links', []))
 
     @property
     def laboratory_names(self) -> set:
