@@ -107,10 +107,15 @@ class AzulClient(object):
         effective_bundle_fqids = set()
         for bundle_fqid in real_bundle_fqids:
             new_bundle_uuid = str(uuid.uuid4())
-            _, _, version = bundle_fqid.partition('.')
-            effective_bundle_fqids.add(new_bundle_uuid + '.' + version)
+            # Using a new version helps ensure that any aggregation will choose
+            # the contribution from the test bundle over that by any other
+            # bundle not in the test set.
+            # Failing to do this before caused https://github.com/DataBiosphere/azul/issues/1174
+            new_bundle_version = azul.dss.new_version()
+            effective_bundle_fqids.add(new_bundle_uuid + '.' + new_bundle_version)
             notification = dict(self._make_notification(bundle_fqid),
                                 test_bundle_uuid=new_bundle_uuid,
+                                test_bundle_version=new_bundle_version,
                                 test_name=test_name,
                                 test_uuid=test_uuid)
             notifications.append(notification)

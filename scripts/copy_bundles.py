@@ -71,11 +71,11 @@ class CopyBundle(DeferredTaskExecutor):
                              default='keep',
                              help="This is the default. Use the original version string for each copy of a file or "
                                   "bundle. This mode is idempotent when used together with --keep-uuid or --map-uuid.")
-        version.add_argument('--set-version', '-S', metavar='VERSION', dest='version', type=cls._validate_version,
+        version.add_argument('--set-version', '-S', metavar='VERSION', dest='version', type=azul.dss.validate_version,
                              help=f'Set the version of bundle and file copies to the given value. This mode is '
                                   f'idempotent but it will lead to conflicts if the input contains multiple versions '
                                   f'of the same bundle or file. The version must be a string like '
-                                  f'{cls._new_version()}.')
+                                  f'{azul.dss.new_version()}.')
         version.add_argument('--map-version', '-M', metavar='VERSION', dest='version', type=float,
                              help='Set the version of bundle and file copies to the version of the orginal plus/minus '
                                   'the specified duration in seconds. This mode is idempotent but has a low '
@@ -209,56 +209,14 @@ class CopyBundle(DeferredTaskExecutor):
         if mode == 'keep':
             return version
         elif mode == 'new':
-            return self._new_version()
+            return azul.dss.new_version()
         else:
             if isinstance(mode, float):
-                version = datetime.strptime(version, self.version_format)
+                version = datetime.strptime(version, azul.dss.version_format)
                 version = datetime.fromtimestamp(version.timestamp() + mode)
-                return version.strftime(self.version_format)
+                return version.strftime(azul.dss.version_format)
             else:
                 return mode
-
-    version_format = '%Y-%m-%dT%H%M%S.%fZ'
-
-    @classmethod
-    def _new_version(cls):
-        return datetime.utcfromtimestamp(time.time()).strftime(cls.version_format)
-
-    @classmethod
-    def _validate_version(cls, version: str):
-        """
-        >>> # noinspection PyProtectedMember
-        >>> CopyBundle._validate_version('2018-10-18T150431.370880Z')
-        '2018-10-18T150431.370880Z'
-
-        >>> # noinspection PyProtectedMember
-        >>> CopyBundle._validate_version('2018-10-18T150431.0Z')
-        Traceback (most recent call last):
-        ...
-        ValueError: ('2018-10-18T150431.0Z', '2018-10-18T150431.000000Z')
-
-        >>> # noinspection PyProtectedMember
-        >>> CopyBundle._validate_version(' 2018-10-18T150431.370880Z')
-        Traceback (most recent call last):
-        ...
-        ValueError: time data ' 2018-10-18T150431.370880Z' does not match format '%Y-%m-%dT%H%M%S.%fZ'
-
-        >>> # noinspection PyProtectedMember
-        >>> CopyBundle._validate_version('2018-10-18T150431.370880')
-        Traceback (most recent call last):
-        ...
-        ValueError: time data '2018-10-18T150431.370880' does not match format '%Y-%m-%dT%H%M%S.%fZ'
-
-        >>> # noinspection PyProtectedMember
-        >>> CopyBundle._validate_version('2018-10-187150431.370880Z')
-        Traceback (most recent call last):
-        ...
-        ValueError: time data '2018-10-187150431.370880Z' does not match format '%Y-%m-%dT%H%M%S.%fZ'
-        """
-        reparsed_version = datetime.strptime(version, cls.version_format).strftime(cls.version_format)
-        if version != reparsed_version:
-            raise ValueError(version, reparsed_version)
-        return version
 
 
 if __name__ == '__main__':
