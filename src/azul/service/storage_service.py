@@ -3,7 +3,6 @@ from concurrent.futures import (
     as_completed,
 )
 from dataclasses import dataclass
-from datetime import datetime
 from functools import lru_cache
 from logging import getLogger
 import time
@@ -40,13 +39,13 @@ class StorageService:
             object_key: str,
             data: bytes,
             content_type: Optional[str] = None,
-            filename: Optional[str] = None,
+            file_name: Optional[str] = None,
             **kwargs) -> str:
         params = {'Bucket': self.bucket_name, 'Key': object_key, 'Body': data, **kwargs}
         if content_type is not None:
             params['ContentType'] = content_type
-        if filename is not None:
-            params['Tagging'] = f'FileName={filename}'
+        if file_name is not None:
+            params['Tagging'] = f'azul_file_name={file_name}'
         self.client.put_object(**params)
         return object_key
 
@@ -151,21 +150,23 @@ class MultipartUploadHandler:
             self.__abort()
             raise MultipartUploadError(self.bucket_name, self.object_key) from exception
         else:
-            if self.filename:
-                start_time = datetime.now()
-                while (datetime.now() - start_time).seconds < 60:
+            if self.file_name is not None:
+                deadline = time.time() + 60
+                tagging = {'TagSet': [{'Key': 'azul_file_name', 'Value': self.file_name}]}
+                while True:
                     try:
-                        tagging = {'TagSet': [{'Key': 'FileName', 'Value': self.filename}]}
                         self.mp_upload.meta.client.put_object_tagging(Bucket=self.bucket_name,
                                                                       Key=self.object_key,
                                                                       Tagging=tagging)
-                    except self.mp_upload.meta.client.exceptions.NoSuchKey:
-                        logger.warning('Object key %s is not found.', self.object_key)
-                        time.sleep(5)
+                    except self.mp_upload.meta.client.exceptions.NoSuchKey as e:
+                        if time.time() > deadline:
+                            logger.error('Unable to tag object %s with file name, %s.', self.file_name)
+                            raise e
+                        else:
+                            logger.warning('Object key %s is not found. Retrying in 5 s.', self.object_key)
+                            time.sleep(5)
                     else:
                         break
-                else:
-                    logger.error('Unable to tag object %s with its filename, %s.', self.filename)
 
         self.mp_upload = None
         self.thread_pool.shutdown()
