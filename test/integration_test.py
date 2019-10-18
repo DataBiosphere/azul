@@ -190,7 +190,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                            '/other_lambdas'):
             for endpoint in config.service_endpoint(), config.indexer_endpoint():
                 self._check_endpoint(endpoint, '/health' + health_key)
-        self._check_endpoint(config.service_endpoint(), '/')self._check_endpoint(config.service_endpoint(), '/')
+        self._check_endpoint(config.service_endpoint(), '/')
         self._check_endpoint(config.service_endpoint(), '/health/failures')
         self._check_endpoint(config.service_endpoint(), '/openapi')
         self._check_endpoint(config.service_endpoint(), '/version')
