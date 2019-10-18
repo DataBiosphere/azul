@@ -597,6 +597,8 @@ class TestAccessorApi(TestCase):
             self.assertEqual(publication.url, publication.publication_url)
             project_roles = {c.project_role for c in project.contributors}
             self.assertEqual(project_roles, {None, 'external curator', 'Human Cell Atlas wrangler'})
+            supplementary_links = {'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-106540/Results'}
+            self.assertEqual(project.supplementary_links, supplementary_links)
 
         assert_bundle()
 
