@@ -816,6 +816,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_donor(self, donor):
         return {
             "id": donor["biomaterial_id"],
+            "donorCount": donor.get("donor_count", None),
             "genusSpecies": donor.get("genus_species", None),
             "organismAge": donor.get("organism_age", None),
             "organismAgeUnit": donor.get("organism_age_unit", None),

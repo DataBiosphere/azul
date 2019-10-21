@@ -635,6 +635,26 @@ class DistinctAccumulator(Accumulator):
         return self.value.get()
 
 
+class UniqueValueCountAccumulator(Accumulator):
+    """
+    Count the number of unique values
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.value = SetAccumulator()
+
+    def accumulate(self, value) -> bool:
+        """
+        :return: True, if the given value increased the count of unique values
+        """
+        return self.value.accumulate(value)
+
+    def get(self) -> int:
+        unique_items = self.value.get()
+        return len(unique_items)
+
+
 class EntityAggregator(ABC):
 
     def _transform_entity(self, entity: JSON) -> JSON:
