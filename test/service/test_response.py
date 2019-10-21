@@ -96,6 +96,7 @@ class TestResponse(WebServiceTestCase):
                             "disease": None,
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
+                            "donorCount": 1,
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -191,6 +192,7 @@ class TestResponse(WebServiceTestCase):
                             "disease": None,
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
+                            "donorCount": 1,
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -304,6 +306,7 @@ class TestResponse(WebServiceTestCase):
                         "disease": None,
                         "genusSpecies": ["Australopithecus"],
                         "id": ["DID_scRSq06"],
+                        "donorCount": 1,
                         "organismAge": ["38"],
                         "organismAgeUnit": ["year"],
                         "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -569,6 +572,7 @@ class TestResponse(WebServiceTestCase):
                             "disease": None,
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
+                            "donorCount": 1,
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -732,6 +736,7 @@ class TestResponse(WebServiceTestCase):
                             "disease": None,
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
+                            "donorCount": 1,
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -935,6 +940,7 @@ class TestResponse(WebServiceTestCase):
                             "disease": None,
                             "genusSpecies": ["Homo sapiens"],
                             "id": ["donor_ID_1"],
+                            "donorCount": 1,
                             "organismAge": ["20"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}]
@@ -1240,6 +1246,7 @@ class TestResponse(WebServiceTestCase):
                         "HPSI0314i-sojd",
                         "HPSI0214i-kucg"
                     ],
+                    "donorCount": 4,
                     "organismAge": [
                         "45-49",
                         "65-69"
@@ -1275,6 +1282,7 @@ class TestResponse(WebServiceTestCase):
                         "HPSI0314i-sojd",
                         "HPSI0214i-kucg"
                     ],
+                    "donorCount": 4,
                     "organismAge": [
                         "40-44",
                         "55-59"
@@ -1312,6 +1320,30 @@ class TestResponse(WebServiceTestCase):
                 response = requests.get(url, params=params)
                 actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
                 self.assertElasticsearchResultsEqual(expected_hits, actual_value)
+
+    def test_ordering(self):
+        sort_fields = [
+            ('cellCount', lambda hit: hit['cellSuspensions'][0]['totalCells']),
+            ('donorCount', lambda hit: hit['donorOrganisms'][0]['donorCount'])
+        ]
+
+        url = self.base_url + '/repository/projects'
+        for sort_field, accessor in sort_fields:
+            responses = {
+                order: requests.get(url, params={
+                    'filters': '{}',
+                    'order': order,
+                    'sort': sort_field
+                })
+                for order in ['asc', 'desc']
+            }
+            hit_sort_values = {}
+            for order, response in responses.items():
+                response.raise_for_status()
+                hit_sort_values[order] = [accessor(hit) for hit in response.json()['hits']]
+
+            self.assertEqual(hit_sort_values['asc'], sorted(hit_sort_values['asc']))
+            self.assertEqual(hit_sort_values['desc'], sorted(hit_sort_values['desc'], reverse=True))
 
 
 class TestResponseSummary(WebServiceTestCase):
