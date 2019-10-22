@@ -213,6 +213,11 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(expected_field_order, actual_field_order)
 
     def test_bad_query_params(self):
+
+        def assert_bad_request(response):
+            self.assertEqual(400, response.status_code, response.json())
+            self.assertEqual('BadRequestError', response.json()['Code'])
+
         entity_types = ['files', 'bundles', 'samples']
         for entity_type in entity_types:
             url = self.base_url + f'/repository/{entity_type}'
@@ -220,13 +225,13 @@ class FacetNameValidationTest(WebServiceTestCase):
                 params = {
                     'some_nonexistent_filter': 1,
                 }
-                response = requests.get(url, params=params)
-                self.assertEqual(400, response.status_code, response.json())
-                self.assertEqual('BadRequestError', response.json()['Code'])
+                assert_bad_request(requests.get(url, params=params))
             with self.subTest(test='malformed parameter', entity_type=entity_type):
                 params = {
                     'size': 'foo',
                 }
-                response = requests.get(url, params=params)
-                self.assertEqual(400, response.status_code, response.json())
-                self.assertEqual('BadRequestError', response.json()['Code'])
+                assert_bad_request(requests.get(url, params=params))
+        url = self.base_url + '/integrations'
+        with self.subTest(test='missing required parameter', entity_type='integrations'):
+            params = {}
+            assert_bad_request(requests.get(url, params=params))
