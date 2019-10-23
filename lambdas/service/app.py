@@ -437,7 +437,7 @@ def get_integrations():
                     body=json.dumps(body))
 
 
-def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Set[str]) -> JSONs:
+def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:
     """
     Return matching portal integrations.
 
