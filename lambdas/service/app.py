@@ -423,14 +423,20 @@ def get_integrations():
     try:
         entity_ids = query_params['entity_ids']
     except KeyError:
+        # Case where parameter is absent (do not filter using entity_id field)
         entity_ids = None
     else:
-        entity_ids = set(entity_ids.split(','))
-        if not entity_ids:
-            raise BadRequestError('Must at least specify one value for parameter `entity_ids`')
+        if entity_ids:
+            # Case where parameter is present and non-empty (filter for matching id value)
+            entity_ids = {entity_id.strip() for entity_id in entity_ids.split(',')}
+        else:
+            # Case where parameter is present but empty (filter for missing entity_id field,
+            # i.e., there are no acceptable id values)
+            entity_ids = set()
 
     entity_type = query_params['entity_type']
     integration_type = query_params['integration_type']
+
     body = _fetch_integrations(entity_type, integration_type, entity_ids)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
