@@ -1509,6 +1509,12 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                     "entity_ids": {
                         "prod": ["cddab57b-6868-4be4-806f-395ed9dd635a"]
                     }
+                },
+                {
+                    "integration_id": "224b1d42-b939-4d10-8a8f-2b2ac304b813",
+                    "integration_type": "get",
+                    "entity_type": "project",
+                    # NO entity_ids field
                 }
             ]
         }
@@ -1522,9 +1528,11 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
 
     @classmethod
     def _extract_integration_ids(cls, response_json):
-        return [integration['integration_id']
-                for portal in response_json
-                for integration in portal['integrations']]
+        return [
+            integration['integration_id']
+            for portal in response_json
+            for integration in portal['integrations']
+        ]
 
     @mock.patch('azul.project.hca.Plugin.portal_integrations_db')
     def test_integrations(self, portal_integrations_db):
@@ -1534,10 +1542,17 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
         test_cases = [
             ('get_manifest', 'file', ['b87b7f30-2e60-4ca5-9a6f-00ebfcd35f35']),
             ('get', 'bundle', []),
-            ('get', 'project', ['977854a0-2eea-4fec-9459-d4807fe79f0c',
-                                'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138',
-                                'dbfe9394-a326-4574-9632-fbadb51a7b1a',
-                                'f13ddf2d-d913-492b-9ea8-2de4b1881c26'])
+            (
+                'get',
+                'project',
+                [
+                    '977854a0-2eea-4fec-9459-d4807fe79f0c',
+                    'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138',
+                    'dbfe9394-a326-4574-9632-fbadb51a7b1a',
+                    'f13ddf2d-d913-492b-9ea8-2de4b1881c26',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            )
         ]
         portal_integrations_db.return_value = self._portal_integrations_db
         with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
@@ -1557,21 +1572,61 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
         """
         Verify requests specifying `entity_ids` only return integrations matching those entity_ids
         """
+
+        # 224b1d42-b939-4d10-8a8f-2b2ac304b813 must appear in every test since it lacks the entity_ids field
         test_cases = [
             # One project entity id specified by one integration
-            (['cddab57b-6868-4be4-806f-395ed9dd635a'],
-             ['f13ddf2d-d913-492b-9ea8-2de4b1881c26']),
+            (
+                'cddab57b-6868-4be4-806f-395ed9dd635a',
+                [
+                    'f13ddf2d-d913-492b-9ea8-2de4b1881c26',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            ),
             # Two project entity ids specified by two different integrations
-            (['cddab57b-6868-4be4-806f-395ed9dd635a', '90bd6933-40c0-48d4-8d76-778c103bf545'],
-             ['f13ddf2d-d913-492b-9ea8-2de4b1881c26', 'dbfe9394-a326-4574-9632-fbadb51a7b1a']),
+            (
+                'cddab57b-6868-4be4-806f-395ed9dd635a, 90bd6933-40c0-48d4-8d76-778c103bf545',
+                [
+                    'f13ddf2d-d913-492b-9ea8-2de4b1881c26',
+                    'dbfe9394-a326-4574-9632-fbadb51a7b1a',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            ),
             # One project entity id specified by two different integrations
-            (['c4077b3c-5c98-4d26-a614-246d12c2e5d7'],
-             ['977854a0-2eea-4fec-9459-d4807fe79f0c', 'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138'])
+            (
+                'c4077b3c-5c98-4d26-a614-246d12c2e5d7',
+                [
+                    '977854a0-2eea-4fec-9459-d4807fe79f0c',
+                    'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            ),
+            # Blank entity id, to match integrations lacking the entity_id field
+            (
+                '',
+                [
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            ),
+            # No entity id, accepting all integrations
+            (
+                None,
+                [
+                    'f13ddf2d-d913-492b-9ea8-2de4b1881c26',
+                    'dbfe9394-a326-4574-9632-fbadb51a7b1a',
+                    '977854a0-2eea-4fec-9459-d4807fe79f0c',
+                    'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            )
         ]
+
         portal_integrations_db.return_value = self._portal_integrations_db
         with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
             for entity_ids, integration_ids in test_cases:
-                params = dict(integration_type='get', entity_type='project', entity_ids=','.join(entity_ids))
+                params = dict(integration_type='get', entity_type='project')
+                if entity_ids is not None:
+                    params['entity_ids'] = entity_ids
                 with self.subTest(**params):
                     response_json = self._get_integrations(params)
                     found_integration_ids = self._extract_integration_ids(response_json)
