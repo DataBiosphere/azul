@@ -184,6 +184,7 @@ class SummaryRepresentation(JsonObject):
     """
     projectCount = IntegerProperty()
     specimenCount = IntegerProperty()
+    speciesCount = IntegerProperty()
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
     donorCount = IntegerProperty()
@@ -680,6 +681,7 @@ class SummaryResponse(AbstractResponse):
         return SummaryRepresentation(
             projectCount=agg_value('projectCount.value'),
             specimenCount=agg_value('specimenCount.value'),
+            speciesCount=agg_value('speciesCount.value'),
             fileCount=agg_value('fileCount.value'),
             totalFileSize=agg_value('total_size.value'),
             donorCount=agg_value('donorCount.value'),

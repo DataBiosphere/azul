@@ -1381,6 +1381,8 @@ class TestResponseSummary(WebServiceTestCase):
         self.assertEqual(summary_object['specimenCount'], 1)
         self.assertEqual(summary_object['projectCount'], 1)
         self.assertEqual(summary_object['totalCellCount'], 0.0)
+        # Mus musculus only
+        self.assertEqual(summary_object['speciesCount'], 1)
 
         # This request should match bundles 94f2ba52 and dcccb551 but not aaa96233 which has a 'organ_part' value.
         # Bundle 94f2ba52 has a Specimen with 'organ' but no 'organ_part'
@@ -1393,6 +1395,8 @@ class TestResponseSummary(WebServiceTestCase):
         self.assertEqual(summary_object['specimenCount'], 5)
         self.assertEqual(summary_object['projectCount'], 2)
         self.assertEqual(summary_object['totalCellCount'], 6210.0)
+        # Muc muscuclus (94f2ba52) and Homo sapiens (dcccb551)
+        self.assertEqual(summary_object['speciesCount'], 2)
 
 
 class TestPortalIntegrationResponse(LocalAppTestCase):
