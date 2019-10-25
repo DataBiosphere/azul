@@ -425,10 +425,10 @@ Testing
 Version Control
 ===============
 
-* Feature branches are integrated by rebasing or squashing. We only use merges
-  between deployment branches, either to promote changes in their natural
-  progression from one deployment to the next or to backport a hotfix to a
-  lesser branch like from ``prod`` to ``develop``.
+* Feature branches are merged into develop. If a hotfix is made to a deployment
+  branch other than develop, that branch is merged into develop so that the
+  hotfix is eventually distributed to all deployment branches. Deployment
+  branches are merged during a deployment.
 
 * We commit independent changes separately. If two changes could be applied in
   either order, they should occur in separate commits. Two changes A and B of
@@ -587,7 +587,18 @@ Pull Requests
   be assigned the ``sandbox`` label at any point in time.
   
 * Until further notice only the lead may act as a primary reviewer.
-  
+
+* Feature branches are integrated by merging. The merge commit should match the
+  title of the pertinent commit in the branch, but also include the PR number.
+  An example of this history looks like::
+
+    *   8badf00d (develop) Reticulate them splines for good measure (#123, PR #124)
+    |\
+    | * cafebabe Reticulate them splines for good measure (#123)
+    |/
+    ...
+
+
 .. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
   
 
