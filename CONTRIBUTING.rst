@@ -541,9 +541,12 @@ Pull Requests
   assignee may push to the PR branch. If a PR is assigned to no one, only the
   author may push to the PR branch.
 
-* We may amend commits on PR branches, but only between primary reviews. We
-  don't amend a commit that's already been reviewed. Instead we create a new
-  ``fixup!`` commit for addressing the reviewers comments.
+* Commits in a PR should not invalidate changes from previous commits in the PR.
+  Revisions that occur during development should be amended into their relevant
+  ancestor. However …
+
+* … we don't amend a commit that's already been reviewed. Instead we create a
+  new ``fixup!`` commit for addressing the reviewers comments.
   
   Before asking for another review we may amend that commit. In fact, amending
   a ``!fixup`` commit between reviews is preferred in order to avoid continuous
