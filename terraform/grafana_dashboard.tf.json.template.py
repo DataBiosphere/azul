@@ -1,10 +1,9 @@
 import json
 
 from azul import config
-from azul.deployment import aws
-from azul.template import emit
+from azul.deployment import aws, emit_tf
 
-emit({
+emit_tf({
      "output": {
          "grafana_dashboard_azul": {
              "sensitive": True,

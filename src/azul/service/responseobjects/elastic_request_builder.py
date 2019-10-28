@@ -545,7 +545,7 @@ class ElasticTransformDump:
             assert len(response.hits) == 0
             aggregate = response.aggregations
             manifest_config = self._generate_full_manifest_config(aggregate)
-        elif format_ == 'bdbag':
+        elif format_ in ('terra.bdbag', 'bdbag'):
             # Terra rejects `.` in column names
             manifest_config = {
                 path: {

@@ -155,9 +155,7 @@ class Config:
 
     def _dss_bucket(self, dss_endpoint: str, qualifier=None):
         stage = self._dss_deployment_stage(dss_endpoint)
-        # For domain_part, DSS went from `humancellatlas` to `hca` in 9/2018 and started reverting back to
-        # `humancellatlas` in 12/2018. As I write this, only `dev` is back on `humancellatlas`
-        domain_part = 'hca' if stage == 'prod' else 'humancellatlas'
+        domain_part = 'hca' if stage in ('prod', 'staging') else 'humancellatlas'
         qualifier = [qualifier] if qualifier else []
         return '-'.join(['org', domain_part, 'dss', *qualifier, stage])
 
@@ -434,6 +432,9 @@ class Config:
         client = AzulDSSClient(swagger_url=swagger_url, adapter_args=adapter_args)
         client.timeout_policy = Timeout(connect=10, read=40)
         return client
+
+    service_cache_health_lambda_basename = 'servicecachehealth'
+    indexer_cache_health_lambda_basename = 'indexercachehealth'
 
     @property
     def indexer_concurrency(self):
