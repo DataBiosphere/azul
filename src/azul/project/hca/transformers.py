@@ -1,26 +1,44 @@
-from abc import ABCMeta, abstractmethod
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from collections import Counter
 import logging
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Union
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Set,
+    Union,
+)
 
 from humancellatlas.data.metadata import api
 
-from azul import reject, require
+from azul import (
+    reject,
+    require,
+)
 from azul.project.hca.metadata_generator import MetadataGenerator
-from azul.transformer import (Accumulator,
-                              AggregatingTransformer,
-                              Contribution,
-                              DistinctAccumulator,
-                              Document,
-                              EntityReference,
-                              FrequencySetAccumulator,
-                              GroupingAggregator,
-                              SingleValueAccumulator,
-                              ListAccumulator,
-                              SetAccumulator,
-                              SetOfDictAccumulator,
-                              SimpleAggregator,
-                              SumAccumulator)
+from azul.transformer import (
+    Accumulator,
+    AggregatingTransformer,
+    Contribution,
+    DistinctAccumulator,
+    Document,
+    EntityReference,
+    FrequencySetAccumulator,
+    GroupingAggregator,
+    SingleValueAccumulator,
+    ListAccumulator,
+    SetAccumulator,
+    SetOfDictAccumulator,
+    SimpleAggregator,
+    SumAccumulator,
+)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -311,7 +329,6 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'read_index': str,
             'lane_index': int
         }
-
 
     def _file(self, file: api.File) -> JSON:
         # noinspection PyDeprecation

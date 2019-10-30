@@ -44,6 +44,7 @@ generic with minimal need for project-specific behavior.
     - [2.5 Reindexing](#25-reindexing)
     - [2.6 Cancelling an ongoing (re)indexing operation](#26-cancelling-an-ongoing-reindexing-operation)
     - [2.7 Deleting all indices](#27-deleting-all-indices)
+    - [2.8 Deleting a deployment](#28-deleting-a-deployment)
 - [3. Running indexer or service locally](#3-running-indexer-or-service-locally)
 - [4. Troubleshooting](#4-troubleshooting)
 - [5. Branch flow & development process](#5-branch-flow--development-process)
@@ -139,7 +140,7 @@ end.
 
    ```
    pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3
-   pip install -r requirements.dev.txt
+   pip install -Ur requirements.dev.txt
    ```
 
    Newer versions of pip are incompatible with some of our requirements, hence
@@ -431,17 +432,22 @@ make delete
    _select test.local
    ```
 
-3. Unsubscribe
+3. Delete all Azul indices in the selected deployment
+    ```
+    python scripts/reindex.py --delete
+    ```
+   
+4. Unsubscribe
    ```
    make unsubscribe
    ```
    
-4. Destroy cloud infrastructure
+5. Destroy cloud infrastructure
    ```
    make -C terraform destroy
    ```
 
-5. Delete lambdas
+6. Delete lambdas
    ```
    make -C lambdas delete
    ```

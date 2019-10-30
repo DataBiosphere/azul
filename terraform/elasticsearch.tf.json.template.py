@@ -9,12 +9,14 @@ logs = {
     'error': ('ES_APPLICATION_LOGS', False)
 }
 
+domain = config.es_domain
+
 emit_tf(None if config.share_es_domain else {
     "resource": [
         *({
             "aws_cloudwatch_log_group": {
                 f"azul_{log}_log": {
-                    "name": f"/aws/aes/domains/{config.es_domain}/{log}-logs",
+                    "name": f"/aws/aes/domains/{domain}/{log}-logs",
                     "retention_in_days": 1827
                 }
             }
@@ -22,7 +24,7 @@ emit_tf(None if config.share_es_domain else {
         {
             "aws_cloudwatch_log_resource_policy": {
                 "azul_es_cloudwatch_policy": {
-                    "policy_name": config.es_domain,
+                    "policy_name": domain,
                     "policy_document": json.dumps(
                         {
                             "Version": "2012-10-17",
@@ -58,7 +60,7 @@ emit_tf(None if config.share_es_domain else {
                                     "AWS": "arn:aws:iam::${local.account_id}:root"
                                 },
                                 "Action": "es:*",
-                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/" + config.es_domain + "/*"
+                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/" + domain + "/*"
                             },
                             {
                                 "Effect": "Allow",
@@ -66,7 +68,7 @@ emit_tf(None if config.share_es_domain else {
                                     "AWS": "*"
                                 },
                                 "Action": "es:*",
-                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/" + config.es_domain + "/*",
+                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/" + domain + "/*",
                                 "Condition": {
                                     "IpAddress": {
                                         "aws:SourceIp": []
@@ -82,8 +84,8 @@ emit_tf(None if config.share_es_domain else {
                         "instance_count": config.es_instance_count,
                         "instance_type": config.es_instance_type
                     },
-                    "count": 1 if config.es_domain else 0,
-                    "domain_name": config.es_domain,
+                    "count": 1 if domain else 0,
+                    "domain_name": domain,
                     "ebs_options": {
                         "ebs_enabled": "true",
                         "volume_size": config.es_volume_size,

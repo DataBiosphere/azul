@@ -1,19 +1,47 @@
-from abc import ABC, ABCMeta, abstractmethod
-from collections import defaultdict, Counter
+from abc import (
+    ABC,
+    ABCMeta,
+    abstractmethod,
+)
+from collections import (
+    defaultdict,
+    Counter,
+)
 import logging
 import sys
 from functools import lru_cache
 
 from more_itertools import one
-from typing import Any, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple, ClassVar, Sequence
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    NamedTuple,
+    Optional,
+    Tuple,
+    ClassVar,
+    Sequence,
+)
 
-from dataclasses import dataclass, fields
+from dataclasses import (
+    dataclass,
+    fields,
+)
 
 from humancellatlas.data.metadata import api
 
 from azul import config
-from azul.json_freeze import freeze, thaw
-from azul.types import JSON, AnyJSON, AnyMutableJSON
+from azul.json_freeze import (
+    freeze,
+    thaw,
+)
+from azul.types import (
+    JSON,
+    AnyJSON,
+    AnyMutableJSON,
+)
 
 MIN_INT = -sys.maxsize - 1
 
@@ -459,6 +487,7 @@ class FrequencySetAccumulator(Accumulator):
     >>> a.get()
     []
     """
+
     def __init__(self, max_size) -> None:
         super().__init__()
         self.value = Counter()

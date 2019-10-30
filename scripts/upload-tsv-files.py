@@ -10,15 +10,16 @@ import sys
 
 
 class ProjectTSVUploader:
+
     def __init__(self, deployment):
         deployments = {
             'dev':
                 {
-                 'service_url': 'https://service.dev.explore.data.humancellatlas.org'
+                    'service_url': 'https://service.dev.explore.data.humancellatlas.org'
                 },
             'prod':
                 {
-                 'service_url': 'https://service.explore.data.humancellatlas.org'
+                    'service_url': 'https://service.explore.data.humancellatlas.org'
                 }
         }
 
@@ -48,7 +49,7 @@ class ProjectTSVUploader:
                 project_uuid = os.path.splitext(filename)[0]
                 project_name = self._get_project_name(project_uuid)
                 file_name = unicodedata.normalize('NFKD', project_name)
-                file_name = re.sub('[^\w ,.@%&-_()\\[\]/{}]', '_', file_name).strip()
+                file_name = re.sub(r'[^\w ,.@%&-_()\\[\]/{}]', '_', file_name).strip()
                 timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
                 content_disposition = f'attachment;filename="{file_name} {timestamp}.tsv"'
                 assert '\\' not in file_name

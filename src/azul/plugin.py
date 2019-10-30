@@ -1,6 +1,15 @@
-from abc import ABC, abstractmethod
+from abc import (
+    ABC,
+    abstractmethod,
+)
 import importlib
-from typing import Type, Sequence, NamedTuple, Mapping, Union
+from typing import (
+    Type,
+    Sequence,
+    NamedTuple,
+    Mapping,
+    Union,
+)
 
 from azul import config
 from azul.indexer import BaseIndexer

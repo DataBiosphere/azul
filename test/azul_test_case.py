@@ -22,8 +22,9 @@ class AlwaysTearDownTestCase(TestCase):
     - If an exception is raised in setUpClass or setUpModule, the corresponding
       tearDown will not be run.
     """
+
     def __init__(self, *args, **kwargs):
-        super().__init__(* args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.setUp = self._cleanup_wrapper(self.setUp, BaseException)
 
     def run(self, result=None):
@@ -106,6 +107,7 @@ class TestAlwaysTearDownTestCase(TestCase):
                 events = []
 
                 class TC(Hidden.TracingTestCase, test_class):
+
                     def test(self):
                         super().test()
                         raise KeyboardInterrupt()
@@ -123,6 +125,7 @@ class TestAlwaysTearDownTestCase(TestCase):
                 events = []
 
                 class TC(Hidden.TracingTestCase, test_class):
+
                     def setUp(self):
                         super().setUp()
                         raise RuntimeError('Exception in setUp')
@@ -138,6 +141,7 @@ class TestAlwaysTearDownTestCase(TestCase):
                 events = []
 
                 class TC(Hidden.TracingTestCase, test_class):
+
                     def setUp(self):
                         super().setUp()
                         raise KeyboardInterrupt()

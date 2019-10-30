@@ -15,11 +15,13 @@ class FileUrlFunc(Protocol):
 
 
 class EntityNotFoundError(Exception):
+
     def __init__(self, entity_type: str, entity_id: str):
         super().__init__(f"Can't find an entity in {entity_type} with an uuid, {entity_id}.")
 
 
 class InvalidUUIDError(Exception):
+
     def __init__(self, entity_id: str):
         super().__init__(f'{entity_id} is not a valid uuid.')
 

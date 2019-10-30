@@ -1,4 +1,11 @@
-from typing import Union, Mapping, Any, Sequence, MutableMapping, MutableSequence
+from typing import (
+    Union,
+    Mapping,
+    Any,
+    Sequence,
+    MutableMapping,
+    MutableSequence,
+)
 
 PrimitiveJSON = Union[str, int, float, bool, None]
 
