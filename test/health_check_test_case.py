@@ -1,11 +1,21 @@
 from abc import ABCMeta
 from contextlib import contextmanager
 import os
-from typing import List, Mapping
-from unittest import TestSuite, mock
+from typing import (
+    List,
+    Mapping,
+)
+from unittest import (
+    TestSuite,
+    mock,
+)
 
 import boto3
-from moto import mock_sqs, mock_sts, mock_s3
+from moto import (
+    mock_sqs,
+    mock_sts,
+    mock_s3,
+)
 from mock import MagicMock
 import requests
 import responses

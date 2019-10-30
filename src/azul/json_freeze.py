@@ -1,4 +1,7 @@
-from azul.types import AnyJSON, AnyMutableJSON
+from azul.types import (
+    AnyJSON,
+    AnyMutableJSON,
+)
 from azul.vendored.frozendict import frozendict
 
 

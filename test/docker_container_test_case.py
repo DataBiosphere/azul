@@ -61,7 +61,7 @@ class DockerContainerTestCase(AzulTestCase):
                 logger.info('Launched container %s from image %s, with container port %s mapped to %s:%i on the host',
                             container.name, image, container_port, host_ip, host_port)
                 endpoint = (host_ip, host_port)
-        except:  # no coverage
+        except BaseException:  # no coverage
             container.kill()
             raise
         else:

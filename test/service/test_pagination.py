@@ -143,9 +143,12 @@ class PaginationTestCase(WebServiceTestCase):
         search_after = json_response_second['pagination']['search_before']
         search_after_uid = json_response_second['pagination']['search_before_uid']
 
-        content = requests.get(
-            "{}?sort=entryId&order=desc&search_after={}&search_after_uid={}&order=desc".format(self.get_base_url(),
-                                                                            search_after, search_after_uid)).content
+        content = requests.get(f"{self.get_base_url()}"
+                               f"?sort=entryId"
+                               f"&order=desc"
+                               f"&search_after={search_after}"
+                               f"&search_after_uid={search_after_uid}"
+                               f"&order=desc").content
         json_response = json.loads(content)
         if 'search_before' in json_response['pagination']:
             self.assertEqual(json_response['pagination']['search_before'], search_after_lrfp,

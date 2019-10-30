@@ -1,4 +1,7 @@
-from logging import INFO, DEBUG
+from logging import (
+    INFO,
+    DEBUG,
+)
 
 import requests
 

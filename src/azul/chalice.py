@@ -43,16 +43,16 @@ class AzulChaliceApp(Chalice):
             context = self.current_request.context
             query = self.current_request.query_params
             log.info(f"Received {context['httpMethod']} request "
-                          f"to '{context['path']}' "
-                          f"with{' parameters ' + json.dumps(query) if query else 'out parameters'}.")
+                     f"to '{context['path']}' "
+                     f"with{' parameters ' + json.dumps(query) if query else 'out parameters'}.")
 
     def _log_response(self, response):
         if log.isEnabledFor(logging.DEBUG):
             n = 1024
             log.debug(f"Returning {response.status_code} response "
-                           f"with{' headers ' + json.dumps(response.headers) if response.headers else 'out headers'}. "
-                           f"See next line for the first {n} characters of the body.\n"
-                           + (response.body[:n] if isinstance(response.body, str) else json_head(n, response.body)))
+                      f"with{' headers ' + json.dumps(response.headers) if response.headers else 'out headers'}. "
+                      f"See next line for the first {n} characters of the body.\n"
+                      + (response.body[:n] if isinstance(response.body, str) else json_head(n, response.body)))
         else:
             log.info('Returning %i response. To log headers and body, set AZUL_DEBUG to 1.', response.status_code)
 

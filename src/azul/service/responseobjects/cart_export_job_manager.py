@@ -1,7 +1,14 @@
-from base64 import urlsafe_b64encode, urlsafe_b64decode
+from base64 import (
+    urlsafe_b64encode,
+    urlsafe_b64decode,
+)
 import binascii
 from datetime import datetime
-from json import dumps as json_dumps, loads as json_loads, decoder
+from json import (
+    dumps as json_dumps,
+    loads as json_loads,
+    decoder,
+)
 import logging
 import uuid
 
@@ -22,7 +29,7 @@ class CartExportJobManager:
     def decode_token(token):
         return json_loads(urlsafe_b64decode(token).decode('utf-8'))
 
-    def initiate(self, user_id:str, cart_id:str, access_token:str):
+    def initiate(self, user_id: str, cart_id: str, access_token: str):
         execution_id = str(uuid.uuid4())
         collection_uuid = str(uuid.uuid4())
         collection_version = datetime.utcnow().strftime('%Y-%m-%dT%H%M%S.000000Z')

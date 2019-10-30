@@ -1,27 +1,51 @@
-from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from collections import (
+    Counter,
+    defaultdict,
+)
 from itertools import groupby
 import logging
 from operator import attrgetter
 import time
-from typing import Iterable, List, Mapping, MutableMapping, MutableSet, Union, Tuple, Optional
+from typing import (
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    MutableSet,
+    Union,
+    Tuple,
+    Optional,
+)
 
-from elasticsearch import ConflictError, ElasticsearchException
-from elasticsearch.helpers import parallel_bulk, scan, streaming_bulk
+from elasticsearch import (
+    ConflictError,
+    ElasticsearchException,
+)
+from elasticsearch.helpers import (
+    parallel_bulk,
+    scan,
+    streaming_bulk,
+)
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
 from azul import config
-from azul.dss import patch_client_for_direct_access
+import azul.dss
 from azul.es import ESClientFactory
-from azul.transformer import (Aggregate,
-                              AggregatingTransformer,
-                              Contribution,
-                              Document,
-                              DocumentCoordinates,
-                              EntityReference,
-                              Transformer,
-                              BundleUUID)
+from azul.transformer import (
+    Aggregate,
+    AggregatingTransformer,
+    Contribution,
+    Document,
+    DocumentCoordinates,
+    EntityReference,
+    Transformer,
+    BundleUUID,
+)
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -124,8 +148,7 @@ class BaseIndexer(ABC):
 
     def _get_bundle(self, bundle_uuid, bundle_version):
         now = time.time()
-        dss_client = config.dss_client(adapter_args=dict(pool_maxsize=config.num_dss_workers))
-        patch_client_for_direct_access(dss_client)
+        dss_client = azul.dss.direct_access_client(num_workers=config.num_dss_workers)
         _, manifest, metadata_files = download_bundle_metadata(client=dss_client,
                                                                replica='aws',
                                                                uuid=bundle_uuid,
@@ -185,8 +208,10 @@ class BaseIndexer(ABC):
             # Read the aggregates
             old_aggregates = self._read_aggregates(tallies)
             total_tallies = Counter(tallies)
-            total_tallies.update({old_aggregate.entity: old_aggregate.num_contributions
-                                     for old_aggregate in old_aggregates.values()})
+            total_tallies.update({
+                old_aggregate.entity: old_aggregate.num_contributions
+                for old_aggregate in old_aggregates.values()
+            })
             # Read all contributions from Elasticsearch
             contributions = self._read_contributions(total_tallies)
             actual_tallies = Counter(contribution.entity for contribution in contributions)

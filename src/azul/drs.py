@@ -1,5 +1,13 @@
-from typing import Optional, Tuple
-from urllib.parse import urlunsplit, SplitResult, urlencode, urlsplit
+from typing import (
+    Optional,
+    Tuple,
+)
+from urllib.parse import (
+    urlunsplit,
+    SplitResult,
+    urlencode,
+    urlsplit,
+)
 
 from azul import config
 

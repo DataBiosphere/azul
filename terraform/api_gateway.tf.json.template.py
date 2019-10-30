@@ -4,7 +4,10 @@ from typing import List
 from dataclasses import dataclass
 
 from azul import config
-from azul.deployment import aws, emit_tf
+from azul.deployment import (
+    aws,
+    emit_tf,
+)
 from azul.objects import InternMeta
 
 

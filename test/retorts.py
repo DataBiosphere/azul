@@ -75,6 +75,7 @@ class ResponsesHelper:
 
 
 class AuthResponseHelper(ResponsesHelper):
+
     def __init__(self, passthru_url: str = None, request_mock: responses.RequestsMock = None) -> None:
         super().__init__(request_mock)
         self.passthru_url = passthru_url
@@ -85,7 +86,7 @@ class AuthResponseHelper(ResponsesHelper):
             self.add_passthru(self.passthru_url)
 
         def encode_int(x):
-            return b64encode(x.to_bytes(ceil(x.bit_length()/8), 'big')).decode('utf-8')
+            return b64encode(x.to_bytes(ceil(x.bit_length() / 8), 'big')).decode('utf-8')
 
         def generate_test_public_keys(request):
             public_key = TestKeyManager.get_public_key()
@@ -110,7 +111,11 @@ class AuthResponseHelper(ResponsesHelper):
         return context
 
     @staticmethod
-    def generate_test_claims(email:str, identifier:str=None, group:str=None, ttl:int=60, issued_at:float=None):
+    def generate_test_claims(email: str,
+                             identifier: str = None,
+                             group: str = None,
+                             ttl: int = 60,
+                             issued_at: float = None):
         issued_at = issued_at or time.time()
         return {
             "aud": config.access_token_audience_list,
@@ -125,7 +130,11 @@ class AuthResponseHelper(ResponsesHelper):
         }
 
     @staticmethod
-    def generate_test_jwt(email:str, identifier:str=None, group:str=None, ttl:int=60, issued_at:float=None):
+    def generate_test_jwt(email: str,
+                          identifier: str = None,
+                          group: str = None,
+                          ttl: int = 60,
+                          issued_at: float = None):
         return jwt.encode(AuthResponseHelper.generate_test_claims(email, identifier, group, ttl, issued_at),
                           key=TestKeyManager.get_private_key(),
                           algorithm='RS256',
@@ -133,6 +142,7 @@ class AuthResponseHelper(ResponsesHelper):
 
 
 class TestKeyManager:
+
     @staticmethod
     @lru_cache(1)
     def public_key_path():
