@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from datetime import datetime
 import json
 import logging
 import os
@@ -215,3 +216,41 @@ def shared_credentials():
         f.flush()
         with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
             yield
+
+
+version_format = '%Y-%m-%dT%H%M%S.%fZ'
+
+
+def new_version():
+    return datetime.utcnow().strftime(version_format)
+
+
+def validate_version(version: str):
+    """
+    >>> validate_version('2018-10-18T150431.370880Z')
+    '2018-10-18T150431.370880Z'
+
+    >>> validate_version('2018-10-18T150431.0Z')
+    Traceback (most recent call last):
+    ...
+    ValueError: ('2018-10-18T150431.0Z', '2018-10-18T150431.000000Z')
+
+    >>> validate_version(' 2018-10-18T150431.370880Z')
+    Traceback (most recent call last):
+    ...
+    ValueError: time data ' 2018-10-18T150431.370880Z' does not match format '%Y-%m-%dT%H%M%S.%fZ'
+
+    >>> validate_version('2018-10-18T150431.370880')
+    Traceback (most recent call last):
+    ...
+    ValueError: time data '2018-10-18T150431.370880' does not match format '%Y-%m-%dT%H%M%S.%fZ'
+
+    >>> validate_version('2018-10-187150431.370880Z')
+    Traceback (most recent call last):
+    ...
+    ValueError: time data '2018-10-187150431.370880Z' does not match format '%Y-%m-%dT%H%M%S.%fZ'
+    """
+    reparsed_version = datetime.strptime(version, version_format).strftime(version_format)
+    if version != reparsed_version:
+        raise ValueError(version, reparsed_version)
+    return version

@@ -35,7 +35,6 @@ script:
   - make pep8
   - make test
   - make check_clean
-  - make check_autosquash
 
 after_success:
   - coveralls

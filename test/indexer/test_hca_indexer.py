@@ -528,6 +528,32 @@ class TestHCAIndexer(IndexerTestCase):
                 file_document_ids.add(file['hca_ingest']['document_id'])
         self.assertEqual(file_document_ids, file_uuids)
 
+    def test_indexing_matrix_related_files(self):
+        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        self.maxDiff = None
+        hits = self._get_all_hits()
+        zarrs = []
+        for hit in hits:
+            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            if entity_type == 'files':
+                file = one(hit['_source']['contents']['files'])
+                if len(file['related_files']) > 0:
+                    self.assertEqual(file['file_format'], 'matrix')
+                    zarrs.append(hit)
+                elif file['file_format'] == 'matrix':
+                    # Matrix of Loom or CSV format possibly
+                    self.assertNotIn('.zarr', file['name'])
+            elif not aggregate:
+                for file in hit['_source']['contents']['files']:
+                    self.assertEqual(file['related_files'], [])
+
+        self.assertEqual(len(zarrs), 2)  # One contribution, one aggregate
+        for zarr_file in zarrs:
+            zarr_file = one(zarr_file['_source']['contents']['files'])
+            related_files = zarr_file['related_files']
+            self.assertNotIn(zarr_file['name'], {f['name'] for f in related_files})
+            self.assertEqual(len(related_files), 12)
+
     def test_indexing_with_skipped_matrix_file(self):
         # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
         self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
@@ -832,14 +858,38 @@ class TestHCAIndexer(IndexerTestCase):
             else:
                 self.assertIn(metadata_row['file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
 
+    def test_related_files_field_exclusion(self):
+        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+
+        # Check that the dynamic mapping has the related_files field disabled
+        index = config.es_index_name('files')
+        mapping = self.es_client.indices.get_mapping(index=index)
+        contents = mapping[index]['mappings']['doc']['properties']['contents']
+        self.assertFalse(contents['properties']['files']['properties']['related_files']['enabled'])
+
+        # Ensure that related_files exists
+        hits = self._get_all_hits()
+        for hit in hits:
+            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            if aggregate and entity_type == 'files':
+                file = one(hit['_source']['contents']['files'])
+                self.assertIn('related_files', file)
+
+        # … but that it can't be used for queries
+        zattrs_file = "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr!.zattrs"
+        hits = self.es_client.search(index=index,
+                                     body={
+                                         "query": {
+                                             "match": {
+                                                 "contents.files.related_files.name": zattrs_file
+                                             }
+                                         }
+                                     })
+        self.assertEqual(0, hits["hits"]["total"])
+
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
-
-        # Check that the dynamic mapping has the metadata field disabled
         bundles_index = config.es_index_name('bundles')
-        mapping = self.es_client.indices.get_mapping(index=bundles_index)
-        contents = mapping[bundles_index]['mappings']['doc']['properties']['contents']
-        self.assertFalse(contents['properties']['metadata']['enabled'])
 
         # Ensure that a metadata row exists …
         hits = self._get_all_hits()
@@ -860,7 +910,12 @@ class TestHCAIndexer(IndexerTestCase):
                                      })
         self.assertEqual(0, hits["hits"]["total"])
 
-        # We can, however, find documents by the mention of the bundle UUID outside of `metadata`.
+        # Check that the dynamic mapping has the metadata field disabled
+        mapping = self.es_client.indices.get_mapping(index=bundles_index)
+        contents = mapping[bundles_index]['mappings']['doc']['properties']['contents']
+        self.assertFalse(contents['properties']['metadata']['enabled'])
+
+        # Ensure we can find the bundle UUID outside of `metadata`.
         hits = self.es_client.search(index=bundles_index,
                                      body={
                                          "query": {

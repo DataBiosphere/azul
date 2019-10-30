@@ -123,8 +123,14 @@ class BaseIndexer(ABC):
         bundle_uuid = dss_notification['match']['bundle_uuid']
         bundle_version = dss_notification['match']['bundle_version']
         manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
-        # If indexing a test bundle we want to change the uuid so that we can delete the bundle after
-        bundle_uuid = self._add_test_modifications(bundle_uuid, manifest, metadata_files, dss_notification)
+        # If indexing a test bundle we want to change the uuid so that we can delete the bundle after.
+        # We change the version to work around https://github.com/DataBiosphere/azul/issues/1174
+        if dss_notification.get('test_name'):
+            bundle_uuid, bundle_version = self._add_test_modifications(bundle_uuid,
+                                                                       bundle_version,
+                                                                       manifest,
+                                                                       metadata_files,
+                                                                       dss_notification)
         # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
         # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
         self._create_indices()
@@ -158,21 +164,17 @@ class BaseIndexer(ABC):
         assert _ == bundle_version
         return manifest, metadata_files
 
-    def _add_test_modifications(self, bundle_uuid, manifest, metadata_files, dss_notification):
-        integration_test_name = dss_notification.get('test_name', None)
-        if integration_test_name is None:
-            return bundle_uuid
-        else:
-            for dss_file in manifest:
-                if 'project_0.json' in dss_file['name']:
-                    dss_file['uuid'] = dss_notification['test_uuid']
-                    metadata_files['project_0.json']['project_core']['project_short_name'] = integration_test_name
-                    metadata_files['project_0.json']['provenance']['document_id'] = dss_notification['test_uuid']
+    def _add_test_modifications(self, bundle_uuid, bundle_version, manifest, metadata_files, dss_notification):
+        for dss_file in manifest:
+            if 'project_0.json' in dss_file['name']:
+                dss_file['uuid'] = dss_notification['test_uuid']
+                metadata_files['project_0.json']['project_core']['project_short_name'] = dss_notification['test_name']
+                metadata_files['project_0.json']['provenance']['document_id'] = dss_notification['test_uuid']
 
-                    break
-            else:
-                assert False, "project_0.json doesn't exist for this bundle."
-            return dss_notification['test_bundle_uuid']
+                break
+        else:
+            assert False, "project_0.json doesn't exist for this bundle."
+        return dss_notification['test_bundle_uuid'], dss_notification['test_bundle_version']
 
     def contribute(self, contributions: List[Contribution]) -> Tallies:
         """

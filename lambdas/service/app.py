@@ -35,10 +35,9 @@ import requests
 from azul import (
     config,
     drs,
-    RequirementError,
 )
 from azul.chalice import AzulChaliceApp
-from azul.health import Health
+from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.openapi import annotated_specs
 from azul.plugin import Plugin
@@ -195,41 +194,16 @@ def openapi():
 })
 @app.route('/health/{keys}', methods=['GET'], cors=True)
 def health(keys: Optional[str] = None):
-    if keys == 'basic':
-        return {
-            'up': True,
-        }
-    elif keys == 'cached':
-        storage_service = StorageService()
-        health_object = json.loads(storage_service.get('health/service'))
-        max_age = 2 * 60
-        if time.time() - health_object['time'] > max_age:
-            return Response(status_code=500,
-                            body=json.dumps({'Message': 'Cached health object is stale'}))
-        else:
-            body = health_object['health']
-    else:
-        health = Health('service')
-        if keys is None:
-            if app.current_request.context['path'].endswith('/'):
-                keys = ()
-        else:
-            keys = keys.split(',')
-        try:
-            body = health.as_json(keys)
-        except RequirementError:
-            raise BadRequestError('Invalid health keys')
-    return Response(body=json.dumps(body),
-                    status_code=200 if body['up'] else 503)
+    controller = HealthController(lambda_name='service',
+                                  keys=keys,
+                                  request_path=app.current_request.context['path'])
+    return controller.response()
 
 
 @app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
-def generate_health_object(event_: chalice.app.CloudWatchEvent):
-    storage_service = StorageService()
-    health = Health('service')
-    health = health.as_json()
-    health_object = dict(time=time.time(), health=health)
-    storage_service.put(object_key='health/service', data=json.dumps(health_object))
+def generate_health_object(_event: chalice.app.CloudWatchEvent):
+    controller = HealthController(lambda_name='service')
+    controller.generate_cache()
 
 
 @app.route('/version', methods=['GET'], cors=True)

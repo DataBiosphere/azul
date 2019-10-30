@@ -109,8 +109,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             helper.add_passthru(self.base_url)
             response = requests.get(self.base_url + '/health/cached')
             self.assertEqual(500, response.status_code)
-            self.assertEqual({'Code': 'InternalServerError',
-                              'Message': 'An internal server error occurred.'}, response.json())
+            self.assertEqual({'Message': 'Cached health object does not exist'}, response.json())
 
         # A successful response is obtained when all the systems are functional
         self._create_mock_queues()
