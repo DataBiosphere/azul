@@ -759,6 +759,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['geoSeriesAccessions'] = project.get('geo_series_accessions', [])
                 translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [])
                 translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [])
+                translated_project['supplementaryLinks'] = project.get('supplementary_links', [])
             projects.append(translated_project)
         return projects
 
