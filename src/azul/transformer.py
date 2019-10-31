@@ -755,10 +755,13 @@ class AggregatingTransformer(Transformer, metaclass=ABCMeta):
                             collated_entities.get(entity_id, (None, '', None))
                         if cur_entity is not None and entity.keys() != cur_entity.keys():
                             symmetric_difference = set(entity.keys()).symmetric_difference(cur_entity)
-                            logger.warning('Document shape of `%s` entity does not match between bundles %s, version '
-                                           '%s and %s, version %s: %s',
-                                           entity_type, cur_bundle_uuid, cur_bundle_version, contribution.bundle_uuid,
-                                           contribution.bundle_version, symmetric_difference)
+                            logger.warning('Document shape of `%s` entity `%s` does not match between bundles '
+                                           '%s, version %s and %s, version %s: %s',
+                                           entity_type, entity_id,
+                                           cur_bundle_uuid, cur_bundle_version,
+                                           contribution.bundle_uuid,
+                                           contribution.bundle_version,
+                                           symmetric_difference)
                         if cur_bundle_version < contribution.bundle_version:
                             collated_entities[entity_id] = contribution.bundle_uuid, contribution.bundle_version, entity
             return {
