@@ -1232,6 +1232,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "biological_sex": [
                             "female"
                         ],
@@ -1626,6 +1627,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -1826,6 +1828,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -2006,6 +2009,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -2195,6 +2199,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -2625,6 +2630,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "biological_sex": [
                             "female"
                         ],

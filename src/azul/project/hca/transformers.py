@@ -39,6 +39,7 @@ from azul.transformer import (
     SingleValueAccumulator,
     ListAccumulator,
     SetAccumulator,
+    UniqueValueCountAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
     SumAccumulator,
@@ -793,9 +794,17 @@ class CellLineAggregator(SimpleAggregator):
 
 class DonorOrganismAggregator(SimpleAggregator):
 
+    def _transform_entity(self, entity: JSON) -> JSON:
+        return {
+            **entity,
+            'donor_count': entity['biomaterial_id']
+        }
+
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'organism_age_range':
             return SetOfDictAccumulator(max_size=100)
+        elif field == 'donor_count':
+            return UniqueValueCountAccumulator()
         else:
             return SetAccumulator(max_size=100)
 

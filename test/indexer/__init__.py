@@ -46,7 +46,7 @@ class IndexerTestCase(ElasticsearchTestCase):
     @classmethod
     def get_hca_indexer(cls) -> Indexer:
         try:
-            # One of the indexer tests uses multiple threads to facilate concurrent indexing. Each of these threads
+            # One of the indexer tests uses multiple threads to facilitate concurrent indexing. Each of these threads
             # must use its own indexer instance because each one needs to be mock.patch'ed to a different canned
             # bundle.
             indexer = cls.per_thread.indexer
