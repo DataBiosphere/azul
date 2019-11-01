@@ -3,7 +3,6 @@ Command line utility to trigger indexing of bundles from DSS into Azul
 """
 
 import argparse
-import json
 import logging
 import shutil
 import sys
@@ -36,13 +35,7 @@ parser.add_argument('--indexer-url',
                     metavar='URL',
                     default=defaults.indexer_url,
                     help="The URL of the indexer's notification endpoint to send bundles to")
-group1 = parser.add_mutually_exclusive_group()
-group1.add_argument('--query',
-                    metavar='JSON',
-                    type=json.loads,
-                    help=f'The Elasticsearch query to use against DSS to enumerate the bundles to be indexed. '
-                         f'The default is {defaults.query()}')
-group1.add_argument('--prefix',
+parser.add_argument('--prefix',
                     metavar='HEX',
                     default=defaults.prefix,
                     help='A bundle UUID prefix. This must be a sequence of hexadecimal characters. Only bundles whose '
@@ -97,7 +90,6 @@ def main(argv: List[str]):
 
     azul_client = AzulClient(indexer_url=args.indexer_url,
                              dss_url=args.dss_url,
-                             query=args.query,
                              prefix=args.prefix,
                              num_workers=args.num_workers,
                              dryrun=args.dryrun)
@@ -120,6 +112,8 @@ def main(argv: List[str]):
         logger.info('Queuing notifications for reindexing ...')
         if args.partition_prefix_length:
             azul_client.remote_reindex(args.partition_prefix_length)
+        else:
+            azul_client.reindex()
 
 
 if __name__ == "__main__":

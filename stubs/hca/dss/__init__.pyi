@@ -17,3 +17,4 @@ class DSSClient(SwaggerClient):
     put_subscription = _Method()
     delete_subscription = _Method()
     post_search = _Method()
+    get_bundles_all = _Method()
