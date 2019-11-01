@@ -423,6 +423,7 @@ class ElasticTransformDump:
 
         for cardinality, agg_name in (
             ('contents.specimens.document_id', 'specimenCount'),
+            ('contents.donors.genus_species', 'speciesCount'),
             ('contents.files.uuid', 'fileCount'),
             ('contents.donors.document_id', 'donorCount'),
             ('contents.projects.laboratory', 'labCount'),  # FIXME Possible +1 error due to '__null__' value (#1188)
