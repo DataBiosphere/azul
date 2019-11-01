@@ -184,6 +184,7 @@ class SummaryRepresentation(JsonObject):
     """
     projectCount = IntegerProperty()
     specimenCount = IntegerProperty()
+    speciesCount = IntegerProperty()
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
     donorCount = IntegerProperty()
@@ -680,6 +681,7 @@ class SummaryResponse(AbstractResponse):
         return SummaryRepresentation(
             projectCount=agg_value('projectCount.value'),
             specimenCount=agg_value('specimenCount.value'),
+            speciesCount=agg_value('speciesCount.value'),
             fileCount=agg_value('fileCount.value'),
             totalFileSize=agg_value('total_size.value'),
             donorCount=agg_value('donorCount.value'),
@@ -759,6 +761,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['geoSeriesAccessions'] = project.get('geo_series_accessions', [])
                 translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [])
                 translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [])
+                translated_project['supplementaryLinks'] = project.get('supplementary_links', [])
             projects.append(translated_project)
         return projects
 

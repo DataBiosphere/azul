@@ -99,6 +99,7 @@ class RepositoryService(AbstractService):
                 'organTypes',
                 'donorCount',
                 'specimenCount',
+                'speciesCount'
             ],
             'projects': [
                 'projectCount',

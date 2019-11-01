@@ -57,30 +57,61 @@ def setUpModule():
 
 class IntegrationTest(AlwaysTearDownTestCase):
     """
-    The integration tests work by first setting the lambdas in test mode (this happens in setUp). This
-    Sets some environment variable in the indexer lambda that change its behavior slightly, allowing
-    it to process modified test notifications differently.
+    The integration test first kicks the indexer into test mode by setting some environment variables in the indexer
+    Lambda, instrumenting the production code in the indexer, causing it to process incoming notifications slightly
+    differently. In test mode, the indexer rejects organic notifications originating from the DSS, causing them to be
+    retried later. Only notifications sent by the integration test will be handled during test mode. When handling a
+    test notification, the indexer loads the real bundle referenced by the notification and rewrites the metadata
+    files in the bundle as if the bundle had a different UUID, a current version and belonged to a virtual test
+    project.
 
-    Next, the test queries Azul for all of the bundles that match a certain prefix. In
-    AzulClient.reindex() these bundle are used to construct fake notifications. These fake notifications
-    Have an extra information embedded. They include:
-     - the name of the integration test run,
-     - a new UUID for the project, and
-     - a new unique bundle UUID.
-    When the bundle is processed by the indexer lambda the original bundle uuid is used to fetch the
-    metadata, etc., but these new fields are what's actually stored in Azul. This effectively creates a
-    copy of the bundles, but each copy with a new and different bundle UUID and all copies sharing a
-    synthesized project with a different project UUID. Note that unlike real projects, the shared project
-    will contain a mix of metadata graph shapes since the bundles that contribute to it are selected
-    randomly.
+    Next, the integration test then queries DSS for all of bundles matching a certain randomly chosen UUID prefix and
+    sends a notification for each of these bundles. This and the indexer instrumentation effectively create a copy of
+    the bundles in the prefix, but each copy with a new and different bundle FQID and all copies sharing a virtual
+    project with a new and different project UUID. Note that unlike real projects, the virtual project will contain a
+    mix of metadata graph shapes since the bundles that contribute to it are selected randomly.
 
-    The UUIDs for these new bundles are used within the integration tests to assert that everything is
-    indexed. Health endpoints etc. are also checked.
+    The UUIDs for these new bundles are tracked within the integration test and are used to assert that all bundles
+    are indexed.
 
-    Finally, the tests send deletion notifications for these new bundle UUIDs which should remove all
-    trace of the integration test from the index.
+    Finally, the tests sends deletion notifications for these test bundles. The test then asserts that this removed
+    every trace of the test bundles from the index.
+
+    The metadata structure created by the instrumented production code is as follows:
+
+    ┌──────────────────────┐
+    │     Test Project     │          ┌────────────────┐
+    │     title = test     │          │    Project     │
+    │   document_id = b    │          │  title = foo   │
+    │(copy of project with │          │document_id = a │
+    │   document_id = a)   │          └────────────────┘
+    └──────────────────────┘                   │
+                │                              │
+                │                     ┌────────┴────────┐
+                │                     │                 │
+                ▼                     │                 │
+     ┌─────────────────────┐          ▼                 ▼
+     │     Test Bundle     │  ┌──────────────┐  ┌───────────────┐
+     │      uuid = e       │  │    Bundle    │  │    Bundle     │
+     │    version = 100    │  │   uuid = c   │  │   uuid = d    │
+     │(copy of bundle with │  │ version = 1  │  │  version = 2  │
+     │      uuid = 3)      │  └──────────────┘  └───────────────┘
+     └─────────────────────┘          ▲                 ▲
+                ▲                     │                 │
+                │                     │                 │
+                │              ┌────────────┐           │
+                │              │    File    │           │
+                └──────────────│  uuid = f  │───────────┘
+                               └────────────┘
+
+    However, it is important to note that because the selection of test bundles is random, so will be the selection
+    of project_0.json files in those bundles. Since each original project is mapped to the same test project UUID,
+    the test project will have contributions from a diverse set of file project_0.json files.
+
+    The same applies to other types of entities that are shared between bundles.
     """
-    prefix_length = 1 if config.dss_deployment_stage == 'integration' else 3
+    prefix_length = 2
+    max_bundles = 64
 
     def setUp(self):
         super().setUp()
@@ -111,10 +142,10 @@ class IntegrationTest(AlwaysTearDownTestCase):
 
     def _test_indexing(self):
         logger.info('Starting test using test name, %s ...', self.test_name)
-        azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
-                                 prefix=self.bundle_uuid_prefix)
-        logger.info('Creating indices and reindexing ...')
-        self.test_notifications, self.expected_fqids = azul_client.test_notifications(self.test_name, self.test_uuid)
+        azul_client = self.azul_client
+        self.test_notifications, self.expected_fqids = azul_client.test_notifications(test_name=self.test_name,
+                                                                                      test_uuid=self.test_uuid,
+                                                                                      max_bundles=self.max_bundles)
         azul_client._index(self.test_notifications)
         # Index some again to test that we can handle duplicate notifications. Note: choices are with replacement
         azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
@@ -301,12 +332,12 @@ class IntegrationTest(AlwaysTearDownTestCase):
 
         while True:
             hits = self._get_entities_by_project(entity_type, test_name)
-            indexed_fqids.update({
-                f"{entity['bundleUuid']}.{entity['bundleVersion']}"
+            indexed_fqids.update(
+                (entity['bundleUuid'], entity['bundleVersion'])
                 for hit in hits
                 for entity in hit.get('bundles', [])
-                if f"{entity['bundleUuid']}.{entity['bundleVersion']}" in self.expected_fqids
-            })
+                if (entity['bundleUuid'], entity['bundleVersion']) in self.expected_fqids
+            )
             logger.info('Found %i/%i bundles on try #%i. There are %i files with the project name.',
                         len(indexed_fqids), num_bundles, retries + 1, len(hits))
 
