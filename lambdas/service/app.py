@@ -41,6 +41,7 @@ from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.openapi import annotated_specs
 from azul.plugin import Plugin
+from azul.portal_service import PortalService
 from azul.security.authenticator import (
     AuthenticationError,
     Authenticator,
@@ -476,19 +477,20 @@ def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Opt
     :param entity_ids: If given results will be limited to this set of entity UUIDs
     :return: A list of portal dicts that one or more matching integrations
     """
-    plugin = Plugin.load()
-    portals = plugin.portal_integrations_db()
+    portal_service = PortalService()
+    portals = portal_service.get_portal_integrations_db()
     results = []
     stage = config.dss_deployment_stage(config.dss_endpoint)
     for portal in portals:
         integrations = [
             {k: v if k != 'entity_ids' else v[stage] for k, v in integration.items()}
             for integration in cast(Sequence[JSON], portal['integrations'])
-            if integration['entity_type'] == entity_type and integration['integration_type'] == integration_type
+            if (integration['entity_type'] == entity_type
+                and integration['integration_type'] == integration_type
+                and (entity_ids is None
+                     or 'entity_ids' not in integration
+                     or not entity_ids.isdisjoint(integration['entity_ids'])))
         ]
-        if entity_ids is not None:
-            integrations = [integration for integration in integrations
-                            if 'entity_ids' not in integration or entity_ids.intersection(integration['entity_ids'])]
         if len(integrations) > 0:
             portal = {k: v if k != 'integrations' else integrations for k, v in portal.items()}
             results.append(portal)

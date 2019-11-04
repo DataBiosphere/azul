@@ -574,6 +574,14 @@ class Config:
     def github_access_token(self) -> str:
         return os.environ['azul_github_access_token']
 
+    @property
+    def portal_integrations_db_bucket(self) -> str:
+        return self.terraform_backend_bucket
+
+    @property
+    def portal_integrations_db_object(self) -> str:
+        return f'azul/{self.deployment_stage}/portals/{self.dss_deployment_stage}-db.json'
+
     terms_aggregation_size = 99999
 
     null_keyword = '__null__'
