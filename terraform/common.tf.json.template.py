@@ -1,6 +1,9 @@
 import os
 
-from azul import config, require
+from azul import (
+    config,
+    require,
+)
 from azul.deployment import emit_tf
 
 expected_component_path = os.path.join(os.path.abspath(config.project_root), 'terraform', config.terraform_component)

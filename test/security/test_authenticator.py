@@ -1,22 +1,34 @@
 from time import time
-from typing import Dict, Any
+from typing import (
+    Dict,
+    Any,
+)
 from unittest import TestCase
 from unittest.mock import patch
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import (
+    urlparse,
+    parse_qs,
+)
 
 from jwt import encode
 import responses
 
 from azul import config
-from azul.security.authenticator import (Authenticator,
-                                         AuthenticationError,
-                                         InvalidTokenError,
-                                         NonDecodableTokenError,
-                                         InvalidRedirectUriError)
-from retorts import AuthResponseHelper, TestKeyManager
+from azul.security.authenticator import (
+    Authenticator,
+    AuthenticationError,
+    InvalidTokenError,
+    NonDecodableTokenError,
+    InvalidRedirectUriError,
+)
+from retorts import (
+    AuthResponseHelper,
+    TestKeyManager,
+)
 
 
 class AuthenticatorTestCase(TestCase):
+
     @classmethod
     def tearDownClass(cls):
         super().setUpClass()
@@ -125,7 +137,7 @@ class AuthenticatorTestCase(TestCase):
         public_key = TestKeyManager.get_public_key()
         exponent = public_key.public_numbers().e
         modulus = public_key.public_numbers().n
-        with AuthResponseHelper() as helper:
+        with AuthResponseHelper():
             authenticator = Authenticator()
             key_map = authenticator.get_public_keys(config.access_token_issuer)
         self.assertIn('local_test', key_map)
@@ -139,7 +151,7 @@ class AuthenticatorTestCase(TestCase):
                                    issued_at=time())
         test_jwt = AuthResponseHelper.generate_test_jwt(**partial_test_claims)
         test_claims = AuthResponseHelper.generate_test_claims(**partial_test_claims)
-        with AuthResponseHelper() as helper:
+        with AuthResponseHelper():
             authenticator = Authenticator()
             result = authenticator.verify_jwt(test_jwt)
         self.assertEqual(test_claims, result)
@@ -150,7 +162,7 @@ class AuthenticatorTestCase(TestCase):
                                    issued_at=time() - 120)  # this is to force the token to expire.
         test_jwt = AuthResponseHelper.generate_test_jwt(**partial_test_claims)
         with self.assertRaises(InvalidTokenError):
-            with AuthResponseHelper() as helper:
+            with AuthResponseHelper():
                 authenticator = Authenticator()
                 authenticator.verify_jwt(test_jwt)
 

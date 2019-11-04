@@ -5,6 +5,7 @@ from azul_test_case import AzulTestCase
 
 
 class FlushableBufferTest(AzulTestCase):
+
     def test_not_flushed_because_of_no_data(self):
         test_min_size = 5
         mock_callback = Mock()

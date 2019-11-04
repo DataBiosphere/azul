@@ -4,18 +4,41 @@ import logging
 import os
 import tempfile
 import types
-from typing import Mapping, Optional, Any, Union, NamedTuple
-from unittest.mock import MagicMock, patch
+from typing import (
+    Mapping,
+    Optional,
+    Union,
+    NamedTuple,
+)
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import boto3
 from botocore.response import StreamingBody
 from hca.dss import DSSClient
-from requests import Session
+# noinspection PyProtectedMember
+from humancellatlas.data.metadata.helpers.dss import _DSSClient
+from urllib3 import Timeout
 
 from azul import config
 from azul.types import JSON
 
 logger = logging.getLogger(__name__)
+
+
+def client(dss_endpoint: Optional[str] = None, num_workers=None) -> DSSClient:
+    swagger_url = (dss_endpoint or config.dss_endpoint) + '/swagger.json'
+    client = AzulDSSClient(swagger_url=swagger_url, num_workers=num_workers)
+    client.timeout_policy = Timeout(connect=10, read=40)
+    return client
+
+
+def direct_access_client(dss_endpoint: Optional[str] = None, num_workers=None) -> DSSClient:
+    dss_client = client(dss_endpoint=dss_endpoint, num_workers=num_workers)
+    _patch_client_for_direct_access(dss_client)
+    return dss_client
 
 
 class MiniDSS:
@@ -129,7 +152,7 @@ class MiniDSS:
         return self.s3.get_object(Bucket=self.bucket, Key=key)['Body']
 
 
-def patch_client_for_direct_access(client: DSSClient):
+def _patch_client_for_direct_access(client: DSSClient):
     old_get_file = client.get_file
     old_get_bundle = client.get_bundle
     mini_dss = MiniDSS()
@@ -146,6 +169,7 @@ def patch_client_for_direct_access(client: DSSClient):
             return blob
 
     class NewGetBundle:
+
         def _request(self, kwargs, **other_kwargs):
             uuid, version, replica = kwargs['uuid'], kwargs['version'], kwargs['replica']
             try:
@@ -165,41 +189,19 @@ def patch_client_for_direct_access(client: DSSClient):
     client.get_bundle = new_get_bundle
 
 
-class AzulDSSClient(DSSClient):
+class AzulDSSClient(_DSSClient):
     """
     An DSSClient with Azul-specific extensions and fixes.
     """
 
-    def __init__(self, *args, adapter_args: Optional[Mapping[str, Any]] = None, **kwargs):
-        """
-        Pass adapter_args=dict(pool_maxsize=self.num_workers) in order to avoid the resource warnings
-
-        :param args: positional arguments to pass to DSSClient constructor
-        :param adapter_args: optional keyword arguments to request's HTTPAdapter class
-        :param kwargs: keyword arguments to pass to DSSClient constructor
-        """
-        self._adapter_args = adapter_args  # yes, this must come first
-        super().__init__(*args, **kwargs)
-
-    def _set_retry_policy(self, session: Session):
-        if self._adapter_args is None:
-            super()._set_retry_policy(session)
-        else:
-            from requests.sessions import HTTPAdapter
-
-            class MyHTTPAdapter(HTTPAdapter):
-
-                # noinspection PyMethodParameters
-                def __init__(self_, *args, **kwargs):
-                    kwargs.update(self._adapter_args)
-                    super().__init__(*args, **kwargs)
-
-            with patch('hca.util.HTTPAdapter', new=MyHTTPAdapter):
-                super()._set_retry_policy(session)
+    def __init__(self, *args, num_workers: int = None, **kwargs):
+        super().__init__(*args,
+                         adapter_args=None if num_workers is None else dict(pool_maxsize=num_workers),
+                         **kwargs)
 
 
 @contextmanager
-def shared_dss_credentials():
+def shared_credentials():
     """
     A context manager that patches the process environment so that the DSS client is coaxed into using credentials
     for the Google service account that represents the Azul indexer lambda. This can be handy if a) other Google

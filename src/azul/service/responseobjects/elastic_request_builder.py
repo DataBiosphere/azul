@@ -2,38 +2,69 @@ from itertools import chain
 import json
 import logging
 
-from elasticsearch_dsl.response import Response, AggResponse
-from elasticsearch_dsl.response.aggs import FieldBucketData, BucketData, FieldBucket, Bucket
+from elasticsearch_dsl.response import (
+    Response,
+    AggResponse,
+)
+from elasticsearch_dsl.response.aggs import (
+    FieldBucketData,
+    BucketData,
+    FieldBucket,
+    Bucket,
+)
 from more_itertools import one
-from typing import List, Optional
+from typing import (
+    List,
+    Optional,
+)
 import uuid
 
 import elasticsearch
-from elasticsearch_dsl import A, Q, Search
-from elasticsearch_dsl.aggs import Terms, Agg
+from elasticsearch_dsl import (
+    A,
+    Q,
+    Search,
+)
+from elasticsearch_dsl.aggs import (
+    Terms,
+    Agg,
+)
 
 from azul import config
 from azul.es import ESClientFactory
-from azul.json_freeze import freeze, sort_frozen
-from azul.plugin import Plugin, ServiceConfig
-from azul.service.responseobjects.hca_response_v5 import (AutoCompleteResponse,
-                                                          FileSearchResponse,
-                                                          KeywordSearchResponse,
-                                                          ManifestResponse,
-                                                          SummaryResponse)
+from azul.json_freeze import (
+    freeze,
+    sort_frozen,
+)
+from azul.plugin import (
+    Plugin,
+    ServiceConfig,
+)
+from azul.service.responseobjects.hca_response_v5 import (
+    AutoCompleteResponse,
+    FileSearchResponse,
+    KeywordSearchResponse,
+    ManifestResponse,
+    SummaryResponse,
+)
 from azul.service.responseobjects.utilities import json_pp
 from azul.transformer import Document
-from azul.types import JSON, MutableJSON
+from azul.types import (
+    JSON,
+    MutableJSON,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class BadArgumentException(Exception):
+
     def __init__(self, message):
         super().__init__(message)
 
 
 class IndexNotFoundError(Exception):
+
     def __init__(self, missing_index: str):
         super().__init__(f'{missing_index} is not a valid uuid.')
 
@@ -133,7 +164,7 @@ class ElasticTransformDump:
         if agg == 'project':
             _sub_field = self.service_config.translation['projectId'] + '.keyword'
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size).bucket(
-                             'myProjectIds', 'terms', field=_sub_field, size=config.terms_aggregation_size)
+                'myProjectIds', 'terms', field=_sub_field, size=config.terms_aggregation_size)
         else:
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size)
         aggregate.bucket('untagged', 'missing', field=_field)

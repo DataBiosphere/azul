@@ -1,9 +1,11 @@
 import os
 import re
-from typing import List, Mapping, Optional, Tuple, Any
-
-from hca.dss import DSSClient
-from urllib3 import Timeout
+from typing import (
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+)
 
 Netloc = Tuple[str, int]
 
@@ -272,6 +274,10 @@ class Config:
         return self._boolean(os.environ['AZUL_ENABLE_MONITORING'])
 
     @property
+    def disable_monitoring(self) -> bool:
+        return not self.enable_monitoring
+
+    @property
     def es_instance_type(self) -> str:
         return os.environ['AZUL_ES_INSTANCE_TYPE']
 
@@ -423,16 +429,6 @@ class Config:
     def subscribe_to_dss(self):
         return self._boolean(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
 
-    def dss_client(self,
-                   dss_endpoint: Optional[str] = None,
-                   adapter_args: Optional[Mapping[str, Any]] = None) -> DSSClient:
-        # FIXME: This should move to dss.py to eliminate the circular import
-        from azul.dss import AzulDSSClient
-        swagger_url = (dss_endpoint or self.dss_endpoint) + '/swagger.json'
-        client = AzulDSSClient(swagger_url=swagger_url, adapter_args=adapter_args)
-        client.timeout_policy = Timeout(connect=10, read=40)
-        return client
-
     service_cache_health_lambda_basename = 'servicecachehealth'
     indexer_cache_health_lambda_basename = 'indexercachehealth'
 
@@ -473,7 +469,7 @@ class Config:
 
     @property
     def test_mode(self) -> bool:
-        return self._boolean(os.environ.get('TEST_MODE', '0'))
+        return self._boolean(os.environ.get('AZUL_TEST_MODE', '0'))
 
     url_shortener_whitelist = [r'.*humancellatlas\.org']
 

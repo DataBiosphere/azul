@@ -3,7 +3,11 @@ from unittest.mock import patch
 
 from azul import config
 from azul.logging import configure_test_logging
-from azul.service.responseobjects.cart_item_manager import CartItemManager, DuplicateItemError, ResourceAccessError
+from azul.service.responseobjects.cart_item_manager import (
+    CartItemManager,
+    DuplicateItemError,
+    ResourceAccessError,
+)
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 from dynamo_test_case import DynamoTestCase
 from lambdas.service import app
@@ -238,12 +242,10 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         If the default cart does not exist, the manager should create a new cart and register that cart in the user
         object as the default cart.
         """
-        mock_cart_id = 'test_default_cart'
         user_id = '123'
-        cart_name = 'Default Cart'
         self.assertEqual(0, len(self.cart_item_manager.get_user_carts(user_id)))
         with self.assertRaises(ResourceAccessError):
-            cart1 = self.cart_item_manager.get_default_cart(user_id)
+            self.cart_item_manager.get_default_cart(user_id)
 
     def test_get_or_create_default_cart_with_existing_default_cart(self):
         """

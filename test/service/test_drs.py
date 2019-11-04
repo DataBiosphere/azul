@@ -5,7 +5,10 @@ import requests
 import responses
 
 from chalice.config import Config as ChaliceConfig
-from azul import drs, config
+from azul import (
+    drs,
+    config,
+)
 from azul.logging import configure_test_logging
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
@@ -56,8 +59,17 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
         self.assertEqual({
             'id': file_uuid,
             'urls': [
-                {'url': f"{self.base_url}/dss/files/{file_uuid}?version={file_version}&replica=aws&wait=1&fileName=SRR3562915_1.fastq.gz"},
-                {'url': 'gs://foo/bar'}
+                {
+                    'url': f"{self.base_url}/dss/files/{file_uuid}"
+                           f"?version={file_version}"
+                           f"&replica=aws"
+                           f"&wait=1"
+                           f"&fileName=SRR3562915_1.fastq.gz"
+                },
+                {
+                    'url':
+                        'gs://foo/bar'
+                }
             ],
             'size': '195142097',
             'checksums': [

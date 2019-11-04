@@ -123,9 +123,9 @@ class TestDssProxy(LocalAppTestCase):
                                 retry_after = 1
                                 expect_retry_after = None if wait or expect_status == 302 else retry_after
                                 before = time.monotonic()
-                                with mock.patch('time.time', new=lambda: 1547691253.07010), \
-                                     mock.patch.object(type(config), 'dss_checkout_bucket', return_value=bucket_name):
-                                    response = requests.get(url, allow_redirects=False)
+                                with mock.patch.object(type(config), 'dss_checkout_bucket', return_value=bucket_name):
+                                    with mock.patch('time.time', new=lambda: 1547691253.07010):
+                                        response = requests.get(url, allow_redirects=False)
                                 if wait and expect_status == 301:
                                     self.assertLessEqual(retry_after, time.monotonic() - before)
                                 if fetch:

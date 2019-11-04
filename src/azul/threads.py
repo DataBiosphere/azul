@@ -1,9 +1,20 @@
-from abc import ABCMeta, abstractmethod
-from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from concurrent.futures import (
+    Future,
+    ThreadPoolExecutor,
+    as_completed,
+)
 import logging
 import threading
 import time
-from typing import Iterable, List, Optional
+from typing import (
+    Iterable,
+    List,
+    Optional,
+)
 
 from azul import require
 

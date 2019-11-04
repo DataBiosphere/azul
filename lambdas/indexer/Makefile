@@ -13,12 +13,13 @@ wheels:
 
 deploy: state wheels
 	python -m azul.changelog vendor
-	python $(azul_home)/scripts/manage_lambda_iam_role.py indexer lambda-policy.json
+	python $(azul_home)/scripts/manage_lambda_iam_role.py create indexer lambda-policy.json
 	chalice deploy --stage $(AZUL_DEPLOYMENT_STAGE)
 	python $(azul_home)/scripts/manage_chalice_deployed.py indexer upload
 
 delete: state
 	chalice delete --stage $(AZUL_DEPLOYMENT_STAGE)
+	python $(azul_home)/scripts/manage_lambda_iam_role.py delete indexer
 	python $(azul_home)/scripts/manage_chalice_deployed.py indexer upload
 
 local: config
