@@ -769,6 +769,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         files = []
         for _file in entry["contents"]["files"]:
             translated_file = {
+                "content_description": _file.get("content_description"),
                 "format": _file.get("file_format"),
                 "name": _file.get("name"),
                 "sha256": _file.get("sha256"),

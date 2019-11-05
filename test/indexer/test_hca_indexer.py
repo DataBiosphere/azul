@@ -840,6 +840,22 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (child_cell_line)'])
                 self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [config.null_keyword])
 
+    def test_files_content_description(self):
+        self._index_canned_bundle(('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'))
+        hits = self._get_all_hits()
+        for hit in hits:
+            contents = hit['_source']['contents']
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            if aggregate:
+                # bundle aggregates keep individual files
+                num_inner_files = 2 if entity_type == 'bundles' else 1
+            else:
+                # one inner file per file contribution
+                num_inner_files = 1 if entity_type == 'files' else 2
+            self.assertEqual(len(contents['files']), num_inner_files)
+            for file in contents['files']:
+                self.assertEqual(file['content_description'], ['RNA sequence'])
+
     def test_metadata_generator(self):
         index_bundle = ('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
         manifest, metadata = self._load_canned_bundle(index_bundle)
