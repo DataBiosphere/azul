@@ -4,6 +4,7 @@ stages:
   - test
   - deploy
   - subscribe
+  - early_reindex
   - integration_test
   - teardown
   - manual
@@ -77,6 +78,13 @@ on_failure:
   when: on_failure
   script:
     - python scripts/github_status_check.py failure
+
+early_reindex:
+  extends: .base
+  stage: early_reindex
+  when: manual
+  script:
+    - make reindex
 
 reindex:
   extends: .base
