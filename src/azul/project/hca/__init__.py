@@ -96,7 +96,7 @@ class Plugin(azul.plugin.Plugin):
                 "sampleEntityType": "contents.samples.entity_type",
                 "disease": "contents.samples.disease",
                 "genusSpecies": "contents.donors.genus_species",
-                "donorDisease": "contents.donors.disease",
+                "donorDisease": "contents.donors.diseases",
                 "organ": "contents.samples.organ",
                 "organPart": "contents.samples.organ_part",
                 "modelOrgan": "contents.samples.model_organ",

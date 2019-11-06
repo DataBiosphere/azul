@@ -34,6 +34,7 @@ from azul.transformer import (
     DistinctAccumulator,
     Document,
     EntityReference,
+    FieldTypes,
     FrequencySetAccumulator,
     GroupingAggregator,
     SingleValueAccumulator,
@@ -89,7 +90,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                 self._find_ancestor_samples(parent, samples)
 
     @classmethod
-    def _contact_types(cls) -> Mapping[str, type]:
+    def _contact_types(cls) -> FieldTypes:
         return {
             'contact_name': str,
             'corresponding_contributor': bool,
@@ -111,7 +112,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _publication_types(cls) -> Mapping[str, type]:
+    def _publication_types(cls) -> FieldTypes:
         return {
             'publication_title': str,
             'publication_url': str
@@ -125,7 +126,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _project_types(cls) -> Mapping[str, type]:
+    def _project_types(cls) -> FieldTypes:
         return {
             'project_title': str,
             'project_description': str,
@@ -189,7 +190,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _specimen_types(cls) -> Mapping[str, type]:
+    def _specimen_types(cls) -> FieldTypes:
         return {
             'has_input_biomaterial': str,
             '_source': str,
@@ -218,7 +219,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _cell_suspension_types(cls) -> Mapping[str, type]:
+    def _cell_suspension_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'total_estimated_cells': int,
@@ -253,7 +254,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _cell_line_types(cls) -> Mapping[str, type]:
+    def _cell_line_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -271,7 +272,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _donor_types(cls) -> Mapping[str, type]:
+    def _donor_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -280,7 +281,8 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'diseases': str,
             'organism_age': str,
             'organism_age_unit': str,
-            'organism_age_range': dict
+            'organism_age_range': None,  # Exclude ranged values from translation, prevents problem due to shadow copies
+            'donor_count': None  # Exclude this field added by DonorOrganismAggregator from translation
         }
 
     def _donor(self, donor: api.DonorOrganism) -> JSON:
@@ -304,7 +306,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _organoid_types(cls) -> Mapping[str, type]:
+    def _organoid_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -321,19 +323,21 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _file_types(cls) -> Mapping[str, type]:
+    def _file_types(cls) -> FieldTypes:
         return {
             'content-type': str,
             'indexed': bool,
             'name': str,
             'sha256': str,
             'size': int,
+            'count': None,  # Exclude this field added by FileAggregator from translation, field will never be None
             'uuid': api.UUID4,
             'version': str,
             'document_id': str,
             'file_format': str,
             'content_description': str,
             '_type': str,
+            'related_files': cls._related_file_types(),
             'read_index': str,
             'lane_index': int
         }
@@ -362,6 +366,16 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             ),
         }
 
+    @classmethod
+    def _related_file_types(cls) -> FieldTypes:
+        return {
+            'name': str,
+            'sha256': str,
+            'size': int,
+            'uuid': api.UUID4,
+            'version': str,
+        }
+
     def _related_file(self, file: api.File) -> JSON:
         return {
             'name': file.manifest_entry.name,
@@ -372,14 +386,14 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _protocol_types(cls) -> Mapping[str, type]:
+    def _protocol_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'library_construction_approach': str,
             'instrument_manufacturer_model': str,
             'paired_end': bool,
             'workflow': str,
-            'assay_type': str
+            'assay_type': None  # Exclude counter dict used to produce a FrequencySetAccumulator from translation
         }
 
     def _protocol(self, protocol: api.Protocol) -> JSON:
@@ -399,7 +413,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         return protocol_
 
     @classmethod
-    def _sample_types(cls) -> Mapping[str, type]:
+    def _sample_types(cls) -> FieldTypes:
         return {
             'entity_type': str,
             'effective_organ': str,
@@ -442,7 +456,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                             bundle_deleted=deleted)
 
     @classmethod
-    def field_types(cls):
+    def field_types(cls) -> FieldTypes:
         return {
             'samples': cls._sample_types(),
             'specimens': cls._specimen_types(),
@@ -732,10 +746,10 @@ class BundleTransformer(BundleProjectTransformer):
             yield contrib
 
     @classmethod
-    def field_types(cls):
+    def field_types(cls) -> FieldTypes:
         return {
             **super().field_types(),
-            'metadata': list
+            'metadata': None  # Exclude fields that came from MetadataGenerator() from translation
         }
 
 
