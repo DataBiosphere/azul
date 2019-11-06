@@ -216,10 +216,15 @@ class IntegrationTest(AlwaysTearDownTestCase):
 
     def set_lambda_test_mode(self, mode: bool):
         client = boto3.client('lambda')
-        indexer_lambda_config = client.get_function_configuration(FunctionName=config.indexer_name)
+        function_name = config.indexer_name
+        indexer_lambda_config = client.get_function_configuration(FunctionName=function_name)
         environment = indexer_lambda_config['Environment']
-        environment['Variables']['AZUL_TEST_MODE'] = '1' if mode else '0'
-        client.update_function_configuration(FunctionName=config.indexer_name, Environment=environment)
+        env_var_name = 'AZUL_TEST_MODE'
+        env_var_value = '1' if mode else '0'
+        environment['Variables'][env_var_name] = env_var_value
+        logger.info('Setting environment variable %s to "%s" on function %s',
+                    env_var_name, env_var_value, function_name)
+        client.update_function_configuration(FunctionName=function_name, Environment=environment)
 
     @memoized_property
     def requests(self) -> requests.Session:
