@@ -20,7 +20,6 @@ from typing import (
     Optional,
 )
 from unittest import mock
-from urllib.parse import urlencode
 import uuid
 from zipfile import ZipFile
 
@@ -233,9 +232,10 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def check_endpoint_is_working(self, endpoint: str, path: str, query: Optional[Mapping[str, str]] = None) -> bytes:
         url = furl(endpoint)
         url.path.add(path)
-        query = query or {}
-        logger.info('Requesting %s?%s', url.url, urlencode(query))
-        response = self.requests.get(url.url, params=query)
+        if query is not None:
+            url.query.set({k: str(v) for k, v in query.items()})
+        logger.info('Requesting %s', url)
+        response = self.requests.get(url.url)
         response.raise_for_status()
         return response.content
 
