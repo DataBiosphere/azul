@@ -34,7 +34,6 @@ from more_itertools import (
 )
 from openapi_spec_validator import validate_spec
 import requests
-from requests import HTTPError
 
 from azul import (
     config,
@@ -207,11 +206,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
             notifications = random.choices(self.test_notifications, k=len(self.test_notifications) // 2)
         else:
             notifications = self.test_notifications
-        for n in notifications:
-            try:
-                self.azul_client.delete_notification(n)
-            except HTTPError as e:
-                logger.warning('Deletion for notification %s failed. Possibly it was never indexed.', n, exc_info=e)
+        self.azul_client.delete_notification(notifications)
         self.wait_for_queue_level(empty=False)
         self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
         self.assertTrue(self.project_removed_from_azul(),
