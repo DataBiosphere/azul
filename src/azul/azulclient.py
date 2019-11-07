@@ -128,12 +128,12 @@ class AzulClient(object):
                 break
         return filtered_bundle_fqids
 
-    def _index(self, notifications: Iterable, indexer_path: str = ''):
+    def _index(self, notifications: Iterable, path: str = '/'):
         errors = defaultdict(int)
         missing = []
         indexed = 0
         total = 0
-        indexer_url = self.indexer_url + indexer_path
+        indexer_url = self.indexer_url + path
 
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
 
@@ -309,5 +309,4 @@ class AzulClient(object):
         self.delete_notification(notification)
 
     def delete_notification(self, notifications):
-        url_path = '/delete'
-        self._index(notifications=notifications, indexer_path=url_path)
+        self._index(notifications, path='/delete')
