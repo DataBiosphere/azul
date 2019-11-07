@@ -128,18 +128,19 @@ class AzulClient(object):
                 break
         return filtered_bundle_fqids
 
-    def _index(self, notifications: Iterable):
+    def _index(self, notifications: Iterable, path: str = '/'):
         errors = defaultdict(int)
         missing = []
         indexed = 0
         total = 0
+        indexer_url = self.indexer_url + path
 
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
 
             def attempt(notification, i):
                 try:
                     logger.info("Sending notification %s -- attempt %i:", notification, i)
-                    url = urlparse(self.indexer_url)
+                    url = urlparse(indexer_url)
                     if not self.dryrun:
                         self.post_bundle(url.geturl(), notification)
                 except HTTPError as e:
@@ -297,16 +298,15 @@ class AzulClient(object):
 
     def delete_bundle(self, bundle_uuid, bundle_version):
         logger.info('Deleting bundle %s.%s', bundle_uuid, bundle_version)
-        notification = {
-            'match': {
-                'bundle_uuid': bundle_uuid,
-                'bundle_version': bundle_version
+        notification = [
+            {
+                'match': {
+                    'bundle_uuid': bundle_uuid,
+                    'bundle_version': bundle_version
+                }
             }
-        }
+        ]
         self.delete_notification(notification)
 
-    def delete_notification(self, notification):
-        response = requests.post(url=self.indexer_url + '/delete',
-                                 json=notification,
-                                 auth=hmac.prepare())
-        response.raise_for_status()
+    def delete_notification(self, notifications):
+        self._index(notifications, path='/delete')
