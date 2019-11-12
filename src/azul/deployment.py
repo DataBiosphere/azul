@@ -99,13 +99,26 @@ class AWS:
 
     @property
     def es_endpoint(self) -> Netloc:
-        es_domain_status = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
-        return es_domain_status['DomainStatus']['Endpoint'], 443
+        if config.es_endpoint:
+            return config.es_endpoint
+        else:
+            es_domain_status = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
+            return es_domain_status['DomainStatus']['Endpoint'], 443
+
+    @property
+    def es_instance_count(self) -> int:
+        if config.es_endpoint:
+            return config.es_instance_count
+        else:
+            es_domain_status = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
+            return es_domain_status['DomainStatus']['ElasticsearchClusterConfig']['InstanceCount']
 
     def lambda_env(self, function_name) -> Mapping[str, str]:
         gateway_id = self.api_gateway_id(function_name, validate=True)
-        env = config.lambda_env(self.es_endpoint)
-        return env if gateway_id is None else {**env, 'api_gateway_id': gateway_id}
+        return {
+            **config.lambda_env(self.es_endpoint, self.es_instance_count),
+            **({} if gateway_id is None else {'api_gateway_id': gateway_id})
+        }
 
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"

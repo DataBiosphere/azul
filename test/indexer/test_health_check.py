@@ -28,7 +28,8 @@ class TestIndexerHealthCheck(HealthCheckTestCase):
         self._create_mock_queues()
         mock_endpoint = ('nonexisting-index.com', 80)
         endpoint_states = self._make_endpoint_states(self.endpoints)
-        with mock.patch.dict(os.environ, **config.es_endpoint_env(mock_endpoint)):
+        with mock.patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
+                                                                  es_instance_count=1)):
             response = self._test(endpoint_states, lambdas_up=True)
             health_object = response.json()
             self.assertEqual(503, response.status_code)
