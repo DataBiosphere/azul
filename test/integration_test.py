@@ -1,5 +1,11 @@
+from collections import deque
+from contextlib import contextmanager
 import csv
 import gzip
+from io import (
+    BytesIO,
+    TextIOWrapper,
+)
 import json
 import logging
 import os
@@ -7,28 +13,21 @@ import random
 import re
 import sys
 import time
-import unittest
-import uuid
-from collections import deque
-from contextlib import contextmanager
-from io import (
-    BytesIO,
-    TextIOWrapper,
-)
 from typing import (
     Any,
     IO,
+    List,
     Mapping,
     Optional,
-    Tuple,
-    List,
     Set,
+    Tuple,
 )
+import unittest
 from unittest import mock
+import uuid
 from zipfile import ZipFile
 
 import boto3
-import requests
 from furl import furl
 from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
@@ -37,8 +36,8 @@ from more_itertools import (
     one,
 )
 from openapi_spec_validator import validate_spec
+import requests
 
-import azul.dss
 from azul import (
     config,
     drs,
@@ -48,8 +47,9 @@ from azul.azulclient import (
     FQID,
 )
 from azul.decorators import memoized_property
+import azul.dss
 from azul.logging import configure_test_logging
-from azul.requests import requests_session
+from azul.requests import requests_session_with_retry_after
 from azul.types import JSON
 from azul_test_case import AlwaysTearDownTestCase
 
@@ -130,10 +130,10 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.test_uuid = str(uuid.uuid4())
         self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
         self.num_bundles = 0
-        self.set_lambda_test_mode(True)
+        self._set_test_mode(True)
 
     def tearDown(self):
-        self.set_lambda_test_mode(False)
+        self._set_test_mode(False)
         super().tearDown()
 
     def test(self):
@@ -144,7 +144,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 self._test_drs()
             finally:
                 self._delete_bundles_twice()
-                self.assertTrue(self.project_removed_from_azul())
+                self.assertTrue(self._project_removed_from_index())
         self._test_other_endpoints()
 
     def _test_indexing(self):
@@ -159,7 +159,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         # some notifications will end up being sent three or more times.
         azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
         self.num_bundles = len(self.expected_fqids)
-        self.check_bundles_are_indexed(self.test_name, 'files')
+        self._check_bundles_are_indexed(self.test_name, 'files')
 
     def _test_other_endpoints(self):
         for health_key in ('',  # default keys for lambda
@@ -171,44 +171,44 @@ class IntegrationTest(AlwaysTearDownTestCase):
                            '/api_endpoints',
                            '/other_lambdas'):
             for endpoint in config.service_endpoint(), config.indexer_endpoint():
-                self.check_endpoint_is_working(endpoint, '/health' + health_key)
-        self.check_endpoint_is_working(config.service_endpoint(), '/')
-        self.check_endpoint_is_working(config.service_endpoint(), '/openapi')
-        self.check_endpoint_is_working(config.service_endpoint(), '/version')
-        self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
-        self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
+                self._check_endpoint(endpoint, '/health' + health_key)
+        self._check_endpoint(config.service_endpoint(), '/')
+        self._check_endpoint(config.service_endpoint(), '/openapi')
+        self._check_endpoint(config.service_endpoint(), '/version')
+        self._check_endpoint(config.service_endpoint(), '/repository/summary')
+        self._check_endpoint(config.service_endpoint(), '/repository/files/order')
 
     def _test_manifest(self):
         manifest_filter = json.dumps({'project': {'is': [self.test_name]}})
         for format_, validator in [
-            (None, self.check_manifest),
-            ('tsv', self.check_manifest),
-            ('compact', self.check_manifest),
-            ('full', self.check_manifest),
-            ('bdbag', self.check_terra_bdbag),
-            ('terra.bdbag', self.check_terra_bdbag)
+            (None, self._check_manifest),
+            ('tsv', self._check_manifest),
+            ('compact', self._check_manifest),
+            ('full', self._check_manifest),
+            ('bdbag', self._check_terra_bdbag),
+            ('terra.bdbag', self._check_terra_bdbag)
         ]:
             with self.subTest(format=format_, filter=manifest_filter):
                 query = {'filters': manifest_filter}
                 if format_ is not None:
                     query['format'] = format_
-                response = self.check_endpoint_is_working(config.service_endpoint(), '/manifest/files', query)
+                response = self._check_endpoint(config.service_endpoint(), '/manifest/files', query)
                 validator(response)
 
     def _test_drs(self):
         filters = json.dumps({'project': {'is': [self.test_name]}, 'fileFormat': {'is': ['fastq.gz', 'fastq']}})
-        response = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
-                                                  path='/repository/files',
-                                                  query={
-                                                      'filters': filters,
-                                                      'size': 1,
-                                                      'order': 'asc',
-                                                      'sort': 'fileSize'
-                                                  })
+        response = self._check_endpoint(endpoint=config.service_endpoint(),
+                                        path='/repository/files',
+                                        query={
+                                            'filters': filters,
+                                            'size': 1,
+                                            'order': 'asc',
+                                            'sort': 'fileSize'
+                                        })
         hits = json.loads(response)
         file_uuid = one(one(hits['hits'])['files'])['uuid']
         drs_endpoint = drs.drs_http_object_path(file_uuid)
-        self.download_file_from_drs_response(self.check_endpoint_is_working(config.service_endpoint(), drs_endpoint))
+        self._download_file_from_drs_response(self._check_endpoint(config.service_endpoint(), drs_endpoint))
 
     def _delete_bundles_twice(self):
         self._delete_bundles(self.test_notifications)
@@ -221,10 +221,10 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def _delete_bundles(self, notifications):
         if notifications:
             self.azul_client.delete_notification(notifications)
-        self.wait_for_queue_level(empty=False)
-        self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
+        self._wait_for_queue_level(empty=False)
+        self._wait_for_queue_level(timeout=self._queue_empty_timeout(self.num_bundles))
 
-    def set_lambda_test_mode(self, mode: bool):
+    def _set_test_mode(self, mode: bool):
         client = boto3.client('lambda')
         function_name = config.indexer_name
         indexer_lambda_config = client.get_function_configuration(FunctionName=function_name)
@@ -237,30 +237,30 @@ class IntegrationTest(AlwaysTearDownTestCase):
         client.update_function_configuration(FunctionName=function_name, Environment=environment)
 
     @memoized_property
-    def requests(self) -> requests.Session:
-        return requests_session()
+    def _requests(self) -> requests.Session:
+        return requests_session_with_retry_after()
 
-    def check_endpoint_is_working(self, endpoint: str, path: str, query: Optional[Mapping[str, str]] = None) -> bytes:
+    def _check_endpoint(self, endpoint: str, path: str, query: Optional[Mapping[str, str]] = None) -> bytes:
         url = furl(endpoint)
         url.path.add(path)
         if query is not None:
             url.query.set({k: str(v) for k, v in query.items()})
         logger.info('Requesting %s', url)
-        response = self.requests.get(url.url)
+        response = self._requests.get(url.url)
         response.raise_for_status()
         return response.content
 
-    def check_manifest(self, response: bytes):
-        self._check_manifest(BytesIO(response), 'bundle_uuid')
+    def _check_manifest(self, response: bytes):
+        self.__check_manifest(BytesIO(response), 'bundle_uuid')
 
-    def check_terra_bdbag(self, response: bytes):
+    def _check_terra_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'participants.tsv')
             with zip_fh.open(file_path) as file:
-                self._check_manifest(file, 'bundle_uuid')
+                self.__check_manifest(file, 'bundle_uuid')
 
-    def _check_manifest(self, file: IO[bytes], uuid_field_name: str):
+    def __check_manifest(self, file: IO[bytes], uuid_field_name: str):
         text = TextIOWrapper(file)
         reader = csv.DictReader(text, delimiter='\t')
         rows = list(reader)
@@ -270,11 +270,11 @@ class IntegrationTest(AlwaysTearDownTestCase):
         bundle_uuid = rows[0][uuid_field_name]
         self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
 
-    def download_file_from_drs_response(self, response: bytes):
+    def _download_file_from_drs_response(self, response: bytes):
         json_data = json.loads(response)['data_object']
         file_url = first(json_data['urls'])['url']
         file_name = json_data['name']
-        response = self.check_endpoint_is_working(file_url, '')
+        response = self._check_endpoint(file_url, '')
         # Check signature of FASTQ file.
         with gzip.open(BytesIO(response)) as buf:
             fastq = buf.read()
@@ -333,10 +333,10 @@ class IntegrationTest(AlwaysTearDownTestCase):
         logger.info('Counting %i message(s) in %i queue(s).', total_message_count, len(queues))
         return total_message_count
 
-    def get_queue_empty_timeout(self, num_bundles: int):
+    def _queue_empty_timeout(self, num_bundles: int):
         return max(num_bundles * 30, 60)
 
-    def wait_for_queue_level(self, empty: bool = True, timeout: int = 60):
+    def _wait_for_queue_level(self, empty: bool = True, timeout: int = 60):
         queue_names = [config.notify_queue_name, config.document_queue_name]
         queues = {queue_name: boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
                   for queue_name in queue_names}
@@ -362,7 +362,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         for queue in queues.values():
             queue.meta.client._endpoint.http_session.close()
 
-    def check_bundles_are_indexed(self, test_name: str, entity_type: str):
+    def _check_bundles_are_indexed(self, test_name: str, entity_type: str):
         service_check_timeout = 600
         delay_between_retries = 5
         indexed_fqids = set()
@@ -372,8 +372,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
                     test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
         logger.debug('Expected bundles %s ', sorted(self.expected_fqids))
         logger.info('Waiting for the queues to empty ...')
-        self.wait_for_queue_level(empty=False)
-        self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
+        self._wait_for_queue_level(empty=False)
+        self._wait_for_queue_level(timeout=self._queue_empty_timeout(self.num_bundles))
         logger.info('Checking if bundles are referenced by the service response ...')
         retries = 0
         deadline = time.time() + service_check_timeout
@@ -409,7 +409,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                             f' {hit["entryId"]}. Bundle(s) ({",".join(bundle_fqids)})'
                             f' have been indexed without the debug project name. Contains {project}')
 
-    def project_removed_from_azul(self):
+    def _project_removed_from_index(self):
         results_empty = [len(self._get_entities_by_project(entity, self.test_name)) == 0
                          for entity in ['files', 'projects', 'samples', 'bundles']]
         logger.info("Project removed from index files: {}, projects: {}, "
@@ -426,7 +426,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         params = dict(filters=filters, size=str(size))
         while True:
             url = f'{config.service_endpoint()}/repository/{entity_type}'
-            response = self.requests.get(url, params=params)
+            response = self._requests.get(url, params=params)
             response.raise_for_status()
             body = response.json()
             hits = body['hits']
