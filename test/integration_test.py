@@ -320,18 +320,17 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 break
         return filtered_bundle_fqids
 
-    def get_number_of_messages(self, queues: Mapping[str, Any]):
+    def _count_messages(self, queues: Mapping[str, Any]):
+        attribute_names = ['ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed')]
         total_message_count = 0
         for queue_name, queue in queues.items():
-            attributes = tuple('ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed'))
-            num_messages = tuple(int(queue.attributes[attribute]) for attribute in attributes)
-            num_available, num_inflight, num_delayed = num_messages
             queue.reload()
-            message_sum = sum((num_available, num_inflight, num_delayed))
-            logger.info('Queue %s has %i messages, %i available, %i in flight and %i delayed',
-                        queue_name, message_sum, num_available, num_inflight, num_delayed)
-            total_message_count += message_sum
-        logger.info('Total # of messages: %i', total_message_count)
+            message_counts = [int(queue.attributes[attribute_name]) for attribute_name in attribute_names]
+            queue_length = sum(message_counts)
+            logger.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
+                         queue_name, queue_length, *message_counts)
+            total_message_count += queue_length
+        logger.info('Counting %i message(s) in %i queue(s).', total_message_count, len(queues))
         return total_message_count
 
     def get_queue_empty_timeout(self, num_bundles: int):
@@ -345,7 +344,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         queue_size_history = deque(maxlen=10)
 
         while True:
-            total_message_count = self.get_number_of_messages(queues)
+            total_message_count = self._count_messages(queues)
             queue_wait_time_elapsed = (time.time() - wait_start_time)
             queue_size_history.append(total_message_count)
             cumulative_queue_size = sum(queue_size_history)
