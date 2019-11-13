@@ -109,7 +109,7 @@ class AzulClient(object):
 
             def attempt(notification, i):
                 try:
-                    logger.info("Sending notification %s -- attempt %i:", notification, i)
+                    logger.info("Sending notification %s to %s -- attempt %i:", notification, indexer_url, i)
                     url = urlparse(indexer_url)
                     if not self.dryrun:
                         self.post_bundle(url.geturl(), notification)
