@@ -30,7 +30,7 @@ before_install:
 
 install:
   - pip install -U setuptools==40.1.0 wheel==0.32.3
-  - pip install -r requirements.dev.txt
+  - pip install -Ur requirements.dev.txt
   - pip install coveralls codecov trufflehog
 
 script:
