@@ -1,29 +1,34 @@
-import unittest
-from collections import deque
-from contextlib import contextmanager
 import csv
 import gzip
-from io import (
-    BytesIO,
-    TextIOWrapper,
-)
 import json
 import logging
 import os
 import random
 import re
+import sys
 import time
+import unittest
+import uuid
+from collections import deque
+from contextlib import contextmanager
+from io import (
+    BytesIO,
+    TextIOWrapper,
+)
 from typing import (
     Any,
     IO,
     Mapping,
     Optional,
+    Tuple,
+    List,
+    Set,
 )
 from unittest import mock
-import uuid
 from zipfile import ZipFile
 
 import boto3
+import requests
 from furl import furl
 from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
@@ -32,17 +37,20 @@ from more_itertools import (
     one,
 )
 from openapi_spec_validator import validate_spec
-import requests
 
+import azul.dss
 from azul import (
     config,
     drs,
 )
-from azul.azulclient import AzulClient
+from azul.azulclient import (
+    AzulClient,
+    FQID,
+)
 from azul.decorators import memoized_property
-import azul.dss
 from azul.logging import configure_test_logging
 from azul.requests import requests_session
+from azul.types import JSON
 from azul_test_case import AlwaysTearDownTestCase
 
 logger = logging.getLogger(__name__)
@@ -142,9 +150,9 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def _test_indexing(self):
         logger.info('Starting test using test name, %s ...', self.test_name)
         azul_client = self.azul_client
-        self.test_notifications, self.expected_fqids = azul_client.test_notifications(test_name=self.test_name,
-                                                                                      test_uuid=self.test_uuid,
-                                                                                      max_bundles=self.max_bundles)
+        self.test_notifications, self.expected_fqids = self._test_notifications(test_name=self.test_name,
+                                                                                test_uuid=self.test_uuid,
+                                                                                max_bundles=self.max_bundles)
         azul_client._index(self.test_notifications)
         # Index some bundles again to test that we handle duplicate additions.
         # Note: random.choices() may pick the same element multiple times so
@@ -275,6 +283,42 @@ class IntegrationTest(AlwaysTearDownTestCase):
         logger.info(f'Unzipped file {file_name} and verified it to be a FASTQ file.')
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
+
+    def _test_notifications(self, test_name: str, test_uuid: str, max_bundles: int) -> Tuple[List[JSON], Set[FQID]]:
+        bundle_fqids = self.azul_client.list_dss_bundles()
+        bundle_fqids = self._prune_test_bundles(bundle_fqids, max_bundles)
+        notifications = []
+        test_bundle_fqids = set()
+        for bundle_fqid in bundle_fqids:
+            new_bundle_uuid = str(uuid.uuid4())
+            # Using a new version helps ensure that any aggregation will choose
+            # the contribution from the test bundle over that by any other
+            # bundle not in the test set.
+            # Failing to do this before caused https://github.com/DataBiosphere/azul/issues/1174
+            new_bundle_version = azul.dss.new_version()
+            test_bundle_fqids.add((new_bundle_uuid, new_bundle_version))
+            notification = self.azul_client.synthesize_notification(bundle_fqid,
+                                                                    test_bundle_uuid=new_bundle_uuid,
+                                                                    test_bundle_version=new_bundle_version,
+                                                                    test_name=test_name,
+                                                                    test_uuid=test_uuid)
+            notifications.append(notification)
+        return notifications, test_bundle_fqids
+
+    def _prune_test_bundles(self, bundle_fqids, max_bundles):
+        filtered_bundle_fqids = []
+        seed = random.randint(0, sys.maxsize)
+        logger.info('Selecting %i out of %i candidate bundle(s) with random seed %i.',
+                    max_bundles, len(bundle_fqids), seed)
+        random_ = random.Random(x=seed)
+        bundle_fqids = random_.sample(bundle_fqids, len(bundle_fqids))
+        for bundle_uuid, bundle_version in bundle_fqids:
+            if len(filtered_bundle_fqids) < max_bundles:
+                if self.azul_client.bundle_has_project_json(bundle_uuid, bundle_version):
+                    filtered_bundle_fqids.append((bundle_uuid, bundle_version))
+            else:
+                break
+        return filtered_bundle_fqids
 
     def get_number_of_messages(self, queues: Mapping[str, Any]):
         total_message_count = 0
