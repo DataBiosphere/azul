@@ -96,9 +96,11 @@ def main(argv: List[str]):
     if args.purge:
         queue_manager = Queues()
         queues = dict(queue_manager.azul_queues())
+        # FIXME: eliminate need for filtering (https://github.com/DataBiosphere/azul/issues/1448)
+        queues = {k: v for k, v in queues.items() if k in config.work_queue_names}
         logger.info('Disabling lambdas ...')
         queue_manager.manage_lambdas(queues, enable=False)
-        logger.info('Purging queues ...')
+        logger.info('Purging queues: %s', ', '.join(queues.keys()))
         queue_manager.purge_queues_unsafely(queues)
     else:
         queue_manager, queues = None, None
