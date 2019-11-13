@@ -146,7 +146,9 @@ class IntegrationTest(AlwaysTearDownTestCase):
                                                                                       test_uuid=self.test_uuid,
                                                                                       max_bundles=self.max_bundles)
         azul_client._index(self.test_notifications)
-        # Index some again to test that we can handle duplicate notifications. Note: choices are with replacement
+        # Index some bundles again to test that we handle duplicate additions.
+        # Note: random.choices() may pick the same element multiple times so
+        # some notifications will end up being sent three or more times.
         azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
         self.num_bundles = len(self.expected_fqids)
         self.check_bundles_are_indexed(self.test_name, 'files')
@@ -202,8 +204,9 @@ class IntegrationTest(AlwaysTearDownTestCase):
 
     def _delete_bundles_twice(self):
         self._delete_bundles(self.test_notifications)
-        # Delete again to test duplicate deletion notifications
-        # Note: random.choices is with replacement (so the same choice may be made several times
+        # Delete some bundles again to test that we handle duplicate deletions.
+        # Note: random.choices() may pick the same element multiple times so
+        # some notifications will end up being sent three or more times.
         notifications = random.choices(self.test_notifications, k=len(self.test_notifications) // 2)
         self._delete_bundles(notifications)
 
