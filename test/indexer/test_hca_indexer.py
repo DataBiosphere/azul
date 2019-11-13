@@ -1,53 +1,49 @@
-import os
-import re
 from collections import (
     Counter,
     defaultdict,
 )
 from concurrent.futures import ThreadPoolExecutor
+import copy
 from copy import deepcopy
 import logging
-
-import elasticsearch
-from requests_http_signature import HTTPSignatureAuth
-
-import copy
-
-import boto3
-import requests
-
-from moto import (
-    mock_sqs,
-    mock_sts,
-)
+import os
+import re
 from typing import (
+    Mapping,
     NamedTuple,
     Tuple,
-    Mapping,
 )
 import unittest
 from unittest.mock import patch
 from uuid import uuid4
 
+import boto3
+import elasticsearch
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from more_itertools import one
+from moto import (
+    mock_sqs,
+    mock_sts,
+)
+import requests
+from requests_http_signature import HTTPSignatureAuth
 
-import azul.indexer
 from app_test_case import LocalAppTestCase
 from azul import (
     config,
     hmac,
 )
+import azul.indexer
 from azul.indexer import IndexWriter
 from azul.logging import configure_test_logging
 from azul.plugin import Plugin
+from azul.project.hca.metadata_generator import MetadataGenerator
 from azul.threads import Latch
 from azul.transformer import (
     Aggregate,
     Contribution,
 )
-from azul.project.hca.metadata_generator import MetadataGenerator
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper
 
@@ -1092,34 +1088,43 @@ class TestValidNotificationRequests(LocalAppTestCase):
     @mock_sqs
     def test_index_test_mode(self):
         self._create_mock_notify_queue()
-        testless_notification = {
+        notification = {
             "match": {
                 "bundle_uuid": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
                 "bundle_version": "2018-03-28T13:55:26.044Z"
             }
         }
-        test_name_in_notification = {
-            "match": {
-                "bundle_uuid": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
-                "bundle_version": "2018-03-28T13:55:26.044Z"
-            },
-            "test_name": "integration-test_bb2365b9-5a5b-436f-92e3-4fc6d86a9efd_bb2365b9"
-        }
         for endpoint in '/', '/delete':
             for test_mode in 0, 1:
-                for body in testless_notification, test_name_in_notification:
-                    with self.subTest(test_mode=test_mode, endpoint=endpoint):
+                for test_name in None, "foo":
+                    with self.subTest(test_mode=test_mode, endpoint=endpoint, test_name=test_name):
                         with patch.dict(os.environ, AZUL_TEST_MODE=str(test_mode)):
-                            response = self._test(body, endpoint=endpoint, valid_auth=True)
-                            if 'test_name' not in body and test_mode == 1:
-                                self.assertEqual(500, response.status_code)
-                                self.assertEqual({
-                                    "Code": "ChaliceViewError",
-                                    "Message": f"ChaliceViewError: Ignored notification {testless_notification}."
-                                               f" This indexer is currently in TEST MODE."
-                                }, response.json())
-                            else:
-                                self.assertEqual(202, response.status_code)
+                            payload = {} if test_name is None else {'test_name': test_name}
+                            with patch.dict(notification, **payload):
+                                response = self._test(notification, endpoint=endpoint, valid_auth=True)
+                                if test_mode == 1 and test_name is None:
+                                    self.assertEqual(500, response.status_code)
+                                    self.assertEqual(
+                                        {
+                                            'Code': 'ChaliceViewError',
+                                            'Message': 'ChaliceViewError: The indexer is currently in test mode where '
+                                                       'it only accepts specially instrumented notifications. Please '
+                                                       'try again later'
+                                        },
+                                        response.json()
+                                    )
+                                elif test_mode == 0 and test_name is not None:
+                                    self.assertEqual(400, response.status_code)
+                                    self.assertEqual(
+                                        {
+                                            'Code': 'BadRequestError',
+                                            'Message': 'BadRequestError: Cannot process test notifications outside of '
+                                                       'test mode'
+                                        },
+                                        response.json()
+                                    )
+                                else:
+                                    self.assertEqual(202, response.status_code)
 
     def _test(self, body, endpoint, valid_auth):
         with ResponsesHelper() as helper:
