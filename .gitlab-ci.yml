@@ -28,6 +28,7 @@ build_image:
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print || echo sandbox)
     - (cd deployments && ln -snf ${deployment} .active)
     - source environment
+    - export AZUL_DEBUG=0 # reduce test output volume
     - make clean
 
 setup:
