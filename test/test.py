@@ -1,4 +1,7 @@
-from concurrent.futures import ThreadPoolExecutor, wait
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    wait,
+)
 import doctest
 from itertools import chain
 from more_itertools import one
@@ -6,29 +9,37 @@ import json
 import logging
 import os
 import re
-from unittest import TestCase, skip
+from unittest import (
+    TestCase,
+    skip,
+)
 from unittest.mock import Mock
 from uuid import UUID
 import warnings
 
 from atomicwrites import atomic_write
 
-from humancellatlas.data.metadata.api import (AgeRange,
-                                              Biomaterial,
-                                              Bundle,
-                                              DonorOrganism,
-                                              Project,
-                                              SequenceFile,
-                                              SpecimenFromOrganism,
-                                              CellLine,
-                                              CellSuspension,
-                                              AnalysisProtocol,
-                                              ImagingProtocol,
-                                              LibraryPreparationProtocol,
-                                              SequencingProtocol,
-                                              SupplementaryFile,
-                                              ImagedSpecimen)
-from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata, dss_client
+from humancellatlas.data.metadata.api import (
+    AgeRange,
+    Biomaterial,
+    Bundle,
+    DonorOrganism,
+    Project,
+    SequenceFile,
+    SpecimenFromOrganism,
+    CellLine,
+    CellSuspension,
+    AnalysisProtocol,
+    ImagingProtocol,
+    LibraryPreparationProtocol,
+    SequencingProtocol,
+    SupplementaryFile,
+    ImagedSpecimen,
+)
+from humancellatlas.data.metadata.helpers.dss import (
+    download_bundle_metadata,
+    dss_client,
+)
 from humancellatlas.data.metadata.helpers.json import as_json
 from humancellatlas.data.metadata.helpers.schema_examples import download_example_bundle
 
@@ -169,24 +180,23 @@ class TestAccessorApi(TestCase):
         return manifest, metadata_files
 
     def _mock_get_bundle(self, file_uuid, file_version, content_type):
-        response = Mock()
-        response.links = {}
-        response.json.return_value = {
-            'bundle': {
-                'version': '2018-09-20T232924.687620Z',
-                'files': [
-                    {
-                        'name': 'name.json',
-                        'uuid': file_uuid,
-                        'version': file_version,
-                        'indexed': True,
-                        'content-type': content_type
-                    }
-                ]
-            }
-        }
         client = Mock()
-        client.get_bundle._request.return_value = response
+        client.get_bundle.paginate.return_value = [
+            {
+                'bundle': {
+                    'version': '2018-09-20T232924.687620Z',
+                    'files': [
+                        {
+                            'name': 'name.json',
+                            'uuid': file_uuid,
+                            'version': file_version,
+                            'indexed': True,
+                            'content-type': content_type
+                        }
+                    ]
+                }
+            }
+        ]
         return client
 
     def test_bad_content(self):
@@ -210,8 +220,8 @@ class TestAccessorApi(TestCase):
             # noinspection PyTypeChecker
             download_bundle_metadata(client, 'aws', uuid)
         self.assertEqual(cm.exception.args[0],
-                          f"Expecting file {file_uuid}.{file_version} "
-                          "to have content type 'application/json', not 'bad'")
+                         f"Expecting file {file_uuid}.{file_version} "
+                         "to have content type 'application/json', not 'bad'")
 
     def test_v5_bundle(self):
         """
@@ -575,6 +585,7 @@ class TestAccessorApi(TestCase):
         self.assertEqual(cell_lines[0].biomaterial_id, 'cell_line_at_day_54')
         self.assertEqual(cell_lines[0].has_input_biomaterial, None)
         self.assertEqual(cell_lines[0].type, 'stem cell-derived')
+        # noinspection PyDeprecation
         self.assertEqual(cell_lines[0].type, cell_lines[0].cell_line_type)
         self.assertEqual(cell_lines[0].model_organ, 'brain')
 

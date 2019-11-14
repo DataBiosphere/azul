@@ -1,17 +1,37 @@
-from abc import ABC, abstractmethod
+from abc import (
+    ABC,
+    abstractmethod,
+)
 from collections import defaultdict
 from itertools import chain
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Set, Type, TypeVar, Union
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Set,
+    Type,
+    TypeVar,
+    Union,
+)
 from uuid import UUID
 import warnings
 
-from dataclasses import dataclass, field
+from dataclasses import (
+    dataclass,
+    field,
+)
 
 from humancellatlas.data.metadata.age_range import AgeRange
 
 # A few helpful type aliases
 #
-from humancellatlas.data.metadata.lookup import lookup, LookupDefault
+from humancellatlas.data.metadata.lookup import (
+    lookup,
+    LookupDefault,
+)
 
 UUID4 = UUID
 AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
@@ -555,6 +575,7 @@ class ImagingProtocol(Protocol):
         super().__init__(json)
         content = json.get('content', json)
         self.target = [ImagingTarget.from_json(target) for target in content['target']]
+
 
 @dataclass(init=False)
 class ImagingPreparationProtocol(Protocol):
