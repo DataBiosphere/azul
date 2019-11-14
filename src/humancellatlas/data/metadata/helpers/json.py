@@ -1,7 +1,11 @@
 import copy
 from uuid import UUID
 
-from dataclasses import field, fields, is_dataclass
+from dataclasses import (
+    field,
+    fields,
+    is_dataclass,
+)
 
 from humancellatlas.data.metadata.api import Entity
 

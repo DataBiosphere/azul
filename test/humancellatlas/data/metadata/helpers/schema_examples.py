@@ -7,7 +7,7 @@ import json
 from dcplib.checksumming_io import ChecksummingSink
 
 
-def download_example_bundle(repo, branch, path='/'):   # pragma: no cover (because of canning)
+def download_example_bundle(repo, branch, path='/'):  # pragma: no cover (because of canning)
     manifest = []
     metadata_files = {}
     if path.startswith('/') or not path.endswith('/'):
