@@ -1,15 +1,15 @@
-import boto3
+from functools import lru_cache
 import json as _json  # We must use a different name for the import because 'azul.json' exists already as azul/json.py
-
 import os
 import re
-from functools import lru_cache
 from typing import (
     List,
     Mapping,
     Optional,
     Tuple,
 )
+
+import boto3
 
 Netloc = Tuple[str, int]
 
@@ -41,21 +41,24 @@ class Config:
     def _validate_debug(self, debug):
         require(debug in (0, 1, 2), "AZUL_DEBUG must be either 0, 1 or 2")
 
-    es_endpoint_env_name = 'AZUL_ES_ENDPOINT'
+    _es_endpoint_env_name = 'AZUL_ES_ENDPOINT'
 
     @property
     def es_endpoint(self) -> Optional[Netloc]:
         try:
-            es_endpoint = os.environ[self.es_endpoint_env_name]
+            es_endpoint = os.environ[self._es_endpoint_env_name]
         except KeyError:
             return None
         else:
             host, _, port = es_endpoint.partition(':')
             return host, int(port)
 
-    def es_endpoint_env(self, es_endpoint: Netloc) -> Mapping[str, str]:
+    def es_endpoint_env(self, es_endpoint: Netloc, es_instance_count: int) -> Mapping[str, str]:
         host, port = es_endpoint
-        return {self.es_endpoint_env_name: f"{host}:{port}"}
+        return {
+            self._es_endpoint_env_name: f"{host}:{port}",
+            self._es_instance_count_env_name: str(es_instance_count)
+        }
 
     @property
     def project_root(self) -> str:
@@ -292,9 +295,11 @@ class Config:
     def es_instance_type(self) -> str:
         return os.environ['AZUL_ES_INSTANCE_TYPE']
 
+    _es_instance_count_env_name = 'AZUL_ES_INSTANCE_COUNT'
+
     @property
     def es_instance_count(self) -> int:
-        return int(os.environ['AZUL_ES_INSTANCE_COUNT'])
+        return int(os.environ[self._es_instance_count_env_name])
 
     @property
     def es_volume_size(self) -> int:
@@ -388,14 +393,14 @@ class Config:
             'dirty': str_to_bool(os.environ['azul_git_dirty'])
         }
 
-    def lambda_env(self, es_endpoint: Netloc):
+    def lambda_env(self, es_endpoint: Netloc, es_instance_count: int):
         """
         A dictionary with the enviroment variables to be used by a deployed AWS Lambda function or `chalice local`
         """
         return {
             **{k: v for k, v in os.environ.items() if k.startswith('AZUL_')},
             # Hard-wire the ES endpoint, so we don't need to look it up at run-time, for every request/invocation
-            **self.es_endpoint_env(es_endpoint),
+            **self.es_endpoint_env(es_endpoint, es_instance_count),
             **self._git_status,
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }

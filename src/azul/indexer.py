@@ -35,6 +35,7 @@ from more_itertools import one
 
 from azul import config
 import azul.dss
+from azul.deployment import aws
 from azul.es import ESClientFactory
 from azul.transformer import (
     Aggregate,
@@ -70,7 +71,7 @@ class BaseIndexer(ABC):
         # Instead we try using one shard per ES node which is optimal for searching since it allows parallelization of
         # requests (though maybe at the cost of higher contention during indexing).
         _, aggregate = config.parse_es_index_name(index_name)
-        num_shards = config.es_instance_count if aggregate else config.indexer_concurrency
+        num_shards = aws.es_instance_count if aggregate else config.indexer_concurrency
         return {
             "index": {
                 "number_of_shards": num_shards,

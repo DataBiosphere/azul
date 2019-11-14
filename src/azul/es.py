@@ -17,7 +17,7 @@ class ESClientFactory:
 
     @classmethod
     def get(cls):
-        host, port = config.es_endpoint or aws.es_endpoint
+        host, port = aws.es_endpoint
         return cls._create_client(host, port, config.es_timeout)
 
     @classmethod
