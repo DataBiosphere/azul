@@ -50,8 +50,8 @@ def clean_specs(specs):
     Adjust specs from API Gateway so they pass linting
     """
     # Filter out 'options' since it causes linting errors
-    for path in specs['paths']:
-        specs['paths'][path].pop('options', None)
+    for path in specs['paths'].values():
+        path.pop('options', None)
     # Remove listed servers since API Gateway give false results
     specs.pop('servers')
 
