@@ -1,24 +1,104 @@
 import copy
-from typing import List
+from typing import (
+    List,
+    cast,
+    Optional,
+)
 
 from azul.deployment import aws
-from azul.types import JSON
+from azul.types import (
+    JSON,
+    MutableJSON,
+)
 
 
-def openapi_spec(description: JSON):
+def openapi_spec(path: str, methods: List[str], path_spec: Optional[JSON] = None, method_spec: Optional[JSON] = None):
     """
-    Add description to decorated function
+    Add description to decorated function at specified route.
 
-    >>> @openapi_spec({'a': 'b'})
+    >>> @openapi_spec('/foo', ['GET'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
     ... def foo():
     ...     pass
+
+    >>> foo.path_specs
+    {'/foo': {'a': 'b'}}
+
+    >>> foo.method_specs
+    {('/foo', 'get'): {'c': 'd'}}
+
+    One of path_spec or method_spec maybe unspecified
+
+    >>> @openapi_spec('/foo', ['GET'], method_spec={'c': 'd'})
+    ... def foo():
+    ...     pass
+
+    >>> @openapi_spec('/foo', ['GET'], path_spec={'a': 'b'})
+    ... def foo():
+    ...     pass
+
+    Although a valid, documented endpoint should not allow both to be none, we
+    have to allow this behavior to prevent breakages from all currently
+    undocumented endpoints.
+
+    >>> @openapi_spec('/foo', ['GET'])
+    ... def foo():
+    ...     pass
+
+    Multiple routes can be made for the same function
+
+    >>> @openapi_spec('/foo', ['GET', 'PUT'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
+    ... @openapi_spec('/foo/too', ['GET'], method_spec={'e': 'f'})
+    ... def foo():
+    ...     pass
+
+    >>> foo.path_specs
+    {'/foo': {'a': 'b'}}
+
+    >>> foo.method_specs
+    {('/foo/too', 'get'): {'e': 'f'}, ('/foo', 'get'): {'c': 'd'}, ('/foo', 'put'): {'c': 'd'}}
+
+    Only one route should define the top level spec
+
+    >>> @openapi_spec('/bar', ['PUT'], path_spec={'bad, duplicate': 'path spec'}, method_spec={'e': 'f'})
+    ... @openapi_spec('/bar', ['GET'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
+    ... def bar():
+    ...     pass
+    Traceback (most recent call last):
     ...
-    >>> foo.api_spec == {'a': 'b'}
-    True
+    AssertionError: Only specify path_spec once per route path
+
+    At this point we can only validate duplicate specs if they occur on the same
+    method. Unfortunately, this succeeds:
+
+    >>> @openapi_spec('/bar', ['PUT'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
+    ... def foo():
+    ...     pass
+    >>> @openapi_spec('/bar', ['GET'], path_spec={'e', 'f'}, method_spec={'g': 'h'})
+    ... def bar():
+    ...     pass
     """
 
     def spec_adder(func):
-        func.api_spec = description
+        try:
+            func.path_specs
+        except AttributeError:
+            func.path_specs = {}
+        try:
+            func.method_specs
+        except AttributeError:
+            func.method_specs = {}
+
+        assert path not in func.path_specs, 'Only specify path_spec once per route path'
+        if path_spec:
+            func.path_specs[path] = path_spec
+
+        if method_spec:
+            for method in methods:
+                # OpenAPI routes must be lower case
+                method = method.lower()
+                # No need to worry about duplicate method_specs since Chalice
+                # will complain in that case
+                func.method_specs[path, method] = method_spec
         return func
 
     return spec_adder
@@ -26,8 +106,8 @@ def openapi_spec(description: JSON):
 
 def annotated_specs(gateway_id, app, toplevel_spec) -> JSON:
     """
-    Finds all routes in app that are decorated with @openapi_spec and adds this information
-    into the api spec downloaded from API Gateway.
+    Finds all routes in app that are decorated with @openapi_spec and adds this
+    information into the api spec downloaded from API Gateway.
 
     :param gateway_id: API Gateway ID corresponding to the Chalice app
     :param app: App with annotated routes
@@ -37,17 +117,26 @@ def annotated_specs(gateway_id, app, toplevel_spec) -> JSON:
     specs = aws.api_gateway_export(gateway_id)
     clean_specs(specs)
     specs = merge_dicts(toplevel_spec, specs, override=True)
-    docs = get_doc_specs(app)
-    for path, doc_spec in docs.items():
-        for verb, description in specs['paths'][path].items():
-            description = merge_dicts(description, doc_spec)
-            specs['paths'][path][verb] = description
-    return specs
+    path_specs, method_specs = get_app_specs(app)
+    return join_specs(specs, path_specs, method_specs)
 
 
 def clean_specs(specs):
     """
-    Adjust specs from API Gateway so they pass linting
+    Adjust specs from API Gateway so they pass linting.
+
+    >>> spec = {
+    ...     'paths': {
+    ...         'get': {},
+    ...         'options': {}
+    ...     },
+    ...     'servers': ['a', 'b']
+    ... }
+
+    >>> clean_specs(spec)
+
+    >>> spec
+    {'paths': {'get': {}, 'options': {}}}
     """
     # Filter out 'options' since it causes linting errors
     for path in specs['paths'].values():
@@ -56,22 +145,92 @@ def clean_specs(specs):
     specs.pop('servers')
 
 
-def get_doc_specs(app):
-    docs = {}
-    for route, entries in app.routes.items():
+def get_app_specs(app):
+    """
+    Extract OpenAPI specs from a Chalice app object.
+    """
+    path_specs = {}
+    method_specs = {}
+    for entries in app.routes.values():
         func = next(iter(entries.values())).view_function
-        if hasattr(func, 'api_spec'):
-            docs[route] = func.api_spec
-    return docs
+        func_path_specs = getattr(func, 'path_specs', None)
+        if func_path_specs:
+            for path, spec in func_path_specs.items():
+                if path in path_specs:
+                    assert spec == path_specs[path], f'Path spec for {spec} already exists'
+            path_specs.update(func.path_specs)
+        else:
+            # TODO (jesse): raise if route is undocumented
+            pass
+        func_method_specs = getattr(func, 'method_specs', None)
+        if func_method_specs:
+            method_specs.update(func_method_specs)
+
+    return path_specs, method_specs
 
 
-def merge_dicts(d1: JSON, d2: JSON, override: bool = False) -> JSON:
+def join_specs(toplevel_spec: JSON,
+               path_specs: JSON,
+               method_specs: JSON) -> MutableJSON:
+    """
+    Join the specifications, potentially overwriting with specs from a lower
+    level.
+
+    Arguments are given in descending order of level.
+
+    >>> toplevel_spec = {'paths': {}}
+    >>> path_specs = {'/foo': {'get': {'a': 'b'}}}
+    >>> method_specs = {}
+
+    paths_specs are inserted into toplevel_spec ...
+
+    >>> join_specs(toplevel_spec, path_specs, method_specs)
+    {'paths': {'/foo': {'get': {'a': 'b'}}}}
+
+    ... but may overwrite preexisting spec ...
+
+    >>> toplevel_spec['paths']['/foo'] = {'get': 'XXX'}
+    >>> join_specs(toplevel_spec, path_specs, method_specs)
+    {'paths': {'/foo': {'get': {'a': 'b'}}}}
+
+    ... which may be further overwritten by method_spec.
+
+    >>> method_specs = {('/foo', 'get'): {'a': 'XXX'}}
+    >>> join_specs(toplevel_spec, path_specs, method_specs)
+    {'paths': {'/foo': {'get': {'a': 'XXX'}}}}
+
+    Method specs for the same path won't conflict
+
+    >>> method_specs[('/foo', 'put')] = {'c': 'd'}
+    >>> join_specs(toplevel_spec, path_specs, method_specs)
+    {'paths': {'/foo': {'get': {'a': 'XXX'}, 'put': {'c': 'd'}}}}
+
+    nor will path specs for different paths
+
+    >>> path_specs['/bar'] = {'summary': {'Drink': 'up'}}
+    >>> join_specs(toplevel_spec, path_specs, method_specs)
+    {'paths': {'/foo': {'get': {'a': 'XXX'}, 'put': {'c': 'd'}}, '/bar': {'summary': {'Drink': 'up'}}}}
+    """
+    specs = cast(MutableJSON, copy.deepcopy(toplevel_spec))
+
+    for path, path_spec in path_specs.items():
+        # This may override entries from API Gateway with the same path
+        specs['paths'][path] = path_spec
+
+    for (path, method), method_spec in method_specs.items():
+        # This may override duplicate specs from path_specs or API Gateway
+        specs['paths'][path][method] = method_spec
+
+    return specs
+
+
+def merge_dicts(d1: JSON, d2: JSON, override: bool = False) -> MutableJSON:
     """
     Merge two dictionaries deeply such that:
 
     - collisions raise an error,
     - lists are appended, and
-    - child dictionaries are recursively merged
+    - child dictionaries are recursively merged.
 
     Know that the returned dictionary will share references in d1 and d2.
 
@@ -108,7 +267,7 @@ def merge_dicts(d1: JSON, d2: JSON, override: bool = False) -> JSON:
     return _recursive_merge_dicts(d1, d2, [], override)
 
 
-def _recursive_merge_dicts(d1: JSON, d2: JSON, path: List[str], override: bool) -> JSON:
+def _recursive_merge_dicts(d1: JSON, d2: JSON, path: List[str], override: bool) -> MutableJSON:
     merged = dict(copy.copy(d1))
     for k, v in d2.items():
         sub_path = path + [k]
