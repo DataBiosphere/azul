@@ -102,16 +102,21 @@ def post_notification():
 
 
 def process_notification(action: str, notification: JSON):
-    if not config.test_mode or notification.get('test_name', None):
-        message = dict(action=action, notification=notification)
-        notify_queue = queue(config.notify_queue_name)
-        notify_queue.send_message(MessageBody=json.dumps(message))
-        log.info("Queued notification %r", notification)
-        return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
+    if config.test_mode:
+        if 'test_name' not in notification:
+            log.error('Rejecting non-test notification in test mode: %r.', notification)
+            raise chalice.ChaliceViewError('The indexer is currently in test mode where it only accepts specially '
+                                           'instrumented notifications. Please try again later')
     else:
-        test_mode_error = f'Ignored notification {notification}. This indexer is currently in TEST MODE.'
-        log.error(test_mode_error)
-        raise chalice.ChaliceViewError(test_mode_error)
+        if 'test_name' in notification:
+            log.error('Rejecting test notification in production mode: %r.', notification)
+            raise chalice.BadRequestError('Cannot process test notifications outside of test mode')
+
+    message = dict(action=action, notification=notification)
+    notify_queue = queue(config.notify_queue_name)
+    notify_queue.send_message(MessageBody=json.dumps(message))
+    log.info("Queued notification %r", notification)
+    return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
 
 
 def validate_request_syntax(notification):

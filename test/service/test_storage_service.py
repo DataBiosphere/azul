@@ -1,4 +1,5 @@
 import json
+from unittest import skip
 from unittest.mock import patch
 
 from moto import (
@@ -98,6 +99,7 @@ class StorageServiceTest(AzulTestCase):
 
     @mock_s3
     @mock_sts
+    @skip("https://github.com/DataBiosphere/azul/issues/1424")
     def test_multipart_upload_ok_with_n_parts(self):
         sample_key = 'foo-multipart-upload'
         sample_content_parts = [

@@ -1,5 +1,5 @@
-import random
-import sys
+import json
+import logging
 import uuid
 from collections import defaultdict
 from concurrent.futures import (
@@ -14,15 +14,10 @@ from itertools import (
     product,
     groupby,
 )
-import json
-import logging
 from pprint import PrettyPrinter
-
-import requests
 from typing import (
     List,
     Iterable,
-    Set,
     Tuple,
 )
 from urllib.error import HTTPError
@@ -30,16 +25,16 @@ from urllib.parse import (
     urlparse,
 )
 
+import requests
 from more_itertools import chunked
 
+import azul.dss
 from azul import (
     config,
     hmac,
 )
-import azul.dss
 from azul.es import ESClientFactory
 from azul.plugin import Plugin
-from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 
@@ -72,61 +67,36 @@ class AzulClient(object):
         response.raise_for_status()
         return response.content
 
-    def _make_notification(self, bundle_fqid: FQID):
+    def synthesize_notification(self, bundle_fqid: FQID, **payload):
+        """
+        Generate a indexer notification for the given bundle.
+
+        The returned notification is considered synthetic in contrast to the
+        organic ones sent by DSS. They can be easily identified by the special
+        subscription UUID.
+        """
         bundle_uuid, bundle_version = bundle_fqid
         return {
             "query": self.query(),
-            "subscription_id": 'cafebabe-feed-4bad-dead-beaf8badf00d',
+            "subscription_id": "cafebabe-feed-4bad-dead-beaf8badf00d",
             "transaction_id": str(uuid.uuid4()),
             "match": {
                 "bundle_uuid": bundle_uuid,
                 "bundle_version": bundle_version
             },
+            **payload
         }
 
     def reindex(self):
-        bundle_fqids = self._list_dss_bundles()
-        notifications = [self._make_notification(fqid) for fqid in bundle_fqids]
+        bundle_fqids = self.list_dss_bundles()
+        notifications = [self.synthesize_notification(fqid) for fqid in bundle_fqids]
         self._index(notifications)
 
-    def test_notifications(self, test_name: str, test_uuid: str, max_bundles: int) -> Tuple[List[JSON], Set[FQID]]:
-        bundle_fqids = self._list_dss_bundles()
-        bundle_fqids = self._prune_test_bundles(bundle_fqids, max_bundles)
-        notifications = []
-        test_bundle_fqids = set()
-        for bundle_fqid in bundle_fqids:
-            new_bundle_uuid = str(uuid.uuid4())
-            # Using a new version helps ensure that any aggregation will choose
-            # the contribution from the test bundle over that by any other
-            # bundle not in the test set.
-            # Failing to do this before caused https://github.com/DataBiosphere/azul/issues/1174
-            new_bundle_version = azul.dss.new_version()
-            test_bundle_fqids.add((new_bundle_uuid, new_bundle_version))
-            notification = dict(self._make_notification(bundle_fqid),
-                                test_bundle_uuid=new_bundle_uuid,
-                                test_bundle_version=new_bundle_version,
-                                test_name=test_name,
-                                test_uuid=test_uuid)
-            notifications.append(notification)
-        return notifications, test_bundle_fqids
-
-    def _prune_test_bundles(self, bundle_fqids, max_bundles):
-        filtered_bundle_fqids = []
-        seed = random.randint(0, sys.maxsize)
-        logger.info('Selecting %i out of %i candidate bundle(s) with random seed %i.',
-                    max_bundles, len(bundle_fqids), seed)
-        random_ = random.Random(x=seed)
-        bundle_fqids = random_.sample(bundle_fqids, len(bundle_fqids))
-        for bundle_uuid, bundle_version in bundle_fqids:
-            if len(filtered_bundle_fqids) < max_bundles:
-                manifest = self.dss_client.get_bundle(uuid=bundle_uuid, version=bundle_version, replica='aws')
-                # Since we now use DSS' GET /bundles/all which doesn't support filtering, we need to filter by hand
-                # FIXME: handle bundles with more than 500 files where project_0.json is not on first page of manifest
-                if any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest['bundle']['files']):
-                    filtered_bundle_fqids.append((bundle_uuid, bundle_version))
-            else:
-                break
-        return filtered_bundle_fqids
+    def bundle_has_project_json(self, bundle_uuid, bundle_version):
+        manifest = self.dss_client.get_bundle(uuid=bundle_uuid, version=bundle_version, replica='aws')
+        # Since we now use DSS' GET /bundles/all which doesn't support filtering, we need to filter by hand
+        # FIXME: handle bundles with more than 500 files where project_0.json is not on first page of manifest
+        return any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest['bundle']['files'])
 
     def _index(self, notifications: Iterable, path: str = '/'):
         errors = defaultdict(int)
@@ -139,7 +109,7 @@ class AzulClient(object):
 
             def attempt(notification, i):
                 try:
-                    logger.info("Sending notification %s -- attempt %i:", notification, i)
+                    logger.info("Sending notification %s to %s -- attempt %i:", notification, indexer_url, i)
                     url = urlparse(indexer_url)
                     if not self.dryrun:
                         self.post_bundle(url.geturl(), notification)
@@ -188,7 +158,7 @@ class AzulClient(object):
         logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
         logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
 
-    def _list_dss_bundles(self) -> List[FQID]:
+    def list_dss_bundles(self) -> List[FQID]:
         logger.info('Listing bundles in prefix %s.', self.prefix)
         bundle_fqids = []
         request = dict(prefix=self.prefix, replica='aws', per_page=500)
@@ -238,11 +208,11 @@ class AzulClient(object):
         self = cls(dss_url=message['dss_url'],
                    prefix=message['prefix'],
                    dryrun=message['dryrun'])
-        bundle_fqids = self._list_dss_bundles()
+        bundle_fqids = self.list_dss_bundles()
         bundle_fqids = cls._filter_obsolete_bundle_versions(bundle_fqids)
         logger.info("After filtering obsolete versions, %i bundles remain in prefix %s",
                     len(bundle_fqids), self.prefix)
-        messages = (dict(action='add', notification=self._make_notification(bundle_fqid))
+        messages = (dict(action='add', notification=self.synthesize_notification(bundle_fqid))
                     for bundle_fqid in bundle_fqids)
         notify_queue = self.queue(config.notify_queue_name)
         num_messages = 0
