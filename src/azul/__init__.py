@@ -474,8 +474,15 @@ class Config:
 
     @property
     def all_queue_names(self):
-        return (self.token_queue_name, self.document_queue_name, self.fail_queue_name,
-                self.fail_fifo_queue_name, self.notify_queue_name)
+        return self.work_queue_names + self.fail_queue_names
+
+    @property
+    def fail_queue_names(self):
+        return self.fail_fifo_queue_name, self.fail_queue_name
+
+    @property
+    def work_queue_names(self):
+        return self.notify_queue_name, self.token_queue_name, self.document_queue_name
 
     manifest_lambda_basename = 'manifest'
 
