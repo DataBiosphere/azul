@@ -7,24 +7,23 @@ import tempfile
 import types
 from typing import (
     Mapping,
+    NamedTuple,
     Optional,
     Union,
-    NamedTuple,
 )
 from unittest.mock import (
-    MagicMock,
     patch,
 )
 
 import boto3
 from botocore.response import StreamingBody
-from hca.dss import DSSClient
 # noinspection PyProtectedMember
 from humancellatlas.data.metadata.helpers.dss import _DSSClient
 from urllib3 import Timeout
 
 from azul import config
 from azul.types import JSON
+from hca.dss import DSSClient
 
 logger = logging.getLogger(__name__)
 
@@ -171,19 +170,17 @@ def _patch_client_for_direct_access(client: DSSClient):
 
     class NewGetBundle:
 
-        def _request(self, kwargs, **other_kwargs):
+        def paginate(self, *args, **kwargs):
             uuid, version, replica = kwargs['uuid'], kwargs['version'], kwargs['replica']
             try:
                 bundle = mini_dss.get_bundle(uuid, version, replica)
-                response = MagicMock()
-                response.json = lambda: {'bundle': bundle, 'version': version, 'uuid': uuid}
-                response.links.__getitem__.side_effect = KeyError()
             except Exception:
                 logger.warning('Failed getting bundle file %s, version %s directly. '
                                'Falling back to official method', uuid, version)
-                return old_get_bundle._request(kwargs, **other_kwargs)
+                return old_get_bundle.paginate(*args, **kwargs)
             else:
-                return response
+                page = {'bundle': bundle, 'version': version, 'uuid': uuid}
+                return [page]
 
     new_get_bundle = NewGetBundle()
     client.get_file = types.MethodType(new_get_file, client)
