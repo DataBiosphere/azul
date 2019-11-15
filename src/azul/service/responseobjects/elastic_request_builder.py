@@ -439,7 +439,7 @@ class ElasticTransformDump:
         es_response = es_search.execute(ignore_cache=True)
         self._translate_response_aggs(es_response)
         final_response = SummaryResponse(es_response.to_dict())
-        if logger.isEnabledFor(logging.DEBUG):
+        if config.debug == 2 and logger.isEnabledFor(logging.DEBUG):
             logger.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
         return final_response.return_response().to_json()
 
