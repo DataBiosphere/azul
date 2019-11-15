@@ -1,5 +1,4 @@
 from collections import deque
-from contextlib import contextmanager
 import csv
 import gzip
 from io import (
@@ -502,13 +501,21 @@ class DSSIntegrationTest(unittest.TestCase):
     class SpecialError(Exception):
         pass
 
-    @contextmanager
     def _failing_s3_get_object(self):
-        with mock.patch('boto3.client') as mock_client:
-            mock_s3 = mock.MagicMock()
-            mock_s3.get_object.side_effect = self.SpecialError()
-            mock_client.return_value = mock_s3
-            yield
+        def make_mock(**kwargs):
+            original = kwargs['spec']
+
+            def mock_boto3_client(service):
+                if service == 's3':
+                    mock_s3 = mock.MagicMock()
+                    mock_s3.get_object.side_effect = self.SpecialError()
+                    return mock_s3
+                else:
+                    return original(service)
+
+            return mock_boto3_client
+
+        return mock.patch('boto3.client', spec=True, new_callable=make_mock)
 
     def _test_dss_client(self, direct, query, dss_client, replica, fallback):
         with self.subTest(direct=direct, replica=replica, fallback=fallback):
