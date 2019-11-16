@@ -42,6 +42,10 @@ class AzulChaliceApp(Chalice):
         if log.isEnabledFor(logging.INFO):
             context = self.current_request.context
             query = self.current_request.query_params
+            if query is not None:
+                # Convert MultiDict to a plain dict that can be converted to
+                # JSON. Also flatten the singleton values.
+                query = {k: v[0] if len(v) == 1 else v for k, v in ((k, query.getlist(k)) for k in query.keys())}
             log.info(f"Received {context['httpMethod']} request "
                      f"to '{context['path']}' "
                      f"with{' parameters ' + json.dumps(query) if query else 'out parameters'}.")

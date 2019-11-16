@@ -357,10 +357,6 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 logger.info('The most recently sampled queue sizes are %r.', queue_size_history)
             time.sleep(5)
 
-        # Hack that removes the ResourceWarning that is caused by an unclosed SQS session
-        for queue in queues.values():
-            queue.meta.client._endpoint.http_session.close()
-
     def _check_bundles_are_indexed(self, test_name: str, entity_type: str):
         service_check_timeout = 600
         delay_between_retries = 5
