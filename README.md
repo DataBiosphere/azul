@@ -5,6 +5,58 @@
 The Azul project contains the components that together serve as the backend to
 Boardwalk, a web application for browsing genomic data sets.
 
+[TOC levels=1-4]: # "# Table of Contents"
+
+# Table of Contents
+- [1. Architecture Overview](#1-architecture-overview)
+    - [1.1 Components](#11-components)
+    - [1.2 Architecture Diagram](#12-architecture-diagram)
+- [2. Getting Started](#2-getting-started)
+    - [2.1 Development Prerequisites](#21-development-prerequisites)
+    - [2.2 Runtime Prerequisites (Infrastructure)](#22-runtime-prerequisites-infrastructure)
+    - [2.3 Project configuration](#23-project-configuration)
+        - [2.3.1 AWS credentials](#231-aws-credentials)
+        - [2.3.2 Google credentials](#232-google-credentials)
+        - [2.3.3 For personal deployment (AWS credentials available)](#233-for-personal-deployment-aws-credentials-available)
+    - [2.4 PyCharm](#24-pycharm)
+- [3. Deployment](#3-deployment)
+    - [3.1 Provisioning cloud infrastructure](#31-provisioning-cloud-infrastructure)
+    - [3.2 Deploying lambda functions](#32-deploying-lambda-functions)
+    - [3.3 Provisioning stable API domain names](#33-provisioning-stable-api-domain-names)
+    - [3.4 Subscribing to DSS](#34-subscribing-to-dss)
+    - [3.5 Reindexing](#35-reindexing)
+    - [3.6 Cancelling an ongoing (re)indexing operation](#36-cancelling-an-ongoing-reindexing-operation)
+    - [3.7 Deleting all indices](#37-deleting-all-indices)
+    - [3.8 Deleting a deployment](#38-deleting-a-deployment)
+- [4. Running indexer or service locally](#4-running-indexer-or-service-locally)
+- [5. Troubleshooting](#5-troubleshooting)
+- [6. Branch flow & development process](#6-branch-flow--development-process)
+    - [6.1 Deployment branches](#61-deployment-branches)
+- [7. Operational Procedures](#7-operational-procedures)
+    - [7.1 Main deployments and promotions](#71-main-deployments-and-promotions)
+        - [7.1.1 Initial setup](#711-initial-setup)
+        - [7.1.2 Prepare for promotion](#712-prepare-for-promotion)
+        - [7.1.3 Finishing up deployment / promotion](#713-finishing-up-deployment--promotion)
+    - [7.2 Big red button](#72-big-red-button)
+    - [7.3 Copying bundles](#73-copying-bundles)
+- [8. Scale testing](#8-scale-testing)
+- [9. Continuous deployment and integration](#9-continuous-deployment-and-integration)
+    - [9.1 The Sandbox Deployment](#91-the-sandbox-deployment)
+    - [9.2 Security](#92-security)
+    - [9.3 Networking](#93-networking)
+    - [9.4 Storage](#94-storage)
+    - [9.5 Gitlab](#95-gitlab)
+    - [9.6 Updating Gitlab](#96-updating-gitlab)
+    - [9.7 The Gitlab Build Environment](#97-the-gitlab-build-environment)
+- [10. Kibana](#10-kibana)
+- [11. Making wheels](#11-making-wheels)
+- [12. Development tools](#12-development-tools)
+    - [12.1 OpenAPI Development](#121-openapi-development)
+
+# 1. Architecture Overview
+
+## 1.1 Components
+
 [Data Store]: https://github.com/HumanCellAtlas/data-store
 
 Azul consists of two components: an indexer and a web service. The Azul indexer
@@ -25,83 +77,21 @@ Both the indexer and the web service allow for project-specific customizations
 via a plug-in mechanism, allowing the Boardwalk UI codebase to be functionally
 generic with minimal need for project-specific behavior.
 
-[TOC levels=1-4]: # "# Table of Contents"
+## 1.2 Architecture Diagram
 
-# Table of Contents
-- [1. Getting Started](#1-getting-started)
-    - [1.1 Development Prerequisites](#11-development-prerequisites)
-    - [1.2 Runtime Prerequisites (Infrastructure)](#12-runtime-prerequisites-infrastructure)
-    - [1.3 Project configuration](#13-project-configuration)
-        - [1.3.1 AWS credentials](#131-aws-credentials)
-        - [1.3.2 Google credentials](#132-google-credentials)
-        - [1.3.3 For personal deployment (AWS credentials available)](#133-for-personal-deployment-aws-credentials-available)
-    - [1.4 PyCharm](#14-pycharm)
-- [2. Deployment](#2-deployment)
-    - [2.1 Provisioning cloud infrastructure](#21-provisioning-cloud-infrastructure)
-    - [2.2 Deploying lambda functions](#22-deploying-lambda-functions)
-    - [2.3 Provisioning stable API domain names](#23-provisioning-stable-api-domain-names)
-    - [2.4 Subscribing to DSS](#24-subscribing-to-dss)
-    - [2.5 Reindexing](#25-reindexing)
-    - [2.6 Cancelling an ongoing (re)indexing operation](#26-cancelling-an-ongoing-reindexing-operation)
-    - [2.7 Deleting all indices](#27-deleting-all-indices)
-    - [2.8 Deleting a deployment](#28-deleting-a-deployment)
-- [3. Running indexer or service locally](#3-running-indexer-or-service-locally)
-- [4. Troubleshooting](#4-troubleshooting)
-- [5. Branch flow & development process](#5-branch-flow--development-process)
-    - [5.1 Deployment branches](#51-deployment-branches)
-- [6. Operational Procedures](#6-operational-procedures)
-    - [6.1 Main deployments and promotions](#61-main-deployments-and-promotions)
-        - [6.1.1 Initial setup](#611-initial-setup)
-        - [6.1.2 Prepare for promotion](#612-prepare-for-promotion)
-        - [6.1.3 Finishing up deployment / promotion](#613-finishing-up-deployment--promotion)
-    - [6.2 Big red button](#62-big-red-button)
-    - [6.3 Copying bundles](#63-copying-bundles)
-- [7. Scale testing](#7-scale-testing)
-- [8. Continuous deployment and integration](#8-continuous-deployment-and-integration)
-    - [8.1 The Sandbox Deployment](#81-the-sandbox-deployment)
-    - [8.2 Security](#82-security)
-    - [8.3 Networking](#83-networking)
-    - [8.4 Storage](#84-storage)
-    - [8.5 Gitlab](#85-gitlab)
-    - [8.6 Updating Gitlab](#86-updating-gitlab)
-    - [8.7 The Gitlab Build Environment](#87-the-gitlab-build-environment)
-- [9. Kibana](#9-kibana)
-- [10. Making wheels](#10-making-wheels)
-- [11. Development tools](#11-development-tools)
-    - [11.1 OpenAPI development](#111-openapi-development)
+![Azul architecture diagram](docs/azul-arch.png)
 
+# 2. Getting Started
 
-The Azul project contains the components that together serve as the backend to
-Boardwalk, a web application for browsing genomic data sets.
+## 2.1 Development Prerequisites
 
-Azul consists of two components: an indexer and a web service. The Azul indexer
-is an AWS Lambda function that responds to web-hook notifications about bundle
-addition and deletion events occurring in a [Data Store] instance. The indexer
-responds to those notifications by retrieving the bundle's metadata from said
-data store, transforming it and writing the transformed metadata into an
-Elasticsearch index. The transformation extracts selected entities and
-denormalizes the relations between them into a document shape that facilitates
-efficient queries on a number of customizable metadata facets.
-
-The Azul web service, another AWS Lambda function fronted by API Gateway, serves
-as a thin translation layer between Elasticsearch and the Boardwalk UI,
-providing features like pluggable authentication, field name translation and
-introspective capabilities such as facet and entity type discovery.
-
-Both the indexer and the web service allow for project-specific customizations
-via a plug-in mechanism, allowing the Boardwalk UI codebase to be functionally
-generic with minimal need for project-specific behavior.
-
-# 1. Getting Started
-
-## 1.1 Development Prerequisites
-
-- Python 3.6 (3.7 does not work) with `pip`
+- Python 3.6 (3.7 does not work) with `pip`.
 
 - The `bash` shell
 
-- Docker for running the tests. The minimal required version is uncertain but
-  18.09 and 17.09 are known to work
+- [Docker] for running the tests (the community edition is sufficient).
+  The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are 
+  known to work.
 
 - Terraform (optional, to create new deployments). Refer the official
   documentation on how to [install terraform]. On macOS with Homebrew installed,
@@ -113,15 +103,16 @@ generic with minimal need for project-specific behavior.
 
 [install terraform]: https://www.terraform.io/intro/getting-started/install.html
 [git-secrets]: https://github.com/awslabs/git-secrets
+[Docker]: https://docs.docker.com/install/overview/
 
-## 1.2 Runtime Prerequisites (Infrastructure)
+## 2.2 Runtime Prerequisites (Infrastructure)
 
 An instance of the HCA [Data Store] aka DSS. The URL of that instance can be
 configured in `environment` or `deployments/*/environment`.
 
 The remaining infrastructure is managed internally using TerraForm.
 
-## 1.3 Project configuration
+## 2.3 Project configuration
 
 Getting started without attempting to make contributions does not require AWS
 credentials. A subset of the test suite passes without configured AWS
@@ -145,6 +136,13 @@ end.
 
    Newer versions of pip are incompatible with some of our requirements, hence
    the pin on the 10.0.1 version.
+   
+   Ubuntu users using their system's default Python installation must install
+   `python3-dev` before the requirements can be built.
+   
+   ```
+   sudo apt install python3-dev
+   ```
 
 3. Activate the `dev` deployment:
 
@@ -195,20 +193,31 @@ end.
 6. Run `make`. It should say `Looking good!` If one of the sanity checks fails,
    address the complaint and repeat. The various sanity checks are defined in
    `common.mk`.
+   
+   Some checks utilize `git`. If the repository was cloned using HTTP, you may
+   be asked to authenticate. Using SSH is recommended, but for the purposes of
+   this check the credentials may be left blank.
 
-7. Confirm proper configuration, run the following:
+7. Make sure Docker is running without root access. Run the following command 
+   *without `sudo`*:
+   
+   ```
+   docker ps
+   ```
+
+8. Confirm proper configuration. Run the following:
 
    ```
    make test
    ```
 
-### 1.3.1 AWS credentials
+### 2.3.1 AWS credentials
 
 ```
 TBD
 ```
 
-### 1.3.2 Google credentials
+### 2.3.2 Google credentials
 
 1. Ask to be invited to the Google Cloud project `human-cell-atlas-travis-test`
 
@@ -265,7 +274,7 @@ TBD
     $ ln -snf ../alice.local/environment.local environment.local 
     ```
     
-### 1.3.3 For personal deployment (AWS credentials available)
+### 2.3.3 For personal deployment (AWS credentials available)
 
 Creating a personal deployment of Azul allows you test changes on a live system
 in complete isolation from other users. If you intend to make contributions,
@@ -292,7 +301,7 @@ deploying to.
    `deployments/.active/environment.local` according to the comments in there.
 
 
-## 1.4 PyCharm
+## 2.4 PyCharm
 
 Running tests from PyCharm requires `environment` to be sourced. The easiest way
 to do this is to install `envhook.py`, a helper script that injects the
@@ -303,19 +312,29 @@ started from the project's virtual environment in `.venv`:
 python scripts/envhook.py install
 ```
 
+The script works by adding a `sitecustomize.py` file to your virtual 
+environment. If a different `sitecustomize` module is already present in your 
+Python path, its `sitecustomize.py` file must be renamed or removed before the 
+installation can proceed. The current install location can be found by importing
+`sitecustomize` and inspecting the module's `__file__` attribute.
+
 Whether you installed `envook.py` or not, a couple more steps are necessary to
 configure PyCharm for Azul:
 
 1. Under *Settings* -> *Project—Interpreter* select the virtual environment
    created above.
 
-2. Set the `src` & `test` folder as a source root by right-clicking the folder
-   name and selecting *Mark Directory as* → *Source Root*.
+2. Set the `src` and `test` folders as source roots by right-clicking each 
+   folder name and selecting *Mark Directory as* → *Sources Root*.
+   
+3. Exclude the `.venv`, `lambdas/indexer/vendor`, and  `lambdas/service/vendor` 
+   folders by right-clicking each folder name and selecting *Mark Directory as*
+   → *Excluded*.
 
 
-# 2. Deployment
+# 3. Deployment
 
-## 2.1 Provisioning cloud infrastructure
+## 3.1 Provisioning cloud infrastructure
 
 Once you've successfully configured the project and your personal deployment, it
 is time to provision the cloud infrastructure for your deployment. Running
@@ -331,7 +350,7 @@ resources are defined in `….tf.json` files which in turn are generated from
 `….tf.json.template.py` files which are simple Python scripts containing the
 desired JSON as Python dictionary and list literals and comprehensions.
 
-## 2.2 Deploying lambda functions
+## 3.2 Deploying lambda functions
 
 Once the cloud infrastructure for your deployment has been provisioned, you can
 deploy the project code into AWS Lambda. Running
@@ -344,7 +363,7 @@ Will create or update AWS Lambda functions for each lambda defined in the
 `lambdas` directory. It will also create or update an AWS API Gateway to proxy
 the functions that act as web services. We call those functions *API lambdas*.
 
-## 2.3 Provisioning stable API domain names
+## 3.3 Provisioning stable API domain names
 
 The HTTP endpoint offered by API Gateway have somewhat cryptic and hard to
 remember domain names:
@@ -366,7 +385,7 @@ http://service.${AZUL_DEPLOYMENT_STAGE}.azul.data.humancellatlas.org/
 Note that while the native API Gateway URL refers to the stage in the URL path,
 the stable URL mentions it in the domain name.
 
-## 2.4 Subscribing to DSS
+## 3.4 Subscribing to DSS
 
 Once the Lambda functions have been deployed, and the custom domain names
 provisioned, the indexer can be registered to receive notifications about new
@@ -395,7 +414,7 @@ indexer service account must belong to a GCP project that is whitelisted in the
 DSS instance to which the indexer is subscribed to. The credentials of the
 indexer service account are stored in Amazon Secrets Manager.
 
-## 2.5 Reindexing
+## 3.5 Reindexing
 
 The DSS instance used by a deployment is likely to contain existing bundles. To
 index them run:
@@ -408,19 +427,19 @@ When reindexing, artificial notifications are generated by Azul. To distinguish
 from legitimate notifications made by the DSS, the `subscription_id` field is
 hardcoded to be `cafebabe-feed-4bad-dead-beaf8badf00d`.
 
-## 2.6 Cancelling an ongoing (re)indexing operation
+## 3.6 Cancelling an ongoing (re)indexing operation
 
 ```
 python scripts/manage_queues.py purge_all
 ```
 
-## 2.7 Deleting all indices
+## 3.7 Deleting all indices
 
 ```
 make delete
 ```
 
-## 2.8 Deleting a deployment
+## 3.8 Deleting a deployment
 
 1. `cd` to the project root, then
    ```
@@ -453,7 +472,7 @@ make delete
    ```
    
 
-# 3. Running service locally
+# 4. Running indexer or service locally
 
 1. As usual, activate the virtual environment and `source environment` if you
    haven't done so already
@@ -472,7 +491,7 @@ PyCharm recently added a feature that allows you to attach a debugger: From the
 main menu choose *Run*, *Attach to local process* and select the `chalice`
 process.
 
-# 4. Troubleshooting
+# 5. Troubleshooting
 
 `make terraform` complains
 
@@ -492,8 +511,20 @@ Error inspecting states in the "s3" backend:
 `deployments/.active/.terraform/terraform.tfstate` refers to the correct bucket,
 the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET`. If it doesn't, you may
 have to remove that file or modify it to fix the bucket name.
+##
+If you get the following exception in the indexer lambda:
+```
+An error occurred (AccessDeniedException) when calling the GetParameter operation: User: arn:aws:sts::{account_id}:assumed-role/azul-indexer-{deployment_stage}/azul-indexer-{deployment_stage}-index is not authorized to perform: ssm:GetParameter on resource: arn:aws:ssm:{aws_region}:{account_id}:parameter/dcp/dss/{deployment_stage}/environment: ClientError
+Traceback (most recent call last):  
+    ...
+botocore.exceptions.ClientError: An error occurred (AccessDeniedException) when calling the GetParameter operation: User: arn:aws:sts::{account_id}:assumed-role/azul-indexer-{deployment_stage}/azul-indexer-{deployment_stage}-index is not authorized to perform: ssm:GetParameter on resource: arn:aws:ssm:{aws_region}:{account_id}:parameter/dcp/dss/integration/environment
+```
 
-# 5. Branch flow & development process
+Check whether the DSS switched buckets. If so, the lambda policy may need to be 
+updated to reflect that change. To fix this, redeploy the lambdas (`make 
+deploy`) in the affected deployment.
+
+# 6. Branch flow & development process
 
 The section below describes the flow we want to get to eventually, not the one
 we are currently using while this repository recovers from the aftermath of its
@@ -658,7 +689,7 @@ two remotes: `origin` (the forked repository) and `upstream` (the upstream
 repository). Other team members can usually get by with just one remote,
 `origin`.
 
-## 5.1 Deployment branches
+## 6.1 Deployment branches
 
 The code in the upstream repository should never be deployed anywhere because it
 does not contain any concrete modules to be loaded at runtime. The code in a
@@ -674,9 +705,9 @@ fast-forward. A push to any of the deployment branches will trigger a CI/CD
 build that performs the deployment. The promotion could be automatic and/or
 gated on a condition, like tests passing.
 
-# 6. Operational Procedures
+# 7. Operational Procedures
 
-## 6.1 Main deployments and promotions
+## 7.1 Main deployments and promotions
 
 We will refer to the branch of the stage to which you are deploying as the
 **`TARGET`** branch. The branch of the stage just below will be referred to as
@@ -685,7 +716,7 @@ the **`SOURCE`** branch.
 This cheat sheet may differ from branch to branch. Be sure to follow the cheat
 sheet in the README on the branch currently checked out.
 
-### 6.1.1 Initial setup
+### 7.1.1 Initial setup
 
 [Gitlab instance]: https://gitlab.dev.explore.data.humancellatlas.org/
 
@@ -701,7 +732,7 @@ least once already._
    git clone git@github.com:DataBiosphere/azul.git azul.stable
    ```
    
-   Then follow the setup instructions in [1.3 Project configuration](#13-project-configuration).
+   Then follow the setup instructions in [2.3 Project configuration](#23-project-configuration).
 
 2. Next you will need to login to our [Gitlab instance] in order to be able to
    push to Gitlab which automatically takes care of most of the deployment
@@ -741,7 +772,7 @@ or `staging` selected), you may not be able to do the same for the production
 AWS account (with `prod` selected).
 
 
-### 6.1.2 Prepare for promotion
+### 7.1.2 Prepare for promotion
 
 _NOTE: Skip these steps if you are deploying without promoting changes._
 
@@ -817,7 +848,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    contains non-trivial changes reindexing is probably necessary. When in doubt
    assume yes.
 
-### 6.1.3 Finishing up deployment / promotion
+### 7.1.3 Finishing up deployment / promotion
 
 If promoting to staging or production this part of the process must be
 coordinated on the
@@ -926,7 +957,7 @@ are ready to actually deploy.
 7. In the case that you need to reindex run the manual `reindex` job on the
    Gitlab pipeline representing the most recent build on the current branch.
 
-## 6.2 Big red button
+## 7.2 Big red button
 
 In the event of an emergency, Azul can be shut down immediately using the 
 `enable_lambdas.py` script. Before using this script, make sure that the desired 
@@ -945,7 +976,7 @@ python scripts/enable_lambdas.py --enable
 ```
 
 
-## 6.3 Copying bundles
+## 7.3 Copying bundles
 
 In order to copy bundles from one DSS instance to another, you can use
 `scripts/copy_bundles.py`. The script copies specific bundles or all bundles
@@ -1054,7 +1085,7 @@ Here is a complete example for copying bundles from `prod` to `integration`.
    copied file and bundle. Run `python scripts/copy_bundles --help` for details.
 
 
-# 7. Scale testing
+# 8. Scale testing
 
 [Locust]: https://locust.io/
 
@@ -1088,7 +1119,7 @@ running it is straight-forward with your development environment set up.
 For more advanced usage refer to the official [Locust documentation].
 
 
-# 8. Continuous deployment and integration
+# 9. Continuous deployment and integration
 
 We are currently in the process of migrating from manual deployments to
 automated deployments performed on a project-specific EC2 instance running Gitlab.
@@ -1130,14 +1161,14 @@ An Azul build on Gitlab runs the `test`, `terraform`, `deploy`, `subscribe` and
 feature branches is `sandbox`, the protected branches use their respective
 deployments.
 
-## 8.1 The Sandbox Deployment
+## 9.1 The Sandbox Deployment
 
 There is only one such deployment and it should be used to validate feature
 branches (one at a time) or to run experiments. This implies that access to the
 sandbox must be coordinated externally e.g., via Slack. The project lead owns
 the sandbox deployment and coordinates access to it.
 
-## 8.2 Security
+## 9.2 Security
 
 Gitlab has AWS write permissions for the AWS services used by Azul and the
 principle of least privilege is applied as much as IAM allows it. Some AWS
@@ -1162,7 +1193,7 @@ Code running on the Gitlab instance has access to credentials of a Google Cloud
 service account that has read-only privileges to Google Cloud. This read-only
 service account for Gitab needs to be created manually and its credentials need
 to be dropped on the instance at `/mnt/gitlab/runner/config/etc`. See section
-8.7. for details.
+9.7. for details.
 
 Having only read access implies that the Gitlab instance cannot terraform
 Google Cloud resources. Fortunately, there are only two such resources: 1) the
@@ -1178,7 +1209,7 @@ terraform apply -target google_service_account.indexer \
                 -target google_service_account_key.indexer
 ```
 
-## 8.3 Networking
+## 9.3 Networking
 
 The networking details are documented in [gitlab.tf.json.template.py]. The
 Gitlab EC2 instance uses a VPC and is fronted by an Application Load Balancer
@@ -1186,7 +1217,7 @@ Gitlab EC2 instance uses a VPC and is fronted by an Application Load Balancer
 Gitlab web UI, the NLB provides SSH shell access and `git+ssh` access for
 pushing to the project forks on the instance.
 
-## 8.4 Storage
+## 9.4 Storage
 
 The Gitlab EC2 instance is attached to an EBS volume that contains all of
 Gitlab's data and configuration. That volume is not controlled by Terraform and
@@ -1198,7 +1229,7 @@ Git repository under `/mnt/gitlab/.git`. Since Git isn't installed natively on
 RancherOS, you must use a Docker image for it. I've used `alias git='docker run
 -ti --rm -v ${HOME}:/root -v $(pwd):/git alpine/git'` for that purpose.
 
-## 8.5 Gitlab
+## 9.5 Gitlab
 
 The instance runs Gitlab CE running inside a rather elaborate concoction of
 Docker containers. See [gitlab.tf.json.template.py] for details. Administrative
@@ -1206,14 +1237,14 @@ tasks within a container should be performed with `docker exec`. To reconfigure
 Gitlab, for example, one would run `docker exec -it gitlab gitlab-ctl
 reconfigure`.
 
-## 8.6 Updating Gitlab
+## 9.6 Updating Gitlab
 
 Modify the Docker image tags in [gitlab.tf.json.template.py] and run `make
 apply` in `terraform/gitlab`. The instance will be terminated (the EBS volume
 will survive) and a new instance will be launched, with fresh containers from
 updated images. This should be done periodically.
 
-## 8.7 The Gitlab Build Environment
+## 9.7 The Gitlab Build Environment
 
 The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
 mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
@@ -1227,7 +1258,7 @@ access can push code to intentionally or accidentally expose those variables,
 push access is tied to shell access which is what one would normally need to
 modify those files.
 
-## 8.8. Cleaning up hung test containers
+## 9.8. Cleaning up hung test containers
 
 When cancelling the `make test` job on Gitlab, test containers will be left
 running. To clean those up, ssh into the instance as described in
@@ -1235,7 +1266,7 @@ running. To clean those up, ssh into the instance as described in
 xargs docker exec gitlab-dind docker kill`` and again but with ``rm`` instead
 of ``kill``.
 
-# 9. Kibana
+# 10. Kibana
 
 Kibana is a web UI for interactively querying and managing an Elasticsearch
 instance. To use Kibana with Azul's AWS Elasticsearch instance, you have two
@@ -1260,7 +1291,7 @@ options:
 
   * `environment` sourced.
 
-# 10. Making wheels
+# 11. Making wheels
 
 Some of Azul's dependencies contain native code that needs to be compiled into
 a binary executable which is then dynamically loaded into the Python
@@ -1316,13 +1347,14 @@ the corresponding vendor directory.
 
 Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
 
-# 11. Development tools
+# 12. Development tools
 
-## 11.1 OpenAPI development
+## 12.1 OpenAPI development
 
-To assist with adding documentation to the Azul Service OpenAPI page
-(https://service.dev.explore.data.humancellatlas.org/), we use a script that
-validates the specifications.
+[Azul Service OpenAPI page]: https://service.dev.explore.data.humancellatlas.org/
+
+To assist with adding documentation to the [Azul Service OpenAPI page], we use a
+script that validates the specifications.
 
 To run the script, activate your virtual environment, then run
 ```

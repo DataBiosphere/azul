@@ -34,11 +34,13 @@ from azul.transformer import (
     DistinctAccumulator,
     Document,
     EntityReference,
+    FieldTypes,
     FrequencySetAccumulator,
     GroupingAggregator,
     SingleValueAccumulator,
     ListAccumulator,
     SetAccumulator,
+    UniqueValueCountAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
     SumAccumulator,
@@ -88,7 +90,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                 self._find_ancestor_samples(parent, samples)
 
     @classmethod
-    def _contact_types(cls) -> Mapping[str, type]:
+    def _contact_types(cls) -> FieldTypes:
         return {
             'contact_name': str,
             'corresponding_contributor': bool,
@@ -110,7 +112,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _publication_types(cls) -> Mapping[str, type]:
+    def _publication_types(cls) -> FieldTypes:
         return {
             'publication_title': str,
             'publication_url': str
@@ -124,7 +126,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _project_types(cls) -> Mapping[str, type]:
+    def _project_types(cls) -> FieldTypes:
         return {
             'project_title': str,
             'project_description': str,
@@ -188,7 +190,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _specimen_types(cls) -> Mapping[str, type]:
+    def _specimen_types(cls) -> FieldTypes:
         return {
             'has_input_biomaterial': str,
             '_source': str,
@@ -217,7 +219,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _cell_suspension_types(cls) -> Mapping[str, type]:
+    def _cell_suspension_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'total_estimated_cells': int,
@@ -252,7 +254,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _cell_line_types(cls) -> Mapping[str, type]:
+    def _cell_line_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -270,7 +272,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _donor_types(cls) -> Mapping[str, type]:
+    def _donor_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -279,7 +281,8 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'diseases': str,
             'organism_age': str,
             'organism_age_unit': str,
-            'organism_age_range': dict
+            'organism_age_range': None,  # Exclude ranged values from translation, prevents problem due to shadow copies
+            'donor_count': None  # Exclude this field added by DonorOrganismAggregator from translation
         }
 
     def _donor(self, donor: api.DonorOrganism) -> JSON:
@@ -303,7 +306,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _organoid_types(cls) -> Mapping[str, type]:
+    def _organoid_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -320,18 +323,21 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _file_types(cls) -> Mapping[str, type]:
+    def _file_types(cls) -> FieldTypes:
         return {
             'content-type': str,
             'indexed': bool,
             'name': str,
             'sha256': str,
             'size': int,
+            'count': None,  # Exclude this field added by FileAggregator from translation, field will never be None
             'uuid': api.UUID4,
             'version': str,
             'document_id': str,
             'file_format': str,
+            'content_description': str,
             '_type': str,
+            'related_files': cls._related_file_types(),
             'read_index': str,
             'lane_index': int
         }
@@ -348,6 +354,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'version': file.manifest_entry.version,
             'document_id': str(file.document_id),
             'file_format': file.file_format,
+            'content_description': list(file.content_description),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -357,6 +364,16 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                 } if isinstance(file, api.SequenceFile) else {
                 }
             ),
+        }
+
+    @classmethod
+    def _related_file_types(cls) -> FieldTypes:
+        return {
+            'name': str,
+            'sha256': str,
+            'size': int,
+            'uuid': api.UUID4,
+            'version': str,
         }
 
     def _related_file(self, file: api.File) -> JSON:
@@ -369,14 +386,14 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _protocol_types(cls) -> Mapping[str, type]:
+    def _protocol_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'library_construction_approach': str,
             'instrument_manufacturer_model': str,
             'paired_end': bool,
             'workflow': str,
-            'assay_type': str
+            'assay_type': None  # Exclude counter dict used to produce a FrequencySetAccumulator from translation
         }
 
     def _protocol(self, protocol: api.Protocol) -> JSON:
@@ -396,7 +413,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         return protocol_
 
     @classmethod
-    def _sample_types(cls) -> Mapping[str, type]:
+    def _sample_types(cls) -> FieldTypes:
         return {
             'entity_type': str,
             'effective_organ': str,
@@ -439,7 +456,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                             bundle_deleted=deleted)
 
     @classmethod
-    def field_types(cls):
+    def field_types(cls) -> FieldTypes:
         return {
             'samples': cls._sample_types(),
             'specimens': cls._specimen_types(),
@@ -729,10 +746,10 @@ class BundleTransformer(BundleProjectTransformer):
             yield contrib
 
     @classmethod
-    def field_types(cls):
+    def field_types(cls) -> FieldTypes:
         return {
             **super().field_types(),
-            'metadata': list
+            'metadata': None  # Exclude fields that came from MetadataGenerator() from translation
         }
 
 
@@ -741,7 +758,8 @@ class FileAggregator(GroupingAggregator):
     def _transform_entity(self, entity: JSON) -> JSON:
         return dict(size=((entity['uuid'], entity['version']), entity['size']),
                     file_format=entity['file_format'],
-                    count=((entity['uuid'], entity['version']), 1))
+                    count=((entity['uuid'], entity['version']), 1),
+                    content_description=entity['content_description'])
 
     def _group_keys(self, entity) -> Iterable[Any]:
         return entity['file_format']
@@ -749,6 +767,8 @@ class FileAggregator(GroupingAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'file_format':
             return SingleValueAccumulator()
+        elif field == 'content_description':
+            return SetAccumulator(max_size=100)
         elif field in ('size', 'count'):
             return DistinctAccumulator(SumAccumulator(0))
         else:
@@ -793,9 +813,17 @@ class CellLineAggregator(SimpleAggregator):
 
 class DonorOrganismAggregator(SimpleAggregator):
 
+    def _transform_entity(self, entity: JSON) -> JSON:
+        return {
+            **entity,
+            'donor_count': entity['biomaterial_id']
+        }
+
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'organism_age_range':
             return SetOfDictAccumulator(max_size=100)
+        elif field == 'donor_count':
+            return UniqueValueCountAccumulator()
         else:
             return SetAccumulator(max_size=100)
 

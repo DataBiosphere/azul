@@ -35,6 +35,7 @@ from more_itertools import one
 
 from azul import config
 import azul.dss
+from azul.deployment import aws
 from azul.es import ESClientFactory
 from azul.transformer import (
     Aggregate,
@@ -43,6 +44,7 @@ from azul.transformer import (
     Document,
     DocumentCoordinates,
     EntityReference,
+    FieldTypes,
     Transformer,
     BundleUUID,
 )
@@ -69,7 +71,7 @@ class BaseIndexer(ABC):
         # Instead we try using one shard per ES node which is optimal for searching since it allows parallelization of
         # requests (though maybe at the cost of higher contention during indexing).
         _, aggregate = config.parse_es_index_name(index_name)
-        num_shards = config.es_instance_count if aggregate else config.indexer_concurrency
+        num_shards = aws.es_instance_count if aggregate else config.indexer_concurrency
         return {
             "index": {
                 "number_of_shards": num_shards,
@@ -88,7 +90,7 @@ class BaseIndexer(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def field_types(cls) -> Mapping[str, type]:
+    def field_types(cls) -> FieldTypes:
         """
         Returns a mapping of fields to field types
 
@@ -97,7 +99,10 @@ class BaseIndexer(ABC):
         field_types = {}
         for transformer in cls.transformers():
             field_types.update(transformer.field_types())
-        return {'contents': field_types}
+        return {
+            **Contribution.field_types(field_types),
+            **Aggregate.field_types(field_types)
+        }
 
     def index_names(self, aggregate=None) -> List[str]:
         aggregates = (False, True) if aggregate is None else (aggregate,)
@@ -257,7 +262,7 @@ class BaseIndexer(ABC):
                                   _id=entity.entity_id)  # FIXME: assumes that document_id is entity_id for aggregates
                              for entity in entities])
         response = ESClientFactory.get().mget(body=request, _source_include=Aggregate.mandatory_source_fields())
-        aggregates = (Aggregate.from_index(doc) for doc in response['docs'] if doc['found'])
+        aggregates = (Aggregate.from_index(self.field_types(), doc) for doc in response['docs'] if doc['found'])
         aggregates = {a.entity: a for a in aggregates}
         return aggregates
 
@@ -288,7 +293,7 @@ class BaseIndexer(ABC):
         if hits is None:
             log.info('Reading %i expected contribution(s) using scan().', num_contributions)
             hits = scan(es_client, index=index, query=query, size=page_size, doc_type=Document.type)
-        contributions = [Contribution.from_index(hit) for hit in hits]
+        contributions = [Contribution.from_index(self.field_types(), hit) for hit in hits]
         log.info('Read %i contribution(s).', len(contributions))
         return contributions
 
@@ -353,16 +358,19 @@ class BaseIndexer(ABC):
         # We allow one conflict retry in the case of duplicate notifications and switch from 'add' to 'update'.
         # After that, there should be no conflicts because we use an SQS FIFO message group per entity.
         # For other errors we use SQS message redelivery to take care of the retries.
-        return IndexWriter(refresh=False, conflict_retry_limit=1, error_retry_limit=0)
+        return IndexWriter(self.field_types(), refresh=False, conflict_retry_limit=1, error_retry_limit=0)
 
 
 class IndexWriter:
 
     def __init__(self,
+                 field_types: FieldTypes,
                  refresh: Union[bool, str],
                  conflict_retry_limit: int,
                  error_retry_limit: int) -> None:
         """
+        :param field_types: A mapping of field paths to field type
+
         :param refresh: https://www.elastic.co/guide/en/elasticsearch/reference/5.5/docs-refresh.html
 
         :param conflict_retry_limit: The maximum number of retries (the second attempt is the first retry) on version
@@ -372,6 +380,7 @@ class IndexWriter:
                                   errors. Specify 0 for no retries or None for unlimited retries.
         """
         super().__init__()
+        self.field_types = field_types
         self.refresh = refresh
         self.conflict_retry_limit = conflict_retry_limit
         self.error_retry_limit = error_retry_limit
@@ -409,7 +418,7 @@ class IndexWriter:
             assert not update or expect_update, 'update implies expected_update'
             try:
                 method = self.es_client.delete if doc.delete else self.es_client.index
-                method(refresh=self.refresh, **doc.to_index(update=update))
+                method(refresh=self.refresh, **doc.to_index(self.field_types, update=update))
             except ConflictError as e:
                 # Try again but update this time if we expect that possibility
                 self._on_conflict(doc, e, update=expect_update)
@@ -424,7 +433,7 @@ class IndexWriter:
         for coords, doc in documents.items():
             update = doc.entity in self.update_retries
             assert not update or expect_update, 'update implies expected_update'
-            actions.append(doc.to_index(bulk=True, update=update))
+            actions.append(doc.to_index(self.field_types, bulk=True, update=update))
         for doc in documents.values():
             assert (doc.version_type is None) == expect_update, \
                 'Version should only be set for aggregates which do not expect to make updates'

@@ -1,0 +1,810 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Cortex2_specimen1_cell1",
+            "biomaterial_name": "Mouse cortex cells",
+            "biomaterial_description": "Mouse cortex cells",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090",
+                "ontology_label": "Mus musculus"
+            }
+        ],
+        "estimated_cell_count": 349,
+        "provenance": {
+            "document_id": "0432e9a5-604f-4cb7-8571-014eb5fd8ba2",
+            "submission_date": "2019-10-09T15:31:09.351Z",
+            "update_date": "2019-10-09T15:35:11.150Z",
+            "schema_major_version": 13,
+            "schema_minor_version": 3
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Cortex2_specimen1",
+            "biomaterial_name": "Cortex2",
+            "biomaterial_description": "Mouse cortex cells",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090",
+                "ontology_label": "Mus musculus"
+            }
+        ],
+        "organ": {
+            "text": "brain",
+            "ontology": "UBERON:0000955",
+            "ontology_label": "brain"
+        },
+        "organ_parts": [
+            {
+                "text": "cortex",
+                "ontology": "UBERON:0001851",
+                "ontology_label": "cortex"
+            }
+        ],
+        "preservation_storage": {
+            "storage_method": "fresh"
+        },
+        "provenance": {
+            "document_id": "caadf4b5-f5e4-4416-9f04-9c1f902cc601",
+            "submission_date": "2019-10-09T15:31:09.237Z",
+            "update_date": "2019-10-09T15:32:51.765Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 4
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "donor_4",
+            "biomaterial_name": "mouse cortex donor",
+            "biomaterial_description": "C57BL/6 mouse cortex donor",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090",
+                "ontology_label": "Mus musculus"
+            }
+        ],
+        "mouse_specific": {
+            "strain": [
+                {
+                    "text": "C57BL/6",
+                    "ontology": "EFO:0004472",
+                    "ontology_label": "C57BL/6"
+                }
+            ]
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "sex": "male",
+        "organism_age": "1",
+        "organism_age_unit": {
+            "text": "month",
+            "ontology": "UO:0000035",
+            "ontology_label": "month"
+        },
+        "is_living": "no",
+        "development_stage": {
+            "text": "juvenile stage",
+            "ontology": "UBERON:0034919",
+            "ontology_label": "juvenile stage"
+        },
+        "provenance": {
+            "document_id": "e66ac278-96b3-4713-9c5f-5c70b1efb6e3",
+            "submission_date": "2019-10-09T15:31:09.213Z",
+            "update_date": "2019-10-09T15:32:49.737Z",
+            "schema_major_version": 15,
+            "schema_minor_version": 5
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "RNA sequence"
+                }
+            ]
+        },
+        "lane_index": 5,
+        "read_index": "read1",
+        "library_prep_id": "Cortex2.CCJ15ANXX.SM2_052318p4_D8",
+        "read_length": 50,
+        "provenance": {
+            "document_id": "4015da8b-18d8-4f3c-b2b0-54f0b77ae80a",
+            "submission_date": "2019-10-09T15:31:58.607Z",
+            "update_date": "2019-10-09T15:52:46.609Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "RNA sequence"
+                }
+            ]
+        },
+        "lane_index": 5,
+        "read_index": "read2",
+        "library_prep_id": "Cortex2.CCJ15ANXX.SM2_052318p4_D8",
+        "read_length": 50,
+        "provenance": {
+            "document_id": "fa17159e-52ec-4a88-80cf-a3be5e2e9988",
+            "submission_date": "2019-10-09T15:31:58.617Z",
+            "update_date": "2019-10-09T15:52:49.512Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "scRNAseqSystemicComparison",
+            "project_title": "Systematic comparative analysis of single cell RNA-sequencing methods",
+            "project_description": "A multitude of single-cell RNA sequencing methods have been developed in recent years, with dramatic advances in scale and power, and enabling major discoveries and large scale cell mapping efforts. However, these methods have not been systematically and comprehensively benchmarked. Here, we directly compare seven methods for single cell and/or single nucleus profiling from three types of samples \u2013 cell lines, peripheral blood mononuclear cells and brain tissue \u2013 generating 36 libraries in six separate experiments in a single center. To analyze these datasets, we developed and applied scumi, a flexible computational pipeline that can be used for any scRNA-seq method. We evaluated the methods for both basic performance and for their ability to recover known biological information in the samples. Our study will help guide experiments with the methods in this study as well as serve as a benchmark for future studies and for computational algorithm development."
+        },
+        "supplementary_links": [
+            "https://bitbucket.org/jerry00/scumi-dev/src/master/"
+        ],
+        "insdc_project_accessions": [
+            "SRP200058"
+        ],
+        "geo_series_accessions": [
+            "GSE132044"
+        ],
+        "contributors": [
+            {
+                "name": "Jiarui,,Ding",
+                "email": "jding@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                },
+                "orcid_id": "0000-0003-3670-7764"
+            },
+            {
+                "name": "Xian,,Adiconis",
+                "email": "adiconis@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Sean,K,Simmons",
+                "email": "ssimmons@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Monika,S,Kowalczyk",
+                "email": "monika@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Cynthia,C,Hession",
+                "email": "cynthia.hession@gmail.com",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Nemanja,D,Marjanovic",
+                "email": "nemanja@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Travis,K,Hughes",
+                "email": "tkhughes@mit.edu",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Marc,H,Wadsworth",
+                "email": "marcwadsworth2@gmail.com",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Tyler,,Burks",
+                "email": "tylerburks01@gmail.com",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Lan,T,Nguyen",
+                "email": "ltn@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "John,Y,Kwon",
+                "email": "johnyoungkwon@gmail.com",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Boaz,,Barak",
+                "email": "barakboaz@gmail.com",
+                "institution": "MIT",
+                "laboratory": "McGovern Institute for Brain Research",
+                "address": "43 Vassar St, Cambridge, MA, 02139",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "William,,Ge",
+                "email": "hwilliamge@gmail.com",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Amanda,J,Kedaigle",
+                "email": "akedaigl@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Shaina,,Carroll",
+                "email": "shainacarroll12@gmail.com",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Shuqiang,,Li",
+                "email": "shuqiang@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Nir,,Hacohen",
+                "email": "NHACOHEN@mgh.harvard.edu",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Orit,,Rozenblatt-Rosen",
+                "email": "orit@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Alex,K,Shalek",
+                "email": "alex.shalek@gmail.com",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Alexandra-Chlo\u00e9,,Villani",
+                "email": "cvillani@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Aviv,,Regev",
+                "email": "aregev@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Joshua,Z,Levin",
+                "email": "jlevin@broadinstitute.org",
+                "institution": "The Broad Institute of MIT & Harvard",
+                "laboratory": "Klarman Cell Observatory",
+                "address": "415 Main Street, Cambridge, MA, 02142",
+                "country": "USA",
+                "corresponding_contributor": true,
+                "project_role": {
+                    "text": "principal investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                },
+                "orcid_id": "0000-0002-0170-3598"
+            },
+            {
+                "name": "Chris,,Villarreal",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas wrangler",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            },
+            {
+                "name": "William,G,Sullivan",
+                "email": "wisulliv@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas wrangler",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            },
+            {
+                "name": "Parisa,,Nejad",
+                "email": "pnejad@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas wrangler",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                },
+                "orcid_id": "0000-0002-3163-0115"
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Ding J;Adiconis X;Simmons SK;Kowalczyk MS;Hession CC;Marjanovic ND;Hughes TK;MH Wadsworth MH;Burks T;Nguyen LT;Kwon JY;Barak B;Ge W;Kedaigle AJ;Carroll S;Li S;Hacohen N;Rozenblatt-Rosen O;Shalek AK;Villani C;Regev A;Levin JZ"
+                ],
+                "title": "Systematic comparative analysis of single cell RNA-sequencing methods",
+                "doi": "10.1101/632216",
+                "url": "https://www.biorxiv.org/content/10.1101/632216v2"
+            }
+        ],
+        "funders": [
+            {
+                "grant_title": "Klarman Family Foundation: Klarman Cell Observatory 2.0",
+                "grant_id": "unknown",
+                "organization": "Klarman Cell Observatory"
+            },
+            {
+                "grant_title": "The Manton Foundation: The Immune Cell Atlas 2.0",
+                "grant_id": "unknown",
+                "organization": "The Manton Foundation"
+            },
+            {
+                "grant_title": "A High Resolution Cell Type Atlas of the Mouse Forebrain",
+                "grant_id": "NIH: 1U19 MH114821 (Huang and Arlotta)",
+                "organization": "The BRAIN Initiative"
+            }
+        ],
+        "provenance": {
+            "document_id": "88ec040b-8705-4f77-8f41-f81e57632f7d",
+            "submission_date": "2019-10-09T15:31:09.188Z",
+            "update_date": "2019-10-09T15:32:48.934Z",
+            "schema_major_version": 14,
+            "schema_minor_version": 1
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Smart-seq2",
+            "protocol_name": "Smart-seq2",
+            "protocol_description": "Smart-seq2"
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "mRNA"
+        },
+        "nucleic_acid_source": "single cell",
+        "library_construction_method": {
+            "text": "Smart-seq2",
+            "ontology": "EFO:0008931",
+            "ontology_label": "Smart-seq2"
+        },
+        "end_bias": "full length",
+        "primer": "poly-dT",
+        "strand": "unstranded",
+        "spike_in_kit": {
+            "retail_name": "ERCC ExFold RNA Spike-In Mixes",
+            "catalog_number": "4456739",
+            "manufacturer": "Thermo Fisher Scientific"
+        },
+        "cdna_library_amplification_method": {
+            "text": "PCR",
+            "ontology": "OBI:0000415",
+            "ontology_label": "PCR"
+        },
+        "provenance": {
+            "document_id": "76a9a285-f79c-4754-bd26-310b80965b8f",
+            "submission_date": "2019-10-09T15:31:09.411Z",
+            "update_date": "2019-10-09T15:31:15.989Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_full_length"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2500",
+            "ontology": "EFO:0008565",
+            "ontology_label": "Illumina HiSeq 2500"
+        },
+        "paired_end": true,
+        "method": {
+            "text": "full length",
+            "ontology": "EFO:0008441",
+            "ontology_label": "full length single cell RNA sequencing"
+        },
+        "provenance": {
+            "document_id": "63afce7b-829a-491d-a6ed-ab27bf3b4fbc",
+            "submission_date": "2019-10-09T15:31:09.466Z",
+            "update_date": "2019-10-09T15:31:15.893Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 1
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_protocol_3",
+            "protocol_name": "Cortex",
+            "protocol_description": "Tissue lysis and douncing homogenization followed by centrifugation for nuclei isolation"
+        },
+        "method": {
+            "text": "mechanical dissociation",
+            "ontology": "EFO:0009129",
+            "ontology_label": "mechanical dissociation"
+        },
+        "provenance": {
+            "document_id": "78b86ffb-3c85-4b24-81ae-af54815bf222",
+            "submission_date": "2019-10-09T15:31:09.396Z",
+            "update_date": "2019-10-09T15:31:16.106Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "enrichment_protocol_1",
+            "protocol_name": "Dead Cell Staining",
+            "protocol_description": "TOPRO\u00ae-3 Iodide (Thermo Fisher Scientific) per ml to stain dead cells"
+        },
+        "method": {
+            "text": "FACS",
+            "ontology": "EFO:0009108",
+            "ontology_label": "fluorescence-activated cell sorting"
+        },
+        "markers": "TO-PRO-3-",
+        "provenance": {
+            "document_id": "8ec628d3-91d2-46f3-82aa-67c2b831160d",
+            "submission_date": "2019-10-09T15:31:09.472Z",
+            "update_date": "2019-10-09T15:31:16.008Z",
+            "schema_major_version": 3,
+            "schema_minor_version": 1
+        }
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "collection_protocol_2",
+            "protocol_name": "collection_protocol_2",
+            "protocol_description": "We obtained whole cortex samples by euthanizing 1 month old C57BL/6 male mice by cervical dislocation. We then dissected the whole cortex out of the first hemisphere by a midsagittal cut and a cut made between the cerebellum and the hemisphere. The hippocampus, olfactory bulb, and all basal ganglia were dissected out, and the cortex was placed\nin 500 \u00b5l RNAlater (Thermo Fisher Scientific) in a 1.5 ml tube, followed by incubation overnight at 4 \u2103 before storage at -80 \u2103. Then second half of the cortex was processed similarly and placed\nin a different tube. We took only 2 min to harvest the first half of the cortex after the cervical dislocation step and another minute for the second half of the cortex."
+        },
+        "method": {
+            "text": "dissection",
+            "ontology": "EFO:0003856",
+            "ontology_label": "dissection"
+        },
+        "provenance": {
+            "document_id": "a7257865-6a66-472c-bdd1-6314c8a7d4b0",
+            "submission_date": "2019-10-09T15:31:09.380Z",
+            "update_date": "2019-10-09T15:31:15.965Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "Cortex2.CCJ15ANXX.SM2_052318p4_D8"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "74fa0d9c-438f-42b7-94c7-7dd63ab67c12",
+            "submission_date": "2019-10-09T15:32:36.850Z",
+            "update_date": "2019-10-09T15:38:24.184Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_23"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "c6598ea5-a7d0-4898-a640-66eb7aba33a4",
+            "submission_date": "2019-10-09T15:32:18.143Z",
+            "update_date": "2019-10-09T15:36:21.984Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_4"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "c7070951-ec8a-492f-a7be-354b5670c056",
+            "submission_date": "2019-10-09T15:32:18.035Z",
+            "update_date": "2019-10-09T15:36:21.507Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.5",
+        "links": [
+            {
+                "process": "74fa0d9c-438f-42b7-94c7-7dd63ab67c12",
+                "inputs": [
+                    "0432e9a5-604f-4cb7-8571-014eb5fd8ba2"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "4015da8b-18d8-4f3c-b2b0-54f0b77ae80a",
+                    "fa17159e-52ec-4a88-80cf-a3be5e2e9988"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "76a9a285-f79c-4754-bd26-310b80965b8f"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "63afce7b-829a-491d-a6ed-ab27bf3b4fbc"
+                    }
+                ]
+            },
+            {
+                "process": "c6598ea5-a7d0-4898-a640-66eb7aba33a4",
+                "inputs": [
+                    "caadf4b5-f5e4-4416-9f04-9c1f902cc601"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "0432e9a5-604f-4cb7-8571-014eb5fd8ba2"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "78b86ffb-3c85-4b24-81ae-af54815bf222"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "8ec628d3-91d2-46f3-82aa-67c2b831160d"
+                    }
+                ]
+            },
+            {
+                "process": "c7070951-ec8a-492f-a7be-354b5670c056",
+                "inputs": [
+                    "e66ac278-96b3-4713-9c5f-5c70b1efb6e3"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "caadf4b5-f5e4-4416-9f04-9c1f902cc601"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "a7257865-6a66-472c-bdd1-6314c8a7d4b0"
+                    }
+                ]
+            }
+        ]
+    }
+}

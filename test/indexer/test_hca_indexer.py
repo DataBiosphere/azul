@@ -1,52 +1,49 @@
-import os
-import re
 from collections import (
     Counter,
     defaultdict,
 )
 from concurrent.futures import ThreadPoolExecutor
+import copy
 from copy import deepcopy
 import logging
-
-import elasticsearch
-from requests_http_signature import HTTPSignatureAuth
-
-import copy
-
-import boto3
-import requests
-
-from moto import (
-    mock_sqs,
-    mock_sts,
-)
+import os
+import re
 from typing import (
+    Mapping,
     NamedTuple,
     Tuple,
-    Mapping,
 )
 import unittest
 from unittest.mock import patch
 from uuid import uuid4
 
+import boto3
+import elasticsearch
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from more_itertools import one
+from moto import (
+    mock_sqs,
+    mock_sts,
+)
+import requests
+from requests_http_signature import HTTPSignatureAuth
 
-import azul.indexer
 from app_test_case import LocalAppTestCase
 from azul import (
     config,
     hmac,
 )
+import azul.indexer
 from azul.indexer import IndexWriter
 from azul.logging import configure_test_logging
+from azul.plugin import Plugin
+from azul.project.hca.metadata_generator import MetadataGenerator
 from azul.threads import Latch
 from azul.transformer import (
     Aggregate,
     Contribution,
 )
-from azul.project.hca.metadata_generator import MetadataGenerator
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper
 
@@ -102,6 +99,8 @@ class TestHCAIndexer(IndexerTestCase):
                                      size=258)
         self.assertTrue(small_bundle.size < IndexWriter.bulk_threshold < large_bundle.size)
 
+        field_types = Plugin.load().field_types()
+
         for bundle, size in small_bundle, large_bundle:
             with self.subTest(size=size):
                 manifest, metadata = self._load_canned_bundle(bundle)
@@ -114,11 +113,11 @@ class TestHCAIndexer(IndexerTestCase):
                     for hit in hits:
                         entity_type, aggregate = config.parse_es_index_name(hit["_index"])
                         if aggregate:
-                            doc = Aggregate.from_index(hit)
+                            doc = Aggregate.from_index(field_types, hit)
                             self.assertNotEqual(doc.contents, {})
                             num_aggregates += 1
                         else:
-                            doc = Contribution.from_index(hit)
+                            doc = Contribution.from_index(field_types, hit)
                             self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
                             self.assertFalse(doc.bundle_deleted)
                             num_contribs += 1
@@ -132,7 +131,7 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertEqual(len(hits), 2 * size)
                     docs_by_entity_id = defaultdict(list)
                     for hit in hits:
-                        doc = Contribution.from_index(hit)
+                        doc = Contribution.from_index(field_types, hit)
                         docs_by_entity_id[doc.entity.entity_id].append(doc)
                         entity_type, aggregate = config.parse_es_index_name(hit["_index"])
                         # Since there is only one bundle and it was deleted, nothing should be aggregated
@@ -840,6 +839,22 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (child_cell_line)'])
                 self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [config.null_keyword])
 
+    def test_files_content_description(self):
+        self._index_canned_bundle(('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'))
+        hits = self._get_all_hits()
+        for hit in hits:
+            contents = hit['_source']['contents']
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            if aggregate:
+                # bundle aggregates keep individual files
+                num_inner_files = 2 if entity_type == 'bundles' else 1
+            else:
+                # one inner file per file contribution
+                num_inner_files = 1 if entity_type == 'files' else 2
+            self.assertEqual(len(contents['files']), num_inner_files)
+            for file in contents['files']:
+                self.assertEqual(file['content_description'], ['RNA sequence'])
+
     def test_metadata_generator(self):
         index_bundle = ('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
         manifest, metadata = self._load_canned_bundle(index_bundle)
@@ -1073,34 +1088,43 @@ class TestValidNotificationRequests(LocalAppTestCase):
     @mock_sqs
     def test_index_test_mode(self):
         self._create_mock_notify_queue()
-        testless_notification = {
+        notification = {
             "match": {
                 "bundle_uuid": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
                 "bundle_version": "2018-03-28T13:55:26.044Z"
             }
         }
-        test_name_in_notification = {
-            "match": {
-                "bundle_uuid": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
-                "bundle_version": "2018-03-28T13:55:26.044Z"
-            },
-            "test_name": "integration-test_bb2365b9-5a5b-436f-92e3-4fc6d86a9efd_bb2365b9"
-        }
         for endpoint in '/', '/delete':
             for test_mode in 0, 1:
-                for body in testless_notification, test_name_in_notification:
-                    with self.subTest(test_mode=test_mode, endpoint=endpoint):
+                for test_name in None, "foo":
+                    with self.subTest(test_mode=test_mode, endpoint=endpoint, test_name=test_name):
                         with patch.dict(os.environ, AZUL_TEST_MODE=str(test_mode)):
-                            response = self._test(body, endpoint=endpoint, valid_auth=True)
-                            if 'test_name' not in body and test_mode == 1:
-                                self.assertEqual(500, response.status_code)
-                                self.assertEqual({
-                                    "Code": "ChaliceViewError",
-                                    "Message": f"ChaliceViewError: Ignored notification {testless_notification}."
-                                               f" This indexer is currently in TEST MODE."
-                                }, response.json())
-                            else:
-                                self.assertEqual(202, response.status_code)
+                            payload = {} if test_name is None else {'test_name': test_name}
+                            with patch.dict(notification, **payload):
+                                response = self._test(notification, endpoint=endpoint, valid_auth=True)
+                                if test_mode == 1 and test_name is None:
+                                    self.assertEqual(500, response.status_code)
+                                    self.assertEqual(
+                                        {
+                                            'Code': 'ChaliceViewError',
+                                            'Message': 'ChaliceViewError: The indexer is currently in test mode where '
+                                                       'it only accepts specially instrumented notifications. Please '
+                                                       'try again later'
+                                        },
+                                        response.json()
+                                    )
+                                elif test_mode == 0 and test_name is not None:
+                                    self.assertEqual(400, response.status_code)
+                                    self.assertEqual(
+                                        {
+                                            'Code': 'BadRequestError',
+                                            'Message': 'BadRequestError: Cannot process test notifications outside of '
+                                                       'test mode'
+                                        },
+                                        response.json()
+                                    )
+                                else:
+                                    self.assertEqual(202, response.status_code)
 
     def _test(self, body, endpoint, valid_auth):
         with ResponsesHelper() as helper:

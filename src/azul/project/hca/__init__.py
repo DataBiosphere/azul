@@ -96,7 +96,7 @@ class Plugin(azul.plugin.Plugin):
                 "sampleEntityType": "contents.samples.entity_type",
                 "disease": "contents.samples.disease",
                 "genusSpecies": "contents.donors.genus_species",
-                "donorDisease": "contents.donors.disease",
+                "donorDisease": "contents.donors.diseases",
                 "organ": "contents.samples.organ",
                 "organPart": "contents.samples.organ_part",
                 "modelOrgan": "contents.samples.model_organ",
@@ -110,6 +110,7 @@ class Plugin(azul.plugin.Plugin):
                 "cellLineType": "contents.cell_lines.cell_line_type",
 
                 "cellCount": "contents.cell_suspensions.total_estimated_cells",
+                "donorCount": "contents.donors.donor_count",
                 "selectedCellType": "contents.cell_suspensions.selected_cell_type",
 
                 "bundleUuid": "bundles.uuid",

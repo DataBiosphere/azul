@@ -1,6 +1,4 @@
-import unittest
 from collections import deque
-from contextlib import contextmanager
 import csv
 import gzip
 from io import (
@@ -12,15 +10,19 @@ import logging
 import os
 import random
 import re
+import sys
 import time
 from typing import (
     Any,
     IO,
+    List,
     Mapping,
     Optional,
+    Set,
+    Tuple,
 )
+import unittest
 from unittest import mock
-from urllib.parse import urlencode
 import uuid
 from zipfile import ZipFile
 
@@ -34,17 +36,20 @@ from more_itertools import (
 )
 from openapi_spec_validator import validate_spec
 import requests
-from requests import HTTPError
 
 from azul import (
     config,
     drs,
 )
-from azul.azulclient import AzulClient
+from azul.azulclient import (
+    AzulClient,
+    FQID,
+)
 from azul.decorators import memoized_property
 import azul.dss
 from azul.logging import configure_test_logging
-from azul.requests import requests_session
+from azul.requests import requests_session_with_retry_after
+from azul.types import JSON
 from azul_test_case import AlwaysTearDownTestCase
 
 logger = logging.getLogger(__name__)
@@ -124,33 +129,36 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.test_uuid = str(uuid.uuid4())
         self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
         self.num_bundles = 0
-        self.set_lambda_test_mode(True)
+        self._set_test_mode(True)
 
     def tearDown(self):
-        self.set_lambda_test_mode(False)
-        self.delete_bundles()
-        # Delete again to test duplicate deletion notifications
-        self.delete_bundles(duplicates=True)
+        self._set_test_mode(False)
         super().tearDown()
 
     def test(self):
         if config.deployment_stage != 'prod':
-            self._test_indexing()
-            self._test_manifest()
-            self._test_drs()
+            try:
+                self._test_indexing()
+                self._test_manifest()
+                self._test_drs()
+            finally:
+                self._delete_bundles_twice()
+                self.assertTrue(self._project_removed_from_index())
         self._test_other_endpoints()
 
     def _test_indexing(self):
         logger.info('Starting test using test name, %s ...', self.test_name)
         azul_client = self.azul_client
-        self.test_notifications, self.expected_fqids = azul_client.test_notifications(test_name=self.test_name,
-                                                                                      test_uuid=self.test_uuid,
-                                                                                      max_bundles=self.max_bundles)
+        self.test_notifications, self.expected_fqids = self._test_notifications(test_name=self.test_name,
+                                                                                test_uuid=self.test_uuid,
+                                                                                max_bundles=self.max_bundles)
         azul_client._index(self.test_notifications)
-        # Index some again to test that we can handle duplicate notifications. Note: choices are with replacement
+        # Index some bundles again to test that we handle duplicate additions.
+        # Note: random.choices() may pick the same element multiple times so
+        # some notifications will end up being sent three or more times.
         azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
         self.num_bundles = len(self.expected_fqids)
-        self.check_bundles_are_indexed(self.test_name, 'files')
+        self._check_bundles_are_indexed(self.test_name, 'files')
 
     def _test_other_endpoints(self):
         for health_key in ('',  # default keys for lambda
@@ -162,92 +170,96 @@ class IntegrationTest(AlwaysTearDownTestCase):
                            '/api_endpoints',
                            '/other_lambdas'):
             for endpoint in config.service_endpoint(), config.indexer_endpoint():
-                self.check_endpoint_is_working(endpoint, '/health' + health_key)
-        self.check_endpoint_is_working(config.service_endpoint(), '/')
-        self.check_endpoint_is_working(config.service_endpoint(), '/openapi')
-        self.check_endpoint_is_working(config.service_endpoint(), '/version')
-        self.check_endpoint_is_working(config.service_endpoint(), '/repository/summary')
-        self.check_endpoint_is_working(config.service_endpoint(), '/repository/files/order')
+                self._check_endpoint(endpoint, '/health' + health_key)
+        self._check_endpoint(config.service_endpoint(), '/')
+        self._check_endpoint(config.service_endpoint(), '/openapi')
+        self._check_endpoint(config.service_endpoint(), '/version')
+        self._check_endpoint(config.service_endpoint(), '/repository/summary')
+        self._check_endpoint(config.service_endpoint(), '/repository/files/order')
 
     def _test_manifest(self):
         manifest_filter = json.dumps({'project': {'is': [self.test_name]}})
         for format_, validator in [
-            (None, self.check_manifest),
-            ('tsv', self.check_manifest),
-            ('compact', self.check_manifest),
-            ('full', self.check_manifest),
-            ('bdbag', self.check_terra_bdbag),
-            ('terra.bdbag', self.check_terra_bdbag)
+            (None, self._check_manifest),
+            ('tsv', self._check_manifest),
+            ('compact', self._check_manifest),
+            ('full', self._check_manifest),
+            ('bdbag', self._check_terra_bdbag),
+            ('terra.bdbag', self._check_terra_bdbag)
         ]:
             with self.subTest(format=format_, filter=manifest_filter):
                 query = {'filters': manifest_filter}
                 if format_ is not None:
                     query['format'] = format_
-                response = self.check_endpoint_is_working(config.service_endpoint(), '/manifest/files', query)
+                response = self._check_endpoint(config.service_endpoint(), '/manifest/files', query)
                 validator(response)
 
     def _test_drs(self):
         filters = json.dumps({'project': {'is': [self.test_name]}, 'fileFormat': {'is': ['fastq.gz', 'fastq']}})
-        response = self.check_endpoint_is_working(endpoint=config.service_endpoint(),
-                                                  path='/repository/files',
-                                                  query={
-                                                      'filters': filters,
-                                                      'size': 1,
-                                                      'order': 'asc',
-                                                      'sort': 'fileSize'
-                                                  })
+        response = self._check_endpoint(endpoint=config.service_endpoint(),
+                                        path='/repository/files',
+                                        query={
+                                            'filters': filters,
+                                            'size': 1,
+                                            'order': 'asc',
+                                            'sort': 'fileSize'
+                                        })
         hits = json.loads(response)
         file_uuid = one(one(hits['hits'])['files'])['uuid']
         drs_endpoint = drs.drs_http_object_path(file_uuid)
-        self.download_file_from_drs_response(self.check_endpoint_is_working(config.service_endpoint(), drs_endpoint))
+        self._download_file_from_drs_response(self._check_endpoint(config.service_endpoint(), drs_endpoint))
 
-    def delete_bundles(self, duplicates=False):
-        if duplicates:
-            # Note: random.choices is with replacement (so the same choice may be made several times
-            notifications = random.choices(self.test_notifications, k=len(self.test_notifications) // 2)
-        else:
-            notifications = self.test_notifications
-        for n in notifications:
-            try:
-                self.azul_client.delete_notification(n)
-            except HTTPError as e:
-                logger.warning('Deletion for notification %s failed. Possibly it was never indexed.', n, exc_info=e)
-        self.wait_for_queue_level(empty=False)
-        self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
-        self.assertTrue(self.project_removed_from_azul(),
-                        f"Project '{self.test_name}' was not fully removed from index within 5 min. of deletion")
+    def _delete_bundles_twice(self):
+        self._delete_bundles(self.test_notifications)
+        # Delete some bundles again to test that we handle duplicate deletions.
+        # Note: random.choices() may pick the same element multiple times so
+        # some notifications will end up being sent three or more times.
+        notifications = random.choices(self.test_notifications, k=len(self.test_notifications) // 2)
+        self._delete_bundles(notifications)
 
-    def set_lambda_test_mode(self, mode: bool):
+    def _delete_bundles(self, notifications):
+        if notifications:
+            self.azul_client.delete_notification(notifications)
+        self._wait_for_queue_level(empty=False)
+        self._wait_for_queue_level(timeout=self._queue_empty_timeout(self.num_bundles))
+
+    def _set_test_mode(self, mode: bool):
         client = boto3.client('lambda')
-        indexer_lambda_config = client.get_function_configuration(FunctionName=config.indexer_name)
+        function_name = config.indexer_name
+        indexer_lambda_config = client.get_function_configuration(FunctionName=function_name)
         environment = indexer_lambda_config['Environment']
-        environment['Variables']['AZUL_TEST_MODE'] = '1' if mode else '0'
-        client.update_function_configuration(FunctionName=config.indexer_name, Environment=environment)
+        env_var_name = 'AZUL_TEST_MODE'
+        env_var_value = '1' if mode else '0'
+        environment['Variables'][env_var_name] = env_var_value
+        logger.info('Setting environment variable %s to "%s" on function %s',
+                    env_var_name, env_var_value, function_name)
+        client.update_function_configuration(FunctionName=function_name, Environment=environment)
 
     @memoized_property
-    def requests(self) -> requests.Session:
-        return requests_session()
+    def _requests(self) -> requests.Session:
+        return requests_session_with_retry_after()
 
-    def check_endpoint_is_working(self, endpoint: str, path: str, query: Optional[Mapping[str, str]] = None) -> bytes:
+    def _check_endpoint(self, endpoint: str, path: str, query: Optional[Mapping[str, str]] = None) -> bytes:
         url = furl(endpoint)
         url.path.add(path)
-        query = query or {}
-        logger.info('Requesting %s?%s', url.url, urlencode(query))
-        response = self.requests.get(url.url, params=query)
+        if query is not None:
+            url.query.set({k: str(v) for k, v in query.items()})
+        logger.info('Requesting %s', url)
+        response = self._requests.get(url.url)
         response.raise_for_status()
         return response.content
 
-    def check_manifest(self, response: bytes):
-        self._check_manifest(BytesIO(response), 'bundle_uuid')
+    def _check_manifest(self, response: bytes):
+        self.__check_manifest(BytesIO(response), 'bundle_uuid')
 
-    def check_terra_bdbag(self, response: bytes):
+    def _check_terra_bdbag(self, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'participants.tsv')
             with zip_fh.open(file_path) as file:
-                self._check_manifest(file, 'bundle_uuid')
+                self.__check_manifest(file, 'bundle_uuid')
 
-    def _check_manifest(self, file: IO[bytes], uuid_field_name: str):
+    def __check_manifest(self, file: IO[bytes], uuid_field_name: str):
         text = TextIOWrapper(file)
         reader = csv.DictReader(text, delimiter='\t')
         rows = list(reader)
@@ -257,11 +269,11 @@ class IntegrationTest(AlwaysTearDownTestCase):
         bundle_uuid = rows[0][uuid_field_name]
         self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
 
-    def download_file_from_drs_response(self, response: bytes):
+    def _download_file_from_drs_response(self, response: bytes):
         json_data = json.loads(response)['data_object']
         file_url = first(json_data['urls'])['url']
         file_name = json_data['name']
-        response = self.check_endpoint_is_working(file_url, '')
+        response = self._check_endpoint(file_url, '')
         # Check signature of FASTQ file.
         with gzip.open(BytesIO(response)) as buf:
             fastq = buf.read()
@@ -271,24 +283,59 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
-    def get_number_of_messages(self, queues: Mapping[str, Any]):
+    def _test_notifications(self, test_name: str, test_uuid: str, max_bundles: int) -> Tuple[List[JSON], Set[FQID]]:
+        bundle_fqids = self.azul_client.list_dss_bundles()
+        bundle_fqids = self._prune_test_bundles(bundle_fqids, max_bundles)
+        notifications = []
+        test_bundle_fqids = set()
+        for bundle_fqid in bundle_fqids:
+            new_bundle_uuid = str(uuid.uuid4())
+            # Using a new version helps ensure that any aggregation will choose
+            # the contribution from the test bundle over that by any other
+            # bundle not in the test set.
+            # Failing to do this before caused https://github.com/DataBiosphere/azul/issues/1174
+            new_bundle_version = azul.dss.new_version()
+            test_bundle_fqids.add((new_bundle_uuid, new_bundle_version))
+            notification = self.azul_client.synthesize_notification(bundle_fqid,
+                                                                    test_bundle_uuid=new_bundle_uuid,
+                                                                    test_bundle_version=new_bundle_version,
+                                                                    test_name=test_name,
+                                                                    test_uuid=test_uuid)
+            notifications.append(notification)
+        return notifications, test_bundle_fqids
+
+    def _prune_test_bundles(self, bundle_fqids, max_bundles):
+        filtered_bundle_fqids = []
+        seed = random.randint(0, sys.maxsize)
+        logger.info('Selecting %i out of %i candidate bundle(s) with random seed %i.',
+                    max_bundles, len(bundle_fqids), seed)
+        random_ = random.Random(x=seed)
+        bundle_fqids = random_.sample(bundle_fqids, len(bundle_fqids))
+        for bundle_uuid, bundle_version in bundle_fqids:
+            if len(filtered_bundle_fqids) < max_bundles:
+                if self.azul_client.bundle_has_project_json(bundle_uuid, bundle_version):
+                    filtered_bundle_fqids.append((bundle_uuid, bundle_version))
+            else:
+                break
+        return filtered_bundle_fqids
+
+    def _count_messages(self, queues: Mapping[str, Any]):
+        attribute_names = ['ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed')]
         total_message_count = 0
         for queue_name, queue in queues.items():
-            attributes = tuple('ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed'))
-            num_messages = tuple(int(queue.attributes[attribute]) for attribute in attributes)
-            num_available, num_inflight, num_delayed = num_messages
             queue.reload()
-            message_sum = sum((num_available, num_inflight, num_delayed))
-            logger.info('Queue %s has %i messages, %i available, %i in flight and %i delayed',
-                        queue_name, message_sum, num_available, num_inflight, num_delayed)
-            total_message_count += message_sum
-        logger.info('Total # of messages: %i', total_message_count)
+            message_counts = [int(queue.attributes[attribute_name]) for attribute_name in attribute_names]
+            queue_length = sum(message_counts)
+            logger.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
+                         queue_name, queue_length, *message_counts)
+            total_message_count += queue_length
+        logger.info('Counting %i message(s) in %i queue(s).', total_message_count, len(queues))
         return total_message_count
 
-    def get_queue_empty_timeout(self, num_bundles: int):
+    def _queue_empty_timeout(self, num_bundles: int):
         return max(num_bundles * 30, 60)
 
-    def wait_for_queue_level(self, empty: bool = True, timeout: int = 60):
+    def _wait_for_queue_level(self, empty: bool = True, timeout: int = 60):
         queue_names = [config.notify_queue_name, config.document_queue_name]
         queues = {queue_name: boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
                   for queue_name in queue_names}
@@ -296,7 +343,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         queue_size_history = deque(maxlen=10)
 
         while True:
-            total_message_count = self.get_number_of_messages(queues)
+            total_message_count = self._count_messages(queues)
             queue_wait_time_elapsed = (time.time() - wait_start_time)
             queue_size_history.append(total_message_count)
             cumulative_queue_size = sum(queue_size_history)
@@ -314,7 +361,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         for queue in queues.values():
             queue.meta.client._endpoint.http_session.close()
 
-    def check_bundles_are_indexed(self, test_name: str, entity_type: str):
+    def _check_bundles_are_indexed(self, test_name: str, entity_type: str):
         service_check_timeout = 600
         delay_between_retries = 5
         indexed_fqids = set()
@@ -324,8 +371,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
                     test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
         logger.debug('Expected bundles %s ', sorted(self.expected_fqids))
         logger.info('Waiting for the queues to empty ...')
-        self.wait_for_queue_level(empty=False)
-        self.wait_for_queue_level(timeout=self.get_queue_empty_timeout(self.num_bundles))
+        self._wait_for_queue_level(empty=False)
+        self._wait_for_queue_level(timeout=self._queue_empty_timeout(self.num_bundles))
         logger.info('Checking if bundles are referenced by the service response ...')
         retries = 0
         deadline = time.time() + service_check_timeout
@@ -361,7 +408,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                             f' {hit["entryId"]}. Bundle(s) ({",".join(bundle_fqids)})'
                             f' have been indexed without the debug project name. Contains {project}')
 
-    def project_removed_from_azul(self):
+    def _project_removed_from_index(self):
         results_empty = [len(self._get_entities_by_project(entity, self.test_name)) == 0
                          for entity in ['files', 'projects', 'samples', 'bundles']]
         logger.info("Project removed from index files: {}, projects: {}, "
@@ -378,7 +425,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         params = dict(filters=filters, size=str(size))
         while True:
             url = f'{config.service_endpoint()}/repository/{entity_type}'
-            response = self.requests.get(url, params=params)
+            response = self._requests.get(url, params=params)
             response.raise_for_status()
             body = response.json()
             hits = body['hits']
@@ -454,13 +501,21 @@ class DSSIntegrationTest(unittest.TestCase):
     class SpecialError(Exception):
         pass
 
-    @contextmanager
     def _failing_s3_get_object(self):
-        with mock.patch('boto3.client') as mock_client:
-            mock_s3 = mock.MagicMock()
-            mock_s3.get_object.side_effect = self.SpecialError()
-            mock_client.return_value = mock_s3
-            yield
+        def make_mock(**kwargs):
+            original = kwargs['spec']
+
+            def mock_boto3_client(service):
+                if service == 's3':
+                    mock_s3 = mock.MagicMock()
+                    mock_s3.get_object.side_effect = self.SpecialError()
+                    return mock_s3
+                else:
+                    return original(service)
+
+            return mock_boto3_client
+
+        return mock.patch('boto3.client', spec=True, new_callable=make_mock)
 
     def _test_dss_client(self, direct, query, dss_client, replica, fallback):
         with self.subTest(direct=direct, replica=replica, fallback=fallback):

@@ -9,7 +9,6 @@ from collections import (
 )
 import logging
 import sys
-from functools import lru_cache
 
 from more_itertools import one
 from typing import (
@@ -23,6 +22,7 @@ from typing import (
     Tuple,
     ClassVar,
     Sequence,
+    Union,
 )
 
 from dataclasses import (
@@ -68,6 +68,15 @@ class DocumentCoordinates(NamedTuple):
     document_id: str
 
 
+FieldType = Union[type, None]
+
+FieldTypes4 = Union[Mapping[str, FieldType], FieldType]
+FieldTypes3 = Union[Mapping[str, FieldTypes4], FieldType]
+FieldTypes2 = Union[Mapping[str, FieldTypes3], FieldType]
+FieldTypes1 = Union[Mapping[str, FieldTypes2], FieldType]
+FieldTypes = Mapping[str, FieldTypes1]
+
+
 @dataclass
 class Document:
     entity: EntityReference
@@ -77,39 +86,23 @@ class Document:
     contents: Optional[JSON]
 
     @classmethod
-    @lru_cache(maxsize=1)
-    def field_types(cls):
-        from azul.plugin import Plugin
-        return Plugin.load().field_types()
+    def field_types(cls, field_types: FieldTypes) -> FieldTypes:
+        return {
+            'entity_id': str,
+            'entity_version': str,
+            'contents': field_types
+        }
 
     @classmethod
-    @lru_cache(maxsize=64)
-    def _field_type(cls, path: Tuple[str, ...]) -> Any:
-        """
-        Get the field type of a field specified by the full field name split on '.'
-        :param path: A tuple of keys to traverse down the field_types dict
-        """
-        types_mapping = cls.field_types()
-        for p in path:
-            try:
-                types_mapping = types_mapping[p]
-            except KeyError:
-                return None
-            except TypeError:
-                return None
-        return types_mapping
-
-    @classmethod
-    def translate_field(cls, value: AnyJSON, path: Tuple[str, ...] = (), forward: bool = True) -> Any:
+    def translate_field(cls, value: AnyJSON, field_type: FieldType, forward: bool = True) -> Any:
         """
         Translate a single value for insert into or after fetching from Elasticsearch.
 
         :param value: A value to translate
-        :param path: A tuple representing the field name split on dots (.)
+        :param field_type: The type of the field value
         :param forward: If we should translate forward or backward (aka un-translate)
         :return: The translated value
         """
-        field_type = cls._field_type(path)
         if field_type is bool:
             if forward:
                 return {None: -1, False: 0, True: 1}[value]
@@ -138,36 +131,46 @@ class Document:
         elif field_type is None:
             return value
         else:
-            raise ValueError(f'Field type not found for path {path}')
+            raise ValueError(f'Unknown field_type value {field_type}')
 
     @classmethod
-    def translate_fields(cls, source: AnyJSON, path: Tuple[str, ...] = (), forward: bool = True) -> AnyMutableJSON:
+    def translate_fields(cls,
+                         doc: AnyJSON,
+                         field_types: Union[FieldType, FieldTypes],
+                         forward: bool = True) -> AnyMutableJSON:
         """
         Traverse a document to translate field values for insert into Elasticsearch, or to translate back
         response data. This is done to support None/null values since Elasticsearch does not index these values.
 
-        :param source: A document dict of values
-        :param path: A tuple containing the keys encountered as we traverse down the document
+        :param doc: A document dict of values
+        :param field_types: A mapping of field paths to field type
         :param forward: If we should translate forward or backward (aka un-translate)
         :return: A copy of the original document with values translated according to their type
         """
-        if isinstance(source, dict):
+        if field_types is None:
+            return doc
+        elif isinstance(doc, dict):
             new_dict = {}
-            for key, val in source.items():
+            for key, val in doc.items():
                 # Shadow copy fields should only be present during a reverse translation and we skip over to remove them
                 if key.endswith('_'):
                     assert not forward
                 else:
-                    new_path = path + (key,)
-                    new_dict[key] = cls.translate_fields(val, path=new_path, forward=forward)
-                    if forward and cls._field_type(new_path) in (int, float):
+                    try:
+                        field_type = field_types[key]
+                    except KeyError:
+                        raise KeyError(f'Key {key} not defined in field_types')
+                    except TypeError:
+                        raise TypeError(f'Key {key} not defined in field_types')
+                    new_dict[key] = cls.translate_fields(val, field_type, forward=forward)
+                    if forward and field_type in (int, float):
                         # Add a non-translated shadow copy of this field's numeric value for sum aggregations
                         new_dict[key + '_'] = val
             return new_dict
-        elif isinstance(source, list):
-            return [cls.translate_fields(val, path=path, forward=forward) for val in source]
+        elif isinstance(doc, list):
+            return [cls.translate_fields(val, field_types, forward=forward) for val in doc]
         else:
-            return cls.translate_field(source, path=path, forward=forward)
+            return cls.translate_field(doc, field_types, forward=forward)
 
     @classmethod
     def index_name(cls, entity_type: EntityType) -> str:
@@ -213,8 +216,8 @@ class Document:
         return ['entity_id']
 
     @classmethod
-    def from_index(cls, hit: JSON) -> 'Document':
-        source = cls.translate_fields(hit['_source'], forward=False)
+    def from_index(cls, field_types, hit: JSON) -> 'Document':
+        source = cls.translate_fields(hit['_source'], field_types, forward=False)
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
         self = cls(entity=EntityReference(entity_type=cls.entity_type(hit['_index']),
@@ -224,10 +227,11 @@ class Document:
                    **cls._from_source(source))
         return self
 
-    def to_index(self, bulk=False, update=False) -> dict:
+    def to_index(self, field_types, bulk=False, update=False) -> dict:
         """
         Build request parameters from the document for indexing
 
+        :param field_types: A mapping of field paths to field type
         :param bulk: If bulk indexing
         :param update: If creation failed and we need to try update. This will only affect docs with version_type None
                        (AKA contributions)
@@ -237,7 +241,7 @@ class Document:
         result = {
             '_index' if bulk else 'index': self.document_index,
             '_type' if bulk else 'doc_type': self.type,
-            **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source())}),
+            **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source(), field_types)}),
             '_id' if bulk else 'id': self.document_id
         }
         if self.version_type is None:
@@ -265,6 +269,15 @@ class Contribution(Document):
     bundle_uuid: BundleUUID
     bundle_version: BundleVersion
     bundle_deleted: bool
+
+    @classmethod
+    def field_types(cls, field_types: FieldTypes) -> FieldTypes:
+        return {
+            **super().field_types(field_types),
+            'bundle_uuid': None,  # No translation needed on this str field, field will never be None
+            'bundle_version': None,  # No translation needed on this str field, field will never be None
+            'bundle_deleted': None,  # No translation needed on this bool field, field will never be None
+        }
 
     @property
     def document_id(self) -> str:
@@ -304,6 +317,14 @@ class Aggregate(Document):
     version_type: ClassVar[Optional[str]] = 'internal'
 
     @classmethod
+    def field_types(cls, field_types: FieldTypes) -> FieldTypes:
+        return {
+            **super().field_types(field_types),
+            'num_contributions': None,  # Exclude count value field from translations, field will never be None
+            'bundles': None  # Exclude bundle uuid and version values from translations
+        }
+
+    @classmethod
     def _from_source(cls, source: JSON) -> Mapping[str, Any]:
         return dict(super()._from_source(source),
                     num_contributions=source['num_contributions'],
@@ -328,7 +349,7 @@ class Transformer(ABC):
 
     @classmethod
     @abstractmethod
-    def field_types(cls) -> Mapping[str, type]:
+    def field_types(cls) -> FieldTypes:
         raise NotImplementedError()
 
     @abstractmethod
@@ -633,6 +654,26 @@ class DistinctAccumulator(Accumulator):
 
     def get(self):
         return self.value.get()
+
+
+class UniqueValueCountAccumulator(Accumulator):
+    """
+    Count the number of unique values
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.value = SetAccumulator()
+
+    def accumulate(self, value) -> bool:
+        """
+        :return: True, if the given value increased the count of unique values
+        """
+        return self.value.accumulate(value)
+
+    def get(self) -> int:
+        unique_items = self.value.get()
+        return len(unique_items)
 
 
 class EntityAggregator(ABC):

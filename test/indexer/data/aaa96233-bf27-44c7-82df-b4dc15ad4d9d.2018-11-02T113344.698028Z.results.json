@@ -94,6 +94,7 @@
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": -9223372036854775808,
@@ -111,6 +112,7 @@
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": -9223372036854775808,
@@ -481,6 +483,7 @@
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": -9223372036854775808,
@@ -658,6 +661,7 @@
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": -9223372036854775808,
@@ -835,6 +839,7 @@
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": -9223372036854775808,
@@ -852,6 +857,7 @@
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": -9223372036854775808,
@@ -1029,6 +1035,7 @@
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": -9223372036854775808,
@@ -1046,6 +1053,7 @@
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": -9223372036854775808,
@@ -1232,6 +1240,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "biological_sex": [
                             "female"
                         ],
@@ -1267,6 +1276,7 @@
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": -9223372036854775808,
@@ -1284,6 +1294,7 @@
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": -9223372036854775808,
@@ -1626,6 +1637,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -1676,6 +1688,7 @@
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": -9223372036854775808,
@@ -1826,6 +1839,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -1876,6 +1890,7 @@
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": -9223372036854775808,
@@ -2006,6 +2021,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -2048,7 +2064,8 @@
                         "size": 385472253,
                         "size_": 385472253,
                         "file_format": "fastq.gz",
-                        "count": 2
+                        "count": 2,
+                        "content_description": []
                     }
                 ],
                 "protocols": [
@@ -2195,6 +2212,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -2237,7 +2255,8 @@
                         "size": 385472253,
                         "size_": 385472253,
                         "file_format": "fastq.gz",
-                        "count": 2
+                        "count": 2,
+                        "content_description": []
                     }
                 ],
                 "protocols": [
@@ -2416,6 +2435,7 @@
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": -9223372036854775808,
@@ -2433,6 +2453,7 @@
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                         "file_format": "fastq.gz",
+                        "content_description": [],
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": -9223372036854775808,
@@ -2625,6 +2646,7 @@
                         "biomaterial_id": [
                             "DID_scRSq06"
                         ],
+                        "donor_count": 1,
                         "biological_sex": [
                             "female"
                         ],
@@ -2652,7 +2674,8 @@
                         "size": 385472253,
                         "size_": 385472253,
                         "file_format": "fastq.gz",
-                        "count": 2
+                        "count": 2,
+                        "content_description": []
                     }
                 ],
                 "protocols": [

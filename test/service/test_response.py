@@ -9,11 +9,11 @@ import requests
 from app_test_case import LocalAppTestCase
 from azul import config
 from azul.logging import configure_test_logging
+from azul.plugin import Plugin
 from azul.service.responseobjects.hca_response_v5 import (
     FileSearchResponse,
     KeywordSearchResponse,
 )
-from azul.transformer import Document
 from service import WebServiceTestCase
 
 
@@ -30,6 +30,7 @@ class TestResponse(WebServiceTestCase):
         ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
         ('411cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
         ('412cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
+        ('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'),
     ]
 
     @classmethod
@@ -55,7 +56,7 @@ class TestResponse(WebServiceTestCase):
         }
         # Tests are assumed to only ever run with the azul dev index
         results = self.es_client.search(index=config.es_index_name(entity_type, aggregate=True), body=body)
-        return Document.translate_fields([results['hits']['hits'][0]['_source']], forward=False)
+        return Plugin.load().translate_fields([results['hits']['hits'][0]['_source']], forward=False)
 
     def test_key_search_files_response(self):
         """
@@ -93,9 +94,10 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["female"],
-                            "disease": None,
+                            "disease": ['normal'],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
+                            "donorCount": 1,
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -104,6 +106,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                     "files": [
                         {
+                            "content_description": [],
                             "format": "fastq.gz",
                             "name": "SRR3562915_1.fastq.gz",
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
@@ -188,9 +191,10 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["female"],
-                            "disease": None,
+                            "disease": ['normal'],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
+                            "donorCount": 1,
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -301,9 +305,10 @@ class TestResponse(WebServiceTestCase):
                 "donorOrganisms": [
                     {
                         "biologicalSex": ["female"],
-                        "disease": None,
+                        "disease": ['normal'],
                         "genusSpecies": ["Australopithecus"],
                         "id": ["DID_scRSq06"],
+                        "donorCount": 1,
                         "organismAge": ["38"],
                         "organismAgeUnit": ["year"],
                         "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -312,6 +317,7 @@ class TestResponse(WebServiceTestCase):
                 "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                 "files": [
                     {
+                        "content_description": [],
                         "format": "fastq.gz",
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
@@ -566,9 +572,10 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["female"],
-                            "disease": None,
+                            "disease": ['normal'],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
+                            "donorCount": 1,
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -729,9 +736,10 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["female"],
-                            "disease": None,
+                            "disease": ['normal'],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
+                            "donorCount": 1,
                             "organismAge": ["38"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
@@ -932,9 +940,10 @@ class TestResponse(WebServiceTestCase):
                     "donorOrganisms": [
                         {
                             "biologicalSex": ["male"],
-                            "disease": None,
+                            "disease": ['H syndrome'],
                             "genusSpecies": ["Homo sapiens"],
                             "id": ["donor_ID_1"],
+                            "donorCount": 1,
                             "organismAge": ["20"],
                             "organismAgeUnit": ["year"],
                             "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}]
@@ -1102,6 +1111,26 @@ class TestResponse(WebServiceTestCase):
         samples = one(one(keyword_response['hits'])['samples'])
         self.assertElasticsearchResultsEqual(samples, expected_samples)
 
+    def test_file_response(self):
+        """
+        Test KeywordSearchResponse contains the correct file field values
+        """
+        keyword_response = KeywordSearchResponse(
+            hits=self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
+            entity_type='files'
+        ).return_response().to_json()
+        expected_file = {
+            'content_description': ['RNA sequence'],
+            'format': 'fastq.gz',
+            'name': 'Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz',
+            'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
+            'size': 22819025,
+            'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
+            'version': '2019-10-09T172251.560099Z'
+        }
+        file = one(one(keyword_response['hits'])['files'])
+        self.assertElasticsearchResultsEqual(file, expected_file)
+
     def test_filter_with_none(self):
         """
         Test response when using a filter with a None value
@@ -1230,7 +1259,7 @@ class TestResponse(WebServiceTestCase):
                         "male",
                         "female"
                     ],
-                    "disease": None,
+                    "disease": ['normal'],
                     "genusSpecies": [
                         "Homo sapiens"
                     ],
@@ -1240,6 +1269,7 @@ class TestResponse(WebServiceTestCase):
                         "HPSI0314i-sojd",
                         "HPSI0214i-kucg"
                     ],
+                    "donorCount": 4,
                     "organismAge": [
                         "45-49",
                         "65-69"
@@ -1265,7 +1295,7 @@ class TestResponse(WebServiceTestCase):
                         "male",
                         "female"
                     ],
-                    "disease": None,
+                    "disease": ['normal'],
                     "genusSpecies": [
                         "Homo sapiens"
                     ],
@@ -1275,6 +1305,7 @@ class TestResponse(WebServiceTestCase):
                         "HPSI0314i-sojd",
                         "HPSI0214i-kucg"
                     ],
+                    "donorCount": 4,
                     "organismAge": [
                         "40-44",
                         "55-59"
@@ -1312,6 +1343,30 @@ class TestResponse(WebServiceTestCase):
                 response = requests.get(url, params=params)
                 actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
                 self.assertElasticsearchResultsEqual(expected_hits, actual_value)
+
+    def test_ordering(self):
+        sort_fields = [
+            ('cellCount', lambda hit: hit['cellSuspensions'][0]['totalCells']),
+            ('donorCount', lambda hit: hit['donorOrganisms'][0]['donorCount'])
+        ]
+
+        url = self.base_url + '/repository/projects'
+        for sort_field, accessor in sort_fields:
+            responses = {
+                order: requests.get(url, params={
+                    'filters': '{}',
+                    'order': order,
+                    'sort': sort_field
+                })
+                for order in ['asc', 'desc']
+            }
+            hit_sort_values = {}
+            for order, response in responses.items():
+                response.raise_for_status()
+                hit_sort_values[order] = [accessor(hit) for hit in response.json()['hits']]
+
+            self.assertEqual(hit_sort_values['asc'], sorted(hit_sort_values['asc']))
+            self.assertEqual(hit_sort_values['desc'], sorted(hit_sort_values['desc'], reverse=True))
 
 
 class TestResponseSummary(WebServiceTestCase):
@@ -1454,6 +1509,12 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                     "entity_ids": {
                         "prod": ["cddab57b-6868-4be4-806f-395ed9dd635a"]
                     }
+                },
+                {
+                    "integration_id": "224b1d42-b939-4d10-8a8f-2b2ac304b813",
+                    "integration_type": "get",
+                    "entity_type": "project",
+                    # NO entity_ids field
                 }
             ]
         }
@@ -1467,9 +1528,11 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
 
     @classmethod
     def _extract_integration_ids(cls, response_json):
-        return [integration['integration_id']
-                for portal in response_json
-                for integration in portal['integrations']]
+        return [
+            integration['integration_id']
+            for portal in response_json
+            for integration in portal['integrations']
+        ]
 
     @mock.patch('azul.project.hca.Plugin.portal_integrations_db')
     def test_integrations(self, portal_integrations_db):
@@ -1479,10 +1542,17 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
         test_cases = [
             ('get_manifest', 'file', ['b87b7f30-2e60-4ca5-9a6f-00ebfcd35f35']),
             ('get', 'bundle', []),
-            ('get', 'project', ['977854a0-2eea-4fec-9459-d4807fe79f0c',
-                                'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138',
-                                'dbfe9394-a326-4574-9632-fbadb51a7b1a',
-                                'f13ddf2d-d913-492b-9ea8-2de4b1881c26'])
+            (
+                'get',
+                'project',
+                [
+                    '977854a0-2eea-4fec-9459-d4807fe79f0c',
+                    'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138',
+                    'dbfe9394-a326-4574-9632-fbadb51a7b1a',
+                    'f13ddf2d-d913-492b-9ea8-2de4b1881c26',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            )
         ]
         portal_integrations_db.return_value = self._portal_integrations_db
         with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
@@ -1502,21 +1572,61 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
         """
         Verify requests specifying `entity_ids` only return integrations matching those entity_ids
         """
+
+        # 224b1d42-b939-4d10-8a8f-2b2ac304b813 must appear in every test since it lacks the entity_ids field
         test_cases = [
             # One project entity id specified by one integration
-            (['cddab57b-6868-4be4-806f-395ed9dd635a'],
-             ['f13ddf2d-d913-492b-9ea8-2de4b1881c26']),
+            (
+                'cddab57b-6868-4be4-806f-395ed9dd635a',
+                [
+                    'f13ddf2d-d913-492b-9ea8-2de4b1881c26',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            ),
             # Two project entity ids specified by two different integrations
-            (['cddab57b-6868-4be4-806f-395ed9dd635a', '90bd6933-40c0-48d4-8d76-778c103bf545'],
-             ['f13ddf2d-d913-492b-9ea8-2de4b1881c26', 'dbfe9394-a326-4574-9632-fbadb51a7b1a']),
+            (
+                'cddab57b-6868-4be4-806f-395ed9dd635a, 90bd6933-40c0-48d4-8d76-778c103bf545',
+                [
+                    'f13ddf2d-d913-492b-9ea8-2de4b1881c26',
+                    'dbfe9394-a326-4574-9632-fbadb51a7b1a',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            ),
             # One project entity id specified by two different integrations
-            (['c4077b3c-5c98-4d26-a614-246d12c2e5d7'],
-             ['977854a0-2eea-4fec-9459-d4807fe79f0c', 'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138'])
+            (
+                'c4077b3c-5c98-4d26-a614-246d12c2e5d7',
+                [
+                    '977854a0-2eea-4fec-9459-d4807fe79f0c',
+                    'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            ),
+            # Blank entity id, to match integrations lacking the entity_id field
+            (
+                '',
+                [
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            ),
+            # No entity id, accepting all integrations
+            (
+                None,
+                [
+                    'f13ddf2d-d913-492b-9ea8-2de4b1881c26',
+                    'dbfe9394-a326-4574-9632-fbadb51a7b1a',
+                    '977854a0-2eea-4fec-9459-d4807fe79f0c',
+                    'e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138',
+                    '224b1d42-b939-4d10-8a8f-2b2ac304b813'
+                ]
+            )
         ]
+
         portal_integrations_db.return_value = self._portal_integrations_db
         with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
             for entity_ids, integration_ids in test_cases:
-                params = dict(integration_type='get', entity_type='project', entity_ids=','.join(entity_ids))
+                params = dict(integration_type='get', entity_type='project')
+                if entity_ids is not None:
+                    params['entity_ids'] = entity_ids
                 with self.subTest(**params):
                     response_json = self._get_integrations(params)
                     found_integration_ids = self._extract_integration_ids(response_json)
