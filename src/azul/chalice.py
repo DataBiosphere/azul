@@ -4,6 +4,7 @@ import logging
 from chalice import Chalice
 from chalice.app import Request
 
+from azul import config
 from azul.json import json_head
 from azul.openapi import openapi_spec
 from azul.types import LambdaContext
@@ -13,8 +14,8 @@ log = logging.getLogger(__name__)
 
 class AzulChaliceApp(Chalice):
 
-    def __init__(self, app_name, debug=False, env=None):
-        super().__init__(app_name, debug=debug, configure_logs=False, env=env)
+    def __init__(self, app_name):
+        super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
 
     def route(self, path, **kwargs):
         """
