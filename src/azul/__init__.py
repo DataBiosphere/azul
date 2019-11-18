@@ -1,5 +1,6 @@
 from functools import lru_cache
 import json as _json  # We must use a different name for the import because 'azul.json' exists already as azul/json.py
+import logging
 import os
 import re
 from typing import (
@@ -10,6 +11,8 @@ from typing import (
 )
 
 import boto3
+
+log = logging.getLogger(__name__)
 
 Netloc = Tuple[str, int]
 

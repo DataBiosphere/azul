@@ -2,10 +2,10 @@ asn1crypto==0.24.0
 aws-requests-auth==0.4.2
 bdbag==1.5.1
 boto==2.49.0
-boto3==1.7.84
-botocore==1.10.84
+boto3==1.10.19
+botocore==1.13.19
 cffi==1.11.5
-cryptography==2.4.2
+cryptography==2.3.1
 dataclasses<=0.6
 elasticsearch>=5.0.0,<6.0.0
 elasticsearch-dsl>=5.0.0,<6.0.0
@@ -18,9 +18,9 @@ git+git://github.com/HumanCellAtlas/metadata-api@release/1.0b22#egg=hca-metadata
 pyasn1==0.4.4
 pyasn1-modules==0.2.2
 PyJWT==1.6.4
-requests==2.20.0
+requests==2.22.0
 requests-http-signature==0.0.3
-rsa==4.0
+rsa==3.4.2
 urllib3==1.24.3
 more-itertools==4.3.0
 typing-extensions==3.7.4

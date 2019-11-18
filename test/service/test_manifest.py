@@ -513,7 +513,6 @@ class TestManifestEndpoints(WebServiceTestCase):
                 '__fastq_read2__file_url': f'{dss}/files/{fastq_b1_r2_uuid}?version={fastq_b1_r2_version}&replica=gcp',
             }
         ]
-        logging.getLogger('test_request_validation').warning('test_manifest is invoked')
         with ResponsesHelper() as helper, TemporaryDirectory() as zip_dir:
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
