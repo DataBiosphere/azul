@@ -1,6 +1,8 @@
 from copy import deepcopy
 from typing import (
-    Sequence,
+    Callable,
+    Optional,
+    Tuple,
 )
 import json
 import logging
@@ -9,41 +11,115 @@ import boto3
 
 from azul import config
 from azul.plugin import Plugin
-from azul.types import JSON
+from azul.types import JSONs
+from azul.version_service import (
+    VersionService,
+    VersionConflict,
+    NoSuchObjectVersion,
+)
 
 log = logging.getLogger(__name__)
 
 
 class PortalService:
 
-    def get_portal_integrations_db(self) -> Sequence[JSON]:
-        """
-        Retrieve portal DB from S3.
+    def __init__(self):
+        self.client = boto3.client('s3')
+        self.version_service = VersionService()
 
-        If no object is present at the location specified in azul.config, then
-        a default hardcoded DB is obtained from the current plugin, uploaded to
-        S3, and returned.
+    def crud(self, operation: Callable[[JSONs], Optional[JSONs]]) -> None:
         """
+        Perform a concurrent read/write operation on the portal integrations DB.
 
-        client = boto3.client('s3')
+        :param operation: Callable that accepts the latest version of the portal
+        DB and optionally returns an updated version to be uploaded.
+        """
+        while True:
+            version = self.version_service.get(self._db_url)
+            try:
+                if version is None:
+                    log.info('Portal integration DB not found in S3; uploading hard-coded DB.')
+                    db, version = self._create_db()
+                else:
+                    try:
+                        db = self._read_db(version)
+                    except NoSuchObjectVersion:
+                        # Wait for latest version to appear in S3.
+                        continue
+                db = operation(db)
+                if db is None:
+                    # Operation is read-only; we're done.
+                    break
+                else:
+                    self._write_db(db, version)
+            except VersionConflict:
+                # Retry with up-to-date DB
+                continue
+            else:
+                break
+
+    def _create_db(self) -> Tuple[JSONs, str]:
+        """
+        Write hardcoded portal integrations DB to S3.
+        :return: Newly created DB and accompanying version.
+        """
+        plugin = Plugin.load()
+        db = self.demultiplex(plugin.portal_db())
+        version = self._write_db(db, None)
+        return db, version
+
+    def _read_db(self, version: str) -> JSONs:
+        """
+        Retrieve specified version of portal DB from S3.
+        Raises `NoSuchObjectVersion` if the version is not found.
+        """
         try:
-            response = client.get_object(Bucket=config.portal_integrations_db_bucket,
-                                         Key=config.portal_integrations_db_object)
-        except client.exceptions.NoSuchKey:
-            plugin = Plugin.load()
-            db = self.demultiplex(plugin.portal_integrations_db())
-            log.info('Portal integration DB not found in S3; uploading hard-coded DB.')
-            json_bytes = json.dumps(db).encode()
-            client.put_object(Bucket=config.portal_integrations_db_bucket,
-                              Key=config.portal_integrations_db_object,
-                              Body=json_bytes,
-                              ContentType='application/json')
+            response = self.client.get_object(Bucket=config.portal_db_bucket_name,
+                                              Key=config.portal_db_object_key,
+                                              VersionId=version)
+        except self.client.exceptions.NoSuchKey:
+            raise NoSuchObjectVersion(version)
         else:
             json_bytes = response['Body'].read()
-            db = json.loads(json_bytes.decode('UTF-8'))
-        return db
+            return json.loads(json_bytes.decode())
 
-    def demultiplex(self, db: Sequence[JSON]) -> Sequence[JSON]:
+    def _write_db(self, db: JSONs, version: Optional[str]) -> str:
+        """
+        Try to write portal integrations database to S3 and update version.
+        Update is rejected with `VersionConflict` if `version` is not current.
+        :param db: the DB to be written to S3.
+        :param version: the version of the DB this write is intended to replace.
+        :return: version of the newly written DB.
+        """
+        json_bytes = json.dumps(db).encode()
+        response = self.client.put_object(Bucket=config.portal_db_bucket_name,
+                                          Key=config.portal_db_object_key,
+                                          Body=json_bytes,
+                                          ContentType='application/json')
+        new_version = response['VersionId']
+        try:
+            self.version_service.put(self._db_url, version, new_version)
+        except VersionConflict:
+            # Operation was performed on outdated DB and now erroneously exists
+            # in S3.
+            self._delete_db(new_version)
+            raise
+        else:
+            return new_version
+
+    def _delete_db(self, version: str) -> None:
+        """
+        Delete the specified version of the portal integrations DB from S3.
+        Failures are logged and ignored.
+        """
+        try:
+            self.client.delete_object(Bucket=config.portal_db_bucket_name,
+                                      Key=config.portal_db_object_key,
+                                      VersionId=version)
+        except self.client.exceptions.NoSuchKey:
+            log.info(f'Failed to delete version {version} of portal DB from S3.')
+
+    def demultiplex(self, db: JSONs) -> JSONs:
         """
         Transform portal integrations database to only contain entity_ids from
         the current DSS deployment stage, leaving the original unmodified.
@@ -61,14 +137,14 @@ class PortalService:
 
         def transform_integrations(integrations):
             for integration in integrations:
-                if 'entity_ids' in integration:
-                    staged_entity_ids = integration['entity_ids'][config.dss_deployment_stage]
-                    if staged_entity_ids:
+                try:
+                    current_entity_ids = integration['entity_ids'].get(config.dss_deployment_stage)
+                    if current_entity_ids:
                         yield {
-                            k: deepcopy(v if k != 'entity_ids' else staged_entity_ids)
+                            k: deepcopy(v if k != 'entity_ids' else current_entity_ids)
                             for k, v in integration.items()
                         }
-                else:
+                except KeyError:
                     yield deepcopy(integration)
 
         def transform_portal(portal):
@@ -77,4 +153,8 @@ class PortalService:
                 for k, v in portal.items()
             }
 
-        return [transform_portal(portal) for portal in db]
+        return list(map(transform_portal, db))
+
+    @property
+    def _db_url(self) -> str:
+        return f's3:/{config.portal_db_bucket_name}/{config.portal_db_object_key}'

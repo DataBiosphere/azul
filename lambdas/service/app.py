@@ -477,23 +477,26 @@ def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Opt
     :param entity_ids: If given results will be limited to this set of entity UUIDs
     :return: A list of portal dicts that one or more matching integrations
     """
-    portal_service = PortalService()
-    portals = portal_service.get_portal_integrations_db()
+
     results = []
-    stage = config.dss_deployment_stage(config.dss_endpoint)
-    for portal in portals:
-        integrations = [
-            {k: v if k != 'entity_ids' else v[stage] for k, v in integration.items()}
-            for integration in cast(Sequence[JSON], portal['integrations'])
-            if (integration['entity_type'] == entity_type
-                and integration['integration_type'] == integration_type
-                and (entity_ids is None
-                     or 'entity_ids' not in integration
-                     or not entity_ids.isdisjoint(integration['entity_ids'])))
-        ]
-        if len(integrations) > 0:
-            portal = {k: v if k != 'integrations' else integrations for k, v in portal.items()}
-            results.append(portal)
+
+    def list_integrations(portal_db):
+        for portal in portal_db:
+            integrations = [
+                integration
+                for integration in cast(Sequence[JSON], portal['integrations'])
+                if (integration['entity_type'] == entity_type
+                    and integration['integration_type'] == integration_type
+                    and (entity_ids is None
+                         or 'entity_ids' not in integration
+                         or not entity_ids.isdisjoint(integration['entity_ids'])))
+            ]
+            if len(integrations) > 0:
+                portal = {k: v if k != 'integrations' else integrations for k, v in portal.items()}
+                results.append(portal)
+
+    portal_service = PortalService()
+    portal_service.crud(list_integrations)
     return results
 
 

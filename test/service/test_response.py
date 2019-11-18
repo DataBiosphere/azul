@@ -1531,6 +1531,9 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
         }
     ]
 
+    def _mock_portal_crud(self, operation):
+        operation(self._portal_integrations_db)
+
     def _get_integrations(self, params: dict) -> dict:
         url = self.base_url + '/integrations'
         response = requests.get(url, params=params)
@@ -1545,8 +1548,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
             for integration in portal['integrations']
         ]
 
-    @mock.patch('azul.portal_service.PortalService.get_portal_integrations_db')
-    def test_integrations(self, portal_integrations_db):
+    @mock.patch('azul.portal_service.PortalService.crud')
+    def test_integrations(self, portal_crud):
         """
         Verify requests specifying `integration_type` and `entity_type` only return integrations matching those types
         """
@@ -1565,8 +1568,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                 ]
             )
         ]
-        portal_integrations_db.return_value = self._portal_integrations_db
-        with mock.patch.object(type(config), 'dss_deployment_stage', return_value='prod'):
+        portal_crud.side_effect = self._mock_portal_crud
+        with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
             for integration_type, entity_type, expected_integration_ids in test_cases:
                 params = dict(integration_type=integration_type, entity_type=entity_type)
                 with self.subTest(**params):
@@ -1578,8 +1581,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                                         for portal in response_json
                                         for integration in portal['integrations']))
 
-    @mock.patch('azul.portal_service.PortalService.get_portal_integrations_db')
-    def test_integrations_by_entity_ids(self, portal_integrations_db):
+    @mock.patch('azul.portal_service.PortalService.crud')
+    def test_integrations_by_entity_ids(self, portal_crud):
         """
         Verify requests specifying `entity_ids` only return integrations matching those entity_ids
         """
@@ -1632,8 +1635,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
             )
         ]
 
-        portal_integrations_db.return_value = self._portal_integrations_db
-        with mock.patch.object(type(config), 'dss_deployment_stage', return_value='prod'):
+        portal_crud.side_effect = self._mock_portal_crud
+        with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
             for entity_ids, integration_ids in test_cases:
                 params = dict(integration_type='get', entity_type='project')
                 if entity_ids is not None:
