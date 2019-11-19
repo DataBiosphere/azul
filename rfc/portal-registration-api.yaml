@@ -1,7 +1,7 @@
-# A word on the syntactic conventions used in this file. We use a quoted strings
-# for names that we define. Most YAML editors highlight quoted strings, making
-# the distinction between meta domain (OpenAPI) and problem domain (our API)
-# obvious.
+# A word on the syntactic conventions used in this file. We use a quoted
+# strings for names that we define. Together with the fact that most YAML
+# editors highlight quoted strings this emphasizes the distinction between
+# meta  (OpenAPI) and problem domain (our API).
 
 openapi: 3.0.2
 info:
@@ -14,48 +14,84 @@ info:
     concepts: portals and integrations. A _portal_ is a third-party website or
     service to which the HCA Data Browser can direct its visitors. An
     _integration_ is a blueprint describing when and how visitors are
-    redirected and what information is passed along. The can be multiple
-    integrations per portal.
+    redirected and what information is passed along. There can be multiple
+    portals and multiple integrations per portal.
 
-    Portals use this API to register with Azul and specify how they wish to
-    integrate with the Data Browser. The Data Browser uses this API to
-    enumerate the integrations that are available and applicable to a
-    particular UI context.
+    Portal developers use this API to register their portal with Azul and to
+    specify how they wish to integrate their portal with the Data Browser. The
+    Data Browser uses this API to enumerate all available integrations that
+    are applicable in a particular UI context.
 
-    # Static Integration
+    # Static project integration
 
     A portal that offers visualizations for specific HCA datasets—or
-    _projects_, in HCA terminology—analyses the data in those projects ahead of
-    time and publishes the visualization results on specific web pages, one
-    page per project. It then registers with Azul and defines one integration
-    for each such page. Each integration associates the URL of that portal page
-    with the UUID of the corresponding HCA project. When the Data Browser
-    renders a project, it queries this API for integrations matching that
-    project and the current context within the UI. Projects for which a portal
-    integration exists are decorated with a link pointing to the corresponding
-    page in the portal.
+    _projects_, in HCA terminology—indexes or analyses the data in those
+    projects ahead of time and publishes the visualization results on specific
+    web pages, one page per project. It then registers with Azul using this
+    API, defining one integration for each of these pages. Each integration
+    associates the URL of the portal page with the UUID of the corresponding
+    HCA project. When the Data Browser renders a project, it queries this API
+    for integrations that match both the project and the current
+    user-interface context. The Data Browser display of a project for which
+    one or more matching portal integrations exist is then decorated with
+    links pointing to the corresponding pages in those portals.
 
-    # Manifest Integration
+    # Manifest integration
 
-    Manifest integration with Azul is for portals that index all data in the
-    HCA and that offer visualization of user-defined subsets of that data. It
-    can also be used by portals that fetch HCA data on demand at the time a
-    visitor requests the integration, like portals the let the visitor initiate
-    analysis workflows on the data entities listed in the manifest. These
-    portals can register with Azul and define a manifest integration for
-    specific types of biological, experimental or analytical entities like
-    samples or data files. As visitors use the Data Browser to interactively
-    refine a selection of these entities, the Data Browser uses this API to
-    query for portals with manifest integrations for the types of entities
-    currently selected and renders UI elements with which the visitor can
-    initiate a transfer to the respective portal. Once a visitor initiates the
-    transfer, the Data Browser first requests Azul to prepare a manifest and
-    when that is complete, transfers the visitor to the portal, passing along a
-    URL to the prepared manifest. The manifest contains references to the
-    selected entities along with all or some of the associated metadata,
-    depending on the manifest format specified in the integration. The portal
-    can display analysis results or other visualizations for the entities
-    referenced in the manifest.
+    Manifest integration is intended to be used by portals that index all of
+    the data in the HCA and that offer visualizations of subsets of that data.
+    The subset itself is determined by the visitor and is passed to the 
+    portal in the form of a manifest containing references to the items in the
+    subset.
+    
+    Manifest integration is also intended to be used by portals that fetch HCA
+    data on demand at the time a visitor requests the integration. An example
+    of this type is a portal that lets the visitor initiate analysis workflows
+    using data files referenced by the manifest as inputs.
+
+    Portals of either type register with Azul and define a manifest
+    integration for specific types of biological, experimental or analytical
+    entities like samples or data files. As visitors use the Data Browser to
+    interactively select entities of these types, the Data Browser uses this
+    API to query for portals with manifest integrations matching the currently
+    selected entities and renders UI elements (buttons or links) with which
+    the visitor can initiate a transfer to the respective portal. Once a
+    visitor initiates the transfer, the Data Browser first requests Azul to
+    prepare a manifest and when that is complete, transfers the visitor to the
+    portal, passing along a URL to the prepared manifest. The manifest
+    contains references to the selected entities along with all or some of the
+    associated metadata, depending on the manifest format specified in the
+    integration. The portal processes the manifest and either prepares a
+    visualization for the entities referenced therein or initiates workflows
+    to analyse them. 
+
+    # Chosing an integration type
+
+    Static project integration is the most basic means of connecting a portal
+    to the HCA Data Browser. The portal developer selects a specific HCA
+    project and associates a specific portal URL with it. When visitors view
+    that project in the Data Browser, they can click a link that takes them to
+    the portal page for that project. Static project integration makes use of
+    the `get` integration type. That type of integration can also be used for
+    other HCA entities such as samples, files or bundles but is probably most
+    useful for projects, since the set of projects is stable and relatively
+    small. While technically possible, it would not make a lot of sense to
+    provide a `get` integration for non-project entities, like individual data
+    files, simply because there could be millions of those and it seems
+    unlikely that a portal would dedicate a page for just a few of them. It
+    would also be impractical to create a large number of `get` integrations,
+    one per data file.
+
+    For non-project entities the `get_entity`, `get_entities` or
+    `get_manifest` types of integration should be used. The `get_manifest`
+    integration allows for passing a large number of entities to the portal
+    but the portal developer should account for the fact that the manifest
+    could reference entities of which the portal may not have prior knowledge.
+    
+    The `get_entity` and `get_entities` integrations provide a means for
+    negotiating (via HEAD request) the set of entities passed to the portal
+    but only allows for safely passing at most 50 entities, or 500 entities if
+    support for older user-agents is sacrificed.
 
 tags:
   - name: "Portals"
@@ -78,30 +114,32 @@ components:
         The kind of integration.
 
         * `get` - A GET request is made to a portal endpoint but no payload
-          is sent. This integration type associates a specific set of concrete
+          is sent. This integration type associates a fixed set of concrete
           entities with a static URL at the portal. Any Data Browser page
-          listing the specified entities will include a link pointing to
-          the specified URL.
+          listing the specified entities will include a link pointing to the
+          specified URL.
 
-        * `get_entity` - The portal endpoint is invoked with a GET request to a
-          portal URL parameterized with a single identifier referencing an
-          entity of the type denoted in the `entity_type` property of the
-          integration. Any Data Browser page listing entities of that type will
-          include a link/button pointing at the portal URL. When a visitor
-          clicks that link/button while only a single entity is selected, the
-          identifier of that entity will be interpolated into the specified
-          portal URL template and the user agent will be redirected to
-          resulting URL.
-
-        * `get_entities` - The portal endpoint is invoked with a GET request to
-          a portal URL parameterized with a list of entity identifiers. All
-          referenced entities will be of the type denoted in the `entity_type`
+        * `get_entity` - The portal endpoint is invoked using a GET request to
+          a portal URL that is parameterized with a single identifier
+          referencing an entity of the type denoted in the `entity_type`
           property of the integration. Any Data Browser page listing entities
           of that type will include a link/button pointing at the portal URL.
-          When a visitor clicks that link/button, identifiers of the currently
-          selected entities will be interpolated into the specified portal URL
-          template and the user agent will be redirected to resulting URL. This
-          integration type is subject to a limit of at most TBD entities.
+          When a visitor clicks that link/button while only a single entity is
+          selected, the identifier of that entity will be interpolated into
+          the specified portal URL template and the user agent will be
+          redirected to resulting URL.
+
+        * `get_entities` - The portal endpoint is invoked with a GET request
+          to a portal URL that is parameterized with a list of entity
+          identifiers. All referenced entities will be of the type denoted in
+          the `entity_type` property of the integration. Any Data Browser page
+          listing entities of that type will include a link/button pointing at
+          the portal URL. When a visitor clicks that link/button, the
+          identifiers of the currently selected entities will be interpolated
+          into the specified portal URL template and the user agent will be
+          redirected to resulting URL. This integration type is subject to a
+          default limit of 50 entities, or, if the portal developer opts to
+          support only recent user agents, up to 500 entities.
 
         * `get_manifest` - The portal endpoint is invoked with a GET request to
           the specified portal URL parameterized with a URL to a manifest
@@ -110,12 +148,13 @@ components:
           type denoted in the `entity_type` property of the integration. Any
           Data Browser page listing entities of that type will include a
           link/button pointing at the portal URL. When a visitor clicks that
-          link/button, a new manifest will be populated with identifiers of—and
-          metadata about—the currently selected entities, the manifest URL will
-          be interpolated into the specified portal URL template and the user
-          agent will be redirected to the resulting URL. There is no limit on
-          the number of entities in the manifest. The manifest expires in one
-          day.
+          link/button, a manifest will be generated containing the identifiers
+          of and metadata about the currently selected entities. The
+          pre-signed URL of the generated manifest URL will be interpolated
+          into the specified portal URL template and the user agent will be
+          redirected to the resulting portal URL. There is no limit on the
+          number of entities in the manifest. The pre-signed URL to the
+          generated manifest expires in one day.
 
     "entity_type":
       type: string
@@ -220,7 +259,15 @@ components:
             format: uuid
         "portal_url":
           type: string
-          description: "The URL of the portal endpoint that will be requested when the visitor initiates this integration"
+          description: >
+
+            The URL of the portal endpoint that will be requested when the
+            visitor initiates this integration. Note that the same URL will be
+            used for any of the entities listed in the `entity_ids` property.
+            To associate a different URL with each of many entities, multiple
+            `get` integrations need to be created. Typically, the `entity_ids`
+            property of these integrations will be a singleton list referring
+            to the respective entity.
 
     "GetEntityIntegration":
       type: object
@@ -241,10 +288,11 @@ components:
           type: boolean
           description: >
 
-            If `true`, a client may use a HEAD request for the expanded portal
-            URL to determine if the entity in the request are supported. The
-            portal must quickly respond with status 200, if a GET request for
-            the same URL is expected to yield 200 status response.
+            If `true`, a client may make a HEAD request of the expanded portal
+            URL in order to determine if the portal supports the entity
+            specified in the request. The portal must quickly respond with
+            status 200 if a GET request for the same URL is expected to yield
+            200 status response as well.
 
     "GetEntitiesIntegration":
       type: object
@@ -263,15 +311,54 @@ components:
 
         "allow_head":
           type: boolean
+          default: false
           description: >
 
             If `true`, a client may use a HEAD request for the expanded portal
-            URL to determine if the entities in the request are supported. The
-            portal must quickly respond with status 200, if a GET request for
-            the same URL is expected to yield 200 status response. Note that the
-            if URL references multiple entities it is up to the portal to decide
-            if a 200 code is adequate if only some of those entities are
-            supported.
+            URL to determine if the portal supports the entities specified in
+            the request. The portal must quickly respond with 200 status if a
+            GET request for the same URL is expected to yield 200 status
+            response as well. 
+
+            Note that the if URL references multiple entities it is up to the
+            portal to decide if a 200 code is appropriate if only some of
+            those entities are supported by the portal. 
+
+            For more granular control, the portal may return a 200 response
+            that includes the `azul-include-entities` header. The header value
+            must be a comma-separated list of at least one entity ID.
+            Whitespace before and after each comma and at the beginning and
+            end of the header value is ignored. If the portal returns this
+            header, the client will only provide the specified entities when
+            it makes the subsequent GET request. 
+
+            Similarly, the portal may return a 200 response that includes the
+            `azul-exclude-entities` header and on a subsequent GET request,
+            the client will only provide the entities NOT specified in that
+            header. The syntax of the header value is the same as for
+            `azul-include-entities`.
+
+            The portal must not return a response that mentions both headers.
+            Either header may occur multiple times. The values of multiple
+            occurrences of the header are concatenated as defined in
+            https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+
+        "max_entities":
+          type: integer
+          minimum: 2
+          maximum: 500
+          default: 50
+          description: >
+
+            An upper limit to the number of entities that will be interpolated
+            into the portal URL template. The default limit was chosen in
+            consideration of the length of a UUID (36) and the fact that some
+            older user agents limit the length of a URL to 2000. More recent
+            user agents allow considerably longer URLs. The maximum limit
+            accomodates that at the expense of potentially breaking older user
+            agents. Note that it is the portal developers choice as to whether
+            to extend the limit to a value that may break the integration in
+            older user agents.
 
     "GetManifestIntegration":
       type: object
