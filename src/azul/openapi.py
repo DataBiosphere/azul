@@ -36,7 +36,7 @@ def annotated_specs(gateway_id, app, toplevel_spec) -> JSON:
     """
     specs = aws.api_gateway_export(gateway_id)
     clean_specs(specs)
-    specs = merge_dicts(specs, toplevel_spec, override=True)
+    specs = merge_dicts(toplevel_spec, specs, override=True)
     docs = get_doc_specs(app)
     for path, doc_spec in docs.items():
         for verb, description in specs['paths'][path].items():
@@ -52,6 +52,8 @@ def clean_specs(specs):
     # Filter out 'options' since it causes linting errors
     for path in specs['paths']:
         specs['paths'][path].pop('options', None)
+    # Remove listed servers since API Gateway give false results
+    specs.pop('servers')
 
 
 def get_doc_specs(app):

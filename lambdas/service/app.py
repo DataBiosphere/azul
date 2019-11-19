@@ -92,6 +92,9 @@ openapi_spec = {
             'name': 'Health',
             'description': 'For checking on service health'
         }
+    ],
+    'servers': [
+        {'url': config.service_endpoint()}
     ]
 }
 
