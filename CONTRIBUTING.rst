@@ -25,6 +25,10 @@ Code Style
 
 * We prefer single quoted strings except in JSON literals.
 
+* We avoid backslash escaping quote characters within a string by using double
+  quoted strings when the string contains a single quote character (and vice
+  versa). https://www.python.org/dev/peps/pep-0008/#string-quotes
+
 * We prefer aligned indent for wrapped constructs except for literal
   collections such as dictionaries, lists, tuples and sets::
 
