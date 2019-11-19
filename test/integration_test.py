@@ -1,4 +1,3 @@
-from collections import deque
 import csv
 import gzip
 from io import (
@@ -13,7 +12,6 @@ import re
 import sys
 import time
 from typing import (
-    Any,
     IO,
     List,
     Mapping,
@@ -48,6 +46,7 @@ from azul.azulclient import (
 from azul.decorators import memoized_property
 import azul.dss
 from azul.logging import configure_test_logging
+from azul.queues import Queues
 from azul.requests import requests_session_with_retry_after
 from azul.types import JSON
 from azul_test_case import AlwaysTearDownTestCase
@@ -220,8 +219,9 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def _delete_bundles(self, notifications):
         if notifications:
             self.azul_client.delete_notification(notifications)
-        self._wait_for_queue_level(empty=False)
-        self._wait_for_queue_level(timeout=self._queue_empty_timeout(self.num_bundles))
+        queue_names = (config.notify_queue_name, config.document_queue_name)
+        Queues.wait_for_queue_level(queue_names, empty=False)
+        Queues.wait_for_queue_level(queue_names, timeout=self._queue_empty_timeout(self.num_bundles))
 
     def _set_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -319,43 +319,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 break
         return filtered_bundle_fqids
 
-    def _count_messages(self, queues: Mapping[str, Any]):
-        attribute_names = ['ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed')]
-        total_message_count = 0
-        for queue_name, queue in queues.items():
-            queue.reload()
-            message_counts = [int(queue.attributes[attribute_name]) for attribute_name in attribute_names]
-            queue_length = sum(message_counts)
-            logger.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
-                         queue_name, queue_length, *message_counts)
-            total_message_count += queue_length
-        logger.info('Counting %i message(s) in %i queue(s).', total_message_count, len(queues))
-        return total_message_count
-
     def _queue_empty_timeout(self, num_bundles: int):
         return max(num_bundles * 30, 60)
-
-    def _wait_for_queue_level(self, empty: bool = True, timeout: int = 60):
-        queue_names = [config.notify_queue_name, config.document_queue_name]
-        queues = {queue_name: boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
-                  for queue_name in queue_names}
-        wait_start_time = time.time()
-        queue_size_history = deque(maxlen=10)
-
-        while True:
-            total_message_count = self._count_messages(queues)
-            queue_wait_time_elapsed = (time.time() - wait_start_time)
-            queue_size_history.append(total_message_count)
-            cumulative_queue_size = sum(queue_size_history)
-            if queue_wait_time_elapsed > timeout:
-                logger.error('The queue(s) are NOT at the desired level.')
-                return
-            elif (cumulative_queue_size == 0) == empty:
-                logger.info('The queue(s) are at the desired level.')
-                break
-            else:
-                logger.info('The most recently sampled queue sizes are %r.', queue_size_history)
-            time.sleep(5)
 
     def _check_bundles_are_indexed(self, test_name: str, entity_type: str):
         service_check_timeout = 600
@@ -366,9 +331,9 @@ class IntegrationTest(AlwaysTearDownTestCase):
         logger.info('Starting integration test %s with the prefix %s for the entity type %s. Expected %i bundle(s).',
                     test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
         logger.debug('Expected bundles %s ', sorted(self.expected_fqids))
-        logger.info('Waiting for the queues to empty ...')
-        self._wait_for_queue_level(empty=False)
-        self._wait_for_queue_level(timeout=self._queue_empty_timeout(self.num_bundles))
+        queue_names = (config.notify_queue_name, config.document_queue_name)
+        Queues.wait_for_queue_level(queue_names, empty=False)
+        Queues.wait_for_queue_level(queue_names, timeout=self._queue_empty_timeout(self.num_bundles))
         logger.info('Checking if bundles are referenced by the service response ...')
         retries = 0
         deadline = time.time() + service_check_timeout
