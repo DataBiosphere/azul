@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 def manage_subscriptions(dss_client: DSSClient, subscribe=True):
-    response = call_client(dss_client.get_subscriptions, replica='aws')
+    response = dss_client.get_subscriptions(replica='aws',
+                                            subscription_type='elasticsearch')
     current_subscriptions = freeze(response['subscriptions'])
 
     key, key_id = deployment.aws.get_hmac_key_and_id()
@@ -47,20 +48,12 @@ def manage_subscriptions(dss_client: DSSClient, subscribe=True):
         else:
             subscription = thaw(subscription)
             logger.info('Removing stale subscription: %r', subscription)
-            call_client(dss_client.delete_subscription,
-                        uuid=subscription['uuid'],
-                        replica=subscription['replica'])
+            dss_client.delete_subscription(uuid=subscription['uuid'],
+                                           replica=subscription['replica'],
+                                           subscription_type='elasticsearch')
 
     for subscription in new_subscriptions:
         subscription = thaw(subscription)
         response = dss_client.put_subscription(**subscription, hmac_secret_key=key)
         subscription['uuid'] = response['uuid']
         logger.info('Registered subscription %r.', subscription)
-
-
-def call_client(method, *args, **kwargs):
-    # Work around https://github.com/HumanCellAtlas/data-store/issues/1957
-    if 'subscription_type' in method.parameters:
-        kwargs['subscription_type'] = 'elasticsearch'
-    # noinspection PyArgumentList
-    return method(*args, **kwargs)

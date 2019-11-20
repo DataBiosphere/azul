@@ -12,10 +12,9 @@ elasticsearch-dsl>=5.0.0,<6.0.0
 jsonobject==0.9.9
 Faker==0.8.11
 future==0.16.0
-hca==4.4.1
-dcplib==1.5.1  # Recent upgrade to 1.6.0 broke the Travis build
+hca==6.4.0
 git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
-git+git://github.com/HumanCellAtlas/metadata-api@release/1.0b20#egg=hca-metadata-api
+git+git://github.com/HumanCellAtlas/metadata-api@release/1.0b22#egg=hca-metadata-api
 pyasn1==0.4.4
 pyasn1-modules==0.2.2
 PyJWT==1.6.4

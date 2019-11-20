@@ -10,7 +10,11 @@ class _RetryAfterPolicy(urllib3.util.retry.Retry):
         self.RETRY_AFTER_STATUS_CODES = frozenset({301} | self.RETRY_AFTER_STATUS_CODES)
 
 
-def requests_session():
+def requests_session_with_retry_after() -> requests.Session:
+    """
+    Return a `requests` session object that's set up to implicitly handle the
+    RetryAfter redirects returned by various Azul service endpoints.
+    """
     adapter = HTTPAdapter(max_retries=_RetryAfterPolicy())
     session = requests.Session()
     session.mount('http://', adapter)

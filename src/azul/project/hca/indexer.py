@@ -43,6 +43,14 @@ class Indexer(BaseIndexer):
                     }
                 },
                 {
+                    "exclude_metadata_field": {
+                        "path_match": "contents.files.related_files",
+                        "mapping": {
+                            "enabled": False
+                        }
+                    }
+                },
+                {
                     "project_nested_contributors": {
                         "path_match": "contents.projects.contributors",
                         "mapping": {

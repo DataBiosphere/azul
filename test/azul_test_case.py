@@ -1,6 +1,8 @@
 from unittest import TestCase
 
 import boto3.session
+from botocore.credentials import Credentials
+import botocore.session
 
 
 class AlwaysTearDownTestCase(TestCase):
@@ -46,20 +48,36 @@ class AlwaysTearDownTestCase(TestCase):
 
 
 class AzulTestCase(TestCase):
+    get_credentials_botocore = None
+    get_credentials_boto3 = None
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.get_credentials_orig = boto3.session.Session.get_credentials
-        # This ensures that we don't accidentally use actual cloud resources in unit tests. Furthermore,
-        # Boto3/botocore cache credentials which can lead to credentials from an unmocked use of boto3 in one test to
-        # leak into a mocked use of boto3. The latter was the reason for #668.
-        boto3.session.Session.get_credentials = lambda self: None
-        assert boto3.session.Session().get_credentials() is None
+        cls.get_credentials_botocore = botocore.session.Session.get_credentials
+        cls.get_credentials_boto3 = boto3.session.Session.get_credentials
+
+        # This ensures that we don't accidentally use actual cloud resources in
+        # unit tests. Furthermore, `boto3` and `botocore` cache credentials
+        # which can lead to credentials from an unmocked use of boto3 in one
+        # test to leak into a mocked use of boto3. The latter was the reason for
+        # https://github.com/DataBiosphere/azul/issues/668.
+
+        def dummy_get_credentials(self):
+            # These must match what `moto` uses to mock the instance metadata
+            # response (see InstanceMetadataResponse.metadata_response() in
+            # moto.instance_metadata.responses).
+            return Credentials(access_key='test-key',
+                               secret_key='test-secret-key',
+                               token='test-session-token')
+
+        botocore.session.Session.get_credentials = dummy_get_credentials
+        boto3.session.Session.get_credentials = dummy_get_credentials
 
     @classmethod
     def tearDownClass(cls) -> None:
-        boto3.session.Session.get_credentials = cls.get_credentials_orig
+        boto3.session.Session.get_credentials = cls.get_credentials_boto3
+        botocore.session.Session.get_credentials = cls.get_credentials_botocore
         super().tearDownClass()
 
 

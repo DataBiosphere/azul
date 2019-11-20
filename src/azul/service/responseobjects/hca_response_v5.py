@@ -31,6 +31,7 @@ from typing import (
     Mapping,
     MutableMapping,
     IO,
+    Iterable,
     Optional,
     Callable,
     TypeVar,
@@ -40,6 +41,7 @@ from uuid import uuid4
 
 from bdbag import bdbag_api
 from chalice import Response
+from elasticsearch_dsl import Search
 from jsonobject.api import JsonObject
 from jsonobject.properties import (
     DefaultProperty,
@@ -60,6 +62,11 @@ from azul.json_freeze import (
     freeze,
     thaw,
 )
+from azul.plugin import (
+    ManifestConfig,
+    Plugin,
+    Translation,
+)
 from azul.service.responseobjects.buffer import FlushableBuffer
 from azul.service.responseobjects.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
@@ -68,7 +75,6 @@ from azul.service.responseobjects.storage_service import (
 )
 from azul.service.responseobjects.utilities import json_pp
 from azul.strings import to_camel_case
-from azul.transformer import Document
 from azul.types import (
     JSON,
     MutableJSON,
@@ -178,6 +184,7 @@ class SummaryRepresentation(JsonObject):
     """
     projectCount = IntegerProperty()
     specimenCount = IntegerProperty()
+    speciesCount = IntegerProperty()
     fileCount = IntegerProperty()
     totalFileSize = FloatProperty()
     donorCount = IntegerProperty()
@@ -227,7 +234,13 @@ class ManifestResponse(AbstractResponse):
     Class for the Manifest response. Based on the AbstractionResponse class
     """
 
-    def __init__(self, es_search, manifest_entries, mapping, format_, object_key=None):
+    def __init__(self,
+                 plugin: Plugin,
+                 manifest_entries: ManifestConfig,
+                 mapping: Translation,
+                 es_search: Search,
+                 format_: str,
+                 object_key: str = None):
         """
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
@@ -236,6 +249,7 @@ class ManifestResponse(AbstractResponse):
         :param mapping: The mapping between the columns to values within ES
         :param object_key: A UUID string to use as the manifest's object key
         """
+        self.plugin = plugin
         self.es_search = es_search
         self.manifest_entries = OrderedDict(manifest_entries)
         self.mapping = mapping
@@ -394,7 +408,7 @@ class ManifestResponse(AbstractResponse):
         writer = csv.DictWriter(output, self.ordered_column_names, dialect='excel-tab')
         writer.writeheader()
         for hit in self.es_search.scan():
-            doc = Document.translate_fields(hit.to_dict(), forward=False)
+            doc = self.plugin.translate_fields(hit.to_dict(), forward=False)
             assert isinstance(doc, dict)
             for bundle in list(doc['bundles']):  # iterate over copy …
                 doc['bundles'] = [bundle]  # … to facilitate this in-place modifaction
@@ -403,6 +417,14 @@ class ManifestResponse(AbstractResponse):
                     entities = self._get_entities(doc_path, doc)
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
+                writer.writerows(self._get_related_rows(doc, row))
+
+    def _get_related_rows(self, doc: dict, row: dict) -> Iterable[dict]:
+        file_ = one(doc['contents']['files'])
+        for related in file_['related_files']:
+            new_row = row.copy()
+            new_row.update({'file_' + k: v for k, v in related.items()})
+            yield new_row
 
     def _write_full(self, output: IO[str]) -> Optional[str]:
         sources = list(self.manifest_entries['contents'].keys())
@@ -452,7 +474,7 @@ class ManifestResponse(AbstractResponse):
 
         # For each outer file entity_type in the response …
         for hit in self.es_search.scan():
-            doc = Document.translate_fields(hit.to_dict(), forward=False)
+            doc = self.plugin.translate_fields(hit.to_dict(), forward=False)
 
             # Extract fields from inner entities other than bundles or files
             other_cells = {}
@@ -661,6 +683,7 @@ class SummaryResponse(AbstractResponse):
         return SummaryRepresentation(
             projectCount=agg_value('projectCount.value'),
             specimenCount=agg_value('specimenCount.value'),
+            speciesCount=agg_value('speciesCount.value'),
             fileCount=agg_value('fileCount.value'),
             totalFileSize=agg_value('total_size.value'),
             donorCount=agg_value('donorCount.value'),
@@ -740,6 +763,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['geoSeriesAccessions'] = project.get('geo_series_accessions', [])
                 translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [])
                 translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [])
+                translated_project['supplementaryLinks'] = project.get('supplementary_links', [])
             projects.append(translated_project)
         return projects
 
@@ -747,6 +771,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         files = []
         for _file in entry["contents"]["files"]:
             translated_file = {
+                "content_description": _file.get("content_description"),
                 "format": _file.get("file_format"),
                 "name": _file.get("name"),
                 "sha256": _file.get("sha256"),
@@ -794,12 +819,13 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_donor(self, donor):
         return {
             "id": donor["biomaterial_id"],
+            "donorCount": donor.get("donor_count", None),
             "genusSpecies": donor.get("genus_species", None),
             "organismAge": donor.get("organism_age", None),
             "organismAgeUnit": donor.get("organism_age_unit", None),
             "organismAgeRange": donor.get("organism_age_range", None),
             "biologicalSex": donor.get("biological_sex", None),
-            "disease": donor.get("disease", None)
+            "disease": donor.get("diseases", None)
         }
 
     def make_donors(self, entry):

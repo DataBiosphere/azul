@@ -20,3 +20,29 @@ def departition(before, sep, after):
         return before
     else:
         return before + sep + after
+
+
+def pluralize(word: str, count: int) -> str:
+    """
+    Appends 's' or 'es' to `word` following common patterns in English spelling
+    if `count` indicates that the word should be pluralized.
+
+    >>> pluralize('foo', 1)
+    'foo'
+
+    >>> pluralize('bar', 2)
+    'bars'
+
+    >>> pluralize('baz', 2)
+    'bazes'
+
+    >>> pluralize('woman', 2)
+    'womans'
+    """
+    result = word
+    if count != 1:
+        if word[-1] in 'sxz' or word[-2:] in ['sh', 'ch']:
+            result += 'es'
+        else:
+            result += 's'
+    return result

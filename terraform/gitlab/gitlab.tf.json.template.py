@@ -154,6 +154,18 @@ other_public_keys = [
     )
 ]
 
+ingress_egress_block = {
+    "cidr_blocks": None,
+    "ipv6_cidr_blocks": None,
+    "prefix_list_ids": None,
+    "from_port": None,
+    "protocol": None,
+    "security_groups": None,
+    "self": None,
+    "to_port": None,
+    "description": None,
+}
+
 
 @lru_cache(maxsize=1)
 def iam() -> JSON:
@@ -268,6 +280,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             }
         },
         "aws_iam_policy_document": {
+            # This policy is really close to the policy size limit, if you get LimitExceeded: Cannot exceed quota for
+            # PolicySize: 6144, you need to strip the existing policy down by essentialy replacing the calls to the
+            # helper functions like allow_service() with a hand-curated list of actions, potentially by starting from
+            # a copy of the template output.
             "gitlab_boundary": {
                 "statement": [
                     allow_global_actions('S3', types={ServiceActionType.read, ServiceActionType.list}),
@@ -346,11 +362,31 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     # FIXME: this is obviously problematic
                     *allow_service('Secrets Manager', SecretId='*'),
 
-                    *allow_service('Step Functions',
-                                   'execution',
-                                   'statemachine',
-                                   StateMachineName='azul-*',
-                                   ExecutionId='*'),
+                    {
+                        "actions": ['ssm:GetParameter'],
+                        "resources": aws_service_arns('Systems Manager',
+                                                      'parameter',
+                                                      FullyQualifiedParameterName='dcp/dss/*')
+                    },
+
+                    {
+                        "actions": [
+                            "states:*"
+                        ],
+                        "resources": [
+                            "arn:aws:states:us-east-1:861229788715:execution:azul-*:*",
+                            "arn:aws:states:us-east-1:861229788715:stateMachine:azul-*"
+                        ]
+                    },
+                    {
+                        "actions": [
+                            "states:ListStateMachines",
+                            "states:CreateStateMachine"
+                        ],
+                        "resources": [
+                            "*"
+                        ]
+                    },
 
                     # CloudFront does not define any ARNs. We need it for friendly domain names for API Gateways
                     {
@@ -475,7 +511,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "route": [
                     {
                         "cidr_block": "0.0.0.0/0",
-                        "nat_gateway_id": f"${{aws_nat_gateway.gitlab_{zone}.id}}"
+                        "nat_gateway_id": f"${{aws_nat_gateway.gitlab_{zone}.id}}",
+                        "egress_only_gateway_id": None,
+                        "gateway_id": None,
+                        "instance_id": None,
+                        "ipv6_cidr_block": None,
+                        "network_interface_id": None,
+                        "transit_gateway_id": None,
+                        "vpc_peering_connection_id": None
                     }
                 ],
                 "vpc_id": "${aws_vpc.gitlab.id}",
@@ -496,6 +539,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "vpc_id": "${aws_vpc.gitlab.id}",
                 "egress": [
                     {
+                        **ingress_egress_block,
                         "cidr_blocks": ["0.0.0.0/0"],
                         "protocol": -1,
                         "from_port": 0,
@@ -504,12 +548,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 ],
                 "ingress": [
                     {
+                        **ingress_egress_block,
                         "cidr_blocks": ["0.0.0.0/0"],
                         "protocol": "tcp",
                         "from_port": 443,
                         "to_port": 443
                     },
                     *({
+                        **ingress_egress_block,
                         "cidr_blocks": ["0.0.0.0/0"],
                         "protocol": "tcp",
                         "from_port": ext_port,
@@ -522,6 +568,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "vpc_id": "${aws_vpc.gitlab.id}",
                 "egress": [
                     {
+                        **ingress_egress_block,
                         "cidr_blocks": ["0.0.0.0/0"],
                         "protocol": -1,
                         "from_port": 0,
@@ -530,14 +577,16 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 ],
                 "ingress": [
                     {
+                        **ingress_egress_block,
                         "from_port": 80,
                         "protocol": "tcp",
                         "security_groups": [
                             "${aws_security_group.gitlab_alb.id}"
                         ],
-                        "to_port": 80
+                        "to_port": 80,
                     },
                     *({
+                        **ingress_egress_block,
                         "cidr_blocks": [
                             "0.0.0.0/0" if nlb_preserve_source_ip else "${aws_vpc.gitlab.cidr_block}"
                         ],
@@ -831,7 +880,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/config:/etc/gitlab \
                                --volume /mnt/gitlab/logs:/var/log/gitlab \
                                --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:11.8.3-ce.0
+                               gitlab/gitlab-ce:12.3.5-ce.0
                         docker run \
                                --detach \
                                --name gitlab-runner \
@@ -839,7 +888,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
                                --network gitlab-runner-net \
                                --env DOCKER_HOST=tcp://gitlab-dind:2375 \
-                               gitlab/gitlab-runner:v11.8.0
+                               gitlab/gitlab-runner:v12.3.0
                     """[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 "tags": {
                     "Name": "azul-gitlab"

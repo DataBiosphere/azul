@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from unittest import mock
 from unittest.mock import patch
 
 from azul import config
@@ -20,7 +21,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
     shared by all tests in the class.
     """
     es_client = None
-    _old_es_endpoint = None
+    _env_patch = None
 
     @classmethod
     def setUpClass(cls):
@@ -31,8 +32,9 @@ class ElasticsearchTestCase(DockerContainerTestCase):
                                                          'discovery.type=single-node',
                                                          'ES_JAVA_OPTS=-Xms512m -Xmx512m'])
         try:
-            cls._old_es_endpoint = os.environ.get(config.es_endpoint_env_name)
-            os.environ.update(config.es_endpoint_env(es_endpoint))
+            new_env = config.es_endpoint_env(es_endpoint=es_endpoint, es_instance_count=2)
+            cls._env_patch = mock.patch.dict(os.environ, **new_env)
+            cls._env_patch.__enter__()
             cls.es_client = ESClientFactory.get()
             cls._wait_for_es()
         except BaseException:  # no coverage
@@ -63,8 +65,5 @@ class ElasticsearchTestCase(DockerContainerTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if cls._old_es_endpoint is None:
-            del os.environ[config.es_endpoint_env_name]
-        else:
-            os.environ[config.es_endpoint_env_name] = cls._old_es_endpoint
+        cls._env_patch.__exit__(None, None, None)
         super().tearDownClass()
