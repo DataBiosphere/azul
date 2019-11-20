@@ -1,5 +1,8 @@
+from contextlib import contextmanager
 from unittest import mock
 from unittest.mock import patch
+
+import requests
 
 from azul import config
 from azul.logging import configure_test_logging
@@ -10,7 +13,6 @@ from azul.service.responseobjects.cart_item_manager import (
 )
 from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
 from dynamo_test_case import DynamoTestCase
-from lambdas.service import app
 from service import WebServiceTestCase
 
 
@@ -470,17 +472,21 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
             'cart_id': cart_id,
             'batch_size': 1000
         }
-        write_response = app.cart_item_write_batch(write_params, None)
+        write_response = self.app_module.cart_item_write_batch(write_params, None)
         inserted_items = self.dynamo_accessor.query(table_name=config.dynamo_cart_item_table_name,
                                                     key_conditions={'CartId': cart_id})
 
         self.assertEqual(write_response['count'], len(list(inserted_items)))
 
-    @mock.patch('lambdas.service.app.get_user_id')
-    @mock.patch('lambdas.service.app.app')
+    @contextmanager
+    def _mock_auth(self, user_id):
+        with mock.patch.object(self.app_module, 'Authenticator') as jwt_auth:
+            jwt_auth.return_value.authenticate_bearer_token.return_value = {'sub': user_id}
+            yield
+
     @mock.patch('azul.service.responseobjects.cart_item_manager.CartItemManager.step_function_helper')
     @mock.patch('azul.deployment.aws.dynamo')
-    def test_add_all_results_to_cart_endpoint(self, dynamo, step_function_helper, mock_app, get_user_id):
+    def test_add_all_results_to_cart_endpoint(self, dynamo, step_function_helper):
         """
         Write all results endpoint should start an execution of the cart item write state machine and
         return the name of the execution and the number items that will be written
@@ -492,14 +498,17 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
             'executionArn': f'arn:aws:states:us-east-1:1234567890:execution:state_machine:{execution_id}'
         }
 
-        mock_app.current_request.json_body = {'filters': '{}', 'entityType': 'files'}
+        json_body = {'filters': '{}', 'entityType': 'files'}
 
         user_id = '123'
-        get_user_id.return_value = user_id
-        cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
+        with self._mock_auth(user_id):
+            cart_id = self.cart_item_manager.create_cart(user_id, 'test cart', False)
+            response = requests.post(f"{self.base_url}/resources/carts/{cart_id}/items/batch",
+                                     json=json_body,
+                                     headers={'authorization': 'foo'})
 
-        response = app.add_all_results_to_cart(cart_id)
-
+        response.raise_for_status()
+        response = response.json()
         self.assertEqual(response['count'], self.number_of_documents)
         token = response['statusUrl'].split('/')[-1]
         params = self.cart_item_manager.decode_token(token)
