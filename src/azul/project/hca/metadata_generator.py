@@ -8,13 +8,17 @@ from typing import (
     List,
     Mapping,
     MutableMapping,
+    MutableSet,
+    Optional,
     Tuple,
+    Union,
 )
 
 from azul.types import (
     JSON,
-    MutableJSON,
 )
+
+Output = MutableMapping[Union[str, Tuple[str]], Union[str, MutableSet[str]]]
 
 
 class MetadataGenerator:
@@ -60,7 +64,7 @@ class MetadataGenerator:
     uuid4hex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.I)
 
     def __init__(self):
-        self.all_objects = []
+        self.output: List[JSON] = []
         # TODO temp until block filetype is needed
         self.default_blocked_file_ext = {'.csv', '.txt', '.pdf'}
 
@@ -92,7 +96,7 @@ class MetadataGenerator:
         else:
             raise EmptyBundleError()
 
-    def _deep_get(self, d: JSON, *path: str):
+    def _deep_get(self, d: JSON, *path: str) -> Optional[JSON]:
         if d is not None and path:
             key, *path = path
             return self._deep_get(d.get(key), *path)
@@ -100,32 +104,32 @@ class MetadataGenerator:
             return d
 
     @staticmethod
-    def _set_value(master: MutableJSON, key: str, value: Any) -> None:
-
-        if key not in master:
-            master[key] = str(value)
+    def _set_value(output: Output, value: Any, *path: str) -> None:
+        value = str(value)
+        try:
+            old_value = output[path]
+        except KeyError:
+            output[path] = value
         else:
-            existing_values = master[key].split('||')
-            existing_values.append(str(value))
-            uniq = sorted(list(set(existing_values)))
-            master[key] = '||'.join(uniq)
-
-    def _flatten(self, master: MutableJSON, obj: JSON, parent: str) -> None:
-        for key, value in obj.items():
-            if key in self.ignored_fields:
-                continue
-
-            newkey = parent + '.' + key
-            if isinstance(value, dict):
-                self._flatten(master, obj[key], newkey)
-            elif isinstance(value, list):
-                for item in value:
-                    if isinstance(item, dict):
-                        self._flatten(master, item, newkey)
-                    else:
-                        self._set_value(master, newkey, item)
+            if isinstance(old_value, set):
+                old_value.add(value)
             else:
-                self._set_value(master, newkey, value)
+                output[path] = {old_value, value}
+
+    def _flatten(self, output: Output, obj: JSON, *path: str) -> None:
+        for key, value in obj.items():
+            if key not in self.ignored_fields:
+                new_path = *path, key
+                if isinstance(value, dict):
+                    self._flatten(output, obj[key], *new_path)
+                elif isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict):
+                            self._flatten(output, item, *new_path)
+                        else:
+                            self._set_value(output, item, *new_path)
+                else:
+                    self._set_value(output, value, *new_path)
 
     @classmethod
     def _get_schema_name(cls, obj: JSON):
@@ -166,7 +170,7 @@ class MetadataGenerator:
         file_info = self._resolve_data_file_names(manifest, metadata_files)
 
         for file_manifest, metadata_file in file_info.values():
-            obj = {
+            output = {
                 'bundle_uuid': bundle_uuid,
                 'bundle_version': bundle_version,
                 'file_uuid': file_manifest['uuid'],
@@ -177,28 +181,37 @@ class MetadataGenerator:
                 'file_format': self._deep_get(metadata_file, 'file_core', 'file_format'),
             }
 
-            file_name, extension = os.path.splitext(obj['file_name'])
+            file_name, extension = os.path.splitext(output['file_name'])
             if extension in self.default_blocked_file_ext:
                 continue
 
-            if any(self._handle_zarray_members(obj, anchor) for anchor in ('.zarr/', '.zarr!')):
+            if any(self._handle_zarray_members(output, anchor) for anchor in ('.zarr/', '.zarr!')):
                 continue
 
-            if self.format_filter and obj['file_format'] not in self.format_filter:
+            if self.format_filter and output['file_format'] not in self.format_filter:
                 continue
 
             schema_name = self._get_schema_name(metadata_file)
-            self._flatten(obj, metadata_file, schema_name)
+            self._flatten(output, metadata_file, schema_name)
 
             for other_metadata_file in metadata_files.values():
                 if other_metadata_file['schema_type'] not in ('file', 'link_bundle'):
                     schema_name = self._get_schema_name(other_metadata_file)
-                    self._flatten(obj, other_metadata_file, schema_name)
+                    self._flatten(output, other_metadata_file, schema_name)
 
-            self.all_objects.append(obj)
+            self.output.append(self._output_to_json(output))
+
+    def _output_to_json(self, output: Output) -> JSON:
+        """
+        Convert output to JSON by joining tuple keys with '.' and set values with '||'.
+        """
+        return {
+            ('.'.join(k) if isinstance(k, Tuple) else k): ('||'.join(sorted(v)) if isinstance(v, set) else v)
+            for k, v in output.items()
+        }
 
     def dump(self) -> List[JSON]:
-        return self.all_objects
+        return self.output
 
 
 class Error(Exception):
