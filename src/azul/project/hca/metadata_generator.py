@@ -8,8 +8,6 @@ from typing import (
     List,
 )
 
-from more_itertools import one
-
 from azul.types import (
     JSON,
     MutableJSON,
@@ -59,7 +57,7 @@ class MetadataGenerator:
     uuid4hex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.I)
 
     def __init__(self):
-        self.all_objects_by_project_id = {}
+        self.all_objects = []
         # TODO temp until block filetype is needed
         self.default_blocked_file_ext = {'csv', 'txt', 'pdf'}
 
@@ -186,26 +184,19 @@ class MetadataGenerator:
             schema_name = self._get_schema_name(file_metadata)
             self._flatten(obj, file_metadata, schema_name)
 
-            project_uuid = None
             for file_metadata in metadata_files:
 
                 # ignore files
                 if file_metadata['schema_type'] == 'file' or file_metadata['schema_type'] == 'link_bundle':
                     continue
-                elif file_metadata['schema_type'] == 'project':
-                    project_uuid = file_metadata['provenance']['document_id']
 
                 schema_name = self._get_schema_name(file_metadata)
                 self._flatten(obj, file_metadata, schema_name)
 
-            assert project_uuid is not None
-            self.all_objects_by_project_id.setdefault(project_uuid, []).append(obj)
+            self.all_objects.append(obj)
 
     def dump(self) -> List[JSON]:
-        """
-        :return: A list of metadata row entries in key, value format
-        """
-        return one(list(self.all_objects_by_project_id.values()))
+        return self.all_objects
 
 
 class Error(Exception):
