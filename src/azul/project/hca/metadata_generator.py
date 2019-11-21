@@ -60,7 +60,6 @@ class MetadataGenerator:
 
     def __init__(self):
         self.all_objects_by_project_id = {}
-        self.all_keys = []
         # TODO temp until block filetype is needed
         self.default_blocked_file_ext = {'csv', 'txt', 'pdf'}
 
@@ -199,8 +198,6 @@ class MetadataGenerator:
                 schema_name = self._get_schema_name(file_metadata)
                 self._flatten(obj, file_metadata, schema_name)
 
-            self.all_keys.extend(obj.keys())
-            self.all_keys = list(set(self.all_keys))
             assert project_uuid is not None
             self.all_objects_by_project_id.setdefault(project_uuid, []).append(obj)
 
