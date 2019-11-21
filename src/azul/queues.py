@@ -13,7 +13,6 @@ from typing import (
     List,
     Mapping,
 )
-from urllib.parse import urlparse
 
 import boto3
 import more_itertools
@@ -42,7 +41,7 @@ class Queues:
                                                         'Messages in Flight',
                                                         'Messages Delayed'))
         queues = self.azul_queues()
-        for queue_name, queue in queues:
+        for queue_name, queue in queues.items():
             print('{:<35s}{:^20s}{:^20s}{:^18s}'.format(queue_name,
                                                         queue.attributes['ApproximateNumberOfMessages'],
                                                         queue.attributes['ApproximateNumberOfMessagesNotVisible'],
@@ -54,7 +53,7 @@ class Queues:
         self._dump(queue, path)
 
     def dump_all(self):
-        for queue_name, queue in self.azul_queues():
+        for queue_name, queue in self.azul_queues().items():
             self._dump(queue, queue_name + '.json')
 
     def _dump(self, queue, path):
@@ -139,16 +138,7 @@ class Queues:
         return result
 
     def azul_queues(self):
-        sqs = boto3.resource('sqs')
-        all_queues = sqs.queues.all()
-        for queue in all_queues:
-            _, _, queue_name = urlparse(queue.url).path.rpartition('/')
-            if self._is_azul_queue(queue_name):
-                yield queue_name, queue
-
-    def _is_azul_queue(self, queue_name) -> bool:
-        return any(config.unqualified_resource_name_or_none(queue_name, suffix)[1] == config.deployment_stage
-                   for suffix in ('', '.fifo'))
+        return self.get_queues(config.all_queue_names)
 
     @classmethod
     def get_queues(cls, queue_names: List[str]) -> Mapping[str, Any]:
@@ -254,7 +244,7 @@ class Queues:
         self.purge_queues_safely({queue_name: queue})
 
     def purge_all(self):
-        self.purge_queues_safely(dict(self.azul_queues()))
+        self.purge_queues_safely(self.azul_queues())
 
     def purge_queues_safely(self, queues: Mapping[str, Queue]):
         self.manage_lambdas(queues, enable=False)
