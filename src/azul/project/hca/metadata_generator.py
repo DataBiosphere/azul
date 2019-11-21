@@ -76,12 +76,12 @@ class MetadataGenerator:
             try:
                 schema_type = metadata_file['schema_type']
             except KeyError:
-                raise MissingSchemaTypeError('JSON objects must declare a schema type')
+                raise MissingSchemaTypeError()
             else:
                 if schema_type == 'file':
                     file_name = self._deep_get(metadata_file, ['file_core', 'file_name'])
                     if file_name is None:
-                        raise MissingFileNameError('expecting file_core.file_name')
+                        raise MissingFileNameError()
                     else:
                         manifest_entry = manifest[file_name]
                         file_info[manifest_entry['uuid']] = {
@@ -91,7 +91,7 @@ class MetadataGenerator:
         if file_info:
             return file_info
         else:
-            raise MissingFileTypeError('Bundle contains no data files')
+            raise EmptyBundleError()
 
     def _deep_get(self, d: JSON, keys: List[str]):
         if not keys or d is None:
@@ -130,7 +130,7 @@ class MetadataGenerator:
     def _get_schema_name_from_object(obj: JSON):
         if 'describedBy' in obj:
             return obj['describedBy'].rsplit('/', 1)[-1]
-        raise MissingDescribedByError('found a metadata without a describedBy property')
+        raise MissingDescribedByError()
 
     def add_bundle(self,
                    bundle_uuid: str,
@@ -207,20 +207,31 @@ class MetadataGenerator:
 
 
 class Error(Exception):
-    pass
+    msg = None
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(self.msg, *args)
 
 
 class MissingSchemaTypeError(Error):
-    pass
+    """
+    Prove that the traceback includes the message from `msg`
+
+    >>> raise MissingSchemaTypeError()
+    Traceback (most recent call last):
+    ...
+    azul.project.hca.metadata_generator.MissingSchemaTypeError: Metadata document lacks `schema_type` property
+    """
+    msg = 'Metadata document lacks `schema_type` property'
 
 
 class MissingDescribedByError(Error):
-    pass
+    msg = 'Metadata document lacks a `describedBy` property'
 
 
-class MissingFileTypeError(Error):
-    pass
+class EmptyBundleError(Error):
+    msg = 'Bundle contains no data files'
 
 
 class MissingFileNameError(Error):
-    pass
+    msg = 'Metadata document for data file lacks `file_core.file_name` property'
