@@ -64,27 +64,34 @@ class MetadataGenerator:
         # TODO temp until block filetype is needed
         self.default_blocked_file_ext = {'csv', 'txt', 'pdf'}
 
-    def _get_file_uuids_from_objects(self, manifest: List[JSON], list_of_metadata_objects: List[JSON]) -> JSON:
+    def _resolve_data_file_names(self, manifest: List[JSON], metadata_files: List[JSON]) -> JSON:
+        """
+        Associate each metadata document describing a data file with the UUID
+        of the data file it describes. The metadata only refers to data files by
+        name and we need the manifest to resolve those into UUIDs.
+        """
+        manifest = {entry['name']: entry for entry in manifest if not entry['indexed']}
         file_info = {}
-        file_manifests = {file_manifest['name']: file_manifest
-                          for file_manifest in manifest if not file_manifest['indexed']}
-
-        for _object in list_of_metadata_objects:
-            if 'schema_type' not in _object:
+        for metadata_file in metadata_files:
+            try:
+                schema_type = metadata_file['schema_type']
+            except KeyError:
                 raise MissingSchemaTypeError('JSON objects must declare a schema type')
-
-            if _object['schema_type'] == 'file':
-                file_name = self._deep_get(_object, ['file_core', 'file_name'])
-                if file_name is None:
-                    raise MissingFileNameError('expecting file_core.file_name')
-
-                file_manifest = file_manifests[file_name]
-                file_info[file_manifest['uuid']] = {'metadata': _object, 'manifest': file_manifest}
-
-        if not file_info:
+            else:
+                if schema_type == 'file':
+                    file_name = self._deep_get(metadata_file, ['file_core', 'file_name'])
+                    if file_name is None:
+                        raise MissingFileNameError('expecting file_core.file_name')
+                    else:
+                        manifest_entry = manifest[file_name]
+                        file_info[manifest_entry['uuid']] = {
+                            'metadata': metadata_file,
+                            'manifest': manifest_entry
+                        }
+        if file_info:
+            return file_info
+        else:
             raise MissingFileTypeError('Bundle contains no data files')
-
-        return file_info
 
     def _deep_get(self, d: JSON, keys: List[str]):
         if not keys or d is None:
@@ -131,7 +138,7 @@ class MetadataGenerator:
                    manifest: List[JSON],
                    metadata_files: List[JSON]) -> None:
 
-        file_info = self._get_file_uuids_from_objects(manifest, metadata_files)
+        file_info = self._resolve_data_file_names(manifest, metadata_files)
 
         for content in file_info.values():
             file_metadata = content['metadata']
