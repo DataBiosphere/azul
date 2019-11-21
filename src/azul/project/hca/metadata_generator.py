@@ -23,35 +23,35 @@ class MetadataGenerator:
     """
 
     column_order = [
-        "path",
-        "^\\*\\.file_core\\.file_name",
-        "^\\*\\.file_core\\.file_format",
-        "^sequence_file.*",
-        "^analysis_file.*",
-        "^donor_organism.*",
-        "^specimen_from_organism.*",
-        "^cell_suspension.*",
-        "^.*protocol.*",
-        "^project.",
-        "^analysis_process.*",
-        "^process.*",
-        "^bundle_.*",
-        "^file_.*"
+        'path',
+        '^\\*\\.file_core\\.file_name',
+        '^\\*\\.file_core\\.file_format',
+        '^sequence_file.*',
+        '^analysis_file.*',
+        '^donor_organism.*',
+        '^specimen_from_organism.*',
+        '^cell_suspension.*',
+        '^.*protocol.*',
+        '^project.',
+        '^analysis_process.*',
+        '^process.*',
+        '^bundle_.*',
+        '^file_.*'
     ]
 
     ignored_fields = [
-        "describedBy",
-        "schema_type",
-        "submission_date",
-        "update_date",
-        "biomaterial_id",
-        "process_id",
-        "contributors",
-        "publications",
-        "protocol_id",
-        "project_description",
-        "file_format",
-        "file_name"
+        'describedBy',
+        'schema_type',
+        'submission_date',
+        'update_date',
+        'biomaterial_id',
+        'process_id',
+        'contributors',
+        'publications',
+        'protocol_id',
+        'project_description',
+        'file_format',
+        'file_name'
     ]
 
     format_filter = None
@@ -70,19 +70,19 @@ class MetadataGenerator:
                           for file_manifest in manifest if not file_manifest['indexed']}
 
         for _object in list_of_metadata_objects:
-            if "schema_type" not in _object:
-                raise MissingSchemaTypeError("JSON objects must declare a schema type")
+            if 'schema_type' not in _object:
+                raise MissingSchemaTypeError('JSON objects must declare a schema type')
 
-            if _object["schema_type"] == "file":
-                file_name = self._deep_get(_object, ["file_core", "file_name"])
+            if _object['schema_type'] == 'file':
+                file_name = self._deep_get(_object, ['file_core', 'file_name'])
                 if file_name is None:
-                    raise MissingFileNameError("expecting file_core.file_name")
+                    raise MissingFileNameError('expecting file_core.file_name')
 
                 file_manifest = file_manifests[file_name]
                 file_info[file_manifest['uuid']] = {'metadata': _object, 'manifest': file_manifest}
 
         if not file_info:
-            raise MissingFileTypeError("Bundle contains no data files")
+            raise MissingFileTypeError('Bundle contains no data files')
 
         return file_info
 
@@ -97,17 +97,17 @@ class MetadataGenerator:
         if key not in master:
             master[key] = str(value)
         else:
-            existing_values = master[key].split("||")
+            existing_values = master[key].split('||')
             existing_values.append(str(value))
             uniq = sorted(list(set(existing_values)))
-            master[key] = "||".join(uniq)
+            master[key] = '||'.join(uniq)
 
     def _flatten(self, master: MutableJSON, obj: JSON, parent: str) -> None:
         for key, value in obj.items():
             if key in self.ignored_fields:
                 continue
 
-            newkey = parent + "." + key
+            newkey = parent + '.' + key
             if isinstance(value, dict):
                 self._flatten(master, obj[key], newkey)
             elif isinstance(value, list):
@@ -121,9 +121,9 @@ class MetadataGenerator:
 
     @staticmethod
     def _get_schema_name_from_object(obj: JSON):
-        if "describedBy" in obj:
-            return obj["describedBy"].rsplit('/', 1)[-1]
-        raise MissingDescribedByError("found a metadata without a describedBy property")
+        if 'describedBy' in obj:
+            return obj['describedBy'].rsplit('/', 1)[-1]
+        raise MissingDescribedByError('found a metadata without a describedBy property')
 
     def add_bundle(self,
                    bundle_uuid: str,
@@ -143,11 +143,11 @@ class MetadataGenerator:
                 'file_version': file_manifest['version'],
                 'file_sha256': file_manifest['sha256'],
                 'file_size': file_manifest['size'],
-                "file_name": self._deep_get(file_metadata, ["file_core", "file_name"]),
-                "file_format": self._deep_get(file_metadata, ["file_core", "file_format"]),
+                'file_name': self._deep_get(file_metadata, ['file_core', 'file_name']),
+                'file_format': self._deep_get(file_metadata, ['file_core', 'file_format']),
             }
 
-            file_segments = obj["file_name"].split('.')
+            file_segments = obj['file_name'].split('.')
 
             if len(file_segments) > 1 and file_segments[-1] in self.default_blocked_file_ext:
                 continue
@@ -169,7 +169,7 @@ class MetadataGenerator:
             if handle_zarray('.zarr/') or handle_zarray('.zarr!'):
                 continue
 
-            if self.format_filter and obj["file_format"] not in self.format_filter:
+            if self.format_filter and obj['file_format'] not in self.format_filter:
                 continue
 
             schema_name = self._get_schema_name_from_object(file_metadata)
@@ -179,9 +179,9 @@ class MetadataGenerator:
             for file_metadata in metadata_files:
 
                 # ignore files
-                if file_metadata["schema_type"] == "file" or file_metadata["schema_type"] == "link_bundle":
+                if file_metadata['schema_type'] == 'file' or file_metadata['schema_type'] == 'link_bundle':
                     continue
-                elif file_metadata["schema_type"] == 'project':
+                elif file_metadata['schema_type'] == 'project':
                     project_uuid = file_metadata['provenance']['document_id']
 
                 schema_name = self._get_schema_name_from_object(file_metadata)
