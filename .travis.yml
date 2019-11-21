@@ -13,7 +13,6 @@ python:
 before_install:
   - (cd deployments && ln -snf dev .active)
   - source environment
-  - export AZUL_DEBUG=0 # reduce test output volume
 
 install:
   - pip install -U setuptools==40.1.0 wheel==0.32.3
@@ -34,7 +33,7 @@ script:
   - sudo chgrp -R 1000 . && make format && sudo chgrp -R $(id -g) .
   - make check_clean
   - make pep8
-  - make test
+  - AZUL_DEBUG=0 make test
   - make check_clean
 
 after_success:
