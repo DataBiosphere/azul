@@ -126,11 +126,14 @@ class MetadataGenerator:
             else:
                 self._set_value(master, newkey, value)
 
-    @staticmethod
-    def _get_schema_name_from_object(obj: JSON):
-        if 'describedBy' in obj:
-            return obj['describedBy'].rsplit('/', 1)[-1]
-        raise MissingDescribedByError()
+    @classmethod
+    def _get_schema_name(cls, obj: JSON):
+        try:
+            described_by = obj['describedBy']
+        except KeyError:
+            raise MissingDescribedByError()
+        else:
+            return described_by.rsplit('/', 1)[-1]
 
     def add_bundle(self,
                    bundle_uuid: str,
@@ -179,7 +182,7 @@ class MetadataGenerator:
             if self.format_filter and obj['file_format'] not in self.format_filter:
                 continue
 
-            schema_name = self._get_schema_name_from_object(file_metadata)
+            schema_name = self._get_schema_name(file_metadata)
             self._flatten(obj, file_metadata, schema_name)
 
             project_uuid = None
@@ -191,7 +194,7 @@ class MetadataGenerator:
                 elif file_metadata['schema_type'] == 'project':
                     project_uuid = file_metadata['provenance']['document_id']
 
-                schema_name = self._get_schema_name_from_object(file_metadata)
+                schema_name = self._get_schema_name(file_metadata)
                 self._flatten(obj, file_metadata, schema_name)
 
             self.all_keys.extend(obj.keys())
