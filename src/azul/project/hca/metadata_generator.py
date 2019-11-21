@@ -79,7 +79,7 @@ class MetadataGenerator:
                 raise MissingSchemaTypeError()
             else:
                 if schema_type == 'file':
-                    file_name = self._deep_get(metadata_file, ['file_core', 'file_name'])
+                    file_name = self._deep_get(metadata_file, 'file_core', 'file_name')
                     if file_name is None:
                         raise MissingFileNameError()
                     else:
@@ -93,10 +93,12 @@ class MetadataGenerator:
         else:
             raise EmptyBundleError()
 
-    def _deep_get(self, d: JSON, keys: List[str]):
-        if not keys or d is None:
+    def _deep_get(self, d: JSON, *path: str):
+        if d is not None and path:
+            key, *path = path
+            return self._deep_get(d.get(key), *path)
+        else:
             return d
-        return self._deep_get(d.get(keys[0]), keys[1:])
 
     @staticmethod
     def _set_value(master: MutableJSON, key: str, value: Any) -> None:
@@ -153,8 +155,8 @@ class MetadataGenerator:
                 'file_version': file_manifest['version'],
                 'file_sha256': file_manifest['sha256'],
                 'file_size': file_manifest['size'],
-                'file_name': self._deep_get(file_metadata, ['file_core', 'file_name']),
-                'file_format': self._deep_get(file_metadata, ['file_core', 'file_format']),
+                'file_name': self._deep_get(file_metadata, 'file_core', 'file_name'),
+                'file_format': self._deep_get(file_metadata, 'file_core', 'file_format'),
             }
 
             file_segments = obj['file_name'].split('.')
