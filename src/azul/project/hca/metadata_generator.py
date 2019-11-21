@@ -1,7 +1,7 @@
 # Adapted from prior work by Simon Jupp @ EMBL-EBI
 #
 # https://github.com/HumanCellAtlas/hca_bundles_to_csv/blob/b516a3a/hca_bundle_tools/file_metadata_to_csv.py
-
+import os
 import re
 from typing import (
     Any,
@@ -59,7 +59,7 @@ class MetadataGenerator:
     def __init__(self):
         self.all_objects = []
         # TODO temp until block filetype is needed
-        self.default_blocked_file_ext = {'csv', 'txt', 'pdf'}
+        self.default_blocked_file_ext = {'.csv', '.txt', '.pdf'}
 
     def _resolve_data_file_names(self, manifest: List[JSON], metadata_files: List[JSON]) -> JSON:
         """
@@ -134,6 +134,27 @@ class MetadataGenerator:
         else:
             return described_by.rsplit('/', 1)[-1]
 
+    def _handle_zarray_members(self, obj, anchor):
+        """
+        Returns True, if and only if the the given document describes a zarray
+        member that should be ignored. If the given file describes a zarray
+        member that represents the entire zarray store, the file_name property
+        of the document is changed to the path to the zarray file and False is
+        returned. For all other files, this method just returns False.
+        """
+        file_name = obj['file_name']
+        try:
+            i = file_name.index(anchor)
+        except ValueError:
+            return False
+        else:
+            i += len(anchor) - 1
+            dir_name, file_name = file_name[0:i], file_name[i + 1:]
+            if file_name == '.zattrs':
+                obj['file_name'] = dir_name + '/'
+                return False
+        return True
+
     def add_bundle(self,
                    bundle_uuid: str,
                    bundle_version: str,
@@ -156,26 +177,11 @@ class MetadataGenerator:
                 'file_format': self._deep_get(file_metadata, 'file_core', 'file_format'),
             }
 
-            file_segments = obj['file_name'].split('.')
-
-            if len(file_segments) > 1 and file_segments[-1] in self.default_blocked_file_ext:
+            file_name, extension = os.path.splitext(obj['file_name'])
+            if extension in self.default_blocked_file_ext:
                 continue
 
-            def handle_zarray(anchor):
-                file_name = obj['file_name']
-                try:
-                    i = file_name.index(anchor)
-                except ValueError:
-                    return False
-                else:
-                    i += len(anchor) - 1
-                    dir_name, file_name = file_name[0:i], file_name[i + 1:]
-                    if file_name == '.zattrs':
-                        obj['file_name'] = dir_name + '/'
-                        return False
-                return True
-
-            if handle_zarray('.zarr/') or handle_zarray('.zarr!'):
+            if any(self._handle_zarray_members(obj, anchor) for anchor in ('.zarr/', '.zarr!')):
                 continue
 
             if self.format_filter and obj['file_format'] not in self.format_filter:
@@ -185,13 +191,9 @@ class MetadataGenerator:
             self._flatten(obj, file_metadata, schema_name)
 
             for file_metadata in metadata_files:
-
-                # ignore files
-                if file_metadata['schema_type'] == 'file' or file_metadata['schema_type'] == 'link_bundle':
-                    continue
-
-                schema_name = self._get_schema_name(file_metadata)
-                self._flatten(obj, file_metadata, schema_name)
+                if file_metadata['schema_type'] not in ('file', 'link_bundle'):
+                    schema_name = self._get_schema_name(file_metadata)
+                    self._flatten(obj, file_metadata, schema_name)
 
             self.all_objects.append(obj)
 
