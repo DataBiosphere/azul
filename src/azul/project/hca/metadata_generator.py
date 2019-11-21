@@ -6,6 +6,9 @@ import re
 from typing import (
     Any,
     List,
+    Mapping,
+    MutableMapping,
+    Tuple,
 )
 
 from azul.types import (
@@ -61,7 +64,9 @@ class MetadataGenerator:
         # TODO temp until block filetype is needed
         self.default_blocked_file_ext = {'.csv', '.txt', '.pdf'}
 
-    def _resolve_data_file_names(self, manifest: List[JSON], metadata_files: List[JSON]) -> JSON:
+    def _resolve_data_file_names(self,
+                                 manifest: List[JSON],
+                                 metadata_files: Mapping[str, JSON]) -> MutableMapping[str, Tuple[JSON, JSON]]:
         """
         Associate each metadata document describing a data file with the UUID
         of the data file it describes. The metadata only refers to data files by
@@ -69,7 +74,7 @@ class MetadataGenerator:
         """
         manifest = {entry['name']: entry for entry in manifest if not entry['indexed']}
         file_info = {}
-        for metadata_file in metadata_files:
+        for metadata_file in metadata_files.values():
             try:
                 schema_type = metadata_file['schema_type']
             except KeyError:
@@ -81,10 +86,7 @@ class MetadataGenerator:
                         raise MissingFileNameError()
                     else:
                         manifest_entry = manifest[file_name]
-                        file_info[manifest_entry['uuid']] = {
-                            'metadata': metadata_file,
-                            'manifest': manifest_entry
-                        }
+                        file_info[manifest_entry['uuid']] = manifest_entry, metadata_file
         if file_info:
             return file_info
         else:
@@ -159,13 +161,11 @@ class MetadataGenerator:
                    bundle_uuid: str,
                    bundle_version: str,
                    manifest: List[JSON],
-                   metadata_files: List[JSON]) -> None:
+                   metadata_files: Mapping[str, JSON]) -> None:
 
         file_info = self._resolve_data_file_names(manifest, metadata_files)
 
-        for content in file_info.values():
-            file_metadata = content['metadata']
-            file_manifest = content['manifest']
+        for file_manifest, metadata_file in file_info.values():
             obj = {
                 'bundle_uuid': bundle_uuid,
                 'bundle_version': bundle_version,
@@ -173,8 +173,8 @@ class MetadataGenerator:
                 'file_version': file_manifest['version'],
                 'file_sha256': file_manifest['sha256'],
                 'file_size': file_manifest['size'],
-                'file_name': self._deep_get(file_metadata, 'file_core', 'file_name'),
-                'file_format': self._deep_get(file_metadata, 'file_core', 'file_format'),
+                'file_name': self._deep_get(metadata_file, 'file_core', 'file_name'),
+                'file_format': self._deep_get(metadata_file, 'file_core', 'file_format'),
             }
 
             file_name, extension = os.path.splitext(obj['file_name'])
@@ -187,13 +187,13 @@ class MetadataGenerator:
             if self.format_filter and obj['file_format'] not in self.format_filter:
                 continue
 
-            schema_name = self._get_schema_name(file_metadata)
-            self._flatten(obj, file_metadata, schema_name)
+            schema_name = self._get_schema_name(metadata_file)
+            self._flatten(obj, metadata_file, schema_name)
 
-            for file_metadata in metadata_files:
-                if file_metadata['schema_type'] not in ('file', 'link_bundle'):
-                    schema_name = self._get_schema_name(file_metadata)
-                    self._flatten(obj, file_metadata, schema_name)
+            for other_metadata_file in metadata_files.values():
+                if other_metadata_file['schema_type'] not in ('file', 'link_bundle'):
+                    schema_name = self._get_schema_name(other_metadata_file)
+                    self._flatten(obj, other_metadata_file, schema_name)
 
             self.all_objects.append(obj)
 
