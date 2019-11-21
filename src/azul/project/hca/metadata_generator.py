@@ -2,55 +2,65 @@
 #
 # https://github.com/HumanCellAtlas/hca_bundles_to_csv/blob/b516a3a/hca_bundle_tools/file_metadata_to_csv.py
 
-from typing import (
-    List,
-    Any,
-)
-from more_itertools import one
-from azul.types import JSON
 import re
+from typing import (
+    Any,
+    List,
+)
+
+from more_itertools import one
+
+from azul.types import (
+    JSON,
+    MutableJSON,
+)
 
 
 class MetadataGenerator:
+    """
+    Generates a more or less verbatim but unharmonized JSON representation of
+    the metadata in a bundle.
+    """
 
-    def __init__(self, order=None, ignore=None, format_filter=None):
+    column_order = [
+        "path",
+        "^\\*\\.file_core\\.file_name",
+        "^\\*\\.file_core\\.file_format",
+        "^sequence_file.*",
+        "^analysis_file.*",
+        "^donor_organism.*",
+        "^specimen_from_organism.*",
+        "^cell_suspension.*",
+        "^.*protocol.*",
+        "^project.",
+        "^analysis_process.*",
+        "^process.*",
+        "^bundle_.*",
+        "^file_.*"
+    ]
+
+    ignored_fields = [
+        "describedBy",
+        "schema_type",
+        "submission_date",
+        "update_date",
+        "biomaterial_id",
+        "process_id",
+        "contributors",
+        "publications",
+        "protocol_id",
+        "project_description",
+        "file_format",
+        "file_name"
+    ]
+
+    format_filter = None
+
+    uuid4hex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.I)
+
+    def __init__(self):
         self.all_objects_by_project_id = {}
         self.all_keys = []
-        self.uuid4hex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.I)
-
-        self.default_order = order if order else [
-            "path",
-            "^\\*\\.file_core\\.file_name",
-            "^\\*\\.file_core\\.file_format",
-            "^sequence_file.*",
-            "^analysis_file.*",
-            "^donor_organism.*",
-            "^specimen_from_organism.*",
-            "^cell_suspension.*",
-            "^.*protocol.*",
-            "^project.",
-            "^analysis_process.*",
-            "^process.*",
-            "^bundle_.*",
-            "^file_.*"
-        ]
-
-        self.default_ignore = ignore if ignore else [
-            "describedBy",
-            "schema_type",
-            "submission_date",
-            "update_date",
-            "biomaterial_id",
-            "process_id",
-            "contributors",
-            "publications",
-            "protocol_id",
-            "project_description",
-            "file_format",
-            "file_name"
-        ]
-
-        self.default_format_filter = format_filter
         # TODO temp until block filetype is needed
         self.default_blocked_file_ext = {'csv', 'txt', 'pdf'}
 
@@ -82,7 +92,7 @@ class MetadataGenerator:
         return self._deep_get(d.get(keys[0]), keys[1:])
 
     @staticmethod
-    def _set_value(master: JSON, key: str, value: Any) -> None:
+    def _set_value(master: MutableJSON, key: str, value: Any) -> None:
 
         if key not in master:
             master[key] = str(value)
@@ -92,9 +102,9 @@ class MetadataGenerator:
             uniq = sorted(list(set(existing_values)))
             master[key] = "||".join(uniq)
 
-    def _flatten(self, master: JSON, obj: JSON, parent: str) -> None:
+    def _flatten(self, master: MutableJSON, obj: JSON, parent: str) -> None:
         for key, value in obj.items():
-            if key in self.default_ignore:
+            if key in self.ignored_fields:
                 continue
 
             newkey = parent + "." + key
@@ -159,7 +169,7 @@ class MetadataGenerator:
             if handle_zarray('.zarr/') or handle_zarray('.zarr!'):
                 continue
 
-            if self.default_format_filter and obj["file_format"] not in self.default_format_filter:
+            if self.format_filter and obj["file_format"] not in self.format_filter:
                 continue
 
             schema_name = self._get_schema_name_from_object(file_metadata)
