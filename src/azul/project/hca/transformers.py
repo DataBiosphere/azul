@@ -740,7 +740,7 @@ class BundleTransformer(BundleProjectTransformer):
                 metadata = []
             else:
                 generator = MetadataGenerator()
-                generator.add_bundle(uuid, version, manifest, list(metadata_files.values()))
+                generator.add_bundle(uuid, version, manifest, metadata_files)
                 metadata = generator.dump()
             contrib.contents['metadata'] = metadata
             yield contrib
