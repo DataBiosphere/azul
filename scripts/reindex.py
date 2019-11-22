@@ -70,6 +70,11 @@ parser.add_argument('--purge',
                     default=False,
                     action='store_true',
                     help='Purge the queues before taking any action on the index.')
+parser.add_argument('--nowait', '--no-wait',
+                    dest='wait',
+                    default=True,
+                    action='store_false',
+                    help="Don't wait for queues to empty before exiting script.")
 parser.add_argument('--dryrun', '--dry-run',
                     default=False,
                     action='store_true',
@@ -93,29 +98,32 @@ def main(argv: List[str]):
                              prefix=args.prefix,
                              num_workers=args.num_workers,
                              dryrun=args.dryrun)
+    queue_manager = Queues()
+    queues = queue_manager.get_queues(config.work_queue_names)
+
     if args.purge:
-        queue_manager = Queues()
-        queues = dict(queue_manager.azul_queues())
-        # FIXME: eliminate need for filtering (https://github.com/DataBiosphere/azul/issues/1448)
-        queues = {k: v for k, v in queues.items() if k in config.work_queue_names}
         logger.info('Disabling lambdas ...')
         queue_manager.manage_lambdas(queues, enable=False)
         logger.info('Purging queues: %s', ', '.join(queues.keys()))
         queue_manager.purge_queues_unsafely(queues)
-    else:
-        queue_manager, queues = None, None
+
     if args.delete:
         logger.info('Deleting indices ...')
         azul_client.delete_all_indices()
+
     if args.purge:
         logger.info('Re-enabling lambdas ...')
         queue_manager.manage_lambdas(queues, enable=True)
+
     if args.index:
         logger.info('Queuing notifications for reindexing ...')
         if args.partition_prefix_length:
             azul_client.remote_reindex(args.partition_prefix_length)
         else:
             azul_client.reindex()
+        if args.wait:
+            queue_manager.wait_for_queue_level(queues.keys(), empty=False)
+            queue_manager.wait_for_queue_level(queues.keys(), timeout=60 * 60)
 
 
 if __name__ == "__main__":
