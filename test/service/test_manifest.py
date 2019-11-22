@@ -34,12 +34,12 @@ from azul import config
 from azul.json_freeze import freeze
 from azul.logging import configure_test_logging
 from azul.service import (
-    AbstractService,
     hca_response_v5,
 )
 from azul.service.elastic_request_builder import ElasticTransformDump
-from azul.service.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
+from azul.service.storage_service import StorageService
+from azul.types import JSON
 from azul_test_case import AzulTestCase
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
@@ -193,12 +193,13 @@ class TestManifestEndpoints(WebServiceTestCase):
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
-    def get_manifest(self, params, stream=False):
-        filters = AbstractService.parse_filters(params.get('filters'))
+    def _get_manifest(self, format_: str, filters: JSON, stream=False):
+        url = self._get_manifest_url(format_, filters)
+        return requests.get(url, stream=stream)
+
+    def _get_manifest_url(self, format_, filters):
         estd = ElasticTransformDump()
-        url = estd.transform_manifest(params.get('format', 'compact'), filters).headers['Location']
-        response = requests.get(url, stream=stream)
-        return response
+        return estd.transform_manifest(format_, filters).headers['Location']
 
     @mock_sts
     @mock_s3
@@ -298,11 +299,7 @@ class TestManifestEndpoints(WebServiceTestCase):
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                        params = {
-                            'filters': json.dumps({}),
-                            'format': 'compact'
-                        }
-                        response = self.get_manifest(params)
+                        response = self._get_manifest('compact', {})
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
                         self._assert_tsv(expected, response)
 
@@ -326,28 +323,21 @@ class TestManifestEndpoints(WebServiceTestCase):
         if they are not listed in the service response.
         """
         self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
-        search_params = {
-            'filters': json.dumps({"fileFormat": {"is": ["matrix", "mtx"]}}),
-        }
-        download_params = {
-            **search_params,
-            'format': 'tsv'
-        }
-
+        filters = {"fileFormat": {"is": ["matrix", "mtx"]}}
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-
-            response = requests.get(self.base_url + '/repository/files', params=search_params)
+            response = requests.get(self.base_url + '/repository/files',
+                                    params=dict(filters=json.dumps(filters)))
             hits = response.json()['hits']
             self.assertEqual(len(hits), 1)
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                        response = self.get_manifest(download_params)
+                        response = self._get_manifest('tsv', filters)
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
                         # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
                         lines = response.content.decode('utf-8').splitlines()
@@ -534,11 +524,8 @@ class TestManifestEndpoints(WebServiceTestCase):
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            params = {
-                'filters': json.dumps({'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}),
-                'format': 'terra.bdbag',
-            }
-            response = self.get_manifest(params, stream=True)
+            filters = {'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}
+            response = self._get_manifest('terra.bdbag', filters, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
@@ -644,11 +631,7 @@ class TestManifestEndpoints(WebServiceTestCase):
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            params = {
-                'filters': json.dumps({}),
-                'format': 'full'
-            }
-            response = self.get_manifest(params)
+            response = self._get_manifest('full', {})
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
             expected = [
@@ -1089,16 +1072,16 @@ class TestManifestEndpoints(WebServiceTestCase):
             storage_service = StorageService()
             storage_service.create_bucket()
 
-            params = {'filters': json.dumps({'project': {'is': ['Single of human pancreas']}}), 'format': 'full'}
-            response = self.get_manifest(params)
+            filters = {'project': {'is': ['Single of human pancreas']}}
+            response = self._get_manifest('full', filters)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
             lines = response.content.decode('utf-8').splitlines()
             tsv_file1 = csv.reader(lines, delimiter='\t')
             fieldnames1 = set(next(tsv_file1))
 
-            params = {'filters': json.dumps({'project': {'is': ['Mouse Melanoma']}}), 'format': 'full'}
-            response = self.get_manifest(params)
+            filters = {'project': {'is': ['Mouse Melanoma']}}
+            response = self._get_manifest('full', filters)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
             lines = response.content.decode('utf-8').splitlines()
@@ -1126,13 +1109,10 @@ class TestManifestEndpoints(WebServiceTestCase):
 
             def log_messages_from_manifest_request(seconds_until_expire: int) -> List[str]:
                 get_seconds.return_value = seconds_until_expire
-                params = {
-                    'filters': json.dumps({'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}),
-                    'format': 'full'
-                }
+                filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
                 from azul.service.hca_response_v5 import logger as logger_
                 with self.assertLogs(logger=logger_, level='INFO') as logs:
-                    response = self.get_manifest(params)
+                    response = self._get_manifest('full', filters)
                     self.assertEqual(200, response.status_code, 'Unable to download manifest')
                     logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
                     return logs.output
@@ -1172,8 +1152,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
                         # Run the generation of manifests twice to verify generated file names are the same when re-run
                         for project_id in project_ids * 2:
-                            params = {'filters': json.dumps({'projectId': {'is': [project_id]}}), 'format': 'full'}
-                            response = self.get_manifest(params)
+                            response = self._get_manifest('full', {'projectId': {'is': [project_id]}})
                             self.assertEqual(200, response.status_code, 'Unable to download manifest')
                             file_name = urlparse(response.url).path
                             file_names[project_id].append(file_name)
@@ -1210,13 +1189,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                     with self.subTest(filters=filters, single_part=single_part):
                         with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                             assert config.disable_multipart_manifests is single_part
-                            params = {
-                                'filters': json.dumps(filters),
-                                'format': 'full'
-                            }
-                            filters = AbstractService.parse_filters(params.get('filters'))
-                            estd = ElasticTransformDump()
-                            url = estd.transform_manifest(params.get('format', 'full'), filters).headers['Location']
+                            url = self._get_manifest_url('full', filters)
                             query = urlparse(url).query
                             content_dispositions = parse_qs(query).get('response-content-disposition')
                             if single_part and not name_object:

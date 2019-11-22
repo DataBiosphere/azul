@@ -10,10 +10,7 @@ logger = logging.getLogger(__name__)
 
 class AbstractService:
 
-    # FIXME: Convert back to instance method once #566 is solved
-    #  https://github.com/DataBiosphere/azul/issues/566
-    @classmethod
-    def parse_filters(cls, filters: Optional[str]):
+    def parse_filters(self, filters: Optional[str]):
         """
         Parses filters. Handles default cases where filters are None (not set) or {}
         :param filters: string of python interpretable data
