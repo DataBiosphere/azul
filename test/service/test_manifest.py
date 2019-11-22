@@ -47,6 +47,7 @@ from service import WebServiceTestCase
 logger = logging.getLogger(__name__)
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(logger)
 
@@ -129,7 +130,7 @@ class TestManifestService(LocalAppTestCase):
 
     @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
-    def test_manifest_endpoint_boto_error(self, current_request, step_function_helper):
+    def test_manifest_endpoint_boto_error(self, _current_request, step_function_helper):
         """
         Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
         """
@@ -146,7 +147,7 @@ class TestManifestService(LocalAppTestCase):
 
     @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
     @mock.patch('lambdas.service.app.app.current_request')
-    def test_manifest_endpoint_execution_error(self, current_request, step_function_helper):
+    def test_manifest_endpoint_execution_error(self, _current_request, step_function_helper):
         """
         Manifest status check should return a generic error (500 status code)
         if the execution errored.
@@ -159,7 +160,7 @@ class TestManifestService(LocalAppTestCase):
         self.assertEqual(response.status_code, 500)
 
     @mock.patch('lambdas.service.app.app.current_request')
-    def test_manifest_endpoint_invalid_token(self, current_request):
+    def test_manifest_endpoint_invalid_token(self, _current_request):
         """
         Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
         """
