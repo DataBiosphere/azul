@@ -6,7 +6,7 @@ from moto import mock_sts
 
 from azul import config
 from azul.logging import configure_test_logging
-from azul.service.manifest import ManifestService
+from azul.service.manifest_service import ManifestService
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
@@ -35,7 +35,7 @@ class ManifestServiceTest(AzulTestCase):
     # because they require an account id
 
     @mock_sts
-    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
+    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
     def test_manifest_status_success(self, step_function_helper):
         """
         A successful manifest job should return a 302 status and a url to the manifest
@@ -61,7 +61,7 @@ class ManifestServiceTest(AzulTestCase):
         self.assertEqual(manifest_url, location)
 
     @mock_sts
-    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
+    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
     def test_manifest_status_running(self, step_function_helper):
         """
         A running manifest job should return a 301 status and a url to retry checking the job status
@@ -86,7 +86,7 @@ class ManifestServiceTest(AzulTestCase):
         self.assertEqual(f'{retry_url}?token={expected_token}', location)
 
     @mock_sts
-    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
+    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
     def test_manifest_status_failed(self, step_function_helper):
         """
         A failed manifest job should raise a StateMachineError

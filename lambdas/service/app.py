@@ -45,7 +45,7 @@ from azul.security.authenticator import (
     AuthenticationError,
     Authenticator,
 )
-from azul.service.manifest import ManifestService
+from azul.service.manifest_service import ManifestService
 from azul.service.repository import (
     EntityNotFoundError,
     InvalidUUIDError,
