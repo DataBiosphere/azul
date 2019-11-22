@@ -9,7 +9,7 @@ from moto import (
 import requests
 
 from azul.logging import configure_test_logging
-from azul.service.responseobjects.storage_service import (
+from azul.service.storage_service import (
     MultipartUploadError,
     MultipartUploadHandler,
     StorageService,

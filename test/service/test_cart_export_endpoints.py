@@ -3,11 +3,11 @@ from unittest.mock import patch
 import requests
 import responses
 
-from azul.service.responseobjects.cart_export_job_manager import (
+from azul.service.cart_export_job_manager import (
     CartExportJobManager,
     InvalidExecutionTokenError,
 )
-from azul.service.responseobjects.collection_data_access import CollectionDataAccess
+from azul.service.collection_data_access import CollectionDataAccess
 from azul import config
 
 from app_test_case import AuthLocalAppTestCase

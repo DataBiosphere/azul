@@ -67,13 +67,13 @@ from azul.plugin import (
     Plugin,
     Translation,
 )
-from azul.service.responseobjects.buffer import FlushableBuffer
-from azul.service.responseobjects.storage_service import (
+from azul.service.buffer import FlushableBuffer
+from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
     MultipartUploadHandler,
     StorageService,
 )
-from azul.service.responseobjects.utilities import json_pp
+from azul.service.utilities import json_pp
 from azul.strings import to_camel_case
 from azul.types import (
     JSON,

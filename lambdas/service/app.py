@@ -51,23 +51,23 @@ from azul.service.repository import (
     InvalidUUIDError,
     RepositoryService,
 )
-from azul.service.responseobjects.cart_export_job_manager import (
+from azul.service.cart_export_job_manager import (
     CartExportJobManager,
     InvalidExecutionTokenError,
 )
-from azul.service.responseobjects.cart_export_service import CartExportService
-from azul.service.responseobjects.cart_item_manager import (
+from azul.service.cart_export_service import CartExportService
+from azul.service.cart_item_manager import (
     CartItemManager,
     DuplicateItemError,
     ResourceAccessError,
 )
-from azul.service.responseobjects.collection_data_access import CollectionDataAccess
-from azul.service.responseobjects.elastic_request_builder import (
+from azul.service.collection_data_access import CollectionDataAccess
+from azul.service.elastic_request_builder import (
     BadArgumentException,
     ElasticTransformDump,
     IndexNotFoundError,
 )
-from azul.service.responseobjects.storage_service import StorageService
+from azul.service.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
 from azul.types import (
     JSON,

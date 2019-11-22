@@ -42,14 +42,14 @@ from azul.plugin import (
     Plugin,
     ServiceConfig,
 )
-from azul.service.responseobjects.hca_response_v5 import (
+from azul.service.hca_response_v5 import (
     AutoCompleteResponse,
     FileSearchResponse,
     KeywordSearchResponse,
     ManifestResponse,
     SummaryResponse,
 )
-from azul.service.responseobjects.utilities import json_pp
+from azul.service.utilities import json_pp
 from azul.transformer import Document
 from azul.types import (
     JSON,

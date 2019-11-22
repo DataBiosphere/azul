@@ -33,9 +33,12 @@ from app_test_case import LocalAppTestCase
 from azul import config
 from azul.json_freeze import freeze
 from azul.logging import configure_test_logging
-from azul.service import AbstractService
-from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
-from azul.service.responseobjects.storage_service import StorageService
+from azul.service import (
+    AbstractService,
+    hca_response_v5,
+)
+from azul.service.elastic_request_builder import ElasticTransformDump
+from azul.service.storage_service import StorageService
 from azul.service.step_function_helper import StateMachineError
 from azul_test_case import AzulTestCase
 from retorts import ResponsesHelper
@@ -1110,7 +1113,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    @mock.patch('azul.service.responseobjects.hca_response_v5.ManifestResponse._get_seconds_until_expire')
+    @mock.patch('azul.service.hca_response_v5.ManifestResponse._get_seconds_until_expire')
     def test_metadata_cache_expiration(self, get_seconds):
         self.maxDiff = None
         self._index_canned_bundle(('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z'))
@@ -1127,7 +1130,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                     'filters': json.dumps({'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}),
                     'format': 'full'
                 }
-                from azul.service.responseobjects.hca_response_v5 import logger as logger_
+                from azul.service.hca_response_v5 import logger as logger_
                 with self.assertLogs(logger=logger_, level='INFO') as logs:
                     response = self.get_manifest(params)
                     self.assertEqual(200, response.status_code, 'Unable to download manifest')
@@ -1148,7 +1151,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    @mock.patch('azul.service.responseobjects.hca_response_v5.ManifestResponse._get_seconds_until_expire')
+    @mock.patch('azul.service.hca_response_v5.ManifestResponse._get_seconds_until_expire')
     def test_full_metadata_cache(self, get_seconds):
         get_seconds.return_value = 3600
         self.maxDiff = None
@@ -1187,7 +1190,6 @@ class TestManifestEndpoints(WebServiceTestCase):
     @mock_sts
     @mock_s3
     def test_manifest_content_disposition_header(self):
-        from azul.service.responseobjects import hca_response_v5
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
         with mock.patch.object(hca_response_v5, 'datetime') as mock_response:
             mock_date = datetime(1985, 10, 25, 1, 21)
@@ -1232,7 +1234,7 @@ class TestManifestResponse(AzulTestCase):
         """
         Verify a header with valid Expiration and LastModified values returns the correct expiration value
         """
-        from azul.service.responseobjects import hca_response_v5
+        from azul.service import hca_response_v5
         margin = hca_response_v5.ManifestResponse._date_diff_margin
         for object_age, expect_error in [(0, False),
                                          (margin - 1, False),

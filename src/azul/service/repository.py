@@ -5,7 +5,7 @@ from typing_extensions import Protocol
 import uuid
 
 from azul.service import AbstractService
-from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
+from azul.service.elastic_request_builder import ElasticTransformDump
 
 
 class FileUrlFunc(Protocol):
