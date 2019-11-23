@@ -4,7 +4,7 @@ import unittest
 
 from azul.logging import configure_test_logging
 from azul.plugin import ServiceConfig
-from azul.service.elastic_request_builder import ElasticTransformDump
+from azul.service.elasticsearch_service import ElasticTransformDump
 from service import WebServiceTestCase
 
 

@@ -7,7 +7,7 @@ import uuid
 from azul import config
 from azul.es import ESClientFactory
 from azul.service.dynamo_data_access import DynamoDataAccessor
-from azul.service.elastic_request_builder import ElasticTransformDump
+from azul.service.elasticsearch_service import ElasticTransformDump
 from azul.service.step_function_helper import StepFunctionHelper
 from azul.service.user_service import (
     UserService,

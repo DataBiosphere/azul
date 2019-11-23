@@ -11,7 +11,7 @@ from azul.service.cart_item_manager import (
     DuplicateItemError,
     ResourceAccessError,
 )
-from azul.service.elastic_request_builder import ElasticTransformDump
+from azul.service.elasticsearch_service import ElasticTransformDump
 from dynamo_test_case import DynamoTestCase
 from service import WebServiceTestCase
 

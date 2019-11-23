@@ -62,7 +62,7 @@ from azul.service.cart_item_manager import (
     ResourceAccessError,
 )
 from azul.service.collection_data_access import CollectionDataAccess
-from azul.service.elastic_request_builder import (
+from azul.service.elasticsearch_service import (
     BadArgumentException,
     ElasticTransformDump,
     IndexNotFoundError,

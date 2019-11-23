@@ -3,7 +3,7 @@ import logging
 
 from typing import Optional
 
-from azul.service.elastic_request_builder import BadArgumentException
+from azul.service.elasticsearch_service import BadArgumentException
 
 logger = logging.getLogger(__name__)
 

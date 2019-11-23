@@ -36,7 +36,7 @@ from azul.logging import configure_test_logging
 from azul.service import (
     hca_response_v5,
 )
-from azul.service.elastic_request_builder import ElasticTransformDump
+from azul.service.elasticsearch_service import ElasticTransformDump
 from azul.service.step_function_helper import StateMachineError
 from azul.service.storage_service import StorageService
 from azul.types import JSON
