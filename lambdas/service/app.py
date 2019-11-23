@@ -68,7 +68,6 @@ from azul.service.elasticsearch_service import (
     IndexNotFoundError,
 )
 from azul.service.storage_service import StorageService
-from azul.service.step_function_helper import StateMachineError
 from azul.types import (
     JSON,
     JSONs,
@@ -912,8 +911,6 @@ def handle_manifest_generation_request():
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
             raise BadRequestError('Invalid token given')
         raise
-    except StateMachineError as e:
-        raise ChaliceViewError(e.msg)
     except ValueError as e:
         raise BadRequestError(e.args)
 

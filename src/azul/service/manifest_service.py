@@ -92,22 +92,27 @@ class ManifestService(AbstractService):
         return wait_times[min(request_index, len(wait_times) - 1)]
 
     def _get_manifest_status(self, execution_id: str, request_index: int) -> Union[int, str]:
-        """Returns either the time to wait or the location of the result"""
+        """
+        Returns either the time to wait or the location of the result
+        """
         try:
-            execution = self.step_function_helper.describe_execution(
-                config.manifest_state_machine_name, execution_id)
+            execution = self.step_function_helper.describe_execution(config.manifest_state_machine_name, execution_id)
         except ClientError as e:
             if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
                 raise ValueError('Invalid token given')
-            raise
-
-        if execution['status'] == 'SUCCEEDED':
-            # Because describe_execution is eventually consistent output may not yet be present
-            if 'output' in execution:
-                execution_output = json.loads(execution['output'])
-                return execution_output['Location']
             else:
+                raise
+        output = execution.get('output', None)
+        status = execution['status']
+        if status == 'SUCCEEDED':
+            # Because describe_execution is eventually consistent output may
+            # not yet be present
+            if output is None:
                 return 1
-        elif execution['status'] == 'RUNNING':
+            else:
+                output = json.loads(output)
+                return output['Location']
+        elif status == 'RUNNING':
             return self._get_next_wait_time(request_index)
-        raise StateMachineError('Failed to generate manifest')
+        else:
+            raise StateMachineError(status, output)
