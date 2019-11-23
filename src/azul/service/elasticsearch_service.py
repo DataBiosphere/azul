@@ -41,6 +41,10 @@ from azul.plugin import (
     Plugin,
     ServiceConfig,
 )
+from azul.service import (
+    AbstractService,
+    BadArgumentException,
+)
 from azul.service.hca_response_v5 import (
     AutoCompleteResponse,
     FileSearchResponse,
@@ -58,19 +62,13 @@ from azul.types import (
 logger = logging.getLogger(__name__)
 
 
-class BadArgumentException(Exception):
-
-    def __init__(self, message):
-        super().__init__(message)
-
-
 class IndexNotFoundError(Exception):
 
     def __init__(self, missing_index: str):
         super().__init__(f'{missing_index} is not a valid uuid.')
 
 
-class ElasticsearchService:
+class ElasticsearchService(AbstractService):
 
     def __init__(self, service_config: Optional[ServiceConfig] = None):
         self.plugin = Plugin.load()

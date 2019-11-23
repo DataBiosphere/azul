@@ -3,9 +3,13 @@ import logging
 
 from typing import Optional
 
-from azul.service.elasticsearch_service import BadArgumentException
-
 logger = logging.getLogger(__name__)
+
+
+class BadArgumentException(Exception):
+
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class AbstractService:
