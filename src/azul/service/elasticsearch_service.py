@@ -1,18 +1,6 @@
 from itertools import chain
 import json
 import logging
-
-from elasticsearch_dsl.response import (
-    Response,
-    AggResponse,
-)
-from elasticsearch_dsl.response.aggs import (
-    FieldBucketData,
-    BucketData,
-    FieldBucket,
-    Bucket,
-)
-from more_itertools import one
 from typing import (
     List,
     Optional,
@@ -27,9 +15,20 @@ from elasticsearch_dsl import (
     Search,
 )
 from elasticsearch_dsl.aggs import (
-    Terms,
     Agg,
+    Terms,
 )
+from elasticsearch_dsl.response import (
+    AggResponse,
+    Response,
+)
+from elasticsearch_dsl.response.aggs import (
+    Bucket,
+    BucketData,
+    FieldBucket,
+    FieldBucketData,
+)
+from more_itertools import one
 
 from azul import config
 from azul.es import ESClientFactory
@@ -71,15 +70,7 @@ class IndexNotFoundError(Exception):
         super().__init__(f'{missing_index} is not a valid uuid.')
 
 
-class ElasticTransformDump:
-    """
-    This class works as the highest abstraction, serving as the top layer
-    between the webservice and ElasticSearch
-
-    Attributes:
-        es_client: The ElasticSearch client which will be used to connect
-        to ElasticSearch
-    """
+class ElasticsearchService:
 
     def __init__(self, service_config: Optional[ServiceConfig] = None):
         self.plugin = Plugin.load()

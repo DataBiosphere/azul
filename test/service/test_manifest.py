@@ -36,7 +36,7 @@ from azul.logging import configure_test_logging
 from azul.service import (
     hca_response_v5,
 )
-from azul.service.elasticsearch_service import ElasticTransformDump
+from azul.service.elasticsearch_service import ElasticsearchService
 from azul.service.step_function_helper import StateMachineError
 from azul.service.storage_service import StorageService
 from azul.types import JSON
@@ -199,7 +199,7 @@ class TestManifestEndpoints(WebServiceTestCase):
         return requests.get(url, stream=stream)
 
     def _get_manifest_url(self, format_, filters):
-        estd = ElasticTransformDump()
+        estd = ElasticsearchService()
         return estd.transform_manifest(format_, filters).headers['Location']
 
     @mock_sts

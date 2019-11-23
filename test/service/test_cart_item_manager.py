@@ -11,7 +11,7 @@ from azul.service.cart_item_manager import (
     DuplicateItemError,
     ResourceAccessError,
 )
-from azul.service.elasticsearch_service import ElasticTransformDump
+from azul.service.elasticsearch_service import ElasticsearchService
 from dynamo_test_case import DynamoTestCase
 from service import WebServiceTestCase
 
@@ -445,17 +445,17 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
         a search_after string each time that will allow pagination through all documents in the index
         """
         size = 700
-        es_td = ElasticTransformDump()
-        hits, search_after = es_td.transform_cart_item_request(entity_type='files',
-                                                               size=size)
+        service = ElasticsearchService()
+        hits, search_after = service.transform_cart_item_request(entity_type='files',
+                                                                 size=size)
         self.assertEqual(size, len(hits))
-        hits, search_after = es_td.transform_cart_item_request(entity_type='files',
-                                                               size=size,
-                                                               search_after=search_after)
+        hits, search_after = service.transform_cart_item_request(entity_type='files',
+                                                                 size=size,
+                                                                 search_after=search_after)
         self.assertEqual(size, len(hits))
-        hits, search_after = es_td.transform_cart_item_request(entity_type='files',
-                                                               size=size,
-                                                               search_after=search_after)
+        hits, search_after = service.transform_cart_item_request(entity_type='files',
+                                                                 size=size,
+                                                                 search_after=search_after)
         self.assertEqual(100, len(hits))
 
     @mock.patch('azul.deployment.aws.dynamo')

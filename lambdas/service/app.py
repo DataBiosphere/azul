@@ -64,7 +64,7 @@ from azul.service.cart_item_manager import (
 from azul.service.collection_data_access import CollectionDataAccess
 from azul.service.elasticsearch_service import (
     BadArgumentException,
-    ElasticTransformDump,
+    ElasticsearchService,
     IndexNotFoundError,
 )
 from azul.service.storage_service import StorageService
@@ -931,7 +931,7 @@ def generate_manifest(event, context):
                       'compact' (default) or 'terra.bdbag'
     :return: The URL to the generated manifest
     """
-    es_td = ElasticTransformDump()
+    es_td = ElasticsearchService()
     response = es_td.transform_manifest(event['format'], event['filters'])
     return {'Location': response.headers['Location']}
 
@@ -1580,8 +1580,8 @@ def add_all_results_to_cart(cart_id):
         filters = json.loads(filters or '{}')
     except json.JSONDecodeError:
         raise BadRequestError('Invalid filters given')
-    es_td = ElasticTransformDump()
-    hits, search_after = es_td.transform_cart_item_request(entity_type, filters=filters, size=1)
+    service = ElasticsearchService()
+    hits, search_after = service.transform_cart_item_request(entity_type, filters=filters, size=1)
     item_count = hits.total
 
     token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, entity_type, filters, item_count, 10000)
@@ -1918,12 +1918,12 @@ def get_data_object(file_uuid):
         "fileId": {"is": [file_uuid]},
         **({"fileVersion": {"is": [file_version]}} if file_version else {})
     }
-    es_td = ElasticTransformDump()
+    service = ElasticsearchService()
     pagination = _get_pagination(app.current_request, entity_type='files')
-    response = es_td.transform_request(filters=filters,
-                                       pagination=pagination,
-                                       post_filter=True,
-                                       entity_type='files')
+    response = service.transform_request(filters=filters,
+                                         pagination=pagination,
+                                         post_filter=True,
+                                         entity_type='files')
     if response['hits']:
         doc = one(one(response['hits'])['files'])
         data_obj = file_to_drs(doc)

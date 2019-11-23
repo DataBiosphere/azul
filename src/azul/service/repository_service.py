@@ -5,7 +5,7 @@ from typing_extensions import Protocol
 import uuid
 
 from azul.service import AbstractService
-from azul.service.elasticsearch_service import ElasticTransformDump
+from azul.service.elasticsearch_service import ElasticsearchService
 
 
 class FileUrlFunc(Protocol):
@@ -29,7 +29,7 @@ class InvalidUUIDError(Exception):
 class RepositoryService(AbstractService):
 
     def __init__(self):
-        self.es_td = ElasticTransformDump()
+        self.es_td = ElasticsearchService()
 
     def _get_data(self, entity_type, pagination, filters, file_url_func):
         # FIXME: which of these args are really optional? (looks like none of them)

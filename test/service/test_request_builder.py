@@ -4,7 +4,7 @@ import unittest
 
 from azul.logging import configure_test_logging
 from azul.plugin import ServiceConfig
-from azul.service.elasticsearch_service import ElasticTransformDump
+from azul.service.elasticsearch_service import ElasticsearchService
 from service import WebServiceTestCase
 
 
@@ -285,8 +285,8 @@ class TestRequestBuilder(WebServiceTestCase):
         self._test_create_request(expected_output, sample_filter)
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
-        es_td = ElasticTransformDump(self.service_config)
-        es_search = es_td._create_request(sample_filter, post_filter=post_filter)
+        service = ElasticsearchService(self.service_config)
+        es_search = service._create_request(sample_filter, post_filter=post_filter)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
@@ -322,9 +322,9 @@ class TestRequestBuilder(WebServiceTestCase):
             translation={'foo': 'path.to.foo'},
             facets=['foo']
         )
-        es_td = ElasticTransformDump(service_config)
-        es_search = es_td._create_request(sample_filter, post_filter=True)
-        es_td._annotate_aggs_for_translation(es_search)
+        service = ElasticsearchService(service_config)
+        es_search = service._create_request(sample_filter, post_filter=True)
+        service._annotate_aggs_for_translation(es_search)
         aggregation = es_search.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
