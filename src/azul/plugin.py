@@ -11,6 +11,7 @@ from typing import (
     Mapping,
     Tuple,
     Union,
+    MutableMapping,
 )
 
 from azul import config
@@ -27,6 +28,7 @@ from azul.types import (
 )
 
 ManifestConfig = Mapping[str, Mapping[str, str]]
+MutableManifestConfig = MutableMapping[str, MutableMapping[str, str]]
 Translation = Mapping[str, str]
 
 

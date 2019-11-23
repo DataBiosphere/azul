@@ -1,8 +1,6 @@
 import abc
-from botocore.exceptions import ClientError
 from collections import (
     ChainMap,
-    OrderedDict,
     defaultdict,
 )
 from copy import deepcopy
@@ -20,26 +18,28 @@ from io import (
 from itertools import chain
 import logging
 import os
+import re
 from tempfile import (
     TemporaryDirectory,
     mkstemp,
 )
-import re
 from typing import (
     Any,
+    Callable,
+    IO,
+    Iterable,
     List,
     Mapping,
     MutableMapping,
-    IO,
-    Iterable,
     Optional,
-    Callable,
     TypeVar,
+    cast,
 )
 import unicodedata
 from uuid import uuid4
 
 from bdbag import bdbag_api
+from botocore.exceptions import ClientError
 from chalice import Response
 from elasticsearch_dsl import Search
 from jsonobject.api import JsonObject
@@ -64,8 +64,8 @@ from azul.json_freeze import (
 )
 from azul.plugin import (
     ManifestConfig,
+    MutableManifestConfig,
     Plugin,
-    Translation,
 )
 from azul.service.buffer import FlushableBuffer
 from azul.service.storage_service import (
@@ -76,9 +76,9 @@ from azul.service.storage_service import (
 from azul.service.utilities import json_pp
 from azul.strings import to_camel_case
 from azul.types import (
+    AnyMutableJSON,
     JSON,
     MutableJSON,
-    AnyMutableJSON,
 )
 
 logger = logging.getLogger(__name__)
@@ -236,8 +236,7 @@ class ManifestResponse(AbstractResponse):
 
     def __init__(self,
                  plugin: Plugin,
-                 manifest_entries: ManifestConfig,
-                 mapping: Translation,
+                 manifest_config: ManifestConfig,
                  es_search: Search,
                  format_: str,
                  object_key: str = None):
@@ -245,20 +244,15 @@ class ManifestResponse(AbstractResponse):
         The constructor takes the raw response from ElasticSearch and creates
         a csv file based on the columns from the manifest_entries
         :param es_search: The Elasticsearch DSL Search object
-        :param manifest_entries: The columns that will be present in the manifest
-        :param mapping: The mapping between the columns to values within ES
+        :param manifest_config: The columns that will be present in the manifest
         :param object_key: A UUID string to use as the manifest's object key
         """
         self.plugin = plugin
         self.es_search = es_search
-        self.manifest_entries = OrderedDict(manifest_entries)
-        self.mapping = mapping
+        self.manifest_config = manifest_config
         self.storage_service = StorageService()
         self.format = format_
         self.object_key = object_key if object_key is not None else uuid4()
-
-        sources = list(self.manifest_entries.keys())
-        self.ordered_column_names = [field_name for source in sources for field_name in self.manifest_entries[source]]
 
     column_joiner = ' || '
 
@@ -405,7 +399,9 @@ class ManifestResponse(AbstractResponse):
             assert False
 
     def _write_compact(self, output: IO[str]) -> None:
-        writer = csv.DictWriter(output, self.ordered_column_names, dialect='excel-tab')
+        sources = list(self.manifest_config.keys())
+        ordered_column_names = [field_name for source in sources for field_name in self.manifest_config[source]]
+        writer = csv.DictWriter(output, ordered_column_names, dialect='excel-tab')
         writer.writeheader()
         for hit in self.es_search.scan():
             doc = self.plugin.translate_fields(hit.to_dict(), forward=False)
@@ -413,7 +409,7 @@ class ManifestResponse(AbstractResponse):
             for bundle in list(doc['bundles']):  # iterate over copy …
                 doc['bundles'] = [bundle]  # … to facilitate this in-place modifaction
                 row = {}
-                for doc_path, column_mapping in self.manifest_entries.items():
+                for doc_path, column_mapping in self.manifest_config.items():
                     entities = self._get_entities(doc_path, doc)
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
@@ -427,7 +423,7 @@ class ManifestResponse(AbstractResponse):
             yield new_row
 
     def _write_full(self, output: IO[str]) -> Optional[str]:
-        sources = list(self.manifest_entries['contents'].keys())
+        sources = list(self.manifest_config['contents'].keys())
         writer = csv.DictWriter(output, sources, dialect='excel-tab')
         writer.writeheader()
         project_short_names = set()
@@ -466,7 +462,8 @@ class ManifestResponse(AbstractResponse):
         """
         Write the BDBag as a local temporary file and return the path to that file.
         """
-        other_column_mappings = deepcopy(self.manifest_entries)
+        # The cast is safe because deepcopy makes a copy that we *can* modify
+        other_column_mappings = cast(MutableManifestConfig, deepcopy(self.manifest_config))
         bundle_column_mapping = other_column_mappings.pop('bundles')
         file_column_mapping = other_column_mappings.pop('contents.files')
 

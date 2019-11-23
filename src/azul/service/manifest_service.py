@@ -43,7 +43,6 @@ class ManifestService(ElasticsearchService):
         object_key = self._generate_manifest_object_key(filters) if format_ == 'full' else None
         manifest = ManifestResponse(self.plugin,
                                     manifest_config,
-                                    self.service_config.translation,
                                     es_search,
                                     format_,
                                     object_key=object_key)
