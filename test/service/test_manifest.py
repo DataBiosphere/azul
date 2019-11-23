@@ -52,13 +52,14 @@ def setUpModule():
     configure_test_logging(logger)
 
 
-class TestManifestService(LocalAppTestCase):
+class TestAsyncManifestService(LocalAppTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
         return 'service'
 
-    patch_step_function_helper = mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
+    patch_step_function_helper = mock.patch(
+        'azul.service.async_manifest_service.AsyncManifestService.step_function_helper')
 
     patch_current_request = mock.patch('lambdas.service.app.app.current_request')
 

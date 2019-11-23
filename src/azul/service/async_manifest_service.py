@@ -25,9 +25,9 @@ from azul.types import (
 logger = logging.getLogger(__name__)
 
 
-class ManifestService(AbstractService):
+class AsyncManifestService(AbstractService):
     """
-    Class containing logic for starting and checking the status of manifest generation jobs
+    Starting and checking the status of manifest generation jobs.
     """
     step_function_helper = StepFunctionHelper()
 

@@ -6,7 +6,7 @@ from moto import mock_sts
 
 from azul import config
 from azul.logging import configure_test_logging
-from azul.service.manifest_service import ManifestService
+from azul.service.async_manifest_service import AsyncManifestService
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
@@ -19,24 +19,24 @@ def setUpModule():
     configure_test_logging()
 
 
-class ManifestServiceTest(AzulTestCase):
+class TestAsyncManifestService(AzulTestCase):
 
     def test_token_encoding_invertibility(self):
         """
         Parameter encoding and decoding functions should be inverse of each other
         """
         uuid = {"execution_id": "6c9dfa3f-e92e-11e8-9764-ada973595c11"}
-        self.assertEqual(uuid, ManifestService.decode_token(ManifestService.encode_token(uuid)))
+        self.assertEqual(uuid, AsyncManifestService.decode_token(AsyncManifestService.encode_token(uuid)))
 
     def test_token_validation(self):
         token = {'no': 'id'}
-        self.assertRaises(ValueError, ManifestService.decode_token, ManifestService.encode_token(token))
+        self.assertRaises(ValueError, AsyncManifestService.decode_token, AsyncManifestService.encode_token(token))
 
     # @mock_sts is required for tests calling the arn helper methods in StepFunctionHelper
     # because they require an account id
 
     @mock_sts
-    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('azul.service.async_manifest_service.AsyncManifestService.step_function_helper')
     def test_manifest_status_success(self, step_function_helper):
         """
         A successful manifest job should return a 302 status and a url to the manifest
@@ -54,7 +54,7 @@ class ManifestServiceTest(AzulTestCase):
             'output': json.dumps({'Location': manifest_url})
         }
         step_function_helper.describe_execution.return_value = execution_success_output
-        manifest_service = ManifestService()
+        manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
         wait_time, location = manifest_service.start_or_inspect_manifest_generation('', token)
         self.assertEqual(type(wait_time), int)
@@ -62,7 +62,7 @@ class ManifestServiceTest(AzulTestCase):
         self.assertEqual(manifest_url, location)
 
     @mock_sts
-    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('azul.service.async_manifest_service.AsyncManifestService.step_function_helper')
     def test_manifest_status_running(self, step_function_helper):
         """
         A running manifest job should return a 301 status and a url to retry checking the job status
@@ -77,7 +77,7 @@ class ManifestServiceTest(AzulTestCase):
             'input': '{"filters": {}}'
         }
         step_function_helper.describe_execution.return_value = execution_running_output
-        manifest_service = ManifestService()
+        manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
         retry_url = config.service_endpoint() + '/manifest/files'
         wait_time, location = manifest_service.start_or_inspect_manifest_generation(retry_url, token)
@@ -87,7 +87,7 @@ class ManifestServiceTest(AzulTestCase):
         self.assertEqual(f'{retry_url}?token={expected_token}', location)
 
     @mock_sts
-    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
+    @mock.patch('azul.service.async_manifest_service.AsyncManifestService.step_function_helper')
     def test_manifest_status_failed(self, step_function_helper):
         """
         A failed manifest job should raise a StateMachineError
@@ -103,6 +103,6 @@ class ManifestServiceTest(AzulTestCase):
             'input': '{"filters": {"organ": {"is": ["lymph node"]}}}',
         }
         step_function_helper.describe_execution.return_value = execution_failed_output
-        manifest_service = ManifestService()
+        manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
         self.assertRaises(StateMachineError, manifest_service.start_or_inspect_manifest_generation, '', token)

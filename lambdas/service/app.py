@@ -61,7 +61,7 @@ from azul.service.elasticsearch_service import (
     ElasticsearchService,
     IndexNotFoundError,
 )
-from azul.service.manifest_service import ManifestService
+from azul.service.async_manifest_service import AsyncManifestService
 from azul.service.repository_service import (
     EntityNotFoundError,
     InvalidUUIDError,
@@ -901,7 +901,7 @@ def handle_manifest_generation_request():
         raise BadRequestError(f'{format_} is not a valid manifest format.')
     token = query_params.get('token')
     retry_url = self_url()
-    manifest_service = ManifestService()
+    manifest_service = AsyncManifestService()
     try:
         return manifest_service.start_or_inspect_manifest_generation(retry_url,
                                                                      token=token,
