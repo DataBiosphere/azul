@@ -46,6 +46,7 @@ from azul.security.authenticator import (
     Authenticator,
 )
 from azul.service import BadArgumentException
+from azul.service.async_manifest_service import AsyncManifestService
 from azul.service.cart_export_job_manager import (
     CartExportJobManager,
     InvalidExecutionTokenError,
@@ -61,7 +62,7 @@ from azul.service.elasticsearch_service import (
     ElasticsearchService,
     IndexNotFoundError,
 )
-from azul.service.async_manifest_service import AsyncManifestService
+from azul.service.manifest_service import ManifestService
 from azul.service.repository_service import (
     EntityNotFoundError,
     InvalidUUIDError,
@@ -928,8 +929,8 @@ def generate_manifest(event, context):
                       'compact' (default) or 'terra.bdbag'
     :return: The URL to the generated manifest
     """
-    es_td = ElasticsearchService()
-    response = es_td.transform_manifest(event['format'], event['filters'])
+    service = ManifestService()
+    response = service.transform_manifest(event['format'], event['filters'])
     return {'Location': response.headers['Location']}
 
 
