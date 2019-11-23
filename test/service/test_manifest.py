@@ -58,8 +58,12 @@ class TestManifestService(LocalAppTestCase):
     def lambda_name(cls) -> str:
         return 'service'
 
+    patch_step_function_helper = mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
+
+    patch_current_request = mock.patch('lambdas.service.app.app.current_request')
+
     @mock_sts
-    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
+    @patch_step_function_helper
     @mock.patch('uuid.uuid4')
     def test_manifest_endpoint_start_execution(self, mock_uuid, step_function_helper):
         """
@@ -96,7 +100,7 @@ class TestManifestService(LocalAppTestCase):
                     step_function_helper.describe_execution.assert_called_once()
                     step_function_helper.reset_mock()
 
-    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
+    @patch_step_function_helper
     def test_manifest_endpoint_check_status(self, step_function_helper):
         """
         Calling start manifest generation with a token should check the status
@@ -111,7 +115,7 @@ class TestManifestService(LocalAppTestCase):
         step_function_helper.start_execution.assert_not_called()
         step_function_helper.describe_execution.assert_called_once()
 
-    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
+    @patch_step_function_helper
     def test_manifest_endpoint_execution_not_found(self, step_function_helper):
         """
         Manifest status check should raise a BadRequestError (400 status code)
@@ -128,8 +132,8 @@ class TestManifestService(LocalAppTestCase):
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 400)
 
-    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
-    @mock.patch('lambdas.service.app.app.current_request')
+    @patch_step_function_helper
+    @patch_current_request
     def test_manifest_endpoint_boto_error(self, _current_request, step_function_helper):
         """
         Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
@@ -145,8 +149,8 @@ class TestManifestService(LocalAppTestCase):
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 500)
 
-    @mock.patch('azul.service.manifest_service.ManifestService.step_function_helper')
-    @mock.patch('lambdas.service.app.app.current_request')
+    @patch_step_function_helper
+    @patch_current_request
     def test_manifest_endpoint_execution_error(self, _current_request, step_function_helper):
         """
         Manifest status check should return a generic error (500 status code)
@@ -159,7 +163,7 @@ class TestManifestService(LocalAppTestCase):
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 500)
 
-    @mock.patch('lambdas.service.app.app.current_request')
+    @patch_current_request
     def test_manifest_endpoint_invalid_token(self, _current_request):
         """
         Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
