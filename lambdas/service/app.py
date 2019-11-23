@@ -905,7 +905,7 @@ def handle_manifest_generation_request():
     try:
         return manifest_service.start_or_inspect_manifest_generation(retry_url,
                                                                      token=token,
-                                                                     format=format_,
+                                                                     format_=format_,
                                                                      filters=filters)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
