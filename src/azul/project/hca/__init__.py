@@ -302,6 +302,19 @@ class Plugin(azul.plugin.Plugin):
                 "organization_name": "Broad Institute",
                 "portal_description": "Reducing barriers and accelerating single-cell research.",
                 "integrations": [
+                    {
+                        "integration_id": "977854a0-2eea-4fec-9459-d4807fe79f0c",
+                        "integration_type": "get",
+                        "entity_type": "project",
+                        "title": "Visualize in SCP",
+                        "entity_ids": {
+                            "dev": ["bc2229e7-e330-435a-8c2a-4275741f2c2d"],
+                            "staging": ["bc2229e7-e330-435a-8c2a-4275741f2c2d", "259f9041-b72f-45ce-894d-b645add2e620"],
+                            "integration": ["bc2229e7-e330-435a-8c2a-4275741f2c2d"],
+                            "prod": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
+                        },
+                        "portal_url": "https://singlecell.broadinstitute.org/single_cell/study/SCP495"
+                    },
                     # https://docs.google.com/document/d/1HBOPe6h_RjxltfbPenKsNmoN3MVAtkhVKJ_LGG1DBkA/edit#
                     # https://github.com/HumanCellAtlas/data-browser/issues/545#issuecomment-528092658
                     # {

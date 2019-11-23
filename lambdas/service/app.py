@@ -92,6 +92,9 @@ openapi_spec = {
             'name': 'Health',
             'description': 'For checking on service health'
         }
+    ],
+    'servers': [
+        {'url': config.service_endpoint()}
     ]
 }
 
@@ -1587,20 +1590,20 @@ def add_all_results_to_cart(cart_id):
     return {'count': item_count, 'statusUrl': status_url}
 
 
-# noinspection PyUnusedLocal
 @app.lambda_function(name=config.cart_item_write_lambda_basename)
-def cart_item_write_batch(event, context):
-    """Write a single batch to Dynamo and return pagination information for next batch to write"""
+def cart_item_write_batch(event, _context):
+    """
+    Write a single batch to Dynamo and return pagination information for next
+    batch to write.
+    """
     entity_type = event['entity_type']
     filters = event['filters']
     cart_id = event['cart_id']
     batch_size = event['batch_size']
-
     if 'write_result' in event:
         search_after = event['write_result']['search_after']
     else:
         search_after = None
-
     num_written, next_search_after = CartItemManager().write_cart_item_batch(entity_type,
                                                                              filters,
                                                                              cart_id,

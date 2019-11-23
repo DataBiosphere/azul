@@ -4,6 +4,7 @@ import logging
 from chalice import Chalice
 from chalice.app import Request
 
+from azul import config
 from azul.json import json_head
 from azul.openapi import openapi_spec
 from azul.types import LambdaContext
@@ -13,8 +14,8 @@ log = logging.getLogger(__name__)
 
 class AzulChaliceApp(Chalice):
 
-    def __init__(self, app_name, debug=False, env=None):
-        super().__init__(app_name, debug=debug, configure_logs=False, env=env)
+    def __init__(self, app_name):
+        super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
 
     def route(self, path, **kwargs):
         """
@@ -42,6 +43,10 @@ class AzulChaliceApp(Chalice):
         if log.isEnabledFor(logging.INFO):
             context = self.current_request.context
             query = self.current_request.query_params
+            if query is not None:
+                # Convert MultiDict to a plain dict that can be converted to
+                # JSON. Also flatten the singleton values.
+                query = {k: v[0] if len(v) == 1 else v for k, v in ((k, query.getlist(k)) for k in query.keys())}
             log.info(f"Received {context['httpMethod']} request "
                      f"to '{context['path']}' "
                      f"with{' parameters ' + json.dumps(query) if query else 'out parameters'}.")
