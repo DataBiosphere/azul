@@ -32,7 +32,7 @@ from azul import config
 from azul.json_freeze import freeze
 from azul.logging import configure_test_logging
 from azul.service import (
-    hca_response_v5,
+    manifest_service,
 )
 from azul.service.manifest_service import ManifestService
 from azul.service.storage_service import StorageService
@@ -79,7 +79,7 @@ class TestManifestEndpoints(WebServiceTestCase):
         return requests.get(url, stream=stream)
 
     def _get_manifest_url(self, format_, filters):
-        service = ManifestService()
+        service = ManifestService(StorageService())
         return service.transform_manifest(format_, filters).headers['Location']
 
     @mock_sts
@@ -977,7 +977,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    @mock.patch('azul.service.hca_response_v5.ManifestResponse._get_seconds_until_expire')
+    @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
     def test_metadata_cache_expiration(self, get_seconds):
         self.maxDiff = None
         self._index_canned_bundle(('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z'))
@@ -991,7 +991,7 @@ class TestManifestEndpoints(WebServiceTestCase):
             def log_messages_from_manifest_request(seconds_until_expire: int) -> List[str]:
                 get_seconds.return_value = seconds_until_expire
                 filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
-                from azul.service.hca_response_v5 import logger as logger_
+                from azul.service.manifest_service import logger as logger_
                 with self.assertLogs(logger=logger_, level='INFO') as logs:
                     response = self._get_manifest('full', filters)
                     self.assertEqual(200, response.status_code, 'Unable to download manifest')
@@ -1012,7 +1012,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    @mock.patch('azul.service.hca_response_v5.ManifestResponse._get_seconds_until_expire')
+    @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
     def test_full_metadata_cache(self, get_seconds):
         get_seconds.return_value = 3600
         self.maxDiff = None
@@ -1051,7 +1051,7 @@ class TestManifestEndpoints(WebServiceTestCase):
     @mock_s3
     def test_manifest_content_disposition_header(self):
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
-        with mock.patch.object(hca_response_v5, 'datetime') as mock_response:
+        with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_date = datetime(1985, 10, 25, 1, 21)
             mock_response.now.return_value = mock_date
             storage_service = StorageService()
@@ -1088,21 +1088,20 @@ class TestManifestResponse(AzulTestCase):
         """
         Verify a header with valid Expiration and LastModified values returns the correct expiration value
         """
-        from azul.service import hca_response_v5
-        margin = hca_response_v5.ManifestResponse._date_diff_margin
+        margin = ManifestService._date_diff_margin
         for object_age, expect_error in [(0, False),
                                          (margin - 1, False),
                                          (margin, False),
                                          (margin + 1, True)]:
             with self.subTest(object_age=object_age, expect_error=expect_error):
-                with mock.patch.object(hca_response_v5, 'datetime') as mock_datetime:
+                with mock.patch.object(manifest_service, 'datetime') as mock_datetime:
                     now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
                     mock_datetime.now.return_value = now
-                    with self.assertLogs(logger=hca_response_v5.logger, level='DEBUG') as logs:
+                    with self.assertLogs(logger=manifest_service.logger, level='DEBUG') as logs:
                         headers = {
                             'Expiration': 'expiry-date="Wed, 01 Jan 2020 00:00:00 UTC", rule-id="Test Rule"',
                             'LastModified': now - timedelta(days=float(config.manifest_expiration),
                                                             seconds=object_age)
                         }
-                        self.assertEqual(0, hca_response_v5.ManifestResponse._get_seconds_until_expire(headers))
+                        self.assertEqual(0, ManifestService._get_seconds_until_expire(headers))
                     self.assertIs(expect_error, any('does not match' in log for log in logs.output))

@@ -5,13 +5,13 @@ from abc import (
 from functools import lru_cache
 import importlib
 from typing import (
-    Type,
-    Sequence,
-    NamedTuple,
     Mapping,
-    Tuple,
-    Union,
     MutableMapping,
+    NamedTuple,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
 )
 
 from azul import config
@@ -27,8 +27,10 @@ from azul.types import (
     JSON,
 )
 
-ManifestConfig = Mapping[str, Mapping[str, str]]
-MutableManifestConfig = MutableMapping[str, MutableMapping[str, str]]
+ColumnMapping = Mapping[str, str]
+MutableColumnMapping = MutableMapping[str, str]
+ManifestConfig = Mapping[str, ColumnMapping]
+MutableManifestConfig = MutableMapping[str, MutableColumnMapping]
 Translation = Mapping[str, str]
 
 

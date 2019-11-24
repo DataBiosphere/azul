@@ -929,7 +929,7 @@ def generate_manifest(event, context):
                       'compact' (default) or 'terra.bdbag'
     :return: The URL to the generated manifest
     """
-    service = ManifestService()
+    service = ManifestService(StorageService())
     response = service.transform_manifest(event['format'], event['filters'])
     return {'Location': response.headers['Location']}
 
