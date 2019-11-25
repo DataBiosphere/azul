@@ -165,13 +165,7 @@ class ManifestService(ElasticsearchService):
 
     def _push_content_single_part(self, generator: 'ManifestGenerator', base_name: str) -> str:
         extension = generator.file_name_extension
-        if isinstance(generator, FullManifestGenerator):
-            # FIXME: This artificially replicates a bug but that bug also hides
-            #        another bug in test_manifest_content_disposition_header.
-            object_key = f'metadata/{base_name}.tsv'
-        else:
-            # FIXME: This should be the correct behavior for all manifests
-            object_key = f'manifests/{base_name}.{extension}'
+        object_key = f'manifests/{base_name}.{extension}'
         content_type = generator.content_type
         if generator.is_cacheable and self._can_use_cached_manifest(object_key):
             return object_key
@@ -206,7 +200,7 @@ class ManifestService(ElasticsearchService):
         elif isinstance(generator, StreamingManifestGenerator):
             with MultipartUploadHandler(object_key, content_type) as multipart_upload:
                 with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
-                    text_buffer = TextIOWrapper(buffer, encoding="utf-8", write_through=True)
+                    text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
                     content_disposition_basename = generator.write_to(text_buffer)
                     if content_disposition_basename:
                         self._create_name_object(object_key, content_disposition_basename, extension)

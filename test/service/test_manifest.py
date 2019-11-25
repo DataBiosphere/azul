@@ -1049,7 +1049,10 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    def test_manifest_content_disposition_header(self):
+    @mock.patch.object(ManifestService, '_can_use_cached_manifest')
+    def test_manifest_content_disposition_header(self, _can_use_cached_manifest):
+        # prevent individual subtests from reusing the cached manifest
+        _can_use_cached_manifest.return_value = False
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_date = datetime(1985, 10, 25, 1, 21)
