@@ -58,6 +58,7 @@ from azul.plugin import (
     ManifestConfig,
     MutableManifestConfig,
 )
+from azul.service import Filters
 from azul.service.buffer import FlushableBuffer
 from azul.service.elasticsearch_service import ElasticsearchService
 from azul.service.storage_service import (
@@ -300,7 +301,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         ]
 
     @classmethod
-    def for_format(cls, format_: str, service: ManifestService, filters: JSON) -> 'ManifestGenerator':
+    def for_format(cls,
+                   format_: str,
+                   service: ManifestService,
+                   filters: Filters) -> 'ManifestGenerator':
         """
         Return a generator instance for the given format and filters.
 
@@ -323,7 +327,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         else:
             assert False
 
-    def __init__(self, service: ManifestService, filters: JSON) -> None:
+    def __init__(self, service: ManifestService, filters: Filters) -> None:
         super().__init__()
         self.service = service
         self.filters = filters

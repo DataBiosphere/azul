@@ -1,7 +1,17 @@
 import json
 import logging
+from typing import (
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+)
 
-from typing import Optional
+from azul.types import PrimitiveJSON
+
+Filters = Mapping[str, Mapping[str, Sequence[PrimitiveJSON]]]
+MutableFilters = MutableMapping[str, MutableMapping[str, List[PrimitiveJSON]]]
 
 logger = logging.getLogger(__name__)
 
@@ -14,20 +24,14 @@ class BadArgumentException(Exception):
 
 class AbstractService:
 
-    def parse_filters(self, filters: Optional[str]):
+    def parse_filters(self, filters: Optional[str]) -> MutableFilters:
         """
-        Parses filters. Handles default cases where filters are None (not set) or {}
-        :param filters: string of python interpretable data
-        :raises ValueError: Will raise a ValueError if token is misformatted or invalid
-        :return: python literal
+        Parses a string with Azul filters in JSON syntax. Handles default cases
+        where filters are None or '{}'.
+
+        :raises BadArgumentException: if input is misformatted or invalid
         """
-        default_filters = {}
         if filters is None:
-            return default_filters
-        try:
-            filters = json.loads(filters or '{}')
-        except ValueError as e:
-            logger.error('Malformed filters parameter: {}'.format(e))
-            raise BadArgumentException('Malformed filters parameter')
+            return {}
         else:
-            return default_filters if filters == {} else filters
+            return json.loads(filters)

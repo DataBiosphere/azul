@@ -37,6 +37,8 @@ from azul.plugin import (
 from azul.service import (
     AbstractService,
     BadArgumentException,
+    Filters,
+    MutableFilters,
 )
 from azul.service.hca_response_v5 import (
     AutoCompleteResponse,
@@ -48,7 +50,6 @@ from azul.service.utilities import json_pp
 from azul.transformer import Document
 from azul.types import (
     JSON,
-    MutableJSON,
 )
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class ElasticsearchService(AbstractService):
             service_config = self.plugin.service_config()
         self.service_config = service_config
 
-    def _translate_filters(self, filters: JSON, field_mapping: JSON) -> MutableJSON:
+    def _translate_filters(self, filters: Filters, field_mapping: JSON) -> MutableFilters:
         """
         Function for translating the filters
 
@@ -128,7 +129,7 @@ class ElasticsearchService(AbstractService):
 
         return Q('bool', must=query_list)
 
-    def _create_aggregate(self, filters, facet_config, agg):
+    def _create_aggregate(self, filters: MutableFilters, facet_config, agg):
         """
         Creates the aggregation to be used in ElasticSearch
         :param filters: Translated filters from 'files/' endpoint call
@@ -210,7 +211,7 @@ class ElasticsearchService(AbstractService):
             translate(agg)
 
     def _create_request(self,
-                        filters,
+                        filters: Filters,
                         post_filter: bool = False,
                         source_filter: List[str] = None,
                         enable_aggregation: bool = True,
@@ -255,7 +256,7 @@ class ElasticsearchService(AbstractService):
         return es_search
 
     def _create_autocomplete_request(self,
-                                     filters,
+                                     filters: Filters,
                                      es_client,
                                      _query,
                                      search_field,
