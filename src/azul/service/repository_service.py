@@ -7,7 +7,6 @@ from typing_extensions import Protocol
 from azul.service import (
     Filters,
     MutableFilters,
-    AbstractService,
 )
 from azul.service.elasticsearch_service import ElasticsearchService
 
@@ -30,17 +29,14 @@ class InvalidUUIDError(Exception):
         super().__init__(f'{entity_id} is not a valid uuid.')
 
 
-class RepositoryService(AbstractService):
-
-    def __init__(self):
-        self.es_td = ElasticsearchService()
+class RepositoryService(ElasticsearchService):
 
     def _get_data(self, entity_type, pagination, filters: Filters, file_url_func):
         # FIXME: which of these args are really optional? (looks like none of them)
-        response = self.es_td.transform_request(filters=filters,
-                                                pagination=pagination,
-                                                post_filter=True,
-                                                entity_type=entity_type)
+        response = self.transform_request(filters=filters,
+                                          pagination=pagination,
+                                          post_filter=True,
+                                          entity_type=entity_type)
         if entity_type in ('files', 'bundles'):
             # Compose URL to contents of file so clients can download easily
             for hit in response['hits']:
@@ -118,7 +114,7 @@ class RepositoryService(AbstractService):
 
         def make_summary(entity_type):
             """Returns the key and value for a dict entry to transformation summary"""
-            return entity_type, self.es_td.transform_summary(filters=filters, entity_type=entity_type)
+            return entity_type, self.transform_summary(filters=filters, entity_type=entity_type)
 
         with ThreadPoolExecutor(max_workers=len(summary_fields_by_authority)) as executor:
             summaries = dict(executor.map(make_summary,
@@ -134,9 +130,9 @@ class RepositoryService(AbstractService):
         # HACK: Adding this small check to make sure the search bar works with
         if entity_type in {'donor', 'file-donor'}:
             field = 'donor'
-        response = self.es_td.transform_autocomplete_request(pagination,
-                                                             filters=filters,
-                                                             _query=_query,
-                                                             search_field=field,
-                                                             entry_format=entity_type)
+        response = self.transform_autocomplete_request(pagination,
+                                                       filters=filters,
+                                                       _query=_query,
+                                                       search_field=field,
+                                                       entry_format=entity_type)
         return response
