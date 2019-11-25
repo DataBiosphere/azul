@@ -79,17 +79,65 @@ class ManifestService(ElasticsearchService):
         super().__init__()
         self.storage_service = storage_service
 
-    def transform_manifest(self, format_: str, filters: JSON):
+    def transform_manifest(self, format_: str, filters: Filters):
         generator = ManifestGenerator.for_format(format_, self, filters)
-        object_key = self._generate_manifest_object_key(filters) if format_ == 'full' else uuid.uuid4()
-
-        if config.disable_multipart_manifests or format_ in ('terra.bdbag', 'bdbag'):
-            object_key = self._push_content_single_part(generator, object_key)
-            file_name = None
+        if generator.is_cacheable:
+            manifest_key = self._derive_manifest_key(filters)
         else:
-            object_key = self._push_content(generator, object_key)
-            file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
-        if format_ == 'full':
+            manifest_key = uuid.uuid4()
+        object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
+        if generator.is_cacheable and self._can_use_cached_manifest(object_key):
+            file_name = self._use_cached_manifest(generator, object_key)
+        else:
+            file_name = self._generate_manifest(generator, object_key)
+        presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
+        headers = {'Content-Type': 'application/json', 'Location': presigned_url}
+        # FIXME: this should go into app.py or a controller
+        return Response(body='', headers=headers, status_code=302)
+
+    def _generate_manifest(self, generator: 'ManifestGenerator', object_key: str) -> Optional[str]:
+        """
+        Generate the manifest and return the desired content disposiion file
+        name if necessary.
+        """
+        content_type = generator.content_type
+        if isinstance(generator, FileBasedManifestGenerator):
+            file_path, content_disposition_base_name = generator.create_file()
+            try:
+                self.storage_service.upload(file_path, object_key)
+            finally:
+                os.remove(file_path)
+        elif isinstance(generator, StreamingManifestGenerator):
+            if config.disable_multipart_manifests:
+                output = StringIO()
+                content_disposition_base_name = generator.write_to(output)
+                self.storage_service.put(object_key=object_key,
+                                         data=output.getvalue().encode(),
+                                         content_type=content_type)
+            else:
+                with MultipartUploadHandler(object_key, content_type) as multipart_upload:
+                    with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
+                        text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
+                        content_disposition_base_name = generator.write_to(text_buffer)
+        else:
+            raise NotImplementedError('Unsupported generator type', type(generator))
+        if content_disposition_base_name:
+            assert generator.use_content_disposition_file_name
+            file_name = self._create_name_object(object_key,
+                                                 content_disposition_base_name,
+                                                 generator.file_name_extension)
+        else:
+            if generator.use_content_disposition_file_name:
+                file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
+            else:
+                file_name = None
+        return file_name
+
+    def _use_cached_manifest(self, generator: 'ManifestGenerator', object_key: str) -> Optional[str]:
+        """
+        Return the content disposition file name of the exiting cached manifest.
+        """
+        if generator.use_content_disposition_file_name:
             name_object_key = object_key + self.name_object_suffix
             try:
                 file_name = self.storage_service.get(name_object_key).decode()
@@ -97,18 +145,19 @@ class ManifestService(ElasticsearchService):
                 if e.response['Error']['Code'] == 'NoSuchKey':
                     logger.warning("Name object '%s' doesn't exist. "
                                    "Generating pre-signed URL without Content-Disposition header.", name_object_key)
+                    file_name = None
                 else:
-                    raise e
-        presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
-        headers = {'Content-Type': 'application/json', 'Location': presigned_url}
-        return Response(body='', headers=headers, status_code=302)
+                    raise
+        else:
+            file_name = None
+        return file_name
 
-    def _generate_manifest_object_key(self, filters: JSON) -> str:
+    def _derive_manifest_key(self, filters: Filters) -> str:
         """
-        Generate and return a UUID string generated using the latest git commit and filters
-
-        :param filters: Filter parameter eg. {'organ': {'is': ['Brain']}}
-        :return: String representation of a UUID
+        Return a manifest key deterministically derived from the arguments and
+        the current commit hash. The same arguments will always produce the same
+        return value in one revision of this code. Different arguments should,
+        with a very high probability, produce different return values.
         """
         git_commit = config.lambda_git_status['commit']
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
@@ -163,53 +212,6 @@ class ManifestService(ElasticsearchService):
                 logger.info('Cached manifest about to expire: %s', object_key)
                 return False
 
-    def _push_content_single_part(self, generator: 'ManifestGenerator', base_name: str) -> str:
-        extension = generator.file_name_extension
-        object_key = f'manifests/{base_name}.{extension}'
-        content_type = generator.content_type
-        if generator.is_cacheable and self._can_use_cached_manifest(object_key):
-            return object_key
-        elif isinstance(generator, StreamingManifestGenerator):
-            output = StringIO()
-            content_disposition_basename = generator.write_to(output)
-            if content_disposition_basename:
-                self._create_name_object(object_key, content_disposition_basename, extension)
-            return self.storage_service.put(object_key=object_key,
-                                            data=output.getvalue().encode(),
-                                            content_type=content_type)
-        elif isinstance(generator, FileBasedManifestGenerator):
-            bdbag_path, content_disposition_basename = generator.create_file()
-            try:
-                return self.storage_service.upload(bdbag_path, object_key)
-            finally:
-                os.remove(bdbag_path)
-        else:
-            raise NotImplementedError('Unsupported generator type', type(generator))
-
-    def _push_content(self, generator: 'ManifestGenerator', base_name: str) -> str:
-        """
-        Push the content to S3 with multipart upload
-
-        :return: S3 object key
-        """
-        extension = generator.file_name_extension
-        object_key = f'manifests/{base_name}.{extension}'
-        content_type = generator.content_type
-        if generator.is_cacheable and self._can_use_cached_manifest(object_key):
-            return object_key
-        elif isinstance(generator, StreamingManifestGenerator):
-            with MultipartUploadHandler(object_key, content_type) as multipart_upload:
-                with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
-                    text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
-                    content_disposition_basename = generator.write_to(text_buffer)
-                    if content_disposition_basename:
-                        self._create_name_object(object_key, content_disposition_basename, extension)
-                    return object_key
-        elif isinstance(generator, FileBasedManifestGenerator):
-            raise NotImplementedError('Only streaming manifest generators support multipart upload')
-        else:
-            raise NotImplementedError('Unsupported generator type', type(generator))
-
     name_object_suffix = '.name'
 
     def _create_name_object(self, manifest_object_key, base_name, extension):
@@ -217,9 +219,10 @@ class ManifestService(ElasticsearchService):
         file_name_prefix = unicodedata.normalize('NFKD', base_name)
         file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
         timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
-        filename = f'{file_name_prefix} {timestamp}.{extension}'
+        file_name = f'{file_name_prefix} {timestamp}.{extension}'
         self.storage_service.put(object_key=manifest_object_key + self.name_object_suffix,
-                                 data=filename.encode())
+                                 data=file_name.encode())
+        return file_name
 
 
 SourceFilters = List[str]
@@ -238,7 +241,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     # expensive computation or I/O, it should cache its return value.
 
     @property
-    def is_cacheable(self):
+    def is_cacheable(self) -> bool:
         """
         True if output of this generator can be cached.
         """
@@ -260,6 +263,14 @@ class ManifestGenerator(metaclass=ABCMeta):
         The MIME type to use when describing the output of this generator.
         """
         raise NotImplementedError()
+
+    @property
+    def use_content_disposition_file_name(self) -> bool:
+        """
+        True if the manfest output produced by the generator should use a custom
+        file name when stored on a file system.
+        """
+        return True
 
     @property
     @abstractmethod
@@ -554,6 +565,11 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     @property
     def entity_type(self) -> str:
         return 'files'
+
+    @property
+    def use_content_disposition_file_name(self) -> bool:
+        # Apparently, Terra does not like the content disposition header
+        return False
 
     @cachedproperty
     def manifest_config(self) -> ManifestConfig:

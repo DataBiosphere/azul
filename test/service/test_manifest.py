@@ -1055,19 +1055,27 @@ class TestManifestEndpoints(WebServiceTestCase):
         _can_use_cached_manifest.return_value = False
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
-            mock_date = datetime(1985, 10, 25, 1, 21)
-            mock_response.now.return_value = mock_date
+            mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
             storage_service = StorageService()
             storage_service.create_bucket()
-            for filters, expected_name, name_object in [
-                ({'project': {'is': ['Single of human pancreas']}}, 'Single of human pancreas ', True),
-                # When requesting a full metadata TSV is with a filter for two or more projects, the
-                # Content-Disposition header shouldn't be set to the contents .name file.
-                ({'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                 'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721', False),
-                # If the filter is doesn't specify any parameter for projectId, the Content-Disposition
-                # header shouldn't be set to the contents .name file.
-                ({}, 'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3', False)
+            for filters, expected_name in [
+                # For a single project, the content disposition file name should
+                # be the project name followed by the date and time
+                (
+                    {'project': {'is': ['Single of human pancreas']}},
+                    'Single of human pancreas 1985-10-25 01.21'
+                ),
+                # In all other cases, the standard content disposition file name
+                # should be "hca-manifest-" followed by the manifest key, a
+                # v5 UUID deterministically derived from the filter and
+                (
+                    {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                    'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721',
+                ),
+                (
+                    {},
+                    'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3'
+                )
             ]:
                 for single_part in True, False:
                     with self.subTest(filters=filters, single_part=single_part):
@@ -1075,14 +1083,9 @@ class TestManifestEndpoints(WebServiceTestCase):
                             assert config.disable_multipart_manifests is single_part
                             url = self._get_manifest_url('full', filters)
                             query = urlparse(url).query
-                            content_dispositions = parse_qs(query).get('response-content-disposition')
-                            if single_part and not name_object:
-                                self.assertIsNone(content_dispositions)
-                            else:
-                                expected_date = '1985-10-25 01.21' if name_object else ''
-                                expected_value = f'attachment;filename="{expected_name}{expected_date}.tsv"'
-                                actual_value = one(content_dispositions)
-                                self.assertEqual(actual_value, expected_value)
+                            expected_cd = f'attachment;filename="{expected_name}.tsv"'
+                            actual_cd = one(parse_qs(query).get('response-content-disposition'))
+                            self.assertEqual(actual_cd, expected_cd)
 
 
 class TestManifestResponse(AzulTestCase):
