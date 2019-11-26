@@ -3,12 +3,12 @@ import json
 from unittest import TestCase
 from unittest.mock import patch
 
-from azul.service.responseobjects.cart_export_job_manager import CartExportJobManager
+from azul.service.cart_export_job_manager import CartExportJobManager
 
 
 class TestCartExportJobManager(TestCase):
 
-    @patch('azul.service.responseobjects.cart_export_job_manager.CartExportJobManager.step_function_helper')
+    @patch('azul.service.cart_export_job_manager.CartExportJobManager.step_function_helper')
     def test_foo(self, step_function_helper):
         expected_user_id = 'user1'
         expected_cart_id = 'cart1'
@@ -39,7 +39,7 @@ class TestCartExportJobManager(TestCase):
             token = service.initiate(expected_user_id, expected_cart_id, expected_access_token)
         self.assertEquals(expected_execution_id, service.decode_token(token)['execution_id'])
 
-    @patch('azul.service.responseobjects.cart_export_job_manager.CartExportJobManager.step_function_helper')
+    @patch('azul.service.cart_export_job_manager.CartExportJobManager.step_function_helper')
     def test_get_on_job_failed(self, step_function_helper):
         initial_mock_input = json.dumps({
             "execution_id": "foo",
@@ -131,7 +131,7 @@ class TestCartExportJobManager(TestCase):
         self.assertIn('stopped_at', job)
         self.assertEquals('FAILED', job['status'])
 
-    @patch('azul.service.responseobjects.cart_export_job_manager.CartExportJobManager.step_function_helper')
+    @patch('azul.service.cart_export_job_manager.CartExportJobManager.step_function_helper')
     def test_get_on_job_succeeded(self, step_function_helper):
         initial_mock_input = json.dumps({
             "execution_id": "foo",
@@ -230,7 +230,7 @@ class TestCartExportJobManager(TestCase):
         self.assertEquals(260, job['last_update']['state']['exported_item_count'])
         self.assertEquals(260, job['last_update']['state']['expected_exported_item_count'])
 
-    @patch('azul.service.responseobjects.cart_export_job_manager.CartExportJobManager.step_function_helper')
+    @patch('azul.service.cart_export_job_manager.CartExportJobManager.step_function_helper')
     def test_get_on_job_in_progress(self, step_function_helper):
         initial_mock_input = json.dumps({
             "execution_id": "foo",

@@ -23,7 +23,7 @@ import time
 
 from app_test_case import LocalAppTestCase
 from azul.modules import load_app_module
-from azul.service.responseobjects.storage_service import StorageService
+from azul.service.storage_service import StorageService
 from azul import config
 from azul.types import JSON
 from es_test_case import ElasticsearchTestCase

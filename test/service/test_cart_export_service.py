@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 import responses
 
-from azul.service.responseobjects.cart_export_service import (
+from azul.service.cart_export_service import (
     CartExportService,
     ExpiredAccessTokenError,
 )
-from azul.service.responseobjects.collection_data_access import CollectionDataAccess
+from azul.service.collection_data_access import CollectionDataAccess
 
 from retorts import ResponsesHelper
 

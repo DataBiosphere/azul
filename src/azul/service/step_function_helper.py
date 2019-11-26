@@ -54,7 +54,7 @@ class StepFunctionHelper:
         return events
 
 
-class StateMachineError(BaseException):
+class StateMachineError(RuntimeError):
 
-    def __init__(self, msg):
-        self.msg = msg
+    def __init__(self, *args) -> None:
+        super().__init__('Failed to generate manifest', *args)

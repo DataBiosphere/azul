@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import responses
 
-from azul.service.responseobjects.collection_data_access import (
+from azul.service.collection_data_access import (
     CollectionDataAccess,
     ClientError,
     CreationError,
