@@ -373,10 +373,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         "actions": [
                             "states:*"
                         ],
-                        "resources": [
-                            "arn:aws:states:us-east-1:861229788715:execution:azul-*:*",
-                            "arn:aws:states:us-east-1:861229788715:stateMachine:azul-*"
-                        ]
+                        "resources": aws_service_arns('Step Functions',
+                                                      'execution',
+                                                      'statemachine',
+                                                      StateMachineName='azul-*',
+                                                      ExecutionId='*')
                     },
                     {
                         "actions": [
