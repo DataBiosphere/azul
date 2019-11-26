@@ -35,10 +35,9 @@ import requests
 from azul import (
     config,
     drs,
-    RequirementError,
 )
 from azul.chalice import AzulChaliceApp
-from azul.health import Health
+from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.openapi import annotated_specs
 from azul.plugin import Plugin
@@ -74,6 +73,7 @@ from azul.types import (
     JSON,
     JSONs,
 )
+from azul.strings import pluralize
 
 log = logging.getLogger(__name__)
 
@@ -195,41 +195,16 @@ def openapi():
 })
 @app.route('/health/{keys}', methods=['GET'], cors=True)
 def health(keys: Optional[str] = None):
-    if keys == 'basic':
-        return {
-            'up': True,
-        }
-    elif keys == 'cached':
-        storage_service = StorageService()
-        health_object = json.loads(storage_service.get('health/service'))
-        max_age = 2 * 60
-        if time.time() - health_object['time'] > max_age:
-            return Response(status_code=500,
-                            body=json.dumps({'Message': 'Cached health object is stale'}))
-        else:
-            body = health_object['health']
-    else:
-        health = Health('service')
-        if keys is None:
-            if app.current_request.context['path'].endswith('/'):
-                keys = ()
-        else:
-            keys = keys.split(',')
-        try:
-            body = health.as_json(keys)
-        except RequirementError:
-            raise BadRequestError('Invalid health keys')
-    return Response(body=json.dumps(body),
-                    status_code=200 if body['up'] else 503)
+    controller = HealthController(lambda_name='service',
+                                  keys=keys,
+                                  request_path=app.current_request.context['path'])
+    return controller.response()
 
 
 @app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
-def generate_health_object(event_: chalice.app.CloudWatchEvent):
-    storage_service = StorageService()
-    health = Health('service')
-    health = health.as_json()
-    health_object = dict(time=time.time(), health=health)
-    storage_service.put(object_key='health/service', data=json.dumps(health_object))
+def generate_health_object(_event: chalice.app.CloudWatchEvent):
+    controller = HealthController(lambda_name='service')
+    controller.generate_cache()
 
 
 @app.route('/version', methods=['GET'], cors=True)
@@ -354,6 +329,19 @@ def validate_facet(value):
         raise BadRequestError(msg=f'Invalid parameter `{value}`')
 
 
+class Mandatory:
+    """
+    Validation wrapper signifying that a parameter is mandatory.
+    """
+
+    def __init__(self, validator: Callable) -> None:
+        super().__init__()
+        self._validator = validator
+
+    def __call__(self, param):
+        return self._validator(param)
+
+
 def validate_params(query_params: Mapping[str, str],
                     allow_extra_params: bool = False,
                     **validators: Callable[[Any], Any]) -> None:
@@ -367,10 +355,11 @@ def validate_params(query_params: Mapping[str, str],
                                but their value is not validated.
 
     :param validators: A dictionary mapping the name of a parameter to a function that will be used to validate the
-                       parameter. The callable will be called with a single argument, the parameter value to be
-                       validated, and is expected to raise ValueError or TypeError if the value is invalid.
+                       parameter if it is provided. The callable will be called with a single argument, the parameter
+                       value to be validated, and is expected to raise ValueError or TypeError if the value is invalid.
                        Only these exceptions will yield a 4xx status response, all other exceptions will yield
-                       a 500 status response.
+                       a 500 status response. If the validator is an instance of `Mandatory`, then validation will fail
+                       if its corresponding parameter is not provided.
 
     >>> validate_params({'order': 'asc'}, order=str)
 
@@ -385,46 +374,76 @@ def validate_params(query_params: Mapping[str, str],
     chalice.app.BadRequestError: BadRequestError: Invalid query parameter `foo`
 
     >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str, allow_extra_params=True)
+
+    >>> validate_params({}, foo=str)
+
+    >>> validate_params({}, foo=Mandatory(str))
+    Traceback (most recent call last):
+        ...
+    chalice.app.BadRequestError: BadRequestError: Missing required query parameter `foo`
+
     """
-    for param_name, param_value in query_params.items():
+
+    def fmt_error(err_description, params):
+        joined = ', '.join(f'`{p}`' for p in params)
+        return f'{err_description} {pluralize("query parameter", len(params))} {joined}'
+
+    provided_params = set(query_params.keys())
+    validation_params = set(validators.keys())
+    mandatory_params = {p for p, v in validators.items() if isinstance(v, Mandatory)}
+
+    if not allow_extra_params:
+        extra_params = provided_params - validation_params
+        if extra_params:
+            raise BadRequestError(msg=fmt_error('Invalid', extra_params))
+
+    if mandatory_params:
+        missing_params = mandatory_params - provided_params
+        if missing_params:
+            raise BadRequestError(msg=fmt_error('Missing required', missing_params))
+
+    provided_params &= validation_params
+
+    for param_name in provided_params:
+        param_value = query_params[param_name]
+        validator = validators[param_name]
         try:
-            validator = validators[param_name]
-        except KeyError:
-            if not allow_extra_params:
-                raise BadRequestError(msg=f'Invalid query parameter `{param_name}`')
-        else:
-            try:
-                validator(param_value)
-            except (TypeError, ValueError):
-                raise BadRequestError(f'Invalid input type for `{param_name}`')
+            validator(param_value)
+        except (TypeError, ValueError):
+            raise BadRequestError(msg=f'Invalid input type for `{param_name}`')
 
 
 @app.route('/integrations', methods=['GET'], cors=True)
 def get_integrations():
     query_params = app.current_request.query_params or {}
-    validate_params(query_params, entity_type=str, integration_type=str, entity_ids=str)
+    validate_params(query_params,
+                    entity_type=Mandatory(str),
+                    integration_type=Mandatory(str),
+                    entity_ids=str)
     try:
         entity_ids = query_params['entity_ids']
     except KeyError:
+        # Case where parameter is absent (do not filter using entity_id field)
         entity_ids = None
     else:
-        entity_ids = set(entity_ids.split(','))
-        if not entity_ids:
-            raise BadRequestError('Must at least specify one value for parameter `entity_ids`')
-    try:
-        entity_type = query_params['entity_type']
-        integration_type = query_params['integration_type']
-    except KeyError:
-        # FIXME: Make all /integration params optional or support mandatory params in validate_params()
-        #        https://github.com/DataBiosphere/azul/issues/1353
-        raise BadRequestError('Parameters `entity_type` and `integration_type` must be given')
+        if entity_ids:
+            # Case where parameter is present and non-empty (filter for matching id value)
+            entity_ids = {entity_id.strip() for entity_id in entity_ids.split(',')}
+        else:
+            # Case where parameter is present but empty (filter for missing entity_id field,
+            # i.e., there are no acceptable id values)
+            entity_ids = set()
+
+    entity_type = query_params['entity_type']
+    integration_type = query_params['integration_type']
+
     body = _fetch_integrations(entity_type, integration_type, entity_ids)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
                     body=json.dumps(body))
 
 
-def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Set[str]) -> JSONs:
+def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:
     """
     Return matching portal integrations.
 

@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from datetime import datetime
 import json
 import logging
 import os
@@ -6,24 +7,23 @@ import tempfile
 import types
 from typing import (
     Mapping,
+    NamedTuple,
     Optional,
     Union,
-    NamedTuple,
 )
 from unittest.mock import (
-    MagicMock,
     patch,
 )
 
 import boto3
 from botocore.response import StreamingBody
-from hca.dss import DSSClient
 # noinspection PyProtectedMember
 from humancellatlas.data.metadata.helpers.dss import _DSSClient
 from urllib3 import Timeout
 
 from azul import config
 from azul.types import JSON
+from hca.dss import DSSClient
 
 logger = logging.getLogger(__name__)
 
@@ -170,19 +170,17 @@ def _patch_client_for_direct_access(client: DSSClient):
 
     class NewGetBundle:
 
-        def _request(self, kwargs, **other_kwargs):
+        def paginate(self, *args, **kwargs):
             uuid, version, replica = kwargs['uuid'], kwargs['version'], kwargs['replica']
             try:
                 bundle = mini_dss.get_bundle(uuid, version, replica)
-                response = MagicMock()
-                response.json = lambda: {'bundle': bundle, 'version': version, 'uuid': uuid}
-                response.links.__getitem__.side_effect = KeyError()
             except Exception:
                 logger.warning('Failed getting bundle file %s, version %s directly. '
                                'Falling back to official method', uuid, version)
-                return old_get_bundle._request(kwargs, **other_kwargs)
+                return old_get_bundle.paginate(*args, **kwargs)
             else:
-                return response
+                page = {'bundle': bundle, 'version': version, 'uuid': uuid}
+                return [page]
 
     new_get_bundle = NewGetBundle()
     client.get_file = types.MethodType(new_get_file, client)
@@ -215,3 +213,41 @@ def shared_credentials():
         f.flush()
         with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
             yield
+
+
+version_format = '%Y-%m-%dT%H%M%S.%fZ'
+
+
+def new_version():
+    return datetime.utcnow().strftime(version_format)
+
+
+def validate_version(version: str):
+    """
+    >>> validate_version('2018-10-18T150431.370880Z')
+    '2018-10-18T150431.370880Z'
+
+    >>> validate_version('2018-10-18T150431.0Z')
+    Traceback (most recent call last):
+    ...
+    ValueError: ('2018-10-18T150431.0Z', '2018-10-18T150431.000000Z')
+
+    >>> validate_version(' 2018-10-18T150431.370880Z')
+    Traceback (most recent call last):
+    ...
+    ValueError: time data ' 2018-10-18T150431.370880Z' does not match format '%Y-%m-%dT%H%M%S.%fZ'
+
+    >>> validate_version('2018-10-18T150431.370880')
+    Traceback (most recent call last):
+    ...
+    ValueError: time data '2018-10-18T150431.370880' does not match format '%Y-%m-%dT%H%M%S.%fZ'
+
+    >>> validate_version('2018-10-187150431.370880Z')
+    Traceback (most recent call last):
+    ...
+    ValueError: time data '2018-10-187150431.370880Z' does not match format '%Y-%m-%dT%H%M%S.%fZ'
+    """
+    reparsed_version = datetime.strptime(version, version_format).strftime(version_format)
+    if version != reparsed_version:
+        raise ValueError(version, reparsed_version)
+    return version

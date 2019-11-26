@@ -291,13 +291,53 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     def _assert_tsv(self, expected, actual):
         expected_field_names, *expected_rows = map(list, zip(*expected))
-        tsv_file = csv.reader(actual.iter_lines(decode_unicode=True), delimiter='\t')
+        # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+        lines = actual.content.decode('utf-8').splitlines()
+        tsv_file = csv.reader(lines, delimiter='\t')
         actual_field_names = next(tsv_file)
         rows = freeze(list(tsv_file))
         self.assertEqual(expected_field_names, actual_field_names)
         for row in expected_rows:
             self.assertIn(freeze(row), rows)
         self.assertTrue(all(len(row) == len(expected_rows[0]) for row in rows))
+
+    @mock_sts
+    @mock_s3
+    def test_manifest_zarr(self):
+        """
+        Test that when downloading a manifest with a zarr, all of the files are added into the manifest even
+        if they are not listed in the service response.
+        """
+        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        search_params = {
+            'filters': json.dumps({"fileFormat": {"is": ["matrix", "mtx"]}}),
+        }
+        download_params = {
+            **search_params,
+            'format': 'tsv'
+        }
+
+        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
+        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+
+            response = requests.get(self.base_url + '/repository/files', params=search_params)
+            hits = response.json()['hits']
+            self.assertEqual(len(hits), 1)
+            for single_part in False, True:
+                with self.subTest(is_single_part=single_part):
+                    with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
+                        response = self.get_manifest(download_params)
+                        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                        # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+                        lines = response.content.decode('utf-8').splitlines()
+                        tsv_file = csv.DictReader(lines, delimiter='\t')
+                        rows = list(tsv_file)
+                        self.assertEqual(len(rows), 13)  # 12 related file, one original
+                        self.assertEqual(len(rows), len({row['file_uuid'] for row in rows}), 'Rows are not unique')
 
     @mock_sts
     @mock_s3
@@ -1036,13 +1076,17 @@ class TestManifestEndpoints(WebServiceTestCase):
             params = {'filters': json.dumps({'project': {'is': ['Single of human pancreas']}}), 'format': 'full'}
             response = self.get_manifest(params)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
-            tsv_file1 = csv.reader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+            lines = response.content.decode('utf-8').splitlines()
+            tsv_file1 = csv.reader(lines, delimiter='\t')
             fieldnames1 = set(next(tsv_file1))
 
             params = {'filters': json.dumps({'project': {'is': ['Mouse Melanoma']}}), 'format': 'full'}
             response = self.get_manifest(params)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
-            tsv_file2 = csv.reader(response.iter_lines(decode_unicode=True), delimiter='\t')
+            # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+            lines = response.content.decode('utf-8').splitlines()
+            tsv_file2 = csv.reader(lines, delimiter='\t')
             fieldnames2 = set(next(tsv_file2))
 
             intersection = fieldnames1 & fieldnames2

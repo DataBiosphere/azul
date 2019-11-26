@@ -13,6 +13,7 @@ python:
 before_install:
   - (cd deployments && ln -snf dev .active)
   - source environment
+  - export AZUL_DEBUG=0 # reduce test output volume
 
 install:
   - pip install -U setuptools==40.1.0 wheel==0.32.3
@@ -35,7 +36,6 @@ script:
   - make pep8
   - make test
   - make check_clean
-  - make check_autosquash
 
 after_success:
   - coveralls

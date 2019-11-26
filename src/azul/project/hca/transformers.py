@@ -2,7 +2,10 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections import Counter
+from collections import (
+    Counter,
+    defaultdict,
+)
 import logging
 from typing import (
     Any,
@@ -17,6 +20,7 @@ from typing import (
 )
 
 from humancellatlas.data.metadata import api
+from more_itertools import one
 
 from azul import (
     reject,
@@ -30,11 +34,13 @@ from azul.transformer import (
     DistinctAccumulator,
     Document,
     EntityReference,
+    FieldTypes,
     FrequencySetAccumulator,
     GroupingAggregator,
     SingleValueAccumulator,
     ListAccumulator,
     SetAccumulator,
+    UniqueValueCountAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
     SumAccumulator,
@@ -84,7 +90,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                 self._find_ancestor_samples(parent, samples)
 
     @classmethod
-    def _contact_types(cls) -> Mapping[str, type]:
+    def _contact_types(cls) -> FieldTypes:
         return {
             'contact_name': str,
             'corresponding_contributor': bool,
@@ -106,7 +112,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _publication_types(cls) -> Mapping[str, type]:
+    def _publication_types(cls) -> FieldTypes:
         return {
             'publication_title': str,
             'publication_url': str
@@ -120,7 +126,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _project_types(cls) -> Mapping[str, type]:
+    def _project_types(cls) -> FieldTypes:
         return {
             'project_title': str,
             'project_description': str,
@@ -136,6 +142,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'geo_series_accessions': str,
             'array_express_accessions': str,
             'insdc_study_accessions': str,
+            'supplementary_links': str,
             '_type': str
         }
 
@@ -170,19 +177,20 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'laboratory': list(laboratories),
             'institutions': list(institutions),
             'contact_names': list(contact_names),
-            'contributors': [self._contact(c) for c in project.contributors],
+            'contributors': list(map(self._contact, project.contributors)),
             'document_id': str(project.document_id),
             'publication_titles': list(publication_titles),
-            'publications': [self._publication(p) for p in project.publications],
+            'publications': list(map(self._publication, project.publications)),
             'insdc_project_accessions': list(project.insdc_project_accessions),
             'geo_series_accessions': list(project.geo_series_accessions),
             'array_express_accessions': list(project.array_express_accessions),
             'insdc_study_accessions': list(project.insdc_study_accessions),
+            'supplementary_links': list(project.supplementary_links),
             '_type': 'project'
         }
 
     @classmethod
-    def _specimen_types(cls) -> Mapping[str, type]:
+    def _specimen_types(cls) -> FieldTypes:
         return {
             'has_input_biomaterial': str,
             '_source': str,
@@ -211,7 +219,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _cell_suspension_types(cls) -> Mapping[str, type]:
+    def _cell_suspension_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'total_estimated_cells': int,
@@ -246,7 +254,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _cell_line_types(cls) -> Mapping[str, type]:
+    def _cell_line_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -264,7 +272,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _donor_types(cls) -> Mapping[str, type]:
+    def _donor_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -273,7 +281,8 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'diseases': str,
             'organism_age': str,
             'organism_age_unit': str,
-            'organism_age_range': dict
+            'organism_age_range': None,  # Exclude ranged values from translation, prevents problem due to shadow copies
+            'donor_count': None  # Exclude this field added by DonorOrganismAggregator from translation
         }
 
     def _donor(self, donor: api.DonorOrganism) -> JSON:
@@ -297,7 +306,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _organoid_types(cls) -> Mapping[str, type]:
+    def _organoid_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -314,23 +323,26 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _file_types(cls) -> Mapping[str, type]:
+    def _file_types(cls) -> FieldTypes:
         return {
             'content-type': str,
             'indexed': bool,
             'name': str,
             'sha256': str,
             'size': int,
+            'count': None,  # Exclude this field added by FileAggregator from translation, field will never be None
             'uuid': api.UUID4,
             'version': str,
             'document_id': str,
             'file_format': str,
+            'content_description': str,
             '_type': str,
+            'related_files': cls._related_file_types(),
             'read_index': str,
             'lane_index': int
         }
 
-    def _file(self, file: api.File) -> JSON:
+    def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> JSON:
         # noinspection PyDeprecation
         return {
             'content-type': file.manifest_entry.content_type,
@@ -342,25 +354,46 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'version': file.manifest_entry.version,
             'document_id': str(file.document_id),
             'file_format': file.file_format,
+            'content_description': list(file.content_description),
             '_type': 'file',
+            'related_files': list(map(self._related_file, related_files)),
             **(
                 {
                     'read_index': file.read_index,
                     'lane_index': file.lane_index
                 } if isinstance(file, api.SequenceFile) else {
                 }
-            )
+            ),
         }
 
     @classmethod
-    def _protocol_types(cls) -> Mapping[str, type]:
+    def _related_file_types(cls) -> FieldTypes:
+        return {
+            'name': str,
+            'sha256': str,
+            'size': int,
+            'uuid': api.UUID4,
+            'version': str,
+        }
+
+    def _related_file(self, file: api.File) -> JSON:
+        return {
+            'name': file.manifest_entry.name,
+            'sha256': file.manifest_entry.sha256,
+            'size': file.manifest_entry.size,
+            'uuid': file.manifest_entry.uuid,
+            'version': file.manifest_entry.version,
+        }
+
+    @classmethod
+    def _protocol_types(cls) -> FieldTypes:
         return {
             'document_id': str,
             'library_construction_approach': str,
             'instrument_manufacturer_model': str,
             'paired_end': bool,
             'workflow': str,
-            'assay_type': str
+            'assay_type': None  # Exclude counter dict used to produce a FrequencySetAccumulator from translation
         }
 
     def _protocol(self, protocol: api.Protocol) -> JSON:
@@ -380,7 +413,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         return protocol_
 
     @classmethod
-    def _sample_types(cls) -> Mapping[str, type]:
+    def _sample_types(cls) -> FieldTypes:
         return {
             'entity_type': str,
             'effective_organ': str,
@@ -423,7 +456,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
                             bundle_deleted=deleted)
 
     @classmethod
-    def field_types(cls):
+    def field_types(cls) -> FieldTypes:
         return {
             'samples': cls._sample_types(),
             'specimens': cls._specimen_types(),
@@ -435,6 +468,18 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'protocols': cls._protocol_types(),
             'projects': cls._project_types()
         }
+
+
+def _parse_zarr_file_name(file_name):
+    delimiter = [delim for delim in ('.zarr!', '.zarr/') if delim in file_name]
+    try:
+        delimiter = one(delimiter)
+        zarr_name, sub_name = file_name.split(delimiter)
+    except ValueError:
+        # Both one() and unpacking will raise ValueError for an unexpected
+        # number of items. In either case we have an invalid zarr
+        zarr_name, sub_name = None, None
+    return zarr_name, sub_name
 
 
 class TransformerVisitor(api.EntityVisitor):
@@ -476,11 +521,12 @@ class TransformerVisitor(api.EntityVisitor):
                     self.protocols[protocol.document_id] = protocol
         elif isinstance(entity, api.File):
             # noinspection PyDeprecation
-            if '.zarr!' in entity.manifest_entry.name and not entity.manifest_entry.name.endswith('.zattrs'):
-                # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
-                #
-                return
-            self.files[entity.document_id] = entity
+            file_name = entity.manifest_entry.name
+            zarr_name, sub_name = _parse_zarr_file_name(file_name)
+            zarr = zarr_name and sub_name
+            # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+            if not zarr or sub_name.endswith('.zattrs'):
+                self.files[entity.document_id] = entity
 
 
 class FileTransformer(Transformer):
@@ -500,28 +546,44 @@ class FileTransformer(Transformer):
                             manifest=manifest,
                             metadata_files=metadata_files)
         project = self._get_project(bundle)
+        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(bundle.files.values())
         for file in bundle.files.values():
-            # noinspection PyDeprecation
-            if '.zarr!' in file.manifest_entry.name and not file.manifest_entry.name.endswith('.zattrs'):
-                # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
-                #
-                continue
-            visitor = TransformerVisitor()
-            file.accept(visitor)
-            file.ancestors(visitor)
-            samples: MutableMapping[str, Sample] = dict()
-            self._find_ancestor_samples(file, samples)
-            contents = dict(samples=[self._sample(s) for s in samples.values()],
-                            specimens=[self._specimen(s) for s in visitor.specimens.values()],
-                            cell_suspensions=[self._cell_suspension(cs) for cs in
-                                              visitor.cell_suspensions.values()],
-                            cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
-                            donors=[self._donor(d) for d in visitor.donors.values()],
-                            organoids=[self._organoid(o) for o in visitor.organoids.values()],
-                            files=[self._file(file)],
-                            protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
-                            projects=[self._project(project)])
-            yield self._contribution(bundle, contents, file.document_id, deleted)
+            file_name = file.manifest_entry.name
+            zarr_name, sub_name = _parse_zarr_file_name(file_name)
+            zarr = zarr_name and sub_name
+            # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+            if not zarr or sub_name.endswith('.zattrs'):
+                if zarr:
+                    # This is the representative file, so add the related files
+                    related_files = zarr_stores[zarr_name]
+                else:
+                    related_files = ()
+                visitor = TransformerVisitor()
+                file.accept(visitor)
+                file.ancestors(visitor)
+                samples: MutableMapping[str, Sample] = dict()
+                self._find_ancestor_samples(file, samples)
+                contents = dict(samples=list(map(self._sample, samples.values())),
+                                specimens=list(map(self._specimen, visitor.specimens.values())),
+                                cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
+                                cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
+                                donors=list(map(self._donor, visitor.donors.values())),
+                                organoids=list(map(self._organoid, visitor.organoids.values())),
+                                files=[self._file(file, related_files=related_files)],
+                                protocols=list(map(self._protocol, visitor.protocols.values())),
+                                projects=[self._project(project)])
+                yield self._contribution(bundle, contents, file.document_id, deleted)
+
+    def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, List[api.File]]:
+        zarr_stores = defaultdict(list)
+        for file in files:
+            file_name = file.manifest_entry.name
+            zarr_name, sub_name = _parse_zarr_file_name(file_name)
+            if zarr_name and sub_name:
+                # Leave the representative file out of the list since it's already in the manifest
+                if not sub_name.startswith('.zattrs'):
+                    zarr_stores[zarr_name].append(file)
+        return zarr_stores
 
 
 class CellSuspensionTransformer(Transformer):
@@ -542,23 +604,22 @@ class CellSuspensionTransformer(Transformer):
                             metadata_files=metadata_files)
         project = self._get_project(bundle)
         for cell_suspension in bundle.biomaterials.values():
-            if not isinstance(cell_suspension, api.CellSuspension):
-                continue
-            samples: MutableMapping[str, Sample] = dict()
-            self._find_ancestor_samples(cell_suspension, samples)
-            visitor = TransformerVisitor()
-            cell_suspension.accept(visitor)
-            cell_suspension.ancestors(visitor)
-            contents = dict(samples=[self._sample(s) for s in samples.values()],
-                            specimens=[self._specimen(s) for s in visitor.specimens.values()],
-                            cell_suspensions=[self._cell_suspension(cell_suspension)],
-                            cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
-                            donors=[self._donor(d) for d in visitor.donors.values()],
-                            organoids=[self._organoid(o) for o in visitor.organoids.values()],
-                            files=[self._file(f) for f in visitor.files.values()],
-                            protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
-                            projects=[self._project(project)])
-            yield self._contribution(bundle, contents, cell_suspension.document_id, deleted)
+            if isinstance(cell_suspension, api.CellSuspension):
+                samples: MutableMapping[str, Sample] = dict()
+                self._find_ancestor_samples(cell_suspension, samples)
+                visitor = TransformerVisitor()
+                cell_suspension.accept(visitor)
+                cell_suspension.ancestors(visitor)
+                contents = dict(samples=list(map(self._sample, samples.values())),
+                                specimens=list(map(self._specimen, visitor.specimens.values())),
+                                cell_suspensions=[self._cell_suspension(cell_suspension)],
+                                cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
+                                donors=list(map(self._donor, visitor.donors.values())),
+                                organoids=list(map(self._organoid, visitor.organoids.values())),
+                                files=list(map(self._file, visitor.files.values())),
+                                protocols=list(map(self._protocol, visitor.protocols.values())),
+                                projects=[self._project(project)])
+                yield self._contribution(bundle, contents, cell_suspension.document_id, deleted)
 
 
 class SampleTransformer(Transformer):
@@ -586,14 +647,13 @@ class SampleTransformer(Transformer):
             sample.accept(visitor)
             sample.ancestors(visitor)
             contents = dict(samples=[self._sample(sample)],
-                            specimens=[self._specimen(s) for s in visitor.specimens.values()],
-                            cell_suspensions=[self._cell_suspension(cs) for cs in
-                                              visitor.cell_suspensions.values()],
-                            cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
-                            donors=[self._donor(d) for d in visitor.donors.values()],
-                            organoids=[self._organoid(o) for o in visitor.organoids.values()],
-                            files=[self._file(f) for f in visitor.files.values()],
-                            protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+                            specimens=list(map(self._specimen, visitor.specimens.values())),
+                            cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
+                            cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
+                            donors=list(map(self._donor, visitor.donors.values())),
+                            organoids=list(map(self._organoid, visitor.organoids.values())),
+                            files=list(map(self._file, visitor.files.values())),
+                            protocols=list(map(self._protocol, visitor.protocols.values())),
                             projects=[self._project(project)])
             yield self._contribution(bundle, contents, sample.document_id, deleted)
 
@@ -630,14 +690,14 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
             self._find_ancestor_samples(file, samples)
         project = self._get_project(bundle)
 
-        contents = dict(samples=[self._sample(s) for s in samples.values()],
-                        specimens=[self._specimen(s) for s in visitor.specimens.values()],
-                        cell_suspensions=[self._cell_suspension(cs) for cs in visitor.cell_suspensions.values()],
-                        cell_lines=[self._cell_line(cl) for cl in visitor.cell_lines.values()],
-                        donors=[self._donor(d) for d in visitor.donors.values()],
-                        organoids=[self._organoid(o) for o in visitor.organoids.values()],
-                        files=[self._file(f) for f in visitor.files.values()],
-                        protocols=[self._protocol(pl) for pl in visitor.protocols.values()],
+        contents = dict(samples=list(map(self._sample, samples.values())),
+                        specimens=list(map(self._specimen, visitor.specimens.values())),
+                        cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
+                        cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
+                        donors=list(map(self._donor, visitor.donors.values())),
+                        organoids=list(map(self._organoid, visitor.organoids.values())),
+                        files=list(map(self._file, visitor.files.values())),
+                        protocols=list(map(self._protocol, visitor.protocols.values())),
                         projects=[self._project(project)])
 
         yield self._contribution(bundle, contents, self._get_entity_id(bundle, project), deleted)
@@ -686,10 +746,10 @@ class BundleTransformer(BundleProjectTransformer):
             yield contrib
 
     @classmethod
-    def field_types(cls):
+    def field_types(cls) -> FieldTypes:
         return {
             **super().field_types(),
-            'metadata': list
+            'metadata': None  # Exclude fields that came from MetadataGenerator() from translation
         }
 
 
@@ -698,7 +758,8 @@ class FileAggregator(GroupingAggregator):
     def _transform_entity(self, entity: JSON) -> JSON:
         return dict(size=((entity['uuid'], entity['version']), entity['size']),
                     file_format=entity['file_format'],
-                    count=((entity['uuid'], entity['version']), 1))
+                    count=((entity['uuid'], entity['version']), 1),
+                    content_description=entity['content_description'])
 
     def _group_keys(self, entity) -> Iterable[Any]:
         return entity['file_format']
@@ -706,6 +767,8 @@ class FileAggregator(GroupingAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'file_format':
             return SingleValueAccumulator()
+        elif field == 'content_description':
+            return SetAccumulator(max_size=100)
         elif field in ('size', 'count'):
             return DistinctAccumulator(SumAccumulator(0))
         else:
@@ -750,9 +813,17 @@ class CellLineAggregator(SimpleAggregator):
 
 class DonorOrganismAggregator(SimpleAggregator):
 
+    def _transform_entity(self, entity: JSON) -> JSON:
+        return {
+            **entity,
+            'donor_count': entity['biomaterial_id']
+        }
+
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'organism_age_range':
             return SetOfDictAccumulator(max_size=100)
+        elif field == 'donor_count':
+            return UniqueValueCountAccumulator()
         else:
             return SetAccumulator(max_size=100)
 

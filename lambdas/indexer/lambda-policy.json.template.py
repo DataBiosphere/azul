@@ -90,11 +90,20 @@ emit({
             "Effect": "Allow",
             "Action": [
                 "s3:GetObject",
-                "s3:PutObject",
+                "s3:PutObject"
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}/health/*",
             ]
         },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameter"
+            ],
+            "Resource": [
+                f"arn:aws:ssm:{aws.region_name}:{aws.account}:parameter/dcp/*"
+            ]
+        }
     ]
 })
