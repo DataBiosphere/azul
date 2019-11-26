@@ -88,7 +88,10 @@ Code Style
   
     f'{a[0],a[1]}  # this is noisy and tedious
     ','.join(a)    # this is not
-  
+ 
+* We use `EAFP`_ as a principle.
+
+.. _EAFP: https://stackoverflow.com/questions/11360858/what-is-the-eafp-principle-in-python
 
 Logging
 *******
