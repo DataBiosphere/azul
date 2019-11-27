@@ -1,11 +1,10 @@
 import logging
 
-from azul import config
+import azul
 from azul.chalice import AzulChaliceApp
 
 
 def configure_app_logging(app: AzulChaliceApp, *loggers):
-    app.debug = config.debug > 0
     _configure_log_levels(app.log, *loggers)
 
 
@@ -24,6 +23,16 @@ def _configure_non_app_logging(*loggers):
 
 
 def _configure_log_levels(*loggers):
-    logging.getLogger().setLevel([logging.WARN, logging.INFO, logging.DEBUG][config.debug])
-    for logger in {*loggers, logging.getLogger('azul')}:
-        logger.setLevel([logging.INFO, logging.DEBUG, logging.DEBUG][config.debug])
+    azul_level_ = azul_log_level()
+    root_level = root_log_level()
+    logging.getLogger().setLevel(root_level)
+    for logger in {*loggers, azul.log}:
+        logger.setLevel(azul_level_)
+
+
+def root_log_level():
+    return [logging.WARN, logging.INFO, logging.DEBUG][azul.config.debug]
+
+
+def azul_log_level():
+    return [logging.INFO, logging.DEBUG, logging.DEBUG][azul.config.debug]

@@ -9,10 +9,11 @@ import azul.json
 import azul.json_freeze
 from azul.logging import configure_test_logging
 from azul.modules import (
-    load_module,
     load_app_module,
+    load_module,
 )
 import azul.openapi
+import azul.project.hca.metadata_generator
 import azul.service.responseobjects.elastic_request_builder
 import azul.strings
 import azul.threads
@@ -42,6 +43,7 @@ def load_tests(_loader, tests, _ignore):
     tests.addTests(doctest.DocTestSuite(azul.azulclient))
     tests.addTests(doctest.DocTestSuite(azul.service.responseobjects.elastic_request_builder))
     tests.addTests(doctest.DocTestSuite(retorts))
+    tests.addTests(doctest.DocTestSuite(azul.project.hca.metadata_generator))
     tests.addTests(doctest.DocTestSuite(load_app_module('service')))
     root = azul.config.project_root
     tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/envhook.py', 'envhook')))

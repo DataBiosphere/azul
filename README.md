@@ -79,7 +79,7 @@ generic with minimal need for project-specific behavior.
 
 ## 1.2 Architecture Diagram
 
-![Azul architecture diagram](docs/azul-arch.png)
+![Azul architecture diagram](docs/azul-arch.svg)
 
 # 2. Getting Started
 
