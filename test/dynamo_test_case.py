@@ -1,6 +1,6 @@
 from moto import mock_sts
 
-from azul.service.responseobjects.dynamo_data_access import DynamoDataAccessor
+from azul.service.dynamo_data_access import DynamoDataAccessor
 from docker_container_test_case import DockerContainerTestCase
 
 

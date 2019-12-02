@@ -50,6 +50,15 @@ Code Style
     self.call_me(foo, bar,
                  x=1, y=2)
 
+  The one exception to this rule are logging method invocations. The first
+  argument, the log message, is excluded from this rule::
+
+    logger.info('Waiting up to %s seconds for %s queues to %s ...',
+                timeout, len(queues), 'empty' if empty else 'not be empty')
+
+  Only if the second and subsequent arguments won't fit on one line, do we
+  wrap all arguments, one line per argument.
+
 * We don't use trailing commas in enumerations to optimize diffs yet. [#]_
 
 * We avoid the use of backslash for continuing statements beyond one line.
@@ -88,7 +97,10 @@ Code Style
   
     f'{a[0],a[1]}  # this is noisy and tedious
     ','.join(a)    # this is not
-  
+ 
+* We use `EAFP`_ as a principle.
+
+.. _EAFP: https://stackoverflow.com/questions/11360858/what-is-the-eafp-principle-in-python
 
 Logging
 *******

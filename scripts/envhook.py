@@ -1,17 +1,19 @@
 #! /usr/bin/env python3
 
 import errno
+from importlib.abc import (
+    MetaPathFinder,
+)
 from itertools import chain
 import os
+from pathlib import Path
 import subprocess
 import sys
-from pathlib import Path
-
 from typing import (
     Mapping,
-    TypeVar,
-    Tuple,
     MutableMapping,
+    Tuple,
+    TypeVar,
 )
 
 __all__ = ('setenv', 'main')
@@ -166,7 +168,50 @@ def _parse(env: str) -> MutableMapping[str, str]:
     return {k: v for k, _, v in (line.partition('=') for line in env.splitlines())}
 
 
+class SanitizingFinder(MetaPathFinder):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.bad_path = str(Path(__file__).resolve().parent.parent / 'src' / 'azul')
+        self.name = Path(__file__).resolve().name
+
+    def find_spec(self, *args, **kwargs):
+        sys_path = sys.path
+        while True:
+            try:
+                index = sys_path.index(self.bad_path)
+            except ValueError:
+                return None
+            else:
+                _print(f"{self.name}: Sanitizing sys.path by removing entry {index} containing '{self.bad_path}'.")
+                del sys_path[index]
+
+
+def sanitize_sys_path():
+    """
+    Certain PyCharm support scripts like docrunner.py add the directory
+    containing a module to `sys.path`, presumably with the intent to emulate
+    Python behavior for scripts run from the command line:
+
+    https://docs.python.org/3.6/using/cmdline.html#cmdoption-c
+
+    This has negative consequences when the module resides in the `src/azul`
+    directory of this project because that directory also contains modules
+    whose name conflicts with that of important built-in or third-party
+    packages, `json.py` for example. This project relies on the fully-qualified
+    package path of those modules to disambiguate them from the built-in ones
+    but  placing their containing parent directory on `sys.path` defeats that.
+
+    This method attempts to counteract that by removing the directory again.
+    """
+    # Can't remove the entry immediately because it might not yet be present.
+    # Instead, install a hook into the import machinery so it will be removed
+    # soon after is added.
+    sys.meta_path.insert(0, SanitizingFinder())
+
+
 if __name__ == '__main__':
     main(sys.argv[1:])
 elif __name__ == 'sitecustomize':
+    sanitize_sys_path()
     setenv()

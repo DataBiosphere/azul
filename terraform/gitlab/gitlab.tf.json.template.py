@@ -373,10 +373,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         "actions": [
                             "states:*"
                         ],
-                        "resources": [
-                            "arn:aws:states:us-east-1:861229788715:execution:azul-*:*",
-                            "arn:aws:states:us-east-1:861229788715:stateMachine:azul-*"
-                        ]
+                        "resources": aws_service_arns('Step Functions',
+                                                      'execution',
+                                                      'statemachine',
+                                                      StateMachineName='azul-*',
+                                                      ExecutionId='*')
                     },
                     {
                         "actions": [
@@ -880,7 +881,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/config:/etc/gitlab \
                                --volume /mnt/gitlab/logs:/var/log/gitlab \
                                --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:12.3.5-ce.0
+                               gitlab/gitlab-ce:12.4.5-ce.0
                         docker run \
                                --detach \
                                --name gitlab-runner \
@@ -888,7 +889,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
                                --network gitlab-runner-net \
                                --env DOCKER_HOST=tcp://gitlab-dind:2375 \
-                               gitlab/gitlab-runner:v12.3.0
+                               gitlab/gitlab-runner:v12.4.1
                     """[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 "tags": {
                     "Name": "azul-gitlab"

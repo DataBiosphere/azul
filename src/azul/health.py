@@ -19,7 +19,7 @@ from azul import (
 )
 from azul.decorators import memoized_property
 from azul.es import ESClientFactory
-from azul.service.responseobjects.storage_service import StorageService
+from azul.service.storage_service import StorageService
 from azul.types import JSON
 from chalice import (
     Response,

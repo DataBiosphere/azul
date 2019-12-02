@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from azul.service.responseobjects.buffer import FlushableBuffer
+from azul.service.buffer import FlushableBuffer
 from azul_test_case import AzulTestCase
 
 

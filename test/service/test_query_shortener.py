@@ -9,7 +9,7 @@ import requests
 from app_test_case import LocalAppTestCase
 from azul import config
 from azul.logging import configure_test_logging
-from azul.service.responseobjects.storage_service import StorageService
+from azul.service.storage_service import StorageService
 from retorts import ResponsesHelper
 
 
@@ -35,8 +35,8 @@ class TestQueryShortener(LocalAppTestCase):
 
     @mock_sts
     @mock_s3
-    @mock.patch('azul.service.responseobjects.storage_service.StorageService.put')
-    @mock.patch('azul.service.responseobjects.storage_service.StorageService.get')
+    @mock.patch('azul.service.storage_service.StorageService.put')
+    @mock.patch('azul.service.storage_service.StorageService.get')
     def test_valid_url(self, storage_service_get, storage_service_put):
         """
         Passing in a valid url should create an object in s3 and return a link
