@@ -3,6 +3,7 @@ from typing import (
     Callable,
     Optional,
     Tuple,
+    Union,
 )
 import json
 import logging
@@ -11,7 +12,9 @@ import boto3
 
 from azul import config
 from azul.plugin import Plugin
-from azul.types import JSONs
+from azul.types import (
+    JSONs,
+)
 from azul.version_service import (
     VersionService,
     VersionConflict,
@@ -154,6 +157,12 @@ class PortalService:
             }
 
         return list(map(transform_portal, db))
+
+    @classmethod
+    def validate(cls, portal_text: Union[str, bytes]) -> None:
+        portal = json.loads(portal_text)
+        for required_field in ('portal_id', 'integrations'):
+            portal[required_field]
 
     @property
     def _db_url(self) -> str:

@@ -58,7 +58,18 @@ emit({
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}/*",
-                f"arn:aws:s3:::{config.url_redirect_full_domain_name}/*"
+                f"arn:aws:s3:::{config.url_redirect_full_domain_name}/*",
+                f"arn:aws:s3:::{config.terraform_backend_bucket}/*"
+            ]
+        },
+        # Needed for GetObject to work in versioned bucket
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObjectVersion"
+            ],
+            "Resource": [
+                f"arn:aws:s3:::{config.terraform_backend_bucket}/*"
             ]
         },
         {
@@ -68,7 +79,8 @@ emit({
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}",
-                f"arn:aws:s3:::{config.url_redirect_full_domain_name}"
+                f"arn:aws:s3:::{config.url_redirect_full_domain_name}",
+                f"arn:aws:s3:::{config.terraform_backend_bucket}"
             ]
         },
         # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
@@ -106,6 +118,7 @@ emit({
                 f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_table_name}",
                 f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_item_table_name}",
                 f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_user_table_name}",
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_object_version_table_name}",
             ]
         },
         {

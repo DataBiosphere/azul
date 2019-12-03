@@ -583,9 +583,8 @@ class Config:
         return f'azul/{self.deployment_stage}/portals/{self.dss_deployment_stage}-db.json'
 
     @property
-    def object_version_table_name(self) -> str:
-        # TODO decide on actual name (and create actual table on DDB)
-        return 'sometable'
+    def dynamo_object_version_table_name(self) -> str:
+        return f'azul-{self.deployment_stage}-object-versions'
 
     terms_aggregation_size = 99999
 

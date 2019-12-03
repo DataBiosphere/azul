@@ -1,5 +1,6 @@
 from azul import config
 from azul.deployment import emit_tf
+from azul.version_service import VersionService
 
 emit_tf(
     {
@@ -62,6 +63,17 @@ emit_tf(
                             },
                             {
                                 "name": "CartId",
+                                "type": "S"
+                            }
+                        ]
+                    },
+                    "versions_table": {
+                        "name": config.dynamo_object_version_table_name,
+                        "billing_mode": "PAY_PER_REQUEST",
+                        "hash_key": VersionService.key_name,
+                        "attribute": [
+                            {
+                                "name": VersionService.key_name,
                                 "type": "S"
                             }
                         ]

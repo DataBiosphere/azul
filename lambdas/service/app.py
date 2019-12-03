@@ -425,7 +425,7 @@ def validate_params(query_params: Mapping[str, str],
         missing_params = mandatory_params - provided_params
         if missing_params:
             # Sorting is to produce a deterministic error message
-            raise BadRequestError(msg=fmt_error('Missing required', list(sorted(missing_params))))
+            raise BadRequestError(msg=fmt_error('Missing required', sorted(missing_params)))
 
     provided_params &= validation_params
 

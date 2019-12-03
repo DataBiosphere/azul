@@ -14,7 +14,7 @@ class VersionTableTestCase(AzulTestCase):
     def setUp(self):
         self.ddb_client = boto3.client('dynamodb')
 
-        self.ddb_client.create_table(TableName=config.object_version_table_name,
+        self.ddb_client.create_table(TableName=config.dynamo_object_version_table_name,
                                      AttributeDefinitions=[
                                          dict(AttributeName=VersionService.key_name, AttributeType='S'),
                                          dict(AttributeName=VersionService.value_name, AttributeType='S')
@@ -24,7 +24,7 @@ class VersionTableTestCase(AzulTestCase):
                                      ])
 
     def tearDown(self):
-        self.ddb_client.delete_table(TableName=config.object_version_table_name)
+        self.ddb_client.delete_table(TableName=config.dynamo_object_version_table_name)
 
 
 if __name__ == '__main__':

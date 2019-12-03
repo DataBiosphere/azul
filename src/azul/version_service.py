@@ -17,7 +17,7 @@ class VersionService:
         Strongly consistent read of object's current version, or None if the url
         is not tracked in the version table.
         """
-        response = self.client.get_item(TableName=config.object_version_table_name,
+        response = self.client.get_item(TableName=config.dynamo_object_version_table_name,
                                         Key={self.key_name: {'S': object_url}},
                                         ProjectionExpression=self.value_name,
                                         ConsistentRead=True)
@@ -55,7 +55,7 @@ class VersionService:
             # See:
             # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithItems.html#WorkingWithItems.ConditionalUpdate
             # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LegacyConditionalParameters.Expected.html
-            self.client.put_item(TableName=config.object_version_table_name,
+            self.client.put_item(TableName=config.dynamo_object_version_table_name,
                                  Item=item,
                                  **condition_params)
         except self.client.exceptions.ConditionalCheckFailedException:
