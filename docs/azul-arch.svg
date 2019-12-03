@@ -1,0 +1,1744 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:version="1.0beta1 (a4ee55bc41, 2019-11-15)"
+   sodipodi:docname="azul-arch.svg"
+   id="svg1683"
+   version="1.1"
+   viewBox="0 0 294.70178 211.54474"
+   height="211.54474mm"
+   width="294.70178mm">
+  <defs
+     id="defs1677">
+    <clipPath
+       id="inner_stroke_clip_path">
+      <path
+         inkscape:connector-curvature="0"
+         d="m -1840,240 h 912 c 26.5097,0 48,21.49033 48,48 v 624 c 0,26.5097 -21.4903,48 -48,48 h -912 c -26.5097,0 -48,-21.4903 -48,-48 V 288 c 0,-26.50967 21.4903,-48 48,-48 z"
+         id="path2263" />
+    </clipPath>
+    <font-face
+       overline-thickness="0"
+       overline-position="0"
+       strikethrough-thickness="0"
+       strikethrough-position="0"
+       v-hanging="0"
+       v-mathematical="0"
+       v-alphabetic="0"
+       v-ideographic="0"
+       hanging="0"
+       mathematical="0"
+       alphabetic="0"
+       ideographic="0"
+       accent-height="0"
+       stemh="0"
+       stemv="0"
+       font-family="sans-serif"
+       font-size="25"
+       units-per-em="1000"
+       underline-position="-37.597656"
+       underline-thickness="75.68359"
+       slope="0"
+       x-height="545.41016"
+       cap-height="757.8125"
+       ascent="1000"
+       descent="-250"
+       font-weight="400"
+       id="font-face2266">
+      <font-face-src>
+        <font-face-name
+           name="sans-serif" />
+      </font-face-src>
+    </font-face>
+    <clipPath
+       id="inner_stroke_clip_path_2">
+      <path
+         inkscape:connector-curvature="0"
+         d="m -2288,-352 h 240 c 17.673,0 32,14.3269 32,32 v 640 c 0,17.6731 -14.327,32 -32,32 h -240 c -17.673,0 -32,-14.3269 -32,-32 v -640 c 0,-17.6731 14.327,-32 32,-32 z"
+         id="path2268" />
+    </clipPath>
+    <clipPath
+       id="inner_stroke_clip_path_3">
+      <path
+         inkscape:connector-curvature="0"
+         d="m -1824,-144 h 880 c 17.6731,0 32,14.32689 32,32 v 64 c 0,17.673112 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.326888 -32,-32 v -64 c 0,-17.67311 14.3269,-32 32,-32 z"
+         id="path2271" />
+    </clipPath>
+    <clipPath
+       id="inner_stroke_clip_path_4">
+      <path
+         inkscape:connector-curvature="0"
+         d="m -720,144 h 272 c 17.6731,0 32,14.32689 32,32 v 848 c 0,17.6731 -14.3269,32 -32,32 h -272 c -17.6731,0 -32,-14.3269 -32,-32 V 176 c 0,-17.67311 14.3269,-32 32,-32 z"
+         id="path2274" />
+    </clipPath>
+    <clipPath
+       id="inner_stroke_clip_path_5">
+      <path
+         inkscape:connector-curvature="0"
+         d="m -2288,416 h 240 c 17.673,0 32,14.3269 32,32 v 576 c 0,17.6731 -14.327,32 -32,32 h -240 c -17.673,0 -32,-14.3269 -32,-32 V 448 c 0,-17.6731 14.327,-32 32,-32 z"
+         id="path2277" />
+    </clipPath>
+    <marker
+       orient="auto"
+       overflow="visible"
+       markerUnits="strokeWidth"
+       id="StickArrow_Marker"
+       stroke-linejoin="miter"
+       stroke-miterlimit="10"
+       viewBox="-1 -3 6 6"
+       markerWidth="6"
+       markerHeight="6"
+       color="#20414b"
+       opacity=".7460135">
+      <g
+         id="g2282">
+        <path
+           inkscape:connector-curvature="0"
+           d="M 3.2,0 H 0 M 0,-1.2 3.2,0 0,1.2"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1"
+           id="path2280" />
+      </g>
+    </marker>
+    <linearGradient
+       x1="0"
+       x2="1"
+       id="Gradient"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#666"
+         id="stop2285" />
+      <stop
+         offset=".5000592"
+         stop-color="#49799f"
+         id="stop2287" />
+      <stop
+         offset="1"
+         stop-color="#268bd3"
+         id="stop2289" />
+    </linearGradient>
+    <linearGradient
+       id="Obj_Gradient"
+       xlink:href="#Gradient"
+       gradientTransform="matrix(83.3275,-100.89447,100.89447,83.3275,-1049.6638,754.4472)" />
+    <linearGradient
+       id="Obj_Gradient_2"
+       xlink:href="#Gradient"
+       gradientTransform="matrix(83.3275,-100.89447,100.89447,83.3275,-1049.6638,914.4472)" />
+    <linearGradient
+       id="Obj_Gradient_3"
+       xlink:href="#Gradient"
+       gradientTransform="matrix(144.45533,-174.90917,174.90917,144.45533,-2240.2277,839.4546)" />
+    <linearGradient
+       id="Obj_Gradient_4"
+       xlink:href="#Gradient"
+       gradientTransform="matrix(144.45533,-174.90917,174.90917,144.45533,-2240.2277,967.4546)" />
+    <marker
+       orient="auto"
+       overflow="visible"
+       markerUnits="strokeWidth"
+       id="FilledArrow_Marker"
+       stroke-linejoin="miter"
+       stroke-miterlimit="10"
+       viewBox="-1 -3 6 6"
+       markerWidth="6"
+       markerHeight="6"
+       color="#20414b"
+       opacity=".7460135">
+      <g
+         id="g2298">
+        <path
+           inkscape:connector-curvature="0"
+           d="M 3.2,0 0,-1.2 v 2.4 z"
+           fill="currentColor"
+           stroke="currentColor"
+           stroke-width="1"
+           id="path2296" />
+      </g>
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     inkscape:window-maximized="1"
+     inkscape:window-y="-10"
+     inkscape:window-x="0"
+     inkscape:window-height="1053"
+     inkscape:window-width="1920"
+     showgrid="false"
+     inkscape:document-rotation="0"
+     inkscape:current-layer="Azul_Architecture: Layer 1"
+     inkscape:document-units="mm"
+     inkscape:cy="301.92688"
+     inkscape:cx="472.79998"
+     inkscape:zoom="1.1180205"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
+  <metadata
+     id="metadata1680">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-0.91629179,-2.7322653)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <g
+       transform="matrix(0.26458333,0,0,0.26458333,401.97767,-2.5324391)"
+       id="Azul_Architecture"
+       stroke="none"
+       stroke-opacity="1"
+       stroke-dasharray="none"
+       fill="none"
+       fill-opacity="1">
+      <title
+         id="title2305">Azul Architecture</title>
+      <g
+         id="Azul_Architecture: Layer 1">
+        <title
+           id="title2307">Layer 1</title>
+        <g
+           transform="matrix(1.1224362,0,0,1.1224362,123.17276,-47.465762)"
+           id="g4688">
+          <g
+             id="Graphic_43"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2309"
+               fill-opacity=".7460135"
+               fill="#20414b"
+               d="m -1840,240 h 912 c 26.5097,0 48,21.49033 48,48 v 624 c 0,26.5097 -21.4903,48 -48,48 h -912 c -26.5097,0 -48,-21.4903 -48,-48 V 288 c 0,-26.50967 21.4903,-48 48,-48 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2311"
+               clip-path="url(#inner_stroke_clip_path)"
+               stroke-width="2"
+               stroke-dasharray="1.0,4.0"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="white"
+               d="m -1840,240 h 912 c 26.5097,0 48,21.49033 48,48 v 624 c 0,26.5097 -21.4903,48 -48,48 h -912 c -26.5097,0 -48,-21.4903 -48,-48 V 288 c 0,-26.50967 21.4903,-48 48,-48 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2315"
+               fill="white"
+               transform="translate(-1759.061,256)"><tspan
+                 id="tspan2313"
+                 y="25"
+                 x="0"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Tallies Queue (FIFO, one message group per entity)</tspan></text>
+          </g>
+          <g
+             id="Graphic_27"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2318"
+               fill-opacity=".105281"
+               fill="white"
+               d="m -1824,320 h 880 c 17.6731,0 32,14.3269 32,32 v 64 c 0,17.6731 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.3269 -32,-32 v -64 c 0,-17.6731 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2320"
+               stroke-width="1"
+               stroke-dasharray="1.0,4.0"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="white"
+               d="m -1824,320 h 880 c 17.6731,0 32,14.3269 32,32 v 64 c 0,17.6731 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.3269 -32,-32 v -64 c 0,-17.6731 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2324"
+               fill="white"
+               transform="translate(-1451.511,367.4563)"><tspan
+                 id="tspan2322"
+                 y="25"
+                 x="0"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">files_123</tspan></text>
+          </g>
+          <g
+             id="Graphic_39"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2327"
+               fill-opacity=".105281"
+               fill="white"
+               d="m -1824,640 h 880 c 17.6731,0 32,14.3269 32,32 v 64 c 0,17.6731 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.3269 -32,-32 v -64 c 0,-17.6731 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2329"
+               stroke-width="1"
+               stroke-dasharray="1.0,4.0"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="white"
+               d="m -1824,640 h 880 c 17.6731,0 32,14.3269 32,32 v 64 c 0,17.6731 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.3269 -32,-32 v -64 c 0,-17.6731 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2333"
+               fill="white"
+               transform="translate(-1466.5134,687.4563)"><tspan
+                 id="tspan2331"
+                 y="25"
+                 x="0"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">projects_42</tspan></text>
+          </g>
+          <g
+             id="Graphic_42"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2336"
+               fill-opacity=".105281"
+               fill="white"
+               d="m -1824,800 h 880 c 17.6731,0 32,14.3269 32,32 v 64 c 0,17.6731 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.3269 -32,-32 v -64 c 0,-17.6731 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2338"
+               stroke-width="1"
+               stroke-dasharray="1.0,4.0"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="white"
+               d="m -1824,800 h 880 c 17.6731,0 32,14.3269 32,32 v 64 c 0,17.6731 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.3269 -32,-32 v -64 c 0,-17.6731 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2342"
+               fill="white"
+               transform="translate(-1459.0122,847.4563)"><tspan
+                 id="tspan2340"
+                 y="25"
+                 x="0"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">samples_71</tspan></text>
+          </g>
+          <g
+             id="Graphic_87"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2345"
+               fill-opacity=".105281"
+               fill="white"
+               d="m -1824,480 h 880 c 17.6731,0 32,14.3269 32,32 v 64 c 0,17.6731 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.3269 -32,-32 v -64 c 0,-17.6731 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2347"
+               stroke-width="1"
+               stroke-dasharray="1.0,4.0"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="white"
+               d="m -1824,480 h 880 c 17.6731,0 32,14.3269 32,32 v 64 c 0,17.6731 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.3269 -32,-32 v -64 c 0,-17.6731 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2351"
+               fill="white"
+               transform="translate(-1444.0098,527.4563)"><tspan
+                 id="tspan2349"
+                 y="25"
+                 x="0"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">files_98</tspan></text>
+          </g>
+          <g
+             id="Graphic_23"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2354"
+               fill-opacity=".7460135"
+               fill="#20414b"
+               d="m -2288,-352 h 240 c 17.673,0 32,14.3269 32,32 v 640 c 0,17.6731 -14.327,32 -32,32 h -240 c -17.673,0 -32,-14.3269 -32,-32 v -640 c 0,-17.6731 14.327,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2356"
+               clip-path="url(#inner_stroke_clip_path_2)"
+               stroke-width="2"
+               stroke-dasharray="1.0,4.0"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="white"
+               d="m -2288,-352 h 240 c 17.673,0 32,14.3269 32,32 v 640 c 0,17.6731 -14.327,32 -32,32 h -240 c -17.673,0 -32,-14.3269 -32,-32 v -640 c 0,-17.6731 14.327,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2360"
+               fill="white"
+               transform="translate(-2243.0122,-16.543701)"><tspan
+                 id="tspan2358"
+                 y="25"
+                 x="0"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Data Store</tspan></text>
+          </g>
+          <g
+             id="Graphic_9"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2363"
+               fill-opacity=".7460135"
+               fill="#20414b"
+               d="m -1824,-144 h 880 c 17.6731,0 32,14.32689 32,32 v 64 c 0,17.673112 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.326888 -32,-32 v -64 c 0,-17.67311 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2365"
+               clip-path="url(#inner_stroke_clip_path_3)"
+               stroke-width="2"
+               stroke-dasharray="1.0,4.0"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="white"
+               d="m -1824,-144 h 880 c 17.6731,0 32,14.32689 32,32 v 64 c 0,17.673112 -14.3269,32 -32,32 h -880 c -17.6731,0 -32,-14.326888 -32,-32 v -64 c 0,-17.67311 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2369"
+               fill="white"
+               transform="translate(-1526.5232,-96.5437)"><tspan
+                 id="tspan2367"
+                 y="25"
+                 x="0"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Notifications Queue</tspan></text>
+          </g>
+          <g
+             id="Graphic_22"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2372"
+               fill-opacity=".7460135"
+               fill="#20414b"
+               d="m -720,144 h 272 c 17.6731,0 32,14.32689 32,32 v 848 c 0,17.6731 -14.3269,32 -32,32 h -272 c -17.6731,0 -32,-14.3269 -32,-32 V 176 c 0,-17.67311 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2374"
+               clip-path="url(#inner_stroke_clip_path_4)"
+               stroke-width="2"
+               stroke-dasharray="1.0,4.0"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="white"
+               d="m -720,144 h 272 c 17.6731,0 32,14.32689 32,32 v 848 c 0,17.6731 -14.3269,32 -32,32 h -272 c -17.6731,0 -32,-14.3269 -32,-32 V 176 c 0,-17.67311 14.3269,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2380"
+               fill="white"
+               transform="translate(-681.5159,973.8252)"><tspan
+                 id="tspan2376"
+                 y="25"
+                 x="0"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Contributions</tspan><tspan
+                 id="tspan2378"
+                 y="58.087399"
+                 x="60.009766"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Index</tspan></text>
+          </g>
+          <g
+             id="Graphic_60"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2383"
+               fill-opacity=".7460135"
+               fill="#20414b"
+               d="m -2288,416 h 240 c 17.673,0 32,14.3269 32,32 v 576 c 0,17.6731 -14.327,32 -32,32 h -240 c -17.673,0 -32,-14.3269 -32,-32 V 448 c 0,-17.6731 14.327,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2385"
+               clip-path="url(#inner_stroke_clip_path_5)"
+               stroke-width="2"
+               stroke-dasharray="1.0,4.0"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="white"
+               d="m -2288,416 h 240 c 17.673,0 32,14.3269 32,32 v 576 c 0,17.6731 -14.327,32 -32,32 h -240 c -17.673,0 -32,-14.3269 -32,-32 V 448 c 0,-17.6731 14.327,-32 32,-32 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2391"
+               fill="white"
+               transform="translate(-2235.511,973.8252)"><tspan
+                 id="tspan2387"
+                 y="25"
+                 x="0"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Aggregate</tspan><tspan
+                 id="tspan2389"
+                 y="58.087399"
+                 x="30.004883"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Index</tspan></text>
+          </g>
+          <g
+             id="Graphic_11"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2394">Rectangle : Violet</title>
+            <path
+               id="path2396"
+               fill="#d33682"
+               d="m -1536,-336 h 304 c 8.8366,0 16,7.16344 16,16 v 96 c 0,8.83656 -7.1634,16 -16,16 h -304 c -8.8366,0 -16,-7.16344 -16,-16 v -96 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2398"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#ff419d"
+               d="m -1536,-336 h 304 c 8.8366,0 16,7.16344 16,16 v 96 c 0,8.83656 -7.1634,16 -16,16 h -304 c -8.8366,0 -16,-7.16344 -16,-16 v -96 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2402"
+               fill="#fdf6e3"
+               transform="translate(-1530,-288.5437)"><tspan
+                 id="tspan2400"
+                 y="25"
+                 x="25.980471"
+                 fill="#fdf6e3"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Indexer REST API</tspan></text>
+          </g>
+          <g
+             id="Graphic_12"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2405">Rectangle : Blue</title>
+            <path
+               id="path2407"
+               fill="#666"
+               d="m -2272,-320 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2409"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -2272,-320 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2415"
+               fill="white"
+               transform="translate(-2266,-305.0874)"><tspan
+                 id="tspan2411"
+                 y="25"
+                 x="7.985352"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Notification</tspan><tspan
+                 id="tspan2413"
+                 y="58.087399"
+                 x="82.997559"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">b1</tspan></text>
+          </g>
+          <g
+             id="Graphic_15"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2418">Rectangle : Blue</title>
+            <path
+               id="path2420"
+               fill="#666"
+               d="m -1808,-112 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.836556 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.163444 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2422"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -1808,-112 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.836556 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.163444 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2426"
+               fill="white"
+               transform="translate(-1802,-96.5437)"><tspan
+                 id="tspan2424"
+                 y="25"
+                 x="26.997561"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">b1</tspan></text>
+          </g>
+          <g
+             id="Line_13"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <line
+               id="line2429"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               y2="-272"
+               x2="-1572.9"
+               y1="-272"
+               x1="-2046" />
+          </g>
+          <g
+             id="Line_17"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2432"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               d="m -1216,-272 h 368 v 192 h -45.1"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Graphic_19"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2435">Rectangle : Blue</title>
+            <path
+               id="path2437"
+               fill="#268bd2"
+               d="m -1056,-112 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.836556 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.163444 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2439"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -1056,-112 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.836556 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.163444 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2443"
+               fill="white"
+               transform="translate(-1050,-96.5437)"><tspan
+                 id="tspan2441"
+                 y="25"
+                 x="26.997561"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">b2</tspan></text>
+          </g>
+          <g
+             id="Graphic_20"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2446">Rectangle : Green</title>
+            <path
+               id="path2448"
+               fill="#b58900"
+               d="m -1568,48 h 384 c 8.8366,0 16,7.163444 16,16 v 96 c 0,8.83656 -7.1634,16 -16,16 h -384 c -8.8366,0 -16,-7.16344 -16,-16 V 64 c 0,-8.836556 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2450"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#ebb201"
+               d="m -1568,48 h 384 c 8.8366,0 16,7.163444 16,16 v 96 c 0,8.83656 -7.1634,16 -16,16 h -384 c -8.8366,0 -16,-7.16344 -16,-16 V 64 c 0,-8.836556 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2454"
+               fill="#fdf6e3"
+               transform="translate(-1562,95.4563)"><tspan
+                 id="tspan2452"
+                 y="25"
+                 x="35.975586"
+                 fill="#fdf6e3"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Indexer Workers (64)</tspan></text>
+          </g>
+          <g
+             id="Line_21"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2457"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               d="m -1826,-80 h -90.9951 V 80 H -1602.9"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Graphic_24"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2460">Rectangle : Blue</title>
+            <path
+               id="path2462"
+               fill="#268bd2"
+               d="m -2272,224 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2464"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -2272,224 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2470"
+               fill="white"
+               transform="translate(-2266,238.9126)"><tspan
+                 id="tspan2466"
+                 y="25"
+                 x="52.992676"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Bundle</tspan><tspan
+                 id="tspan2468"
+                 y="58.087399"
+                 x="82.997559"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">b2</tspan></text>
+          </g>
+          <g
+             id="Line_25"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2473"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               d="m -2048,272 h 96 V 144 h 349.1"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Graphic_26"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <rect
+               id="rect2476"
+               fill="white"
+               height="43.087399"
+               width="130.01953"
+               y="58.456299"
+               x="-1827.144" />
+            <text
+               id="text2480"
+               fill="#20414b"
+               transform="translate(-1822.144,63.4563)"><tspan
+                 id="tspan2478"
+                 y="25"
+                 x="0"
+                 fill="#20414b"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">SQS Push</tspan></text>
+          </g>
+          <g
+             id="Graphic_28"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2483">Rectangle : Blue</title>
+            <path
+               id="path2485"
+               fill="#666"
+               d="m -1808,352 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2487"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -1808,352 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2491"
+               fill="white"
+               transform="translate(-1802,367.4563)"><tspan
+                 id="tspan2489"
+                 y="25"
+                 x="34.498779"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">1</tspan></text>
+          </g>
+          <g
+             id="Graphic_30"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2494">Rectangle : Blue</title>
+            <path
+               id="path2496"
+               fill="#666"
+               d="m -704,176 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2498"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -704,176 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2504"
+               fill="white"
+               transform="translate(-698,190.9126)"><tspan
+                 id="tspan2500"
+                 y="25"
+                 x="23.985352"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Contribution</tspan><tspan
+                 id="tspan2502"
+                 y="58.087399"
+                 x="23.985352"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">files_123_b1</tspan></text>
+          </g>
+          <g
+             id="Graphic_36"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2507">Rectangle : Yellow</title>
+            <path
+               id="path2509"
+               fill="#b58900"
+               d="m -1568,1024 h 368 c 8.8366,0 16,7.1634 16,16 v 96 c 0,8.8366 -7.1634,16 -16,16 h -368 c -8.8366,0 -16,-7.1634 -16,-16 v -96 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2511"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#ebb201"
+               d="m -1568,1024 h 368 c 8.8366,0 16,7.1634 16,16 v 96 c 0,8.8366 -7.1634,16 -16,16 h -368 c -8.8366,0 -16,-7.1634 -16,-16 v -96 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2515"
+               fill="#fdf6e3"
+               transform="translate(-1562,1071.4563)"><tspan
+                 id="tspan2513"
+                 y="25"
+                 x="12.973145"
+                 fill="#fdf6e3"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Agregator Workers (64)</tspan></text>
+          </g>
+          <g
+             id="Graphic_38"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2518">Rectangle : Blue</title>
+            <path
+               id="path2520"
+               fill="#666"
+               d="m -1808,672 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2522"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -1808,672 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2526"
+               fill="white"
+               transform="translate(-1802,687.4563)"><tspan
+                 id="tspan2524"
+                 y="25"
+                 x="34.498779"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">1</tspan></text>
+          </g>
+          <g
+             id="Graphic_37"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2529">Rectangle : Blue</title>
+            <path
+               id="path2531"
+               fill="url(#Obj_Gradient)"
+               d="m -1056,672 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0"
+               style="fill:url(#Obj_Gradient)" />
+            <path
+               id="path2533"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -1056,672 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2537"
+               fill="white"
+               transform="translate(-1050,687.4563)"><tspan
+                 id="tspan2535"
+                 y="25"
+                 x="34.498779"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">2</tspan></text>
+          </g>
+          <g
+             id="Graphic_41"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2540">Rectangle : Blue</title>
+            <path
+               id="path2542"
+               fill="#666"
+               d="m -1808,832 h 96 c 8.8366,0 16,7.1634 16,16 v 32 c 0,8.8366 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.1634 -16,-16 v -32 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2544"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -1808,832 h 96 c 8.8366,0 16,7.1634 16,16 v 32 c 0,8.8366 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.1634 -16,-16 v -32 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2548"
+               fill="white"
+               transform="translate(-1802,847.4563)"><tspan
+                 id="tspan2546"
+                 y="25"
+                 x="34.498779"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">1</tspan></text>
+          </g>
+          <g
+             id="Graphic_40"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2551">Rectangle : Blue</title>
+            <path
+               id="path2553"
+               fill="url(#Obj_Gradient_2)"
+               d="m -1056,832 h 96 c 8.8366,0 16,7.1634 16,16 v 32 c 0,8.8366 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.1634 -16,-16 v -32 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0"
+               style="fill:url(#Obj_Gradient_2)" />
+            <path
+               id="path2555"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -1056,832 h 96 c 8.8366,0 16,7.1634 16,16 v 32 c 0,8.8366 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.1634 -16,-16 v -32 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2559"
+               fill="white"
+               transform="translate(-1050,847.4563)"><tspan
+                 id="tspan2557"
+                 y="25"
+                 x="34.498779"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">2</tspan></text>
+          </g>
+          <g
+             id="Line_48"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2562"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               d="m -1888,600 h -64 v 456 h 349.1"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Line_67"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2565"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               d="m -2048,-144 h 96 v -128 h 381.1"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Graphic_51"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2568">Rectangle : Blue</title>
+            <path
+               id="path2570"
+               fill="#666"
+               d="m -704,304 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2572"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -704,304 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2578"
+               fill="white"
+               transform="translate(-698,318.9126)"><tspan
+                 id="tspan2574"
+                 y="25"
+                 x="23.985352"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Contribution</tspan><tspan
+                 id="tspan2576"
+                 y="58.087399"
+                 x="8.9829102"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">projects_42_b1</tspan></text>
+          </g>
+          <g
+             id="Graphic_52"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2581">Rectangle : Blue</title>
+            <path
+               id="path2583"
+               fill="#666"
+               d="m -704,432 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2585"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -704,432 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2591"
+               fill="white"
+               transform="translate(-698,446.9126)"><tspan
+                 id="tspan2587"
+                 y="25"
+                 x="23.985352"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Contribution</tspan><tspan
+                 id="tspan2589"
+                 y="58.087399"
+                 x="16.484131"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">samples_71_b1</tspan></text>
+          </g>
+          <g
+             id="Line_53"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2594"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               d="m -584,1056 v 64 h -581.1"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Graphic_59"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2597">Rectangle : Blue</title>
+            <path
+               id="path2599"
+               fill="#268bd2"
+               d="m -2272,576 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2601"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -2272,576 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2607"
+               fill="white"
+               transform="translate(-2266,590.9126)"><tspan
+                 id="tspan2603"
+                 y="25"
+                 x="30.489014"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Aggregate</tspan><tspan
+                 id="tspan2605"
+                 y="58.087399"
+                 x="37.990234"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">files_98</tspan></text>
+          </g>
+          <g
+             id="Graphic_58"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2610">Rectangle : Blue</title>
+            <path
+               id="path2612"
+               fill="url(#Obj_Gradient_3)"
+               d="m -2272,704 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.8366 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.1634 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0"
+               style="fill:url(#Obj_Gradient_3)" />
+            <path
+               id="path2614"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -2272,704 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.8366 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.1634 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2620"
+               fill="white"
+               transform="translate(-2266,718.9126)"><tspan
+                 id="tspan2616"
+                 y="25"
+                 x="30.489014"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Aggregate</tspan><tspan
+                 id="tspan2618"
+                 y="58.087399"
+                 x="15.486572"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">projects_42</tspan></text>
+          </g>
+          <g
+             id="Graphic_57"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2623">Rectangle : Blue</title>
+            <path
+               id="path2625"
+               fill="url(#Obj_Gradient_4)"
+               d="m -2272,832 h 208 c 8.8366,0 16,7.1634 16,16 v 64 c 0,8.8366 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.1634 -16,-16 v -64 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0"
+               style="fill:url(#Obj_Gradient_4)" />
+            <path
+               id="path2627"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -2272,832 h 208 c 8.8366,0 16,7.1634 16,16 v 64 c 0,8.8366 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.1634 -16,-16 v -64 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2633"
+               fill="white"
+               transform="translate(-2266,846.9126)"><tspan
+                 id="tspan2629"
+                 y="25"
+                 x="30.489014"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Aggregate</tspan><tspan
+                 id="tspan2631"
+                 y="58.087399"
+                 x="22.987793"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">samples_71</tspan></text>
+          </g>
+          <g
+             id="Graphic_62"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2636">Rectangle : Blue</title>
+            <path
+               id="path2638"
+               fill="#268bd2"
+               d="m -704,576 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2640"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -704,576 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2646"
+               fill="white"
+               transform="translate(-698,590.9126)"><tspan
+                 id="tspan2642"
+                 y="25"
+                 x="23.985352"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Contribution</tspan><tspan
+                 id="tspan2644"
+                 y="58.087399"
+                 x="31.486572"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">files_98_b2</tspan></text>
+          </g>
+          <g
+             id="Graphic_63"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2649">Rectangle : Blue</title>
+            <path
+               id="path2651"
+               fill="#268bd2"
+               d="m -704,704 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.8366 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.1634 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2653"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -704,704 h 240 c 8.83656,0 16,7.16344 16,16 v 64 c 0,8.8366 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.1634 -16,-16 v -64 c 0,-8.83656 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2659"
+               fill="white"
+               transform="translate(-698,718.9126)"><tspan
+                 id="tspan2655"
+                 y="25"
+                 x="23.985352"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Contribution</tspan><tspan
+                 id="tspan2657"
+                 y="58.087399"
+                 x="8.9829102"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">projects_42_b2</tspan></text>
+          </g>
+          <g
+             id="Graphic_64"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2662">Rectangle : Blue</title>
+            <path
+               id="path2664"
+               fill="#268bd2"
+               d="m -704,832 h 240 c 8.83656,0 16,7.1634 16,16 v 64 c 0,8.8366 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.1634 -16,-16 v -64 c 0,-8.8366 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2666"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -704,832 h 240 c 8.83656,0 16,7.1634 16,16 v 64 c 0,8.8366 -7.16344,16 -16,16 h -240 c -8.83656,0 -16,-7.1634 -16,-16 v -64 c 0,-8.8366 7.16344,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2672"
+               fill="white"
+               transform="translate(-698,846.9126)"><tspan
+                 id="tspan2668"
+                 y="25"
+                 x="23.985352"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Contribution</tspan><tspan
+                 id="tspan2670"
+                 y="58.087399"
+                 x="16.484131"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">samples_71_b2</tspan></text>
+          </g>
+          <g
+             id="Line_65"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2675"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               d="m -1184,1056 h 368 V 780 h -45.1"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Graphic_66"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2678">Rectangle : Blue</title>
+            <path
+               id="path2680"
+               fill="#268bd2"
+               d="m -2272,-192 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2682"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -2272,-192 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2688"
+               fill="white"
+               transform="translate(-2266,-177.0874)"><tspan
+                 id="tspan2684"
+                 y="25"
+                 x="7.985352"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Notification</tspan><tspan
+                 id="tspan2686"
+                 y="58.087399"
+                 x="82.997559"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">b2</tspan></text>
+          </g>
+          <g
+             id="Graphic_18"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <rect
+               id="rect2691"
+               fill="white"
+               height="43.087399"
+               width="70.009766"
+               y="-293.5437"
+               x="-1806.8481" />
+            <text
+               id="text2695"
+               fill="#20414b"
+               transform="translate(-1801.8482,-288.5437)"><tspan
+                 id="tspan2693"
+                 y="25"
+                 x="0"
+                 fill="#20414b"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">HTTP</tspan></text>
+          </g>
+          <g
+             id="Graphic_68"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2698">Rectangle : Blue</title>
+            <path
+               id="path2700"
+               fill="#666"
+               d="m -2272,96 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2702"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -2272,96 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2708"
+               fill="white"
+               transform="translate(-2266,110.9126)"><tspan
+                 id="tspan2704"
+                 y="25"
+                 x="52.992676"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Bundle</tspan><tspan
+                 id="tspan2706"
+                 y="58.087399"
+                 x="82.997559"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">b1</tspan></text>
+          </g>
+          <g
+             id="Line_69"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <line
+               id="line2711"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               y2="144"
+               x2="-1602.9"
+               y1="144"
+               x1="-2048" />
+          </g>
+          <g
+             id="Graphic_70"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2714">Rectangle : Blue</title>
+            <path
+               id="path2716"
+               fill="#666"
+               d="m -2272,448 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2718"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#a5a5a5"
+               d="m -2272,448 h 208 c 8.8366,0 16,7.16344 16,16 v 64 c 0,8.83656 -7.1634,16 -16,16 h -208 c -8.8366,0 -16,-7.16344 -16,-16 v -64 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2724"
+               fill="white"
+               transform="translate(-2266,462.9126)"><tspan
+                 id="tspan2720"
+                 y="25"
+                 x="30.489014"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Aggregate</tspan><tspan
+                 id="tspan2722"
+                 y="58.087399"
+                 x="30.489014"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">files_123</tspan></text>
+          </g>
+          <g
+             id="Graphic_74"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2727">Rectangle : Violet</title>
+            <path
+               id="path2729"
+               fill="#d33682"
+               d="M -2512,1040 V 432 c 0,-8.83656 7.1634,-16 16,-16 h 96 c 8.8366,0 16,7.16344 16,16 v 608 c 0,8.8366 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.1634 -16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2731"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#ff419d"
+               d="M -2512,1040 V 432 c 0,-8.83656 7.1634,-16 16,-16 h 96 c 8.8366,0 16,7.16344 16,16 v 608 c 0,8.8366 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.1634 -16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2735"
+               fill="#fdf6e3"
+               transform="rotate(-90,-715.27185,1749.2719)"><tspan
+                 id="tspan2733"
+                 y="25"
+                 x="177.98047"
+                 fill="#fdf6e3"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Service REST API</tspan></text>
+          </g>
+          <g
+             id="Line_75"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <line
+               id="line2738"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               y2="736"
+               x2="-2363.1001"
+               y1="736"
+               x1="-2320" />
+          </g>
+          <g
+             id="Line_32"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2741"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#StickArrow_Marker)"
+               d="m -1168,144 h 352 v 276 h -45.1"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Line_80"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2744"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#FilledArrow_Marker)"
+               d="m -1584,1120 h -584 v -45.1"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Line_82"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <path
+               id="path2747"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke-opacity=".7460135"
+               stroke="#20414b"
+               marker-end="url(#FilledArrow_Marker)"
+               d="m -1168,80 h 584 v 45.1"
+               inkscape:connector-curvature="0" />
+          </g>
+          <g
+             id="Graphic_83"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <rect
+               id="rect2750"
+               fill="white"
+               height="76.174805"
+               width="130.01953"
+               y="1017.9126"
+               x="-1843.2529" />
+            <text
+               id="text2756"
+               fill="#20414b"
+               transform="translate(-1838.2529,1022.9126)"><tspan
+                 id="tspan2752"
+                 y="25"
+                 x="0"
+                 fill="#20414b"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Emulated</tspan><tspan
+                 id="tspan2754"
+                 y="58.087399"
+                 x="0"
+                 fill="#20414b"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">SQS Push</tspan></text>
+          </g>
+          <g
+             id="Graphic_84"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <rect
+               id="rect2759"
+               fill="white"
+               height="43.087399"
+               width="145.02197"
+               y="1034.4563"
+               x="-1065.6324" />
+            <text
+               id="text2763"
+               fill="#20414b"
+               transform="translate(-1060.6324,1039.4563)"><tspan
+                 id="tspan2761"
+                 y="25"
+                 x="0"
+                 fill="#20414b"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">Deferment</tspan></text>
+          </g>
+          <g
+             id="Graphic_86"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2766">Rectangle : Blue</title>
+            <path
+               id="path2768"
+               fill="#268bd2"
+               d="m -1808,512 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2770"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -1808,512 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2774"
+               fill="white"
+               transform="translate(-1802,527.4563)"><tspan
+                 id="tspan2772"
+                 y="25"
+                 x="34.498779"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">1</tspan></text>
+          </g>
+          <g
+             id="Graphic_88"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2777">Rectangle : Blue</title>
+            <path
+               id="path2779"
+               fill="#268bd2"
+               d="m -1648,672 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2781"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -1648,672 h 96 c 8.8366,0 16,7.16344 16,16 v 32 c 0,8.83656 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.16344 -16,-16 v -32 c 0,-8.83656 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2785"
+               fill="white"
+               transform="translate(-1642,687.4563)"><tspan
+                 id="tspan2783"
+                 y="25"
+                 x="34.498779"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">1</tspan></text>
+          </g>
+          <g
+             id="Graphic_89"
+             transform="matrix(0.47299126,0,0,0.47299126,-271.11242,226.50868)">
+            <title
+               id="title2788">Rectangle : Blue</title>
+            <path
+               id="path2790"
+               fill="#268bd2"
+               d="m -1648,832 h 96 c 8.8366,0 16,7.1634 16,16 v 32 c 0,8.8366 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.1634 -16,-16 v -32 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <path
+               id="path2792"
+               stroke-width="4"
+               stroke-linejoin="round"
+               stroke-linecap="round"
+               stroke="#2ea9ff"
+               d="m -1648,832 h 96 c 8.8366,0 16,7.1634 16,16 v 32 c 0,8.8366 -7.1634,16 -16,16 h -96 c -8.8366,0 -16,-7.1634 -16,-16 v -32 c 0,-8.8366 7.1634,-16 16,-16 z"
+               inkscape:connector-curvature="0" />
+            <text
+               id="text2796"
+               fill="white"
+               transform="translate(-1642,847.4563)"><tspan
+                 id="tspan2794"
+                 y="25"
+                 x="34.498779"
+                 fill="white"
+                 font-weight="400"
+                 font-size="25"
+                 font-family="sans-serif">1</tspan></text>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

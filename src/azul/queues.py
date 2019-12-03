@@ -1,3 +1,4 @@
+from collections import deque
 from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
@@ -9,9 +10,9 @@ import os
 import time
 from typing import (
     Any,
+    List,
     Mapping,
 )
-from urllib.parse import urlparse
 
 import boto3
 import more_itertools
@@ -40,7 +41,7 @@ class Queues:
                                                         'Messages in Flight',
                                                         'Messages Delayed'))
         queues = self.azul_queues()
-        for queue_name, queue in queues:
+        for queue_name, queue in queues.items():
             print('{:<35s}{:^20s}{:^20s}{:^18s}'.format(queue_name,
                                                         queue.attributes['ApproximateNumberOfMessages'],
                                                         queue.attributes['ApproximateNumberOfMessagesNotVisible'],
@@ -52,7 +53,7 @@ class Queues:
         self._dump(queue, path)
 
     def dump_all(self):
-        for queue_name, queue in self.azul_queues():
+        for queue_name, queue in self.azul_queues().items():
             self._dump(queue, queue_name + '.json')
 
     def _dump(self, queue, path):
@@ -137,16 +138,61 @@ class Queues:
         return result
 
     def azul_queues(self):
-        sqs = boto3.resource('sqs')
-        all_queues = sqs.queues.all()
-        for queue in all_queues:
-            _, _, queue_name = urlparse(queue.url).path.rpartition('/')
-            if self._is_azul_queue(queue_name):
-                yield queue_name, queue
+        return self.get_queues(config.all_queue_names)
 
-    def _is_azul_queue(self, queue_name) -> bool:
-        return any(config.unqualified_resource_name_or_none(queue_name, suffix)[1] == config.deployment_stage
-                   for suffix in ('', '.fifo'))
+    @classmethod
+    def get_queues(cls, queue_names: List[str]) -> Mapping[str, Any]:
+        sqs = boto3.resource('sqs')
+        return {queue_name: sqs.get_queue_by_name(QueueName=queue_name) for queue_name in queue_names}
+
+    @classmethod
+    def count_messages(cls, queues: Mapping[str, Any]) -> int:
+        """
+        Count the number of messages in the given queues
+
+        :param queues: A collection of mapped queue_names to queues
+        :return: Total count of available, in flight, and delayed messages
+        """
+        attribute_names = ['ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed')]
+        total_message_count = 0
+        for queue_name, queue in queues.items():
+            queue.reload()
+            message_counts = [int(queue.attributes[attribute_name]) for attribute_name in attribute_names]
+            queue_length = sum(message_counts)
+            logger.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
+                         queue_name, queue_length, *message_counts)
+            total_message_count += queue_length
+        logger.info('Counting %i message(s) in %i queue(s).', total_message_count, len(queues))
+        return total_message_count
+
+    @classmethod
+    def wait_for_queue_level(cls, queue_names, empty: bool = True, timeout: int = 60):
+        """
+        Wait until the total count of queued messages reaches the desired level
+
+        :param queue_names: The names of the queues to check messages counts in
+        :param empty: If we should wait until the queues are empty. False to wait until not empty.
+        :param timeout: Give up waiting after this many seconds
+        """
+        queues = cls.get_queues(queue_names)
+        wait_start_time = time.time()
+        queue_size_history = deque(maxlen=10)
+
+        logger.info('Waiting up to %s seconds for %s queues to empty ...', timeout, len(queues))
+        while True:
+            total_message_count = cls.count_messages(queues)
+            queue_wait_time_elapsed = (time.time() - wait_start_time)
+            queue_size_history.append(total_message_count)
+            cumulative_queue_size = sum(queue_size_history)
+            if queue_wait_time_elapsed > timeout:
+                logger.error('The queue(s) are NOT at the desired level.')
+                return
+            elif (cumulative_queue_size == 0) == empty:
+                logger.info('The queue(s) are at the desired level.')
+                break
+            else:
+                logger.info('The most recently sampled queue sizes are %r.', queue_size_history)
+            time.sleep(5)
 
     def feed(self, path, queue_name, force=False):
         with open(path) as file:
@@ -198,7 +244,7 @@ class Queues:
         self.purge_queues_safely({queue_name: queue})
 
     def purge_all(self):
-        self.purge_queues_safely(dict(self.azul_queues()))
+        self.purge_queues_safely(self.azul_queues())
 
     def purge_queues_safely(self, queues: Mapping[str, Queue]):
         self.manage_lambdas(queues, enable=False)

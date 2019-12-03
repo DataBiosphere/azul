@@ -857,10 +857,10 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_metadata_generator(self):
         index_bundle = ('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
-        manifest, metadata = self._load_canned_bundle(index_bundle)
+        manifest, metadata_files = self._load_canned_bundle(index_bundle)
         generator = MetadataGenerator()
         uuid, version = index_bundle
-        generator.add_bundle(uuid, version, manifest, list(metadata.values()))
+        generator.add_bundle(uuid, version, manifest, metadata_files)
         metadata_rows = generator.dump()
         expected_metadata_contributions = 8
         self.assertEqual(expected_metadata_contributions, len(metadata_rows))
