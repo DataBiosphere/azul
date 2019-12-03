@@ -379,8 +379,13 @@ newly deployed API lambdas and create those resources for you. What the
 user-friendly domain names look like depends on project configuration. The
 default for HCA is currently
 
-http://indexer.${AZUL_DEPLOYMENT_STAGE}.azul.data.humancellatlas.org/
-http://service.${AZUL_DEPLOYMENT_STAGE}.azul.data.humancellatlas.org/
+http://indexer.${AZUL_DEPLOYMENT_STAGE}.explore.data.humancellatlas.org/
+http://service.${AZUL_DEPLOYMENT_STAGE}.explore.data.humancellatlas.org/
+
+Personal deployments are subdomains of the domain for the ``dev`` deployment:
+
+http://indexer.${AZUL_DEPLOYMENT_STAGE}.dev.explore.data.humancellatlas.org/
+http://service.${AZUL_DEPLOYMENT_STAGE}.dev.explore.data.humancellatlas.org/
 
 Note that while the native API Gateway URL refers to the stage in the URL path,
 the stable URL mentions it in the domain name.
@@ -408,7 +413,7 @@ deployment. To temporarily subscribe a personal deployment, set
 
 Subscription requires credentials to a service account that has the
 required privileges to create another service account under which the
-subscription is then made. This indirection exists to faciliate shared
+subscription is then made. This indirection exists to facilitate shared
 deployments without having to share any one person's Google credentials. The
 indexer service account must belong to a GCP project that is whitelisted in the
 DSS instance to which the indexer is subscribed to. The credentials of the
@@ -1181,11 +1186,11 @@ creating it, Gitlab must be given write access to **all** API IDs. For details
 refer to the `azul-gitlab` role and the policy of the same name, both defined in
 [gitlab.tf.json.template.py].
 
-[permisions boundary]: https://aws.amazon.com/blogs/security/delegate-permission-management-to-developers-using-iam-permissions-boundaries/
+[permissions boundary]: https://aws.amazon.com/blogs/security/delegate-permission-management-to-developers-using-iam-permissions-boundaries/
 
 Gitlab does not have general write permissions to IAM, its write access is
 limited to creating roles and attaching policies to them as long as the roles
-and policies specify the `azul-gitlab` policy as a [permisions boundary]. This
+and policies specify the `azul-gitlab` policy as a [permissions boundary]. This
 means that code running on the Gitlab instance can never escalate privileges
 beyond the boundary. This mechanism is defined in the `azul-gitlab-iam` policy.
 
