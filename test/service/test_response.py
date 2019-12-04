@@ -255,33 +255,39 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
-    paginations = [
-        {
-            "count": 2,
-            "order": "desc",
-            "pages": 1,
-            "size": 5,
-            "sort": "entryId",
-            "total": 2
-        },
-        {
-            "count": 2,
-            "order": "desc",
-            "pages": 1,
-            "search_after": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
-            "search_after_uid": "meta#32",
-            "size": 5,
-            "sort": "entryId",
-            "total": 2
-        }
-    ]
+    path = "/repository/files"
+    query = "?size=5&search_after=cbb998ce-ddaf-34fa-e163-d14b399c6b34&search_after_uid=meta%2332"
+
+    @property
+    def paginations(self):
+        return [
+            {
+                "count": 2,
+                "order": "desc",
+                "pages": 1,
+                "size": 5,
+                "sort": "entryId",
+                "total": 2
+            },
+            {
+                "count": 2,
+                "order": "desc",
+                "pages": 1,
+                "search_after": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
+                "search_after_uid": "meta#32",
+                "next": self.base_url + self.path + self.query,
+                "size": 5,
+                "sort": "entryId",
+                "total": 2
+            }
+        ]
 
     def test_file_search_response(self):
         """
         n=0: Test the FileSearchResponse object, making sure the functionality works as appropriate by asserting the
         apiResponse attribute is the same as expected.
 
-        n=1: Tests the FileSearchResponse object, using 'search_after' pagination.
+        n=1: Tests the FileSearchResponse object, using 'next' pagination.
         """
         hits = [
             {
@@ -384,6 +390,8 @@ class TestResponse(WebServiceTestCase):
                     "search_after_uid": None,
                     "search_before": None,
                     "search_before_uid": None,
+                    "next": None,
+                    "previous": None,
                     "size": 5,
                     "sort": "entryId",
                     "total": 2
@@ -400,6 +408,8 @@ class TestResponse(WebServiceTestCase):
                     "search_after_uid": "meta#32",
                     "search_before": None,
                     "search_before_uid": None,
+                    "next": self.base_url + self.path + self.query,
+                    "previous": None,
                     "size": 5,
                     "sort": "entryId",
                     "total": 2
@@ -876,6 +886,8 @@ class TestResponse(WebServiceTestCase):
                 "search_after_uid": None,
                 "search_before": None,
                 "search_before_uid": None,
+                "next": None,
+                "previous": None,
                 "size": 5,
                 "sort": "entryId",
                 "total": 2

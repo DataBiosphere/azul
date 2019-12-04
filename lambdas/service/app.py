@@ -125,7 +125,7 @@ def _get_pagination(current_request, entity_type):
         pagination['search_before'] = [sb, sb_uid]
     elif sa and sb:
         raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
-
+    pagination['_self_url'] = self_url()  # For `_generate_paging_dict()`
     return pagination
 
 
