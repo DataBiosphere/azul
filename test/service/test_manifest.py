@@ -18,7 +18,6 @@ from urllib.parse import (
 )
 from zipfile import ZipFile
 
-from botocore.exceptions import ClientError
 from more_itertools import (
     first,
     one,
@@ -29,14 +28,15 @@ from moto import (
 )
 import requests
 
-from app_test_case import LocalAppTestCase
 from azul import config
 from azul.json_freeze import freeze
 from azul.logging import configure_test_logging
-from azul.service import AbstractService
-from azul.service.responseobjects.elastic_request_builder import ElasticTransformDump
-from azul.service.responseobjects.storage_service import StorageService
-from azul.service.step_function_helper import StateMachineError
+from azul.service import (
+    manifest_service,
+)
+from azul.service.manifest_service import ManifestService
+from azul.service.storage_service import StorageService
+from azul.types import JSON
 from azul_test_case import AzulTestCase
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
@@ -44,125 +44,9 @@ from service import WebServiceTestCase
 logger = logging.getLogger(__name__)
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(logger)
-
-
-class TestManifestService(LocalAppTestCase):
-
-    @classmethod
-    def lambda_name(cls) -> str:
-        return 'service'
-
-    @mock_sts
-    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
-    @mock.patch('uuid.uuid4')
-    def test_manifest_endpoint_start_execution(self, mock_uuid, step_function_helper):
-        """
-        Calling start manifest generation without a token should start an
-        execution and return a response with Retry-After and Location in the
-        headers.
-        """
-        with ResponsesHelper() as helper:
-            helper.add_passthru(self.base_url)
-            for fetch in True, False:
-                with self.subTest(fetch=fetch):
-                    execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
-                    mock_uuid.return_value = execution_name
-                    step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
-                    format_ = 'compact'
-                    filters = {'file': {'organ': {'is': ['lymph node']}}}
-                    params = {'filters': json.dumps(filters), 'format': format_}
-                    if fetch:
-                        response = requests.get(self.base_url + '/fetch/manifest/files',
-                                                params=params)
-                        response.raise_for_status()
-                        response = response.json()
-                    else:
-                        response = requests.get(self.base_url + '/manifest/files',
-                                                params=params,
-                                                allow_redirects=False)
-                    self.assertEqual(301, response['Status'] if fetch else response.status_code)
-                    self.assertIn('Retry-After', response if fetch else response.headers)
-                    self.assertIn('Location', response if fetch else response.headers)
-                    step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
-                                                                                 execution_name,
-                                                                                 execution_input=dict(format=format_,
-                                                                                                      filters=filters))
-                    step_function_helper.describe_execution.assert_called_once()
-                    step_function_helper.reset_mock()
-
-    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
-    def test_manifest_endpoint_check_status(self, step_function_helper):
-        """
-        Calling start manifest generation with a token should check the status
-        without starting an execution.
-        """
-        params = {
-            'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
-        }
-        step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
-        response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
-        response.raise_for_status()
-        step_function_helper.start_execution.assert_not_called()
-        step_function_helper.describe_execution.assert_called_once()
-
-    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
-    def test_manifest_endpoint_execution_not_found(self, step_function_helper):
-        """
-        Manifest status check should raise a BadRequestError (400 status code)
-        if execution cannot be found.
-        """
-        params = {
-            'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
-        }
-        step_function_helper.describe_execution.side_effect = ClientError({
-            'Error': {
-                'Code': 'ExecutionDoesNotExist'
-            }
-        }, '')
-        response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
-        self.assertEqual(response.status_code, 400)
-
-    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
-    @mock.patch('lambdas.service.app.app.current_request')
-    def test_manifest_endpoint_boto_error(self, current_request, step_function_helper):
-        """
-        Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
-        """
-        params = {
-            'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
-        }
-        step_function_helper.describe_execution.side_effect = ClientError({
-            'Error': {
-                'Code': 'OtherError'
-            }
-        }, '')
-        response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
-        self.assertEqual(response.status_code, 500)
-
-    @mock.patch('azul.service.manifest.ManifestService.step_function_helper')
-    @mock.patch('lambdas.service.app.app.current_request')
-    def test_manifest_endpoint_execution_error(self, current_request, step_function_helper):
-        """
-        Manifest status check should return a generic error (500 status code)
-        if the execution errored.
-        """
-        params = {
-            'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
-        }
-        step_function_helper.get_manifest_status.side_effect = StateMachineError
-        response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
-        self.assertEqual(response.status_code, 500)
-
-    @mock.patch('lambdas.service.app.app.current_request')
-    def test_manifest_endpoint_invalid_token(self, current_request):
-        """
-        Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
-        """
-        params = {'token': 'Invalid base64'}
-        response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
-        self.assertEqual(response.status_code, 400)
 
 
 class TestManifestEndpoints(WebServiceTestCase):
@@ -190,12 +74,13 @@ class TestManifestEndpoints(WebServiceTestCase):
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
-    def get_manifest(self, params, stream=False):
-        filters = AbstractService.parse_filters(params.get('filters'))
-        estd = ElasticTransformDump()
-        url = estd.transform_manifest(params.get('format', 'compact'), filters).headers['Location']
-        response = requests.get(url, stream=stream)
-        return response
+    def _get_manifest(self, format_: str, filters: JSON, stream=False):
+        url = self._get_manifest_url(format_, filters)
+        return requests.get(url, stream=stream)
+
+    def _get_manifest_url(self, format_, filters):
+        service = ManifestService(StorageService())
+        return service.transform_manifest(format_, filters).headers['Location']
 
     @mock_sts
     @mock_s3
@@ -295,11 +180,7 @@ class TestManifestEndpoints(WebServiceTestCase):
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                        params = {
-                            'filters': json.dumps({}),
-                            'format': 'compact'
-                        }
-                        response = self.get_manifest(params)
+                        response = self._get_manifest('compact', {})
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
                         self._assert_tsv(expected, response)
 
@@ -323,28 +204,21 @@ class TestManifestEndpoints(WebServiceTestCase):
         if they are not listed in the service response.
         """
         self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
-        search_params = {
-            'filters': json.dumps({"fileFormat": {"is": ["matrix", "mtx"]}}),
-        }
-        download_params = {
-            **search_params,
-            'format': 'tsv'
-        }
-
+        filters = {"fileFormat": {"is": ["matrix", "mtx"]}}
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-
-            response = requests.get(self.base_url + '/repository/files', params=search_params)
+            response = requests.get(self.base_url + '/repository/files',
+                                    params=dict(filters=json.dumps(filters)))
             hits = response.json()['hits']
             self.assertEqual(len(hits), 1)
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                        response = self.get_manifest(download_params)
+                        response = self._get_manifest('tsv', filters)
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
                         # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
                         lines = response.content.decode('utf-8').splitlines()
@@ -531,11 +405,8 @@ class TestManifestEndpoints(WebServiceTestCase):
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            params = {
-                'filters': json.dumps({'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}),
-                'format': 'terra.bdbag',
-            }
-            response = self.get_manifest(params, stream=True)
+            filters = {'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}
+            response = self._get_manifest('terra.bdbag', filters, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
@@ -641,11 +512,7 @@ class TestManifestEndpoints(WebServiceTestCase):
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            params = {
-                'filters': json.dumps({}),
-                'format': 'full'
-            }
-            response = self.get_manifest(params)
+            response = self._get_manifest('full', {})
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
             expected = [
@@ -1086,16 +953,16 @@ class TestManifestEndpoints(WebServiceTestCase):
             storage_service = StorageService()
             storage_service.create_bucket()
 
-            params = {'filters': json.dumps({'project': {'is': ['Single of human pancreas']}}), 'format': 'full'}
-            response = self.get_manifest(params)
+            filters = {'project': {'is': ['Single of human pancreas']}}
+            response = self._get_manifest('full', filters)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
             lines = response.content.decode('utf-8').splitlines()
             tsv_file1 = csv.reader(lines, delimiter='\t')
             fieldnames1 = set(next(tsv_file1))
 
-            params = {'filters': json.dumps({'project': {'is': ['Mouse Melanoma']}}), 'format': 'full'}
-            response = self.get_manifest(params)
+            filters = {'project': {'is': ['Mouse Melanoma']}}
+            response = self._get_manifest('full', filters)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
             lines = response.content.decode('utf-8').splitlines()
@@ -1110,7 +977,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    @mock.patch('azul.service.responseobjects.hca_response_v5.ManifestResponse._get_seconds_until_expire')
+    @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
     def test_metadata_cache_expiration(self, get_seconds):
         self.maxDiff = None
         self._index_canned_bundle(('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z'))
@@ -1123,13 +990,10 @@ class TestManifestEndpoints(WebServiceTestCase):
 
             def log_messages_from_manifest_request(seconds_until_expire: int) -> List[str]:
                 get_seconds.return_value = seconds_until_expire
-                params = {
-                    'filters': json.dumps({'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}),
-                    'format': 'full'
-                }
-                from azul.service.responseobjects.hca_response_v5 import logger as logger_
+                filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
+                from azul.service.manifest_service import logger as logger_
                 with self.assertLogs(logger=logger_, level='INFO') as logs:
-                    response = self.get_manifest(params)
+                    response = self._get_manifest('full', filters)
                     self.assertEqual(200, response.status_code, 'Unable to download manifest')
                     logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
                     return logs.output
@@ -1148,7 +1012,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    @mock.patch('azul.service.responseobjects.hca_response_v5.ManifestResponse._get_seconds_until_expire')
+    @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
     def test_full_metadata_cache(self, get_seconds):
         get_seconds.return_value = 3600
         self.maxDiff = None
@@ -1169,8 +1033,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
                         # Run the generation of manifests twice to verify generated file names are the same when re-run
                         for project_id in project_ids * 2:
-                            params = {'filters': json.dumps({'projectId': {'is': [project_id]}}), 'format': 'full'}
-                            response = self.get_manifest(params)
+                            response = self._get_manifest('full', {'projectId': {'is': [project_id]}})
                             self.assertEqual(200, response.status_code, 'Unable to download manifest')
                             file_name = urlparse(response.url).path
                             file_names[project_id].append(file_name)
@@ -1186,44 +1049,43 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    def test_manifest_content_disposition_header(self):
-        from azul.service.responseobjects import hca_response_v5
+    @mock.patch.object(ManifestService, '_can_use_cached_manifest')
+    def test_manifest_content_disposition_header(self, _can_use_cached_manifest):
+        # prevent individual subtests from reusing the cached manifest
+        _can_use_cached_manifest.return_value = False
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
-        with mock.patch.object(hca_response_v5, 'datetime') as mock_response:
-            mock_date = datetime(1985, 10, 25, 1, 21)
-            mock_response.now.return_value = mock_date
+        with mock.patch.object(manifest_service, 'datetime') as mock_response:
+            mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
             storage_service = StorageService()
             storage_service.create_bucket()
-            for filters, expected_name, name_object in [
-                ({'project': {'is': ['Single of human pancreas']}}, 'Single of human pancreas ', True),
-                # When requesting a full metadata TSV is with a filter for two or more projects, the
-                # Content-Disposition header shouldn't be set to the contents .name file.
-                ({'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                 'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721', False),
-                # If the filter is doesn't specify any parameter for projectId, the Content-Disposition
-                # header shouldn't be set to the contents .name file.
-                ({}, 'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3', False)
+            for filters, expected_name in [
+                # For a single project, the content disposition file name should
+                # be the project name followed by the date and time
+                (
+                    {'project': {'is': ['Single of human pancreas']}},
+                    'Single of human pancreas 1985-10-25 01.21'
+                ),
+                # In all other cases, the standard content disposition file name
+                # should be "hca-manifest-" followed by the manifest key, a
+                # v5 UUID deterministically derived from the filter and
+                (
+                    {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                    'hca-manifest-912122a5-d4bb-520d-bd96-df627d0a3721',
+                ),
+                (
+                    {},
+                    'hca-manifest-93dfad49-d20d-5eaf-a3e2-0c9bb54f16e3'
+                )
             ]:
                 for single_part in True, False:
                     with self.subTest(filters=filters, single_part=single_part):
                         with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                             assert config.disable_multipart_manifests is single_part
-                            params = {
-                                'filters': json.dumps(filters),
-                                'format': 'full'
-                            }
-                            filters = AbstractService.parse_filters(params.get('filters'))
-                            estd = ElasticTransformDump()
-                            url = estd.transform_manifest(params.get('format', 'full'), filters).headers['Location']
+                            url = self._get_manifest_url('full', filters)
                             query = urlparse(url).query
-                            content_dispositions = parse_qs(query).get('response-content-disposition')
-                            if single_part and not name_object:
-                                self.assertIsNone(content_dispositions)
-                            else:
-                                expected_date = '1985-10-25 01.21' if name_object else ''
-                                expected_value = f'attachment;filename="{expected_name}{expected_date}.tsv"'
-                                actual_value = one(content_dispositions)
-                                self.assertEqual(actual_value, expected_value)
+                            expected_cd = f'attachment;filename="{expected_name}.tsv"'
+                            actual_cd = one(parse_qs(query).get('response-content-disposition'))
+                            self.assertEqual(actual_cd, expected_cd)
 
 
 class TestManifestResponse(AzulTestCase):
@@ -1232,21 +1094,20 @@ class TestManifestResponse(AzulTestCase):
         """
         Verify a header with valid Expiration and LastModified values returns the correct expiration value
         """
-        from azul.service.responseobjects import hca_response_v5
-        margin = hca_response_v5.ManifestResponse._date_diff_margin
+        margin = ManifestService._date_diff_margin
         for object_age, expect_error in [(0, False),
                                          (margin - 1, False),
                                          (margin, False),
                                          (margin + 1, True)]:
             with self.subTest(object_age=object_age, expect_error=expect_error):
-                with mock.patch.object(hca_response_v5, 'datetime') as mock_datetime:
+                with mock.patch.object(manifest_service, 'datetime') as mock_datetime:
                     now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
                     mock_datetime.now.return_value = now
-                    with self.assertLogs(logger=hca_response_v5.logger, level='DEBUG') as logs:
+                    with self.assertLogs(logger=manifest_service.logger, level='DEBUG') as logs:
                         headers = {
                             'Expiration': 'expiry-date="Wed, 01 Jan 2020 00:00:00 UTC", rule-id="Test Rule"',
                             'LastModified': now - timedelta(days=float(config.manifest_expiration),
                                                             seconds=object_age)
                         }
-                        self.assertEqual(0, hca_response_v5.ManifestResponse._get_seconds_until_expire(headers))
+                        self.assertEqual(0, ManifestService._get_seconds_until_expire(headers))
                     self.assertIs(expect_error, any('does not match' in log for log in logs.output))

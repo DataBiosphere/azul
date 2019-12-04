@@ -10,13 +10,27 @@ services:
 python:
   - 3.6
 
+branches:
+  # Disable branch builds except for the main branches. For PRs, only the `pr`
+  # build will be performed, the `push` build won't. This means that PR authors
+  # will not see builds for the head commit of their branches, only merge
+  # commits of their branches into the target branch. Given the 50% reduction
+  # of load on Travis this should be an acceptable compromise.
+  #
+  # https://github.com/travis-ci/travis-ci/issues/1147
+  only:
+    - develop
+    - integration
+    - staging
+    - prod
+
 before_install:
   - (cd deployments && ln -snf dev .active)
   - source environment
 
 install:
   - pip install -U setuptools==40.1.0 wheel==0.32.3
-  - pip install -r requirements.dev.txt
+  - pip install -Ur requirements.dev.txt
   - pip install coveralls codecov trufflehog
 
 script:
