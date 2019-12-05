@@ -16,6 +16,7 @@ from azul.logging import (
 )
 
 
+# noinspection PyPep8Naming
 def setupModule():
     configure_test_logging()
 
