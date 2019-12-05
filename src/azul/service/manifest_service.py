@@ -39,7 +39,6 @@ import uuid
 
 from bdbag import bdbag_api
 from boltons.cacheutils import cachedproperty
-from botocore.exceptions import ClientError
 from chalice import Response
 from elasticsearch_dsl import Search
 from more_itertools import one
@@ -138,16 +137,13 @@ class ManifestService(ElasticsearchService):
         Return the content disposition file name of the exiting cached manifest.
         """
         if generator.use_content_disposition_file_name:
-            name_object_key = object_key + self.name_object_suffix
+            tag_set = self.storage_service.get_object_tagging(object_key)['TagSet']
             try:
-                file_name = self.storage_service.get(name_object_key).decode()
-            except ClientError as e:
-                if e.response['Error']['Code'] == 'NoSuchKey':
-                    logger.warning("Name object '%s' doesn't exist. "
-                                   "Generating pre-signed URL without Content-Disposition header.", name_object_key)
-                    file_name = None
-                else:
-                    raise
+                file_name = one([tag['Value'] for tag in tag_set if tag['Key'] == 'azul_file_name'])
+            except ValueError:
+                logger.warning("Manifest object '%s' doesn't have the tag, azul_file_name."
+                               "Generating pre-signed URL without Content-Disposition header.", object_key)
+                file_name = None
         else:
             file_name = None
         return file_name
@@ -212,16 +208,13 @@ class ManifestService(ElasticsearchService):
                 logger.info('Cached manifest about to expire: %s', object_key)
                 return False
 
-    name_object_suffix = '.name'
-
     def _create_name_object(self, manifest_object_key, base_name, extension):
         assert base_name
         file_name_prefix = unicodedata.normalize('NFKD', base_name)
         file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
         timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
         file_name = f'{file_name_prefix} {timestamp}.{extension}'
-        self.storage_service.put(object_key=manifest_object_key + self.name_object_suffix,
-                                 data=file_name.encode())
+        self.storage_service.put_filename_tag(manifest_object_key, file_name)
         return file_name
 
 

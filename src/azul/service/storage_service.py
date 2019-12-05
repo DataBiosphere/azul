@@ -76,6 +76,24 @@ class StorageService:
     def create_bucket(self, bucket_name: str = None):
         self.client.create_bucket(Bucket=(bucket_name or self.bucket_name))
 
+    def put_filename_tag(self, object_key: str, file_name: str):
+        deadline = time.time() + 60
+        tagging = {'TagSet': [{'Key': 'azul_file_name', 'Value': file_name}]}
+        while True:
+            try:
+                self.client.put_object_tagging(Bucket=self.bucket_name,
+                                               Key=object_key,
+                                               Tagging=tagging)
+            except self.client.exceptions.NoSuchKey as e:
+                if time.time() > deadline:
+                    logger.error('Unable to tag object %s with file name, %s.', file_name)
+                    raise e
+                else:
+                    logger.warning('Object key %s is not found. Retrying in 5 s.', object_key)
+                    time.sleep(5)
+            else:
+                break
+
     def get_object_tagging(self, key: str):
         return self.client.get_object_tagging(Bucket=self.bucket_name, Key=key)
 
@@ -149,24 +167,6 @@ class MultipartUploadHandler:
                          exc_info=exception)
             self.__abort()
             raise MultipartUploadError(self.bucket_name, self.object_key) from exception
-        else:
-            if self.file_name is not None:
-                deadline = time.time() + 60
-                tagging = {'TagSet': [{'Key': 'azul_file_name', 'Value': self.file_name}]}
-                while True:
-                    try:
-                        self.mp_upload.meta.client.put_object_tagging(Bucket=self.bucket_name,
-                                                                      Key=self.object_key,
-                                                                      Tagging=tagging)
-                    except self.mp_upload.meta.client.exceptions.NoSuchKey as e:
-                        if time.time() > deadline:
-                            logger.error('Unable to tag object %s with file name, %s.', self.file_name)
-                            raise e
-                        else:
-                            logger.warning('Object key %s is not found. Retrying in 5 s.', self.object_key)
-                            time.sleep(5)
-                    else:
-                        break
 
         self.mp_upload = None
         self.thread_pool.shutdown()
