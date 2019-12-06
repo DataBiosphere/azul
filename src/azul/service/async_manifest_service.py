@@ -12,7 +12,10 @@ import uuid
 from botocore.exceptions import ClientError
 
 from azul import config
-from azul.service import AbstractService
+from azul.service import (
+    AbstractService,
+    Filters,
+)
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
@@ -50,7 +53,7 @@ class AsyncManifestService(AbstractService):
                                              self_url,
                                              token: Optional[str] = None,
                                              format_: Optional[str] = None,
-                                             filters: Optional[str] = None
+                                             filters: Optional[Filters] = None
                                              ) -> Tuple[int, str]:
         """
         If token is None, start a manifest generation process and returns its status.
@@ -60,8 +63,6 @@ class AsyncManifestService(AbstractService):
         :raises StateMachineError: If the state machine fails for some reason.
         :return: Tuple of time to wait and the URL to try. 0 wait time indicates success
         """
-        filters = self.parse_filters(filters)
-
         if token is None:
             execution_id = str(uuid.uuid4())
             self._start_manifest_generation(format_, filters, execution_id)

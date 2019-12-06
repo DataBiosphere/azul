@@ -922,20 +922,26 @@ def handle_manifest_generation_request():
         format_ = 'compact'
     if format_ not in ('compact', 'terra.bdbag', 'full'):
         raise BadRequestError(f'{format_} is not a valid manifest format.')
-    token = query_params.get('token')
-    retry_url = self_url()
-    manifest_service = AsyncManifestService()
-    try:
-        return manifest_service.start_or_inspect_manifest_generation(retry_url,
-                                                                     token=token,
-                                                                     format_=format_,
-                                                                     filters=filters)
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
-            raise BadRequestError('Invalid token given')
-        raise
-    except ValueError as e:
-        raise BadRequestError(e.args)
+    service = ManifestService(StorageService())
+    filters = service.parse_filters(filters)
+    cached_manifest = service.fetch_cached_manifest(format_, filters)
+    if cached_manifest:
+        return 0, cached_manifest
+    else:
+        token = query_params.get('token')
+        retry_url = self_url()
+        manifest_service = AsyncManifestService()
+        try:
+            return manifest_service.start_or_inspect_manifest_generation(retry_url,
+                                                                         token=token,
+                                                                         format_=format_,
+                                                                         filters=filters)
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
+                raise BadRequestError('Invalid token given')
+            raise
+        except ValueError as e:
+            raise BadRequestError(e.args)
 
 
 # noinspection PyUnusedLocal
@@ -952,8 +958,8 @@ def generate_manifest(event, context):
     :return: The URL to the generated manifest
     """
     service = ManifestService(StorageService())
-    response = service.transform_manifest(event['format'], event['filters'])
-    return {'Location': response.headers['Location']}
+    presigned_url = service.transform_manifest(event['format'], event['filters'])
+    return {'Location': presigned_url}
 
 
 @app.route('/dss/files/{uuid}', methods=['GET'], cors=True)
