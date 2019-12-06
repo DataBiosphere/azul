@@ -9,6 +9,7 @@ from azul.transformer import Contribution
 from indexer.test_hca_indexer import IndexerTestCase
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 

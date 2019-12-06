@@ -320,7 +320,12 @@ class IntegrationTest(AlwaysTearDownTestCase):
         return filtered_bundle_fqids
 
     def _queue_empty_timeout(self, num_bundles: int):
-        return max(num_bundles * 30, 60)
+        time_per_bundle = 5
+        time_for_deque_to_empty = 10 * 5  # time for a 0 count to propagate through the deque in wait_for_queue_level()
+        min_timeout = 60
+        max_timeout = 10 * 60
+        timeout = max((num_bundles * time_per_bundle) + time_for_deque_to_empty, min_timeout)
+        return min(timeout, max_timeout)
 
     def _check_bundles_are_indexed(self, test_name: str, entity_type: str):
         service_check_timeout = 600
