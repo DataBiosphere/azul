@@ -425,10 +425,12 @@ Testing
 Version Control
 ===============
 
-* Feature branches are merged into develop. If a hotfix is made to a deployment
-  branch other than develop, that branch is merged into develop so that the
-  hotfix is eventually distributed to all deployment branches. Deployment
-  branches are merged during a deployment.
+* Feature branches are merged into ``develop``. If a hotfix is made to a
+  deployment branch other than ``develop``, that branch is also merged into
+  ``develop`` so that the hotfix eventually propagates to all deployments.
+
+* During a promotion, the branch for a lower deployment (say, ``integration``)
+  is merged into the branch for the next higher deployment.
 
 * We commit independent changes separately. If two changes could be applied in
   either order, they should occur in separate commits. Two changes A and B of
@@ -460,9 +462,9 @@ Version Control
 
   Note that we don't use Github resolution keywords like "fixes" or "resolves".
   Any mention of those preceding an issue reference in a title would
-  automatically close the issue as soon as the commit lands on the default
+  automatically close the issue as soon as the commit appears on the default
   branch. This is undesirable as we want to continue to track issues in
-  Zenhub's *Merged* and *Done* pipelines even after the commit lands on the
+  Zenhub's *Merged* and *Done* pipelines even after the commit appears on the
   ``develop`` branch.
 
 * We value `expressive and concise commit message titles`_ and we use Github's
@@ -522,7 +524,7 @@ Pull Requests
   
   ``DESCRIPTION`` is a short (no more than nine words) slug_ describing the
   branch
-  
+
 * We rebase PR branches daily but …
 
 * … we don't eagerly squash them. Changes that address the outcome of a review
@@ -542,15 +544,22 @@ Pull Requests
   author may push to the PR branch.
 
 * Commits in a PR should not invalidate changes from previous commits in the PR.
-  Revisions that occur during development should be amended into their relevant
-  ancestor. However …
+  Revisions that occur during development should be incorporated into their
+  relevant ancestor commit. There are various techniques to achieve this (``git
+  commit --amend``, ``git rebase --interactive``, ``git rebase --interactive
+  --autosquash`` or ``git reset`` and committing the changes again but all of
+  these techniques involve rewriting the commit history. Rewriting the history
+  of a feature branch is allowed and even encouraged but …
 
-* … we don't amend a commit that's already been reviewed. Instead we create a
-  new ``fixup!`` commit for addressing the reviewers comments.
+* … we only rewrite the part of the branch that has not yet been been reviewed.
+  To modify a commit that has already been reviewed, we create a new ``fixup!``
+  commit containing the changes that addressing the reviewers comments.
   
-  Before asking for another review we may amend that commit. In fact, amending
-  a ``!fixup`` commit between reviews is preferred in order to avoid continuous
-  chains of redundant fixup commits referring to the same main commit.
+  Before asking for another review, we may amend or rerwrite that ``!fixup``
+  commit. In fact, amending a ``!fixup`` commit between reviews is preferred in
+  order to avoid a series of redundant fixup commits referring to the same main
+  commit. In other words, the commits added to a feature branch after a review
+  should all have dictinct titles.
   
   Considering that we also require frequent rebasing, this rule makes for a
   more transparent review process. The reviewers can ignore force pushes
@@ -581,7 +590,7 @@ Pull Requests
   on the PR.
   
 * Without expressed permission by the primary reviewer, only the primary
-  reviewer lands PR branches. Certain team members may possess sufficient
+  reviewer integrates PR branches. Certain team members may possess sufficient
   privileges to push to main branches, but that does not imply that those team
   members may land PR branches.
   
@@ -591,16 +600,20 @@ Pull Requests
   
 * Until further notice only the lead may act as a primary reviewer.
 
-* Feature branches are integrated by merging. The merge commit should match the
-  title of the pertinent commit in the branch, but also include the PR number.
-  An example of this history looks like::
+* Feature branches are integrated by merging. The title of the merge commit
+  should match the title of the pertinent commit in the branch, but also include
+  the PR number. An example of this history looks like::
 
-    *   8badf00d (develop) Reticulate them splines for good measure (#123, PR #124)
+    *   8badf00d Reticulate them splines for good measure (#123, PR #124)
     |\
     | * cafebabe Reticulate them splines for good measure (#123)
     |/
     ...
 
+  If a feature branch contains more than one commit, one of them usually
+  represents the main feature or fix while other commits are preparatory
+  refactorings or minor unrelated changes. The title of merge commit in this
+  case usually matches that of the main commit.
 
 .. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
   
