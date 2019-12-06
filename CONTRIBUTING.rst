@@ -21,7 +21,7 @@ Code Style
 
 * For documentation we use a maximum line length of 80 characters. For comments
   and docstrings in Python, we prefer a line length of 80, but 120 may also be
-  used as long as consistency with surounding code is maintained.
+  used as long as consistency with surrounding code is maintained.
 
 * We prefer single quoted strings except in JSON literals.
 
@@ -68,7 +68,7 @@ Code Style
 
   With some keywords it is impossible to add semantically insignificant
   parentheses. For example, ``assert foo, "bad"`` is not equivalent to ``assert
-  (foo, "bad")``. In these exceptional situations it is permissable to use
+  (foo, "bad")``. In these exceptional situations it is permissible to use
   backslash for line continuation.
 
 .. [#] Note: If we were to adopt trailing commas, we would also have to
@@ -76,7 +76,7 @@ Code Style
 
 * Except for log messages (see below), we don't use the ``%`` operator or the
   ``str.format()`` method. We use ``f''`` strings or string concatenation. When
-  chosing between the latter two, we use the one that yields the shortest
+  choosing between the latter two, we use the one that yields the shortest
   expression. When both alternatives yield an expression of equal lengths, we
   prefer string concatenation::
   
@@ -113,7 +113,7 @@ Logging
     logger = logging.getLogger(__name__) # this is ok in old code
   
 * At program entry points we use the appropriate configuration method from
-  `azul.logging`. Program entry points are 
+  ``azul.logging``. Program entry points are
   
   - in scripts::
 
@@ -183,7 +183,7 @@ Imports
        parentheses and wrapping such that every addition of an imported symbol
        from the same module is a one-line diff. We could also discourage
        multi-symbol ``from`` imports and require that every symbol is imported
-       in a seperate `import` statement.
+       in a separate ``import`` statement.
 
 
 Comments
@@ -246,7 +246,7 @@ Code Hygiene
   Both are acceptable. We weigh the cost of extending the scope of our current
   work against the impact of perpetuating a problem. If we decide to make the
   section compliant, we do so in a separate commit. That commit should not
-  introduce semantic changes and it should precede the commit that resovles the
+  introduce semantic changes and it should precede the commit that resolves the
   issue.
   
 * We generally use top-down ordering of artifacts within a module or script.
@@ -398,7 +398,7 @@ Type Hints
   ``azul.typing``. Note that due to the lack of recursive types in PEP-484,
   ``JSON`` unrolls the recursion only three levels deep. This means that with
   ``x: JSON`` the expression ``x['a']['b']['c']`` would be of type ``JSON``
-  while ``x['a']['b']['c']['d']`` would be of type `Any`.
+  while ``x['a']['b']['c']['d']`` would be of type ``Any``.
 
   
 Testing
@@ -425,25 +425,26 @@ Testing
 Version Control
 ===============
 
-* Feature branches are integrated by rebasing or squashing. We only use merges
-  between deployment branches, either to promote changes in their natural
-  progression from one deployment to the next or to backport a hotfix to a
-  lesser branch like from ``prod`` to ``develop``.
+* Feature branches are merged into ``develop``. If a hotfix is made to a
+  deployment branch other than ``develop``, that branch is also merged into
+  ``develop`` so that the hotfix eventually propagates to all deployments.
+
+* During a promotion, the branch for a lower deployment (say, ``integration``)
+  is merged into the branch for the next higher deployment.
 
 * We commit independent changes separately. If two changes could be applied in
   either order, they should occur in separate commits. Two changes A and B of
-  which B depends on A may still be comitted separately if B represents an
+  which B depends on A may still be committed separately if B represents an
   extension of A that we might want to revert while leaving A in place.
-  
+
 * We separate semantically neutral changes from those that alter semantics by
   committing them separately, even if that would violate the previous rule. The
   most prominent example of a semantically neutral change is a refactoring. We
-  also push the every semantically neutral commit separately such that the
-  build status checks on Github and Gitlab prove the commit's semantic
-  neutrality.
+  also push every semantically neutral commit separately such that the build
+  status checks on Github and Gitlab prove the commit's semantic neutrality.
 
 * In theory, every individual commit should pass unit and integration tests. In
-  practice, on PR branches with long histories not intented to be squashed, not
+  practice, on PR branches with long histories not intended to be squashed, not
   every commit is built in CI. This is acceptable. [#]_
 
 .. [#] Note: I am not a fan this rule but the desire to maintain a linear
@@ -461,9 +462,9 @@ Version Control
 
   Note that we don't use Github resolution keywords like "fixes" or "resolves".
   Any mention of those preceding an issue reference in a title would
-  automatically close the issue as soon as the commit lands on the default
+  automatically close the issue as soon as the commit appears on the default
   branch. This is undesirable as we want to continue to track issues in
-  Zenhub's *Merged* and *Done* pipelines even after the commit lands on the
+  Zenhub's *Merged* and *Done* pipelines even after the commit appears on the
   ``develop`` branch.
 
 * We value `expressive and concise commit message titles`_ and we use Github's
@@ -523,7 +524,7 @@ Pull Requests
   
   ``DESCRIPTION`` is a short (no more than nine words) slug_ describing the
   branch
-  
+
 * We rebase PR branches daily but …
 
 * … we don't eagerly squash them. Changes that address the outcome of a review
@@ -542,13 +543,23 @@ Pull Requests
   assignee may push to the PR branch. If a PR is assigned to no one, only the
   author may push to the PR branch.
 
-* We may amend commits on PR branches, but only between primary reviews. We
-  don't amend a commit that's already been reviewed. Instead we create a new
-  ``fixup!`` commit for addressing the reviewers comments.
+* Commits in a PR should not invalidate changes from previous commits in the PR.
+  Revisions that occur during development should be incorporated into their
+  relevant ancestor commit. There are various techniques to achieve this (``git
+  commit --amend``, ``git rebase --interactive``, ``git rebase --interactive
+  --autosquash`` or ``git reset`` and committing the changes again but all of
+  these techniques involve rewriting the commit history. Rewriting the history
+  of a feature branch is allowed and even encouraged but …
+
+* … we only rewrite the part of the branch that has not yet been been reviewed.
+  To modify a commit that has already been reviewed, we create a new ``fixup!``
+  commit containing the changes that addressing the reviewers comments.
   
-  Before asking for another review we may amend that commit. In fact, amending
-  a `!fixup` commit between reviews is preferred in order to avoid continuous
-  chains of redundant fixup commits referring to the same main commit.
+  Before asking for another review, we may amend or rerwrite that ``!fixup``
+  commit. In fact, amending a ``!fixup`` commit between reviews is preferred in
+  order to avoid a series of redundant fixup commits referring to the same main
+  commit. In other words, the commits added to a feature branch after a review
+  should all have dictinct titles.
   
   Considering that we also require frequent rebasing, this rule makes for a
   more transparent review process. The reviewers can ignore force pushes
@@ -574,12 +585,12 @@ Pull Requests
   ``drop!`` commits.
 
 * We usually don't request a review before all status checks are green. In
-  certain cases a preliminary review of a work in progress is permissable but
+  certain cases a preliminary review of a work in progress is permissible but
   the request for a preliminary review has to be qualified as such in a comment
   on the PR.
   
 * Without expressed permission by the primary reviewer, only the primary
-  reviewer lands PR branches. Certain team members may posess sufficient
+  reviewer integrates PR branches. Certain team members may possess sufficient
   privileges to push to main branches, but that does not imply that those team
   members may land PR branches.
   
@@ -588,7 +599,22 @@ Pull Requests
   be assigned the ``sandbox`` label at any point in time.
   
 * Until further notice only the lead may act as a primary reviewer.
-  
+
+* Feature branches are integrated by merging. The title of the merge commit
+  should match the title of the pertinent commit in the branch, but also include
+  the PR number. An example of this history looks like::
+
+    *   8badf00d Reticulate them splines for good measure (#123, PR #124)
+    |\
+    | * cafebabe Reticulate them splines for good measure (#123)
+    |/
+    ...
+
+  If a feature branch contains more than one commit, one of them usually
+  represents the main feature or fix while other commits are preparatory
+  refactorings or minor unrelated changes. The title of merge commit in this
+  case usually matches that of the main commit.
+
 .. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
   
 
