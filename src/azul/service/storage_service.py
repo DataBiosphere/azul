@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from functools import lru_cache
 from logging import getLogger
 import time
-from typing import Optional
+from typing import (
+    Optional,
+    Mapping,
+)
 
 import boto3
 
@@ -39,13 +42,13 @@ class StorageService:
             object_key: str,
             data: bytes,
             content_type: Optional[str] = None,
-            file_name: Optional[str] = None,
+            tagging: Optional[Mapping[str, str]] = None,
             **kwargs) -> str:
         params = {'Bucket': self.bucket_name, 'Key': object_key, 'Body': data, **kwargs}
         if content_type is not None:
             params['ContentType'] = content_type
-        if file_name is not None:
-            params['Tagging'] = f'azul_file_name={file_name}'
+        if tagging is not None:
+            params['Tagging'] = tagging
         self.client.put_object(**params)
         return object_key
 
@@ -76,9 +79,8 @@ class StorageService:
     def create_bucket(self, bucket_name: str = None):
         self.client.create_bucket(Bucket=(bucket_name or self.bucket_name))
 
-    def put_filename_tag(self, object_key: str, file_name: str):
+    def put_object_tagging(self, object_key: str, tagging: Optional[Mapping[str, str]] = None):
         deadline = time.time() + 60
-        tagging = {'TagSet': [{'Key': 'azul_file_name', 'Value': file_name}]}
         while True:
             try:
                 self.client.put_object_tagging(Bucket=self.bucket_name,
@@ -86,7 +88,7 @@ class StorageService:
                                                Tagging=tagging)
             except self.client.exceptions.NoSuchKey as e:
                 if time.time() > deadline:
-                    logger.error('Unable to tag object %s with file name, %s.', file_name)
+                    logger.error('Unable to tag %s on object.', tagging)
                     raise e
                 else:
                     logger.warning('Object key %s is not found. Retrying in 5 s.', object_key)
@@ -128,7 +130,6 @@ class MultipartUploadHandler:
         self.parts = []
         self.futures = []
         self.thread_pool = None
-        self.filename = None
 
     def __enter__(self):
         api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,

@@ -208,13 +208,16 @@ class ManifestService(ElasticsearchService):
                 logger.info('Cached manifest about to expire: %s', object_key)
                 return False
 
+    azul_file_name_key = 'azul_file_name'
+
     def _create_name_object(self, manifest_object_key, base_name, extension):
         assert base_name
         file_name_prefix = unicodedata.normalize('NFKD', base_name)
         file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
         timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
         file_name = f'{file_name_prefix} {timestamp}.{extension}'
-        self.storage_service.put_filename_tag(manifest_object_key, file_name)
+        tagging = {'TagSet': [{'Key': self.azul_file_name_key, 'Value': file_name}]}
+        self.storage_service.put_object_tagging(manifest_object_key, tagging)
         return file_name
 
 
