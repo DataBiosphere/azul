@@ -47,6 +47,10 @@ from azul.azulclient import (
 )
 from azul.decorators import memoized_property
 import azul.dss
+from azul.drs import (
+    drs_http_object_path,
+    Client,
+)
 from azul.logging import configure_test_logging
 from azul.portal_service import PortalService
 from azul.queues import Queues
@@ -145,7 +149,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 self._test_indexing()
                 self._test_manifest()
                 if config.dss_direct_access:
-                    self._test_drs()
+                    self._test_dos_and_drs()
             finally:
                 self._delete_bundles_twice()
                 self.assertTrue(self._project_removed_from_index())
@@ -206,7 +210,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                     log.info('Third `full` request took %s to execute.', time.time() - start_request)
                 validator(response)
 
-    def _test_drs(self):
+    def _test_dos_and_drs(self):
         filters = json.dumps({'project': {'is': [self.test_name]}, 'fileFormat': {'is': ['fastq.gz', 'fastq']}})
         response = self._check_endpoint(endpoint=config.service_endpoint(),
                                         path='/repository/files',
@@ -218,8 +222,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
                                         })
         hits = json.loads(response)
         file_uuid = one(one(hits['hits'])['files'])['uuid']
-        drs_endpoint = drs.drs_http_object_path(file_uuid)
-        self._download_file_from_drs_response(self._check_endpoint(config.service_endpoint(), drs_endpoint))
+        self._download_with_dos(file_uuid)
+        self._download_with_drs(file_uuid)
 
     def _delete_bundles_twice(self):
         self._delete_bundles(self.test_notifications)
@@ -282,17 +286,29 @@ class IntegrationTest(AlwaysTearDownTestCase):
         bundle_uuid = rows[0][uuid_field_name]
         self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
 
-    def _download_file_from_drs_response(self, response: bytes):
+    def _download_with_drs(self, file_uuid: str):
+        base_url = config.service_endpoint() + drs_http_object_path('')
+        client = Client(base_url)
+        response = client.get_object(file_uuid)
+        self._validate_fastq_response_content(file_uuid, response.content)
+        log.info('Successfully downloaded file %s with DRS', file_uuid)
+
+    def _download_with_dos(self, file_uuid: str):
+        dos_endpoint = drs.dos_http_object_path(file_uuid)
+        response = self._check_endpoint(config.service_endpoint(), dos_endpoint)
         json_data = json.loads(response)['data_object']
         file_url = first(json_data['urls'])['url']
-        file_name = json_data['name']
         response = self._check_endpoint(file_url, '')
+        self._validate_fastq_response_content(file_uuid, response)
+        log.info('Successfully downloaded file %s with DOS', file_uuid)
+
+    def _validate_fastq_response_content(self, file_uuid, response):
         # Check signature of FASTQ file.
         with gzip.open(BytesIO(response)) as buf:
             fastq = buf.read()
         lines = fastq.splitlines()
         # Assert first character of first and third line of file (see https://en.wikipedia.org/wiki/FASTQ_format).
-        log.info(f'Unzipped file {file_name} and verified it to be a FASTQ file.')
+        log.info(f'Unzipped file {file_uuid} and verified it to be a FASTQ file.')
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 

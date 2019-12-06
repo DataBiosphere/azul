@@ -1864,6 +1864,76 @@ def cart_export_send_to_collection_api(event, context):
     }
 
 
+@app.route(drs.drs_http_object_path('{file_uuid}'), methods=['GET'], cors=True)
+def get_data_object(file_uuid):
+    """
+    Return a DRS data object dictionary for a given DSS file UUID and version.
+
+    If the file is already checked out, we can return a drs_object with a URL
+    immediately. Otherwise, we need to send the request through the /access
+    endpoint.
+    """
+    query_params = app.current_request.query_params or {}
+    validate_params(query_params, version=str)
+    response = dss_get_file(file_uuid, extra_params=query_params)
+    version_ = query_params.get('version')
+    if response.status_code == 301:
+        retry_url = response.headers['location']
+        query = urllib.parse.urlparse(retry_url).query
+        query = urllib.parse.parse_qs(query, strict_parsing=True)
+        token = one(query['token'])
+        # We use the encoded token string as the key for our access ID.
+        access_id = drs.encode_access_id(token)
+        return Response(drs.access_id_drs_object(file_uuid, access_id, version=version_))
+    elif response.status_code == 302:
+        retry_url = response.headers['location']
+        return Response(drs.access_url_drs_object(file_uuid, retry_url, version=version_))
+    else:
+        # For errors, just proxy DSS response
+        return Response(response.text, status_code=response.status_code)
+
+
+@app.route(drs.drs_http_object_path('{file_uuid}', access_id='{access_id}'), methods=['GET'], cors=True)
+def get_data_object_access(file_uuid, access_id):
+    """
+    Return a DRS data object dictionary for a given DSS file UUID, version, and
+    access ID.
+
+    The access ID endpoint is only necessary if the DSS needs to do a checkout
+    for the file.
+    """
+    query_params = app.current_request.query_params or {}
+    validate_params(query_params, version=str)
+    token = drs.decode_access_id(access_id)
+    # Using the same token as before is OK. The DSS only starts a new checkout
+    # if the token is absent. Otherwise the token undergoes minimal validation
+    # and receives an update to the `attempts` key (which is not used for
+    # anything besides perhaps diagnostics).
+    response = dss_get_file(file_uuid, extra_params={**query_params, 'token': token})
+    if response.status_code == 301:
+        headers = {'retry-after': response.headers['retry-after']}
+        # DRS says no body for 202 responses
+        return Response(body='', status_code=202, headers=headers)
+    elif response.status_code == 302:
+        retry_url = response.headers['location']
+        return Response(drs.access_url(retry_url))
+    else:
+        # For errors, just proxy DSS response
+        return Response(response.text, status_code=response.status_code)
+
+
+def dss_get_file(file_uuid, extra_params=None):
+    if extra_params is None:
+        extra_params = {}
+    dss_params = {
+        'replica': 'aws',
+        **extra_params
+    }
+    url = config.dss_endpoint + '/files/' + file_uuid
+    return requests.get(url, params=dss_params, allow_redirects=False)
+
+
+# TODO: Remove when DOS support is dropped
 def file_to_drs(doc):
     """
     Converts an aggregate file document to a DRS data object response.
@@ -1899,8 +1969,9 @@ def file_to_drs(doc):
     }
 
 
-@app.route(drs.drs_http_object_path('{file_uuid}'), methods=['GET'], cors=True)
-def get_data_object(file_uuid):
+# TODO: Remove when DOS support is dropped
+@app.route(drs.dos_http_object_path('{file_uuid}'), methods=['GET'], cors=True)
+def dos_get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.
     """
@@ -1927,6 +1998,7 @@ def get_data_object(file_uuid):
         return Response({'msg': "Data object not found."}, status_code=404)
 
 
+# TODO: Remove when DOS support is dropped
 def gs_url(file_uuid, version):
     url = config.dss_endpoint + '/files/' + urllib.parse.quote(file_uuid, safe='')
     params = dict({'file_version': version} if version else {},
