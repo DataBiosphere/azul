@@ -3,10 +3,13 @@ from unittest import TestCase
 from unittest.mock import (
     patch,
 )
+from uuid import uuid4
 
 import boto3.session
 from botocore.credentials import Credentials
 import botocore.session
+
+from azul.types import JSON
 
 
 class AlwaysTearDownTestCase(TestCase):
@@ -113,6 +116,21 @@ class AzulTestCase(TestCase):
         boto3.DEFAULT_SESSION = cls._saved_boto3_default_session
         os.environ['AZUL_AWS_ACCOUNT_ID'] = cls.aws_account_id
         super().tearDownClass()
+
+    @classmethod
+    def _make_fake_notification(cls, bundle_fqid) -> JSON:
+        bundle_uuid, bundle_version = bundle_fqid
+        return {
+            "query": {
+                "match_all": {}
+            },
+            "subscription_id": str(uuid4()),
+            "transaction_id": str(uuid4()),
+            "match": {
+                "bundle_uuid": bundle_uuid,
+                "bundle_version": bundle_version
+            }
+        }
 
 
 class Hidden:

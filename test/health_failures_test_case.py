@@ -11,10 +11,13 @@ from moto import (
     mock_dynamodb2,
 )
 import requests
-from uuid import uuid4
 
 from app_test_case import LocalAppTestCase
 from azul import config
+from azul.json_freeze import (
+    freeze,
+    sort_frozen,
+)
 from azul.modules import load_app_module
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper
@@ -69,6 +72,7 @@ class TestHealthFailures(LocalAppTestCase):
     @mock_dynamodb2
     def test_failures_endpoint(self):
         from more_itertools import chunked
+        from uuid import uuid4
         indexer_app = load_app_module('indexer')
         sqs = boto3.resource('sqs', region_name='us-east-1')
         sqs.create_queue(QueueName=config.fail_queue_name)
@@ -77,31 +81,26 @@ class TestHealthFailures(LocalAppTestCase):
             helper.add_passthru(self.base_url)
             # The 4th sub-test checks if the indexer lambda can write more than 1 batch of messages to dynamodb.
             # The max number of messages in a batch is 10 and this sub-test populates the queue with 11 messages.
-            for bundle_notification_count, other_count in ((0, 0), (1, 0), (0, 1), (10, 1)):
+            for num_bundles, num_other in ((0, 0), (1, 0), (0, 1), (10, 1)):
                 with self._make_database():
                     bundle_notifications = [{
                         'action': 'add',
                         'notification': IndexerTestCase._make_fake_notification((str(uuid4()),
                                                                                  '2019-10-14T113344.698028Z'))
-                    } for i in range(bundle_notification_count)]
-                    other_notifications = [{
-                        'other': 'notification'
-                    } for i in range(other_count)]
+                    } for _ in range(num_bundles)]
+                    other_notifications = [{'other': 'notification'}] * num_other
+
                     for batch in chunked(bundle_notifications + other_notifications, 10):
                         items = [{'Id': str(i), 'MessageBody': json.dumps(message)} for i, message in enumerate(batch)]
                         fail_queue.send_messages(Entries=items)
-                    expected_response = {
+                    expected_response = sort_frozen(freeze({
                         "failed_bundle_notifications": bundle_notifications,
-                        "other_failed_messages": other_count
-                    }
-                    with self.subTest(bundle_notification_count=bundle_notification_count,
-                                      document_notification_count=other_count):
+                        "other_failed_messages": num_other
+                    }))
+                    with self.subTest(num_bundle_notification=num_bundles,
+                                      num_document_notification=num_other):
                         indexer_app.retrieve_failure_messages(MagicMock(), MagicMock())
                         response = requests.get(self.base_url + '/health/failures')
                         self.assertEqual(200, response.status_code)
-                        actual_response = response.json()
-                        self.assertEqual(expected_response.keys(), actual_response.keys())
-                        self.assertEqual(expected_response['other_failed_messages'],
-                                         actual_response['other_failed_messages'])
-                        self.assertCountEqual(expected_response['failed_bundle_notifications'],
-                                              actual_response['failed_bundle_notifications'])
+                        actual_response = sort_frozen(freeze(response.json()))
+                        self.assertEqual(expected_response, actual_response)

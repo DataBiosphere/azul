@@ -6,6 +6,7 @@ from typing import (
     Union,
     cast,
 )
+from uuid import uuid4
 
 from dataclasses import replace
 
@@ -48,6 +49,21 @@ class IndexerTestCase(ElasticsearchTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.index_service = ForcedRefreshIndexService()
+
+    @staticmethod
+    def _make_fake_notification(bundle_fqid) -> JSON:
+        bundle_uuid, bundle_version = bundle_fqid
+        return {
+            "query": {
+                "match_all": {}
+            },
+            "subscription_id": str(uuid4()),
+            "transaction_id": str(uuid4()),
+            "match": {
+                "bundle_uuid": bundle_uuid,
+                "bundle_version": bundle_version
+            }
+        }
 
     @classmethod
     def _load_canned_file(cls, bundle_fqid: BundleFQID, extension: str) -> Union[MutableJSONs, MutableJSON]:

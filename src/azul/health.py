@@ -113,22 +113,14 @@ class HealthController:
 
     @health_property
     def failures(self):
-        failed_bundle_notifications = []
-        database = boto3.resource('dynamodb')
-        table = database.Table(config.dynamo_failure_message_table_name)
-        bundle_key_condition = {'MessageType': {'AttributeValueList': ['bundle_notification'],
-                                                'ComparisonOperator': 'EQ'}}
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(config.dynamo_failure_message_table_name)
+        bundle_key_condition = {'MessageType': {'AttributeValueList': ['bundle'], 'ComparisonOperator': 'EQ'}}
         bundle_notification_items = table.query(KeyConditions=bundle_key_condition, Limit=100)['Items']
-        for item in bundle_notification_items:
-            body = json.loads(item['Body'])
-            failed_bundle_notifications.append({'bundle_uuid': body['notification']['match']['bundle_uuid'],
-                                                'bundle_version': body['notification']['match']['bundle_version']})
+        failed_bundle_notifications = [json.loads(item['Body']) for item in bundle_notification_items]
         other_key_condition = {'MessageType': {'AttributeValueList': ['other'], 'ComparisonOperator': 'EQ'}}
-        other_failed_count = table.query(KeyConditions=other_key_condition, Select='COUNT')['Count']
-        return {
-            'failed_bundle_notifications': failed_bundle_notifications,
-            'other_failed_messages': other_failed_count
-        }
+        num_other_failed = table.query(KeyConditions=other_key_condition, Select='COUNT')['Count']
+        return {'failed_bundle_notifications': failed_bundle_notifications, 'other_failed_messages': num_other_failed}
 
     @memoized_property
     def progress(self) -> JSON:
