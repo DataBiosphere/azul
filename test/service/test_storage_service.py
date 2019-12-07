@@ -92,7 +92,7 @@ class StorageServiceTest(AzulTestCase):
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with MultipartUploadHandler(sample_key, 'text/plain') as upload:
+        with MultipartUploadHandler(sample_key) as upload:
             for part in sample_content_parts:
                 upload.push(part)
 
@@ -112,7 +112,7 @@ class StorageServiceTest(AzulTestCase):
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with MultipartUploadHandler(sample_key, 'text/plain') as upload:
+        with MultipartUploadHandler(sample_key) as upload:
             for part in sample_content_parts:
                 upload.push(part)
 
@@ -132,7 +132,7 @@ class StorageServiceTest(AzulTestCase):
         storage_service.create_bucket()
 
         with self.assertRaises(MultipartUploadError):
-            with MultipartUploadHandler(sample_key, 'text/plain') as upload:
+            with MultipartUploadHandler(sample_key) as upload:
                 for part in sample_content_parts:
                     upload.push(part)
 
@@ -150,7 +150,7 @@ class StorageServiceTest(AzulTestCase):
         storage_service = StorageService()
         storage_service.create_bucket()
         with self.assertRaises(MultipartUploadError):
-            with MultipartUploadHandler(sample_key, 'text/plain') as upload:
+            with MultipartUploadHandler(sample_key) as upload:
                 for part in sample_content_parts:
                     upload.push(part)
 
@@ -167,6 +167,6 @@ class StorageServiceTest(AzulTestCase):
         storage_service.create_bucket()
         with patch.object(MultipartUploadHandler, '_upload_part', side_effect=RuntimeError('test')):
             with self.assertRaises(MultipartUploadError):
-                with MultipartUploadHandler(sample_key, 'text/plain') as upload:
+                with MultipartUploadHandler(sample_key) as upload:
                     for part in sample_content_parts:
                         upload.push(part)
