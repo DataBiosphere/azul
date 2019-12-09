@@ -2,16 +2,27 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
 )
-from dataclasses import dataclass
 from functools import lru_cache
 from logging import getLogger
-from typing import Optional
+import time
+from typing import (
+    Mapping,
+    Optional,
+)
+from urllib.parse import urlencode
+
 import boto3
+from dataclasses import dataclass
+
 from azul import config
 
 logger = getLogger(__name__)
+
 AWS_S3_DEFAULT_MINIMUM_PART_SIZE = 5242880  # 5 MB; see https://docs.aws.amazon.com/AmazonS3/latest/dev/qfacts.html
+
 MULTIPART_UPLOAD_MAX_WORKERS = 4
+
+Tagging = Mapping[str, str]
 
 
 class StorageService:
@@ -32,18 +43,42 @@ class StorageService:
     def get(self, object_key: str) -> bytes:
         return self.client.get_object(Bucket=self.bucket_name, Key=object_key)['Body'].read()
 
-    def put(self, object_key: str, data: bytes, content_type: Optional[str] = None, **kwargs) -> str:
-        params = {'Bucket': self.bucket_name, 'Key': object_key, 'Body': data, **kwargs}
-        if content_type is not None:
-            params['ContentType'] = content_type
-        self.client.put_object(**params)
-        return object_key
+    def put(self,
+            object_key: str,
+            data: bytes,
+            content_type: Optional[str] = None,
+            tagging: Optional[Tagging] = None,
+            **kwargs):
+        self.client.put_object(Bucket=self.bucket_name,
+                               Key=object_key,
+                               Body=data,
+                               **self._object_creation_kwargs(content_type, tagging),
+                               **kwargs)
 
-    def upload(self, file_name, object_key):
-        self.client.upload_file(Filename=file_name,
+    def put_multipart(self,
+                      object_key: str,
+                      content_type: Optional[str] = None,
+                      tagging: Optional[Tagging] = None):
+        return MultipartUploadHandler(object_key,
+                                      **self._object_creation_kwargs(content_type, tagging))
+
+    def upload(self,
+               file_path: str,
+               object_key: str,
+               content_type: Optional[str] = None,
+               tagging: Optional[Tagging] = None):
+        self.client.upload_file(Filename=file_path,
                                 Bucket=self.bucket_name,
-                                Key=object_key)
-        return object_key
+                                Key=object_key,
+                                ExtraArgs=self._object_creation_kwargs(content_type, tagging))
+
+    def _object_creation_kwargs(self, content_type, tagging):
+        kwargs = {}
+        if content_type is not None:
+            kwargs['ContentType'] = content_type
+        if tagging is not None:
+            kwargs['Tagging'] = urlencode(tagging)
+        return kwargs
 
     def get_presigned_url(self, key: str, file_name: Optional[str] = None) -> str:
         """
@@ -66,6 +101,29 @@ class StorageService:
     def create_bucket(self, bucket_name: str = None):
         self.client.create_bucket(Bucket=(bucket_name or self.bucket_name))
 
+    def put_object_tagging(self, object_key: str, tagging: Tagging = None):
+        deadline = time.time() + 60
+        tagging = {'TagSet': [{'Key': k, 'Value': v} for k, v in tagging.items()]}
+        while True:
+            try:
+                self.client.put_object_tagging(Bucket=self.bucket_name,
+                                               Key=object_key,
+                                               Tagging=tagging)
+            except self.client.exceptions.NoSuchKey:
+                if time.time() > deadline:
+                    logger.error('Unable to tag %s on object.', tagging)
+                    raise
+                else:
+                    logger.warning('Object key %s is not found. Retrying in 5 s.', object_key)
+                    time.sleep(5)
+            else:
+                break
+
+    def get_object_tagging(self, object_key: str) -> Tagging:
+        response = self.client.get_object_tagging(Bucket=self.bucket_name, Key=object_key)
+        tagging = {tag['Key']: tag['Value'] for tag in response['TagSet']}
+        return tagging
+
 
 class MultipartUploadHandler:
     """
@@ -76,7 +134,7 @@ class MultipartUploadHandler:
 
     .. code-block:: python
 
-       with MultipartUploadHandler('samples.txt', 'text/plain'):
+       with MultipartUploadHandler('samples.txt'):
            handler.push(b'abc')
            handler.push(b'defg')
            # ...
@@ -87,13 +145,14 @@ class MultipartUploadHandler:
     automatically.
     """
 
-    def __init__(self, object_key, content_type: str):
-        self.bucket_name = config.s3_bucket
+    bucket_name = config.s3_bucket
+
+    def __init__(self, object_key, **kwargs):
         self.object_key = object_key
+        self.kwargs = kwargs
         self.upload_id = None
         self.mp_upload = None
         self.next_part_number = 1
-        self.content_type = content_type
         self.parts = []
         self.futures = []
         self.thread_pool = None
@@ -101,7 +160,7 @@ class MultipartUploadHandler:
     def __enter__(self):
         api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,
                                                                   Key=self.object_key,
-                                                                  ContentType=self.content_type)
+                                                                  **self.kwargs)
         self.upload_id = api_response['UploadId']
         self.mp_upload = boto3.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
         self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
