@@ -1,0 +1,14 @@
+[
+    {
+        "content-type": "application/json; dcp-type=\"metadata/project\"",
+        "crc32c": "ef89ecd4",
+        "indexed": true,
+        "name": "project_0.json",
+        "s3_etag": "6f48b91d5fe66c2b679432e27b71e93b",
+        "sha1": "d95c316e832cc732d2bdcb5ea3bb87a8b957ffee",
+        "sha256": "65b93005fa5752fd6029c3721bf87617af494a494c53b0450000f57d83cde31f",
+        "size": 16327,
+        "uuid": "88ec040b-8705-4f77-8f41-f81e57632f7d",
+        "version": "2019-10-09T153248.934000Z"
+    }
+]

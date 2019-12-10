@@ -1,0 +1,24 @@
+{
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "scRNAseqSystemicComparison",
+            "project_title": "Systematic comparative analysis of single cell RNA-sequencing methods"
+        },
+        "provenance": {
+            "document_id": "88ec040b-8705-4f77-8f41-f81e57632f7d",
+            "submission_date": "2019-10-09T15:31:09.188Z",
+            "update_date": "2019-10-09T15:32:48.934Z",
+            "schema_major_version": 14,
+            "schema_minor_version": 1
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.5",
+        "links": [
+        ]
+    }
+}

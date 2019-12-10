@@ -87,6 +87,21 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_all_hits()
         self.assertElasticsearchResultsEqual(expected_hits, hits)
 
+    def test_minimum_fields(self):
+        """
+        Test indexing a bundle with minimal metadata using a canned bundle
+        copied from ffac201f-4b1c-4455-bd58-19c1a9e863b4
+        """
+        self._index_canned_bundle(('10101010-1010-1010-1010-101010101010', '2019-10-09T170735.528600Z'))
+        hits = self._get_all_hits()
+        for hit in hits:
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            contents = hit['_source']['contents']
+            if aggregate and entity_type == 'bundles':
+                self.assertEqual(contents['projects'][0]['project_short_name'], ['scRNAseqSystemicComparison'])
+            else:
+                self.assertEqual(contents['projects'][0]['project_short_name'], 'scRNAseqSystemicComparison')
+
     def test_deletion(self):
         """
         Delete a bundle and check that the index contains the appropriate flags
