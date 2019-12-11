@@ -689,8 +689,8 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
             file.ancestors(visitor)
             self._find_ancestor_samples(file, samples)
         # Manually visit each biomaterial to pickup any that are not linked in the graph
-        for cell_suspension in bundle.biomaterials.values():
-            visitor.visit(cell_suspension)
+        for biomaterial in bundle.biomaterials.values():
+            visitor.visit(biomaterial)
         project = self._get_project(bundle)
 
         contents = dict(samples=list(map(self._sample, samples.values())),
