@@ -97,10 +97,11 @@ class TestHCAIndexer(IndexerTestCase):
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
             contents = hit['_source']['contents']
-            if aggregate and entity_type == 'bundles':
-                self.assertEqual(contents['projects'][0]['project_short_name'], ['scRNAseqSystemicComparison'])
+            if aggregate and entity_type in ('bundles', 'cell_suspensions'):
+                self.assertEqual(one(contents['projects'])['project_short_name'], ['scRNAseqSystemicComparison'])
             else:
-                self.assertEqual(contents['projects'][0]['project_short_name'], 'scRNAseqSystemicComparison')
+                self.assertEqual(one(contents['projects'])['project_short_name'], 'scRNAseqSystemicComparison')
+            self.assertEqual(one(contents['cell_suspensions'])['total_estimated_cells'], 349)
 
     def test_deletion(self):
         """

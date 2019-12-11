@@ -92,9 +92,6 @@ class MetadataGenerator:
                         manifest_entry = manifest[file_name]
                         file_info[manifest_entry['uuid']] = manifest_entry, metadata_file
         return file_info
-        # if file_info:
-        # else:
-        #     raise EmptyBundleError()
 
     def _deep_get(self, d: JSON, *path: str) -> Optional[JSON]:
         if d is not None and path:

@@ -10,5 +10,17 @@
         "size": 16327,
         "uuid": "88ec040b-8705-4f77-8f41-f81e57632f7d",
         "version": "2019-10-09T153248.934000Z"
+    },
+    {
+        "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+        "crc32c": "a6670814",
+        "indexed": true,
+        "name": "cell_suspension_0.json",
+        "s3_etag": "0e44168582f71d0f11b0481b90e825f2",
+        "sha1": "bb6f2ddc26ce22f8da7af9a0b275926580e19b55",
+        "sha256": "4e8fc47be35b4cddfb4b49050d019a0b37253c0d95f97de521891062b4987da5",
+        "size": 853,
+        "uuid": "0432e9a5-604f-4cb7-8571-014eb5fd8ba2",
+        "version": "2019-10-09T153511.150000Z"
     }
 ]

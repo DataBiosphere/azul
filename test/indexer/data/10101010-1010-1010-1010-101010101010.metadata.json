@@ -14,6 +14,33 @@
             "schema_minor_version": 1
         }
     },
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Cortex2_specimen1_cell1",
+            "biomaterial_name": "Mouse cortex cells",
+            "biomaterial_description": "Mouse cortex cells",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090",
+                "ontology_label": "Mus musculus"
+            }
+        ],
+        "estimated_cell_count": 349,
+        "provenance": {
+            "document_id": "0432e9a5-604f-4cb7-8571-014eb5fd8ba2",
+            "submission_date": "2019-10-09T15:31:09.351Z",
+            "update_date": "2019-10-09T15:35:11.150Z",
+            "schema_major_version": 13,
+            "schema_minor_version": 3
+        }
+    },
     "links.json": {
         "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
         "schema_type": "link_bundle",
