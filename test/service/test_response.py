@@ -10,7 +10,7 @@ from app_test_case import LocalAppTestCase
 from azul import config
 from azul.logging import configure_test_logging
 from azul.plugin import Plugin
-from azul.service.responseobjects.hca_response_v5 import (
+from azul.service.hca_response_v5 import (
     FileSearchResponse,
     KeywordSearchResponse,
 )

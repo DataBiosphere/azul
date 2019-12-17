@@ -14,7 +14,7 @@ from azul.modules import (
 )
 import azul.openapi
 import azul.project.hca.metadata_generator
-import azul.service.responseobjects.elastic_request_builder
+import azul.service.elasticsearch_service
 import azul.strings
 import azul.threads
 import azul.time
@@ -41,7 +41,7 @@ def load_tests(_loader, tests, _ignore):
     tests.addTests(doctest.DocTestSuite(azul.transformer))
     tests.addTests(doctest.DocTestSuite(azul.vendored.frozendict))
     tests.addTests(doctest.DocTestSuite(azul.azulclient))
-    tests.addTests(doctest.DocTestSuite(azul.service.responseobjects.elastic_request_builder))
+    tests.addTests(doctest.DocTestSuite(azul.service.elasticsearch_service))
     tests.addTests(doctest.DocTestSuite(retorts))
     tests.addTests(doctest.DocTestSuite(azul.project.hca.metadata_generator))
     tests.addTests(doctest.DocTestSuite(load_app_module('service')))

@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-
 from tempfile import TemporaryDirectory
 from unittest import mock
 
@@ -214,24 +213,31 @@ class FacetNameValidationTest(WebServiceTestCase):
 
     def test_bad_query_params(self):
 
-        def assert_bad_request(response):
-            self.assertEqual(400, response.status_code, response.json())
-            self.assertEqual('BadRequestError', response.json()['Code'])
+        def test(url, message, params):
+            response = requests.get(url, params=params)
+            self.assertEqual(400, response.status_code, response.content)
+            response = response.json()
+            code = 'BadRequestError'
+            self.assertEqual(code, response['Code'])
+            self.assertEqual(code + ': ' + message, response['Message'])
 
-        entity_types = ['files', 'bundles', 'samples']
-        for entity_type in entity_types:
+        for entity_type in ('files', 'bundles', 'samples'):
             url = self.base_url + f'/repository/{entity_type}'
-            with self.subTest(test='extra parameter', entity_type=entity_type):
-                params = {
-                    'some_nonexistent_filter': 1,
-                }
-                assert_bad_request(requests.get(url, params=params))
-            with self.subTest(test='malformed parameter', entity_type=entity_type):
-                params = {
-                    'size': 'foo',
-                }
-                assert_bad_request(requests.get(url, params=params))
+            with self.subTest(entity_type=entity_type):
+                with self.subTest(test='extra parameter'):
+                    test(url,
+                         params={'some_nonexistent_filter': 1},
+                         message='Invalid query parameter `some_nonexistent_filter`')
+                with self.subTest(test='malformed parameter'):
+                    test(url,
+                         params={'size': 'foo'},
+                         message='Invalid value for parameter `size`')
+                with self.subTest(test='malformed filter parameter'):
+                    test(url,
+                         params={'filters': '{"}'},
+                         message='The `filters` parameter is not valid JSON')
         url = self.base_url + '/integrations'
-        with self.subTest(test='missing required parameter', entity_type='integrations'):
-            params = {}
-            assert_bad_request(requests.get(url, params=params))
+        with self.subTest(test='missing required parameter'):
+            test(url,
+                 params={},
+                 message='Missing required query parameters `entity_type`, `integration_type`')

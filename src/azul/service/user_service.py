@@ -1,5 +1,5 @@
 from azul import config
-from azul.service.responseobjects.dynamo_data_access import (
+from azul.service.dynamo_data_access import (
     DynamoDataAccessor,
     ConditionalUpdateItemError,
 )

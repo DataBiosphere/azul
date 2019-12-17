@@ -1,6 +1,5 @@
 import base64
 import binascii
-import chalice
 import hashlib
 import json
 import logging.config
@@ -9,18 +8,19 @@ import os
 import re
 import time
 from typing import (
-    Optional,
+    Any,
     Callable,
     Mapping,
-    Any,
-    cast,
+    Optional,
     Sequence,
     Set,
+    cast,
 )
 import urllib.parse
 
 import boto3
 from botocore.exceptions import ClientError
+import chalice
 # noinspection PyPackageRequirements
 from chalice import (
     AuthResponse,
@@ -45,35 +45,35 @@ from azul.security.authenticator import (
     AuthenticationError,
     Authenticator,
 )
-from azul.service.manifest import ManifestService
-from azul.service.repository import (
-    EntityNotFoundError,
-    InvalidUUIDError,
-    RepositoryService,
-)
-from azul.service.responseobjects.cart_export_job_manager import (
+from azul.service import BadArgumentException
+from azul.service.async_manifest_service import AsyncManifestService
+from azul.service.cart_export_job_manager import (
     CartExportJobManager,
     InvalidExecutionTokenError,
 )
-from azul.service.responseobjects.cart_export_service import CartExportService
-from azul.service.responseobjects.cart_item_manager import (
+from azul.service.cart_export_service import CartExportService
+from azul.service.cart_item_manager import (
     CartItemManager,
     DuplicateItemError,
     ResourceAccessError,
 )
-from azul.service.responseobjects.collection_data_access import CollectionDataAccess
-from azul.service.responseobjects.elastic_request_builder import (
-    BadArgumentException,
-    ElasticTransformDump,
+from azul.service.collection_data_access import CollectionDataAccess
+from azul.service.elasticsearch_service import (
+    ElasticsearchService,
     IndexNotFoundError,
 )
-from azul.service.responseobjects.storage_service import StorageService
-from azul.service.step_function_helper import StateMachineError
+from azul.service.manifest_service import ManifestService
+from azul.service.repository_service import (
+    EntityNotFoundError,
+    InvalidUUIDError,
+    RepositoryService,
+)
+from azul.service.storage_service import StorageService
+from azul.strings import pluralize
 from azul.types import (
     JSON,
     JSONs,
 )
-from azul.strings import pluralize
 
 log = logging.getLogger(__name__)
 
@@ -403,7 +403,8 @@ def validate_params(query_params: Mapping[str, str],
     if mandatory_params:
         missing_params = mandatory_params - provided_params
         if missing_params:
-            raise BadRequestError(msg=fmt_error('Missing required', missing_params))
+            # Sorting is to produce a deterministic error message
+            raise BadRequestError(msg=fmt_error('Missing required', list(sorted(missing_params))))
 
     provided_params &= validation_params
 
@@ -902,18 +903,16 @@ def handle_manifest_generation_request():
         raise BadRequestError(f'{format_} is not a valid manifest format.')
     token = query_params.get('token')
     retry_url = self_url()
-    manifest_service = ManifestService()
+    manifest_service = AsyncManifestService()
     try:
         return manifest_service.start_or_inspect_manifest_generation(retry_url,
                                                                      token=token,
-                                                                     format=format_,
+                                                                     format_=format_,
                                                                      filters=filters)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
             raise BadRequestError('Invalid token given')
         raise
-    except StateMachineError as e:
-        raise ChaliceViewError(e.msg)
     except ValueError as e:
         raise BadRequestError(e.args)
 
@@ -931,8 +930,8 @@ def generate_manifest(event, context):
                       'compact' (default) or 'terra.bdbag'
     :return: The URL to the generated manifest
     """
-    es_td = ElasticTransformDump()
-    response = es_td.transform_manifest(event['format'], event['filters'])
+    service = ManifestService(StorageService())
+    response = service.transform_manifest(event['format'], event['filters'])
     return {'Location': response.headers['Location']}
 
 
@@ -1580,8 +1579,8 @@ def add_all_results_to_cart(cart_id):
         filters = json.loads(filters or '{}')
     except json.JSONDecodeError:
         raise BadRequestError('Invalid filters given')
-    es_td = ElasticTransformDump()
-    hits, search_after = es_td.transform_cart_item_request(entity_type, filters=filters, size=1)
+    service = ElasticsearchService()
+    hits, search_after = service.transform_cart_item_request(entity_type, filters=filters, size=1)
     item_count = hits.total
 
     token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, entity_type, filters, item_count, 10000)
@@ -1918,12 +1917,12 @@ def get_data_object(file_uuid):
         "fileId": {"is": [file_uuid]},
         **({"fileVersion": {"is": [file_version]}} if file_version else {})
     }
-    es_td = ElasticTransformDump()
+    service = ElasticsearchService()
     pagination = _get_pagination(app.current_request, entity_type='files')
-    response = es_td.transform_request(filters=filters,
-                                       pagination=pagination,
-                                       post_filter=True,
-                                       entity_type='files')
+    response = service.transform_request(filters=filters,
+                                         pagination=pagination,
+                                         post_filter=True,
+                                         entity_type='files')
     if response['hits']:
         doc = one(one(response['hits'])['files'])
         data_obj = file_to_drs(doc)
