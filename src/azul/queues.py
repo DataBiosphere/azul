@@ -3,6 +3,7 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
 )
+from datetime import datetime
 from itertools import chain
 import json
 import logging
@@ -78,7 +79,8 @@ class Queues:
         logger.info(f'Finished writing {path !r}')
 
     def _dump_messages(self, messages, queue_url, path):
-        messages = [self._condense(message) for message in messages]
+        messages = sorted(messages, key=lambda m: int(m.attributes['SentTimestamp']), reverse=True)
+        messages = list(map(self._condense, messages))
         with write_file_atomically(path) as file:
             content = {
                 'queue': queue_url,
@@ -108,12 +110,19 @@ class Queues:
         """
         Prepare a message for writing to a local file.
         """
+
+        def isoformat(t):
+            return datetime.fromtimestamp(int(t) / 1000).isoformat()
+
         return {
             'MessageId': message.message_id,
             'ReceiptHandle': message.receipt_handle,
             'MD5OfBody': message.md5_of_body,
             'Body': json.loads(message.body) if self._json_body else message.body,
-            'Attributes': message.attributes,
+            'Attributes': {
+                k: isoformat(v) if self._json_body and k.endswith('Timestamp') else v
+                for k, v in message.attributes.items()
+            },
         }
 
     def _reconstitute(self, message):
