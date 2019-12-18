@@ -12,7 +12,7 @@
 
 _set AZUL_DEPLOYMENT_STAGE skunk
 _set AZUL_DSS_ENDPOINT "https://dss.dev.data.humancellatlas.org/v1"
-_set AZUL_SUBSCRIBE_TO_DSS 0
+_set AZUL_SUBSCRIBE_TO_DSS 1
 
 # Your personal deployment uses a subdomain of the `dev` deployment's domain.
 #
@@ -27,5 +27,4 @@ _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRE
 _set AZUL_SHARE_ES_DOMAIN 1
 _set AZUL_ES_DOMAIN "azul-index-dev"
 
-_set azul_dss_query_prefix '42'
 _set AZUL_DEBUG 1
