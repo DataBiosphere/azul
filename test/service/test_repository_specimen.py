@@ -4,6 +4,7 @@ from azul.logging import configure_test_logging
 from service import WebServiceTestCase
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 

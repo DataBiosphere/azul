@@ -5,6 +5,7 @@ import threading
 from typing import (
     List,
     Tuple,
+    Union,
 )
 from unittest.mock import patch
 from uuid import uuid4
@@ -16,7 +17,11 @@ from azul.indexer import (
 )
 from azul.plugin import Plugin
 from azul.project.hca import Indexer
-from azul.types import JSON
+from azul.types import (
+    JSON,
+    MutableJSON,
+    MutableJSONs,
+)
 from es_test_case import ElasticsearchTestCase
 
 
@@ -71,7 +76,7 @@ class IndexerTestCase(ElasticsearchTestCase):
         }
 
     @classmethod
-    def _load_canned_file(cls, bundle_fqid, extension) -> JSON:
+    def _load_canned_file(cls, bundle_fqid, extension) -> Union[MutableJSONs, MutableJSON]:
         bundle_uuid, bundle_version = bundle_fqid
         data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
         for suffix in '.' + bundle_version, '':
@@ -83,13 +88,13 @@ class IndexerTestCase(ElasticsearchTestCase):
                     raise
 
     @classmethod
-    def _load_canned_bundle(cls, bundle_fqid) -> Tuple[List[JSON], JSON]:
-        manifest = cls._load_canned_file(bundle_fqid, 'manifest')
-        metadata = cls._load_canned_file(bundle_fqid, 'metadata')
+    def _load_canned_bundle(cls, bundle_fqid) -> Tuple[List[MutableJSON], MutableJSON]:
+        manifest: MutableJSONs = cls._load_canned_file(bundle_fqid, 'manifest')
+        metadata: MutableJSON = cls._load_canned_file(bundle_fqid, 'metadata')
         assert isinstance(manifest, list)
         return manifest, metadata
 
-    def _load_canned_result(self, bundle_fqid) -> List[JSON]:
+    def _load_canned_result(self, bundle_fqid) -> MutableJSONs:
         """
         Load the canned index contents for the given canned bundle and fix the '_index' entry in each to match the
         index name used by the current deployment

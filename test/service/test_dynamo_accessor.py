@@ -3,6 +3,7 @@ from azul.service.dynamo_data_access import ConditionalUpdateItemError
 from dynamo_test_case import DynamoTestCase
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 

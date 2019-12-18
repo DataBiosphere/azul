@@ -44,12 +44,16 @@ from azul.transformer import (
     Aggregate,
     Contribution,
 )
+from azul.types import (
+    JSONs,
+)
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper
 
 logger = logging.getLogger(__name__)
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(logger)
 
@@ -523,7 +527,8 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertEqual(4, len(file_uuids))
         for bundle_fqid in bundles:
             manifest, metadata = self._load_canned_bundle(bundle_fqid)
-            for file in metadata['file.json']['files']:
+            files: JSONs = metadata['file.json']['files']
+            for file in files:
                 file_document_ids.add(file['hca_ingest']['document_id'])
         self.assertEqual(file_document_ids, file_uuids)
 
