@@ -694,6 +694,13 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
             visitor.visit(biomaterial)
         # Pretend all specimens are samples
         samples = visitor.specimens
+        # Manually visit each process to pickup any that are not linked in the graph
+        for process in bundle.processes.values():
+            visitor.visit(process)
+        # Manually visit each protocol to pickup any that are not linked in the graph
+        for protocol in bundle.protocols.values():
+            visitor.visit(protocol)
+
         project = self._get_project(bundle)
 
         contents = dict(samples=list(map(self._sample, samples.values())),
