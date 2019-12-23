@@ -37,13 +37,13 @@ from azul.transformer import (
     FieldTypes,
     FrequencySetAccumulator,
     GroupingAggregator,
-    SingleValueAccumulator,
     ListAccumulator,
     SetAccumulator,
-    UniqueValueCountAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
+    SingleValueAccumulator,
     SumAccumulator,
+    UniqueValueCountAccumulator,
 )
 from azul.types import JSON
 
@@ -514,11 +514,12 @@ class TransformerVisitor(api.EntityVisitor):
             self.organoids[entity.document_id] = entity
         elif isinstance(entity, api.Process):
             for protocol in entity.protocols.values():
-                if isinstance(protocol, (api.SequencingProtocol,
-                                         api.LibraryPreparationProtocol,
-                                         api.AnalysisProtocol,
-                                         api.ImagingProtocol)):
-                    self.protocols[protocol.document_id] = protocol
+                self.visit(protocol)
+        elif isinstance(entity, (api.SequencingProtocol,
+                                 api.LibraryPreparationProtocol,
+                                 api.AnalysisProtocol,
+                                 api.ImagingProtocol)):
+            self.protocols[entity.document_id] = entity
         elif isinstance(entity, api.File):
             # noinspection PyDeprecation
             file_name = entity.manifest_entry.name
