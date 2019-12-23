@@ -16,9 +16,9 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSet,
-    Union,
-    Tuple,
     Optional,
+    Tuple,
+    Union,
 )
 
 from elasticsearch import (
@@ -34,19 +34,19 @@ from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
 from azul import config
-import azul.dss
 from azul.deployment import aws
+import azul.dss
 from azul.es import ESClientFactory
 from azul.transformer import (
     Aggregate,
     AggregatingTransformer,
+    BundleUUID,
     Contribution,
     Document,
     DocumentCoordinates,
     EntityReference,
     FieldTypes,
     Transformer,
-    BundleUUID,
 )
 from azul.types import JSON
 
@@ -268,14 +268,35 @@ class BaseIndexer(ABC):
 
     def _read_contributions(self, tallies: Tallies) -> List[Contribution]:
         es_client = ESClientFactory.get()
+        entities_by_index: MutableMapping[str, MutableSet[str]] = defaultdict(set)
+        for entity in tallies.keys():
+            index = config.es_index_name(entity.entity_type, aggregate=False)
+            entities_by_index[index].add(entity.entity_id)
         query = {
             "query": {
-                "terms": {
-                    "entity_id.keyword": [e.entity_id for e in tallies.keys()]
+                "bool": {
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "term": {
+                                            "_index": index
+                                        }
+                                    },
+                                    {
+                                        "terms": {
+                                            "entity_id.keyword": list(entity_ids)
+                                        }
+                                    }
+                                ]
+                            }
+                        } for index, entity_ids in entities_by_index.items()
+                    ]
                 }
             }
         }
-        index = sorted(list({config.es_index_name(e.entity_type, aggregate=False) for e in tallies.keys()}))
+        index = sorted(list(entities_by_index.keys()))
         # scan() uses a server-side cursor and is expensive. Only use it if the number of contributions is large
         page_size = 100
         num_contributions = sum(tallies.values())

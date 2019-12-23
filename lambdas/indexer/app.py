@@ -336,7 +336,7 @@ class DocumentTally:
 
     def to_message(self) -> JSON:
         return dict(MessageBody=json.dumps(self.to_json()),
-                    MessageGroupId=self.entity.entity_id,
+                    MessageGroupId='_'.join(self.entity),
                     MessageDeduplicationId=str(uuid.uuid4()))
 
     def consolidate(self, others: List['DocumentTally']) -> 'DocumentTally':
