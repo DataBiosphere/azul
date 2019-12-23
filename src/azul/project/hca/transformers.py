@@ -692,6 +692,8 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
         # Manually visit each biomaterial to pickup any that are not linked in the graph
         for biomaterial in bundle.biomaterials.values():
             visitor.visit(biomaterial)
+        # Pretend all specimens are samples
+        samples = visitor.specimens
         project = self._get_project(bundle)
 
         contents = dict(samples=list(map(self._sample, samples.values())),
