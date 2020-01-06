@@ -53,6 +53,8 @@ Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
 sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert Sample.__args__ == sample_types  # since we can't use * in generic types
 
+skunk = True
+
 
 class Transformer(AggregatingTransformer, metaclass=ABCMeta):
 
@@ -529,6 +531,18 @@ class TransformerVisitor(api.EntityVisitor):
             if not zarr or sub_name.endswith('.zattrs'):
                 self.files[entity.document_id] = entity
 
+    if skunk:
+        def skunk_hacks(self, bundle):
+            # Manually visit each biomaterial to pickup any that are not linked in the graph
+            for biomaterial in bundle.biomaterials.values():
+                self.visit(biomaterial)
+            # Manually visit each process to pickup any that are not linked in the graph
+            for process in bundle.processes.values():
+                self.visit(process)
+            # Manually visit each protocol to pickup any that are not linked in the graph
+            for protocol in bundle.protocols.values():
+                self.visit(protocol)
+
 
 class FileTransformer(Transformer):
 
@@ -564,6 +578,10 @@ class FileTransformer(Transformer):
                 file.ancestors(visitor)
                 samples: MutableMapping[str, Sample] = dict()
                 self._find_ancestor_samples(file, samples)
+                if skunk:
+                    visitor.skunk_hacks(bundle)
+                    # Pretend all specimens are samples
+                    samples = visitor.specimens
                 contents = dict(samples=list(map(self._sample, samples.values())),
                                 specimens=list(map(self._specimen, visitor.specimens.values())),
                                 cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
@@ -611,6 +629,10 @@ class CellSuspensionTransformer(Transformer):
                 visitor = TransformerVisitor()
                 cell_suspension.accept(visitor)
                 cell_suspension.ancestors(visitor)
+                if skunk:
+                    visitor.skunk_hacks(bundle)
+                    # Pretend all specimens are samples
+                    samples = visitor.specimens
                 contents = dict(samples=list(map(self._sample, samples.values())),
                                 specimens=list(map(self._specimen, visitor.specimens.values())),
                                 cell_suspensions=[self._cell_suspension(cell_suspension)],
@@ -643,10 +665,15 @@ class SampleTransformer(Transformer):
         samples: MutableMapping[str, Sample] = dict()
         for file in bundle.files.values():
             self._find_ancestor_samples(file, samples)
+        if skunk:
+            # Pretend all specimens are samples
+            samples = {str(s.document_id): s for s in bundle.specimens}
         for sample in samples.values():
             visitor = TransformerVisitor()
             sample.accept(visitor)
             sample.ancestors(visitor)
+            if skunk:
+                visitor.skunk_hacks(bundle)
             contents = dict(samples=[self._sample(sample)],
                             specimens=list(map(self._specimen, visitor.specimens.values())),
                             cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
@@ -689,17 +716,10 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
             file.accept(visitor)
             file.ancestors(visitor)
             self._find_ancestor_samples(file, samples)
-        # Manually visit each biomaterial to pickup any that are not linked in the graph
-        for biomaterial in bundle.biomaterials.values():
-            visitor.visit(biomaterial)
-        # Pretend all specimens are samples
-        samples = visitor.specimens
-        # Manually visit each process to pickup any that are not linked in the graph
-        for process in bundle.processes.values():
-            visitor.visit(process)
-        # Manually visit each protocol to pickup any that are not linked in the graph
-        for protocol in bundle.protocols.values():
-            visitor.visit(protocol)
+        if skunk:
+            visitor.skunk_hacks(bundle)
+            # Pretend all specimens are samples
+            samples = visitor.specimens
 
         project = self._get_project(bundle)
 
