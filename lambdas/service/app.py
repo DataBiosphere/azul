@@ -481,7 +481,7 @@ def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Opt
     results = []
     for portal in portals:
         integrations = [
-            {k: v if k != 'entity_ids' else v[config.dss_deployment_stage] for k, v in integration.items()}
+            {k: v if k != 'entity_ids' else [] for k, v in integration.items()}
             for integration in cast(Sequence[JSON], portal['integrations'])
             if integration['entity_type'] == entity_type and integration['integration_type'] == integration_type
         ]
