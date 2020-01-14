@@ -362,7 +362,6 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Reconstructing the human first trimester fetal-maternal interface using single cell "
                                  "transcriptomics - 10x data",
                         "entity_ids": {
-                            "staging": [],
                             "integration": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"],
                             "prod": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"]
                         },
@@ -375,7 +374,6 @@ class Plugin(azul.plugin.Plugin):
                         "title": "Reconstructing the human first trimester fetal-maternal interface using single cell "
                                  "transcriptomics - Smartseq 2 data",
                         "entity_ids": {
-                            "staging": [],
                             "integration": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"],
                             "prod": ["f83165c5-e2ea-4d15-a5cf-33f3550bffde"]
                         },
@@ -449,7 +447,6 @@ class Plugin(azul.plugin.Plugin):
                         "entity_type": "project",
                         "title": title,
                         "entity_ids": {
-                            "staging": [],
                             "integration": [project_uuid],
                             "prod": [project_uuid]
                         },
