@@ -184,39 +184,19 @@ def openapi():
                     body=spec)
 
 
-health_spec = {
-    'responses': {
-        '200': {
-            'description': '200 response',
-            'content': {
-                'application/json': {
-                    'schema': {'$ref': '#/components/schemas/Empty'}
-                }
-            }
-        }
-    },
-    'tags': ['Health']
-}
-
-
-@app.route('/health', methods=['GET'], cors=True, method_spec={
-    **health_spec,
-    'summary': 'List health information for webservice'
-})
-@app.route('/health/{keys}', methods=['GET'], cors=True, path_spec={
+@app.route('/health', methods=['GET'], cors=True, spec={
     'parameters': [
         {
-            'name': 'keys',
-            'in': 'path',
-            'required': True,
-            'schema': {'type': 'string'}
+            'in': 'query',
+            'name': 'foo',
+            'description': 'This is not a real parameter',
+            'required': False,
+            'schema': {'$ref': "#/components/schemas/Empty"}
         }
     ],
-}, method_spec={
-    **health_spec,
-    'summary': 'List health information for a specific key',
-    'description': 'List health information for a specific key, or all keys if `/health/` is used.'
+    'tags': ['Health']
 })
+@app.route('/health/{keys}', methods=['GET'], cors=True)
 def health(keys: Optional[str] = None):
     controller = HealthController(lambda_name='service',
                                   keys=keys,

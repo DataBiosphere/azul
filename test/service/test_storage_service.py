@@ -17,7 +17,6 @@ from azul.service.storage_service import (
 from azul_test_case import AzulTestCase
 
 
-# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 
