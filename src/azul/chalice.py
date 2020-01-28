@@ -22,13 +22,12 @@ class AzulChaliceApp(Chalice):
         Same as method in supper class but stashes URL path a view function is bound to as an attribute of the
         function itself.
         """
-        methods = kwargs.get('methods', None)
-        path_spec = kwargs.pop('path_spec', None)
-        method_spec = kwargs.pop('method_spec', None)
+        spec = kwargs.pop('spec', None)
         decorator = super().route(path, **kwargs)
 
         def _decorator(view_func):
-            view_func = openapi_spec(path, methods, path_spec=path_spec, method_spec=method_spec)(view_func)
+            if spec is not None:
+                view_func = openapi_spec(spec)(view_func)
             view_func.path = path
             return decorator(view_func)
 

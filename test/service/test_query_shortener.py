@@ -13,7 +13,6 @@ from azul.service.storage_service import StorageService
 from retorts import ResponsesHelper
 
 
-# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 

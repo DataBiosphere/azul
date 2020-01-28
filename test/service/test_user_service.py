@@ -9,7 +9,6 @@ from azul.service.user_service import (
 from dynamo_test_case import DynamoTestCase
 
 
-# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 

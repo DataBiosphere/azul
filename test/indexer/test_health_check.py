@@ -12,7 +12,6 @@ from azul.logging import configure_test_logging
 from health_check_test_case import HealthCheckTestCase
 
 
-# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 

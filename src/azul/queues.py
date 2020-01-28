@@ -166,7 +166,7 @@ class Queues:
         return total_message_count
 
     @classmethod
-    def wait_for_queue_level(cls, queue_names, empty: bool = True, timeout: int = 120):
+    def wait_for_queue_level(cls, queue_names, empty: bool = True, timeout: int = 60):
         """
         Wait until the total count of queued messages reaches the desired level
 
@@ -176,11 +176,9 @@ class Queues:
         """
         queues = cls.get_queues(queue_names)
         wait_start_time = time.time()
-        deque_size = 10
-        queue_size_history = deque(maxlen=deque_size)
+        queue_size_history = deque(maxlen=10)
 
-        logger.info('Waiting up to %s seconds for %s queues to %s ...',
-                    timeout, len(queues), 'empty' if empty else 'not be empty')
+        logger.info('Waiting up to %s seconds for %s queues to empty ...', timeout, len(queues))
         while True:
             total_message_count = cls.count_messages(queues)
             queue_wait_time_elapsed = (time.time() - wait_start_time)
@@ -189,7 +187,7 @@ class Queues:
             if queue_wait_time_elapsed > timeout:
                 logger.error('The queue(s) are NOT at the desired level.')
                 return
-            elif (cumulative_queue_size == 0) == empty and len(queue_size_history) == deque_size:
+            elif (cumulative_queue_size == 0) == empty:
                 logger.info('The queue(s) are at the desired level.')
                 break
             else:

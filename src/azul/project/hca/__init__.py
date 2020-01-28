@@ -277,7 +277,7 @@ class Plugin(azul.plugin.Plugin):
             {
                 "portal_id": "7bc432a6-0fcf-4c19-b6e6-4cb6231279b3",
                 "portal_name": "Terra Portal",
-                "portal_icon": "https://app.terra.bio/favicon.png",
+                "portal_icon": "https://app.terra.bio/static/media/logo.c5ed3676.svg",
                 "contact_email": "",
                 "organization_name": "Broad Institute",
                 "portal_description": "Terra is a cloud-native platform for biomedical researchers to access data, "
@@ -297,7 +297,7 @@ class Plugin(azul.plugin.Plugin):
                 "portal_id": "9852dece-443d-42e8-869c-17b9a86d447e",
                 "portal_name": "Single Cell Portal",
                 "portal_icon": "https://singlecell.broadinstitute.org/single_cell/assets/"
-                               "scp_favicon-1e5be59fdd577f7e7e275109b800364728b01b4ffc54a41e9e32117f3d5d9aa6.ico",
+                               "SCP-logo-5d31abc1f355f68c809a100d74c886af016bd0aba246bcfad92f0b50b5ce2cd8.png",
                 "contact_email": "",
                 "organization_name": "Broad Institute",
                 "portal_description": "Reducing barriers and accelerating single-cell research.",
@@ -330,8 +330,7 @@ class Plugin(azul.plugin.Plugin):
             {
                 "portal_id": "f58bdc5e-98cd-4df4-80a4-7372dc035e87",
                 "portal_name": "Single Cell Expression Atlas",
-                "portal_icon": "https://ebi.emblstatic.net/web_guidelines/EBI-Framework/v1.3/images/logos/EMBL-EBI/"
-                               "favicons/favicon.ico",
+                "portal_icon": "https://www.ebi.ac.uk/gxa/sc/resources/images/logos/sc_atlas_logo.png",
                 "contact_email": "Irene Papatheodorou irenep@ebi.ac.uk",
                 "organization_name": "European Bioinformatics Institute",
                 "portal_description": "Single Cell Expression Atlas annotates publicly available single cell "
@@ -438,7 +437,7 @@ class Plugin(azul.plugin.Plugin):
             {
                 "portal_id": "2e05f611-16fb-4bf3-b860-aa500f0256de",
                 "portal_name": "Xena",
-                "portal_icon": "https://xena.ucsc.edu/icons-9ac0cb8372f662ad72d747b981120f73/favicon.ico",
+                "portal_icon": "https://xenabrowser.net/03340e094d1f3edc51bc3d1a2a589b65.png",
                 "contact_email": "",
                 "organization_name": "UCSC",
                 "portal_description": "",
