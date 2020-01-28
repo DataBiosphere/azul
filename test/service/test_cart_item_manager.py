@@ -16,7 +16,6 @@ from dynamo_test_case import DynamoTestCase
 from service import WebServiceTestCase
 
 
-# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 

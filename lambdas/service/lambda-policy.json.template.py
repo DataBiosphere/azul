@@ -50,9 +50,7 @@ emit({
                 "s3:PutObject",
                 "s3:GetObject",
                 "s3:HeadObject",
-                "s3:PutObjectAcl",
-                "s3:PutObjectTagging",
-                "s3:GetObjectTagging"
+                "s3:PutObjectAcl"
             ],
             "Resource": [
                 f"arn:aws:s3:::{config.s3_bucket}/*",

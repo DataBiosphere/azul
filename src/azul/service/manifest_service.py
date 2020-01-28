@@ -39,6 +39,7 @@ import uuid
 
 from bdbag import bdbag_api
 from boltons.cacheutils import cachedproperty
+from botocore.exceptions import ClientError
 from chalice import Response
 from elasticsearch_dsl import Search
 from more_itertools import one
@@ -62,6 +63,7 @@ from azul.service.buffer import FlushableBuffer
 from azul.service.elasticsearch_service import ElasticsearchService
 from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
+    MultipartUploadHandler,
     StorageService,
 )
 from azul.types import (
@@ -93,61 +95,42 @@ class ManifestService(ElasticsearchService):
         # FIXME: this should go into app.py or a controller
         return Response(body='', headers=headers, status_code=302)
 
-    file_name_tag = 'azul_file_name'
-
     def _generate_manifest(self, generator: 'ManifestGenerator', object_key: str) -> Optional[str]:
         """
         Generate the manifest and return the desired content disposiion file
         name if necessary.
         """
-
-        def file_name_(base_name: str) -> str:
-            if base_name:
-                assert generator.use_content_disposition_file_name
-                file_name_prefix = unicodedata.normalize('NFKD', base_name)
-                file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
-                timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
-                file_name = f'{file_name_prefix} {timestamp}.{generator.file_name_extension}'
-            else:
-                if generator.use_content_disposition_file_name:
-                    file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
-                else:
-                    file_name = None
-            return file_name
-
-        def tagging_(file_name: str) -> Optional[Mapping[str, str]]:
-            return None if file_name is None else {self.file_name_tag: file_name}
-
         content_type = generator.content_type
         if isinstance(generator, FileBasedManifestGenerator):
-            file_path, base_name = generator.create_file()
-            file_name = file_name_(base_name)
+            file_path, content_disposition_base_name = generator.create_file()
             try:
-                self.storage_service.upload(file_path,
-                                            object_key,
-                                            content_type=content_type,
-                                            tagging=tagging_(file_name))
+                self.storage_service.upload(file_path, object_key)
             finally:
                 os.remove(file_path)
         elif isinstance(generator, StreamingManifestGenerator):
             if config.disable_multipart_manifests:
                 output = StringIO()
-                base_name = generator.write_to(output)
-                file_name = file_name_(base_name)
-                self.storage_service.put(object_key,
+                content_disposition_base_name = generator.write_to(output)
+                self.storage_service.put(object_key=object_key,
                                          data=output.getvalue().encode(),
-                                         content_type=content_type,
-                                         tagging=tagging_(file_name))
+                                         content_type=content_type)
             else:
-                with self.storage_service.put_multipart(object_key, content_type=content_type) as upload:
-                    with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, upload.push) as buffer:
+                with MultipartUploadHandler(object_key, content_type) as multipart_upload:
+                    with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, multipart_upload.push) as buffer:
                         text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
-                        base_name = generator.write_to(text_buffer)
-                file_name = file_name_(base_name)
-                if file_name is not None:
-                    self.storage_service.put_object_tagging(object_key, tagging_(file_name))
+                        content_disposition_base_name = generator.write_to(text_buffer)
         else:
             raise NotImplementedError('Unsupported generator type', type(generator))
+        if content_disposition_base_name:
+            assert generator.use_content_disposition_file_name
+            file_name = self._create_name_object(object_key,
+                                                 content_disposition_base_name,
+                                                 generator.file_name_extension)
+        else:
+            if generator.use_content_disposition_file_name:
+                file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
+            else:
+                file_name = None
         return file_name
 
     def _use_cached_manifest(self, generator: 'ManifestGenerator', object_key: str) -> Optional[str]:
@@ -155,12 +138,16 @@ class ManifestService(ElasticsearchService):
         Return the content disposition file name of the exiting cached manifest.
         """
         if generator.use_content_disposition_file_name:
-            tagging = self.storage_service.get_object_tagging(object_key)
-            file_name = tagging.get(self.file_name_tag)
-            if file_name is None:
-                logger.warning("Manifest object '%s' doesn't have the '%s' tag."
-                               "Generating pre-signed URL without Content-Disposition header.",
-                               object_key, self.file_name_tag)
+            name_object_key = object_key + self.name_object_suffix
+            try:
+                file_name = self.storage_service.get(name_object_key).decode()
+            except ClientError as e:
+                if e.response['Error']['Code'] == 'NoSuchKey':
+                    logger.warning("Name object '%s' doesn't exist. "
+                                   "Generating pre-signed URL without Content-Disposition header.", name_object_key)
+                    file_name = None
+                else:
+                    raise
         else:
             file_name = None
         return file_name
@@ -224,6 +211,18 @@ class ManifestService(ElasticsearchService):
             else:
                 logger.info('Cached manifest about to expire: %s', object_key)
                 return False
+
+    name_object_suffix = '.name'
+
+    def _create_name_object(self, manifest_object_key, base_name, extension):
+        assert base_name
+        file_name_prefix = unicodedata.normalize('NFKD', base_name)
+        file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
+        file_name = f'{file_name_prefix} {timestamp}.{extension}'
+        self.storage_service.put(object_key=manifest_object_key + self.name_object_suffix,
+                                 data=file_name.encode())
+        return file_name
 
 
 SourceFilters = List[str]

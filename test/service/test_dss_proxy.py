@@ -19,7 +19,6 @@ from retorts import ResponsesHelper
 logger = logging.getLogger(__name__)
 
 
-# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(logger)
 

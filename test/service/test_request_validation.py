@@ -12,7 +12,6 @@ from azul.plugin import Plugin
 from service import WebServiceTestCase
 
 
-# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 

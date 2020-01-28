@@ -17,7 +17,6 @@ from azul.service.storage_service import (
 from azul_test_case import AzulTestCase
 
 
-# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 
@@ -92,7 +91,7 @@ class StorageServiceTest(AzulTestCase):
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with MultipartUploadHandler(sample_key) as upload:
+        with MultipartUploadHandler(sample_key, 'text/plain') as upload:
             for part in sample_content_parts:
                 upload.push(part)
 
@@ -112,7 +111,7 @@ class StorageServiceTest(AzulTestCase):
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        with MultipartUploadHandler(sample_key) as upload:
+        with MultipartUploadHandler(sample_key, 'text/plain') as upload:
             for part in sample_content_parts:
                 upload.push(part)
 
@@ -132,7 +131,7 @@ class StorageServiceTest(AzulTestCase):
         storage_service.create_bucket()
 
         with self.assertRaises(MultipartUploadError):
-            with MultipartUploadHandler(sample_key) as upload:
+            with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                 for part in sample_content_parts:
                     upload.push(part)
 
@@ -150,7 +149,7 @@ class StorageServiceTest(AzulTestCase):
         storage_service = StorageService()
         storage_service.create_bucket()
         with self.assertRaises(MultipartUploadError):
-            with MultipartUploadHandler(sample_key) as upload:
+            with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                 for part in sample_content_parts:
                     upload.push(part)
 
@@ -167,6 +166,6 @@ class StorageServiceTest(AzulTestCase):
         storage_service.create_bucket()
         with patch.object(MultipartUploadHandler, '_upload_part', side_effect=RuntimeError('test')):
             with self.assertRaises(MultipartUploadError):
-                with MultipartUploadHandler(sample_key) as upload:
+                with MultipartUploadHandler(sample_key, 'text/plain') as upload:
                     for part in sample_content_parts:
                         upload.push(part)
