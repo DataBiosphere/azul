@@ -364,7 +364,20 @@ Code Hygiene
         <do something1>       
     else:
         <do something2>
-   
+
+* We always use ``@classmethod`` instead of @staticmethod, even if the first
+  argument (cls) of such a method is not used by its body. Whether cls is used
+  is often incidental and an implementation detail. We don't want to repeatedly
+  switch from ``@staticmethod`` to ``@classmethod`` and back if that
+  implementation detail changes. We simply declare all methods that should be
+  invoked through the class (as opposed to through an instance of that class) as
+  ``@classmethod`` and call it a day.
+
+  The same consideration goes for instance methods and ``self``: some use it,
+  some don't. The ones that don't shouldn't suddenly be considered static
+  methods. The distinction between instance and class methods is driven by
+  higher order concerns than the one about whether a method's body currently
+  references self or not.
      
 
 Type Hints
