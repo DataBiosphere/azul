@@ -8,3 +8,6 @@
 # This overrides one of the default patterns used by the AWS provider for
 # `git secrets. We don't mind exposing account IDs.
 AWS_ACCOUNT_ID=861229788715
+
+# This is the UCSC AWS Gateway account ID
+122796619775
