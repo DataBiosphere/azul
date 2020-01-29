@@ -63,6 +63,12 @@ class PortalService:
         self._crud(callback)
         return result
 
+    def read(self):
+        return self._crud(lambda db: db)
+
+    def overwrite(self, new_db):
+        return self._crud(lambda _: new_db)
+
     def demultiplex(self, db: JSONs) -> JSONs:
         """
         Transform portal integrations database to only contain entity_ids from
@@ -99,13 +105,15 @@ class PortalService:
 
         return list(map(transform_portal, db))
 
-    def _crud(self, operation: Callable[[JSONs], Optional[JSONs]]) -> None:
+    def _crud(self, operation: Callable[[JSONs], Optional[JSONs]]) -> Optional[JSONs]:
         """
         Perform a concurrent read/write operation on the portal integrations DB.
 
         :param operation: Callable that accepts the latest version of the portal
         DB and optionally returns an updated version to be uploaded.
+        :return: the result of the operation.
         """
+        db = None
         while True:
             version = self.version_service.get(self._db_url)
             try:
@@ -129,6 +137,8 @@ class PortalService:
                 continue
             else:
                 break
+
+        return db
 
     def _create_db(self) -> Tuple[JSONs, str]:
         """
