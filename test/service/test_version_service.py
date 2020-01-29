@@ -8,6 +8,7 @@ from azul.version_service import (
 from version_table_test_case import VersionTableTestCase
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 

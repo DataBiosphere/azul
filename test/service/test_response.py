@@ -1548,7 +1548,7 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
             for integration in portal['integrations']
         ]
 
-    @mock.patch('azul.portal_service.PortalService.crud')
+    @mock.patch('azul.portal_service.PortalService._crud')
     def test_integrations(self, portal_crud):
         """
         Verify requests specifying `integration_type` and `entity_type` only return integrations matching those types
@@ -1581,7 +1581,7 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                                         for portal in response_json
                                         for integration in portal['integrations']))
 
-    @mock.patch('azul.portal_service.PortalService.crud')
+    @mock.patch('azul.portal_service.PortalService._crud')
     def test_integrations_by_entity_ids(self, portal_crud):
         """
         Verify requests specifying `entity_ids` only return integrations matching those entity_ids

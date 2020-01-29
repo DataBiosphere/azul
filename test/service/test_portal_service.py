@@ -17,6 +17,7 @@ from azul.version_service import NoSuchObjectVersion
 from version_table_test_case import VersionTableTestCase
 
 
+# noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
 
@@ -138,9 +139,9 @@ class TestPortalService(VersionTableTestCase):
         self.assertRaises(ClientError, self.download_db)
 
         def test(callback, expected):
-            self.portal_service.crud(callback)
-            self.portal_service.crud(lambda db: self.assertEqual(db, expected))
-            self.portal_service.crud(lambda db: self.assertEqual(db, self.download_db()))
+            self.portal_service._crud(callback)
+            self.portal_service._crud(lambda db: self.assertEqual(db, expected))
+            self.portal_service._crud(lambda db: self.assertEqual(db, self.download_db()))
 
         # It would be cool if we could force version conflicts but I'm not sure how
         test_cases = [

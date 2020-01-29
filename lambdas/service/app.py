@@ -12,9 +12,6 @@ from typing import (
     Callable,
     Mapping,
     Optional,
-    Sequence,
-    Set,
-    cast,
 )
 import urllib.parse
 
@@ -71,10 +68,6 @@ from azul.service.repository_service import (
 )
 from azul.service.storage_service import StorageService
 from azul.strings import pluralize
-from azul.types import (
-    JSON,
-    JSONs,
-)
 
 log = logging.getLogger(__name__)
 
@@ -462,42 +455,11 @@ def get_integrations():
     entity_type = query_params['entity_type']
     integration_type = query_params['integration_type']
 
-    body = _fetch_integrations(entity_type, integration_type, entity_ids)
+    portal_service = PortalService()
+    body = portal_service.list_integrations(entity_type, integration_type, entity_ids)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
                     body=json.dumps(body))
-
-
-def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:
-    """
-    Return matching portal integrations.
-
-    :param entity_type: The type of the entity to which an integration applies (e.g. project, file, bundle)
-    :param integration_type: The kind of integration (e.g. get, get_entity, get_entities, get_manifest)
-    :param entity_ids: If given results will be limited to this set of entity UUIDs
-    :return: A list of portal dicts that one or more matching integrations
-    """
-
-    results = []
-
-    def list_integrations(portal_db):
-        for portal in portal_db:
-            integrations = [
-                integration
-                for integration in cast(Sequence[JSON], portal['integrations'])
-                if (integration['entity_type'] == entity_type
-                    and integration['integration_type'] == integration_type
-                    and (entity_ids is None
-                         or 'entity_ids' not in integration
-                         or not entity_ids.isdisjoint(integration['entity_ids'])))
-            ]
-            if len(integrations) > 0:
-                portal = {k: v if k != 'integrations' else integrations for k, v in portal.items()}
-                results.append(portal)
-
-    portal_service = PortalService()
-    portal_service.crud(list_integrations)
-    return results
 
 
 def repository_search(entity_type: str, item_id: str):

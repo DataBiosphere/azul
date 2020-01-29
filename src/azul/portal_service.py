@@ -4,6 +4,9 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    Set,
+    cast,
+    Sequence,
 )
 import json
 import logging
@@ -14,6 +17,7 @@ from azul import config
 from azul.plugin import Plugin
 from azul.types import (
     JSONs,
+    JSON,
 )
 from azul.version_service import (
     VersionService,
@@ -30,7 +34,72 @@ class PortalService:
         self.client = boto3.client('s3')
         self.version_service = VersionService()
 
-    def crud(self, operation: Callable[[JSONs], Optional[JSONs]]) -> None:
+    def list_integrations(self, entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:
+        """
+        Return matching portal integrations.
+
+        :param entity_type: The type of the entity to which an integration applies (e.g. project, file, bundle)
+        :param integration_type: The kind of integration (e.g. get, get_entity, get_entities, get_manifest)
+        :param entity_ids: If given results will be limited to this set of entity UUIDs
+        :return: A list of portals that have one or more matching integrations
+        """
+        result = []
+
+        def callback(portal_db):
+            for portal in portal_db:
+                integrations = [
+                    integration
+                    for integration in cast(Sequence[JSON], portal['integrations'])
+                    if (integration['entity_type'] == entity_type
+                        and integration['integration_type'] == integration_type
+                        and (entity_ids is None
+                             or 'entity_ids' not in integration
+                             or not entity_ids.isdisjoint(integration['entity_ids'])))
+                ]
+                if len(integrations) > 0:
+                    portal = {k: v if k != 'integrations' else integrations for k, v in portal.items()}
+                    result.append(portal)
+
+        self._crud(callback)
+        return result
+
+    def demultiplex(self, db: JSONs) -> JSONs:
+        """
+        Transform portal integrations database to only contain entity_ids from
+        the current DSS deployment stage, leaving the original unmodified.
+
+        :param db: portal DB where the `entity_ids` fields  are dictionaries
+        whose keys correspond to DSS deployment stages.
+
+        :return: deep copy of that DB where the `entity_ids` fields have been
+        replaced by the entry associated with the current DSS deployment stage.
+        If the `entity_ids` field is present but no entity ids are specified for
+        the current deployment stages, the integration is removed. Portals,
+        however, are not removed even if they have no remaining associated
+        integrations.
+        """
+
+        def transform_integrations(integrations):
+            for integration in integrations:
+                try:
+                    current_entity_ids = integration['entity_ids'].get(config.dss_deployment_stage)
+                    if current_entity_ids:
+                        yield {
+                            k: deepcopy(v if k != 'entity_ids' else current_entity_ids)
+                            for k, v in integration.items()
+                        }
+                except KeyError:
+                    yield deepcopy(integration)
+
+        def transform_portal(portal):
+            return {
+                k: deepcopy(v) if k != 'integrations' else list(transform_integrations(v))
+                for k, v in portal.items()
+            }
+
+        return list(map(transform_portal, db))
+
+    def _crud(self, operation: Callable[[JSONs], Optional[JSONs]]) -> None:
         """
         Perform a concurrent read/write operation on the portal integrations DB.
 
@@ -121,42 +190,6 @@ class PortalService:
                                       VersionId=version)
         except self.client.exceptions.NoSuchKey:
             log.info(f'Failed to delete version {version} of portal DB from S3.')
-
-    def demultiplex(self, db: JSONs) -> JSONs:
-        """
-        Transform portal integrations database to only contain entity_ids from
-        the current DSS deployment stage, leaving the original unmodified.
-
-        :param db: portal DB where the `entity_ids` fields  are dictionaries
-        whose keys correspond to DSS deployment stages.
-
-        :return: deep copy of that DB where the `entity_ids` fields have been
-        replaced by the entry associated with the current DSS deployment stage.
-        If the `entity_ids` field is present but no entity ids are specified for
-        the current deployment stages, the integration is removed. Portals,
-        however, are not removed even if they have no remaining associated
-        integrations.
-        """
-
-        def transform_integrations(integrations):
-            for integration in integrations:
-                try:
-                    current_entity_ids = integration['entity_ids'].get(config.dss_deployment_stage)
-                    if current_entity_ids:
-                        yield {
-                            k: deepcopy(v if k != 'entity_ids' else current_entity_ids)
-                            for k, v in integration.items()
-                        }
-                except KeyError:
-                    yield deepcopy(integration)
-
-        def transform_portal(portal):
-            return {
-                k: deepcopy(v) if k != 'integrations' else list(transform_integrations(v))
-                for k, v in portal.items()
-            }
-
-        return list(map(transform_portal, db))
 
     @classmethod
     def validate(cls, portal_text: Union[str, bytes]) -> None:
