@@ -279,6 +279,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "private_zone": False
             }
         },
+        "aws_ami": {
+            "rancheros": {
+                "owners": ['605812595337'],
+                "filter": [
+                    {
+                        "name": "name",
+                        "values": ["rancheros-v1.4.2-hvm-1"]
+                    }
+                ]
+            }
+        },
         "aws_iam_policy_document": {
             # This policy is really close to the policy size limit, if you get LimitExceeded: Cannot exceed quota for
             # PolicySize: 6144, you need to strip the existing policy down by essentialy replacing the calls to the
@@ -838,7 +849,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         "aws_instance": {
             "gitlab": {
                 "iam_instance_profile": "${aws_iam_instance_profile.gitlab.name}",
-                "ami": "ami-08bb050b78c315da3",
+                "ami": "${data.aws_ami.rancheros.id}",
                 "instance_type": "t2.large",
                 "key_name": "${aws_key_pair.gitlab.key_name}",
                 "network_interface": {
