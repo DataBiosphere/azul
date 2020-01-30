@@ -23,3 +23,5 @@ _set AZUL_ENABLE_MONITORING 1
 _set AZUL_ES_INSTANCE_COUNT 4
 
 _set AZUL_DEBUG 1
+
+_set AZUL_OWNER hannes@ucsc.edu

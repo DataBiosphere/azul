@@ -9,6 +9,10 @@ azul_vars=(
     # The path to the root directory of the project
     azul_home
 
+    # The email address of a user that owns the cloud resources in the current
+    # deployment. This will become the value of the Owner tag on all resources.
+    AZUL_OWNER
+
     # Controls the verbosity of application logs. Use 0 for no debug logging
     # 1 for debug logging by application code and info logging by other code
     # and 2 for debug logging by all code. This also controls app.debug, a

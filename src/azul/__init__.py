@@ -22,6 +22,10 @@ class Config:
     See `environment` for documentation of these settings.
     """
 
+    @property
+    def owner(self):
+        return os.environ['AZUL_OWNER']
+
     def _boolean(self, value: str) -> bool:
         if value == "0":
             return False

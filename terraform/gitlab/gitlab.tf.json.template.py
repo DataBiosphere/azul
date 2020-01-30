@@ -892,7 +892,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                gitlab/gitlab-runner:v12.4.1
                     """[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 "tags": {
-                    "Name": "azul-gitlab"
+                    "Name": "azul-gitlab",
+                    "Owner": config.owner
                 }
             }
         }

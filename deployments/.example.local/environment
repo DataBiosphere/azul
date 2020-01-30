@@ -29,3 +29,5 @@ _set AZUL_ES_DOMAIN "azul-index-dev"
 
 _set azul_dss_query_prefix '42'
 _set AZUL_DEBUG 1
+
+_set AZUL_OWNER <your email>
