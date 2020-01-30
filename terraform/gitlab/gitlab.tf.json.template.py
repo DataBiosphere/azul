@@ -145,12 +145,16 @@ other_public_keys = [
     (
         "ssh-rsa"
         " "
-        "AAAAB3NzaC1yc2EAAAADAQABAAABAQCmNbmfZWBPg+jKhH20KjmpOOxo4I6HaL3qQg7ilxtDyvg+F4PG0vwBgAPiTd04o"
-        "iaOQmXy/On/B2aZNd/GpZLpywTu1f+QhFl4CgDOd3uK9Dq88VzLFEHjrfrzv21pnuu2FIO+u+zVgPU3i4dNlYK10MYGW2"
-        "tWXEIA0AV3lO6Erk8Xcoru72iYXsT9RP2Md0o8FsM/bytRPDDk4GRWcLR6oVLEzxhvnYJANIAaJvAjKdC0tqaSPmseAzI"
-        "UjFeDpX/8tvXhhXao2lgzFkSITIvJkKiKiQL+bykLy63j6PDfKY1jLoqIVdfHjSvj3XpVTlSvy9pOJ4LsYGysSnWVeq4j"
+        "AAAAB3NzaC1yc2EAAAADAQABAAACAQDgH4xDhSmVz4hCXA2Vzf9laArT37Cp2SUs/5MIXoAJ2LkYl9295IM+P+j1hO6MV"
+        "S+iR6M80WhZskivMg62xoLORnYrtj4ZDbVLCqnkphVHhhDXXl/Rdid9217+iIsRemiIk7qHfD3WG78WERGsTqKayjmzW4"
+        "qpL/ZmTdYzRcmOE1p2iQ4QpRqzhrt3yAdehb+LUg1OJJcV7a7fkYQk61CML91Inj+yhKlD+ovtCywfGrYyEiENpED+O3q"
+        "irLbbDgMQMtMp4c8rTdvK/fB9v5myoMsT2qrSk2U8XxZWjojPSQPQZ9gSO7CJOV3pHC9XLksLijOxVi5cup18DpUz3GYt"
+        "DOEJPFQu2uvszbTtCYgqn18k6yKCXDBDMIrK50jAkrDoLzxUtjNDnG4IGhZQXbzHF3JW3g9FwJPGH/h+5IDR3VhtlcdFi"
+        "4r8/pwWqzKapH+6b9eEfpBRO0eTlm+dblDzuQFScGf2tnlgSSmu/2EAD4+2+VbZgtEvTt3k4lRBexfF5k7wa3Dl4js3y6"
+        "CFCbNhNBvaPXXpNK74vMoIvSb0+LQArcEPI/Oca8pzIUs2zFACcDV71i+KRMdNBZvfG6RwMN21ru3xSnn3jv4txqHUodl"
+        "oB17qteWRvuXV1tHo+EWJwf9nexOe+1YczMFYdFoKqqkjwG0BHLWlWOJQja+g5Q=="
         " "
-        "dave@clevercanary.com"
+        "brennan@ucsc.edu"
     )
 ]
 
