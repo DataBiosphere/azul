@@ -11,16 +11,17 @@
 # at the project root.
 
 _set AZUL_DEPLOYMENT_STAGE dev
-_set AZUL_DSS_ENDPOINT "https://dss.integration.data.humancellatlas.org/v1"
-_set AZUL_DRS_DOMAIN_NAME "drs.dev.data.humancellatlas.org"
+_set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
+_set AZUL_DRS_DOMAIN_NAME "drs.dev.ucscsc.cc"
 
-_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.data.humancellatlas.org"
+_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.ucscsc.cc"
 _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
 
-_set azul_grafana_endpoint "https://metrics.dev.data.humancellatlas.org"
+_set AZUL_ENABLE_MONITORING 0
 
-_set AZUL_ENABLE_MONITORING 1
-_set AZUL_ES_INSTANCE_COUNT 4
+# $0.392/h × 2 × 24h/d × 30d/mo = $564.48/mo
+_set AZUL_ES_INSTANCE_TYPE r4.xlarge.elasticsearch
+_set AZUL_ES_INSTANCE_COUNT 2
 
 _set AZUL_DEBUG 1
 

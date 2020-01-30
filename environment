@@ -269,16 +269,16 @@ fi
 # Set the global defaults. This is the least specific level.
 
 _set AZUL_DEBUG 0
-_set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.explore.data.humancellatlas.org"
+_set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.ucscsc.cc"
 _set AZUL_DRS_DOMAIN_NAME ""
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
 _set AZUL_RESOURCE_PREFIX "azul"
 _set AZUL_INDEX_PREFIX "azul"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_SHARE_ES_DOMAIN 0
-_set AZUL_S3_BUCKET "azul-storage-$AZUL_DEPLOYMENT_STAGE"
-_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME ""
-_set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.url.data.humancellatlas.org"
+_set AZUL_S3_BUCKET "edu-ucsc-azul-storage-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "url.ucscsc.cc"
+_set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "r4.2xlarge.elasticsearch"  # Indexing performance benefits from the increased memory offered
                                                        # by the `r` family, especially now that the number of shards is
@@ -292,7 +292,7 @@ _set AZUL_INDEXER_CONCURRENCY 64
 _set AZUL_SUBSCRIBE_TO_DSS 1
 _set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 
-_set AZUL_TERRAFORM_BACKEND_BUCKET "org-humancellatlas-azul-dev-config"
+_set AZUL_TERRAFORM_BACKEND_BUCKET "edu-ucsc-azul-dev-config"
 
 _set AZUL_ENABLE_MONITORING 0
 
