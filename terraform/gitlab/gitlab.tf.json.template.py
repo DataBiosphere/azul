@@ -102,7 +102,7 @@ from azul.types import JSON
 # If this EBS volume does not exist you must create it with the desired size before running Terraform. To then format
 # the volume, you can then either attach it to some other Linux instance and format it there or use `make terraform`
 # to create the actual Gitlab instance and attach the volume. For the latter you would need to ssh into the Gitlab
-# instance, format `/dev/xvdf` and reboot the instance.
+# instance, format `/dev/xvdf` (`/dev/nvme1n1` on newer instance types) and reboot the instance.
 #
 # The EBS volume should be backed up (EBS snapshot) periodically. Not only does it contain Gitlabs data but also its
 # config.
@@ -850,7 +850,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             "gitlab": {
                 "iam_instance_profile": "${aws_iam_instance_profile.gitlab.name}",
                 "ami": "${data.aws_ami.rancheros.id}",
-                "instance_type": "t2.large",
+                "instance_type": "t3a.large",
                 "key_name": "${aws_key_pair.gitlab.key_name}",
                 "network_interface": {
                     "network_interface_id": "${aws_network_interface.gitlab.id}",
@@ -859,7 +859,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "user_data": dedent(rf"""
                     #cloud-config
                     mounts:
-                    - ["/dev/xvdf", "/mnt/gitlab", "ext4", ""]
+                    - ["/dev/nvme1n1", "/mnt/gitlab", "ext4", ""]
                     rancher:
                     ssh_authorized_keys: {other_public_keys}
                     write_files:
