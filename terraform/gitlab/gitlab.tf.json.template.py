@@ -716,7 +716,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "domain_name": "${aws_route53_record.gitlab.name}",
                 "subject_alternative_names": ["${aws_route53_record.gitlab_docker.name}"],
                 "validation_method": "DNS",
-                "provider": "aws.us-east-1",
                 "tags": {
                     "Name": "azul-gitlab"
                 },
@@ -732,7 +731,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     "${aws_route53_record.gitlab_validation.fqdn}",
                     "${aws_route53_record.gitlab_validation_docker.fqdn}"
                 ],
-                "provider": "aws.us-east-1"
             }
         },
         "aws_route53_record": {
