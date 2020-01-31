@@ -1,14 +1,9 @@
 import abc
-from collections import (
-    ChainMap,
-    defaultdict,
-)
-from itertools import chain
+from collections import ChainMap
 import logging
 from typing import (
     Callable,
     List,
-    MutableMapping,
     TypeVar,
 )
 
@@ -22,17 +17,9 @@ from jsonobject.properties import (
     StringProperty,
 )
 
-from azul.json_freeze import (
-    freeze,
-    thaw,
-)
 from azul.service.utilities import json_pp
 from azul.strings import to_camel_case
-from azul.types import (
-    AnyMutableJSON,
-    JSON,
-    MutableJSON,
-)
+from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 
@@ -256,27 +243,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     Not to be confused with the 'keywords' endpoint
     """
 
-    def _merge(self, dict_1: MutableJSON, dict_2: MutableJSON, identifier):
-        merged_dict: MutableMapping[str, List[AnyMutableJSON]] = defaultdict(list)
-        dict_id = dict_1.pop(identifier)
-        dict_2.pop(identifier)
-        for key, value in chain(dict_1.items(), dict_2.items()):
-            if isinstance(value, str):
-                merged_dict[key] = list(set(merged_dict[key] + [value]))
-            elif isinstance(value, int):
-                merged_dict[key] = list(merged_dict[key] + [value])
-            elif isinstance(value, list):
-                cleaned_list = list(filter(None, chain(value, merged_dict[key])))
-                if len(cleaned_list) > 0 and isinstance(cleaned_list[0], dict):
-                    # Make each dict hashable so we can deduplicate the list
-                    merged_dict[key] = list(map(thaw, set(map(freeze, cleaned_list))))
-                else:
-                    merged_dict[key] = list(set(cleaned_list))
-            elif value is None:
-                merged_dict[key] = []
-        merged_dict[identifier] = dict_id
-        return dict(merged_dict)
-
     def return_response(self):
         return self.apiResponse
 
@@ -302,12 +268,12 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             translated_project = {
                 "projectTitle": project.get("project_title"),
                 "projectShortname": project["project_short_name"],
-                "laboratory": list(set(project.get("laboratory", [])))
+                "laboratory": sorted(set(project.get("laboratory", [])))
             }
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
-                translated_project['contributors'] = project.get('contributors', [])
-                translated_project['publications'] = project.get('publications', [])
+                translated_project['contributors'] = project.get('contributors', [])  # list of dict
+                translated_project['publications'] = project.get('publications', [])  # list of dict
                 for contributor in translated_project['contributors']:
                     for key in list(contributor.keys()):
                         contributor[to_camel_case(key)] = contributor.pop(key)
@@ -378,7 +344,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "genusSpecies": donor.get("genus_species", None),
             "organismAge": donor.get("organism_age", None),
             "organismAgeUnit": donor.get("organism_age_unit", None),
-            "organismAgeRange": donor.get("organism_age_range", None),
+            "organismAgeRange": donor.get("organism_age_range", None),  # list of dict
             "biologicalSex": donor.get("biological_sex", None),
             "disease": donor.get("diseases", None)
         }

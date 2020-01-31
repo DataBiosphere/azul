@@ -521,15 +521,19 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticsearchResultsEqual(facets, expected_output)
 
-    def test_default_sorting_parameter(self):
+    def test_sorting_details(self):
         for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
                 base_url = self.base_url
                 url = base_url + "/repository/" + entity_type
                 response = requests.get(url)
                 response.raise_for_status()
-                summary_object = response.json()
-                self.assertEqual(summary_object['pagination']["sort"], self.app_module.sort_defaults[entity_type][0])
+                response_json = response.json()
+                # Verify default sort field is set correctly
+                self.assertEqual(response_json['pagination']["sort"], self.app_module.sort_defaults[entity_type][0])
+                # Verify all fields in the response that are lists of primitives are sorted
+                for hit in response_json['hits']:
+                    self._verify_sorted_lists(hit)
 
     def test_transform_request_with_file_url(self):
         base_url = self.base_url

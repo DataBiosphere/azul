@@ -429,10 +429,11 @@ class SetAccumulator(Accumulator):
     optionally, values that would grow the set past the maximum size.
     """
 
-    def __init__(self, max_size=None) -> None:
+    def __init__(self, max_size=None, key=None) -> None:
         super().__init__()
         self.value = set()
         self.max_size = max_size
+        self.key = key
 
     def accumulate(self, value) -> bool:
         """
@@ -455,7 +456,7 @@ class SetAccumulator(Accumulator):
             return False
 
     def get(self) -> List[Any]:
-        return list(self.value)
+        return sorted(self.value, key=self.key)
 
 
 class ListAccumulator(Accumulator):
@@ -477,7 +478,7 @@ class ListAccumulator(Accumulator):
                 self.value.append(value)
 
     def get(self) -> List[Any]:
-        return list(self.value)
+        return sorted(self.value)
 
 
 class SetOfDictAccumulator(SetAccumulator):
