@@ -57,10 +57,12 @@ def setUpModule():
 class TestHCAIndexer(IndexerTestCase):
 
     def _get_all_hits(self):
-        hits = scan(client=self.es_client,
-                    index=','.join(self.get_hca_indexer().index_names()),
-                    doc_type="doc")
-        return list(hits)
+        hits = list(scan(client=self.es_client,
+                         index=','.join(self.get_hca_indexer().index_names()),
+                         doc_type="doc"))
+        for hit in hits:
+            self._verify_sorted_lists(hit)
+        return hits
 
     def tearDown(self):
         self._delete_indices()
