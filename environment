@@ -344,3 +344,42 @@ export TF_DATA_DIR="${azul_home}/deployments/.active/.terraform.${AWS_PROFILE}"
 
 # HCA client caches Swagger specs downloaded from the DSS endpoint here
 export XDG_CONFIG_HOME=${azul_home}/.config
+
+
+# Get temporary credentials from STS via AssumeRole and inject them
+# into the current environment where other AWS client libraries can
+# find them.
+#
+# https://github.com/boto/boto3/issues/1179#issuecomment-569940530
+#
+_preauth () {
+	eval $(
+		python - <<- "EOF"
+			import os
+			import botocore.session
+			import botocore.credentials
+
+			# Get the AssumeRole credential provider and make it the only one
+			session = botocore.session.get_session()
+			resolver = session.get_component('credential_provider')
+			assume_role_provider = resolver.get_provider('assume-role')
+			resolver.providers = [assume_role_provider]
+
+			# Make the provider use the same cache as the AWS CLI
+			cli_cache = os.path.join(os.path.expanduser('~'), '.aws/cli/cache')
+			assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
+
+			# Request the credentials. If the CLI has cached credentials, this step
+			# would use those. If not, fresh ones will be requested from STS. If that
+			# requires entering an MFA code, the user will be prompted. The fresh
+			# credentials will be cached such that subsequent invocations just use them
+			# until they expire.
+			credentials = session.get_credentials()
+
+			# Print the bash statement so they can be eval'ed
+			print(f'export AWS_ACCESS_KEY_ID={credentials.access_key}')
+			print(f'export AWS_SECRET_ACCESS_KEY={credentials.secret_key}')
+			print(f'export AWS_SESSION_TOKEN={credentials.token}')
+		EOF
+	)
+}
