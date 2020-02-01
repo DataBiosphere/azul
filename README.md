@@ -1210,7 +1210,7 @@ recreate it after it was destroyed):
 
 ```
 cd terraform
-make config
+make init
 terraform apply -target google_service_account.indexer \
                 -target google_service_account_key.indexer
 ```
