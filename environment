@@ -30,6 +30,22 @@ azul_vars=(
     # The URL to the DSS (aka Blue box) REST API
     AZUL_DSS_ENDPOINT
 
+    # The name of the DSS main bucket. This is used for direct access.
+    #
+    # If unset, the DSS parameter store will be examined which will fail unless
+    # the DSS is in the same AWS account. If it isn't you can use this variable
+    # to hard-code the bucket name.
+    #
+    AZUL_DSS_BUCKET
+
+    # The name of the DSS checkout bucket. This is used by the DOS/DRS proxy.
+    #
+    # If unset, the DSS parameter store will be examined which will fail unless
+    # the DSS is in the same AWS account. If it isn't you can use this variable
+    # to hard-code the bucket name.
+    #
+    AZUL_DSS_CHECKOUT_BUCKET
+
     # The name of the hosted zone in Route 53 in which to create user friendly
     # domain names for various API gateways. This hosted zone will have to be
     # created manually prior to running `make terraform`. The value is typically
