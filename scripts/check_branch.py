@@ -16,14 +16,14 @@ def check_branch(branch, stage):
     >>> from unittest.mock import patch
 
     >>> with patch.object(azul.deployment, 'aws') as aws:
-    ...     aws.account = 123
+    ...     aws.account = '123'
     ...     check_branch('develop', 'dev')
     Traceback (most recent call last):
     ...
     RuntimeError: Protected branch 'develop' should be deployed to AWS account '122796619775', not '123'
 
     >>> with patch.object(azul.deployment, 'aws') as aws:
-    ...     aws.account = 122796619775
+    ...     aws.account = '122796619775'
     ...     check_branch('develop', 'dev')
 
     >>> check_branch('issues/foo', 'prod')
@@ -58,7 +58,8 @@ def check_branch(branch, stage):
 
 
 def expected_stage(branch):
-    return config.main_deployments_by_branch.get(branch)
+    account, stage = config.main_deployments_by_branch.get(branch, (None, None))
+    return stage
 
 
 def current_branch():

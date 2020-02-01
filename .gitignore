@@ -46,6 +46,7 @@ __pycache__/
 /deployments/*/environment.local
 !/deployments/.example.local/environment.local
 /deployments/*/.terraform/
+/deployments/*/.terraform.*/
 
 # Other caches, including for PyTest and scrape_aws_service_model.py
 .cache/

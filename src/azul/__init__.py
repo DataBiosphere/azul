@@ -22,6 +22,10 @@ class Config:
     See `environment` for documentation of these settings.
     """
 
+    @property
+    def owner(self):
+        return os.environ['AZUL_OWNER']
+
     def _boolean(self, value: str) -> bool:
         if value == "0":
             return False
@@ -370,11 +374,11 @@ class Config:
         return os.environ['AZUL_DOMAIN_NAME']
 
     main_deployments_by_branch = {
-        'develop': (122796619775, 'dev'),
-        'hca/develop': (861229788715, 'dev'),
-        'hca/integration': (861229788715, 'integration'),
-        'hca/staging': (861229788715, 'staging'),
-        'hca/prod': (109067257620, 'prod')
+        'develop': ('122796619775', 'dev'),
+        'hca/develop': ('861229788715', 'dev'),
+        'hca/integration': ('861229788715', 'integration'),
+        'hca/staging': ('861229788715', 'staging'),
+        'hca/prod': ('109067257620', 'prod')
     }
 
     @property
@@ -440,6 +444,13 @@ class Config:
 
     def enable_gcp(self):
         return 'GOOGLE_PROJECT' in os.environ
+
+    @property
+    def indexer_google_service_account(self):
+        try:
+            return os.environ['AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT']
+        except KeyError:
+            return self.qualified_resource_name('indexer')
 
     @property
     def plugin_name(self) -> str:

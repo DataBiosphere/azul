@@ -9,6 +9,10 @@ azul_vars=(
     # The path to the root directory of the project
     azul_home
 
+    # The email address of a user that owns the cloud resources in the current
+    # deployment. This will become the value of the Owner tag on all resources.
+    AZUL_OWNER
+
     # Controls the verbosity of application logs. Use 0 for no debug logging
     # 1 for debug logging by application code and info logging by other code
     # and 2 for debug logging by all code. This also controls app.debug, a
@@ -117,6 +121,13 @@ azul_vars=(
     # resources are physically deleted. After that you may also unset the
     # GOOGLE_.. variables in your environment.
     AZUL_SUBSCRIBE_TO_DSS
+
+    # The name of the Google Cloud service account to be created and used
+    # in conjunction with DSS subscriptions. If unset, a canonical resource
+    # name will be used. That default allows one such account per Azul
+    # deployment and Google Cloud project.
+    #
+    AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT
 
     # The number of concurrently running indexer lambda executions. Chalice
     # creates one Lambda function for handling HTTP requests from API Gateway
@@ -265,16 +276,16 @@ fi
 # Set the global defaults. This is the least specific level.
 
 _set AZUL_DEBUG 0
-_set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.explore.data.humancellatlas.org"
+_set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.singlecell.gi.ucsc.edu"
 _set AZUL_DRS_DOMAIN_NAME ""
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
 _set AZUL_RESOURCE_PREFIX "azul"
 _set AZUL_INDEX_PREFIX "azul"
 _set AZUL_ES_DOMAIN "azul-index-$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_SHARE_ES_DOMAIN 0
-_set AZUL_S3_BUCKET "azul-storage-$AZUL_DEPLOYMENT_STAGE"
-_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME ""
-_set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.url.data.humancellatlas.org"
+_set AZUL_S3_BUCKET "edu-ucsc-gi-singlecell-azul-storage-$AZUL_DEPLOYMENT_STAGE"
+_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "url.singlecell.gi.ucsc.edu"
+_set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
 _set AZUL_ES_INSTANCE_COUNT 2
 _set AZUL_ES_INSTANCE_TYPE "r4.2xlarge.elasticsearch"  # Indexing performance benefits from the increased memory offered
                                                        # by the `r` family, especially now that the number of shards is
@@ -285,10 +296,13 @@ _set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front 
                          # https://forums.aws.amazon.com/thread.jspa?threadID=233378
 _set AZUL_DSS_WORKERS 8
 _set AZUL_INDEXER_CONCURRENCY 64
+
 _set AZUL_SUBSCRIBE_TO_DSS 1
+_set AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT "azul-ucsc-indexer-$AZUL_DEPLOYMENT_STAGE"
+
 _set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 
-_set AZUL_TERRAFORM_BACKEND_BUCKET "org-humancellatlas-azul-dev-config"
+_set AZUL_TERRAFORM_BACKEND_BUCKET "edu-ucsc-gi-singlecell-azul-dev-config"
 
 _set AZUL_ENABLE_MONITORING 0
 
@@ -331,7 +345,51 @@ _select () {
 
 export PYTHONPATH="${azul_home}/src:${azul_home}/test"
 export MYPYPATH="${azul_home}/stubs"
-export TF_DATA_DIR="${azul_home}/deployments/.active/.terraform"
+
+# Set the Terraform state directory. Since we reuse deployment names accross
+# different AWS accounts, we need a discriminator for the state directory and
+# the best I could come up with is the profile name.
+#
+export TF_DATA_DIR="${azul_home}/deployments/.active/.terraform.${AWS_PROFILE}"
 
 # HCA client caches Swagger specs downloaded from the DSS endpoint here
 export XDG_CONFIG_HOME=${azul_home}/.config
+
+
+# Get temporary credentials from STS via AssumeRole and inject them
+# into the current environment where other AWS client libraries can
+# find them.
+#
+# https://github.com/boto/boto3/issues/1179#issuecomment-569940530
+#
+_preauth () {
+	eval $(
+		python - <<- "EOF"
+			import os
+			import botocore.session
+			import botocore.credentials
+
+			# Get the AssumeRole credential provider and make it the only one
+			session = botocore.session.get_session()
+			resolver = session.get_component('credential_provider')
+			assume_role_provider = resolver.get_provider('assume-role')
+			resolver.providers = [assume_role_provider]
+
+			# Make the provider use the same cache as the AWS CLI
+			cli_cache = os.path.join(os.path.expanduser('~'), '.aws/cli/cache')
+			assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
+
+			# Request the credentials. If the CLI has cached credentials, this step
+			# would use those. If not, fresh ones will be requested from STS. If that
+			# requires entering an MFA code, the user will be prompted. The fresh
+			# credentials will be cached such that subsequent invocations just use them
+			# until they expire.
+			credentials = session.get_credentials()
+
+			# Print the bash statement so they can be eval'ed
+			print(f'export AWS_ACCESS_KEY_ID={credentials.access_key}')
+			print(f'export AWS_SECRET_ACCESS_KEY={credentials.secret_key}')
+			print(f'export AWS_SESSION_TOKEN={credentials.token}')
+		EOF
+	)
+}

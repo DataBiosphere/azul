@@ -102,7 +102,7 @@ from azul.types import JSON
 # If this EBS volume does not exist you must create it with the desired size before running Terraform. To then format
 # the volume, you can then either attach it to some other Linux instance and format it there or use `make terraform`
 # to create the actual Gitlab instance and attach the volume. For the latter you would need to ssh into the Gitlab
-# instance, format `/dev/xvdf` and reboot the instance.
+# instance, format `/dev/xvdf` (`/dev/nvme1n1` on newer instance types) and reboot the instance.
 #
 # The EBS volume should be backed up (EBS snapshot) periodically. Not only does it contain Gitlabs data but also its
 # config.
@@ -145,12 +145,16 @@ other_public_keys = [
     (
         "ssh-rsa"
         " "
-        "AAAAB3NzaC1yc2EAAAADAQABAAABAQCmNbmfZWBPg+jKhH20KjmpOOxo4I6HaL3qQg7ilxtDyvg+F4PG0vwBgAPiTd04o"
-        "iaOQmXy/On/B2aZNd/GpZLpywTu1f+QhFl4CgDOd3uK9Dq88VzLFEHjrfrzv21pnuu2FIO+u+zVgPU3i4dNlYK10MYGW2"
-        "tWXEIA0AV3lO6Erk8Xcoru72iYXsT9RP2Md0o8FsM/bytRPDDk4GRWcLR6oVLEzxhvnYJANIAaJvAjKdC0tqaSPmseAzI"
-        "UjFeDpX/8tvXhhXao2lgzFkSITIvJkKiKiQL+bykLy63j6PDfKY1jLoqIVdfHjSvj3XpVTlSvy9pOJ4LsYGysSnWVeq4j"
+        "AAAAB3NzaC1yc2EAAAADAQABAAACAQDgH4xDhSmVz4hCXA2Vzf9laArT37Cp2SUs/5MIXoAJ2LkYl9295IM+P+j1hO6MV"
+        "S+iR6M80WhZskivMg62xoLORnYrtj4ZDbVLCqnkphVHhhDXXl/Rdid9217+iIsRemiIk7qHfD3WG78WERGsTqKayjmzW4"
+        "qpL/ZmTdYzRcmOE1p2iQ4QpRqzhrt3yAdehb+LUg1OJJcV7a7fkYQk61CML91Inj+yhKlD+ovtCywfGrYyEiENpED+O3q"
+        "irLbbDgMQMtMp4c8rTdvK/fB9v5myoMsT2qrSk2U8XxZWjojPSQPQZ9gSO7CJOV3pHC9XLksLijOxVi5cup18DpUz3GYt"
+        "DOEJPFQu2uvszbTtCYgqn18k6yKCXDBDMIrK50jAkrDoLzxUtjNDnG4IGhZQXbzHF3JW3g9FwJPGH/h+5IDR3VhtlcdFi"
+        "4r8/pwWqzKapH+6b9eEfpBRO0eTlm+dblDzuQFScGf2tnlgSSmu/2EAD4+2+VbZgtEvTt3k4lRBexfF5k7wa3Dl4js3y6"
+        "CFCbNhNBvaPXXpNK74vMoIvSb0+LQArcEPI/Oca8pzIUs2zFACcDV71i+KRMdNBZvfG6RwMN21ru3xSnn3jv4txqHUodl"
+        "oB17qteWRvuXV1tHo+EWJwf9nexOe+1YczMFYdFoKqqkjwG0BHLWlWOJQja+g5Q=="
         " "
-        "dave@clevercanary.com"
+        "brennan@ucsc.edu"
     )
 ]
 
@@ -279,6 +283,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "private_zone": False
             }
         },
+        "aws_ami": {
+            "rancheros": {
+                "owners": ['605812595337'],
+                "filter": [
+                    {
+                        "name": "name",
+                        "values": ["rancheros-v1.4.2-hvm-1"]
+                    }
+                ]
+            }
+        },
         "aws_iam_policy_document": {
             # This policy is really close to the policy size limit, if you get LimitExceeded: Cannot exceed quota for
             # PolicySize: 6144, you need to strip the existing policy down by essentialy replacing the calls to the
@@ -290,12 +305,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         "actions": aws_service_actions('S3'),
                         "resources": merge(aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
-                                           for bucket_name in ['azul-*',
-                                                               'org-humancellatlas-azul-*',
-                                                               '*.url.data.humancellatlas.org',
-                                                               'url.data.humancellatlas.org',
-                                                               "org-humancellatlas-dss-*",
-                                                               "org-hca-dss-*"])
+                                           for bucket_name in ['edu-ucsc-gi-singlecell-azul-*',
+                                                               '*.url.singlecell.gi.ucsc.edu',
+                                                               'url.singlecell.gi.ucsc.edu'])
                     },
 
                     *allow_service('KMS',
@@ -707,7 +719,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "domain_name": "${aws_route53_record.gitlab.name}",
                 "subject_alternative_names": ["${aws_route53_record.gitlab_docker.name}"],
                 "validation_method": "DNS",
-                "provider": "aws.us-east-1",
                 "tags": {
                     "Name": "azul-gitlab"
                 },
@@ -723,7 +734,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     "${aws_route53_record.gitlab_validation.fqdn}",
                     "${aws_route53_record.gitlab_validation_docker.fqdn}"
                 ],
-                "provider": "aws.us-east-1"
             }
         },
         "aws_route53_record": {
@@ -840,8 +850,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         "aws_instance": {
             "gitlab": {
                 "iam_instance_profile": "${aws_iam_instance_profile.gitlab.name}",
-                "ami": "ami-08bb050b78c315da3",
-                "instance_type": "t2.large",
+                "ami": "${data.aws_ami.rancheros.id}",
+                "instance_type": "t3a.large",
                 "key_name": "${aws_key_pair.gitlab.key_name}",
                 "network_interface": {
                     "network_interface_id": "${aws_network_interface.gitlab.id}",
@@ -850,7 +860,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "user_data": dedent(rf"""
                     #cloud-config
                     mounts:
-                    - ["/dev/xvdf", "/mnt/gitlab", "ext4", ""]
+                    - ["/dev/nvme1n1", "/mnt/gitlab", "ext4", ""]
                     rancher:
                     ssh_authorized_keys: {other_public_keys}
                     write_files:
@@ -892,7 +902,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                gitlab/gitlab-runner:v12.4.1
                     """[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 "tags": {
-                    "Name": "azul-gitlab"
+                    "Name": "azul-gitlab",
+                    "Owner": config.owner
                 }
             }
         }

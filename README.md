@@ -46,8 +46,10 @@ Boardwalk, a web application for browsing genomic data sets.
     - [9.3 Networking](#93-networking)
     - [9.4 Storage](#94-storage)
     - [9.5 Gitlab](#95-gitlab)
-    - [9.6 Updating Gitlab](#96-updating-gitlab)
-    - [9.7 The Gitlab Build Environment](#97-the-gitlab-build-environment)
+    - [9.6 Registering the Gitlab Runner](#96-registering-the-gitlab-runner)
+    - [9.7 Updating Gitlab](#97-updating-gitlab)
+    - [9.8 The Gitlab Build Environment](#98-the-gitlab-build-environment)
+    - [9.8 Cleaning up hung test containers](#99-cleaning-up-hung-test-containers)
 - [10. Kibana](#10-kibana)
 - [11. Making wheels](#11-making-wheels)
 - [12. Development tools](#12-development-tools)
@@ -1126,10 +1128,9 @@ For more advanced usage refer to the official [Locust documentation].
 
 # 9. Continuous deployment and integration
 
-We are currently in the process of migrating from manual deployments to
-automated deployments performed on a project-specific EC2 instance running Gitlab.
-There is currently one such instance for the `dev`, `integration` and
-`staging` deployments and another one for `prod`.
+We use to automated deployments performed on a project-specific EC2 instance 
+running Gitlab. There is currently one such instance for the `dev`, 
+`integration` and `staging` deployments and another one for `prod`.
 
 The Gitlab instances are provisioned through Terraform but its resource
 definitions reside in a separate *Terraform component*. A *Terraform component*
@@ -1209,7 +1210,7 @@ recreate it after it was destroyed):
 
 ```
 cd terraform
-make config
+make init
 terraform apply -target google_service_account.indexer \
                 -target google_service_account_key.indexer
 ```
@@ -1234,6 +1235,20 @@ Git repository under `/mnt/gitlab/.git`. Since Git isn't installed natively on
 RancherOS, you must use a Docker image for it. I've used `alias git='docker run
 -ti --rm -v ${HOME}:/root -v $(pwd):/git alpine/git'` for that purpose.
 
+When an instance boots and finds the EBS volume empty, Gitlab will initialize it 
+with default configuration. That configuration is very vulnerable because the 
+first user to visit the instance will be given the opportunity to chose the root 
+password. It is therefore important that you visit the Gitlab UI immediately 
+after the instance boots for the first time on an empty EBS volume. 
+
+Other than that, the default configuration is functional but lacks features like 
+sign-in with Github and a Docker image repository. To enable those you could 
+follow the respective Gitlab documentation but a faster approach is to compare 
+`/mnt/gitlab/config/gitlab.rb` between an existing Gitlab instance and the new 
+one. Just keep in mind that the new instance might have a newer version of 
+Gitlab which may have added new settings. You may see commented-out default 
+settings in the new gitlab.rb file that may be missing in the old one.
+
 ## 9.5 Gitlab
 
 The instance runs Gitlab CE running inside a rather elaborate concoction of
@@ -1242,14 +1257,39 @@ tasks within a container should be performed with `docker exec`. To reconfigure
 Gitlab, for example, one would run `docker exec -it gitlab gitlab-ctl
 reconfigure`.
 
-## 9.6 Updating Gitlab
+## 9.6 Registering the Gitlab Runner
+
+The runner is the container that performs the builds. The instance is configured 
+to automatically start that container. The primary configuration for the runner 
+is in `/mnt/gitlab/runner/config/config.toml`. There is one catch, on a fresh 
+EBS volume that just been initialized, this file is missing so the container 
+starts but doesn't advertise itself to Gitlab. The easiest way to create the 
+file is to kill the `gitlab-runner` container and the run it manually using 
+the `docker run` command from the instance user data in 
+[gitlab.tf.json.template.py], but replacing `--detach` with `-it` and adding 
+`register` at the end of the command. You will be prompted to supply a URL and 
+a token as [documented here](https://docs.gitlab.com/runner/register/). Specify 
+`docker` as the runner type and `docker:18.03.1-ce` as the image. Once the 
+container exits `config.toml` should have been created. Edit it and adjust the 
+`volumes` setting to read
+
+```
+volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/etc/gitlab-runner/etc:/etc/gitlab"]
+```
+
+Comparing `config.toml` between an existing instance and the new one doesn't 
+hurt either. Finally, reboot the instance or manually start the container using 
+the command from [gitlab.tf.json.template.py] verbatim. The Gitlab UI should 
+now show the runner. 
+
+## 9.7 Updating Gitlab
 
 Modify the Docker image tags in [gitlab.tf.json.template.py] and run `make
 apply` in `terraform/gitlab`. The instance will be terminated (the EBS volume
 will survive) and a new instance will be launched, with fresh containers from
 updated images. This should be done periodically.
 
-## 9.7 The Gitlab Build Environment
+## 9.8 The Gitlab Build Environment
 
 The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
 mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
@@ -1263,7 +1303,7 @@ access can push code to intentionally or accidentally expose those variables,
 push access is tied to shell access which is what one would normally need to
 modify those files.
 
-## 9.8. Cleaning up hung test containers
+## 9.9. Cleaning up hung test containers
 
 When cancelling the `make test` job on Gitlab, test containers will be left
 running. To clean those up, ssh into the instance as described in

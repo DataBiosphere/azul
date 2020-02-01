@@ -12,7 +12,7 @@ emit_tf({
                     # See https://www.terraform.io/docs/provisioners/index.html#destroy-time-provisioners
                     "count": 1 if config.subscribe_to_dss else 0,
                     "project": "${local.google_project}",
-                    "account_id": config.qualified_resource_name('indexer'),
+                    "account_id": config.indexer_google_service_account,
                     "display_name": f"Azul indexer in {config.deployment_stage}",
                     "provisioner": [
                         {
