@@ -305,10 +305,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         "actions": aws_service_actions('S3'),
                         "resources": merge(aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
-                                           for bucket_name in ['azul-*',
-                                                               'edu-ucsc-azul-*',
-                                                               '*.dev.url.ucscsc.cc',
-                                                               'url.ucscsc.cc'])
+                                           for bucket_name in ['edu-ucsc-gi-singlecell-azul-*',
+                                                               '*.url.singlecell.gi.ucsc.edu',
+                                                               'url.singlecell.gi.ucsc.edu'])
                     },
 
                     *allow_service('KMS',

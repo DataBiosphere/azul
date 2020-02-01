@@ -13,15 +13,15 @@
 
 _set AZUL_DEPLOYMENT_STAGE sandbox
 _set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
-_set AZUL_DRS_DOMAIN_NAME "drs.sandbox.dev.ucscsc.cc"
+_set AZUL_DRS_DOMAIN_NAME "drs.sandbox.dev.singlecell.gi.ucsc.edu"
 _set AZUL_SUBSCRIBE_TO_DSS 1
 
 # The sandbox deployment uses a subdomain of the `dev` deployment's domain.
 #
-_set AZUL_DOMAIN_NAME "dev.ucscsc.cc"
+_set AZUL_DOMAIN_NAME "dev.singlecell.gi.ucsc.edu"
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}.$AZUL_DEPLOYMENT_STAGE"
 
-_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.ucscsc.cc"
+_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.singlecell.gi.ucsc.edu"
 _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
 
 # Personal deployments and the `sandbox` share an ES domain with `dev`
