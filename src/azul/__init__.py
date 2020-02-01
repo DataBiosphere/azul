@@ -370,10 +370,11 @@ class Config:
         return os.environ['AZUL_DOMAIN_NAME']
 
     main_deployments_by_branch = {
-        'develop': 'dev',
-        'integration': 'integration',
-        'staging': 'staging',
-        'prod': 'prod'
+        'develop': ('122796619775', 'dev'),
+        'hca/develop': ('861229788715', 'dev'),
+        'hca/integration': ('861229788715', 'integration'),
+        'hca/staging': ('861229788715', 'staging'),
+        'hca/prod': ('109067257620', 'prod')
     }
 
     @property

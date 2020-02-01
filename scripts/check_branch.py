@@ -4,44 +4,62 @@ import sys
 import git
 
 from azul import config
+import azul.deployment
 
 """
-Ensure that the currently checked out branch matches the selected deployemnt
+Ensure that the currently checked out branch matches the selected deployment
 """
 
 
 def check_branch(branch, stage):
     """
-    >>> check_branch('dev', 'develop')
+    >>> from unittest.mock import patch
 
-    >>> check_branch('feature/foo', 'prod')
+    >>> with patch.object(azul.deployment, 'aws') as aws:
+    ...     aws.account = '123'
+    ...     check_branch('develop', 'dev')
     Traceback (most recent call last):
     ...
-    RuntimeError: Non-protected branch 'feature/foo' can't be deployed to main deployment 'prod'
+    RuntimeError: Protected branch 'develop' should be deployed to AWS account '122796619775', not '123'
 
-    >>> check_branch('staging', 'hannes')
+    >>> with patch.object(azul.deployment, 'aws') as aws:
+    ...     aws.account = '122796619775'
+    ...     check_branch('develop', 'dev')
+
+    >>> check_branch('issues/foo', 'prod')
     Traceback (most recent call last):
     ...
-    RuntimeError: Protected branch 'staging' should be deployed to 'staging', not 'hannes'
+    RuntimeError: Non-protected branch 'issues/foo' can't be deployed to main deployment 'prod'
 
-    >>> check_branch('staging', 'integration')
+    >>> check_branch('hca/staging', 'hannes.local')
     Traceback (most recent call last):
     ...
-    RuntimeError: Protected branch 'staging' should be deployed to 'staging', not 'integration'
+    RuntimeError: Protected branch 'hca/staging' should be deployed to 'staging', not 'hannes.local'
+
+    >>> check_branch('hca/staging', 'hca/integration')
+    Traceback (most recent call last):
+    ...
+    RuntimeError: Protected branch 'hca/staging' should be deployed to 'staging', not 'hca/integration'
     """
     stage_by_branch = config.main_deployments_by_branch
+    account = azul.deployment.aws.account
     try:
-        expected_stage = stage_by_branch[branch]
+        expected_account, expected_stage = stage_by_branch[branch]
     except KeyError:
-        if stage in stage_by_branch.values():
+        if stage in [s for _, s in stage_by_branch.values()]:
             raise RuntimeError(f"Non-protected branch '{branch}' can't be deployed to main deployment '{stage}'")
     else:
         if stage != expected_stage:
             raise RuntimeError(f"Protected branch '{branch}' should be deployed to '{expected_stage}', not '{stage}'")
+        elif account != expected_account:
+            raise RuntimeError(
+                f"Protected branch '{branch}' should be deployed to AWS account '{expected_account}', not '{account}'"
+            )
 
 
 def expected_stage(branch):
-    return config.main_deployments_by_branch.get(branch)
+    account, stage = config.main_deployments_by_branch.get(branch, (None, None))
+    return stage
 
 
 def current_branch():
