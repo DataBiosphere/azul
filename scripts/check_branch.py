@@ -58,7 +58,8 @@ def check_branch(branch, stage):
 
 
 def expected_stage(branch):
-    return config.main_deployments_by_branch.get(branch)
+    account, stage = config.main_deployments_by_branch.get(branch, (None, None))
+    return stage
 
 
 def current_branch():
