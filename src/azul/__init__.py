@@ -446,6 +446,13 @@ class Config:
         return 'GOOGLE_PROJECT' in os.environ
 
     @property
+    def indexer_google_service_account(self):
+        try:
+            return os.environ['AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT']
+        except KeyError:
+            return self.qualified_resource_name('indexer')
+
+    @property
     def plugin_name(self) -> str:
         return 'azul.project.' + os.environ.get('AZUL_PROJECT', 'hca')
 

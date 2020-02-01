@@ -122,6 +122,13 @@ azul_vars=(
     # GOOGLE_.. variables in your environment.
     AZUL_SUBSCRIBE_TO_DSS
 
+    # The name of the Google Cloud service account to be created and used
+    # in conjunction with DSS subscriptions. If unset, a canonical resource
+    # name will be used. That default allows one such account per Azul
+    # deployment and Google Cloud project.
+    #
+    AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT
+
     # The number of concurrently running indexer lambda executions. Chalice
     # creates one Lambda function for handling HTTP requests from API Gateway
     # and one additional Lambda function per event handler. The concurrency
@@ -289,7 +296,10 @@ _set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front 
                          # https://forums.aws.amazon.com/thread.jspa?threadID=233378
 _set AZUL_DSS_WORKERS 8
 _set AZUL_INDEXER_CONCURRENCY 64
+
 _set AZUL_SUBSCRIBE_TO_DSS 1
+_set AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT "azul-ucsc-indexer-$AZUL_DEPLOYMENT_STAGE"
+
 _set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 
 _set AZUL_TERRAFORM_BACKEND_BUCKET "edu-ucsc-gi-singlecell-azul-dev-config"
