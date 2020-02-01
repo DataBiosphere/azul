@@ -117,6 +117,7 @@ def main(argv: List[str]):
         else:
             azul_client.reindex()
         if args.wait:
+            # Max wait time for queues must be less than the GitLab job-level timeout specified in `.gitlab-ci.yml`
             queue_manager.wait_for_queue_level(queues.keys(), empty=False)
             queue_manager.wait_for_queue_level(queues.keys(), timeout=60 * 60)
 

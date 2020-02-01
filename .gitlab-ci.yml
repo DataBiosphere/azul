@@ -85,6 +85,7 @@ early_reindex:
   when: manual
   script:
     - make reindex
+  timeout: 1h 10m  # to allow the waiting on message queues by reindex.py time to complete
 
 reindex:
   extends: .base
@@ -92,3 +93,4 @@ reindex:
   when: manual
   script:
     - make reindex
+  timeout: 1h 10m  # to allow the waiting on message queues by reindex.py time to complete
