@@ -8,11 +8,16 @@ from typing import (
     Iterable,
     List,
     Set,
+    Tuple,
+    Union,
 )
 
 from azul import config
 from azul.aws_service_model import ServiceActionType
-from azul.collections import dict_merge
+from azul.collections import (
+    dict_merge,
+    explode_dict,
+)
 from azul.deployment import (
     aws,
     emit_tf,
@@ -193,14 +198,18 @@ def aws_service_arns(service: str, *resource_names: str, **arn_fields: str) -> L
     all_names = resources.keys()
     invalid_names = resource_names.difference(all_names)
     assert not invalid_names, f"No such resource in {service}: {invalid_names}"
+    arn_fields = {
+        'Account': aws.account,
+        'Region': aws.region_name,
+        **arn_fields
+    }
     arns = []
-    for name, arn in resources.items():
-        if not resource_names or name in resource_names:
-            arn = arn.replace('${', '{')
-            arn = arn.format_map(dict(Account=aws.account,
-                                      Region=aws.region_name,
-                                      **arn_fields))
-            arns.append(arn)
+    for arn_fields in explode_dict(arn_fields):
+        for name, arn in resources.items():
+            if not resource_names or name in resource_names:
+                arn = arn.replace('${', '{')
+                arn = arn.format_map(arn_fields)
+                arns.append(arn)
     return arns
 
 
@@ -240,7 +249,7 @@ def allow_service(service: str,
                   *resource_names: str,
                   action_types: Set[ServiceActionType] = None,
                   global_action_types: Set[ServiceActionType] = None,
-                  **arn_fields: str) -> List[JSON]:
+                  **arn_fields: Union[str, List[str], Set[str], Tuple[str, ...]]) -> List[JSON]:
     if global_action_types is None:
         global_action_types = action_types
     return remove_inconsequential_statements([
@@ -336,8 +345,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    RoleNameWithPath='*',
                                    UserNameWithPath='*'),
 
-                    # ACM ARNs refer to certificates by ID so so we cannot restrict to name or prefix
-                    *allow_service('Certificate Manager', CertificateId='*'),
+                    *allow_service('Certificate Manager',
+                                   # ACM ARNs refer to certificates by ID so so we cannot restrict to name or prefix
+                                   CertificateId='*',
+                                   # API Gateway certs must reside in us-east-1, so we'll always add that region
+                                   Region={aws.region_name, 'us-east-1'}),
 
                     *allow_service('DynamoDB',
                                    'table',

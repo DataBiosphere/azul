@@ -1,13 +1,16 @@
 export AWS_PROFILE=yourprofile
-export AWS_DEFAULT_REGION=us-east-1
 
-# If you have the credentials of a service account, uncomment these GOOGLE_
-# lines, change them accordingly and set AZUL_SUBSCRIBE_TO_DSS to 1.
+# If you have the credentials of a service account, uncomment this line, and
+# change it point to a file with the credentials to that service account.
+# The account must have owner permissions to the project referenced by
+# the GOOGLE_PROJECT environment variable. The project (not the account) also
+# needs to be whitelisted in the DSS instance you are using for subscriptions to
+# work.
+#
+# Once those prerequisites are satisfied, set AZUL_SUBSCRIBE_TO_DSS to 1.
+#
+# The account whose credentials you specify here is used to create yet another
+# service account, one that represents the Azul indexer in your deployment. The
+# indexer's service account credentials are stored in AWS secrets manager.
 #
 # export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/gcp-credentials.json"
-
-# The GCP project you reference here needs to be whitelisted in the DSS instance
-# you are using for subscriptions to work. The service account whose credentials
-# you configured in must have owner permissions.
-#
-# export GOOGLE_PROJECT="human-cell-atlas-travis-test"
