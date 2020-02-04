@@ -162,6 +162,10 @@ class Config:
         assert len(stage) < 2
         return 'prod' if stage == [] else stage[0]
 
+    @property
+    def dss_direct_access(self) -> bool:
+        return self._boolean(os.environ['AZUL_DSS_DIRECT_ACCESS'])
+
     def dss_main_bucket(self, dss_endpoint: Optional[str] = None) -> str:
         return self._dss_bucket(dss_endpoint)
 
