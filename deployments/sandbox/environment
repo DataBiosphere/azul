@@ -16,9 +16,9 @@ _set AZUL_DEPLOYMENT_STAGE sandbox
 _set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
 _set AZUL_DSS_BUCKET "org-hca-dss-staging"
 _set AZUL_DSS_CHECKOUT_BUCKET "org-hca-dss-checkout-staging"
+_set AZUL_SUBSCRIBE_TO_DSS 1
 
 _set AZUL_DRS_DOMAIN_NAME "drs.sandbox.dev.singlecell.gi.ucsc.edu"
-_set AZUL_SUBSCRIBE_TO_DSS 1
 
 # The sandbox deployment uses a subdomain of the `dev` deployment's domain.
 #
