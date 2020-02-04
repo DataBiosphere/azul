@@ -11,15 +11,17 @@
 # at the project root.
 
 _set AZUL_DEPLOYMENT_STAGE <yourname>
-_set AZUL_DSS_ENDPOINT "https://dss.integration.data.humancellatlas.org/v1"
+_set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
+_set AZUL_DSS_BUCKET "org-hca-dss-staging"
+_set AZUL_DSS_CHECKOUT_BUCKET "org-hca-dss-checkout-staging"
 _set AZUL_SUBSCRIBE_TO_DSS 0
 
 # Your personal deployment uses a subdomain of the `dev` deployment's domain.
 #
-_set AZUL_DOMAIN_NAME "dev.explore.data.humancellatlas.org"
+_set AZUL_DOMAIN_NAME "dev.singlecell.gi.ucsc.edu"
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}.$AZUL_DEPLOYMENT_STAGE"
 
-_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.data.humancellatlas.org"
+_set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.singlecell.gi.ucsc.edu"
 _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
 
 # All personal deployments should share an ES domain with `dev`

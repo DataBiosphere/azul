@@ -1,5 +1,5 @@
 export AWS_PROFILE=yourprofile
-export AWS_DEFAULT_REGION=us-east-1
+export AWS_DEFAULT_REGION=us-west-2
 
 # If you have the credentials of a service account, uncomment these GOOGLE_
 # lines, change them accordingly and set AZUL_SUBSCRIBE_TO_DSS to 1.
