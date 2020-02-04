@@ -20,14 +20,15 @@ Boardwalk, a web application for browsing genomic data sets.
         - [2.3.3 For personal deployment (AWS credentials available)](#233-for-personal-deployment-aws-credentials-available)
     - [2.4 PyCharm](#24-pycharm)
 - [3. Deployment](#3-deployment)
-    - [3.1 Provisioning cloud infrastructure](#31-provisioning-cloud-infrastructure)
-    - [3.2 Deploying lambda functions](#32-deploying-lambda-functions)
-    - [3.3 Provisioning stable API domain names](#33-provisioning-stable-api-domain-names)
-    - [3.4 Subscribing to DSS](#34-subscribing-to-dss)
-    - [3.5 Reindexing](#35-reindexing)
-    - [3.6 Cancelling an ongoing (re)indexing operation](#36-cancelling-an-ongoing-reindexing-operation)
-    - [3.7 Deleting all indices](#37-deleting-all-indices)
-    - [3.8 Deleting a deployment](#38-deleting-a-deployment)
+    - [3.1 One-time provisioning of shared cloud resources](#31-one-time-provisioning-of-shared-cloud-resources)
+    - [3.2 Provisioning cloud infrastructure](#32-provisioning-cloud-infrastructure)
+    - [3.3 Deploying lambda functions](#33-deploying-lambda-functions)
+    - [3.4 Provisioning stable API domain names](#34-provisioning-stable-api-domain-names)
+    - [3.5 Subscribing to DSS](#35-subscribing-to-dss)
+    - [3.6 Reindexing](#36-reindexing)
+    - [3.7 Cancelling an ongoing (re)indexing operation](#37-cancelling-an-ongoing-reindexing-operation)
+    - [3.8 Deleting all indices](#38-deleting-all-indices)
+    - [3.9 Deleting a deployment](#39-deleting-a-deployment)
 - [4. Running indexer or service locally](#4-running-indexer-or-service-locally)
 - [5. Troubleshooting](#5-troubleshooting)
 - [6. Branch flow & development process](#6-branch-flow--development-process)
@@ -336,10 +337,43 @@ configure PyCharm for Azul:
 
 # 3. Deployment
 
-## 3.1 Provisioning cloud infrastructure
+## 3.1 One-time provisioning of shared cloud resources
 
-Once you've successfully configured the project and your personal deployment, it
-is time to provision the cloud infrastructure for your deployment. Running
+Most of the cloud resources used by a particular deployment (personal or shared) 
+are provisioned automatically by `make terraform` and `make deploy`. A handful 
+of  resources must be created manually before invoking thise Makefile targets 
+for the first time in a particular AWS account. This only needs to be done once 
+per AWS account, before the first Azul deployment in that account. Additional 
+deployments do not require this step.
+
+Create an S3 bucket for shared Terraform and Chalice state. That bucket should 
+have versioning enabled abd must not be publicly accessible since Terraform 
+state may include secrets. The name of that bucket is configured in the 
+`AZUL_TERRAFORM_BACKEND_BUCKET` environment variable.
+
+Create a Route 53 hosted zone for the Azul service and indexer. Multiple 
+deployments  can share a hosted zone but they don't have to. The name of the 
+hosted zone is configured with `AZUL_DOMAIN_NAME`. `make terraform` will 
+automatically provision record sets in  the configured zone but it will not 
+create the zone itself or register the  domain name it is associated with.
+ 
+Optionally create another hosted zone for the URL shortener. The URLs produced 
+by the Azul service's URL shortening endpoint will refer to this zone. The name 
+of this zone is configured in `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME`. It should be 
+supported to use the same zone for both `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME` and 
+`AZUL_DOMAIN_NAME` but this was not tested. The shortener zone can be a 
+subdomain of the main Azul zone but it doesn't have  to be.
+
+If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an 
+EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the 
+[section on CI/CD](#9-continuous-deployment-and-integration) and for details. 
+
+
+## 3.2 Provisioning cloud infrastructure
+
+Once you've configured the project and your personal deployment or a shared 
+deployment deployment you intend to create, and once you manually provisioned 
+the global cloud resources, it is time to provision the cloud infrastructure for your deployment. Running
 
 ```
 make terraform
@@ -352,7 +386,7 @@ resources are defined in `….tf.json` files which in turn are generated from
 `….tf.json.template.py` files which are simple Python scripts containing the
 desired JSON as Python dictionary and list literals and comprehensions.
 
-## 3.2 Deploying lambda functions
+## 3.3 Deploying lambda functions
 
 Once the cloud infrastructure for your deployment has been provisioned, you can
 deploy the project code into AWS Lambda. Running
@@ -365,7 +399,7 @@ Will create or update AWS Lambda functions for each lambda defined in the
 `lambdas` directory. It will also create or update an AWS API Gateway to proxy
 the functions that act as web services. We call those functions *API lambdas*.
 
-## 3.3 Provisioning stable API domain names
+## 3.4 Provisioning stable API domain names
 
 The HTTP endpoint offered by API Gateway have somewhat cryptic and hard to
 remember domain names:
@@ -392,7 +426,7 @@ http://service.${AZUL_DEPLOYMENT_STAGE}.dev.explore.data.humancellatlas.org/
 Note that while the native API Gateway URL refers to the stage in the URL path,
 the stable URL mentions it in the domain name.
 
-## 3.4 Subscribing to DSS
+## 3.5 Subscribing to DSS
 
 Once the Lambda functions have been deployed, and the custom domain names
 provisioned, the indexer can be registered to receive notifications about new
@@ -421,7 +455,7 @@ indexer service account must belong to a GCP project that is whitelisted in the
 DSS instance to which the indexer is subscribed to. The credentials of the
 indexer service account are stored in Amazon Secrets Manager.
 
-## 3.5 Reindexing
+## 3.6 Reindexing
 
 The DSS instance used by a deployment is likely to contain existing bundles. To
 index them run:
@@ -434,19 +468,19 @@ When reindexing, artificial notifications are generated by Azul. To distinguish
 from legitimate notifications made by the DSS, the `subscription_id` field is
 hardcoded to be `cafebabe-feed-4bad-dead-beaf8badf00d`.
 
-## 3.6 Cancelling an ongoing (re)indexing operation
+## 3.7 Cancelling an ongoing (re)indexing operation
 
 ```
 python scripts/manage_queues.py purge_all
 ```
 
-## 3.7 Deleting all indices
+## 3.8 Deleting all indices
 
 ```
 make delete
 ```
 
-## 3.8 Deleting a deployment
+## 3.9 Deleting a deployment
 
 1. `cd` to the project root, then
    ```
