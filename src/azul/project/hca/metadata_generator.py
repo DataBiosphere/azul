@@ -1,7 +1,6 @@
 # Adapted from prior work by Simon Jupp @ EMBL-EBI
 #
 # https://github.com/HumanCellAtlas/hca_bundles_to_csv/blob/b516a3a/hca_bundle_tools/file_metadata_to_csv.py
-import os
 import re
 from typing import (
     Any,
@@ -13,7 +12,7 @@ from typing import (
     Tuple,
     Union,
 )
-
+from urllib import parse
 from azul.types import (
     JSON,
 )
@@ -65,8 +64,7 @@ class MetadataGenerator:
 
     def __init__(self):
         self.output: List[JSON] = []
-        # TODO temp until block filetype is needed
-        self.default_blocked_file_ext = {'.csv', '.txt', '.pdf'}
+        self.blocked_file_type = {'supplementary_file', 'reference_file'}
 
     def _resolve_data_file_names(self,
                                  manifest: List[JSON],
@@ -181,8 +179,9 @@ class MetadataGenerator:
                 'file_format': self._deep_get(metadata_file, 'file_core', 'file_format'),
             }
 
-            file_name, extension = os.path.splitext(output['file_name'])
-            if extension in self.default_blocked_file_ext:
+            described_by = parse.urlparse(self._deep_get(metadata_file, 'describedBy'))
+            _, _, schema_type = described_by.path.rpartition('/')
+            if schema_type in self.blocked_file_type:
                 continue
 
             if any(self._handle_zarray_members(output, anchor) for anchor in ('.zarr/', '.zarr!')):

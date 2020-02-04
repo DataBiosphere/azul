@@ -867,7 +867,7 @@ class TestHCAIndexer(IndexerTestCase):
         uuid, version = index_bundle
         generator.add_bundle(uuid, version, manifest, metadata_files)
         metadata_rows = generator.dump()
-        expected_metadata_contributions = 8
+        expected_metadata_contributions = 20
         self.assertEqual(expected_metadata_contributions, len(metadata_rows))
         for metadata_row in metadata_rows:
             self.assertEqual(uuid, metadata_row['bundle_uuid'])
@@ -876,7 +876,7 @@ class TestHCAIndexer(IndexerTestCase):
                 expected_file_name = '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/'
                 self.assertEqual(expected_file_name, metadata_row['file_name'])
             else:
-                self.assertIn(metadata_row['file_format'], {'fastq.gz', 'results', 'bam', 'bai'})
+                self.assertIn(metadata_row['file_format'], {'txt', 'csv', 'fastq.gz', 'results', 'bam', 'bai'})
 
     def test_related_files_field_exclusion(self):
         self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
