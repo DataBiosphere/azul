@@ -19,7 +19,6 @@ from azul.json_freeze import (
     sort_frozen,
 )
 from azul.modules import load_app_module
-from indexer import IndexerTestCase
 from retorts import ResponsesHelper
 
 
@@ -85,8 +84,7 @@ class TestHealthFailures(LocalAppTestCase):
                 with self._make_database():
                     bundle_notifications = [{
                         'action': 'add',
-                        'notification': IndexerTestCase._make_fake_notification((str(uuid4()),
-                                                                                 '2019-10-14T113344.698028Z'))
+                        'notification': self._make_fake_notification((str(uuid4()), '2019-10-14T113344.698028Z'))
                     } for _ in range(num_bundles)]
                     other_notifications = [{'other': 'notification'}] * num_other
 
@@ -97,8 +95,8 @@ class TestHealthFailures(LocalAppTestCase):
                         "failed_bundle_notifications": bundle_notifications,
                         "other_failed_messages": num_other
                     }))
-                    with self.subTest(num_bundle_notification=num_bundles,
-                                      num_document_notification=num_other):
+                    with self.subTest(num_bundles=num_bundles,
+                                      num_other=num_other):
                         indexer_app.retrieve_failure_messages(MagicMock(), MagicMock())
                         response = requests.get(self.base_url + '/health/failures')
                         self.assertEqual(200, response.status_code)
