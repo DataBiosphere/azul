@@ -139,7 +139,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
             try:
                 self._test_indexing()
                 self._test_manifest()
-                self._test_drs()
+                if config.dss_direct_access:
+                    self._test_drs()
             finally:
                 self._delete_bundles_twice()
                 self.assertTrue(self._project_removed_from_index())
@@ -452,7 +453,7 @@ class DSSIntegrationTest(unittest.TestCase):
             }
         }
         self.maxDiff = None
-        for direct in False, True:
+        for direct in {config.dss_direct_access, False}:
             for replica in 'aws', 'gcp':
                 if direct:
                     with self._failing_s3_get_object():
@@ -536,7 +537,7 @@ class DSSIntegrationTest(unittest.TestCase):
                 self.assertSequenceEqual(sorted(expected), sorted(actual))
 
     def test_get_file_fail(self):
-        for direct in True, False:
+        for direct in {config.dss_direct_access, False}:
             with self.subTest(direct=direct):
                 dss_client = azul.dss.direct_access_client() if direct else azul.dss.client()
                 with self.assertRaises(SwaggerAPIException) as e:

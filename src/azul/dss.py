@@ -37,7 +37,8 @@ def client(dss_endpoint: Optional[str] = None, num_workers=None) -> DSSClient:
 
 def direct_access_client(dss_endpoint: Optional[str] = None, num_workers=None) -> DSSClient:
     dss_client = client(dss_endpoint=dss_endpoint, num_workers=num_workers)
-    _patch_client_for_direct_access(dss_client)
+    if config.dss_direct_access:
+        _patch_client_for_direct_access(dss_client)
     return dss_client
 
 
