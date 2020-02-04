@@ -89,7 +89,8 @@ class TestHealthFailures(LocalAppTestCase):
                     other_notifications = [{'other': 'notification'}] * num_other
 
                     for batch in chunked(bundle_notifications + other_notifications, 10):
-                        items = [{'Id': str(i), 'MessageBody': json.dumps(message)} for i, message in enumerate(batch)]
+                        items = [{'Id': str(i), 'MessageBody': json.dumps(message)}
+                                 for i, message in enumerate(batch)]
                         fail_queue.send_messages(Entries=items)
                     expected_response = sort_frozen(freeze({
                         "failed_bundle_notifications": bundle_notifications,
