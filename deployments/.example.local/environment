@@ -12,6 +12,7 @@
 
 _set AZUL_DEPLOYMENT_STAGE <yourname>
 _set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
+_set AZUL_DSS_DIRECT_ACCESS 0
 _set AZUL_DSS_BUCKET "org-hca-dss-staging"
 _set AZUL_DSS_CHECKOUT_BUCKET "org-hca-dss-checkout-staging"
 _set AZUL_SUBSCRIBE_TO_DSS 0

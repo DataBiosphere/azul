@@ -30,6 +30,28 @@ azul_vars=(
     # The URL to the DSS (aka Blue box) REST API
     AZUL_DSS_ENDPOINT
 
+    # Whether to enable direct access to objects in the DSS main bucket. If 0,
+    # bundles and files are retrieved from the DSS using the GET /bundles/{uuid}
+    # and GET /files/{UUID} endpoints. If 1, S3 GetObject requests are made
+    # directly to the underlying bucket. This requires intimate knowledge of DSS
+    # implementation details but was ten times faster. Recent optimizations to
+    # the DSS (mainly, the delayed eviction of metadata files from the checkout
+    # bucket made the performance gains less dramatic but the first hit to a
+    # metadata file is still going to be slow because the objects needs to be
+    # checked out. Aside from the latency improvements on a single request,
+    # direct access also bypasses DSS lambda concurrency limits, thereby
+    # increasing in the throughput of the Azul indexer, which is especially
+    # noticable during reindexing and scale testing.
+    #
+    # More importantly, direct access needs to be enabled for deletions to work
+    # properly as the Azul indexer needs to know the metadata of the deleted
+    # bundle in order to place the correct tombstone contributions into its
+    # index. Direct access is also required for the Azul service's DSS files
+    # proxy and DOS/DRS endpoints. Disabling DSS direct access will break these
+    # endpoints.
+    #
+    AZUL_DSS_DIRECT_ACCESS
+
     # The name of the DSS main bucket. This is used for direct access.
     #
     # If unset, the DSS parameter store will be examined which will fail unless
@@ -292,6 +314,7 @@ fi
 # Set the global defaults. This is the least specific level.
 
 _set AZUL_DEBUG 0
+_set AZUL_DSS_DIRECT_ACCESS 1
 _set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.singlecell.gi.ucsc.edu"
 _set AZUL_DRS_DOMAIN_NAME ""
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
