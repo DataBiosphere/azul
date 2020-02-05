@@ -1,4 +1,5 @@
 from itertools import chain
+from urllib.parse import urlencode
 import json
 import logging
 from typing import (
@@ -323,6 +324,13 @@ class ElasticsearchService(AbstractService):
         :return: Modifies and returns the pagination updated with the
         new required entries.
         """
+
+        def page_link(**kwargs) -> str:
+            return pagination['_self_url'] + '?' + urlencode(dict(sort=pagination['sort'],
+                                                                  order=pagination['order'],
+                                                                  size=pagination['size'],
+                                                                  **kwargs))
+
         pages = -(-es_response['hits']['total'] // pagination['size'])
 
         # ...else use search_after/search_before pagination
@@ -347,8 +355,14 @@ class ElasticsearchService(AbstractService):
             else:
                 # No next page
                 search_after = [None, None]
-            search_before = es_hits[0]['sort'] if 'search_after' in pagination else [None, None]
-
+            if 'search_after' in pagination:
+                search_before = es_hits[0]['sort']
+            else:
+                search_before = [None, None]
+        next_ = page_link(search_after=search_after[0],
+                          search_after_uid=search_after[1]) if search_after[0] else None
+        previous = page_link(search_before=search_before[0],
+                             search_before_uid=search_before[1]) if search_before[0] else None
         page_field = {
             'count': count,
             'total': es_response['hits']['total'],
@@ -357,6 +371,8 @@ class ElasticsearchService(AbstractService):
             'search_after_uid': search_after[1],
             'search_before': search_before[0],
             'search_before_uid': search_before[1],
+            'next': next_,
+            'previous': previous,
             'pages': pages,
             'sort': pagination['sort'],
             'order': pagination['order']
@@ -502,11 +518,8 @@ class ElasticsearchService(AbstractService):
             hits = self.plugin.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
-
+            pagination['sort'] = inverse_translation[pagination['sort']]
             paging = self._generate_paging_dict(es_response_dict, pagination)
-            # Translate the sort field back to external name
-            if paging['sort'] in inverse_translation:
-                paging['sort'] = inverse_translation[paging['sort']]
             final_response = FileSearchResponse(hits, paging, facets, entity_type)
 
         final_response = final_response.apiResponse.to_json()

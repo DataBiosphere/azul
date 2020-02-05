@@ -65,6 +65,8 @@ class PaginationObj(JsonObject):
     search_after_uid = StringProperty()
     search_before = DefaultProperty()
     search_before_uid = StringProperty()
+    next = StringProperty()
+    previous = StringProperty()
     sort = StringProperty()
     order = StringProperty(choices=['asc', 'desc'])
 

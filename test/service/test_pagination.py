@@ -166,6 +166,29 @@ class PaginationTestCase(WebServiceTestCase):
         else:
             self.fail("search_after not set to [] on first page of results")
 
+    def test_next_and_previous_page_links(self):
+        """
+        Test that the next and previous links in pages are correct.
+        :return:
+        """
+        # Fetch and check first page.
+        content = requests.get("{}?sort=entryId&order=desc".format(self.get_base_url())).content
+        json_response = json.loads(content)
+        self.assert_page1_correct(json_response)
+
+        # Fetch the second page using next
+        url = json_response['pagination']['next']
+
+        content = requests.get(url).content
+        json_response_second = json.loads(content)
+        self.assert_page2_correct(json_response, json_response_second, "desc")
+
+        # Fetch the first page using previous in first page
+        url = json_response_second['pagination']['previous']
+        content = requests.get(url).content
+        json_response_first = json.loads(content)
+        self.assert_page1_correct(json_response_first)
+
 
 if __name__ == '__main__':
     unittest.main()
