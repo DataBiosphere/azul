@@ -409,7 +409,7 @@ class ElasticsearchService(AbstractService):
             ('contents.donors.genus_species', 'speciesCount'),
             ('contents.files.uuid', 'fileCount'),
             ('contents.donors.document_id', 'donorCount'),
-            ('contents.projects.laboratory', 'labCount'),  # FIXME Possible +1 error due to '__null__' value (#1188)
+            ('contents.projects.laboratory', 'labCount'),
             ('contents.projects.document_id', 'projectCount')
         ):
             es_search.aggs.metric(
