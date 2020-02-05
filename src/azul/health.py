@@ -115,12 +115,23 @@ class HealthController:
     def failures(self):
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(config.dynamo_failure_message_table_name)
-        bundle_key_condition = {'MessageType': {'AttributeValueList': ['bundle'], 'ComparisonOperator': 'EQ'}}
+        bundle_key_condition = {
+            'MessageType': {
+                'AttributeValueList': ['bundle'], 'ComparisonOperator': 'EQ'
+            }
+        }
         bundle_notification_items = table.query(KeyConditions=bundle_key_condition, Limit=100)['Items']
         failed_bundle_notifications = [json.loads(item['Body']) for item in bundle_notification_items]
-        other_key_condition = {'MessageType': {'AttributeValueList': ['other'], 'ComparisonOperator': 'EQ'}}
+        other_key_condition = {
+            'MessageType': {
+                'AttributeValueList': ['other'], 'ComparisonOperator': 'EQ'
+            }
+        }
         num_other_failed = table.query(KeyConditions=other_key_condition, Select='COUNT')['Count']
-        return {'failed_bundle_notifications': failed_bundle_notifications, 'other_failed_messages': num_other_failed}
+        return {
+            'failed_bundle_notifications': failed_bundle_notifications,
+            'other_failed_messages': num_other_failed
+        }
 
     @memoized_property
     def progress(self) -> JSON:
@@ -258,3 +269,44 @@ class HealthController:
     @classmethod
     def all_keys(cls) -> Set[str]:
         return {p.key for p in cls.all_properties}
+
+    def archive_fail_messages(self):
+        client = boto3.client('dynamodb')
+        fail_queue = boto3.resource('sqs').get_queue_by_name(QueueName=config.fail_queue_name)
+        while True:
+            received_messages = fail_queue.receive_messages(AttributeNames=['All'],
+                                                            MaxNumberOfMessages=10,
+                                                            WaitTimeSeconds=20,
+                                                            VisibilityTimeout=300)
+            if received_messages:
+                message_batch = [
+                    {
+                        'PutRequest': {
+                            'Item': {
+                                'MessageType': {
+                                    'S': 'bundle' if 'notification' in json.loads(message.body).keys() else 'other'
+                                },
+                                'SentTimeMessageId': {
+                                    'S': message.attributes['SentTimestamp'] + '-' + message.message_id
+                                },
+                                'Body': {
+                                    'S': message.body
+                                }
+                            }
+                        }
+                    } for message in received_messages
+                ]
+                items = {config.dynamo_failure_message_table_name: message_batch}
+                response = client.batch_write_item(RequestItems=items)
+                unprocessed_items = response['UnprocessedItems']
+                if unprocessed_items and unprocessed_items[config.dynamo_failure_message_table_name]:
+                    raise ConnectionError('Unable to process and write all messages to dynamo db.')
+                else:
+                    fail_queue.delete_messages(Entries=[
+                        {
+                            'Id': message.message_id,
+                            'ReceiptHandle': message.receipt_handle
+                        } for message in received_messages
+                    ])
+            else:
+                break

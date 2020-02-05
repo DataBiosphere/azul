@@ -82,15 +82,20 @@ class TestHealthFailures(LocalAppTestCase):
             # The max number of messages in a batch is 10 and this sub-test populates the queue with 11 messages.
             for num_bundles, num_other in ((0, 0), (1, 0), (0, 1), (10, 1)):
                 with self._make_database():
-                    bundle_notifications = [{
-                        'action': 'add',
-                        'notification': self._make_fake_notification((str(uuid4()), '2019-10-14T113344.698028Z'))
-                    } for _ in range(num_bundles)]
+                    bundle_notifications = [
+                        {
+                            'action': 'add',
+                            'notification': self._make_fake_notification((str(uuid4()), '2019-10-14T113344.698028Z'))
+                        } for _ in range(num_bundles)
+                    ]
                     other_notifications = [{'other': 'notification'}] * num_other
 
                     for batch in chunked(bundle_notifications + other_notifications, 10):
-                        items = [{'Id': str(i), 'MessageBody': json.dumps(message)}
-                                 for i, message in enumerate(batch)]
+                        items = [
+                            {
+                                'Id': str(i), 'MessageBody': json.dumps(message)
+                            } for i, message in enumerate(batch)
+                        ]
                         fail_queue.send_messages(Entries=items)
                     expected_response = sort_frozen(freeze({
                         "failed_bundle_notifications": bundle_notifications,
