@@ -180,12 +180,6 @@ class Config:
     def _dss_bucket(self, dss_endpoint: Optional[str], *qualifiers: str) -> str:
         if dss_endpoint is None:
             dss_endpoint = self.dss_endpoint
-        if dss_endpoint == self.dss_endpoint:
-            env_var = '_'.join(['AZUL', 'DSS', *map(str.upper, qualifiers), 'BUCKET'])
-            try:
-                return os.environ[env_var]
-            except KeyError:
-                pass
         stage = self._dss_deployment_stage(dss_endpoint)
         name = f'/dcp/dss/{stage}/environment'
         ssm = boto3.client('ssm')
