@@ -1403,15 +1403,16 @@ class TestResponseSummary(WebServiceTestCase):
         Verify the /repository/summary response with two sequencing bundles and
         one imaging bundle that has no cell suspension.
 
-        - bundle=aaa96233…, fileCount=2, donorCount=1, totalCellCount=1.0, organType=pancreas
-        - bundle=dcccb551…, fileCount=19, donorCount=4, totalCellCount=6210.0, organType=Brain
-        - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain
+        - bundle=aaa96233…, fileCount=2, donorCount=1, totalCellCount=1.0, organType=pancreas, labCount=1
+        - bundle=dcccb551…, fileCount=19, donorCount=4, totalCellCount=6210.0, organType=Brain, labCount=1
+        - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain, labCount=0
         """
         url = self.base_url + "/repository/summary"
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
         self.assertEqual(summary_object['fileCount'], 2 + 19 + 227)
+        self.assertEqual(summary_object['labCount'], 1 + 1 + 0)
         self.assertEqual(summary_object['donorCount'], 1 + 4 + 1)
         self.assertEqual(summary_object['totalCellCount'], 1.0 + 6210.0 + 0)
         file_counts_expected = {
@@ -1444,6 +1445,7 @@ class TestResponseSummary(WebServiceTestCase):
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
+        self.assertEqual(summary_object['labCount'], 0)
         self.assertEqual(summary_object['donorCount'], 1)
         self.assertEqual(summary_object['specimenCount'], 1)
         self.assertEqual(summary_object['projectCount'], 1)
@@ -1458,12 +1460,13 @@ class TestResponseSummary(WebServiceTestCase):
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
-        self.assertEqual(summary_object['donorCount'], 5)
-        self.assertEqual(summary_object['specimenCount'], 5)
-        self.assertEqual(summary_object['projectCount'], 2)
-        self.assertEqual(summary_object['totalCellCount'], 6210.0)
+        self.assertEqual(summary_object['labCount'], 0 + 1)
+        self.assertEqual(summary_object['donorCount'], 1 + 4)
+        self.assertEqual(summary_object['specimenCount'], 1 + 4)
+        self.assertEqual(summary_object['projectCount'], 1 + 1)
+        self.assertEqual(summary_object['totalCellCount'], 0 + 6210.0)
         # Muc muscuclus (94f2ba52) and Homo sapiens (dcccb551)
-        self.assertEqual(summary_object['speciesCount'], 2)
+        self.assertEqual(summary_object['speciesCount'], 1 + 1)
 
 
 class TestPortalIntegrationResponse(LocalAppTestCase):
