@@ -200,7 +200,7 @@ def sanitize_sys_path():
     whose name conflicts with that of important built-in or third-party
     packages, `json.py` for example. This project relies on the fully-qualified
     package path of those modules to disambiguate them from the built-in ones
-    but  placing their containing parent directory on `sys.path` defeats that.
+    but placing their containing parent directory on `sys.path` defeats that.
 
     This method attempts to counteract that by removing the directory again.
     """
@@ -210,8 +210,40 @@ def sanitize_sys_path():
     sys.meta_path.insert(0, SanitizingFinder())
 
 
+def use_cached_boto_session():
+    """
+    By default, boto does not use a cache for the assume-role provider. This
+    means that if assuming a role requires you to enter a MFA key, you will have
+    to enter this key every time you instantiate a boto session, even if your
+    assume-role session will last for longer.
+
+    This script connects the assume-role provider with the cache used by the
+    CLI, saving tedious key reentry.
+    """
+    try:
+        import boto3
+        import botocore.credentials
+        import botocore.session
+    except ImportError:
+        _print('Failed to import boto, so cached session will not be used.')
+    else:
+        # Get the AssumeRole credential provider and make it the only one
+        session = botocore.session.get_session()
+        resolver = session.get_component('credential_provider')
+        assume_role_provider = resolver.get_provider('assume-role')
+
+        # Make the provider use the same cache as the AWS CLI
+        cli_cache = os.path.join(os.path.expanduser('~'), '.aws/cli/cache')
+        assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
+
+        # Every boto call will use this default session and therefore hit the
+        # cached credentials
+        boto3.setup_default_session(botocore_session=session)
+
+
 if __name__ == '__main__':
     main(sys.argv[1:])
 elif __name__ == 'sitecustomize':
     sanitize_sys_path()
     setenv()
+    use_cached_boto_session()
