@@ -247,7 +247,7 @@ class TestManifestEndpoints(WebServiceTestCase):
         fastq_b1_r2_uuid, fastq_b1_r2_version = "74897eb7-0701-4e4f-9e6b-8b9521b2816b", "2018-11-02T113344.450442Z"
         expected_rows = [
             {
-                'entity:participant_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2_2018-09-14T133314_453337Z',
+                'entity:participant_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2.2018-09-14T133314.453337Z',
                 'bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                 'bundle_version': '2018-09-14T133314.453337Z',
                 'cell_suspension__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
@@ -324,7 +324,7 @@ class TestManifestEndpoints(WebServiceTestCase):
                 '__fastq_read2__drs_url': f'drs://{domain}/{fastq_b0_r2_uuid}?version={fastq_b0_r2_version}',
             },
             {
-                'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344_698028Z',
+                'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.2018-11-02T113344.698028Z',
                 'bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                 'bundle_version': '2018-11-02T113344.698028Z',
                 'cell_suspension__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
