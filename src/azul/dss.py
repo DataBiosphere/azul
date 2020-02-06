@@ -17,13 +17,14 @@ from unittest.mock import (
 
 import boto3
 from botocore.response import StreamingBody
+from hca.dss import DSSClient
 # noinspection PyProtectedMember
 from humancellatlas.data.metadata.helpers.dss import _DSSClient
 from urllib3 import Timeout
 
 from azul import config
+from azul.deployment import aws
 from azul.types import JSON
-from hca.dss import DSSClient
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +45,11 @@ def direct_access_client(dss_endpoint: Optional[str] = None, num_workers=None) -
 
 class MiniDSS:
 
-    def __init__(self, dss_endpoint=None, **s3_client_kwargs) -> None:
+    def __init__(self, dss_endpoint: str, **s3_client_kwargs) -> None:
         super().__init__()
-        self.s3 = boto3.client('s3', **s3_client_kwargs)
-        self.bucket = config.dss_main_bucket(dss_endpoint)
+        self.bucket = aws.dss_main_bucket(dss_endpoint)
+        with aws.direct_access_credentials(dss_endpoint, lambda_name='indexer'):
+            self.s3 = aws.client('s3', region_name='us-east-1', **s3_client_kwargs)  # FIXME: make region configurable)
 
     def get_bundle(self, uuid: str, version: str, replica: str) -> JSON:
         assert replica == 'aws' and version is not None
@@ -156,7 +158,7 @@ class MiniDSS:
 def _patch_client_for_direct_access(client: DSSClient):
     old_get_file = client.get_file
     old_get_bundle = client.get_bundle
-    mini_dss = MiniDSS()
+    mini_dss = MiniDSS(config.dss_endpoint)
 
     def new_get_file(self, uuid, replica, version=None):
         assert client is self

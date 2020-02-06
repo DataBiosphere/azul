@@ -1570,7 +1570,7 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
             )
         ]
         portal_integrations_db.return_value = self._portal_integrations_db
-        with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
+        with mock.patch.object(type(config), 'dss_deployment_stage', return_value='prod'):
             for integration_type, entity_type, expected_integration_ids in test_cases:
                 params = dict(integration_type=integration_type, entity_type=entity_type)
                 with self.subTest(**params):
@@ -1637,7 +1637,7 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
         ]
 
         portal_integrations_db.return_value = self._portal_integrations_db
-        with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
+        with mock.patch.object(type(config), 'dss_deployment_stage', return_value='prod'):
             for entity_ids, integration_ids in test_cases:
                 params = dict(integration_type='get', entity_type='project')
                 if entity_ids is not None:

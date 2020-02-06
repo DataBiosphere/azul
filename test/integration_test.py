@@ -472,17 +472,17 @@ class DSSIntegrationTest(unittest.TestCase):
         def make_mock(**kwargs):
             original = kwargs['spec']
 
-            def mock_boto3_client(service):
+            def mock_boto3_client(service, *args, **kwargs):
                 if service == 's3':
                     mock_s3 = mock.MagicMock()
                     mock_s3.get_object.side_effect = self.SpecialError()
                     return mock_s3
                 else:
-                    return original(service)
+                    return original(service, *args, **kwargs)
 
             return mock_boto3_client
 
-        return mock.patch('boto3.client', spec=True, new_callable=make_mock)
+        return mock.patch('azul.deployment.aws.client', spec=True, new_callable=make_mock)
 
     def _test_dss_client(self, direct, query, dss_client, replica, fallback):
         with self.subTest(direct=direct, replica=replica, fallback=fallback):
@@ -498,8 +498,10 @@ class DSSIntegrationTest(unittest.TestCase):
                 self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))
                 for f in manifest:
                     self.assertIn('s3_etag', f)
-                # Extract the log method name and the first three words of log message logged
-                # Note that the PyCharm debugger will call certain dunder methods on the variable, leading to failed
+                # Extract the log method name and the first three words of log
+                # message logged. Note that the PyCharm debugger will call
+                # certain dunder methods on the variable, leading to failed
+                # assertions.
                 actual = [(m, ' '.join(re.split(r'[\s,]', a[0])[:3])) for m, a, k in log.mock_calls]
                 if direct:
                     if replica == 'aws':
@@ -550,7 +552,7 @@ class DSSIntegrationTest(unittest.TestCase):
         uuid = 'acafefed-beef-4bad-babe-feedfa11afe1'
         version = '2018-11-19T232756.056947Z'
         with self._failing_s3_get_object():
-            mini_dss = azul.dss.MiniDSS()
+            mini_dss = azul.dss.MiniDSS(config.dss_endpoint)
             with self.assertRaises(self.SpecialError):
                 mini_dss._get_file_object(uuid, version)
             with self.assertRaises(KeyError):

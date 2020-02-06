@@ -265,6 +265,18 @@ def remove_inconsequential_statements(statements: List[JSON]) -> List[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
+# FIXME: generalize, this is currently specific to HCA dev account
+
+dss_direct_access_policy_statement = {
+    "actions": [
+        "sts:AssumeRole",
+    ],
+    "resources": [
+        "arn:aws:iam::861229788715:role/azul-indexer-*",
+        "arn:aws:iam::861229788715:role/azul-service-*"
+    ]
+}
+
 emit_tf({} if config.terraform_component != 'gitlab' else {
     "data": {
         "aws_availability_zones": {
@@ -344,6 +356,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    RelativeId='*',
                                    RoleNameWithPath='*',
                                    UserNameWithPath='*'),
+
+                    dss_direct_access_policy_statement,
 
                     *allow_service('Certificate Manager',
                                    # ACM ARNs refer to certificates by ID so so we cannot restrict to name or prefix
@@ -460,6 +474,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             "values": [aws.permissions_boundary_arn]
                         }
                     },
+
+                    dss_direct_access_policy_statement,
+
                     {
                         "actions": [
                             "iam:UpdateAssumeRolePolicy",

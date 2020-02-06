@@ -1,5 +1,3 @@
-from functools import lru_cache
-import json as _json  # We must use a different name for the import because 'azul.json' exists already as azul/json.py
 import logging
 import os
 import re
@@ -9,8 +7,6 @@ from typing import (
     Optional,
     Tuple,
 )
-
-import boto3
 
 log = logging.getLogger(__name__)
 
@@ -142,15 +138,11 @@ class Config:
 
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 
-    @property
-    def dss_deployment_stage(self):
-        return self._dss_deployment_stage(self.dss_endpoint)
-
-    def _dss_deployment_stage(self, dss_endpoint):
+    def dss_deployment_stage(self, dss_endpoint: str) -> str:
         """
-        >>> config._dss_deployment_stage('https://dss.staging.data.humancellatlas.org/v1')
+        >>> config.dss_deployment_stage('https://dss.staging.data.humancellatlas.org/v1')
         'staging'
-        >>> config._dss_deployment_stage('https://dss.data.humancellatlas.org/v1')
+        >>> config.dss_deployment_stage('https://dss.data.humancellatlas.org/v1')
         'prod'
         """
         from urllib.parse import urlparse
@@ -166,27 +158,8 @@ class Config:
     def dss_direct_access(self) -> bool:
         return self._boolean(os.environ['AZUL_DSS_DIRECT_ACCESS'])
 
-    def dss_main_bucket(self, dss_endpoint: Optional[str] = None) -> str:
-        return self._dss_bucket(dss_endpoint)
-
-    # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
-
-    def dss_checkout_bucket(self, dss_endpoint: Optional[str] = None) -> str:
-        return self._dss_bucket(dss_endpoint, 'checkout')
-
-    @lru_cache(maxsize=10)
-    # `maxsize` should be greater than or equal to the expected number of
-    # possible values for the `qualifier` argument.
-    def _dss_bucket(self, dss_endpoint: Optional[str], *qualifiers: str) -> str:
-        if dss_endpoint is None:
-            dss_endpoint = self.dss_endpoint
-        stage = self._dss_deployment_stage(dss_endpoint)
-        name = f'/dcp/dss/{stage}/environment'
-        ssm = boto3.client('ssm')
-        dss_parameter = ssm.get_parameter(Name=name)
-        dss_config = _json.loads(dss_parameter['Parameter']['Value'])
-        bucket_key = '_'.join(['dss', 's3', *qualifiers, 'bucket']).upper()
-        return dss_config[bucket_key]
+    def dss_direct_access_role(self, lambda_name: str) -> Optional[str]:
+        return os.environ.get('AZUL_DSS_DIRECT_ACCESS_ROLE').format(lambda_name=lambda_name)
 
     @property
     def num_dss_workers(self) -> int:

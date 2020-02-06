@@ -18,7 +18,6 @@ from typing import (
 )
 import urllib.parse
 
-import boto3
 from botocore.exceptions import ClientError
 import chalice
 # noinspection PyPackageRequirements
@@ -37,6 +36,7 @@ from azul import (
     drs,
 )
 from azul.chalice import AzulChaliceApp
+from azul.deployment import aws
 from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.openapi import annotated_specs
@@ -479,9 +479,10 @@ def _fetch_integrations(entity_type: str, integration_type: str, entity_ids: Opt
     plugin = Plugin.load()
     portals = plugin.portal_integrations_db()
     results = []
+    stage = config.dss_deployment_stage(config.dss_endpoint)
     for portal in portals:
         integrations = [
-            {k: v if k != 'entity_ids' else v[config.dss_deployment_stage] for k, v in integration.items()}
+            {k: v if k != 'entity_ids' else v[stage] for k, v in integration.items()}
             for integration in cast(Sequence[JSON], portal['integrations'])
             if integration['entity_type'] == entity_type and integration['integration_type'] == integration_type
         ]
@@ -1094,7 +1095,8 @@ def fetch_dss_files(uuid):
 def _dss_files(uuid, fetch=True):
     query_params = app.current_request.query_params
     validate_params(query_params, True, fileName=str, wait=int, requestIndex=int)
-    url = config.dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
+    dss_endpoint = config.dss_endpoint
+    url = dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
     file_name = query_params.pop('fileName', None)
     wait = query_params.pop('wait', None)
     request_index = int(query_params.pop('requestIndex', '0'))
@@ -1135,18 +1137,20 @@ def _dss_files(uuid, fetch=True):
             location = urllib.parse.urlparse(location)
             query = urllib.parse.parse_qs(location.query, strict_parsing=True)
             expires = int(one(query['Expires']))
-            s3 = boto3.client('s3')
             if file_name is None:
                 file_name = uuid
             bucket = location.netloc.partition('.')[0]
-            assert bucket == config.dss_checkout_bucket(), bucket
-            location = s3.generate_presigned_url(ClientMethod=s3.get_object.__name__,
-                                                 ExpiresIn=round(expires - time.time()),
-                                                 Params={
-                                                     'Bucket': bucket,
-                                                     'Key': location.path[1:],
-                                                     'ResponseContentDisposition': 'attachment;filename=' + file_name,
-                                                 })
+            assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
+            with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
+                s3 = aws.client('s3', region_name='us-east-1')  # FIXME: make region configurable
+                params = {
+                    'Bucket': bucket,
+                    'Key': location.path[1:],
+                    'ResponseContentDisposition': 'attachment;filename=' + file_name,
+                }
+                location = s3.generate_presigned_url(ClientMethod=s3.get_object.__name__,
+                                                     ExpiresIn=round(expires - time.time()),
+                                                     Params=params)
         response = {"Status": 302, "Location": location}
     else:
         dss_response.raise_for_status()

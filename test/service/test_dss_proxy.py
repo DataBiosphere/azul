@@ -13,6 +13,7 @@ import responses
 
 from app_test_case import LocalAppTestCase
 from azul import config
+from azul.deployment import aws
 from azul.logging import configure_test_logging
 from retorts import ResponsesHelper
 
@@ -61,8 +62,10 @@ class TestDssProxy(LocalAppTestCase):
                      AWS_ACCESS_KEY_ID=mock_access_key_id,
                      AWS_SECRET_ACCESS_KEY=mock_secret_access_key,
                      AWS_SESSION_TOKEN=mock_session_token)
+    @mock.patch.object(type(config), 'dss_direct_access_role')
     @mock_s3
-    def test_dss_files_proxy(self):
+    def test_dss_files_proxy(self, dss_direct_access_role):
+        dss_direct_access_role.return_value = None
         self.maxDiff = None
         key = ("blobs/6929799f227ae5f0b3e0167a6cf2bd683db097848af6ccde6329185212598779"
                ".f2237ad0a776fd7057eb3d3498114c85e2f521d7"
@@ -124,7 +127,7 @@ class TestDssProxy(LocalAppTestCase):
                                 retry_after = 1
                                 expect_retry_after = None if wait or expect_status == 302 else retry_after
                                 before = time.monotonic()
-                                with mock.patch.object(type(config), 'dss_checkout_bucket', return_value=bucket_name):
+                                with mock.patch.object(type(aws), 'dss_checkout_bucket', return_value=bucket_name):
                                     with mock.patch('time.time', new=lambda: 1547691253.07010):
                                         response = requests.get(url, allow_redirects=False)
                                 if wait and expect_status == 301:

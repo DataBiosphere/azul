@@ -52,6 +52,22 @@ azul_vars=(
     #
     AZUL_DSS_DIRECT_ACCESS
 
+    # An optional ARN of a role to assume when directly accessing a DSS bucket.
+    # This can be useful when the DSS buckets are not owned by the same AWS
+    # account owning the current Azul deployment. If there is another Azul
+    # deployment in the account owning the DSS bucket, the role assumed by the
+    # other Azul indexer would be an obvious candidate for the current
+    # deployment's indexer to assume for direct access. Presumably that other
+    # indexer has sufficient privileges to directly access the DSS buckets.
+    #
+    # The string {lambda_name} will be replaced with the name of the lambda
+    # wishing to gain access. This parameterization can be used to have the
+    # indexer lambda in the native deployment assume the role of the indexer
+    # lambda in the foreign deployment, while the native service lambda assumes
+    # the role of the foreign service lambda.
+    #
+    AZUL_DSS_DIRECT_ACCESS_ROLE
+
     # The name of the hosted zone in Route 53 in which to create user friendly
     # domain names for various API gateways. This hosted zone will have to be
     # created manually prior to running `make terraform`. The value is typically
