@@ -920,7 +920,7 @@ def handle_manifest_generation_request():
         format_ = query_params['format']
     except KeyError:
         format_ = 'compact'
-    if format_ not in ('compact', 'tsv', 'terra.bdbag', 'bdbag', 'full'):
+    if format_ not in ('compact', 'terra.bdbag', 'full'):
         raise BadRequestError(f'{format_} is not a valid manifest format.')
     token = query_params.get('token')
     retry_url = self_url()

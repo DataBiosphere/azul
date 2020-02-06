@@ -218,7 +218,7 @@ class TestManifestEndpoints(WebServiceTestCase):
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                        response = self._get_manifest('tsv', filters)
+                        response = self._get_manifest('compact', filters)
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
                         # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
                         lines = response.content.decode('utf-8').splitlines()
