@@ -11,9 +11,10 @@
 # at the project root.
 
 _set AZUL_DEPLOYMENT_STAGE <yourname>
+
 _set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
 
-# Your personal deployment uses a subdomain of the `dev` deployment's domain.
+# A personal deployment uses a subdomain of the `dev` deployment's domain.
 #
 _set AZUL_DOMAIN_NAME "dev.singlecell.gi.ucsc.edu"
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}.$AZUL_DEPLOYMENT_STAGE"
@@ -21,12 +22,13 @@ _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}.$AZUL_DEPLOYMENT_STAGE"
 _set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.singlecell.gi.ucsc.edu"
 _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
 
-# All personal deployments should share an ES domain with `dev`
+# A personal deployment shares an ES domain with `dev`
 #
 _set AZUL_SHARE_ES_DOMAIN 1
 _set AZUL_ES_DOMAIN "azul-index-dev"
 
 _set azul_dss_query_prefix '42'
+
 _set AZUL_DEBUG 1
 
 _set AZUL_OWNER <your email>
