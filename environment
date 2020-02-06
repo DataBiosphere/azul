@@ -298,7 +298,7 @@ fi
 # Set the global defaults. This is the least specific level.
 
 _set AZUL_DEBUG 0
-_set AZUL_DSS_DIRECT_ACCESS 1
+_set AZUL_DSS_DIRECT_ACCESS 0
 _set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.singlecell.gi.ucsc.edu"
 _set AZUL_DRS_DOMAIN_NAME ""
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
@@ -320,7 +320,7 @@ _set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front 
 _set AZUL_DSS_WORKERS 8
 _set AZUL_INDEXER_CONCURRENCY 64
 
-_set AZUL_SUBSCRIBE_TO_DSS 1
+_set AZUL_SUBSCRIBE_TO_DSS 0
 _set AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT "azul-ucsc-indexer-$AZUL_DEPLOYMENT_STAGE"
 
 _set AZUL_DISABLE_MULTIPART_MANIFESTS 0

@@ -13,14 +13,12 @@
 _set AZUL_DEPLOYMENT_STAGE dev
 
 _set AZUL_DSS_ENDPOINT "https://dss.staging.data.humancellatlas.org/v1"
-_set AZUL_DSS_DIRECT_ACCESS 0
+_set AZUL_SUBSCRIBE_TO_DSS 1
 
 _set AZUL_DRS_DOMAIN_NAME "drs.dev.singlecell.gi.ucsc.edu"
 
 _set AZUL_URL_REDIRECT_BASE_DOMAIN_NAME "dev.url.singlecell.gi.ucsc.edu"
 _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRECT_BASE_DOMAIN_NAME"
-
-_set AZUL_ENABLE_MONITORING 0
 
 # $0.392/h × 2 × 24h/d × 30d/mo = $564.48/mo
 _set AZUL_ES_INSTANCE_TYPE r4.xlarge.elasticsearch
