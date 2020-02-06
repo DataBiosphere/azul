@@ -14,15 +14,16 @@ emit({
     "environment_variables": aws.lambda_env(config.indexer_name),
     'lambda_timeout': config.api_gateway_timeout + config.api_gateway_timeout_padding,
     "lambda_memory_size": 128,
-    "reserved_concurrency": config.indexer_concurrency,
     "stages": {
         config.deployment_stage: {
             "lambda_functions": {
                 "index": {
+                    "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 256,
                     "lambda_timeout": config.indexer_lambda_timeout,
                 },
                 "write": {
+                    "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 2048,
                     "lambda_timeout": config.indexer_lambda_timeout,
                 },
