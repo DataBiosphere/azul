@@ -125,17 +125,17 @@ class MiniDSS:
         file_key = f'files/{uuid}.{version}'
         try:
             return json.load(self._get_object(file_key))
-        except Exception:
+        except Exception as e:
             logger.warning('Error accessing file %s in DSS bucket %s directly.',
-                           file_key, self.bucket, exc_info=True)
+                           file_key, self.bucket, exc_info=e)
             raise
 
     def _get_blob_key(self, file_object: JSON) -> str:
         try:
             return 'blobs/' + '.'.join(file_object[k] for k in ('sha256', 'sha1', 's3-etag', 'crc32c'))
-        except Exception:
+        except Exception as e:
             logger.warning('Error determining blob key from file %r in DSS bucket %s directly.',
-                           file_object, self.bucket, exc_info=True)
+                           file_object, self.bucket, exc_info=e)
             raise
 
     def _get_blob(self, blob_key: str, file_object: JSON) -> Union[JSON, StreamingBody]:
@@ -145,9 +145,9 @@ class MiniDSS:
             if content_type == 'application/json':
                 blob = json.load(blob)
             return blob
-        except Exception:
+        except Exception as e:
             logger.warning('Error accessing blob %s in DSS bucket %s directly.',
-                           blob_key, self.bucket, exc_info=True)
+                           blob_key, self.bucket, exc_info=e)
             raise
 
     def _get_object(self, key: str) -> StreamingBody:
