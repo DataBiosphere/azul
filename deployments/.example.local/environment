@@ -37,6 +37,9 @@ _set AZUL_OWNER <your email>
 
 export AWS_DEFAULT_REGION=us-west-2
 
+# Indexer Lambdas in personal deployments do not require default reserved concurrency
+_set AZUL_INDEXER_CONCURRENCY 8
+
 # See also GOOGLE_APPLICATION_CREDENTIALS in .example.local/environment.local
 #
 export GOOGLE_PROJECT="human-cell-atlas-travis-test"
