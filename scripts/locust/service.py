@@ -149,7 +149,7 @@ class ServiceTaskSet(TaskSet):
 
 
 class ServiceLocust(HttpLocust):
-    host = 'https://service.integration.explore.data.humancellatlas.org'
+    host = 'https://service.dev.singlecell.gi.ucsc.edu'
     task_set = ServiceTaskSet
     min_wait = 1000
     max_wait = 5000

@@ -45,10 +45,10 @@ class TestQueryShortener(LocalAppTestCase):
         """
         storage_service_get.side_effect = StorageService().client.exceptions.NoSuchKey({}, "")
         response = self._shorten_query_url(
-            'https://dev.data.humancellatlas.org/explore/specimens'
+            'https://dev.singlecell.gi.ucsc.edu/explore/specimens'
             '?filter=%5B%7B%22facetName%22%3A%22organ%22%2C%22terms%22%3A%5B%22bone%22%5D%7D%5D'
         )
-        self.assertEqual({'url': f'http://{config.url_redirect_full_domain_name}/FFq'}, response)
+        self.assertEqual({'url': f'http://{config.url_redirect_full_domain_name}/pv9'}, response)
         storage_service_put.assert_called_once()
 
     @mock_sts
@@ -58,12 +58,12 @@ class TestQueryShortener(LocalAppTestCase):
         URL shortener should accept any humancellatlas domain
         """
         urls = [
-            'https://humancellatlas.org',
-            'http://humancellatlas.org',
-            'https://humancellatlas.org/',
-            'https://humancellatlas.org/abc',
-            'https://subdomain.humancellatlas.org/',
-            'https://sub.subdomain.humancellatlas.org/abc/def'
+            'https://singlecell.gi.ucsc.edu',
+            'http://singlecell.gi.ucsc.edu',
+            'https://singlecell.gi.ucsc.edu/',
+            'https://singlecell.gi.ucsc.edu/abc',
+            'https://subdomain.singlecell.gi.ucsc.edu/',
+            'https://sub.subdomain.singlecell.gi.ucsc.edu/abc/def'
         ]
         StorageService().create_bucket(config.url_redirect_full_domain_name)
         for url in urls:
@@ -77,10 +77,11 @@ class TestQueryShortener(LocalAppTestCase):
         URL shortener should reject any non-URL argument and any non-HCA URL
         """
         urls = [
-            'https://hmanclatls.org',
-            'https://humancellatlas.orgo',
-            'http://humancellatlas.xyz.org',
-            'humancellatlas.org'
+            'https://asinglecell.gi.ucsc.edu',
+            'https://singlecll.gi.ucsc.edu',
+            'https://singlecell.gi.ucsc.edut',
+            'http://singlecell.gi.xyz.edu',
+            'singlecell.gi.ucsc.edu'
         ]
         StorageService().create_bucket(config.url_redirect_full_domain_name)
         for url in urls:
@@ -93,7 +94,7 @@ class TestQueryShortener(LocalAppTestCase):
         """
         URL shortener should return the same response URL for identical input URLs
         """
-        url = 'https://humancellatlas.org'
+        url = 'https://singlecell.gi.ucsc.edu'
         StorageService().create_bucket(config.url_redirect_full_domain_name)
         shortened_url1 = self._shorten_query_url(url)
         shortened_url2 = self._shorten_query_url(url)
@@ -110,13 +111,13 @@ class TestQueryShortener(LocalAppTestCase):
             hash_url.return_value = 'abcde'
             StorageService().create_bucket(config.url_redirect_full_domain_name)
 
-            self.assertEqual(self._shorten_query_url('https://humancellatlas.org')['url'],
+            self.assertEqual(self._shorten_query_url('https://singlecell.gi.ucsc.edu')['url'],
                              f'http://{config.url_redirect_full_domain_name}/abc')
 
-            self.assertEqual(self._shorten_query_url('https://humancellatlas.org/2')['url'],
+            self.assertEqual(self._shorten_query_url('https://singlecell.gi.ucsc.edu/2')['url'],
                              f'http://{config.url_redirect_full_domain_name}/abcd')
 
-            self.assertEqual(self._shorten_query_url('https://humancellatlas.org/3')['url'],
+            self.assertEqual(self._shorten_query_url('https://singlecell.gi.ucsc.edu/3')['url'],
                              f'http://{config.url_redirect_full_domain_name}/abcde')
 
-            self._shorten_query_url('https://humancellatlas.org/4', expect_status=500)
+            self._shorten_query_url('https://singlecell.gi.ucsc.edu/4', expect_status=500)

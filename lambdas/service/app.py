@@ -1232,7 +1232,7 @@ def shorten_query_url():
 
     ```
     {
-        "url": "http://url.data.humancellatlas.org/b3N"
+        "url": "http://url.singlecell.gi.ucsc.edu/b3N"
     }
     ```
 
@@ -1781,7 +1781,7 @@ def export_cart_as_collection_fetch(cart_id: str):
     ```
     {
         "Status": 200,
-        "Location": "https://dss.<DEPLOYMENT>.data.humancellatlas.org/v1/collections/<CART_ID>?..."
+        "Location": "https://dss.<DEPLOYMENT>.singlecell.gi.ucsc.edu/v1/collections/<CART_ID>?..."
     }
     ```
 

@@ -415,13 +415,13 @@ newly deployed API lambdas and create those resources for you. What the
 user-friendly domain names look like depends on project configuration. The
 default for HCA is currently
 
-http://indexer.${AZUL_DEPLOYMENT_STAGE}.explore.data.humancellatlas.org/
-http://service.${AZUL_DEPLOYMENT_STAGE}.explore.data.humancellatlas.org/
+http://indexer.${AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu/
+http://service.${AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu/
 
 Personal deployments are subdomains of the domain for the ``dev`` deployment:
 
-http://indexer.${AZUL_DEPLOYMENT_STAGE}.dev.explore.data.humancellatlas.org/
-http://service.${AZUL_DEPLOYMENT_STAGE}.dev.explore.data.humancellatlas.org/
+http://indexer.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
+http://service.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
 
 Note that while the native API Gateway URL refers to the stage in the URL path,
 the stable URL mentions it in the domain name.
@@ -759,12 +759,12 @@ sheet in the README on the branch currently checked out.
 
 ### 7.1.1 Initial setup
 
-[Gitlab instance]: https://gitlab.dev.explore.data.humancellatlas.org/
+[Gitlab instance]: https://gitlab.dev.singlecell.gi.ucsc.edu/
 
 _Note: You can skip this step if you've deployed or promoted with Gitlab at
 least once already._
 
-[SSH keys]: https://gitlab.dev.explore.data.humancellatlas.org/profile/keys
+[SSH keys]: https://gitlab.dev.singlecell.gi.ucsc.edu/profile/keys
 
 1. For promotion, we recommend keeping a separate clone of Azul that is never in
    a dirty state. To create this if it doesn't yet exist run
@@ -788,7 +788,7 @@ least once already._
 4. Now that your SSH key is set up, you will need to add Gitlab as a remote. Run
 
    ```
-   git remote add gitlab.dev git@ssh.gitlab.dev.explore.data.humancellatlas.org:azul/azul.git
+   git remote add gitlab.dev git@ssh.gitlab.dev.singlecell.gi.ucsc.edu:ucsc/azul.git
    ```
 
    Run
@@ -928,7 +928,7 @@ are ready to actually deploy.
    ```
 
    The build should start immediately. You can monitor its progress from the
-   [Gitlab Pipelines page](https://gitlab.dev.explore.data.humancellatlas.org/azul/azul/pipelines).
+   [Gitlab Pipelines page](https://gitlab.gitlab.dev.singlecell.gi.ucsc.edu/ucsc/azul/pipelines).
    
    If reindexing and promoting to staging or production, send a second 
    warning about reindexing to the #data-wrangling channel at this point.
@@ -944,37 +944,37 @@ are ready to actually deploy.
    * For the `develop` branch and the corresponding `dev` deployment use
 
      ```
-     http https://indexer.dev.explore.data.humancellatlas.org/version
-     http https://service.dev.explore.data.humancellatlas.org/version
-     http https://indexer.dev.explore.data.humancellatlas.org/health
-     http https://service.dev.explore.data.humancellatlas.org/health
+     http https://indexer.dev.singlecell.gi.ucsc.edu/version
+     http https://service.dev.singlecell.gi.ucsc.edu/version
+     http https://indexer.dev.singlecell.gi.ucsc.edu/health
+     http https://service.dev.singlecell.gi.ucsc.edu/health
      ```
 
    * For the `integration` branch/deployment use
 
      ```
-     http https://indexer.integration.explore.data.humancellatlas.org/version
-     http https://service.integration.explore.data.humancellatlas.org/version
-     http https://indexer.integration.explore.data.humancellatlas.org/health
-     http https://service.integration.explore.data.humancellatlas.org/health
+     http https://indexer.integration.singlecell.gi.ucsc.edu/version
+     http https://service.integration.singlecell.gi.ucsc.edu/version
+     http https://indexer.integration.singlecell.gi.ucsc.edu/health
+     http https://service.integration.singlecell.gi.ucsc.edu/health
      ```
 
    * For the `staging` branch/deployment use
 
      ```
-     http https://indexer.staging.explore.data.humancellatlas.org/version
-     http https://service.staging.explore.data.humancellatlas.org/version
-     http https://indexer.staging.explore.data.humancellatlas.org/health
-     http https://service.staging.explore.data.humancellatlas.org/health
+     http https://indexer.staging.singlecell.gi.ucsc.edu/version
+     http https://service.staging.singlecell.gi.ucsc.edu/version
+     http https://indexer.staging.singlecell.gi.ucsc.edu/health
+     http https://service.staging.singlecell.gi.ucsc.edu/health
      ```
 
    * For the `prod` branch/deployment use
 
      ```
-     http https://indexer.explore.data.humancellatlas.org/version
-     http https://service.explore.data.humancellatlas.org/version
-     http https://indexer.explore.data.humancellatlas.org/health
-     http https://service.explore.data.humancellatlas.org/health
+     http https://indexer.singlecell.gi.ucsc.edu/version
+     http https://service.singlecell.gi.ucsc.edu/version
+     http https://indexer.singlecell.gi.ucsc.edu/health
+     http https://service.singlecell.gi.ucsc.edu/health
      ```
 
 5. Assuming everything is successful, run
@@ -1150,7 +1150,7 @@ running it is straight-forward with your development environment set up.
    If you want to test against a different stage use the `--host` option:
 
    ```
-   locust -f scripts/locust/service.py --host https://service.dev.explore.data.humancellatlas.org
+   locust -f scripts/locust/service.py --host https://service.dev.singlecell.gi.ucsc.edu
    ```
 
 3. Navigate to `http://localhost:8090` in your browser to start a test run.
@@ -1430,7 +1430,7 @@ Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
 
 ## 12.1 OpenAPI development
 
-[Azul Service OpenAPI page]: https://service.dev.explore.data.humancellatlas.org/
+[Azul Service OpenAPI page]: https://service.dev.singlecell.gi.ucsc.edu/
 
 To assist with adding documentation to the [Azul Service OpenAPI page], we use a
 script that validates the specifications.

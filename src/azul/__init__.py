@@ -516,7 +516,10 @@ class Config:
     def test_mode(self) -> bool:
         return self._boolean(os.environ.get('AZUL_TEST_MODE', '0'))
 
-    url_shortener_whitelist = [r'.*humancellatlas\.org']
+    url_shortener_whitelist = [
+        r'([^.]+\.)*humancellatlas\.org',
+        r'([^.]+\.)*singlecell\.gi\.ucsc\.edu'
+    ]
 
     @property
     def es_refresh_interval(self) -> int:

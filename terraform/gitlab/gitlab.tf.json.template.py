@@ -75,12 +75,12 @@ from azul.types import JSON
 #
 # The instance itself does not have a public IP and is only reachable from the internet through the load balancers.
 #
-# The NLB's public IP is bound to ssh.gitlab.{dev,prod}.explore.data.humancellatlas.org
-# The ALB's public IP is bound to gitlab.{dev,prod}.explore.data.humancellatlas.org
-# To log into the instance run `ssh rancher@ssh.gitlab.dev.explore.data.humancellatlas.org -p 2222`. Your SSH key
+# The NLB's public IP is bound to ssh.gitlab.{dev,prod}.singlecell.gi.ucsc.edu
+# The ALB's public IP is bound to gitlab.{dev,prod}.singlecell.gi.ucsc.edu
+# To log into the instance run `ssh rancher@ssh.gitlab.dev.singlecell.gi.ucsc.edu -p 2222`. Your SSH key
 # must be mentioned in public_key or other_public_keys below.
 #
-# The Gitlab web UI is at https://gitlab.{dev,prod}.explore.data.humancellatlas.org/.
+# The Gitlab web UI is at https://gitlab.{dev,prod}.singlecell.gi.ucsc.edu/.
 # It's safe to destroy all resources in this TF config. You can always build them up again. The only golden egg is
 # the EBS volume that's attached to the instance. See below under ebs_volume_name.
 # RancherOS was chosen for the AMI because it has Docker pre installed and supports cloud-init user data.
