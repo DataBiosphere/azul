@@ -404,7 +404,7 @@ export XDG_CONFIG_HOME=${azul_home}/.config
 _preauth () {
 	eval $(
 		python - <<- "EOF"
-			import os
+			from pathlib import Path
 			import botocore.session
 			import botocore.credentials
 
@@ -415,8 +415,11 @@ _preauth () {
 			resolver.providers = [assume_role_provider]
 
 			# Make the provider use the same cache as the AWS CLI
-			cli_cache = os.path.join(os.path.expanduser('~'), '.aws/cli/cache')
-			assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
+			cli_cache = Path('~/.aws/cli/cache').expanduser()
+			if assume_role_provider.cache is None:
+			    # We do this conditionally because envhook.py may have already
+			    # set up the boto cache.
+			    assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
 
 			# Request the credentials. If the CLI has cached credentials, this step
 			# would use those. If not, fresh ones will be requested from STS. If that

@@ -37,6 +37,7 @@ def main(argv):
         raise RuntimeError('Need to be run from within a virtualenv')
     dst = os.path.realpath(__file__)
     try:
+        # noinspection PyUnresolvedReferences
         import sitecustomize
     except ImportError:
         pass
@@ -117,11 +118,14 @@ NV = TypeVar('NV')
 
 def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> MutableMapping[K, Tuple[OV, NV]]:
     """
-    Merge two dictionaries. The resulting dictionary contains an entry for every key in either `old` or `new`. Each
-    entry in the result associates a key to two values: the value from `old` for that key followed by the value from
-    `new` for that key. If the key is absent from either argument, the respective tuple element will be `missing`,
-    which defaults to None. If either `old` or `new` could contain None values, some other value should be passed for
-    `missing` in order to distinguish None values from values for absent entries.
+    Merge two dictionaries. The resulting dictionary contains an entry for every
+    key in either `old` or `new`. Each entry in the result associates a key to
+    two values: the value from `old` for that key followed by the value from
+    `new` for that key. If the key is absent from either argument, the
+    respective tuple element will be `missing`, which defaults to None. If
+    either `old` or `new` could contain None values, some other value should be
+    passed for `missing` in order to distinguish None values from values for
+    absent entries.
 
     >>> zip_dict({1:2}, {1:2})
     {1: (2, 2)}
@@ -175,7 +179,7 @@ class SanitizingFinder(MetaPathFinder):
         self.bad_path = str(Path(__file__).resolve().parent.parent / 'src' / 'azul')
         self.name = Path(__file__).resolve().name
 
-    def find_spec(self, *args, **kwargs):
+    def find_spec(self, *_args, **_kwargs):
         sys_path = sys.path
         while True:
             try:
@@ -200,7 +204,7 @@ def sanitize_sys_path():
     whose name conflicts with that of important built-in or third-party
     packages, `json.py` for example. This project relies on the fully-qualified
     package path of those modules to disambiguate them from the built-in ones
-    but  placing their containing parent directory on `sys.path` defeats that.
+    but placing their containing parent directory on `sys.path` defeats that.
 
     This method attempts to counteract that by removing the directory again.
     """
@@ -210,8 +214,41 @@ def sanitize_sys_path():
     sys.meta_path.insert(0, SanitizingFinder())
 
 
+def share_aws_cli_credential_cache():
+    """
+    By default, boto3 and botocore do not use a cache for the assume-role
+    provider even though the credentials cache mechanism exists in botocore.
+    This means that if assuming a role requires you to enter a MFA code, you
+    will have to enter it every time you instantiate a boto3 or botocore client,
+    even if your previous session would have lasted longer.
+
+    This function connects the assume-role provider with the cache used by the
+    AWS CLI, saving tedious code reentry. It does so only for boto3.
+    """
+    try:
+        import boto3
+        import botocore.credentials
+        import botocore.session
+    except ImportError:
+        _print('Looks like boto3 is not installed. Skipping credential sharing with AWS CLI.')
+    else:
+        # Get the AssumeRole credential provider
+        session = botocore.session.get_session()
+        resolver = session.get_component('credential_provider')
+        assume_role_provider = resolver.get_provider('assume-role')
+
+        # Make the provider use the same cache as the AWS CLI
+        cli_cache = Path('~/.aws/cli/cache').expanduser()
+        assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
+
+        # Calls to boto3.client() and .resource() use the default session and
+        # therefore hit the cached credentials
+        boto3.setup_default_session(botocore_session=session)
+
+
 if __name__ == '__main__':
     main(sys.argv[1:])
 elif __name__ == 'sitecustomize':
     sanitize_sys_path()
     setenv()
+    share_aws_cli_credential_cache()
