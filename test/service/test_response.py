@@ -1372,6 +1372,27 @@ class TestResponse(WebServiceTestCase):
             self.assertEqual(hit_sort_values['asc'], sorted(hit_sort_values['asc']))
             self.assertEqual(hit_sort_values['desc'], sorted(hit_sort_values['desc'], reverse=True))
 
+    def test_multivalued_field_sorting(self):
+        """
+        Test that sorting by a multi-valued field responds with hits that are
+        correctly sorted based on the first value from each multi-valued field, and
+        that each multi-valued field itself is sorted low to high regardless of the search sort
+        """
+        for order, reverse in (('asc', False), ('desc', True)):
+            with self.subTest(order=order, reverse=reverse):
+                url = self.base_url + "/repository/projects"
+                params = {'size': 15, 'filters': json.dumps({}), 'sort': 'laboratory', 'order': order}
+                response = requests.get(url, params=params)
+                response.raise_for_status()
+                response_json = response.json()
+                laboratories = []
+                for hit in response_json['hits']:
+                    laboratory = one(hit['projects'])['laboratory']
+                    self.assertEqual(laboratory, sorted(laboratory))
+                    laboratories.append(laboratory[0])
+                self.assertGreater(len(laboratories), 1)
+                self.assertEqual(laboratories, sorted(laboratories, reverse=reverse))
+
     def test_disease_facet(self):
         """
         Verify the values of the different types of disease facets

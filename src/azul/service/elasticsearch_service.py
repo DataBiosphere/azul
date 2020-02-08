@@ -299,15 +299,15 @@ class ElasticsearchService(AbstractService):
         # Using search_after/search_before pagination
         if 'search_after' in pagination:
             es_search = es_search.extra(search_after=pagination['search_after'])
-            es_search = es_search.sort({_sort: {"order": _order}},
+            es_search = es_search.sort({_sort: {"order": _order, "mode": 'min'}},
                                        {'_uid': {"order": 'desc'}})
         elif 'search_before' in pagination:
             es_search = es_search.extra(search_after=pagination['search_before'])
             rev_order = 'asc' if _order == 'desc' else 'desc'
-            es_search = es_search.sort({_sort: {"order": rev_order}},
+            es_search = es_search.sort({_sort: {"order": rev_order, "mode": 'min'}},
                                        {'_uid': {"order": 'asc'}})
         else:
-            es_search = es_search.sort({_sort: {"order": _order}},
+            es_search = es_search.sort({_sort: {"order": _order, "mode": 'min'}},
                                        {'_uid': {"order": 'desc'}})
 
         # fetch one more than needed to see if there's a "next page".
