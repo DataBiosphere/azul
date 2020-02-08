@@ -365,7 +365,9 @@ class Config:
 
     @property
     def is_main_deployment(self):
-        return self.deployment_stage in self.main_deployments_by_branch.values()
+        current_deployment = self.deployment_stage
+        return any(current_deployment == main_deployment
+                   for account, main_deployment in self.main_deployments_by_branch.values())
 
     @property
     def _git_status(self) -> Mapping[str, str]:
