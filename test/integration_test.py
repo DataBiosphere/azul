@@ -417,8 +417,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
             params['search_after_uid'] = pagination['search_after_uid']
         return entities
 
-    @unittest.skipIf(config.deployment_stage not in ('sandbox', 'nadove'),
-                     'Not polluting portal db since not in sandbox environment')
+    @unittest.skipIf(config.is_main_deployment, 'Test would pollute portal DB')
     def test_concurrent_portal_db_crud(self):
         """
         Use multithreading to simulate multiple users simultaneously modifying
