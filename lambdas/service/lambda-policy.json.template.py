@@ -2,6 +2,8 @@ from azul import config
 from azul.deployment import aws
 from azul.template import emit
 
+direct_access_role = config.dss_direct_access_role(lambda_name='service')
+
 emit({
     "Version": "2012-10-17",
     "Statement": [
@@ -76,7 +78,7 @@ emit({
                 "s3:GetObject",
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.dss_checkout_bucket()}/*",
+                f"arn:aws:s3:::{aws.dss_checkout_bucket(config.dss_endpoint)}/*",
             ]
         },
         # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
@@ -86,7 +88,7 @@ emit({
                 "s3:ListBucket"  # Without this, GetObject and HeadObject yield 403 for missing keys, not 404
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.dss_checkout_bucket()}"
+                f"arn:aws:s3:::{aws.dss_checkout_bucket(config.dss_endpoint)}"
             ]
         },
         {
@@ -157,6 +159,16 @@ emit({
             "Resource": [
                 f"arn:aws:ssm:{aws.region_name}:{aws.account}:parameter/dcp/*"
             ]
-        }
+        },
+        *(
+            [
+                {
+                    "Effect": "Allow",
+                    "Action": "sts:AssumeRole",
+                    "Resource": direct_access_role
+                }
+            ] if direct_access_role is not None else [
+            ]
+        )
     ]
 })

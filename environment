@@ -52,21 +52,21 @@ azul_vars=(
     #
     AZUL_DSS_DIRECT_ACCESS
 
-    # The name of the DSS main bucket. This is used for direct access.
+    # An optional ARN of a role to assume when directly accessing a DSS bucket.
+    # This can be useful when the DSS buckets are not owned by the same AWS
+    # account owning the current Azul deployment. If there is another Azul
+    # deployment in the account owning the DSS bucket, the role assumed by the
+    # other Azul indexer would be an obvious candidate for the current
+    # deployment's indexer to assume for direct access. Presumably that other
+    # indexer has sufficient privileges to directly access the DSS buckets.
     #
-    # If unset, the DSS parameter store will be examined which will fail unless
-    # the DSS is in the same AWS account. If it isn't you can use this variable
-    # to hard-code the bucket name.
+    # The string {lambda_name} will be replaced with the name of the lambda
+    # wishing to gain access. This parameterization can be used to have the
+    # indexer lambda in the native deployment assume the role of the indexer
+    # lambda in the foreign deployment, while the native service lambda assumes
+    # the role of the foreign service lambda.
     #
-    AZUL_DSS_BUCKET
-
-    # The name of the DSS checkout bucket. This is used by the DOS/DRS proxy.
-    #
-    # If unset, the DSS parameter store will be examined which will fail unless
-    # the DSS is in the same AWS account. If it isn't you can use this variable
-    # to hard-code the bucket name.
-    #
-    AZUL_DSS_CHECKOUT_BUCKET
+    AZUL_DSS_DIRECT_ACCESS_ROLE
 
     # The name of the hosted zone in Route 53 in which to create user friendly
     # domain names for various API gateways. This hosted zone will have to be
@@ -314,7 +314,7 @@ fi
 # Set the global defaults. This is the least specific level.
 
 _set AZUL_DEBUG 0
-_set AZUL_DSS_DIRECT_ACCESS 1
+_set AZUL_DSS_DIRECT_ACCESS 0
 _set AZUL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.singlecell.gi.ucsc.edu"
 _set AZUL_DRS_DOMAIN_NAME ""
 _set AZUL_SUBDOMAIN_TEMPLATE "{lambda_name}"
@@ -336,7 +336,7 @@ _set AZUL_ES_TIMEOUT 60  # matches AWS' own timeout on the ELB sitting in front 
 _set AZUL_DSS_WORKERS 8
 _set AZUL_INDEXER_CONCURRENCY 64
 
-_set AZUL_SUBSCRIBE_TO_DSS 1
+_set AZUL_SUBSCRIBE_TO_DSS 0
 _set AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT "azul-ucsc-indexer-$AZUL_DEPLOYMENT_STAGE"
 
 _set AZUL_DISABLE_MULTIPART_MANIFESTS 0

@@ -1,5 +1,9 @@
+from contextlib import contextmanager
 from functools import lru_cache
 import json
+import logging
+import re
+import threading
 from typing import (
     Mapping,
     Optional,
@@ -17,8 +21,16 @@ from azul.decorators import memoized_property
 from azul.template import emit
 from azul.types import JSON
 
+log = logging.getLogger(__name__)
+
 
 class AWS:
+    class _PerThread(threading.local):
+        session: Optional[boto3.session.Session] = None
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._per_thread = self._PerThread()
 
     @memoized_property
     def profile(self):
@@ -152,10 +164,124 @@ class AWS:
         assert cache_key_id == key_id
         return key, key_id
 
+    def dss_main_bucket(self, dss_endpoint: str) -> str:
+        return self._dss_bucket(dss_endpoint, lambda_name='indexer')
+
+    # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+
+    def dss_checkout_bucket(self, dss_endpoint: str) -> str:
+        return self._dss_bucket(dss_endpoint, 'checkout', lambda_name='service')
+
+    @lru_cache()
+    def _dss_bucket(self, dss_endpoint: str, *qualifiers: str, lambda_name: str) -> str:
+        with self.direct_access_credentials(dss_endpoint, lambda_name):
+            stage = config.dss_deployment_stage(dss_endpoint)
+            name = f'/dcp/dss/{stage}/environment'
+            ssm = aws.client('ssm', region_name='us-east-1')  # FIXME: make region configurable
+            dss_parameter = ssm.get_parameter(Name=name)
+        dss_config = json.loads(dss_parameter['Parameter']['Value'])
+        bucket_key = '_'.join(['dss', 's3', *qualifiers, 'bucket']).upper()
+        return dss_config[bucket_key]
+
+    def direct_access_credentials(self, dss_endpoint: str, lambda_name: str):
+        """
+        A context manager that causes the client() method to return boto3
+        clients that use credentials suitable for accessing the DSS bucket
+        directly.
+
+        :param dss_endpoint: The URL of the REST API endpoint of the DSS
+                             instance whose bucket is to be accessed directly
+
+        :param lambda_name: The name of the lambda wishing to access the bucket
+                            directly. If direct access is gained by assuming a
+                            role and if the role name is parameterized with the
+                            lambda name, the specified value will be
+                            interpolated into the role name. See
+                            AZUL_DSS_DIRECT_ACCESS_ROLE for details
+        """
+        if dss_endpoint == config.dss_endpoint:
+            role_arn = config.dss_direct_access_role(lambda_name)
+        else:
+            role_arn = None
+        return self.assumed_role_credentials(role_arn)
+
+    @contextmanager
+    def assumed_role_credentials(self, role_arn: Optional[str]):
+        """
+        A context manager that causes the client() method to return boto3
+        clients that use credentials obtained by assuming the given role as long
+        as that method is invoked in context i.e., the body of the `with`
+        statement.
+
+        This context manager is thread-safe in that it doesn't affect clients
+        obtained by other threads, even when the context manager is active in
+        one thread.
+
+        It can be nested as long as the outer context's role has permission to
+        assume the inner context's role. It is not reentrant in that two nested
+        contexts cannot use the same role, since a role cannot assume itself.
+
+        The given role is assumed using currently active credentials, either the
+        the default ones or those from another assumed_role_credentials context.
+
+        :param role_arn: the ARN of the role to assume. If None, the context
+                         manager does nothing and calls to the .client() method
+                         in context will use the same credentials as calls out
+                         of context
+        """
+        if role_arn is None:
+            # FIXME: make this CM reentrant by taking this branch if the given
+            #  role is already assumed
+            yield
+        else:
+            sts = self.client('sts')
+            identity = sts.get_caller_identity()
+            # If we used the current identity's ARN to derive the session name,
+            # we'd quickly risk exceeding the maximum 64 character limit on the
+            # session name, especially when nesting this context manager.
+            # Instead we use the user ID, something like AKIAIOSFODNN7EXAMPLE),
+            # as the session name and log it along with the ARN. That way we
+            # can at least string things back together forensically.
+            session_name = self.invalid_session_name_re.sub('.', identity['UserId'])
+            log.info('Identity %s with ARN %s is about to assume role %s using session name %s.',
+                     identity['UserId'], identity['Arn'], role_arn, session_name)
+            response = sts.assume_role(RoleArn=role_arn,
+                                       RoleSessionName=session_name)
+            credentials = response['Credentials']
+            new_session = boto3.session.Session(aws_access_key_id=credentials['AccessKeyId'],
+                                                aws_secret_access_key=credentials['SecretAccessKey'],
+                                                aws_session_token=credentials['SessionToken'])
+            old_session = self._per_thread.session
+            self._per_thread.session = new_session
+            try:
+                yield
+            finally:
+                self._per_thread.session = old_session
+
+    invalid_session_name_re = re.compile(r'[^\w+=,.@-]')
+
+    def client(self, *args, **kwargs):
+        """
+        Outside of a context established by `.assumed_role_credentials()` or
+        `.direct_access_credentials()` this is the same as boto3.client. Within
+        such a context, it returns boto3 clients that use different, temporary
+        credentials.
+        """
+        session = self._per_thread.session or boto3
+        return session.client(*args, **kwargs)
+
+    def resource(self, *args, **kwargs):
+        """
+        Outside of a context established by `.assumed_role_credentials()` or
+        `.direct_access_credentials()` this is the same as boto3.resource.
+        Within such a context, it returns boto3 clients that use different,
+        temporary credentials.
+        """
+        session = self._per_thread.session or boto3
+        return session.resource(*args, **kwargs)
+
 
 aws = AWS()
-
-del AWS
 
 
 def _sanitize_tf(tf_config: JSON) -> JSON:

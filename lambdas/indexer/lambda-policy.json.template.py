@@ -2,6 +2,8 @@ from azul import config
 from azul.deployment import aws
 from azul.template import emit
 
+direct_access_role = config.dss_direct_access_role(lambda_name='indexer')
+
 emit({
     "Version": "2012-10-17",
     "Statement": [
@@ -83,7 +85,7 @@ emit({
                 "s3:GetObject",
             ],
             "Resource": [
-                f"arn:aws:s3:::{config.dss_main_bucket()}/*",
+                f"arn:aws:s3:::{aws.dss_main_bucket(config.dss_endpoint)}/*",
             ]
         },
         {
@@ -104,6 +106,16 @@ emit({
             "Resource": [
                 f"arn:aws:ssm:{aws.region_name}:{aws.account}:parameter/dcp/*"
             ]
-        }
+        },
+        *(
+            [
+                {
+                    "Effect": "Allow",
+                    "Action": "sts:AssumeRole",
+                    "Resource": direct_access_role
+                }
+            ] if direct_access_role is not None else [
+            ]
+        )
     ]
 })
