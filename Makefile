@@ -28,7 +28,7 @@ reindex: check_branch
 
 clean:
 	rm -rf .cache .config
-	for d in lambdas terraform; do $(MAKE) -C $$d clean; done
+	for d in lambdas terraform terraform/gitlab; do $(MAKE) -C $$d clean; done
 
 absolute_sources = $(shell echo $(azul_home)/src \
                                 $(azul_home)/scripts \
