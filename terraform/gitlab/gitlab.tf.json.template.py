@@ -265,7 +265,8 @@ def remove_inconsequential_statements(statements: List[JSON]) -> List[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-# FIXME: generalize, this is currently specific to HCA dev account
+# FIXME: Generalize. This is currently specific to HCA dev account:
+#        https://github.com/DataBiosphere/azul/issues/1561
 
 dss_direct_access_policy_statement = {
     "actions": [
