@@ -177,7 +177,8 @@ class AWS:
         with self.direct_access_credentials(dss_endpoint, lambda_name):
             stage = config.dss_deployment_stage(dss_endpoint)
             name = f'/dcp/dss/{stage}/environment'
-            ssm = aws.client('ssm', region_name='us-east-1')  # FIXME: make region configurable
+            # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
+            ssm = aws.client('ssm', region_name='us-east-1')
             dss_parameter = ssm.get_parameter(Name=name)
         dss_config = json.loads(dss_parameter['Parameter']['Value'])
         bucket_key = '_'.join(['dss', 's3', *qualifiers, 'bucket']).upper()

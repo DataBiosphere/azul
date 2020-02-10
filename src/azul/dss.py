@@ -49,7 +49,8 @@ class MiniDSS:
         super().__init__()
         self.bucket = aws.dss_main_bucket(dss_endpoint)
         with aws.direct_access_credentials(dss_endpoint, lambda_name='indexer'):
-            self.s3 = aws.client('s3', region_name='us-east-1', **s3_client_kwargs)  # FIXME: make region configurable)
+            # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
+            self.s3 = aws.client('s3', region_name='us-east-1', **s3_client_kwargs)
 
     def get_bundle(self, uuid: str, version: str, replica: str) -> JSON:
         assert replica == 'aws' and version is not None

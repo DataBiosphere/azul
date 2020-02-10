@@ -1142,7 +1142,8 @@ def _dss_files(uuid, fetch=True):
             bucket = location.netloc.partition('.')[0]
             assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
             with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
-                s3 = aws.client('s3', region_name='us-east-1')  # FIXME: make region configurable
+                # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
+                s3 = aws.client('s3', region_name='us-east-1')
                 params = {
                     'Bucket': bucket,
                     'Key': location.path[1:],
