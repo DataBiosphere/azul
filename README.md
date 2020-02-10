@@ -513,7 +513,7 @@ make delete
 
    ```
    cd terraform
-   make config
+   make init
    terraform destroy $(terraform state list | grep aws_api_gateway_base_path_mapping | sed 's/^/-target /')
    cd ..
    ```
@@ -523,6 +523,9 @@ make delete
    ```
    make -C lambdas delete
    ```
+   
+   If `An error occurred (TooManyRequestsException) when calling the DeleteRestApi` error is encountered,
+   retry this step. 
 
 7. Destroy cloud infrastructure
 
