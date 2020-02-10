@@ -261,8 +261,16 @@ class Config:
         return self._term_from_env('AZUL_DEPLOYMENT_STAGE')
 
     @property
+    def region(self) -> str:
+        return os.environ['AWS_DEFAULT_REGION']
+
+    @property
     def terraform_backend_bucket(self) -> str:
-        return os.environ['AZUL_TERRAFORM_BACKEND_BUCKET']
+        bucket_name = os.environ['AZUL_TERRAFORM_BACKEND_BUCKET']
+        reject('.' in bucket_name,
+               'AZUL_TERRAFORM_BACKEND_BUCKET must not contain period (".") characters',
+               bucket_name)
+        return bucket_name + '.' + self.region
 
     @property
     def enable_monitoring(self) -> bool:

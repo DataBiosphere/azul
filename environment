@@ -121,11 +121,13 @@ azul_vars=(
     # Elasticsearch operation timeout in seconds
     AZUL_ES_TIMEOUT
 
-    # The name of the bucket where TerraForm maintains its state, allowing
-    # multiple developers to collaboratively use TerraForm in a single AWS
-    # account. This bucket is likely going be shared with other projects such as
-    # DSS and might require some coordination with the developers of those
-    # projects.
+    # The prefix of the name of the bucket where Terraform and Chalice maintain
+    # their state, allowing multiple developers to collaboratively use those
+    # frameworks on a single Azul deployment. The full bucket name is the
+    # combination of this value and the AWS region name. The bucket is specific
+    # to an AWS region to ensure that the bucket is in the same region as the
+    # Azul deployment thereby avoiding complications in conjunction with
+    # STS AssumeRole credentials (which are specific to a region).
     AZUL_TERRAFORM_BACKEND_BUCKET
 
     # The number of workers pulling files from DSS. There is one such set of DSS
@@ -341,7 +343,7 @@ _set AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT "azul-ucsc-indexer-$AZUL_DEPLOYMENT_STA
 
 _set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 
-_set AZUL_TERRAFORM_BACKEND_BUCKET "edu-ucsc-gi-singlecell-azul-dev-config"
+_set AZUL_TERRAFORM_BACKEND_BUCKET "edu-ucsc-gi-singlecell-azul-config-dev"
 
 _set AZUL_ENABLE_MONITORING 0
 

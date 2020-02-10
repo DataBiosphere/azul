@@ -348,8 +348,9 @@ deployments do not require this step.
 
 Create an S3 bucket for shared Terraform and Chalice state. That bucket should 
 have versioning enabled and must not be publicly accessible since Terraform 
-state may include secrets. The name of that bucket is configured in the 
-`AZUL_TERRAFORM_BACKEND_BUCKET` environment variable.
+state may include secrets. The name of that bucket is the concatenation of the 
+`AZUL_TERRAFORM_BACKEND_BUCKET` and `AWS_DEFAULT_REGION` environment variables,
+with a period in between.
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple 
 deployments  can share a hosted zone but they don't have to. The name of the 
