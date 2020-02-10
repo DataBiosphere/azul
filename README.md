@@ -347,7 +347,7 @@ per AWS account, before the first Azul deployment in that account. Additional
 deployments do not require this step.
 
 Create an S3 bucket for shared Terraform and Chalice state. That bucket should 
-have versioning enabled abd must not be publicly accessible since Terraform 
+have versioning enabled and must not be publicly accessible since Terraform 
 state may include secrets. The name of that bucket is configured in the 
 `AZUL_TERRAFORM_BACKEND_BUCKET` environment variable.
 
@@ -373,7 +373,8 @@ EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 
 Once you've configured the project and your personal deployment or a shared 
 deployment deployment you intend to create, and once you manually provisioned 
-the global cloud resources, it is time to provision the cloud infrastructure for your deployment. Running
+the shared cloud resources, it is time to provision the cloud infrastructure 
+for your deployment. Running
 
 ```
 make terraform
