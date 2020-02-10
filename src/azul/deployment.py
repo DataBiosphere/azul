@@ -231,7 +231,7 @@ class AWS:
         """
         if role_arn is None:
             # FIXME: make this CM reentrant by taking this branch if the given
-            #  role is already assumed
+            #        role is already assumed
             yield
         else:
             sts = self.client('sts')

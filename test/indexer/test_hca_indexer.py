@@ -574,7 +574,7 @@ class TestHCAIndexer(IndexerTestCase):
                 else:
                     for file in files:
                         # FIXME: need for one() is odd, file_format is a group field
-                        # https://github.com/DataBiosphere/azul/issues/612
+                        #        https://github.com/DataBiosphere/azul/issues/612
                         if entity_type == 'bundles':
                             if file['file_format'] == 'matrix':
                                 entities_with_matrix_files.add(hit['_source']['entity_id'])

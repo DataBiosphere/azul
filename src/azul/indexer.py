@@ -343,13 +343,15 @@ class BaseIndexer(ABC):
 
         In production code, there is an SQS queue between the calls to `contribute()` and `aggregate()`
         """
-        # FIXME: this only works if the bundle version is not being indexed concurrently
-        # The fix could be to optimistically lock on the aggregate version
-        # https://github.com/DataBiosphere/azul/issues/611
+        # FIXME: this only works if the bundle version is not being indexed
+        #        concurrently. The fix could be to optimistically lock on the
+        #        aggregate version (https://github.com/DataBiosphere/azul/issues/611)
         contributions = self.transform(dss_notification, delete=True)
-        # FIXME: these are all modified contributions, not new ones. This also happens when we reindex without
-        # deleting the indices first. The tallies refer to number of updated or added contributions but we treat them
-        # as if they are all new when we estimate the number of contributions per bundle.
+        # FIXME: these are all modified contributions, not new ones. This also
+        #        happens when we reindex without deleting the indices first. The
+        #        tallies refer to number of updated or added contributions but
+        #        we treat them as if they are all new when we estimate the
+        #        number of contributions per bundle.
         # https://github.com/DataBiosphere/azul/issues/610
         tallies = self.contribute(contributions)
         self.aggregate(tallies)
