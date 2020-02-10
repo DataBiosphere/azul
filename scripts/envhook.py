@@ -147,7 +147,7 @@ def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> MutableM
 
 
 def _print(msg):
-    print(msg, file=sys.stderr)
+    print('envhook:', msg, file=sys.stderr)
 
 
 def _run(command) -> str:
@@ -238,7 +238,7 @@ def share_aws_cli_credential_cache():
         assume_role_provider = resolver.get_provider('assume-role')
 
         # Make the provider use the same cache as the AWS CLI
-        cli_cache = Path('~/.aws/cli/cache').expanduser()
+        cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
         assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
 
         # Calls to boto3.client() and .resource() use the default session and
