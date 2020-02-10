@@ -482,36 +482,61 @@ make delete
 
 ## 3.9 Deleting a deployment
 
+
 1. `cd` to the project root, then
+   
    ```
    source environment
    ```
 
-2. Select the deployment to be delete
+2. Select the deployment to deleted
+   
    ```
-   _select test.local
+   _select foo.local
    ```
 
-3. Delete all Azul indices in the selected deployment
-    ```
-    python scripts/reindex.py --delete
-    ```
+3. Delete all Elasticseach indices in the selected deployment
    
+   ```
+   python scripts/reindex.py --delete
+   ```
+
 4. Unsubscribe
+   
    ```
    make unsubscribe
    ```
-   
-5. Destroy cloud infrastructure
+
+5. Delete the API Gateway base path mappings 
+
    ```
-   make -C terraform destroy
+   cd terraform
+   make config
+   terraform destroy $(terraform state list | grep aws_api_gateway_base_path_mapping | sed 's/^/-target /')
+   cd ..
    ```
 
 6. Delete lambdas
+
    ```
    make -C lambdas delete
    ```
+
+7. Destroy cloud infrastructure
+
+   ```
+   make -C terraform destroy
+   ```
    
+   The destruction of `aws_acm_certificate` resources may time out. Simply 
+   repeat this step until it succeeds.
+
+8. From the config bucket (see environment var AZUL_TERRAFORM_BACKEND_BUCKET), 
+   delete all keys relating to your deployment. 
+   
+9. Delete the local Terraform state file at 
+   `deployments/.active/.terraform.{$AWS_PROFILE}/terraform.tfstate`.
+
 
 # 4. Running indexer or service locally
 
