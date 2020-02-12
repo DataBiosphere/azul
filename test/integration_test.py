@@ -181,10 +181,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
         manifest_filter = json.dumps({'project': {'is': [self.test_name]}})
         for format_, validator in [
             (None, self._check_manifest),
-            ('tsv', self._check_manifest),
             ('compact', self._check_manifest),
             ('full', self._check_manifest),
-            ('bdbag', self._check_terra_bdbag),
             ('terra.bdbag', self._check_terra_bdbag)
         ]:
             with self.subTest(format=format_, filter=manifest_filter):

@@ -324,11 +324,11 @@ class ManifestGenerator(metaclass=ABCMeta):
         :return: a ManifestGenerator instance. Note that the protocol used for
                  consuming the generator output is defined in subclasses.
         """
-        if format_ in ('tsv', 'compact'):
+        if format_ == 'compact':
             return CompactManifestGenerator(service, filters)
         elif format_ == 'full':
             return FullManifestGenerator(service, filters)
-        elif format_ in ('terra.bdbag', 'bdbag'):
+        elif format_ == 'terra.bdbag':
             return BDBagManifestGenerator(service, filters)
         else:
             assert False
