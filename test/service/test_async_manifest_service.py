@@ -126,17 +126,17 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
 
     @mock_sts
     @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.fetch_cached_manifest')
+    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
     @mock.patch('uuid.uuid4')
-    def test_manifest_endpoint_start_execution(self, mock_uuid, step_function_helper, fetch_cached_manifest, __init__):
+    def test_manifest_endpoint_start_execution(self, mock_uuid, step_function_helper, get_cached_manifest, __init__):
         """
         Calling start manifest generation without a token should start an
         execution and return a response with Retry-After and Location in the
         headers.
         """
         __init__.return_value = None
-        fetch_cached_manifest.return_value = None
+        get_cached_manifest.return_value = None
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             for fetch in True, False:
@@ -167,15 +167,15 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     step_function_helper.reset_mock()
 
     @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.fetch_cached_manifest')
+    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
-    def test_manifest_endpoint_check_status(self, step_function_helper, fetch_cached_manifest, __init__):
+    def test_manifest_endpoint_check_status(self, step_function_helper, get_cached_manifest, __init__):
         """
         Calling start manifest generation with a token should check the status
         without starting an execution.
         """
         __init__.return_value = None
-        fetch_cached_manifest.return_value = None
+        get_cached_manifest.return_value = None
         params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -186,15 +186,15 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
         step_function_helper.describe_execution.assert_called_once()
 
     @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.fetch_cached_manifest')
+    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
-    def test_manifest_endpoint_execution_not_found(self, step_function_helper, fetch_cached_manifest, __init__):
+    def test_manifest_endpoint_execution_not_found(self, step_function_helper, get_cached_manifest, __init__):
         """
         Manifest status check should raise a BadRequestError (400 status code)
         if execution cannot be found.
         """
         __init__.return_value = None
-        fetch_cached_manifest.return_value = None
+        get_cached_manifest.return_value = None
         params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -238,14 +238,14 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
         self.assertEqual(response.status_code, 500)
 
     @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.fetch_cached_manifest')
+    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_current_request
-    def test_manifest_endpoint_invalid_token(self, _current_request, fetch_cached_manifest, __init__):
+    def test_manifest_endpoint_invalid_token(self, _current_request, get_cached_manifest, __init__):
         """
         Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
         """
         __init__.return_value = None
-        fetch_cached_manifest.return_value = None
+        get_cached_manifest.return_value = None
         params = {'token': 'Invalid base64'}
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 400)

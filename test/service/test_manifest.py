@@ -80,7 +80,7 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     def _get_manifest_url(self, format_, filters):
         service = ManifestService(StorageService())
-        return service.transform_manifest(format_, filters)
+        return service.get_manifest(format_, filters)
 
     @mock_sts
     @mock_s3
