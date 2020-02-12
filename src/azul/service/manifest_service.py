@@ -76,25 +76,25 @@ class ManifestService(ElasticsearchService):
         super().__init__()
         self.storage_service = storage_service
 
-    def transform_manifest(self, format_: str, filters: Filters):
+    def get_manifest(self, format_: str, filters: Filters):
         generator = ManifestGenerator.for_format(format_, self, filters)
-        object_key, presigned_url = self._fetch_cached_manifest(generator, format_, filters)
+        object_key, presigned_url = self._get_cached_manifest(generator, format_, filters)
         if presigned_url is None:
             object_key = f'manifests/{uuid.uuid4()}.{generator.file_name_extension}' if not object_key else object_key
             file_name = self._generate_manifest(generator, object_key)
             presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
         return presigned_url
 
-    def fetch_cached_manifest(self, format_: str, filters: Filters) -> Optional[str]:
+    def get_cached_manifest(self, format_: str, filters: Filters) -> Optional[str]:
         generator = ManifestGenerator.for_format(format_, self, filters)
-        _, presigned_url = self._fetch_cached_manifest(generator, format_, filters)
+        _, presigned_url = self._get_cached_manifest(generator, format_, filters)
         return presigned_url
 
-    def _fetch_cached_manifest(self,
-                               generator: 'ManifestGenerator',
-                               format_: str,
-                               filters: Filters,
-                               ) -> Tuple[Optional[str], Optional[str]]:
+    def _get_cached_manifest(self,
+                             generator: 'ManifestGenerator',
+                             format_: str,
+                             filters: Filters,
+                             ) -> Tuple[Optional[str], Optional[str]]:
         if generator.is_cacheable:
             # Assertion to be removed in https://github.com/DataBiosphere/azul/issues/1476
             assert isinstance(generator, FullManifestGenerator)
