@@ -75,6 +75,26 @@ azul_vars=(
     # each deployment.
     AZUL_DOMAIN_NAME
 
+    # An optional list of roles in other AWS accounts that can assume the IAM
+    # role normally assumed by lambda functions in the active Azul deployment.
+    #
+    # The syntax is <account>[,<role>...][:<account>[,<role>...]...] where
+    # <account> is the numeric AWS account ID and role is a role name with
+    # optional * or ? wildcards for the StringLike operator in IAM conditions.
+    # Whitespace around separators and at the beginning or end of the value
+    # are ignored.
+    #
+    # This parameter has profound security implications: the external role can
+    # do anything an Azul lambda can do. The external account and any principal
+    # with IAM access in that account, not just the specified roles, must be
+    # fully trusted.
+    #
+    # This configuration is typically used to enable an external Azul deployment
+    # to directly access the same DSS buckets the active deployment has direct
+    # access to.
+    #
+    AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS
+
     # The domain name of the HCA DRS endpoint. The service lambda serves
     # requests under both its canonical domain name as well as the domain name
     # given here. It is assumed that the parent domain of the given domain is

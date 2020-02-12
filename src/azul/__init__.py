@@ -4,6 +4,7 @@ import re
 from typing import (
     List,
     Mapping,
+    MutableMapping,
     Optional,
     Tuple,
 )
@@ -164,6 +165,76 @@ class Config:
     @property
     def num_dss_workers(self) -> int:
         return int(os.environ['AZUL_DSS_WORKERS'])
+
+    @property
+    def external_lambda_role_assumptors(self) -> MutableMapping[str, List[str]]:
+        try:
+            accounts = os.environ['AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS']
+        except KeyError:
+            return {}
+        else:
+            return self._parse_principals(accounts)
+
+    def _parse_principals(self, accounts) -> MutableMapping[str, List[str]]:
+        """
+        >>> from azul import config  # Without this import, these doctests fail
+        ...                          # in Pycharm since the fully qualified
+        ...                          # class name of the exception would be
+        ...                          # __init__.RequirementError
+
+        >>> config._parse_principals('123,foo*')
+        {'123': ['foo*']}
+
+        >>> config._parse_principals('123, foo*: 456,bar ,fubaz')
+        {'123': ['foo*'], '456': ['bar', 'fubaz']}
+
+        >>> config._parse_principals('')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('An account ID and at least one role must be specified', '')
+
+        >>> config._parse_principals(' ')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('An account ID and at least one role must be specified', ' ')
+
+        >>> config._parse_principals(':')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('An account ID and at least one role must be specified', '')
+
+        >>> config._parse_principals(',')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('An account ID and at least one role must be specified', ',')
+
+        >>> config._parse_principals(',:')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('An account ID and at least one role must be specified', ',')
+
+        >>> config._parse_principals('123')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('An account ID and at least one role must be specified', '123')
+
+        >>> config._parse_principals('123:')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('An account ID and at least one role must be specified', '123')
+
+        >>> config._parse_principals('123 ,:')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('An account ID and at least one role must be specified', '123 ,')
+        """
+        result = {}
+        for account in accounts.split(':'):
+            account_id, *roles = map(str.strip, account.split(','))
+            require(account_id and roles and all(roles),
+                    'An account ID and at least one role must be specified', account)
+            result[account_id] = roles
+        return result
 
     @property
     def _resource_prefix(self):
