@@ -7,6 +7,7 @@ from collections import (
     defaultdict,
 )
 import logging
+from operator import itemgetter
 from typing import (
     Any,
     Iterable,
@@ -174,18 +175,18 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'project_title': project.project_title,
             'project_description': project.project_description,
             'project_short_name': project.project_short_name,
-            'laboratory': list(laboratories),
-            'institutions': list(institutions),
-            'contact_names': list(contact_names),
+            'laboratory': sorted(laboratories),
+            'institutions': sorted(institutions),
+            'contact_names': sorted(contact_names),
             'contributors': list(map(self._contact, project.contributors)),
             'document_id': str(project.document_id),
-            'publication_titles': list(publication_titles),
+            'publication_titles': sorted(publication_titles),
             'publications': list(map(self._publication, project.publications)),
-            'insdc_project_accessions': list(project.insdc_project_accessions),
-            'geo_series_accessions': list(project.geo_series_accessions),
-            'array_express_accessions': list(project.array_express_accessions),
-            'insdc_study_accessions': list(project.insdc_study_accessions),
-            'supplementary_links': list(project.supplementary_links),
+            'insdc_project_accessions': sorted(project.insdc_project_accessions),
+            'geo_series_accessions': sorted(project.geo_series_accessions),
+            'array_express_accessions': sorted(project.array_express_accessions),
+            'insdc_study_accessions': sorted(project.insdc_study_accessions),
+            'supplementary_links': sorted(project.supplementary_links),
             '_type': 'project'
         }
 
@@ -210,9 +211,9 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             '_source': api.schema_names[type(specimen)],
             'document_id': str(specimen.document_id),
             'biomaterial_id': specimen.biomaterial_id,
-            'disease': list(specimen.diseases),
+            'disease': sorted(specimen.diseases),
             'organ': specimen.organ,
-            'organ_part': list(specimen.organ_parts),
+            'organ_part': sorted(specimen.organ_parts),
             'storage_method': specimen.storage_method,
             'preservation_method': specimen.preservation_method,
             '_type': 'specimen'
@@ -248,9 +249,9 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         return {
             'document_id': str(cell_suspension.document_id),
             'total_estimated_cells': cell_suspension.estimated_cell_count,
-            'selected_cell_type': list(cell_suspension.selected_cell_types),
-            'organ': list(organs),
-            'organ_part': list(organ_parts)
+            'selected_cell_type': sorted(cell_suspension.selected_cell_types),
+            'organ': sorted(organs),
+            'organ_part': sorted(organ_parts)
         }
 
     @classmethod
@@ -290,8 +291,8 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'document_id': str(donor.document_id),
             'biomaterial_id': donor.biomaterial_id,
             'biological_sex': donor.sex,
-            'genus_species': list(donor.genus_species),
-            'diseases': list(donor.diseases),
+            'genus_species': sorted(donor.genus_species),
+            'diseases': sorted(donor.diseases),
             'organism_age': donor.organism_age,
             'organism_age_unit': donor.organism_age_unit,
             **(
@@ -354,7 +355,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'version': file.manifest_entry.version,
             'document_id': str(file.document_id),
             'file_format': file.file_format,
-            'content_description': list(file.content_description),
+            'content_description': sorted(file.content_description),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -821,7 +822,8 @@ class DonorOrganismAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'organism_age_range':
-            return SetOfDictAccumulator(max_size=100)
+            return SetOfDictAccumulator(max_size=100,
+                                        key=itemgetter('lte', 'gte'))
         elif field == 'donor_count':
             return UniqueValueCountAccumulator()
         else:
