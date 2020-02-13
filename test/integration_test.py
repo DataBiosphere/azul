@@ -189,7 +189,16 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 query = {'filters': manifest_filter}
                 if format_ is not None:
                     query['format'] = format_
+                start_request = time.time()
                 response = self._check_endpoint(config.service_endpoint(), '/manifest/files', query)
+                if format_ == 'full':
+                    logger.info('First `full` request took %s to execute.', time.time() - start_request)
+                    start_request = time.time()
+                    self._check_endpoint(config.service_endpoint(), '/manifest/files', query)
+                    logger.info('Second `full` request took %s to execute.', time.time() - start_request)
+                    start_request = time.time()
+                    self._check_endpoint(config.service_endpoint(), '/manifest/files', query)
+                    logger.info('Third `full` request took %s to execute.', time.time() - start_request)
                 validator(response)
 
     def _test_drs(self):

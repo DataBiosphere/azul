@@ -39,7 +39,6 @@ import uuid
 
 from bdbag import bdbag_api
 from boltons.cacheutils import cachedproperty
-from chalice import Response
 from elasticsearch_dsl import Search
 from more_itertools import one
 from werkzeug.http import parse_dict_header
@@ -77,27 +76,43 @@ class ManifestService(ElasticsearchService):
         super().__init__()
         self.storage_service = storage_service
 
-    def transform_manifest(self, format_: str, filters: Filters):
+    def get_manifest(self, format_: str, filters: Filters):
         generator = ManifestGenerator.for_format(format_, self, filters)
-        if generator.is_cacheable:
-            manifest_key = self._derive_manifest_key(filters)
-        else:
-            manifest_key = uuid.uuid4()
-        object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
-        if generator.is_cacheable and self._can_use_cached_manifest(object_key):
-            file_name = self._use_cached_manifest(generator, object_key)
-        else:
+        object_key, presigned_url = self._get_cached_manifest(generator, format_, filters)
+        if presigned_url is None:
+            object_key = f'manifests/{uuid.uuid4()}.{generator.file_name_extension}' if not object_key else object_key
             file_name = self._generate_manifest(generator, object_key)
-        presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
-        headers = {'Content-Type': 'application/json', 'Location': presigned_url}
-        # FIXME: this should go into app.py or a controller
-        return Response(body='', headers=headers, status_code=302)
+            presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
+        return presigned_url
+
+    def get_cached_manifest(self, format_: str, filters: Filters) -> Optional[str]:
+        generator = ManifestGenerator.for_format(format_, self, filters)
+        _, presigned_url = self._get_cached_manifest(generator, format_, filters)
+        return presigned_url
+
+    def _get_cached_manifest(self,
+                             generator: 'ManifestGenerator',
+                             format_: str,
+                             filters: Filters,
+                             ) -> Tuple[Optional[str], Optional[str]]:
+        if generator.is_cacheable:
+            # Assertion to be removed in https://github.com/DataBiosphere/azul/issues/1476
+            assert isinstance(generator, FullManifestGenerator)
+            manifest_key = self._derive_manifest_key(format_, filters, generator.manifest_content_hash)
+            object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
+            if self._can_use_cached_manifest(object_key):
+                file_name = self._use_cached_manifest(generator, object_key)
+                return object_key, self.storage_service.get_presigned_url(object_key, file_name=file_name)
+            else:
+                return object_key, None
+        else:
+            return None, None
 
     file_name_tag = 'azul_file_name'
 
     def _generate_manifest(self, generator: 'ManifestGenerator', object_key: str) -> Optional[str]:
         """
-        Generate the manifest and return the desired content disposiion file
+        Generate the manifest and return the desired content disposition file
         name if necessary.
         """
 
@@ -165,7 +180,7 @@ class ManifestService(ElasticsearchService):
             file_name = None
         return file_name
 
-    def _derive_manifest_key(self, filters: Filters) -> str:
+    def _derive_manifest_key(self, format_: str, filters: Filters, content_hash: int) -> str:
         """
         Return a manifest key deterministically derived from the arguments and
         the current commit hash. The same arguments will always produce the same
@@ -175,7 +190,9 @@ class ManifestService(ElasticsearchService):
         git_commit = config.lambda_git_status['commit']
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
         filter_string = repr(sort_frozen(freeze(filters)))
-        return str(uuid.uuid5(manifest_namespace, git_commit + filter_string))
+        content_hash = str(content_hash)
+        assert not any(',' in param for param in (git_commit, format_, content_hash))
+        return str(uuid.uuid5(manifest_namespace, ','.join((git_commit, format_, content_hash, filter_string))))
 
     _date_diff_margin = 10  # seconds
 
@@ -551,6 +568,31 @@ class FullManifestGenerator(StreamingManifestGenerator):
                 for value in sorted(response.aggregations.fields.value)
             }
         }
+
+    @cachedproperty
+    def manifest_content_hash(self) -> int:
+        es_search = self._create_request()
+        generate_hash_map_script = '''
+                for (bundle in params._source.bundles) {
+                    params._agg.fields += (bundle.uuid + bundle.version).hashCode()
+                }
+            '''
+        generate_hash_reduce_script = '''
+                int result = 0;
+                for (agg in params._aggs) {
+                    result += agg
+                }
+                return result
+            '''
+        es_search.aggs.metric('hash', 'scripted_metric',
+                              init_script='params._agg.fields = 0',
+                              map_script=generate_hash_map_script,
+                              combine_script='return params._agg.fields.hashCode()',
+                              reduce_script=generate_hash_reduce_script)
+        es_search = es_search.extra(size=0)
+        response = es_search.execute()
+        assert len(response.hits) == 0
+        return response.aggregations.hash.value
 
 
 class BDBagManifestGenerator(FileBasedManifestGenerator):

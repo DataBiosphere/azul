@@ -12,7 +12,10 @@ import uuid
 from botocore.exceptions import ClientError
 
 from azul import config
-from azul.service import AbstractService
+from azul.service import (
+    AbstractService,
+    Filters,
+)
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
@@ -50,33 +53,37 @@ class AsyncManifestService(AbstractService):
                                              self_url,
                                              token: Optional[str] = None,
                                              format_: Optional[str] = None,
-                                             filters: Optional[str] = None
+                                             filters: Optional[Filters] = None
                                              ) -> Tuple[int, str]:
         """
-        If token is None, start a manifest generation process and returns its status.
-        Otherwise return the status of the manifest generation process represented by the token.
+        If token is None, start a manifest generation process and returns its
+        status. Otherwise return the status of the manifest generation process
+        represented by the token.
 
-        :raises ValueError: Will raise a ValueError if token is misformatted or invalid
-        :raises StateMachineError: If the state machine fails for some reason.
-        :return: Tuple of time to wait and the URL to try. 0 wait time indicates success
+        :raises ValueError: if token is misformatted or invalid
+
+        :raises StateMachineError: if the state machine execution failed
+
+        :return: Tuple of time to wait and the URL to try. 0 wait time indicates
+                 success, in which case the URL will be a presigned URL to the
+                 actual manifest.
         """
-        filters = self.parse_filters(filters)
-
         if token is None:
             execution_id = str(uuid.uuid4())
             self._start_manifest_generation(format_, filters, execution_id)
             token = {'execution_id': execution_id}
         else:
             token = self.decode_token(token)
-
         request_index = token.get('request_index', 0)
         time_or_location = self._get_manifest_status(token['execution_id'], request_index)
         if isinstance(time_or_location, int):
             request_index += 1
             token['request_index'] = request_index
             return time_or_location, f'{self_url}?token={self.encode_token(token)}'
-        else:
+        elif isinstance(time_or_location, str):
             return 0, time_or_location
+        else:
+            assert False
 
     def _start_manifest_generation(self, format_: str, filters: JSON, execution_id: str) -> None:
         """

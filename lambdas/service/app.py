@@ -910,32 +910,34 @@ def start_manifest_generation_fetch():
 
 def handle_manifest_generation_request():
     """
-    Start a manifest generation job and return a status code, Retry-After, and a retry URL for
-    the view function to handle
+    Start a manifest generation job and return a status code, Retry-After, and
+    a retry URL for the view function to handle.
     """
     query_params = app.current_request.query_params or {}
     validate_params(query_params, filters=str, format=str, token=str)
-    filters = query_params.get('filters')
-    try:
-        format_ = query_params['format']
-    except KeyError:
-        format_ = 'compact'
+    format_ = query_params.get('format', 'compact')
     if format_ not in ('compact', 'terra.bdbag', 'full'):
         raise BadRequestError(f'{format_} is not a valid manifest format.')
-    token = query_params.get('token')
-    retry_url = self_url()
-    manifest_service = AsyncManifestService()
-    try:
-        return manifest_service.start_or_inspect_manifest_generation(retry_url,
-                                                                     token=token,
-                                                                     format_=format_,
-                                                                     filters=filters)
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
-            raise BadRequestError('Invalid token given')
-        raise
-    except ValueError as e:
-        raise BadRequestError(e.args)
+    service = ManifestService(StorageService())
+    filters = service.parse_filters(query_params.get('filters'))
+    presigned_url = service.get_cached_manifest(format_, filters)
+    if presigned_url is None:
+        token = query_params.get('token')
+        retry_url = self_url()
+        async_service = AsyncManifestService()
+        try:
+            return async_service.start_or_inspect_manifest_generation(retry_url,
+                                                                      token=token,
+                                                                      format_=format_,
+                                                                      filters=filters)
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
+                raise BadRequestError('Invalid token given')
+            raise
+        except ValueError as e:
+            raise BadRequestError(e.args)
+    else:
+        return 0, presigned_url
 
 
 # noinspection PyUnusedLocal
@@ -952,8 +954,8 @@ def generate_manifest(event, context):
     :return: The URL to the generated manifest
     """
     service = ManifestService(StorageService())
-    response = service.transform_manifest(event['format'], event['filters'])
-    return {'Location': response.headers['Location']}
+    presigned_url = service.get_manifest(event['format'], event['filters'])
+    return {'Location': presigned_url}
 
 
 @app.route('/dss/files/{uuid}', methods=['GET'], cors=True)
