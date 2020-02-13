@@ -27,6 +27,10 @@ from azul import (
     reject,
     require,
 )
+from azul.collections import (
+    compose_keys,
+    none_safe_tuple_key,
+)
 from azul.project.hca.metadata_generator import MetadataGenerator
 from azul.transformer import (
     Accumulator,
@@ -38,13 +42,13 @@ from azul.transformer import (
     FieldTypes,
     FrequencySetAccumulator,
     GroupingAggregator,
-    SingleValueAccumulator,
     ListAccumulator,
     SetAccumulator,
-    UniqueValueCountAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
+    SingleValueAccumulator,
     SumAccumulator,
+    UniqueValueCountAccumulator,
 )
 from azul.types import JSON
 
@@ -823,7 +827,7 @@ class DonorOrganismAggregator(SimpleAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'organism_age_range':
             return SetOfDictAccumulator(max_size=100,
-                                        key=itemgetter('lte', 'gte'))
+                                        key=compose_keys(none_safe_tuple_key, itemgetter('lte', 'gte')))
         elif field == 'donor_count':
             return UniqueValueCountAccumulator()
         else:
