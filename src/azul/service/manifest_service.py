@@ -80,9 +80,9 @@ class ManifestService(ElasticsearchService):
         generator = ManifestGenerator.for_format(format_, self, filters)
         object_key, presigned_url = self._get_cached_manifest(generator, format_, filters)
         if presigned_url is None:
-            object_key = f'manifests/{uuid.uuid4()}.{generator.file_name_extension}' if not object_key else object_key
-            file_name = self._generate_manifest(generator, object_key)
-            presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
+            raise Exception('Step function to generate manifest triggered, a cached version should not exist.')
+        file_name = self._generate_manifest(generator, object_key)
+        presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
         return presigned_url
 
     def get_cached_manifest(self, format_: str, filters: Filters) -> Optional[str]:
@@ -94,10 +94,8 @@ class ManifestService(ElasticsearchService):
                              generator: 'ManifestGenerator',
                              format_: str,
                              filters: Filters,
-                             ) -> Tuple[Optional[str], Optional[str]]:
+                             ) -> Tuple[str, Optional[str]]:
         if generator.is_cacheable:
-            # Assertion to be removed in https://github.com/DataBiosphere/azul/issues/1476
-            assert isinstance(generator, FullManifestGenerator)
             manifest_key = self._derive_manifest_key(format_, filters, generator.manifest_content_hash)
             object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
             if self._can_use_cached_manifest(object_key):
@@ -106,7 +104,7 @@ class ManifestService(ElasticsearchService):
             else:
                 return object_key, None
         else:
-            return None, None
+            raise Exception('ManifestGenerator must be cacheable.')
 
     file_name_tag = 'azul_file_name'
 
@@ -419,6 +417,31 @@ class ManifestGenerator(metaclass=ABCMeta):
         dss_url = config.dss_endpoint + '/' + path
         return dss_url
 
+    @cachedproperty
+    def manifest_content_hash(self) -> int:
+        es_search = self._create_request()
+        generate_hash_map_script = '''
+                   for (bundle in params._source.bundles) {
+                       params._agg.fields += (bundle.uuid + bundle.version).hashCode()
+                   }
+                   '''
+        generate_hash_reduce_script = '''
+                   int result = 0;
+                   for (agg in params._aggs) {
+                       result += agg
+                   }
+                   return result
+                   '''
+        es_search.aggs.metric('hash', 'scripted_metric',
+                              init_script='params._agg.fields = 0',
+                              map_script=generate_hash_map_script,
+                              combine_script='return params._agg.fields.hashCode()',
+                              reduce_script=generate_hash_reduce_script)
+        es_search = es_search.extra(size=0)
+        response = es_search.execute()
+        assert len(response.hits) == 0
+        return response.aggregations.hash.value
+
 
 class StreamingManifestGenerator(ManifestGenerator):
     """
@@ -452,6 +475,10 @@ class FileBasedManifestGenerator(ManifestGenerator):
 
 
 class CompactManifestGenerator(StreamingManifestGenerator):
+
+    @property
+    def is_cacheable(self) -> bool:
+        return True
 
     @property
     def content_type(self) -> str:
@@ -569,33 +596,12 @@ class FullManifestGenerator(StreamingManifestGenerator):
             }
         }
 
-    @cachedproperty
-    def manifest_content_hash(self) -> int:
-        es_search = self._create_request()
-        generate_hash_map_script = '''
-                for (bundle in params._source.bundles) {
-                    params._agg.fields += (bundle.uuid + bundle.version).hashCode()
-                }
-            '''
-        generate_hash_reduce_script = '''
-                int result = 0;
-                for (agg in params._aggs) {
-                    result += agg
-                }
-                return result
-            '''
-        es_search.aggs.metric('hash', 'scripted_metric',
-                              init_script='params._agg.fields = 0',
-                              map_script=generate_hash_map_script,
-                              combine_script='return params._agg.fields.hashCode()',
-                              reduce_script=generate_hash_reduce_script)
-        es_search = es_search.extra(size=0)
-        response = es_search.execute()
-        assert len(response.hits) == 0
-        return response.aggregations.hash.value
-
 
 class BDBagManifestGenerator(FileBasedManifestGenerator):
+
+    @property
+    def is_cacheable(self) -> bool:
+        return True
 
     @property
     def file_name_extension(self) -> str:
