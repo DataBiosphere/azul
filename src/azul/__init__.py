@@ -89,7 +89,7 @@ class Config:
         """
         Number of days before a manifest will be deleted from the storage bucket
         """
-        return 1
+        return 7
 
     @property
     def manifest_expiration_margin(self) -> float:
