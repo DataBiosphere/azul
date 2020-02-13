@@ -4,24 +4,22 @@ from abc import (
     abstractmethod,
 )
 from collections import (
-    defaultdict,
     Counter,
+    defaultdict,
 )
 import logging
 import sys
-
-from more_itertools import one
 from typing import (
     Any,
+    ClassVar,
     Iterable,
     List,
     Mapping,
     MutableMapping,
     NamedTuple,
     Optional,
-    Tuple,
-    ClassVar,
     Sequence,
+    Tuple,
     Union,
 )
 
@@ -29,18 +27,19 @@ from dataclasses import (
     dataclass,
     fields,
 )
-
 from humancellatlas.data.metadata import api
+from more_itertools import one
 
 from azul import config
+from azul.collections import none_safe_key
 from azul.json_freeze import (
     freeze,
     thaw,
 )
 from azul.types import (
-    JSON,
     AnyJSON,
     AnyMutableJSON,
+    JSON,
 )
 
 MIN_INT = -sys.maxsize - 1
@@ -425,15 +424,27 @@ class SumAccumulator(Accumulator):
 
 class SetAccumulator(Accumulator):
     """
-    Accumulates values into a set, discarding duplicates and,
-    optionally, values that would grow the set past the maximum size.
+    Accumulates values into a set, discarding duplicates and, optionally, values
+    that would grow the set past the maximum size. The accumulated value is
+    returned as a sorted list. The maximum size constraint does not take the
+    ordering into account. This accumulator does not return a list of the N
+    smallest values, it returns a sorted list of the first N distinct values.
     """
 
     def __init__(self, max_size=None, key=None) -> None:
+        """
+        :param max_size: the maximum number of elemens to retain
+
+        :param key: The key to be used for sorting the accumulated set of
+                    values. If this value is None, a default None-safe key will
+                    be used. With that default key, if any None values were
+                    placed in the accumulator, the first element, and only the
+                    first element of the returned list will be None.
+        """
         super().__init__()
         self.value = set()
         self.max_size = max_size
-        self.key = key
+        self.key = none_safe_key if key is None else key
 
     def accumulate(self, value) -> bool:
         """
