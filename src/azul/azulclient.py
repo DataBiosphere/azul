@@ -47,13 +47,11 @@ class AzulClient(object):
                  indexer_url: str = config.indexer_endpoint(),
                  dss_url: str = config.dss_endpoint,
                  prefix: str = config.dss_query_prefix,
-                 num_workers: int = 16,
-                 dryrun: bool = False):
+                 num_workers: int = 16):
         self.num_workers = num_workers
         self.prefix = prefix
         self.dss_url = dss_url
         self.indexer_url = indexer_url
-        self.dryrun = dryrun
 
     @lru_cache()
     def query(self):
@@ -111,8 +109,7 @@ class AzulClient(object):
                 try:
                     logger.info("Sending notification %s to %s -- attempt %i:", notification, indexer_url, i)
                     url = urlparse(indexer_url)
-                    if not self.dryrun:
-                        self.post_bundle(url.geturl(), notification)
+                    self.post_bundle(url.geturl(), notification)
                 except HTTPError as e:
                     if i < 3:
                         logger.warning("Notification %s, attempt %i: retrying after error %s", notification, i, e)
@@ -194,7 +191,6 @@ class AzulClient(object):
             logger.info('Preparing message for partition with prefix %s', prefix)
             return dict(action='reindex',
                         dss_url=self.dss_url,
-                        dryrun=self.dryrun,
                         prefix=prefix)
 
         notify_queue = self.queue(config.notify_queue_name)
@@ -206,8 +202,7 @@ class AzulClient(object):
     @classmethod
     def do_remote_reindex(cls, message):
         self = cls(dss_url=message['dss_url'],
-                   prefix=message['prefix'],
-                   dryrun=message['dryrun'])
+                   prefix=message['prefix'])
         bundle_fqids = self.list_dss_bundles()
         bundle_fqids = cls._filter_obsolete_bundle_versions(bundle_fqids)
         logger.info("After filtering obsolete versions, %i bundles remain in prefix %s",
@@ -217,9 +212,8 @@ class AzulClient(object):
         notify_queue = self.queue(config.notify_queue_name)
         num_messages = 0
         for batch in chunked(messages, 10):
-            if not self.dryrun:
-                notify_queue.send_messages(Entries=[dict(Id=str(i), MessageBody=json.dumps(message))
-                                                    for i, message in enumerate(batch)])
+            notify_queue.send_messages(Entries=[dict(Id=str(i), MessageBody=json.dumps(message))
+                                                for i, message in enumerate(batch)])
             num_messages += len(batch)
         logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, self.prefix)
 
@@ -261,10 +255,7 @@ class AzulClient(object):
         indexer = indexer_cls()
         for index_name in indexer.index_names():
             if es_client.indices.exists(index_name):
-                if self.dryrun:
-                    logger.info("Would delete index '%s'", index_name)
-                else:
-                    es_client.indices.delete(index=index_name)
+                es_client.indices.delete(index=index_name)
 
     def delete_bundle(self, bundle_uuid, bundle_version):
         logger.info('Deleting bundle %s.%s', bundle_uuid, bundle_version)
