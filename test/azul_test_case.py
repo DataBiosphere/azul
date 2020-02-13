@@ -50,10 +50,18 @@ class AlwaysTearDownTestCase(TestCase):
 class AzulTestCase(TestCase):
     get_credentials_botocore = None
     get_credentials_boto3 = None
+    _saved_boto3_default_session = None
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+
+        # Save and then reset the default boto3session. This overrides any
+        # session customizations such as those performed by envhook.py which
+        # interfere with moto patchers, rendering them ineffective.
+        cls._saved_boto3_default_session = boto3.DEFAULT_SESSION
+        boto3.DEFAULT_SESSION = None
+
         cls.get_credentials_botocore = botocore.session.Session.get_credentials
         cls.get_credentials_boto3 = boto3.session.Session.get_credentials
 
@@ -78,6 +86,7 @@ class AzulTestCase(TestCase):
     def tearDownClass(cls) -> None:
         boto3.session.Session.get_credentials = cls.get_credentials_boto3
         botocore.session.Session.get_credentials = cls.get_credentials_botocore
+        boto3.DEFAULT_SESSION = cls._saved_boto3_default_session
         super().tearDownClass()
 
 
