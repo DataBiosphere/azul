@@ -582,7 +582,7 @@ class Config:
 
     @property
     def portal_db_object_key(self) -> str:
-        return f'azul/{self.deployment_stage}/portals/{self.dss_deployment_stage}-db.json'
+        return f'azul/{self.deployment_stage}/portals/{self.dss_deployment_stage(self.dss_endpoint)}-db.json'
 
     @property
     def dynamo_object_version_table_name(self) -> str:
