@@ -26,17 +26,23 @@ def check_branch(branch, stage):
     ...     aws.account = '122796619775'
     ...     check_branch('develop', 'dev')
 
-    >>> check_branch('issues/foo', 'prod')
+    >>> with patch.object(azul.deployment, 'aws') as aws:
+    ...     aws.account = '122796619775'
+    ...     check_branch('issues/foo', 'prod')
     Traceback (most recent call last):
     ...
     RuntimeError: Non-protected branch 'issues/foo' can't be deployed to main deployment 'prod'
 
-    >>> check_branch('hca/staging', 'hannes.local')
+    >>> with patch.object(azul.deployment, 'aws') as aws:
+    ...     aws.account = '122796619775'
+    ...     check_branch('hca/staging', 'hannes.local')
     Traceback (most recent call last):
     ...
     RuntimeError: Protected branch 'hca/staging' should be deployed to 'staging', not 'hannes.local'
 
-    >>> check_branch('hca/staging', 'hca/integration')
+    >>> with patch.object(azul.deployment, 'aws') as aws:
+    ...     aws.account = '122796619775'
+    ...     check_branch('hca/staging', 'hca/integration')
     Traceback (most recent call last):
     ...
     RuntimeError: Protected branch 'hca/staging' should be deployed to 'staging', not 'hca/integration'
