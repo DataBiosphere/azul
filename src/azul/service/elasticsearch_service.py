@@ -434,7 +434,9 @@ class ElasticsearchService(AbstractService):
                 precision_threshold="40000")
 
         self._annotate_aggs_for_translation(es_search)
+        es_search = es_search.extra(size=0)
         es_response = es_search.execute(ignore_cache=True)
+        assert len(es_response.hits) == 0
         self._translate_response_aggs(es_response)
         final_response = SummaryResponse(es_response.to_dict())
         if config.debug == 2 and logger.isEnabledFor(logging.DEBUG):
