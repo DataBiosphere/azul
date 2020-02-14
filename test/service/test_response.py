@@ -1481,7 +1481,7 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
 
     maxDiff = None
 
-    # Mocked db content for the tests
+    # Mocked DB content for the tests
     _portal_integrations_db = [
         {
             "portal_id": "9852dece-443d-42e8-869c-17b9a86d447e",
@@ -1496,9 +1496,7 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                     "integration_id": "977854a0-2eea-4fec-9459-d4807fe79f0c",
                     "integration_type": "get",
                     "entity_type": "project",
-                    "entity_ids": {
-                        "prod": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
-                    }
+                    "entity_ids": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
                 }
             ]
         },
@@ -1509,25 +1507,19 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                     "integration_id": "e8b3ca4f-bcf5-42eb-b58c-de6d7e0fe138",
                     "integration_type": "get",
                     "entity_type": "project",
-                    "entity_ids": {
-                        "prod": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
-                    }
+                    "entity_ids": ["c4077b3c-5c98-4d26-a614-246d12c2e5d7"]
                 },
                 {
                     "integration_id": "dbfe9394-a326-4574-9632-fbadb51a7b1a",
                     "integration_type": "get",
                     "entity_type": "project",
-                    "entity_ids": {
-                        "prod": ["90bd6933-40c0-48d4-8d76-778c103bf545"]
-                    }
+                    "entity_ids": ["90bd6933-40c0-48d4-8d76-778c103bf545"]
                 },
                 {
                     "integration_id": "f13ddf2d-d913-492b-9ea8-2de4b1881c26",
                     "integration_type": "get",
                     "entity_type": "project",
-                    "entity_ids": {
-                        "prod": ["cddab57b-6868-4be4-806f-395ed9dd635a"]
-                    }
+                    "entity_ids": ["cddab57b-6868-4be4-806f-395ed9dd635a"]
                 },
                 {
                     "integration_id": "224b1d42-b939-4d10-8a8f-2b2ac304b813",
@@ -1538,6 +1530,9 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
             ]
         }
     ]
+
+    def _mock_portal_crud(self, operation):
+        operation(self._portal_integrations_db)
 
     def _get_integrations(self, params: dict) -> dict:
         url = self.base_url + '/integrations'
@@ -1553,8 +1548,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
             for integration in portal['integrations']
         ]
 
-    @mock.patch('azul.project.hca.Plugin.portal_integrations_db')
-    def test_integrations(self, portal_integrations_db):
+    @mock.patch('azul.portal_service.PortalService._crud')
+    def test_integrations(self, portal_crud):
         """
         Verify requests specifying `integration_type` and `entity_type` only return integrations matching those types
         """
@@ -1573,8 +1568,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                 ]
             )
         ]
-        portal_integrations_db.return_value = self._portal_integrations_db
-        with mock.patch.object(type(config), 'dss_deployment_stage', return_value='prod'):
+        portal_crud.side_effect = self._mock_portal_crud
+        with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
             for integration_type, entity_type, expected_integration_ids in test_cases:
                 params = dict(integration_type=integration_type, entity_type=entity_type)
                 with self.subTest(**params):
@@ -1586,8 +1581,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                                         for portal in response_json
                                         for integration in portal['integrations']))
 
-    @mock.patch('azul.project.hca.Plugin.portal_integrations_db')
-    def test_integrations_by_entity_ids(self, portal_integrations_db):
+    @mock.patch('azul.portal_service.PortalService._crud')
+    def test_integrations_by_entity_ids(self, portal_crud):
         """
         Verify requests specifying `entity_ids` only return integrations matching those entity_ids
         """
@@ -1640,8 +1635,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
             )
         ]
 
-        portal_integrations_db.return_value = self._portal_integrations_db
-        with mock.patch.object(type(config), 'dss_deployment_stage', return_value='prod'):
+        portal_crud.side_effect = self._mock_portal_crud
+        with mock.patch.object(type(config), 'dss_deployment_stage', 'prod'):
             for entity_ids, integration_ids in test_cases:
                 params = dict(integration_type='get', entity_type='project')
                 if entity_ids is not None:

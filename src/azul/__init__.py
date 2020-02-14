@@ -365,7 +365,9 @@ class Config:
 
     @property
     def is_main_deployment(self):
-        return self.deployment_stage in self.main_deployments_by_branch.values()
+        current_deployment = self.deployment_stage
+        return any(current_deployment == main_deployment
+                   for account, main_deployment in self.main_deployments_by_branch.values())
 
     @property
     def _git_status(self) -> Mapping[str, str]:
@@ -573,6 +575,18 @@ class Config:
     @property
     def github_access_token(self) -> str:
         return os.environ['azul_github_access_token']
+
+    @property
+    def portal_db_bucket_name(self) -> str:
+        return self.terraform_backend_bucket
+
+    @property
+    def portal_db_object_key(self) -> str:
+        return f'azul/{self.deployment_stage}/portals/{self.dss_deployment_stage(self.dss_endpoint)}-db.json'
+
+    @property
+    def dynamo_object_version_table_name(self) -> str:
+        return f'azul-{self.deployment_stage}-object-versions'
 
     terms_aggregation_size = 99999
 

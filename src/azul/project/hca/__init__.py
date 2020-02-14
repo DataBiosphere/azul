@@ -269,7 +269,7 @@ class Plugin(azul.plugin.Plugin):
             ]
         )
 
-    def portal_integrations_db(self) -> Sequence[JSON]:
+    def portal_db(self) -> Sequence[JSON]:
         """
         A hardcoded example database for use during development of the integrations API implementation
         """

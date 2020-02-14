@@ -1,3 +1,4 @@
+from concurrent.futures.thread import ThreadPoolExecutor
 import csv
 import gzip
 from io import (
@@ -18,6 +19,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    cast,
 )
 import unittest
 from unittest import mock
@@ -46,17 +48,20 @@ from azul.azulclient import (
 from azul.decorators import memoized_property
 import azul.dss
 from azul.logging import configure_test_logging
+from azul.portal_service import PortalService
 from azul.queues import Queues
 from azul.requests import requests_session_with_retry_after
-from azul.types import JSON
+from azul.types import (
+    JSON,
+)
 from azul_test_case import AlwaysTearDownTestCase
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
-    configure_test_logging(logger)
+    configure_test_logging(log)
 
 
 class IntegrationTest(AlwaysTearDownTestCase):
@@ -147,7 +152,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self._test_other_endpoints()
 
     def _test_indexing(self):
-        logger.info('Starting test using test name, %s ...', self.test_name)
+        log.info('Starting test using test name, %s ...', self.test_name)
         azul_client = self.azul_client
         self.test_notifications, self.expected_fqids = self._test_notifications(test_name=self.test_name,
                                                                                 test_uuid=self.test_uuid,
@@ -192,13 +197,13 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 start_request = time.time()
                 response = self._check_endpoint(config.service_endpoint(), '/manifest/files', query)
                 if format_ == 'full':
-                    logger.info('First `full` request took %s to execute.', time.time() - start_request)
+                    log.info('First `full` request took %s to execute.', time.time() - start_request)
                     start_request = time.time()
                     self._check_endpoint(config.service_endpoint(), '/manifest/files', query)
-                    logger.info('Second `full` request took %s to execute.', time.time() - start_request)
+                    log.info('Second `full` request took %s to execute.', time.time() - start_request)
                     start_request = time.time()
                     self._check_endpoint(config.service_endpoint(), '/manifest/files', query)
-                    logger.info('Third `full` request took %s to execute.', time.time() - start_request)
+                    log.info('Third `full` request took %s to execute.', time.time() - start_request)
                 validator(response)
 
     def _test_drs(self):
@@ -239,8 +244,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
         env_var_name = 'AZUL_TEST_MODE'
         env_var_value = '1' if mode else '0'
         environment['Variables'][env_var_name] = env_var_value
-        logger.info('Setting environment variable %s to "%s" on function %s',
-                    env_var_name, env_var_value, function_name)
+        log.info('Setting environment variable %s to "%s" on function %s',
+                 env_var_name, env_var_value, function_name)
         client.update_function_configuration(FunctionName=function_name, Environment=environment)
 
     @memoized_property
@@ -252,7 +257,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         url.path.add(path)
         if query is not None:
             url.query.set({k: str(v) for k, v in query.items()})
-        logger.info('Requesting %s', url)
+        log.info('Requesting %s', url)
         response = self._requests.get(url.url)
         response.raise_for_status()
         return response.content
@@ -271,7 +276,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         text = TextIOWrapper(file)
         reader = csv.DictReader(text, delimiter='\t')
         rows = list(reader)
-        logger.info(f'Manifest contains {len(rows)} rows.')
+        log.info(f'Manifest contains {len(rows)} rows.')
         self.assertGreater(len(rows), 0)
         self.assertIn(uuid_field_name, reader.fieldnames)
         bundle_uuid = rows[0][uuid_field_name]
@@ -287,7 +292,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
             fastq = buf.read()
         lines = fastq.splitlines()
         # Assert first character of first and third line of file (see https://en.wikipedia.org/wiki/FASTQ_format).
-        logger.info(f'Unzipped file {file_name} and verified it to be a FASTQ file.')
+        log.info(f'Unzipped file {file_name} and verified it to be a FASTQ file.')
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
@@ -315,8 +320,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def _prune_test_bundles(self, bundle_fqids, max_bundles):
         filtered_bundle_fqids = []
         seed = random.randint(0, sys.maxsize)
-        logger.info('Selecting %i out of %i candidate bundle(s) with random seed %i.',
-                    max_bundles, len(bundle_fqids), seed)
+        log.info('Selecting %i out of %i candidate bundle(s) with random seed %i.',
+                 max_bundles, len(bundle_fqids), seed)
         random_ = random.Random(x=seed)
         bundle_fqids = random_.sample(bundle_fqids, len(bundle_fqids))
         for bundle_uuid, bundle_version in bundle_fqids:
@@ -341,13 +346,13 @@ class IntegrationTest(AlwaysTearDownTestCase):
         indexed_fqids = set()
 
         num_bundles = len(self.expected_fqids)
-        logger.info('Starting integration test %s with the prefix %s for the entity type %s. Expected %i bundle(s).',
-                    test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
-        logger.debug('Expected bundles %s ', sorted(self.expected_fqids))
+        log.info('Starting integration test %s with the prefix %s for the entity type %s. Expected %i bundle(s).',
+                 test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
+        log.debug('Expected bundles %s ', sorted(self.expected_fqids))
         queue_names = (config.notify_queue_name, config.document_queue_name)
         Queues.wait_for_queue_level(queue_names, empty=False)
         Queues.wait_for_queue_level(queue_names, timeout=self._queue_empty_timeout(self.num_bundles))
-        logger.info('Checking if bundles are referenced by the service response ...')
+        log.info('Checking if bundles are referenced by the service response ...')
         retries = 0
         deadline = time.time() + service_check_timeout
 
@@ -359,20 +364,20 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 for entity in hit.get('bundles', [])
                 if (entity['bundleUuid'], entity['bundleVersion']) in self.expected_fqids
             )
-            logger.info('Found %i/%i bundles on try #%i. There are %i files with the project name.',
-                        len(indexed_fqids), num_bundles, retries + 1, len(hits))
+            log.info('Found %i/%i bundles on try #%i. There are %i files with the project name.',
+                     len(indexed_fqids), num_bundles, retries + 1, len(hits))
 
             if indexed_fqids == self.expected_fqids:
-                logger.info('Found all bundles.')
+                log.info('Found all bundles.')
                 break
             elif time.time() > deadline:
-                logger.error('Unable to find all the bundles in under %i seconds.', service_check_timeout)
+                log.error('Unable to find all the bundles in under %i seconds.', service_check_timeout)
                 break
             else:
                 time.sleep(delay_between_retries)
                 retries += 1
 
-        logger.info('Actual bundle count is %i.', len(indexed_fqids))
+        log.info('Actual bundle count is %i.', len(indexed_fqids))
         self.assertEqual(indexed_fqids, self.expected_fqids)
         for hit in hits:
             project = one(hit['projects'])
@@ -385,8 +390,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def _project_removed_from_index(self):
         results_empty = [len(self._get_entities_by_project(entity, self.test_name)) == 0
                          for entity in ['files', 'projects', 'samples', 'bundles']]
-        logger.info("Project removed from index files: {}, projects: {}, "
-                    "specimens: {}, bundles: {}".format(*results_empty))
+        log.info("Project removed from index files: {}, projects: {}, "
+                 "specimens: {}, bundles: {}".format(*results_empty))
         return all(results_empty)
 
     def _get_entities_by_project(self, entity_type, project_short_name):
@@ -411,6 +416,55 @@ class IntegrationTest(AlwaysTearDownTestCase):
             params['search_after'] = search_after
             params['search_after_uid'] = pagination['search_after_uid']
         return entities
+
+    @unittest.skipIf(config.is_main_deployment, 'Test would pollute portal DB')
+    def test_concurrent_portal_db_crud(self):
+        """
+        Use multithreading to simulate multiple users simultaneously modifying
+        the portals database.
+        """
+
+        # Currently takes about 50 seconds and creates a 25 kb db file.
+        n_threads = 10
+        n_tasks = n_threads * 10
+        n_ops = 5
+        portal_service = PortalService()
+
+        entry_format = 'task={};op={}'
+
+        def run(thread_count):
+            for op_count in range(n_ops):
+                mock_entry = cast(JSON, {
+                    "portal_id": "foo",
+                    "integrations": [
+                        {
+                            "integration_id": "bar",
+                            "entity_type": "project",
+                            "integration_type": "get",
+                            "entity_ids": ["baz"]
+                        }
+                    ],
+                    "mock-count": entry_format.format(thread_count, op_count)
+                })
+                portal_service._crud(lambda db: list(db) + [mock_entry])
+
+        old_db = portal_service.read()
+
+        with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            futures = [executor.submit(run, i) for i in range(n_tasks)]
+
+        self.assertTrue(all(f.result() is None for f in futures))
+
+        new_db = portal_service.read()
+
+        old_entries = [portal for portal in new_db if 'mock-count' not in portal]
+        self.assertEqual(old_entries, old_db)
+        mock_counts = [portal['mock-count'] for portal in new_db if 'mock-count' in portal]
+        self.assertEqual(len(mock_counts), len(set(mock_counts)))
+        self.assertEqual(set(mock_counts), {entry_format.format(i, j) for i in range(n_tasks) for j in range(n_ops)})
+
+        # Reset to pre-test state.
+        portal_service.overwrite(old_db)
 
 
 class OpenAPIIntegrationTest(unittest.TestCase):
@@ -501,7 +555,7 @@ class DSSIntegrationTest(unittest.TestCase):
                                                                  uuid=bundle_uuid,
                                                                  version=bundle_version,
                                                                  num_workers=config.num_dss_workers)
-            logger.info('Captured log calls: %r', captured_log.mock_calls)
+            log.info('Captured log calls: %r', captured_log.mock_calls)
             self.assertGreater(len(metadata), 0)
             self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))
             for f in manifest:
