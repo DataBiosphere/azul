@@ -83,13 +83,13 @@ openapi_spec = {
     },
     'tags': [
         {
-            'name': 'Health',
-            'description': 'For checking on service health'
+            'name': 'Auxiliary',
+            'description': 'Describes various aspects of the Azul service'
         }
     ],
     'servers': [
         {'url': config.service_endpoint()}
-    ]
+    ],
 }
 
 sort_defaults = {
@@ -189,7 +189,7 @@ health_spec = {
             }
         }
     },
-    'tags': ['Health']
+    'tags': ['Auxiliary']
 }
 
 
@@ -224,7 +224,62 @@ def generate_health_object(_event: chalice.app.CloudWatchEvent):
     controller.generate_cache()
 
 
-@app.route('/version', methods=['GET'], cors=True)
+@app.route('/version', methods=['GET'], cors=True, method_spec={
+    'summary': 'Describe current version of the Azul service',
+    'tags': ['Auxiliary'],
+    'responses': {
+        '200': {
+            'description': 'Version endpoint is reachable.',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'git': {
+                                'type': 'object',
+                                'properties': {
+                                    'commit': {
+                                        'type': 'string'
+                                    },
+                                    'dirty': {
+                                        'type': 'boolean'
+                                    }
+                                }
+                            },
+                            'changes': {
+                                'type': 'array',
+                                'items': {
+                                    'type': 'object',
+                                    'properties': {
+                                        'title': {
+                                            'type': 'string'
+                                        },
+                                        'issues': {
+                                            'type': 'array',
+                                            'items': {
+                                                'type': 'string'
+                                            }
+                                        },
+                                        'upgrade': {
+                                            'type': 'array',
+                                            'items': {
+                                                'type': 'string'
+                                            }
+                                        },
+                                        'notes': {
+                                            'type': 'string'
+                                        }
+                                    },
+                                    'required': ['title', 'issues', 'upgrade']
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+})
 def version():
     from azul.changelog import compact_changes
     return {
