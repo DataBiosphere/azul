@@ -1115,7 +1115,7 @@ def fetch_dss_files(uuid):
 
 
 def _dss_files(uuid, fetch=True):
-    query_params = app.current_request.query_params
+    query_params = app.current_request.query_params or {}
     validate_params(query_params, True, fileName=str, wait=int, requestIndex=int)
     dss_endpoint = config.dss_endpoint
     url = dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
