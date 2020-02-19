@@ -715,7 +715,10 @@ def get_summary():
         raise BadRequestError(msg=e)
 
 
-@app.route('/keywords', methods=['GET'], cors=True)
+@app.route('/keywords', methods=['GET'], cors=True, method_spec={
+    'deprecated': True,
+    'responses': {'200': {'description': 'OK'}}
+})
 def get_search():
     """
     Creates and returns a dictionary with entries that best match the query
