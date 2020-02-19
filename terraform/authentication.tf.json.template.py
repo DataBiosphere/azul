@@ -22,7 +22,7 @@ emit_tf({
                                     config.project_root + "/scripts/provision_credentials.py",
                                     "google-key",
                                     "--build",
-                                    "${google_service_account.indexer[0].email}",
+                                    "${self.email}",
                                 ]))
                             }
                         }, {
@@ -33,7 +33,7 @@ emit_tf({
                                     config.project_root + "/scripts/provision_credentials.py",
                                     "google-key",
                                     "--destroy",
-                                    "${google_service_account.indexer[0].email}",
+                                    "${self.email}",
                                 ]))
                             }
                         }
