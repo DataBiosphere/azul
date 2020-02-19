@@ -59,10 +59,25 @@ def create_policy(lambda_name, role_policy_file):
                 "Principal": {
                     "Service": "lambda.amazonaws.com"
                 }
-            }
+            },
+            *(
+                {
+                    "Effect": "Allow",
+                    "Action": "sts:AssumeRole",
+                    "Principal": {
+                        "AWS": f"arn:aws:iam::{account}:root"
+                    },
+                    # Wildcards are not supported in `Principal`, but they are in `Condition`
+                    "Condition": {
+                        "StringLike": {
+                            "aws:PrincipalArn": [f"arn:aws:iam::{account}:role/{role}" for role in roles]
+                        }
+                    }
+                }
+                for account, roles in config.external_lambda_role_assumptors.items()
+            )
         ]
     }
-
     iam = boto3.client('iam')
 
     try:
