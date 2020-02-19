@@ -360,9 +360,9 @@ class ElasticsearchService(AbstractService):
             else:
                 search_before = [None, None]
         next_ = page_link(search_after=search_after[0],
-                          search_after_uid=search_after[1]) if search_after[0] else None
+                          search_after_uid=search_after[1]) if search_after[1] else None
         previous = page_link(search_before=search_before[0],
-                             search_before_uid=search_before[1]) if search_before[0] else None
+                             search_before_uid=search_before[1]) if search_before[1] else None
         page_field = {
             'count': count,
             'total': es_response['hits']['total'],
