@@ -3,6 +3,7 @@ from abc import (
     abstractmethod,
 )
 from collections import (
+    ChainMap,
     Counter,
     defaultdict,
 )
@@ -402,20 +403,22 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     def _protocol(self, protocol: api.Protocol) -> JSON:
-        protocol_ = {'document_id': protocol.document_id}
-        if isinstance(protocol, api.LibraryPreparationProtocol):
-            # noinspection PyDeprecation
-            protocol_['library_construction_approach'] = protocol.library_construction_approach
-        elif isinstance(protocol, api.SequencingProtocol):
-            protocol_['instrument_manufacturer_model'] = protocol.instrument_manufacturer_model
-            protocol_['paired_end'] = protocol.paired_end
-        elif isinstance(protocol, api.AnalysisProtocol):
-            protocol_['workflow'] = protocol.protocol_id
-        elif isinstance(protocol, api.ImagingProtocol):
-            protocol_['assay_type'] = dict(Counter(target.assay_type for target in protocol.target))
-        else:
-            assert False
-        return protocol_
+        # Note that `protocol` inner entities are constructed with all possible
+        # protocol fields, and not just the fields relating to one specific
+        # protocol. This is required for Elasticsearch searching and sorting.
+        return {
+            'document_id': protocol.document_id,
+            'library_construction_approach': protocol.library_construction_method
+            if isinstance(protocol, api.LibraryPreparationProtocol) else None,
+            'instrument_manufacturer_model': protocol.instrument_manufacturer_model
+            if isinstance(protocol, api.SequencingProtocol) else None,
+            'paired_end': protocol.paired_end
+            if isinstance(protocol, api.SequencingProtocol) else None,
+            'workflow': protocol.protocol_id
+            if isinstance(protocol, api.AnalysisProtocol) else None,
+            'assay_type': dict(Counter(target.assay_type for target in protocol.target))
+            if isinstance(protocol, api.ImagingProtocol) else None,
+        }
 
     @classmethod
     def _sample_types(cls) -> FieldTypes:
@@ -428,7 +431,16 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     def _sample(self, sample: api.Biomaterial) -> JSON:
-        entity_type, sample_ = (
+        # Start construction of a `sample` inner entity by including all fields
+        # possible from any entities that can be a sample. This is done to
+        # have consistency of fields between various sample inner entities
+        # to allow Elasticsearch to search and sort against these entities.
+        sample_ = dict.fromkeys(ChainMap(
+            self._cell_line_types(),
+            self._organoid_types(),
+            self._specimen_types()
+        ).keys())
+        entity_type, entity_dict = (
             'cell_lines', self._cell_line(sample)
         ) if isinstance(sample, api.CellLine) else (
             'organoids', self._organoid(sample)
@@ -437,6 +449,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         ) if isinstance(sample, api.SpecimenFromOrganism) else (
             require(False, sample), None
         )
+        sample_.update(entity_dict)
         sample_['entity_type'] = entity_type
         assert hasattr(sample, 'organ') != hasattr(sample, 'model_organ')
         sample_['effective_organ'] = sample.organ if hasattr(sample, 'organ') else sample.model_organ
@@ -827,7 +840,7 @@ class DonorOrganismAggregator(SimpleAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'organism_age_range':
             return SetOfDictAccumulator(max_size=100,
-                                        key=compose_keys(none_safe_tuple_key, itemgetter('lte', 'gte')))
+                                        key=compose_keys(none_safe_tuple_key(none_last=True), itemgetter('lte', 'gte')))
         elif field == 'donor_count':
             return UniqueValueCountAccumulator()
         else:

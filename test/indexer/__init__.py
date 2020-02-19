@@ -154,7 +154,7 @@ class IndexerTestCase(ElasticsearchTestCase):
                     elif isinstance(data_[0], (type(None), bool, int, float, str)):
                         self.assertEqual(data_,
                                          sorted(data_, key=lambda x: (x is None, x)),
-                                         msg=f'Value at {path} is not sorted')
+                                         msg=f'Value at {path} is not sorted: {data_}')
                         return 1
                     else:
                         assert False, str(type(data_[0]))

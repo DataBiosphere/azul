@@ -251,11 +251,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         protocols = []
         for protocol in entry["contents"]["protocols"]:
             translated_process = {
-                "libraryConstructionApproach": protocol.get("library_construction_approach", []),
-                "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", []),
-                "pairedEnd": protocol.get("paired_end", []),
-                "workflow": protocol.get("workflow", []),
-                "assayType": protocol.get("assay_type", []),
+                "libraryConstructionApproach": protocol.get("library_construction_approach", [None]),
+                "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", [None]),
+                "pairedEnd": protocol.get("paired_end", [None]),
+                "workflow": protocol.get("workflow", [None]),
+                "assayType": protocol.get("assay_type", [None]),
             }
             protocols.append(translated_process)
         return protocols
@@ -266,7 +266,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             translated_project = {
                 "projectTitle": project.get("project_title"),
                 "projectShortname": project["project_short_name"],
-                "laboratory": sorted(set(project.get("laboratory", [])))
+                "laboratory": sorted(set(project.get("laboratory", [None])))
             }
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
@@ -278,11 +278,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 for publication in translated_project['publications']:
                     for key in list(publication.keys()):
                         publication[to_camel_case(key)] = publication.pop(key)
-                translated_project['arrayExpressAccessions'] = project.get('array_express_accessions', [])
-                translated_project['geoSeriesAccessions'] = project.get('geo_series_accessions', [])
-                translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [])
-                translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [])
-                translated_project['supplementaryLinks'] = project.get('supplementary_links', [])
+                translated_project['arrayExpressAccessions'] = project.get('array_express_accessions', [None])
+                translated_project['geoSeriesAccessions'] = project.get('geo_series_accessions', [None])
+                translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [None])
+                translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [None])
+                translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
             projects.append(translated_project)
         return projects
 

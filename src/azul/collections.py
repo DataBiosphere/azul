@@ -1,7 +1,10 @@
 from itertools import chain
 from typing import (
+    Any,
+    Callable,
     Iterable,
     Mapping,
+    Tuple,
 )
 
 
@@ -25,35 +28,49 @@ def dict_merge(dicts: Iterable[Mapping]) -> Mapping:
     return dict(items)
 
 
-def none_safe_key(v):
+def none_safe_key(none_last: bool = False) -> Callable[[Any], Any]:
     """
-    A sort key that handles None values.
+    Returns a sort key that handles None values.
 
     >>> sorted([1, None, 2])
     Traceback (most recent call last):
     ...
     TypeError: '<' not supported between instances of 'NoneType' and 'int'
 
-    >>> sorted([1, None, 2], key=none_safe_key)
+    >>> sorted([1, None, 2], key=none_safe_key())
     [None, 1, 2]
+
+    >>> sorted([1, None, 2], key=none_safe_key(none_last=True))
+    [1, 2, None]
     """
-    return v is not None, v
+
+    def inner_func(v):
+        return (v is None, v) if none_last else (v is not None, v)
+
+    return inner_func
 
 
-def none_safe_tuple_key(t):
+def none_safe_tuple_key(none_last: bool = False) -> Callable[[Tuple[Any]], Any]:
     """
-    A sort key that handles tuples containing None value.
+    Returns a sort key that handles tuples containing None values.
 
     >>> sorted([(2, 'c'), (None, 'a'), (2, None), (1, 'b')])
     Traceback (most recent call last):
     ...
     TypeError: '<' not supported between instances of 'NoneType' and 'int'
 
-    >>> sorted([(2, 'c'), (None, 'a'), (2, None), (1, 'b')], key=none_safe_tuple_key)
+    >>> sorted([(2, 'c'), (None, 'a'), (2, None), (1, 'b')], key=none_safe_tuple_key())
     [(None, 'a'), (1, 'b'), (2, None), (2, 'c')]
+
+    >>> sorted([(2, 'c'), (None, 'a'), (2, None), (1, 'b')], key=none_safe_tuple_key(none_last=True))
+    [(1, 'b'), (2, 'c'), (2, None), (None, 'a')]
     """
-    assert isinstance(t, tuple)
-    return tuple(map(none_safe_key, t))
+
+    def inner_func(t):
+        assert isinstance(t, tuple)
+        return tuple(map(none_safe_key(none_last=none_last), t))
+
+    return inner_func
 
 
 def compose_keys(f, g):
@@ -65,7 +82,7 @@ def compose_keys(f, g):
     >>> v = dict(b=1, a=None)
     >>> key(v)
     (None, 1)
-    >>> composed_key = compose_keys(none_safe_tuple_key, key)
+    >>> composed_key = compose_keys(none_safe_tuple_key(), key)
     >>> composed_key(v)
     ((False, None), (True, 1))
 

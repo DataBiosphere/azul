@@ -45,7 +45,7 @@ class PaginationTestCase(WebServiceTestCase):
         num_hits = len(json_response['hits'])
         if 'search_after' in json_response['pagination']:
             self.assertEqual(json_response['pagination']['search_after'],
-                             json_response['hits'][num_hits - 1]['entryId'],
+                             json.dumps(json_response['hits'][num_hits - 1]['entryId']),
                              "search_after not set to last returned document on first page")
             self.assertIsNotNone(json_response['pagination']['search_after_uid'])
         else:
@@ -63,7 +63,7 @@ class PaginationTestCase(WebServiceTestCase):
         num_hits_second = len(json_response_second['hits'])
         if 'search_before' in json_response_second['pagination']:
             self.assertEqual(json_response_second['pagination']['search_before'],
-                             json_response_second['hits'][0]['entryId'],
+                             json.dumps(json_response_second['hits'][0]['entryId']),
                              "search_before on second page not set to first returned document on second page, "
                              + "order=" + sort_order)
             self.assertIsNotNone(json_response_second['pagination']['search_before_uid'],
@@ -73,7 +73,7 @@ class PaginationTestCase(WebServiceTestCase):
 
         if 'search_after' in json_response['pagination']:
             self.assertEqual(json_response_second['pagination']['search_after'],
-                             json_response_second['hits'][num_hits_second - 1]['entryId'],
+                             json.dumps(json_response_second['hits'][num_hits_second - 1]['entryId']),
                              "search_after on second page not set to last returned document on second page, "
                              + "order=" + sort_order)
             self.assertIsNotNone(json_response['pagination']['search_after_uid'],

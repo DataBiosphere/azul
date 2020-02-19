@@ -14,6 +14,7 @@ from azul.service.hca_response_v5 import (
     FileSearchResponse,
     KeywordSearchResponse,
 )
+from azul.transformer import Document
 from service import WebServiceTestCase
 
 
@@ -87,7 +88,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "selectedCellType": [],
+                            "selectedCellType": [None],
                             "totalCells": 1
                         }
                     ],
@@ -106,7 +107,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                     "files": [
                         {
-                            "content_description": [],
+                            "content_description": [None],
                             "format": "fastq.gz",
                             "name": "SRR3562915_1.fastq.gz",
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
@@ -126,11 +127,11 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True],
-                            "workflow": [],
-                            "assayType": [],
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
+                            "libraryConstructionApproach": ["Smart-seq2", None],
+                            "pairedEnd": [True, None],
+                            "workflow": [None],
+                            "assayType": [None],
                         }
                     ],
                     "samples": [
@@ -184,7 +185,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "selectedCellType": [],
+                            "selectedCellType": [None],
                             "totalCells": 1
                         }
                     ],
@@ -219,11 +220,11 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True],
-                            "workflow": [],
-                            "assayType": [],
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
+                            "libraryConstructionApproach": ["Smart-seq2", None],
+                            "pairedEnd": [True, None],
+                            "workflow": [None],
+                            "assayType": [None],
                         }
                     ],
                     "samples": [
@@ -298,7 +299,7 @@ class TestResponse(WebServiceTestCase):
                     {
                         "organ": ["pancreas"],
                         "organPart": ["islet of Langerhans"],
-                        "selectedCellType": [],
+                        "selectedCellType": [None],
                         "totalCells": 1
                     }
                 ],
@@ -317,7 +318,7 @@ class TestResponse(WebServiceTestCase):
                 "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                 "files": [
                     {
-                        "content_description": [],
+                        "content_description": [None],
                         "format": "fastq.gz",
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
@@ -338,11 +339,11 @@ class TestResponse(WebServiceTestCase):
                 ],
                 "protocols": [
                     {
-                        "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                        "libraryConstructionApproach": ["Smart-seq2"],
-                        "pairedEnd": [True],
-                        "workflow": [],
-                        "assayType": [],
+                        "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
+                        "libraryConstructionApproach": ["Smart-seq2", None],
+                        "pairedEnd": [True, None],
+                        "workflow": [None],
+                        "assayType": [None],
                     }
                 ],
                 "samples": [
@@ -569,7 +570,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "selectedCellType": [],
+                            "selectedCellType": [None],
                             "totalCells": 1
                         }
                     ],
@@ -597,10 +598,10 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
-                            "arrayExpressAccessions": [],
-                            "geoSeriesAccessions": [],
-                            "insdcProjectAccessions": [],
-                            "insdcStudyAccessions": [],
+                            "arrayExpressAccessions": [None],
+                            "geoSeriesAccessions": [None],
+                            "insdcProjectAccessions": [None],
+                            "insdcStudyAccessions": [None],
                             "contributors": [
                                 {
                                     "contactName": "Martin, Enge",
@@ -673,11 +674,11 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True],
-                            "workflow": [],
-                            "assayType": [],
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
+                            "libraryConstructionApproach": ["Smart-seq2", None],
+                            "pairedEnd": [True, None],
+                            "workflow": [None],
+                            "assayType": [None],
                         }
                     ],
                     "samples": [
@@ -733,7 +734,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
-                            "selectedCellType": [],
+                            "selectedCellType": [None],
                             "totalCells": 1
                         }
                     ],
@@ -761,10 +762,10 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
-                            "arrayExpressAccessions": [],
-                            "geoSeriesAccessions": [],
-                            "insdcProjectAccessions": [],
-                            "insdcStudyAccessions": [],
+                            "arrayExpressAccessions": [None],
+                            "geoSeriesAccessions": [None],
+                            "insdcProjectAccessions": [None],
+                            "insdcStudyAccessions": [None],
                             "contributors": [
                                 {
                                     "contactName": "Matthew,,Green",
@@ -837,11 +838,11 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "pairedEnd": [True],
-                            "workflow": [],
-                            "assayType": [],
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
+                            "libraryConstructionApproach": ["Smart-seq2", None],
+                            "pairedEnd": [True, None],
+                            "workflow": [None],
+                            "assayType": [None],
                         }
                     ],
                     "samples": [
@@ -937,7 +938,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "organ": ["brain"],
                             "organPart": ["amygdala"],
-                            "selectedCellType": [],
+                            "selectedCellType": [None],
                             "totalCells": 10000
                         }
                     ],
@@ -1035,16 +1036,16 @@ class TestResponse(WebServiceTestCase):
                                     "publicationUrl": "https://europepmc.org"
                                 }
                             ],
-                            "supplementaryLinks": [],
+                            "supplementaryLinks": [None],
                         }
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
-                            "libraryConstructionApproach": ["10X v2 sequencing"],
-                            "pairedEnd": [False],
-                            "workflow": ['cellranger_v1.0.2'],
-                            "assayType": [],
+                            "instrumentManufacturerModel": ["Illumina HiSeq 2500", None],
+                            "libraryConstructionApproach": ["10X v2 sequencing", None],
+                            "pairedEnd": [False, None],
+                            "workflow": ['cellranger_v1.0.2', None],
+                            "assayType": [None],
                         }
                     ],
                     "samples": [
@@ -1195,8 +1196,8 @@ class TestResponse(WebServiceTestCase):
 
     def test_translated_facets(self):
         """
-        Test that response facets values are correctly translated back to correct data types
-        and that the translated None value '__null__' is not present
+        Test that response facets values are correctly translated back to the
+        correct data types and that the translated None value is not present.
         """
         url = self.base_url + "/repository/samples"
         params = {'size': 10, 'filters': json.dumps({})}
@@ -1206,7 +1207,7 @@ class TestResponse(WebServiceTestCase):
         facets = response_json['termFacets']
 
         paired_end_terms = {term['term'] for term in facets['pairedEnd']['terms']}
-        self.assertEqual(paired_end_terms, {'true', 'false'})
+        self.assertEqual(paired_end_terms, {None, 'true', 'false'})
 
         preservation_method_terms = {term['term'] for term in facets['preservationMethod']['terms']}
         self.assertEqual(preservation_method_terms, {None})
@@ -1216,7 +1217,7 @@ class TestResponse(WebServiceTestCase):
 
         for facet in facets.values():
             for term in facet['terms']:
-                self.assertNotEqual(term['term'], config.null_keyword)
+                self.assertNotEqual(term['term'], Document.translate_field(None, str))
 
     def test_sample(self):
         """
@@ -1428,6 +1429,48 @@ class TestResponse(WebServiceTestCase):
                 for facet_name, facet_value in facet_data.items():
                     self.assertEqual(facets[facet_name]['terms'], facet_value)
 
+    def test_pagination_search_after_search_before(self):
+        """
+        Test search_after and search_before values when using sorting on a field containing None values
+        """
+        url = self.base_url + "/repository/samples"
+        params = {'size': 3, 'filters': json.dumps({}), 'sort': 'workflow', 'order': 'asc'}  #
+
+        response = requests.get(url + '?' + urllib.parse.urlencode(params))
+        response.raise_for_status()
+        response_json = response.json()
+
+        expected_entry_ids = [
+            '58c60e15-e07c-4875-ac34-f026d6912f1c',
+            'caadf4b5-f5e4-4416-9f04-9c1f902cc601',
+            'b7214641-1ac5-4f60-b795-cb33a7c25434',
+        ]
+        self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
+
+        self.assertEqual(response_json['pagination']['search_after'], '"~null"')
+        self.assertEqual(response_json['pagination']['search_after_uid'], 'doc#b7214641-1ac5-4f60-b795-cb33a7c25434')
+        self.assertIsNone(response_json['pagination']['search_before'])
+        self.assertIsNone(response_json['pagination']['search_before_uid'])
+
+        params['search_after'] = response_json['pagination']['search_after']
+        params['search_after_uid'] = response_json['pagination']['search_after_uid']
+
+        response = requests.get(url + '?' + urllib.parse.urlencode(params))
+        response.raise_for_status()
+        response_json = response.json()
+
+        expected_entry_ids = [
+            'a21dc760-a500-4236-bcff-da34a0e873d2',
+            '79682426-b813-4f69-8c9c-2764ffac5dc1',
+            '73f10dad-afc5-4d1d-a71c-4a8b6fff9172',
+        ]
+        self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
+
+        self.assertEqual(response_json['pagination']['search_after'], '"~null"')
+        self.assertEqual(response_json['pagination']['search_after_uid'], 'doc#73f10dad-afc5-4d1d-a71c-4a8b6fff9172')
+        self.assertEqual(response_json['pagination']['search_before'], '"~null"')
+        self.assertEqual(response_json['pagination']['search_before_uid'], 'doc#a21dc760-a500-4236-bcff-da34a0e873d2')
+
 
 class TestResponseSummary(WebServiceTestCase):
     maxDiff = None
@@ -1453,14 +1496,14 @@ class TestResponseSummary(WebServiceTestCase):
 
         - bundle=aaa96233…, fileCount=2, donorCount=1, totalCellCount=1.0, organType=pancreas, labCount=1
         - bundle=dcccb551…, fileCount=19, donorCount=4, totalCellCount=6210.0, organType=Brain, labCount=1
-        - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain, labCount=0
+        - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain, labCount=(None counts as 1)
         """
         url = self.base_url + "/repository/summary"
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
         self.assertEqual(summary_object['fileCount'], 2 + 19 + 227)
-        self.assertEqual(summary_object['labCount'], 1 + 1 + 0)
+        self.assertEqual(summary_object['labCount'], 1 + 1 + 1)
         self.assertEqual(summary_object['donorCount'], 1 + 4 + 1)
         self.assertEqual(summary_object['totalCellCount'], 1.0 + 6210.0 + 0)
         file_counts_expected = {
@@ -1487,34 +1530,15 @@ class TestResponseSummary(WebServiceTestCase):
         ])
 
     def test_summary_filter_none(self):
-        # This request should match the 94f2ba52 bundle which has no 'paired_end' field and not match the
-        # dcccb551 or aaa96233 bundles which have 'pared_end' set to True
-        url = self.base_url + '/repository/summary?filters={"pairedEnd": {"is": [null]}}'
-        response = requests.get(url)
-        response.raise_for_status()
-        summary_object = response.json()
-        self.assertEqual(summary_object['labCount'], 0)
-        self.assertEqual(summary_object['donorCount'], 1)
-        self.assertEqual(summary_object['specimenCount'], 1)
-        self.assertEqual(summary_object['projectCount'], 1)
-        self.assertEqual(summary_object['totalCellCount'], 0.0)
-        # Mus musculus only
-        self.assertEqual(summary_object['speciesCount'], 1)
-
-        # This request should match bundles 94f2ba52 and dcccb551 but not aaa96233 which has a 'organ_part' value.
-        # Bundle 94f2ba52 has a Specimen with 'organ' but no 'organ_part'
-        # Bundle dcccb551 has Specimens with 'organ_part' however the Organoid with no 'model_organ_part' is the Sample
-        url = self.base_url + '/repository/summary?filters={"organPart": {"is": [null]}}'
-        response = requests.get(url)
-        response.raise_for_status()
-        summary_object = response.json()
-        self.assertEqual(summary_object['labCount'], 0 + 1)
-        self.assertEqual(summary_object['donorCount'], 1 + 4)
-        self.assertEqual(summary_object['specimenCount'], 1 + 4)
-        self.assertEqual(summary_object['projectCount'], 1 + 1)
-        self.assertEqual(summary_object['totalCellCount'], 0 + 6210.0)
-        # Muc muscuclus (94f2ba52) and Homo sapiens (dcccb551)
-        self.assertEqual(summary_object['speciesCount'], 1 + 1)
+        for use_filter, labCount in [(False, 3), (True, 2)]:
+            with self.subTest(use_filter=use_filter, labCount=labCount):
+                url = self.base_url + '/repository/summary'
+                if use_filter:
+                    url += '?filters={"organPart": {"is": [null]}}'
+                response = requests.get(url)
+                response.raise_for_status()
+                summary_object = response.json()
+                self.assertEqual(summary_object['labCount'], labCount)
 
 
 class TestPortalIntegrationResponse(LocalAppTestCase):
