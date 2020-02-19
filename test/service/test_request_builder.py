@@ -167,7 +167,7 @@ class TestRequestBuilder(WebServiceTestCase):
                                             {
                                                 "terms": {
                                                     "contents.protocols.library_construction_approach.keyword": [
-                                                        "__null__"
+                                                        "~null"
                                                     ]
                                                 }
                                             },
@@ -215,7 +215,7 @@ class TestRequestBuilder(WebServiceTestCase):
                                         "should": [
                                             {
                                                 "terms": {
-                                                    "contents.projects.laboratory.keyword": ["__null__"]
+                                                    "contents.projects.laboratory.keyword": ["~null"]
                                                 }
                                             },
                                             {
@@ -250,7 +250,7 @@ class TestRequestBuilder(WebServiceTestCase):
                                         "should": [
                                             {
                                                 "terms": {
-                                                    "contents.specimens.disease.keyword": ["__null__", "Dragon Pox"]
+                                                    "contents.specimens.disease.keyword": ["~null", "Dragon Pox"]
                                                 }
                                             },
                                             {
