@@ -22,5 +22,3 @@ _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "url.data.humancellatlas.org"
 _set azul_grafana_endpoint "https://metrics.data.humancellatlas.org"
 
 _set AZUL_ENABLE_MONITORING 1
-
-AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS=122796619775,administrator,developer,azul-gitlab,azul-service-*,azul-indexer-*
