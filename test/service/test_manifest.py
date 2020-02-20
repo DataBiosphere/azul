@@ -84,7 +84,9 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    def test_manifest(self):
+    @mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest')
+    def test_manifest(self, can_use_cached_manifest):
+        can_use_cached_manifest.return_value = False
         expected = [
             ('bundle_uuid', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
             ('bundle_version', '2018-09-14T133314.453337Z', '2018-09-14T133314.453337Z'),
@@ -198,7 +200,9 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    def test_manifest_zarr(self):
+    @mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest')
+    def test_manifest_zarr(self, can_use_cached_manifest):
+        can_use_cached_manifest.return_value = False
         """
         Test that when downloading a manifest with a zarr, all of the files are added into the manifest even
         if they are not listed in the service response.
@@ -229,11 +233,13 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    def test_terra_bdbag_manifest(self):
+    @mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest')
+    def test_terra_bdbag_manifest(self, can_use_cached_manifest):
         """
         moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit
         the server (see GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
         """
+        can_use_cached_manifest.return_value = False
         self.maxDiff = None
         self._index_canned_bundle(("587d74b4-1075-4bbf-b96a-4d1ede0481b2", "2018-09-14T133314.453337Z"))
         domain = config.drs_domain or config.api_lambda_domain('service')
@@ -503,7 +509,9 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    def test_full_metadata(self):
+    @mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest')
+    def test_full_metadata(self, can_use_cached_manifest):
+        can_use_cached_manifest.return_value = False
         self.maxDiff = None
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
@@ -943,7 +951,9 @@ class TestManifestEndpoints(WebServiceTestCase):
 
     @mock_sts
     @mock_s3
-    def test_full_metadata_missing_fields(self):
+    @mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest')
+    def test_full_metadata_missing_fields(self, can_use_cached_manifest):
+        can_use_cached_manifest.return_value = False
         self.maxDiff = None
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server

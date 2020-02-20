@@ -79,8 +79,6 @@ class ManifestService(ElasticsearchService):
     def get_manifest(self, format_: str, filters: Filters):
         generator = ManifestGenerator.for_format(format_, self, filters)
         object_key, presigned_url = self._get_cached_manifest(generator, format_, filters)
-        if presigned_url is None:
-            raise Exception('Step function to generate manifest triggered, a cached version should not exist.')
         file_name = self._generate_manifest(generator, object_key)
         presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
         return presigned_url
