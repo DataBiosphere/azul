@@ -156,8 +156,8 @@ class TestHCAIndexer(IndexerTestCase):
         with self.assertLogs(logger=azul.indexer.log, level='WARNING') as logs:
             # Writing again simulates a duplicate notification being processed
             tallies.update(self._write_contributions(self.new_bundle, manifest, metadata))
-        message_re = re.compile(r'^WARNING:azul\.indexer:Writing document .* requires update\. Possible causes include '
-                                r'duplicate notifications or reindexing without clearing the index\.$')
+        message_re = re.compile(r'^WARNING:azul\.indexer:Writing document .* requires overwrite\. Possible causes '
+                                r'include duplicate notifications or reindexing without clearing the index\.$')
         for message in logs.output:
             self.assertRegex(message, message_re)
         # Tallies should not be inflated despite indexing document twice
