@@ -72,8 +72,8 @@ class TestPortalService(VersionTableTestCase):
         super().setUp()
 
         self.s3_client = boto3.client('s3')
-        self.s3_client.create_bucket(Bucket=config.portal_db_bucket_name)
-        self.s3_client.put_bucket_versioning(Bucket=config.portal_db_bucket_name,
+        self.s3_client.create_bucket(Bucket=config.portal_db_bucket)
+        self.s3_client.put_bucket_versioning(Bucket=config.portal_db_bucket,
                                              VersioningConfiguration={
                                                  'Status': 'Enabled',
                                                  'MFADelete': 'Disabled'
@@ -87,17 +87,17 @@ class TestPortalService(VersionTableTestCase):
         # To ensure that the bucket is cleared between tests, all versions
         # must be deleted. The most convenient way to do this is just to
         # disabling versioning and perform a single delete.
-        self.s3_client.put_bucket_versioning(Bucket=config.portal_db_bucket_name,
+        self.s3_client.put_bucket_versioning(Bucket=config.portal_db_bucket,
                                              VersioningConfiguration={
                                                  'Status': 'Disabled',
                                                  'MFADelete': 'Disabled'
                                              })
-        self.s3_client.delete_object(Bucket=config.portal_db_bucket_name,
+        self.s3_client.delete_object(Bucket=config.portal_db_bucket,
                                      Key=config.portal_db_object_key)
-        self.s3_client.delete_bucket(Bucket=config.portal_db_bucket_name)
+        self.s3_client.delete_bucket(Bucket=config.portal_db_bucket)
 
     def download_db(self) -> JSONs:
-        response = self.s3_client.get_object(Bucket=config.portal_db_bucket_name,
+        response = self.s3_client.get_object(Bucket=config.portal_db_bucket,
                                              Key=config.portal_db_object_key)
         return json.loads(response['Body'].read().decode())
 

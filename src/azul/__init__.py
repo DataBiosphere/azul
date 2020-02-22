@@ -337,9 +337,13 @@ class Config:
 
     @property
     def terraform_backend_bucket(self) -> str:
-        bucket_name = os.environ['AZUL_TERRAFORM_BACKEND_BUCKET']
+        return self.versioned_bucket
+
+    @property
+    def versioned_bucket(self):
+        bucket_name = os.environ['AZUL_VERSIONED_BUCKET']
         reject('.' in bucket_name,
-               'AZUL_TERRAFORM_BACKEND_BUCKET must not contain period (".") characters',
+               'AZUL_VERSIONED_BUCKET must not contain period (".") characters',
                bucket_name)
         return bucket_name + '.' + self.region
 
@@ -648,8 +652,8 @@ class Config:
         return os.environ['azul_github_access_token']
 
     @property
-    def portal_db_bucket_name(self) -> str:
-        return self.terraform_backend_bucket
+    def portal_db_bucket(self) -> str:
+        return self.versioned_bucket
 
     @property
     def portal_db_object_key(self) -> str:
