@@ -349,7 +349,7 @@ deployments do not require this step.
 Create an S3 bucket for shared Terraform and Chalice state. That bucket should 
 have versioning enabled and must not be publicly accessible since Terraform 
 state may include secrets. The name of that bucket is the concatenation of the 
-`AZUL_TERRAFORM_BACKEND_BUCKET` and `AWS_DEFAULT_REGION` environment variables,
+`AZUL_VERSIONED_BUCKET` and `AWS_DEFAULT_REGION` environment variables,
 with a period in between.
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple 
@@ -536,7 +536,7 @@ make delete
    The destruction of `aws_acm_certificate` resources may time out. Simply 
    repeat this step until it succeeds.
 
-8. From the config bucket (see environment var AZUL_TERRAFORM_BACKEND_BUCKET), 
+8. From the config bucket (see environment var AZUL_VERSIONED_BUCKET), 
    delete all keys relating to your deployment. 
    
 9. Delete the local Terraform state file at 
@@ -580,7 +580,7 @@ Error inspecting states in the "s3" backend:
 
 … but the bucket does exist. Make sure
 `deployments/.active/.terraform/terraform.tfstate` refers to the correct bucket,
-the one configured in `AZUL_TERRAFORM_BACKEND_BUCKET`. If it doesn't, you may
+the one configured in `AZUL_VERSIONED_BUCKET`. If it doesn't, you may
 have to remove that file or modify it to fix the bucket name.
 ##
 If you get the following exception in the indexer lambda:

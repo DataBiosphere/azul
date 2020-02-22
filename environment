@@ -148,7 +148,7 @@ azul_vars=(
     # to an AWS region to ensure that the bucket is in the same region as the
     # Azul deployment thereby avoiding complications in conjunction with
     # STS AssumeRole credentials (which are specific to a region).
-    AZUL_TERRAFORM_BACKEND_BUCKET
+    AZUL_VERSIONED_BUCKET
 
     # The number of workers pulling files from DSS. There is one such set of DSS
     # workers per index worker!
@@ -363,7 +363,7 @@ _set AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT "azul-ucsc-indexer-$AZUL_DEPLOYMENT_STA
 
 _set AZUL_DISABLE_MULTIPART_MANIFESTS 0
 
-_set AZUL_TERRAFORM_BACKEND_BUCKET "edu-ucsc-gi-singlecell-azul-config-dev"
+_set AZUL_VERSIONED_BUCKET "edu-ucsc-gi-singlecell-azul-config-dev"
 
 _set AZUL_ENABLE_MONITORING 0
 
