@@ -1,5 +1,8 @@
 from contextlib import contextmanager
-from unittest import mock
+from unittest import (
+    mock,
+    skip,
+)
 from unittest.mock import patch
 
 import requests
@@ -21,7 +24,8 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
+@skip('https://github.com/DataBiosphere/azul/issues/1513')
+class TestCartItemManager(WebServiceTestCase, DynamoTestCase):  # no coverage
     number_of_documents = 1500
 
     @classmethod

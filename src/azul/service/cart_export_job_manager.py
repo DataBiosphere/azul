@@ -18,7 +18,7 @@ from azul import config
 logger = logging.getLogger(__name__)
 
 
-class CartExportJobManager:
+class CartExportJobManager:  # no coverage
     step_function_helper = StepFunctionHelper()
 
     @staticmethod
