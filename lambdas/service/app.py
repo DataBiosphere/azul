@@ -172,7 +172,27 @@ def swagger_ui():
                     body=openapi_ui_html)
 
 
-@app.route('/openapi', methods=['GET'], cors=True)
+@app.route('/openapi', methods=['GET'], cors=True, method_spec={
+    'summary': 'Return OpenAPI specifications for this service',
+    'description': 'This endpoint returns the [OpenAPI specifications]'
+                   '(https://github.com/OAI/OpenAPI-Specification) for this '
+                   'service. These are the specifications used to generate the '
+                   'page you are visiting now.',
+    'responses': {
+        '200': {
+            'description': '200 response',
+            'content': {
+                'application/json': {
+                    'schema': schema.object(
+                        openapi=str,
+                        **{k: schema.object() for k in ['info', 'tags', 'servers', 'paths', 'components']}
+                    )
+                }
+            }
+        }
+    },
+    'tags': ['Auxiliary']
+})
 def openapi():
     gateway_id = os.environ['api_gateway_id']
     spec = annotated_specs(gateway_id, app, openapi_spec)
