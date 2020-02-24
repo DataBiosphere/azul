@@ -1309,11 +1309,11 @@ def hash_url(url):
     return base64.urlsafe_b64encode(url_hash).decode()
 
 
-def get_user_id():
+def get_user_id():  # no coverage
     return app.current_request.context['authorizer']['sub']
 
 
-def transform_cart_to_response(cart):
+def transform_cart_to_response(cart):  # no coverage
     """
     Remove fields from response to return only user-relevant attributes
     """
@@ -1323,8 +1323,7 @@ def transform_cart_to_response(cart):
     }
 
 
-@app.route('/resources/carts', methods=['POST'], cors=True, authorizer=jwt_auth)
-def create_cart():
+def create_cart():  # no coverage
     """
     Create a cart with the given name for the authenticated user
 
@@ -1357,8 +1356,7 @@ def create_cart():
     }
 
 
-@app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True, authorizer=jwt_auth)
-def get_cart(cart_id):
+def get_cart(cart_id):  # no coverage
     """
     Get the cart of the given ID belonging to the user
 
@@ -1386,8 +1384,7 @@ def get_cart(cart_id):
         return transform_cart_to_response(cart)
 
 
-@app.route('/resources/carts', methods=['GET'], cors=True, authorizer=jwt_auth)
-def get_all_carts():
+def get_all_carts():  # no coverage
     """
     Get a list of all carts belonging the user
 
@@ -1406,8 +1403,7 @@ def get_all_carts():
     return [transform_cart_to_response(cart) for cart in carts]
 
 
-@app.route('/resources/carts/{cart_id}', methods=['DELETE'], cors=True, authorizer=jwt_auth)
-def delete_cart(cart_id):
+def delete_cart(cart_id):  # no coverage
     """
     Delete the given cart if it exists and return the deleted cart
 
@@ -1426,8 +1422,7 @@ def delete_cart(cart_id):
     return transform_cart_to_response(deleted_cart)
 
 
-@app.route('/resources/carts/{cart_id}', methods=['PUT'], cors=True, authorizer=jwt_auth)
-def update_cart(cart_id):
+def update_cart(cart_id):  # no coverage
     """
     Update a cart's attributes.  Only the listed parameters can be updated
 
@@ -1457,8 +1452,7 @@ def update_cart(cart_id):
     return transform_cart_to_response(updated_cart)
 
 
-@app.route('/resources/carts/{cart_id}/items', methods=['GET'], cors=True, authorizer=jwt_auth)
-def get_items_in_cart(cart_id):
+def get_items_in_cart(cart_id):  # no coverage
     """
     Get a list of items in a cart
      parameters:
@@ -1504,8 +1498,7 @@ def get_items_in_cart(cart_id):
         raise NotFoundError(e.msg)
 
 
-@app.route('/resources/carts/{cart_id}/items', methods=['POST'], cors=True, authorizer=jwt_auth)
-def add_item_to_cart(cart_id):
+def add_item_to_cart(cart_id):  # no coverage
     """
     Add cart item to a cart and return the ID of the created item
 
@@ -1554,8 +1547,7 @@ def add_item_to_cart(cart_id):
     }
 
 
-@app.route('/resources/carts/{cart_id}/items/{item_id}', methods=['DELETE'], cors=True, authorizer=jwt_auth)
-def delete_cart_item(cart_id, item_id):
+def delete_cart_item(cart_id, item_id):  # no coverage
     """
     Delete an item from the cart
 
@@ -1584,8 +1576,7 @@ def delete_cart_item(cart_id, item_id):
     return {'deleted': True}
 
 
-@app.route('/resources/carts/{cart_id}/items/batch', methods=['POST'], cors=True, authorizer=jwt_auth)
-def add_all_results_to_cart(cart_id):
+def add_all_results_to_cart(cart_id):  # no coverage
     """
     Add all entities matching the given filters to a cart
 
@@ -1660,8 +1651,7 @@ def cart_item_write_batch(event, _context):
     }
 
 
-@app.route('/resources/carts/status/{token}', methods=['GET'], cors=True, authorizer=jwt_auth)
-def get_cart_item_write_progress(token):
+def get_cart_item_write_progress(token):  # no coverage
     """
     Get the status of a batch cart item write job
 
@@ -1718,8 +1708,7 @@ def assert_jwt_ttl(expected_ttl):
         raise BadRequestError('The TTL of the access token is too short.')
 
 
-@app.route('/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
-def export_cart_as_collection(cart_id: str):
+def export_cart_as_collection(cart_id: str):  # no coverage
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
     redirecting to either the location of the manifest or a URL to re-check the status of
@@ -1759,8 +1748,7 @@ def export_cart_as_collection(cart_id: str):
                         headers=result['headers'])
 
 
-@app.route('/fetch/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
-def export_cart_as_collection_fetch(cart_id: str):
+def export_cart_as_collection_fetch(cart_id: str):  # no coverage
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
     redirecting to either the location of the manifest or a URL to re-check the status of
@@ -1828,7 +1816,7 @@ def export_cart_as_collection_fetch(cart_id: str):
     }
 
 
-def handle_cart_export_request(cart_id: str = None):
+def handle_cart_export_request(cart_id: str = None):  # no coverage
     assert_jwt_ttl(config.cart_export_min_access_token_ttl)
     user_id = get_user_id()
     query_params = app.current_request.query_params or {}
@@ -1867,7 +1855,7 @@ def handle_cart_export_request(cart_id: str = None):
 
 # noinspection PyUnusedLocal
 @app.lambda_function(name=config.cart_export_dss_push_lambda_basename)
-def cart_export_send_to_collection_api(event, context):
+def cart_export_send_to_collection_api(event, context):  # no coverage
     """
     Export the data to DSS Collection API
     """

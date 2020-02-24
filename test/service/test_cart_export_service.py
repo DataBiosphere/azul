@@ -1,4 +1,7 @@
-from unittest import TestCase
+from unittest import (
+    TestCase,
+    skip,
+)
 from unittest.mock import patch
 
 import responses
@@ -12,7 +15,8 @@ from azul.service.collection_data_access import CollectionDataAccess
 from retorts import ResponsesHelper
 
 
-class TestCartExportService(TestCase):
+@skip('https://github.com/DataBiosphere/azul/issues/1513')
+class TestCartExportService(TestCase):  # no coverage
 
     @patch('azul.deployment.aws.dynamo')
     def test_get_content_with_no_resume_token_returning_results_without_next_resume_token(self, dynamodb_client):

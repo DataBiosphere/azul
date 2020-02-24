@@ -1,3 +1,4 @@
+from unittest import skip
 from unittest.mock import patch
 
 import requests
@@ -14,7 +15,8 @@ from app_test_case import AuthLocalAppTestCase
 from retorts import AuthResponseHelper
 
 
-class CartExportEndpointTest(AuthLocalAppTestCase):
+@skip('https://github.com/DataBiosphere/azul/issues/1513')
+class CartExportEndpointTest(AuthLocalAppTestCase):  # no coverage
 
     @classmethod
     def lambda_name(cls) -> str:

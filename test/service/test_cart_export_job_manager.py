@@ -1,12 +1,16 @@
 import datetime
 import json
-from unittest import TestCase
+from unittest import (
+    TestCase,
+    skip,
+)
 from unittest.mock import patch
 
 from azul.service.cart_export_job_manager import CartExportJobManager
 
 
-class TestCartExportJobManager(TestCase):
+@skip('https://github.com/DataBiosphere/azul/issues/1513')
+class TestCartExportJobManager(TestCase):  # no coverage
 
     @patch('azul.service.cart_export_job_manager.CartExportJobManager.step_function_helper')
     def test_foo(self, step_function_helper):
