@@ -17,7 +17,7 @@ from azul.service.user_service import (
 logger = logging.getLogger(__name__)
 
 
-class CartItemManager:
+class CartItemManager:  # no coverage
     """
     Helper functions to handle read/write/update of carts and cart items
     """
@@ -342,13 +342,13 @@ class CartItemManager:
         return len(hits), next_search_after
 
 
-class ResourceAccessError(Exception):
+class ResourceAccessError(Exception):  # no coverage
 
     def __init__(self, msg):
         self.msg = msg
 
 
-class DuplicateItemError(Exception):
+class DuplicateItemError(Exception):  # no coverage
 
     def __init__(self, msg):
         self.msg = msg
