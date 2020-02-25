@@ -2,6 +2,7 @@ import logging
 from functools import lru_cache
 
 from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
+import boto3
 from elasticsearch import (
     Elasticsearch,
     RequestsHttpConnection,
@@ -11,6 +12,17 @@ from azul import config
 from azul.deployment import aws
 
 logger = logging.getLogger(__name__)
+
+
+class CachedBotoAWSRequestsAuth(BotoAWSRequestsAuth):
+
+    def __init__(self, *args, **kwags):
+        super().__init__(*args, **kwags)
+        # We use the botocore session from Boto3 since it is pre-configured by
+        # envhook.py to use cached credentials for the AssumeRoleProvider. This
+        # avoids repeated entry of MFA tokens when running this code locally.
+        # noinspection PyProtectedMember
+        self._refreshable_credentials = boto3.DEFAULT_SESSION._session.get_credentials()
 
 
 class ESClientFactory:
@@ -33,9 +45,9 @@ class ESClientFactory:
                              timeout=timeout,
                              max_retries=0)
         if host.endswith(".amazonaws.com"):
-            aws_auth = BotoAWSRequestsAuth(aws_host=host,
-                                           aws_region=aws.region_name,
-                                           aws_service='es')
+            aws_auth = CachedBotoAWSRequestsAuth(aws_host=host,
+                                                 aws_region=aws.region_name,
+                                                 aws_service='es')
             return Elasticsearch(http_auth=aws_auth,
                                  use_ssl=True,
                                  verify_certs=True,
