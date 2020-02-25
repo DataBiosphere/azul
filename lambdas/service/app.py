@@ -36,7 +36,10 @@ from azul.chalice import AzulChaliceApp
 from azul.deployment import aws
 from azul.health import HealthController
 from azul.logging import configure_app_logging
-from azul.openapi import annotated_specs
+from azul.openapi import (
+    annotated_specs,
+    schema,
+)
 from azul.plugin import Plugin
 from azul.portal_service import PortalService
 from azul.security.authenticator import (
@@ -83,13 +86,13 @@ openapi_spec = {
     },
     'tags': [
         {
-            'name': 'Health',
-            'description': 'For checking on service health'
+            'name': 'Auxiliary',
+            'description': 'Describes various aspects of the Azul service'
         }
     ],
     'servers': [
         {'url': config.service_endpoint()}
-    ]
+    ],
 }
 
 sort_defaults = {
@@ -189,7 +192,7 @@ health_spec = {
             }
         }
     },
-    'tags': ['Health']
+    'tags': ['Auxiliary']
 }
 
 
@@ -224,7 +227,33 @@ def generate_health_object(_event: chalice.app.CloudWatchEvent):
     controller.generate_cache()
 
 
-@app.route('/version', methods=['GET'], cors=True)
+@app.route('/version', methods=['GET'], cors=True, method_spec={
+    'summary': 'Describe current version of the Azul service',
+    'tags': ['Auxiliary'],
+    'responses': {
+        '200': {
+            'description': 'Version endpoint is reachable.',
+            'content': {
+                'application/json': {
+                    'schema': schema.object(
+                        git=schema.object(
+                            commit=str,
+                            dirty=bool
+                        ),
+                        changes=schema.array(
+                            schema.object(
+                                title=str,
+                                issues=schema.array(str),
+                                upgrade=schema.array(str),
+                                notes=schema.optional(str)
+                            )
+                        )
+                    )
+                }
+            }
+        }
+    }
+})
 def version():
     from azul.changelog import compact_changes
     return {

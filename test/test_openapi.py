@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from azul.openapi import (
     get_app_specs,
     openapi_spec,
+    schema,
 )
 from azul_test_case import AzulTestCase
 
@@ -86,3 +87,87 @@ class TestGetAppSpecs(AzulTestCase):
             mock_routes.append(route_wrapper)
         app.routes.values.return_value = mock_routes
         return app
+
+
+class TestSchemaHelpers(AzulTestCase):
+
+    def test_complex_object(self):
+        self.assertEqual(
+            schema.object(
+                git=schema.object(
+                    commit=str,
+                    dirty=bool
+                ),
+                changes=schema.array(
+                    schema.object(
+                        title='string',
+                        issues=schema.array(str),
+                        upgrade=schema.array(str),
+                        notes=schema.optional(str)
+                    )
+                )
+            ),
+            {
+                'type': 'object',
+                'properties': {
+                    'git': {
+                        'type': 'object',
+                        'properties': {
+                            'commit': {
+                                'type': 'string'
+                            },
+                            'dirty': {
+                                'type': 'boolean'
+                            }
+                        },
+                        'required': ['commit', 'dirty'],
+                        'additionalProperties': False
+                    },
+                    'changes': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'properties': {
+                                'title': {
+                                    'type': 'string'
+                                },
+                                'issues': {
+                                    'type': 'array',
+                                    'items': {
+                                        'type': 'string'
+                                    }
+                                },
+                                'upgrade': {
+                                    'type': 'array',
+                                    'items': {
+                                        'type': 'string'
+                                    }
+                                },
+                                'notes': {
+                                    'type': 'string'
+                                }
+                            },
+                            'required': [
+                                'title',
+                                'issues',
+                                'upgrade'
+                            ],
+                            'additionalProperties': False
+                        }
+                    }
+                },
+                'required': ['git', 'changes'],
+                'additionalProperties': False
+            }
+        )
+
+    def test_misuse(self):
+        # Only `object_with` handles required fields via the optional()
+        # wrapper.
+        try:
+            # noinspection PyTypeChecker
+            schema.make_type(schema.optional(str))
+        except AssertionError as e:
+            self.assertIn(schema.optional, e.args)
+        else:
+            self.fail()
