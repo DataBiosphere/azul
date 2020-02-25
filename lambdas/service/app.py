@@ -36,7 +36,10 @@ from azul.chalice import AzulChaliceApp
 from azul.deployment import aws
 from azul.health import HealthController
 from azul.logging import configure_app_logging
-from azul.openapi import annotated_specs
+from azul.openapi import (
+    annotated_specs,
+    schema,
+)
 from azul.plugin import Plugin
 from azul.portal_service import PortalService
 from azul.security.authenticator import (
@@ -232,49 +235,20 @@ def generate_health_object(_event: chalice.app.CloudWatchEvent):
             'description': 'Version endpoint is reachable.',
             'content': {
                 'application/json': {
-                    'schema': {
-                        'type': 'object',
-                        'properties': {
-                            'git': {
-                                'type': 'object',
-                                'properties': {
-                                    'commit': {
-                                        'type': 'string'
-                                    },
-                                    'dirty': {
-                                        'type': 'boolean'
-                                    }
-                                }
-                            },
-                            'changes': {
-                                'type': 'array',
-                                'items': {
-                                    'type': 'object',
-                                    'properties': {
-                                        'title': {
-                                            'type': 'string'
-                                        },
-                                        'issues': {
-                                            'type': 'array',
-                                            'items': {
-                                                'type': 'string'
-                                            }
-                                        },
-                                        'upgrade': {
-                                            'type': 'array',
-                                            'items': {
-                                                'type': 'string'
-                                            }
-                                        },
-                                        'notes': {
-                                            'type': 'string'
-                                        }
-                                    },
-                                    'required': ['title', 'issues', 'upgrade']
-                                }
-                            }
-                        }
-                    }
+                    'schema': schema.object(
+                        git=schema.object(
+                            commit=str,
+                            dirty=bool
+                        ),
+                        changes=schema.array(
+                            schema.object(
+                                title=str,
+                                issues=schema.array(str),
+                                upgrade=schema.array(str),
+                                notes=schema.optional(str)
+                            )
+                        )
+                    )
                 }
             }
         }
