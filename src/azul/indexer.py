@@ -294,7 +294,14 @@ class BaseIndexer(ABC):
             log.info('Reading %i expected contribution(s) using scan().', num_contributions)
             hits = scan(es_client, index=index, query=query, size=page_size, doc_type=Document.type)
         contributions = [Contribution.from_index(self.field_types(), hit) for hit in hits]
-        log.info('Read %i contribution(s).', len(contributions))
+
+        entity_key = attrgetter('entity')
+        log.info('Read %i contribution(s). Breakdown by entity: %s',
+                 len(contributions),
+                 {
+                     f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
+                     for entity, contribution_group in groupby(sorted(contributions, key=entity_key), key=entity_key)
+                 })
         return contributions
 
     def _aggregate(self, contributions: List[Contribution]) -> List[Aggregate]:
@@ -325,6 +332,8 @@ class BaseIndexer(ABC):
         # Aggregate contributions for the same entity
         aggregates = []
         for entity, contributions in contributions_by_entity.items():
+            log.info('Selected %i contributions to be aggregated for entity %s/%s.',
+                     len(contributions), entity.entity_type, entity.entity_id)
             transformer = transformers[entity.entity_type]
             contents = transformer.aggregate(contributions)
             bundles = [dict(uuid=c.bundle_uuid, version=c.bundle_version) for c in contributions]
