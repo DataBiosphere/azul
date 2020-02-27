@@ -75,10 +75,6 @@ parser.add_argument('--nowait', '--no-wait',
                     default=True,
                     action='store_false',
                     help="Don't wait for queues to empty before exiting script.")
-parser.add_argument('--dryrun', '--dry-run',
-                    default=False,
-                    action='store_true',
-                    help='Just print what would be done, do not actually do it.')
 parser.add_argument('--verbose',
                     default=False,
                     action='store_true',
@@ -96,8 +92,7 @@ def main(argv: List[str]):
     azul_client = AzulClient(indexer_url=args.indexer_url,
                              dss_url=args.dss_url,
                              prefix=args.prefix,
-                             num_workers=args.num_workers,
-                             dryrun=args.dryrun)
+                             num_workers=args.num_workers)
     queue_manager = Queues()
     queues = queue_manager.get_queues(config.work_queue_names)
 
