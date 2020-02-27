@@ -3,8 +3,8 @@ from typing import (
 )
 
 from azul.openapi import (
+    format_description_key,
     schema,
-    unwrap_description,
 )
 from azul.openapi.schema import (
     TYPE,
@@ -58,7 +58,7 @@ def _make_param(name: str, in_: str, type_: Union[TYPE, schema.optional], **kwar
     is_optional = isinstance(type_, schema.optional)
     if is_optional:
         type_ = type_.type_
-    unwrap_description(kwargs)
+    format_description_key(kwargs)
     return {
         'name': name,
         'in': in_,

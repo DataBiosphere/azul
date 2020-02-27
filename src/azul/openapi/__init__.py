@@ -1,13 +1,13 @@
 import copy
+from textwrap import dedent
 from typing import (
+    Any,
     List,
     cast,
-    Optional,
     MutableMapping,
-    Any,
+    Optional,
 )
 
-from azul.strings import unwrap
 from azul.types import (
     JSON,
     MutableJSON,
@@ -288,30 +288,52 @@ def _recursive_merge_dicts(d1: JSON, d2: JSON, path: List[str], override: bool) 
     return merged
 
 
-def unwrap_description(kwargs: MutableMapping[str, Any]) -> None:
+def format_description(string: str) -> str:
     """
+    Remove common leading whitespace from every line in text.
+    Useful for processing triple-quote strings.
+
+    :param string: The string to unwrap
+
+    >>> format_description(" c'est \\n une chaine \\n de plusieurs lignes. ")
+    "c'est \\nune chaine \\nde plusieurs lignes. "
+
+    >>> format_description('''
+    ...     Multi-lined,
+    ...     indented,
+    ...     triple-quoted string.
+    ... ''')
+    '\\nMulti-lined,\\nindented,\\ntriple-quoted string.\\n'
+    """
+    return dedent(string)
+
+
+def format_description_key(kwargs: MutableMapping[str, Any]) -> None:
+    """
+    Clean up the `description` key's value in `kwargs` (if it exists)
+
     >>> from azul.doctests import assert_json
     >>> kwargs = {"foo": "bar", "description": '''
     ...                                        Multi-lined,
     ...                                        indented,
     ...                                        triple-quoted string
     ...                                        '''}
-    >>> unwrap_description(kwargs)
+    >>> format_description_key(kwargs)
     >>> assert_json(kwargs)
     {
         "foo": "bar",
-        "description": "Multi-lined, indented, triple-quoted string"
+        "description": "\\nMulti-lined,\\nindented,\\ntriple-quoted string\\n"
     }
 
     >>> kwargs = {"foo": "bar"}
-    >>> unwrap_description(kwargs)
+    >>> format_description_key(kwargs)
     >>> assert_json(kwargs)
     {
         "foo": "bar"
     }
     """
     try:
-        unwrapped = unwrap(kwargs['description'])
+        unwrapped = format_description(kwargs['description'])
     except KeyError:
         pass
     else:

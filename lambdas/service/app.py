@@ -1,5 +1,6 @@
 import base64
 import binascii
+import copy
 import hashlib
 import json
 import logging.config
@@ -38,6 +39,7 @@ from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.openapi import (
     annotated_specs,
+    format_description,
     schema,
     params,
     responses,
@@ -74,7 +76,6 @@ from azul.service.repository_service import (
 from azul.service.storage_service import StorageService
 from azul.strings import (
     pluralize,
-    unwrap,
 )
 
 log = logging.getLogger(__name__)
@@ -94,6 +95,10 @@ openapi_spec = {
         {
             'name': 'Auxiliary',
             'description': 'Describes various aspects of the Azul service'
+        },
+        {
+            'name': 'Manifests',
+            'description': 'Complete listing of files matching a given filter in TSV and other formats'
         }
     ],
     'servers': [
@@ -831,36 +836,97 @@ def get_order():
     return {'order': Plugin.load().service_config().order_config}
 
 
-@app.route('/manifest/files', methods=['GET'], cors=True)
+manifest_path_spec = {
+    'parameters': [
+        params.query(
+            'filters',
+            schema.optional(schema.object(
+                **{
+                    facet_name: schema.object(**{'is': schema.array(str)})
+                    for facet_name in Plugin.load().service_config().translation.keys()
+                }
+            )),
+            description='Filters to be applied when generating the manifest',
+        ),
+        params.query(
+            'format',
+            schema.optional(schema.enum('compact', 'full', 'terra.bdbag', type_=str)),
+            description='''
+                The desired format of the output.
+
+                - `compact` (the default) for a compact tab-separated manifest
+
+                - `full` for a full tab-separated manifest
+
+                - `terra.bdbag` for a manifest in the
+                  [bdbag format](http://bd2k.ini.usc.edu/tools/bdbag/). This
+                  provides a ZIP file containing two manifests: one for
+                  Participants (aka Donors) and one for Samples (aka Specimens).
+                  For more on the format of the manifests see
+                  [documentation here](https://software.broadinstitute.org/firecloud/documentation/article?id=10954).
+            ''',
+        ),
+        params.query(
+            'token',
+            schema.optional({'type': 'string'}),
+            description='Reserved. Do not pass explicitly.',
+        ),
+    ],
+}
+
+
+# Copy of path_spec required due to FIXME: https://github.com/DataBiosphere/azul/issues/1646
+@app.route('/manifest/files', methods=['GET'], cors=True, path_spec=copy.copy(manifest_path_spec), method_spec={
+    'tags': ['Manifests'],
+    'summary': 'Request a download link to a manifest file and redirect',
+    'description': format_description('''
+        Initiate and check status of a manifest generation job, returning
+        either a 301 response redirecting to a URL to re-check the status of
+        the manifest generation or a 302 response redirecting to the location
+        of the completed manifest.
+    '''),
+    'responses': {
+        '301': {
+            'description': format_description('''
+                The manifest generation has been started or is ongoing.
+                The response is a redirect back to this endpoint, so the client
+                should expect a subsequent response of the same kind.
+            '''),
+            'headers': {
+                'Location': {
+                    'description': 'URL to recheck the status of the '
+                                   'manifest generation.',
+                    'schema': {'type': 'string', 'format': 'url'},
+                },
+                'Retry-After': {
+                    'description': 'Recommended number of seconds to wait '
+                                   'before requesting the URL specified in '
+                                   'the Location header.',
+                    'schema': {'type': 'string'},
+                },
+            },
+        },
+        '302': {
+            'description': format_description('''
+                The manifest generation is complete and ready for download.
+            '''),
+            'headers': {
+                'Location': {
+                    'description': 'URL that will yield the actual '
+                                   'manifest file.',
+                    'schema': {'type': 'string', 'format': 'url'},
+                },
+                'Retry-After': {
+                    'description': 'Recommended number of seconds to wait '
+                                   'before requesting the URL specified in '
+                                   'the Location header.',
+                    'schema': {'type': 'string'},
+                },
+            },
+        }
+    },
+})
 def start_manifest_generation():
-    """
-    Initiate and check status of a manifest generation job, returning a either a 301 or 302 response
-    redirecting to either the location of the manifest or a URL to re-check the status of the manifest job.
-
-    parameters:
-        - name: filters
-          in: query
-          type: string
-          description: Filters to be applied when generating the manifest
-        - name: format
-          in: query
-          type: string
-          description: The desired format of the output. Possible values are `compact` (the default) for a tab-separated
-          manifest and `terra.bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
-          latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
-          samples (aka specimens). The format of the manifests inside the BDBag is documented here:
-          https://software.broadinstitute.org/firecloud/documentation/article?id=10954
-        - name: token
-          in: query
-          type: string
-          description: Reserved. Do not pass explicitly.
-
-    :return: If the manifest generation has been started or is still ongoing, the response will have a
-    301 status and will redirect to a URL that will get a recheck the status of the manifest.
-
-    If the manifest generation is done and the manifest is ready to be downloaded, the response will
-    have a 302 status and will redirect to the URL of the manifest.
-    """
     wait_time, location = handle_manifest_generation_request()
     return Response(body='',
                     headers={
@@ -870,69 +936,49 @@ def start_manifest_generation():
                     status_code=301 if wait_time else 302)
 
 
-@app.route('/fetch/manifest/files', methods=['GET'], cors=True)
+# Copy of path_spec required due to FIXME: https://github.com/DataBiosphere/azul/issues/1646
+@app.route('/fetch/manifest/files', methods=['GET'], cors=True, path_spec=copy.copy(manifest_path_spec), method_spec={
+    'tags': ['Manifests'],
+    'summary': 'Request a download link to a manifest file and check status',
+    'description': format_description('''
+        Initiate a manifest generation or check the status of an already ongoing
+        generation, returning a 200 response with simulated HTTP headers in the
+        body.
+    '''),
+    'responses': {
+        '200': {
+            **{
+                'content': {
+                    'application/json': {
+                        'schema': schema.object(
+                            Status=int,
+                            Location={'type': 'string', 'format': 'url'},
+                            **{'Retry-After': schema.optional(int)}
+                        )
+                    }
+                }
+            },
+            'description': format_description('''
+                Manifest generation with status report, emulating the response
+                code and headers of the `/manifest/files` endpoint. Note that
+                the actual HTTP response will have status 200 while the `Status`
+                field of the body will be 301 or 302. The intent is to emulate
+                HTTP while bypassing the default client behavior, which (in most
+                web browsers) is to ignore `Retry-After`. The response described
+                here is intended to be processed by client-side Javascript such
+                that the recommended delay in `Retry-After` can be handled in
+                Javascript rather than relying on the native implementation by
+                the web browser.
+
+                For a detailed description of the fields in the response see
+                the documentation for the headers they emulate in the
+                [`/manifest/files`](#operations-Manifests-get_manifest_files)
+                endpoint response.
+            '''),
+        },
+    },
+})
 def start_manifest_generation_fetch():
-    """
-    Initiate and check status of a manifest generation job, returning a 200 response with
-    simulated headers in the body.
-
-    parameters:
-        - name: filters
-          in: query
-          type: string
-          description: Filters to be applied when generating the manifest
-        - name: format
-          in: query
-          type: string
-          description: The desired format of the output. Possible values are `compact` (the default) for a tab-separated
-          manifest and `terra.bdbag` for a manifest in the format documented `http://bd2k.ini.usc.edu/tools/bdbag/. The
-          latter is essentially a ZIP file containing two manifests: one for participants (aka Donors) and one for
-          samples (aka specimens). The format of the manifests inside the BDBag is documented here:
-          https://software.broadinstitute.org/firecloud/documentation/article?id=10954
-        - name: token
-          in: query
-          type: string
-          description: Reserved. Do not pass explicitly.
-
-    :return:  A 200 response with a JSON body describing the status of the manifest.
-
-    If the manifest generation has been started or is still ongoing, the response will look like:
-
-    ```
-    {
-        "Status": 301,
-        "Retry-After": 2,
-        "Location": "https://…"
-    }
-    ```
-
-    The `Status` field emulates HTTP status code 301 Moved Permanently.
-
-    `Retry-After` is the recommended number of seconds to wait before requesting the URL the `Location` field.
-
-    `Location` is the URL to make a GET request to in order to recheck the status.
-
-    If the client receives a response body with the `Status` field set to 301, the client should wait the number of
-    seconds specified in `Retry-After` and then request the URL given in the `Location` field. The URL will point
-    back at this endpoint so the client should expect a response of the same shape. Note that the actual HTTP
-    response is of status 200, only the `Status` field of the body will be 301. The intent is to emulate HTTP while
-    bypassing the default client behavior which, in most web browsers, is to ignore `Retry-After`. The response
-    described here is intended to be processed by client-side Javascript such that the recommended delay in
-    `Retry-After` can be handled in Javascript rather that relying on the native implementation by the web browser.
-
-    If the manifest generation is done and the manifest is ready to be downloaded, the response will be:
-
-    ```
-    {
-        "Status": 302,
-        "Location": "https://…"
-    }
-    ```
-
-    The client should request the URL given in the `Location` field. The URL will point to a different service and
-    the client should expect a response containing the actual manifest. Currently the `Location` field of the final
-    response is a signed URL to an object in S3 but clients should not depend on that.
-    """
     wait_time, location = handle_manifest_generation_request()
     response = {
         'Status': 301 if wait_time else 302,
@@ -1038,7 +1084,7 @@ dss_files_spec = {
     'summary': 'Request a download link to a Data Store file and redirect',
     'responses': {
         '301': {
-            'description': unwrap('''
+            'description': format_description('''
                 DSS checkout has been started or is ongoing. The response is a
                 redirect to this very endpoint, so the client should expect a
                 subsequent response of the same kind.
@@ -1054,17 +1100,17 @@ dss_files_spec = {
             }
         },
         '302': {
-            'description': unwrap('''
+            'description': format_description('''
                 DSS checkout is complete. The response is a redirect to an
                 entirely different service (currently a signed URL to an object
                 in S3, but clients should not depend on that).
             '''),
             'headers': {
                 'Location': responses.header(str, description='URL that will yield the actual content of the file.'),
-                'Content-Disposition': responses.header(str, description=unwrap('''
+                'Content-Disposition': responses.header(str, description='''
                     Set to `attachment; filename=` followed by the name of the
                     file as determined by the `uuid`/`fileName` parameters.
-                '''))
+                ''')
             }
         },
     }
@@ -1087,7 +1133,7 @@ def dss_files(uuid):
     'summary': 'Request a download link to a Data Store file and check status',
     'responses': {
         '200': {
-            'description': unwrap('''
+            'description': format_description('''
                 DSS checkout with status report, emulating the response code and
                 headers of the `/dss/files/` endpoint. Note that the actual HTTP
                 response will have status 200 while the `Status` field of the
