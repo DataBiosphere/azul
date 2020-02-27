@@ -156,7 +156,7 @@ class PortalService:
         Raises `NoSuchObjectVersion` if the version is not found.
         """
         try:
-            response = self.client.get_object(Bucket=config.portal_db_bucket_name,
+            response = self.client.get_object(Bucket=config.portal_db_bucket,
                                               Key=config.portal_db_object_key,
                                               VersionId=version)
         except self.client.exceptions.NoSuchKey:
@@ -174,7 +174,7 @@ class PortalService:
         :return: version of the newly written DB.
         """
         json_bytes = json.dumps(db).encode()
-        response = self.client.put_object(Bucket=config.portal_db_bucket_name,
+        response = self.client.put_object(Bucket=config.portal_db_bucket,
                                           Key=config.portal_db_object_key,
                                           Body=json_bytes,
                                           ContentType='application/json')
@@ -195,7 +195,7 @@ class PortalService:
         Failures are logged and ignored.
         """
         try:
-            self.client.delete_object(Bucket=config.portal_db_bucket_name,
+            self.client.delete_object(Bucket=config.portal_db_bucket,
                                       Key=config.portal_db_object_key,
                                       VersionId=version)
         except self.client.exceptions.NoSuchKey:
@@ -209,4 +209,4 @@ class PortalService:
 
     @property
     def _db_url(self) -> str:
-        return f's3:/{config.portal_db_bucket_name}/{config.portal_db_object_key}'
+        return f's3:/{config.portal_db_bucket}/{config.portal_db_object_key}'
