@@ -24,8 +24,7 @@ def setUpModule():
     configure_test_logging()
 
 
-@skip('https://github.com/DataBiosphere/azul/issues/1513')
-class TestCartItemManager(WebServiceTestCase, DynamoTestCase):  # no coverage
+class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
     number_of_documents = 1500
 
     @classmethod
@@ -489,6 +488,7 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):  # no coverage
             jwt_auth.return_value.authenticate_bearer_token.return_value = {'sub': user_id}
             yield
 
+    @skip('https://github.com/DataBiosphere/azul/issues/1513')
     @mock.patch('azul.service.cart_item_manager.CartItemManager.step_function_helper')
     @mock.patch('azul.deployment.aws.dynamo')
     def test_add_all_results_to_cart_endpoint(self, dynamo, step_function_helper):

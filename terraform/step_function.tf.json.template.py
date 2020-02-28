@@ -67,8 +67,8 @@ emit_tf({
                             ],
                             "Resource": [
                                 aws.get_lambda_arn(config.service_name, config.manifest_lambda_basename),
-                                # aws.get_lambda_arn(config.service_name, config.cart_item_write_lambda_basename),
-                                # aws.get_lambda_arn(config.service_name, config.cart_export_dss_push_lambda_basename)
+                                aws.get_lambda_arn(config.service_name, config.cart_item_write_lambda_basename),
+                                aws.get_lambda_arn(config.service_name, config.cart_export_dss_push_lambda_basename)
                             ]
                         }
                     ]
@@ -90,44 +90,44 @@ emit_tf({
                     }
                 }, indent=2)
             },
-            # "cart_item_state_machine": {
-            #     "name": config.cart_item_state_machine_name,
-            #     "role_arn": "${aws_iam_role.state_machine_iam_role.arn}",
-            #     "definition": json.dumps({
-            #         "StartAt": "WriteBatch",
-            #         "States": cart_item_states()
-            #     }, indent=2)
-            # },
-            # "cart_export_state_machine": {
-            #     "name": config.cart_export_state_machine_name,
-            #     "role_arn": "${aws_iam_role.state_machine_iam_role.arn}",
-            #     "definition": json.dumps({
-            #         "StartAt": "SendToCollectionAPI",
-            #         "States": {
-            #             "SendToCollectionAPI": {
-            #                 "Type": "Task",
-            #                 "Resource": aws.get_lambda_arn(config.service_name,
-            #                                                config.cart_export_dss_push_lambda_basename),
-            #                 "Next": "NextBatch",
-            #                 "ResultPath": "$"
-            #             },
-            #             "NextBatch": {
-            #                 "Type": "Choice",
-            #                 "Choices": [
-            #                     {
-            #                         "Variable": "$.resumable",
-            #                         "BooleanEquals": False,
-            #                         "Next": "SuccessState"
-            #                     }
-            #                 ],
-            #                 "Default": "SendToCollectionAPI"
-            #             },
-            #             "SuccessState": {
-            #                 "Type": "Succeed"
-            #             }
-            #         }
-            #     }, indent=2)
-            # }
+            "cart_item_state_machine": {
+                "name": config.cart_item_state_machine_name,
+                "role_arn": "${aws_iam_role.state_machine_iam_role.arn}",
+                "definition": json.dumps({
+                    "StartAt": "WriteBatch",
+                    "States": cart_item_states()
+                }, indent=2)
+            },
+            "cart_export_state_machine": {
+                "name": config.cart_export_state_machine_name,
+                "role_arn": "${aws_iam_role.state_machine_iam_role.arn}",
+                "definition": json.dumps({
+                    "StartAt": "SendToCollectionAPI",
+                    "States": {
+                        "SendToCollectionAPI": {
+                            "Type": "Task",
+                            "Resource": aws.get_lambda_arn(config.service_name,
+                                                           config.cart_export_dss_push_lambda_basename),
+                            "Next": "NextBatch",
+                            "ResultPath": "$"
+                        },
+                        "NextBatch": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.resumable",
+                                    "BooleanEquals": False,
+                                    "Next": "SuccessState"
+                                }
+                            ],
+                            "Default": "SendToCollectionAPI"
+                        },
+                        "SuccessState": {
+                            "Type": "Succeed"
+                        }
+                    }
+                }, indent=2)
+            }
         }
     }
 })

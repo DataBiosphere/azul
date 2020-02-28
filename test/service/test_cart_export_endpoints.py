@@ -16,7 +16,7 @@ from retorts import AuthResponseHelper
 
 
 @skip('https://github.com/DataBiosphere/azul/issues/1513')
-class CartExportEndpointTest(AuthLocalAppTestCase):  # no coverage
+class CartExportEndpointTest(AuthLocalAppTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
