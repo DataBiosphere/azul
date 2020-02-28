@@ -1293,11 +1293,11 @@ The Gitlab EC2 instance is attached to an EBS volume that contains all of
 Gitlab's data and configuration. That volume is not controlled by Terraform and
 must be created manually before terraforming the `gitlab` component for the
 first time. Details about creating and formatting the volume can be found in
-[gitlab.tf.json.template.py]. The volume is mounted at `/mnt/gitlab`. On the
-`prod` instance I had the wherewithal to track the configuration changes in a
-Git repository under `/mnt/gitlab/.git`. Since Git isn't installed natively on
-RancherOS, you must use a Docker image for it. I've used `alias git='docker run
--ti --rm -v ${HOME}:/root -v $(pwd):/git alpine/git'` for that purpose.
+[gitlab.tf.json.template.py]. The volume is mounted at `/mnt/gitlab`. The
+configuration changes are tracked in a Git repository under `/mnt/gitlab/.git`
+which is tracked in an AWS CodeCommit repo. Since Git isn't installed natively 
+on RancherOS, you must use a Docker image for it. An alias for this is defined
+in the `environment` file of that repository.
 
 When an instance boots and finds the EBS volume empty, Gitlab will initialize it 
 with default configuration. That configuration is very vulnerable because the 
