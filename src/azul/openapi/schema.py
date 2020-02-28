@@ -58,6 +58,12 @@ def object(additional_properties=False, **props: Union[TYPE, optional]):
         ],
         "additionalProperties": false
     }
+    >>> assert_json(object())
+    {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+    }
     """
     new_props = {}
     required = []
@@ -67,9 +73,13 @@ def object(additional_properties=False, **props: Union[TYPE, optional]):
         else:
             required.append(name)
         new_props[name] = prop
-    return object_type(properties(**new_props),
-                       required=required,
-                       additionalProperties=additional_properties)
+    if required:
+        return object_type(properties(**new_props),
+                           required=required,
+                           additionalProperties=additional_properties)
+    else:
+        return object_type(properties(**new_props),
+                           additionalProperties=additional_properties)
 
 
 def properties(**props: TYPE):
