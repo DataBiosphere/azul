@@ -269,13 +269,13 @@ class HealthController:
     def all_keys(cls) -> Set[str]:
         return {p.key for p in cls.all_properties}
 
-    def archive_fail_messages(self, receive_message_wait_time=5):
+    def archive_fail_messages(self):
         client = boto3.client('dynamodb')
         fail_queue = boto3.resource('sqs').get_queue_by_name(QueueName=config.fail_queue_name)
         while True:
             received_messages = fail_queue.receive_messages(AttributeNames=['All'],
                                                             MaxNumberOfMessages=10,
-                                                            WaitTimeSeconds=receive_message_wait_time,
+                                                            WaitTimeSeconds=self.receive_message_wait_time,
                                                             VisibilityTimeout=300)
             if received_messages:
                 message_batch = [

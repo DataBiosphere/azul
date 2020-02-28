@@ -80,12 +80,8 @@ class TestHealthFailures(LocalAppTestCase):
         sqs = boto3.resource('sqs', region_name='us-east-1')
         sqs.create_queue(QueueName=config.fail_queue_name)
         fail_queue = sqs.get_queue_by_name(QueueName=config.fail_queue_name)
-        original_archive_fail_messages = HealthController.archive_fail_messages
 
-        def mocked_archive_fail_messages(self):
-            original_archive_fail_messages(self, 0)
-
-        with patch.object(HealthController, 'archive_fail_messages', new=mocked_archive_fail_messages):
+        with patch.object(HealthController, 'receive_message_wait_time', 0):
             with ResponsesHelper() as helper:
                 helper.add_passthru(self.base_url)
                 # The 4th sub-test checks if the indexer lambda can write more than 1 batch of messages to dynamodb.
