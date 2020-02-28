@@ -33,6 +33,8 @@ _set AZUL_URL_REDIRECT_FULL_DOMAIN_NAME "$AZUL_DEPLOYMENT_STAGE.$AZUL_URL_REDIRE
 _set AZUL_SHARE_ES_DOMAIN 1
 _set AZUL_ES_DOMAIN "azul-index-dev"
 
+_set azul_dss_query_prefix '42'
+
 _set AZUL_DEBUG 1
 
 _set AZUL_OWNER hannes@ucsc.edu
