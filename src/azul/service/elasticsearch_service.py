@@ -596,7 +596,7 @@ class ElasticsearchService(AbstractService):
                                     entity_type,
                                     filters=None,
                                     search_after=None,
-                                    size=1000):  # no coverage
+                                    size=1000):
         """
         Create a query using the given filter used for cart item requests
 
