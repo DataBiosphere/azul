@@ -17,7 +17,7 @@ from azul.service.user_service import (
 logger = logging.getLogger(__name__)
 
 
-class CartItemManager:
+class CartItemManager:  # no coverage
     """
     Helper functions to handle read/write/update of carts and cart items
     """
