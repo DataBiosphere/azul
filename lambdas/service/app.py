@@ -1556,7 +1556,7 @@ def delete_cart_item(cart_id, item_id):
     return {'deleted': True}
 
 
-def add_all_results_to_cart(cart_id):
+def add_all_results_to_cart(cart_id):  # no coverage
     """
     Add all entities matching the given filters to a cart
 
@@ -1682,13 +1682,13 @@ def get_cart_item_write_progress(token):
     return response
 
 
-def assert_jwt_ttl(expected_ttl):
+def assert_jwt_ttl(expected_ttl):  # no coverage
     remaining_ttl = math.floor(int(app.current_request.context['authorizer']['exp']) - time.time())
     if remaining_ttl < expected_ttl:
         raise BadRequestError('The TTL of the access token is too short.')
 
 
-def export_cart_as_collection(cart_id: str):
+def export_cart_as_collection(cart_id: str):  # no coverage
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
     redirecting to either the location of the manifest or a URL to re-check the status of
@@ -1796,7 +1796,7 @@ def export_cart_as_collection_fetch(cart_id: str):
     }
 
 
-def handle_cart_export_request(cart_id: str = None):
+def handle_cart_export_request(cart_id: str = None):  # no coverage
     assert_jwt_ttl(config.cart_export_min_access_token_ttl)
     user_id = get_user_id()
     query_params = app.current_request.query_params or {}

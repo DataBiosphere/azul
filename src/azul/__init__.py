@@ -595,7 +595,7 @@ class Config:
     cart_item_write_lambda_basename = 'cartitemwrite'
 
     @property
-    def cart_item_state_machine_name(self):
+    def cart_item_state_machine_name(self):  # no coverage
         return self.qualified_resource_name('cartitems')
 
     @property
@@ -603,7 +603,7 @@ class Config:
         return int(os.environ['AZUL_CART_EXPORT_MAX_BATCH_SIZE'])
 
     @property
-    def cart_export_min_access_token_ttl(self):
+    def cart_export_min_access_token_ttl(self):  # no coverage
         return int(os.environ['AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL'])
 
     @property
