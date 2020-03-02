@@ -120,20 +120,25 @@ def encode_access_id(token_str: str) -> str:
     """
     Encode the token as an access id in a URL safe way.
 
-    >>> encode_access_id('tedeschi trucks')
-    'dGVkZXNjaGkgdHJ1Y2tz'
+    Notice that with `encode_access_id` base64 padding is stripped off
+    >>> base64.urlsafe_b64encode(b'boogie street')
+    b'Ym9vZ2llIHN0cmVldA=='
 
-    >>> decode_access_id(encode_access_id('tedeschi trucks'))
-    'tedeschi trucks'
+    >>> encode_access_id('boogie street')
+    'Ym9vZ2llIHN0cmVldA'
+
+    >>> decode_access_id(encode_access_id('boogie street'))
+    'boogie street'
     """
     access_id = bytes(token_str, 'ascii')
     access_id = base64.urlsafe_b64encode(access_id)
-    return access_id.decode()
+    return access_id.rstrip(b'=').decode()
 
 
 def decode_access_id(access_id: str) -> str:
     token = bytes(access_id, 'ascii')
-    token = base64.urlsafe_b64decode(token)
+    padding = b'=' * (-len(token) % 4)
+    token = base64.urlsafe_b64decode(token + padding)
     return token.decode()
 
 
@@ -249,7 +254,7 @@ class Client:
                 raise DRSError(response.status_code, response.text)
 
 
-class DRSError:
+class DRSError(Exception):
 
     def __init__(self, status_code, msg):
         self.status_code = status_code
