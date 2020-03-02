@@ -10,7 +10,7 @@ from azul import config
 logger = logging.getLogger(__name__)
 
 
-class CartExportService:  # no coverage
+class CartExportService:
 
     def __init__(self):
         self.cart_item_manager = CartItemManager()

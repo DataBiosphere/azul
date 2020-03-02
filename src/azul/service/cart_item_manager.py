@@ -342,13 +342,13 @@ class CartItemManager:  # no coverage
         return len(hits), next_search_after
 
 
-class ResourceAccessError(Exception):  # no coverage
+class ResourceAccessError(Exception):
 
     def __init__(self, msg):
         self.msg = msg
 
 
-class DuplicateItemError(Exception):  # no coverage
+class DuplicateItemError(Exception):
 
     def __init__(self, msg):
         self.msg = msg

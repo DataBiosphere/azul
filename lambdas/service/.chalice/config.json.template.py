@@ -20,12 +20,12 @@ emit({
                 config.manifest_lambda_basename: {
                     'lambda_timeout': config.service_lambda_timeout
                 },
-                # config.cart_item_write_lambda_basename: {
-                #     'lambda_timeout': config.service_lambda_timeout
-                # },
-                # config.cart_export_dss_push_lambda_basename: {
-                #     'lambda_timeout': config.service_lambda_timeout
-                # },
+                config.cart_item_write_lambda_basename: {
+                    'lambda_timeout': config.service_lambda_timeout
+                },
+                config.cart_export_dss_push_lambda_basename: {
+                    'lambda_timeout': config.service_lambda_timeout
+                },
                 config.service_cache_health_lambda_basename: {
                     "lambda_memory_size": 128,
                     'lambda_timeout': config.service_lambda_timeout

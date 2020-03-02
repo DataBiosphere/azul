@@ -585,11 +585,11 @@ class Config:
         return self.qualified_resource_name('users')
 
     @property
-    def dynamo_cart_table_name(self):  # no coverage
+    def dynamo_cart_table_name(self):
         return self.qualified_resource_name('carts')
 
     @property
-    def dynamo_cart_item_table_name(self):  # no coverage
+    def dynamo_cart_item_table_name(self):
         return self.qualified_resource_name('cartitems')
 
     cart_item_write_lambda_basename = 'cartitemwrite'
@@ -599,7 +599,7 @@ class Config:
         return self.qualified_resource_name('cartitems')
 
     @property
-    def cart_export_max_batch_size(self):  # no coverage
+    def cart_export_max_batch_size(self):
         return int(os.environ['AZUL_CART_EXPORT_MAX_BATCH_SIZE'])
 
     @property
@@ -607,7 +607,7 @@ class Config:
         return int(os.environ['AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL'])
 
     @property
-    def cart_export_state_machine_name(self):  # no coverage
+    def cart_export_state_machine_name(self):
         return self.qualified_resource_name('cartexport')
 
     cart_export_dss_push_lambda_basename = 'cartexportpush'
