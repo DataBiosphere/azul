@@ -1323,7 +1323,7 @@ def transform_cart_to_response(cart):  # no coverage
     }
 
 
-def create_cart():  # no coverage
+def create_cart():
     """
     Create a cart with the given name for the authenticated user
 
@@ -1356,7 +1356,7 @@ def create_cart():  # no coverage
     }
 
 
-def get_cart(cart_id):  # no coverage
+def get_cart(cart_id):
     """
     Get the cart of the given ID belonging to the user
 
@@ -1384,7 +1384,7 @@ def get_cart(cart_id):  # no coverage
         return transform_cart_to_response(cart)
 
 
-def get_all_carts():  # no coverage
+def get_all_carts():
     """
     Get a list of all carts belonging the user
 
@@ -1403,7 +1403,7 @@ def get_all_carts():  # no coverage
     return [transform_cart_to_response(cart) for cart in carts]
 
 
-def delete_cart(cart_id):  # no coverage
+def delete_cart(cart_id):
     """
     Delete the given cart if it exists and return the deleted cart
 
@@ -1422,7 +1422,7 @@ def delete_cart(cart_id):  # no coverage
     return transform_cart_to_response(deleted_cart)
 
 
-def update_cart(cart_id):  # no coverage
+def update_cart(cart_id):
     """
     Update a cart's attributes.  Only the listed parameters can be updated
 
@@ -1452,7 +1452,7 @@ def update_cart(cart_id):  # no coverage
     return transform_cart_to_response(updated_cart)
 
 
-def get_items_in_cart(cart_id):  # no coverage
+def get_items_in_cart(cart_id):
     """
     Get a list of items in a cart
      parameters:
@@ -1498,7 +1498,7 @@ def get_items_in_cart(cart_id):  # no coverage
         raise NotFoundError(e.msg)
 
 
-def add_item_to_cart(cart_id):  # no coverage
+def add_item_to_cart(cart_id):
     """
     Add cart item to a cart and return the ID of the created item
 
@@ -1547,7 +1547,7 @@ def add_item_to_cart(cart_id):  # no coverage
     }
 
 
-def delete_cart_item(cart_id, item_id):  # no coverage
+def delete_cart_item(cart_id, item_id):
     """
     Delete an item from the cart
 
@@ -1651,7 +1651,7 @@ def cart_item_write_batch(event, _context):
     }
 
 
-def get_cart_item_write_progress(token):  # no coverage
+def get_cart_item_write_progress(token):
     """
     Get the status of a batch cart item write job
 
@@ -1702,7 +1702,7 @@ def get_cart_item_write_progress(token):  # no coverage
     return response
 
 
-def assert_jwt_ttl(expected_ttl):
+def assert_jwt_ttl(expected_ttl):  # no coverage
     remaining_ttl = math.floor(int(app.current_request.context['authorizer']['exp']) - time.time())
     if remaining_ttl < expected_ttl:
         raise BadRequestError('The TTL of the access token is too short.')
@@ -1748,7 +1748,7 @@ def export_cart_as_collection(cart_id: str):  # no coverage
                         headers=result['headers'])
 
 
-def export_cart_as_collection_fetch(cart_id: str):  # no coverage
+def export_cart_as_collection_fetch(cart_id: str):
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
     redirecting to either the location of the manifest or a URL to re-check the status of
@@ -1855,7 +1855,7 @@ def handle_cart_export_request(cart_id: str = None):  # no coverage
 
 # noinspection PyUnusedLocal
 @app.lambda_function(name=config.cart_export_dss_push_lambda_basename)
-def cart_export_send_to_collection_api(event, context):  # no coverage
+def cart_export_send_to_collection_api(event, context):
     """
     Export the data to DSS Collection API
     """

@@ -24,8 +24,7 @@ def setUpModule():
     configure_test_logging()
 
 
-@skip('https://github.com/DataBiosphere/azul/issues/1513')
-class TestCartItemManager(WebServiceTestCase, DynamoTestCase):  # no coverage
+class TestCartItemManager(WebServiceTestCase, DynamoTestCase):
     number_of_documents = 1500
 
     @classmethod
@@ -484,14 +483,15 @@ class TestCartItemManager(WebServiceTestCase, DynamoTestCase):  # no coverage
         self.assertEqual(write_response['count'], len(list(inserted_items)))
 
     @contextmanager
-    def _mock_auth(self, user_id):
+    def _mock_auth(self, user_id):  # no coverage
         with mock.patch.object(self.app_module, 'Authenticator') as jwt_auth:
             jwt_auth.return_value.authenticate_bearer_token.return_value = {'sub': user_id}
             yield
 
+    @skip('https://github.com/DataBiosphere/azul/issues/1513')
     @mock.patch('azul.service.cart_item_manager.CartItemManager.step_function_helper')
     @mock.patch('azul.deployment.aws.dynamo')
-    def test_add_all_results_to_cart_endpoint(self, dynamo, step_function_helper):
+    def test_add_all_results_to_cart_endpoint(self, dynamo, step_function_helper):  # no coverage
         """
         Write all results endpoint should start an execution of the cart item write state machine and
         return the name of the execution and the number items that will be written
