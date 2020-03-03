@@ -3,9 +3,12 @@ from typing import (
     List,
     cast,
     Optional,
+    MutableMapping,
+    Any,
 )
 
 from azul.deployment import aws
+from azul.strings import unwrap
 from azul.types import (
     JSON,
     MutableJSON,
@@ -285,3 +288,33 @@ def _recursive_merge_dicts(d1: JSON, d2: JSON, path: List[str], override: bool) 
                     path_str = '.'.join(map(str, sub_path))
                     raise ValueError(f"Cannot merge path '{path_str}' with values: {merged[k]}, {v}")
     return merged
+
+
+def unwrap_description(kwargs: MutableMapping[str, Any]) -> None:
+    """
+    >>> from azul.doctests import assert_json
+    >>> kwargs = {"foo": "bar", "description": '''
+    ...                                        Multi-lined,
+    ...                                        indented,
+    ...                                        triple-quoted string
+    ...                                        '''}
+    >>> unwrap_description(kwargs)
+    >>> assert_json(kwargs)
+    {
+        "foo": "bar",
+        "description": "Multi-lined, indented, triple-quoted string"
+    }
+
+    >>> kwargs = {"foo": "bar"}
+    >>> unwrap_description(kwargs)
+    >>> assert_json(kwargs)
+    {
+        "foo": "bar"
+    }
+    """
+    try:
+        unwrapped = unwrap(kwargs['description'])
+    except KeyError:
+        pass
+    else:
+        kwargs['description'] = unwrapped

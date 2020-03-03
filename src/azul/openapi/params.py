@@ -2,9 +2,12 @@ from typing import (
     Union
 )
 
-from azul.openapi import schema
+from azul.openapi import (
+    schema,
+    unwrap_description,
+)
 from azul.openapi.schema import (
-    TYPE
+    TYPE,
 )
 from azul.types import (
     JSON,
@@ -55,6 +58,7 @@ def _make_param(name: str, in_: str, type_: Union[TYPE, schema.optional], **kwar
     is_optional = isinstance(type_, schema.optional)
     if is_optional:
         type_ = type_.type_
+    unwrap_description(kwargs)
     return {
         'name': name,
         'in': in_,

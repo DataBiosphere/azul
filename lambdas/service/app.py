@@ -72,7 +72,10 @@ from azul.service.repository_service import (
     RepositoryService,
 )
 from azul.service.storage_service import StorageService
-from azul.strings import pluralize
+from azul.strings import (
+    pluralize,
+    unwrap,
+)
 
 log = logging.getLogger(__name__)
 
@@ -984,25 +987,38 @@ dss_files_spec = {
     'tags': ['DSS'],
     'parameters': [
         params.path('uuid', str, description='UUID of the file to be checked out'),
-        params.query('fileName',
-                     schema.optional(str),
-                     description='The desired name of the file. If absent, the UUID of the file will be used.'),
-        params.query('requestIndex',
-                     schema.optional(int),
-                     description='Number of attempts made through the endpoint to fetch the desired file.'),
-        params.query('wait',
-                     schema.optional(int),
-                     description='If this parameter is 1 and the checkout is still in process, the server will wait '
-                                 'before returning a response. This parameter should only be set to 1 by clients who '
-                                 'don\'t honor the Retry-After header, preventing them from quickly exhausting the '
-                                 'maximum number of redirects. If the server cannot wait the full amount, any amount '
-                                 'of wait time left will still be returned in the Retry-After header of the response.'),
-        params.query('replica',
-                     schema.enum('aws'),
-                     description='All query parameters not mentioned above are forwarded to DSS in order to initiate '
-                                 'checkout process for the correct file. For more information refer to '
-                                 'https://dss.data.humancellatlas.org under GET `/files/{uuid}`. The only mandatory '
-                                 'forwarded header parameter is `replica`, for which Azul only supports AWS.')
+        params.query(
+            'fileName',
+            schema.optional(str),
+            description='The desired name of the file. If absent, the UUID of the file will be used.'
+        ),
+        params.query(
+            'requestIndex',
+            schema.optional(int),
+            description='Number of attempts made through the endpoint to fetch the desired file.'
+        ),
+        params.query(
+            'wait',
+            schema.optional(int),
+            description='''
+                If this parameter is 1 and the checkout is still in progress,
+                the server will wait before returning a response. This parameter
+                should only be set to 1 by clients who don't honor the
+                `Retry-After` header, preventing them from quickly exhausting
+                the maximum number of redirects. If the server cannot wait the
+                full amount, any amount of wait time left will still be returned
+                in the Retry-After header of the response.
+            '''),
+        params.query(
+            'replica',
+            schema.enum('aws'),
+            description='''
+                All query parameters not mentioned above are forwarded to DSS in
+                order to initiate the checkout process for the correct file. For
+                more information refer to https://dss.data.humancellatlas.org
+                under `GET /files/{uuid}`. The only mandatory forwarded
+                parameter is `replica`, for which Azul only supports AWS.
+            ''')
     ]
 }
 
@@ -1012,43 +1028,33 @@ dss_files_spec = {
     'summary': 'Request a download link to a Data Store file and redirect',
     'responses': {
         '301': {
-            'description': 'DSS checkout has been started or is ongoing. The '
-                           'response is a redirect to this very endpoint. The '
-                           'response MAY carry a `Retry-After` header, even if '
-                           'server-side waiting was requested via `wait=1`. '
-                           '`Retry-After` is the recommended number of seconds '
-                           'to wait before requesting the URL specified in the '
-                           '`Location` header, which will point back to this '
-                           'endpoint (so the client should expect a subsequent '
-                           'response of the same kind).',
-
+            'description': unwrap('''
+                DSS checkout has been started or is ongoing. The response is a
+                redirect to this very endpoint, so the client should expect a
+                subsequent response of the same kind.
+            '''),
             'headers': {
                 'Location': responses.header(str, description='This endpoint.'),
-                'Retry-After': responses.header(int, description='Recommended number of seconds to wait before '
-                                                                 'requesting the URL specified in the `Location` '
-                                                                 'header. The response MAY carry this header even if '
-                                                                 'server-side waiting was requested via `wait=1`.')
+                'Retry-After': responses.header(int, description='''
+                    Recommended number of seconds to wait before requesting the
+                    URL specified in the `Location` header. The response MAY
+                    carry this header even if server-side waiting was requested
+                    via `wait=1`.
+                ''')
             }
         },
         '302': {
-            'description': 'DSS checkout is complete. The response is a '
-                           'redirect to an entirely different service. '
-                           'The client should requesting the URL in the '
-                           '`Location` header and expect a response containing '
-                           'the actual file. Currently the `Location` header '
-                           'is a signed URL to an object in S3, but clients '
-                           'should not depend on that. The response will also '
-                           'include a `Content-Disposition` header set to '
-                           '`attachment; filename=` followed by the value of '
-                           'the `fileName` parameter specified in the initial '
-                           'request (or the UUID of the file if that parameter '
-                           'was omitted).',
+            'description': unwrap('''
+                DSS checkout is complete. The response is a redirect to an
+                entirely different service (currently a signed URL to an object
+                in S3, but clients should not depend on that).
+            '''),
             'headers': {
-                'Location': responses.header(str, description='Signed URL that will yield the actual content of the '
-                                                              'file.'),
-                'Content-Disposition': responses.header(str, description='Set to `attachment; filename=` followed by '
-                                                                         'the name of the file as determined by the '
-                                                                         '`uuid`/`fileName` parameters.')
+                'Location': responses.header(str, description='URL that will yield the actual content of the file.'),
+                'Content-Disposition': responses.header(str, description=unwrap('''
+                    Set to `attachment; filename=` followed by the name of the
+                    file as determined by the `uuid`/`fileName` parameters.
+                '''))
             }
         },
     }
@@ -1071,20 +1077,19 @@ def dss_files(uuid):
     'summary': 'Request a download link to a Data Store file and check status',
     'responses': {
         '200': {
-            'description': 'DSS checkout with status report, emulating the '
-                           'response code and headers of the `/dss/files/` '
-                           'endpoint. Note that the actual HTTP response will '
-                           'have status 200 while the `Status` field of the '
-                           'body will be 301 or 302. The intent is to emulate '
-                           'HTTP while bypassing the default client behavior, '
-                           'which (in most web browsers) is to ignore '
-                           '`Retry-After`. The response described here is '
-                           'intended to be processed by client-side Javascript '
-                           'such that the recommended delay in `Retry-After` '
-                           'can be handled in Javascript rather that relying '
-                           'on the native implementation by the web browser. '
-                           'See `/dss/files` for guidance on handling the '
-                           'response.',
+            'description': unwrap('''
+                DSS checkout with status report, emulating the response code and
+                headers of the `/dss/files/` endpoint. Note that the actual HTTP
+                response will have status 200 while the `Status` field of the
+                body will be 301 or 302. The intent is to emulate HTTP while
+                bypassing the default client behavior, which (in most web
+                browsers) is to ignore `Retry-After`. The response described
+                here is intended to be processed by client-side Javascript such
+                that the recommended delay in `Retry-After` can be handled in
+                Javascript rather that relying on the native implementation by
+                the web browser. See `/dss/files` for the meaning of the
+                response elements.
+            '''),
             'content': {
                 'application/json': {
                     'schema': schema.object(

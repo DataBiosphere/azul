@@ -46,3 +46,22 @@ def pluralize(word: str, count: int) -> str:
         else:
             result += 's'
     return result
+
+
+def unwrap(string: str):
+    """
+    Remove newlines and leading/trailing whitespace, and consolidate
+    newline-adjacent whitespace.
+    Useful for processing triple-quote strings.
+
+    >>> unwrap(' ce nest pas \\n une chaine \\n de plusieurs lignes. ')
+    'ce nest pas une chaine de plusieurs lignes.'
+
+    >>> unwrap('''
+    ...        Multi-lined,
+    ...        indented,
+    ...        triple-quoted string.
+    ...        ''')
+    'Multi-lined, indented, triple-quoted string.'
+    """
+    return ' '.join(filter(None, (line.strip() for line in string.split('\n'))))
