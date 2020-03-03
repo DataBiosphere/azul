@@ -189,18 +189,20 @@ class BaseIndexer(ABC):
                     break
             else:
                 assert False
-            # When indexing a test bundle we want to change its UUID so that we can delete it later. We change the
-            # version to ensure that the test bundle will always be selected to contribute to a shared entity (the
-            # test bunde version was set to the current time when the notification is sent).
+            # When indexing a test bundle we want to change its UUID so that we
+            # can delete it later. We change the version to ensure that the test
+            # bundle will always be selected to contribute to a shared entity
+            # (the test bunde version was set to the current time when the
+            # notification is sent).
             return dss_notification['test_bundle_uuid'], dss_notification['test_bundle_version']
 
     def contribute(self, contributions: List[Contribution]) -> Tallies:
         """
-        Write the given entity contributions to the index and return tallies, a dictionary tracking the number of
-        contributions made to each entity.
+        Write the given entity contributions to the index and return tallies, a
+        dictionary tracking the number of contributions made to each entity.
 
-        Tallies for overwritten documents are not counted. This means a tally with a count of 0 may exist. This is ok.
-        See description of aggregate().
+        Tallies for overwritten documents are not counted. This means a tally
+        with a count of 0 may exist. This is ok. See description of aggregate().
         """
         writer = self._create_writer()
         tallies = Counter(c.entity for c in contributions)
@@ -217,14 +219,17 @@ class BaseIndexer(ABC):
 
     def aggregate(self, tallies: Tallies):
         """
-        Read all contributions to the entities listed in the given tallies from the index, aggregate the
-        contributions into one aggregate per entity and write the resulting aggregates to the index.
+        Read all contributions to the entities listed in the given tallies from
+        the index, aggregate the contributions into one aggregate per entity and
+         write the resulting aggregates to the index.
 
-        Normally there is a 1 to 1 correspondence between number of contributions for an entity and the value for a
-        tally, however tallies are not counted for updates. This means, in the case of a duplicate notification or
-        writing over an already populated index, it's possible to receive a tally with a value of 0. We still need to
-        aggregate (if the indexed format changed for example). Tallies are a lower bound for the number of contributions
-        in the index for a given entity.
+        Normally there is a 1 to 1 correspondence between number of
+        contributions for an entity and the value for a tally, however tallies
+        are not counted for updates. This means, in the case of a duplicate
+        notification or writing over an already populated index, it's possible
+        to receive a tally with a value of 0. We still need to aggregate (if the
+        indexed format changed for example). Tallies are a lower bound for the
+        number of contributions in the index for a given entity.
         """
         writer = self._create_writer()
         while True:
@@ -354,7 +359,8 @@ class BaseIndexer(ABC):
         """
         Synchronous form of delete that is currently only used for testing.
 
-        In production code, there is an SQS queue between the calls to `contribute()` and `aggregate()`
+        In production code, there is an SQS queue between the calls to
+        `contribute()` and `aggregate()`.
         """
         # FIXME: this only works if the bundle version is not being indexed
         #        concurrently. The fix could be to optimistically lock on the
@@ -370,9 +376,11 @@ class BaseIndexer(ABC):
         self.aggregate(tallies)
 
     def _create_writer(self) -> 'IndexWriter':
-        # We allow one conflict retry in the case of duplicate notifications and switch from 'add' to 'update'.
-        # After that, there should be no conflicts because we use an SQS FIFO message group per entity.
-        # For other errors we use SQS message redelivery to take care of the retries.
+        # We allow one conflict retry in the case of duplicate notifications and
+        # switch from 'add' to 'update'. After that, there should be no
+        # conflicts because we use an SQS FIFO message group per entity. For
+        # other errors we use SQS message redelivery to take care of the
+        # retries.
         return IndexWriter(self.field_types(), refresh=False, conflict_retry_limit=1, error_retry_limit=0)
 
 
@@ -388,11 +396,15 @@ class IndexWriter:
 
         :param refresh: https://www.elastic.co/guide/en/elasticsearch/reference/5.5/docs-refresh.html
 
-        :param conflict_retry_limit: The maximum number of retries (the second attempt is the first retry) on version
-                                     conflicts. Specify 0 for no retries or None for unlimited retries.
+        :param conflict_retry_limit: The maximum number of retries (the second
+                                     attempt is the first retry) on version
+                                     conflicts. Specify 0 for no retries or None
+                                     for unlimited retries.
 
-        :param error_retry_limit: The maximum number of retries (the second attempt is the first retry) on other
-                                  errors. Specify 0 for no retries or None for unlimited retries.
+        :param error_retry_limit: The maximum number of retries (the second
+                                  attempt is the first retry) on other errors.
+                                  Specify 0 for no retries or None for
+                                  unlimited retries.
         """
         super().__init__()
         self.field_types = field_types
@@ -408,7 +420,8 @@ class IndexWriter:
 
     def write(self, documents: List[Document]):
         """
-        Make an attempt to write the documents into the index, updating local state with failures and conflicts
+        Make an attempt to write the documents into the index, updating local
+        state with failures and conflicts
 
         :param documents: Documents to index
         """
