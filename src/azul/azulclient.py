@@ -20,7 +20,6 @@ from typing import (
     Iterable,
     Tuple,
 )
-from urllib.error import HTTPError
 from urllib.parse import (
     urlparse,
 )
@@ -110,7 +109,7 @@ class AzulClient(object):
                     logger.info("Sending notification %s to %s -- attempt %i:", notification, indexer_url, i)
                     url = urlparse(indexer_url)
                     self.post_bundle(url.geturl(), notification)
-                except HTTPError as e:
+                except requests.HTTPError as e:
                     if i < 3:
                         logger.warning("Notification %s, attempt %i: retrying after error %s", notification, i, e)
                         return notification, tpe.submit(partial(attempt, notification, i + 1))
@@ -131,7 +130,7 @@ class AzulClient(object):
                     bundle_fqid, result = future.result()
                     if result is None:
                         indexed += 1
-                    elif isinstance(result, HTTPError):
+                    elif isinstance(result, requests.HTTPError):
                         errors[result.code] += 1
                         missing.append((notification, result.code))
                     elif isinstance(result, Future):
