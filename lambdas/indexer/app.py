@@ -134,16 +134,6 @@ def retrieve_fail_messages(_event: chalice.app.CloudWatchEvent):
     """
     Get all the messages from the fail queue and save them in the the DynamoDB failure message table.
     """
-    queues = Queues()
-    messages = queues.receive_all_messages(config.fail_queue_name)
-    database = boto3.resource('dynamodb')
-    table = database.Table(config.dynamo_failure_message_table_name)
-    with table.batch_writer() as writer:
-        for message in messages:
-            body = json.loads(message.body)
-            item = {
-                'MessageType': 'bundle_notification' if 'notification' in body.keys() else 'other',
-                'SentTimeMessageId': f"{message.attributes['SentTimestamp']}-{message.message_id}",
-                'Body': message.body
-            }
-            writer.put_item(Item=item)
+    controller = HealthController(lambda_name='indexer')
+    remaining_context_time = RemainingLambdaContextTime(app.lambda_context)
+    controller.archive_fail_messages(remaining_context_time)
