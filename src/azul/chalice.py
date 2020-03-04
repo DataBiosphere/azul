@@ -14,25 +14,46 @@ log = logging.getLogger(__name__)
 
 class AzulChaliceApp(Chalice):
 
-    def __init__(self, app_name):
+    def __init__(self, app_name, unit_test=False):
+        self.unit_test = unit_test
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
 
-    def route(self, path, **kwargs):
+    def route(self, path, enabled=True, path_spec=None, method_spec=None, **kwargs):
         """
-        Same as method in supper class but stashes URL path a view function is bound to as an attribute of the
-        function itself.
+        Decorates a view handler function in a Chalice application.
+
+        See https://chalice.readthedocs.io/en/latest/api.html#Chalice.route.
+
+        :param path: See https://chalice.readthedocs.io/en/latest/api.html#Chalice.route
+
+        :param method_spec: FIXME: https://github.com/DataBiosphere/azul/issues/1613
+
+        :param path_spec: FIXME: https://github.com/DataBiosphere/azul/issues/1613
+
+        :param enabled: If False, do not route any requests to the decorated
+                        view function. The application will behave as if the
+                        view function wasn't decorated.
         """
-        methods = kwargs.get('methods', None)
-        path_spec = kwargs.pop('path_spec', None)
-        method_spec = kwargs.pop('method_spec', None)
-        decorator = super().route(path, **kwargs)
+        if enabled:
+            methods = kwargs.get('methods')
+            decorator = super().route(path, **kwargs)
 
-        def _decorator(view_func):
-            view_func = openapi_spec(path, methods, path_spec=path_spec, method_spec=method_spec)(view_func)
-            view_func.path = path
-            return decorator(view_func)
+            def _decorator(view_func):
+                view_func = openapi_spec(path, methods, path_spec=path_spec, method_spec=method_spec)(view_func)
+                # Stash the URL path a view function is bound to as an attribute of
+                # the function itself.
+                view_func.path = path
+                return decorator(view_func)
 
-        return _decorator
+            return _decorator
+        else:
+            return lambda view_func: view_func
+
+    def test_route(self, *args, **kwargs):
+        """
+        A route that's only enabled during unit tests.
+        """
+        return self.route(*args, enabled=self.unit_test, **kwargs)
 
     def _get_view_function_response(self, view_function, function_args):
         self._log_request()

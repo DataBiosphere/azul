@@ -74,7 +74,8 @@ from azul.strings import pluralize
 
 log = logging.getLogger(__name__)
 
-app = AzulChaliceApp(app_name=config.service_name)
+app = AzulChaliceApp(app_name=config.service_name,
+                     unit_test=globals().get('unit_test', False))  # see LocalAppTestCase.setUpClass()
 configure_app_logging(app, log)
 
 openapi_spec = {
@@ -1323,7 +1324,7 @@ def transform_cart_to_response(cart):
     }
 
 
-@app.route('/resources/carts', methods=['POST'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts', methods=['POST'], cors=True, authorizer=jwt_auth)
 def create_cart():
     """
     Create a cart with the given name for the authenticated user
@@ -1357,7 +1358,7 @@ def create_cart():
     }
 
 
-@app.route('/resources/carts/{cart_id}', methods=['GET'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts/{cart_id}', methods=['GET'], cors=True, authorizer=jwt_auth)
 def get_cart(cart_id):
     """
     Get the cart of the given ID belonging to the user
@@ -1386,7 +1387,7 @@ def get_cart(cart_id):
         return transform_cart_to_response(cart)
 
 
-@app.route('/resources/carts', methods=['GET'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts', methods=['GET'], cors=True, authorizer=jwt_auth)
 def get_all_carts():
     """
     Get a list of all carts belonging the user
@@ -1406,7 +1407,7 @@ def get_all_carts():
     return [transform_cart_to_response(cart) for cart in carts]
 
 
-@app.route('/resources/carts/{cart_id}', methods=['DELETE'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts/{cart_id}', methods=['DELETE'], cors=True, authorizer=jwt_auth)
 def delete_cart(cart_id):
     """
     Delete the given cart if it exists and return the deleted cart
@@ -1426,7 +1427,7 @@ def delete_cart(cart_id):
     return transform_cart_to_response(deleted_cart)
 
 
-@app.route('/resources/carts/{cart_id}', methods=['PUT'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts/{cart_id}', methods=['PUT'], cors=True, authorizer=jwt_auth)
 def update_cart(cart_id):
     """
     Update a cart's attributes.  Only the listed parameters can be updated
@@ -1457,7 +1458,7 @@ def update_cart(cart_id):
     return transform_cart_to_response(updated_cart)
 
 
-@app.route('/resources/carts/{cart_id}/items', methods=['GET'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts/{cart_id}/items', methods=['GET'], cors=True, authorizer=jwt_auth)
 def get_items_in_cart(cart_id):
     """
     Get a list of items in a cart
@@ -1504,7 +1505,7 @@ def get_items_in_cart(cart_id):
         raise NotFoundError(e.msg)
 
 
-@app.route('/resources/carts/{cart_id}/items', methods=['POST'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts/{cart_id}/items', methods=['POST'], cors=True, authorizer=jwt_auth)
 def add_item_to_cart(cart_id):
     """
     Add cart item to a cart and return the ID of the created item
@@ -1554,7 +1555,7 @@ def add_item_to_cart(cart_id):
     }
 
 
-@app.route('/resources/carts/{cart_id}/items/{item_id}', methods=['DELETE'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts/{cart_id}/items/{item_id}', methods=['DELETE'], cors=True, authorizer=jwt_auth)
 def delete_cart_item(cart_id, item_id):
     """
     Delete an item from the cart
@@ -1584,7 +1585,7 @@ def delete_cart_item(cart_id, item_id):
     return {'deleted': True}
 
 
-@app.route('/resources/carts/{cart_id}/items/batch', methods=['POST'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts/{cart_id}/items/batch', methods=['POST'], cors=True, authorizer=jwt_auth)
 def add_all_results_to_cart(cart_id):
     """
     Add all entities matching the given filters to a cart
@@ -1660,7 +1661,7 @@ def cart_item_write_batch(event, _context):
     }
 
 
-@app.route('/resources/carts/status/{token}', methods=['GET'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts/status/{token}', methods=['GET'], cors=True, authorizer=jwt_auth)
 def get_cart_item_write_progress(token):
     """
     Get the status of a batch cart item write job
@@ -1718,7 +1719,7 @@ def assert_jwt_ttl(expected_ttl):
         raise BadRequestError('The TTL of the access token is too short.')
 
 
-@app.route('/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
+@app.test_route('/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
 def export_cart_as_collection(cart_id: str):
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
@@ -1759,7 +1760,7 @@ def export_cart_as_collection(cart_id: str):
                         headers=result['headers'])
 
 
-@app.route('/fetch/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
+@app.test_route('/fetch/resources/carts/{cart_id}/export', methods=['GET', 'POST'], cors=True, authorizer=jwt_auth)
 def export_cart_as_collection_fetch(cart_id: str):
     """
     Initiate and check status of a cart export job, returning a either a 301 or 302 response
