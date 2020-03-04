@@ -68,10 +68,12 @@ class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # Load the application module without modifying `sys.path` and without adding it to `sys.modules`. This
-        # simplifies tear down and isolates the app modules from different lambdas loaded by different concrete
-        # subclasses. It does, however, violate this one invariant: `sys.modules[module.__name__] == module`
-        cls.app_module = load_app_module(cls.lambda_name())
+        # Load the application module without modifying `sys.path` and without
+        # adding it to `sys.modules`. This simplifies tear down and isolates the
+        # app modules from different lambdas loaded by different concrete
+        # subclasses. It does, however, violate this one invariant:
+        # `sys.modules[module.__name__] == module`
+        cls.app_module = load_app_module(cls.lambda_name(), unit_test=True)
 
     @classmethod
     def tearDownClass(cls):

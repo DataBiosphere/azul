@@ -47,7 +47,8 @@ from azul.types import JSON
 
 log = logging.getLogger(__name__)
 
-app = AzulChaliceApp(app_name=config.indexer_name)
+app = AzulChaliceApp(app_name=config.indexer_name,
+                     unit_test=globals().get('unit_test', False))  # see LocalAppTestCase.setUpClass()
 
 configure_app_logging(app, log)
 
