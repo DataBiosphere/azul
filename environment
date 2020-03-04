@@ -3,7 +3,7 @@
 # even though they are considered part of Azul. For secret values that should
 # not be printed or logged, use a variable name containing any of the strings
 # `secret`, `password` or `token`, either upper or lower case. Think twice
-# before publishing variable containing a secret.
+# before publishing a variable containing a secret.
 
 azul_vars=(
     # The path to the root directory of the project
