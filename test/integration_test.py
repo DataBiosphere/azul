@@ -137,6 +137,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.test_uuid = str(uuid.uuid4())
         self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
         self.num_bundles = 0
+        self.queue_names = (config.notify_queue_name, config.document_queue_name)
         self._set_test_mode(True)
 
     def tearDown(self):
@@ -161,12 +162,13 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.test_notifications, self.expected_fqids = self._test_notifications(test_name=self.test_name,
                                                                                 test_uuid=self.test_uuid,
                                                                                 max_bundles=self.max_bundles)
+        self.num_bundles = len(self.expected_fqids)
+        Queues.wait_for_queue_level(self.queue_names, empty=True, num_bundles=self.num_bundles)
         azul_client._index(self.test_notifications)
         # Index some bundles again to test that we handle duplicate additions.
         # Note: random.choices() may pick the same element multiple times so
         # some notifications will end up being sent three or more times.
         azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
-        self.num_bundles = len(self.expected_fqids)
         self._check_bundles_are_indexed(self.test_name, 'files')
 
     def _test_other_endpoints(self):
@@ -236,9 +238,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def _delete_bundles(self, notifications):
         if notifications:
             self.azul_client.delete_notification(notifications)
-        queue_names = (config.notify_queue_name, config.document_queue_name)
-        Queues.wait_for_queue_level(queue_names, empty=False)
-        Queues.wait_for_queue_level(queue_names, timeout=self._queue_empty_timeout(self.num_bundles))
+        Queues.wait_for_queue_level(self.queue_names, empty=False, num_bundles=self.num_bundles)
+        Queues.wait_for_queue_level(self.queue_names, empty=True, num_bundles=self.num_bundles)
 
     def _set_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -348,14 +349,6 @@ class IntegrationTest(AlwaysTearDownTestCase):
                 break
         return filtered_bundle_fqids
 
-    def _queue_empty_timeout(self, num_bundles: int):
-        time_per_bundle = 5
-        time_for_deque_to_empty = 10 * 5  # time for a 0 count to propagate through the deque in wait_for_queue_level()
-        min_timeout = 60
-        max_timeout = 10 * 60
-        timeout = max((num_bundles * time_per_bundle) + time_for_deque_to_empty, min_timeout)
-        return min(timeout, max_timeout)
-
     def _check_bundles_are_indexed(self, test_name: str, entity_type: str):
         service_check_timeout = 600
         delay_between_retries = 5
@@ -365,9 +358,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
         log.info('Starting integration test %s with the prefix %s for the entity type %s. Expected %i bundle(s).',
                  test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
         log.debug('Expected bundles %s ', sorted(self.expected_fqids))
-        queue_names = (config.notify_queue_name, config.document_queue_name)
-        Queues.wait_for_queue_level(queue_names, empty=False)
-        Queues.wait_for_queue_level(queue_names, timeout=self._queue_empty_timeout(self.num_bundles))
+        Queues.wait_for_queue_level(self.queue_names, empty=False, num_bundles=self.num_bundles)
+        Queues.wait_for_queue_level(self.queue_names, empty=True, num_bundles=self.num_bundles)
         log.info('Checking if bundles are referenced by the service response ...')
         retries = 0
         deadline = time.time() + service_check_timeout

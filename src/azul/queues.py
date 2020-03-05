@@ -166,18 +166,30 @@ class Queues:
         return total_message_count
 
     @classmethod
-    def wait_for_queue_level(cls, queue_names, empty: bool = True, timeout: int = 120):
+    def wait_for_queue_level(cls, queue_names, empty: bool = True, num_bundles: int = None):
         """
         Wait until the total count of queued messages reaches the desired level
 
         :param queue_names: The names of the queues to check messages counts in
-        :param empty: If we should wait until the queues are empty. False to wait until not empty.
-        :param timeout: Give up waiting after this many seconds
+        :param empty: True to wait until the queues are empty, False to wait until not empty.
+        :param num_bundles: Number of bundles being indexed (None = many bundles)
         """
+        sleep_time = 5
+        deque_size = 10 if empty else 1
         queues = cls.get_queues(queue_names)
-        wait_start_time = time.time()
-        deque_size = 10
         queue_size_history = deque(maxlen=deque_size)
+        wait_start_time = time.time()
+
+        if not empty:
+            timeout = 2 * 60
+        elif num_bundles is None:
+            timeout = 60 * 60
+        else:
+            # calculate timeout for queues to empty with a given number of bundles
+            time_to_clear_deque = deque_size * sleep_time
+            time_processing_bundles = num_bundles * 5  # small time per bundle
+            timeout = max(time_processing_bundles + time_to_clear_deque, 60)  # at least 1 min
+            timeout = min(timeout, 60 * 60)  # at most 60 min
 
         logger.info('Waiting up to %s seconds for %s queues to %s ...',
                     timeout, len(queues), 'empty' if empty else 'not be empty')
