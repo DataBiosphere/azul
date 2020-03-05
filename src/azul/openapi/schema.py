@@ -6,7 +6,12 @@ from typing import (
     Union,
 )
 
-from azul.types import JSON
+from more_itertools import one
+
+from azul.types import (
+    JSON,
+    PrimitiveJSON,
+)
 
 """
 A bunch of factories for creating JSON schemas. Mainly for use in OpenAPI specs.
@@ -22,14 +27,14 @@ class optional(NamedTuple):
     """
     Use in conjunction with `object` to mark certain properties as optional.
     """
-    property: TYPE
+    type_: TYPE
 
 
 # We're consciously shadowing the `object` builtin here. Two factors mitigate
 # the negative effects of this decision: 1) this module is short so the shadowed
 # builtin is unlikely to be used by it. 2) this module is meant to be imported
 # wholesale and its members referenced by fully qualifying their name so the
-# `object` builtin is not shadowed in the importing module.q
+# `object` builtin is not shadowed in the importing module.
 
 
 # noinspection PyShadowingBuiltins
@@ -70,7 +75,7 @@ def object(additional_properties=False, **props: Union[TYPE, optional]):
     required = []
     for name, prop in props.items():
         if isinstance(prop, optional):
-            prop = prop.property
+            prop = prop.type_
         else:
             required.append(name)
         new_props[name] = prop
@@ -122,6 +127,78 @@ def array(item: TYPE, *items: TYPE, **kwargs):
     }
     """
     return array_type(make_type(item), *map(make_type, items), **kwargs)
+
+
+def enum(*items: PrimitiveJSON, type_: TYPE = None) -> JSON:
+    """
+    Returns an `enum` schema for the given items. By default, the schema type of
+    the items is inferred, but a type may be passed explicitly to override that.
+    However, the current implementation cannot detect some cases in which the
+    types of the enum values contradict the explicit type.
+
+    >>> from azul.doctests import assert_json
+    >>> assert_json(enum('foo', 'bar', type_=str))
+    {
+        "type": "string",
+        "enum": [
+            "foo",
+            "bar"
+        ]
+    }
+
+    >>> assert_json(enum(2, 5, 7))
+    {
+        "type": "integer",
+        "format": "int64",
+        "enum": [
+            2,
+            5,
+            7
+        ]
+    }
+
+    >>> assert_json(enum('x', type_={'type': 'string'}))
+    {
+        "type": "string",
+        "enum": [
+            "x"
+        ]
+    }
+
+    >>> enum('foo', 1.0)
+    Traceback (most recent call last):
+    ...
+    ValueError: too many items in iterable (expected 1)
+
+    >>> enum('foo', 'bar', type_=int)
+    Traceback (most recent call last):
+    ...
+    AssertionError
+
+    >>> assert_json(enum('foo', 'bar', type_="integer"))
+    {
+        "type": "integer",
+        "enum": [
+            "foo",
+            "bar"
+        ]
+    }
+    """
+
+    if isinstance(type_, type):
+        assert all(isinstance(item, type_) for item in items)
+    else:
+        inferred_type = one(set(map(type, items)))
+        if type_ is None:
+            type_ = inferred_type
+        else:
+            # Can't easily verify type when passed as string or mapping
+            pass
+
+    return {
+        **make_type(type_),
+        'enum': items
+    }
 
 
 _primitive_types: Mapping[Optional[type], JSON] = {
