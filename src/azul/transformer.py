@@ -7,6 +7,10 @@ from collections import (
     Counter,
     defaultdict,
 )
+from enum import (
+    Enum,
+    auto,
+)
 import logging
 import sys
 from typing import (
@@ -26,6 +30,7 @@ from typing import (
 from dataclasses import (
     dataclass,
     fields,
+    field,
 )
 from humancellatlas.data.metadata import api
 from more_itertools import one
@@ -76,12 +81,25 @@ FieldTypes1 = Union[Mapping[str, FieldTypes2], FieldType]
 FieldTypes = Mapping[str, FieldTypes1]
 
 
+class VersionType(Enum):
+    # No versioning; document is created or overwritten as needed
+    none = auto()
+
+    # Writing a document fails with 409 conflict if one with the same ID already
+    # exists in the index
+    create_only = auto()
+
+    # Use the Elasticsearch "internal" versioning type
+    # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docs-index_.html#_version_types
+    internal = auto()
+
+
 @dataclass
 class Document:
     entity: EntityReference
     type: ClassVar[str] = 'doc'
+    version_type: VersionType = field(init=False)
     version: Optional[int]
-    version_type: ClassVar[Optional[str]] = None
     contents: Optional[JSON]
 
     @classmethod
@@ -226,14 +244,12 @@ class Document:
                    **cls._from_source(source))
         return self
 
-    def to_index(self, field_types, bulk=False, update=False) -> dict:
+    def to_index(self, field_types, bulk=False) -> dict:
         """
         Build request parameters from the document for indexing
 
         :param field_types: A mapping of field paths to field type
         :param bulk: If bulk indexing
-        :param update: If creation failed and we need to try update. This will only affect docs with version_type None
-                       (AKA contributions)
         :return: Request parameters for indexing
         """
         delete = self.delete
@@ -243,19 +259,34 @@ class Document:
             **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source(), field_types)}),
             '_id' if bulk else 'id': self.document_id
         }
-        if self.version_type is None:
-            # TODO: FIXME: (jesse) why only for bulk???
-            if False and bulk:
+        if self.version_type is VersionType.none:
+            assert self.version is None
+            if bulk:
                 result['_op_type'] = 'delete' if delete else 'index'
-            op_key = '_op_type' if bulk else 'op_type'
-            result[op_key] = 'delete' if delete else ('index' if update else 'create')
-        else:
+            else:
+                # For non-bulk updates, the op-type is determined by which
+                # client method is invoked.
+                pass
+        elif self.version_type is VersionType.create_only:
+            assert self.version is None
+            if bulk:
+                result['_op_type'] = 'delete' if delete else 'create'
+            else:
+                result['op_type'] = 'create'
+        elif self.version_type is VersionType.internal:
             if bulk:
                 result['_op_type'] = 'delete' if delete else ('create' if self.version is None else 'index')
-            elif self.version is None and not delete:
-                result['op_type'] = 'create'
-            result['_version_type' if bulk else 'version_type'] = self.version_type
+            elif not delete:
+                if self.version is None:
+                    result['op_type'] = 'create'
+            else:
+                # For non-bulk updates 'delete' is not a possible op-type.
+                # Instead, self.delete controls which client method is invoked.
+                pass
+            result['_version_type' if bulk else 'version_type'] = 'internal'
             result['_version' if bulk else 'version'] = self.version
+        else:
+            assert False
         return result
 
     @property
@@ -268,6 +299,12 @@ class Contribution(Document):
     bundle_uuid: BundleUUID
     bundle_version: BundleVersion
     bundle_deleted: bool
+
+    def __post_init__(self):
+        # The version_type attribute will change to VersionType.none if writing
+        # to Elasticsearch fails with 409. The reason we provide a default for
+        # version_type at the class level is due to limitations with @dataclass.
+        self.version_type = VersionType.create_only
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
@@ -313,7 +350,11 @@ class Contribution(Document):
 class Aggregate(Document):
     bundles: Optional[List[JSON]]
     num_contributions: int
-    version_type: ClassVar[Optional[str]] = 'internal'
+
+    def __post_init__(self):
+        # Cannot provide a default for version_type at the class level due to
+        # limitations with @dataclass.
+        self.version_type = VersionType.internal
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
@@ -720,12 +761,12 @@ class SimpleAggregator(EntityAggregator):
 
     def _accumulate(self, aggregate: MutableMapping[str, Optional[Accumulator]], entity: JSON):
         entity = self._transform_entity(entity)
-        for field, value in entity.items():
+        for field_, value in entity.items():
             try:
-                accumulator = aggregate[field]
+                accumulator = aggregate[field_]
             except Exception:
-                accumulator = self._get_accumulator(field)
-                aggregate[field] = accumulator
+                accumulator = self._get_accumulator(field_)
+                aggregate[field_] = accumulator
             if accumulator is not None:
                 accumulator.accumulate(value)
 
