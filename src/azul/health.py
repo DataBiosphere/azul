@@ -1,33 +1,32 @@
-import json
-import time
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
+import json
+import time
 from typing import (
-    Tuple,
-    Optional,
     Iterable,
+    Tuple,
 )
 
 import boto3
-import requests
 from botocore.exceptions import ClientError
+from chalice import (
+    ChaliceViewError,
+    Response,
+)
+import requests
 
 from azul import (
+    RequirementError,
     config,
     require,
-    RequirementError,
 )
 from azul.decorators import memoized_property
 from azul.es import ESClientFactory
 from azul.service.storage_service import StorageService
 from azul.types import JSON
-from chalice import (
-    Response,
-    BadRequestError,
-)
 
 
-class Health:
+class HealthController:
     """
     Encapsulates information about the health status of an Azul deployment. All
     aspects of health are exposed as lazily loaded properties. Instantiating the
@@ -54,25 +53,27 @@ class Health:
             'api_endpoints',
         }
     }
+
     endpoints = [f'/repository/{entity_type}?size=1'
                  for entity_type in ('projects', 'samples', 'files', 'bundles')]
 
-    def __init__(self, lambda_name):
+    def __init__(self, lambda_name: str):
         self.lambda_name = lambda_name
+        self.storage_service = StorageService()
 
-    def as_json(self, keys: Optional[Iterable[str]] = None) -> JSON:
-        if keys is None:
-            keys = self.keys_by_service[self.lambda_name]
-            assert keys.issubset(self.all_keys)
+    def as_json(self, keys: Iterable[str]) -> JSON:
+        keys = set(keys)
+        if keys:
+            require(keys.issubset(self.all_keys))
         else:
-            keys = set(keys)
-            if keys:
-                require(keys.issubset(self.all_keys))
-            else:
-                keys = self.all_keys
+            keys = self.all_keys
         json = {k: getattr(self, k) for k in keys}
         json['up'] = all(v['up'] for v in json.values())
         return json
+
+    def fast_response(self):
+        body = self.as_json(self.keys_by_service[self.lambda_name])
+        return self._http_response(body)
 
     @memoized_property
     def other_lambdas(self):
@@ -160,45 +161,49 @@ class Health:
                 'up': up,
             }
 
+    def full_response(self):
+        body = self.as_json(self.all_keys)
+        return self._http_response(body)
 
-class HealthController:
-
-    def __init__(self, lambda_name: str, keys: str = None, request_path: str = '/health'):
-        self.keys = keys
-        self.request_path = request_path
-        self.storage_service = StorageService()
-        self.health = Health(lambda_name=lambda_name)
-
-    def response(self):
-        if self.keys == 'basic':
-            return {
-                'up': True,
-            }
-        elif self.keys == 'cached':
+    def response(self, keys):
+        if keys is None:
+            body = self.as_json(self.all_keys)
+        elif isinstance(keys, str):
+            assert keys  # Chalice maps empty string to None
+            keys = keys.split(',')
             try:
-                health_object = json.loads(self.storage_service.get(f'health/{self.health.lambda_name}'))
-            except self.storage_service.client.exceptions.NoSuchKey:
-                return Response(status_code=500,
-                                body=json.dumps({'Message': 'Cached health object does not exist'}))
-            max_age = 2 * 60
-            if time.time() - health_object['time'] > max_age:
-                return Response(status_code=500,
-                                body=json.dumps({'Message': 'Cached health object is stale'}))
-            else:
-                body = health_object['health']
-        else:
-            if self.keys is None:
-                if self.request_path.endswith('/'):
-                    self.keys = ()
-            else:
-                self.keys = self.keys.split(',')
-            try:
-                body = self.health.as_json(self.keys)
+                body = self.as_json(keys)
             except RequirementError:
-                raise BadRequestError('Invalid health keys')
-        return Response(body=json.dumps(body),
-                        status_code=200 if body['up'] else 503)
+                body = {'Message': 'Invalid health keys'}
+        else:
+            body = {'Message': 'Invalid health keys'}
+        return self._http_response(body)
 
     def generate_cache(self):
-        health_object = dict(time=time.time(), health=self.health.as_json())
-        self.storage_service.put(object_key=f'health/{self.health.lambda_name}', data=json.dumps(health_object))
+        health_object = dict(time=time.time(), health=self.fast_response())
+        self.storage_service.put(object_key=f'health/{self.lambda_name}', data=json.dumps(health_object))
+
+    def cached_response(self):
+        try:
+            cache = json.loads(self.storage_service.get(f'health/{self.lambda_name}'))
+        except self.storage_service.client.exceptions.NoSuchKey:
+            raise ChaliceViewError('Cached health object does not exist')
+        else:
+            max_age = 2 * 60
+            if time.time() - cache['time'] > max_age:
+                raise ChaliceViewError('Cached health object is stale')
+            else:
+                body = cache['health']
+        return self._http_response(body)
+
+    def basic_response(self):
+        return self._http_response({'up': True})
+
+    def _http_response(self, body):
+        try:
+            up = body['up']
+        except KeyError:
+            status = 400
+        else:
+            status = 200 if up else 503
+        return Response(body=json.dumps(body), status_code=status)

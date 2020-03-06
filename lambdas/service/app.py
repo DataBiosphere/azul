@@ -38,9 +38,9 @@ from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.openapi import (
     annotated_specs,
-    schema,
     params,
     responses,
+    schema,
 )
 from azul.plugin import Plugin
 from azul.portal_service import PortalService
@@ -222,10 +222,42 @@ health_spec = {
 }
 
 
+def health_controller():
+    return HealthController(lambda_name='service')
+
+
 @app.route('/health', methods=['GET'], cors=True, method_spec={
     **health_spec,
     'summary': 'List health information for webservice'
 })
+def health():
+    return health_controller().full_response()
+
+
+@app.route('/health/basic', methods=['GET'], cors=True,  method_spec={
+    **health_spec,
+    'summary': 'Check Azul service is reachable'
+})
+def basic_health():
+    return health_controller().basic_response()
+
+
+@app.route('/health/cached', methods=['GET'], cors=True,  method_spec={
+    **health_spec,
+    'summary': 'Check health for Azul service which updates every minute'
+})
+def cached_health():
+    return health_controller().cached_response()
+
+
+@app.route('/health/fast', methods=['GET'], cors=True,  method_spec={
+    **health_spec,
+    'summary': 'Check health for Azul service'
+})
+def fast_health():
+    return health_controller().fast_response()
+
+
 @app.route('/health/{keys}', methods=['GET'], cors=True, path_spec={
     'parameters': [
         {
@@ -240,11 +272,8 @@ health_spec = {
     'summary': 'List health information for a specific key',
     'description': 'List health information for a specific key, or all keys if `/health/` is used.'
 })
-def health(keys: Optional[str] = None):
-    controller = HealthController(lambda_name='service',
-                                  keys=keys,
-                                  request_path=app.current_request.context['path'])
-    return controller.response()
+def health_by_keys(keys: Optional[str] = None):
+    return health_controller().response(keys)
 
 
 @app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
