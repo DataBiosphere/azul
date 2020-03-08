@@ -222,19 +222,74 @@ def openapi_raw():
                     body=raw_spec)
 
 
-health_spec = {
-    'responses': {
-        '200': {
-            'description': '200 response',
-            'content': {
-                'application/json': {
-                    'schema': {'$ref': '#/components/schemas/Empty'}
-                }
-            }
-        }
-    },
-    'tags': ['Auxiliary']
+health_up_key = {
+    'up': 'Indicates with a boolean value if the service is reachable.',
 }
+
+health_service_keys = {
+    'elasticsearch': format_description('''
+        Indicates whether service can establish a connection with Elasticsearch,
+        ensuring that indexed documents can be access through Elasticsearch.
+    '''),
+    'api_endpoints': format_description('''
+        Shows a list of service API endpoints being requested by service,
+        confirming that a client making a similar request will obtain a OK
+        response.
+    '''),
+    **health_up_key
+}
+
+health_all_keys = {
+    'queues': format_description('''
+        Lists queues utilized by indexer to process transactions and index
+        documents into Elasticsearch. A queue is denoted as healthy if queue
+        stats can be collected, stats are then displayed for each available
+        queue.
+    '''),
+    'other_lambdas': format_description('''
+        Represent other server-less applications used by Azul in order to make
+        web service available, index is an example. Index processes data and
+        indexes it into Elasticsearch. Indexed data is then available for
+        service to search through via Elasticsearch. The status check for other
+        lambdas is obtained by getting a response from their `health/basic`
+        endpoints, ensuring that the application is reachable.
+    '''),
+    'progress': format_description('''
+        Is a more concrete version of __queues__. Progress indicates the
+        remainder of transactions and documents to be indexed. Which gives the
+        client insight into the progress of indexing.
+    '''),
+    **health_service_keys
+}
+
+
+def health_spec(health_keys: dict):
+    return {
+        'responses': {
+            f'{200 if up else 503}': {
+                'description': format_description(f'''
+                    Service component is {'' if up else 'un'}reachable.
+
+                    Response keys:
+                ''') + ''.join(f'* __{k}__ {v}' for k, v in health_keys.items()),
+                'content': {
+                    'application/json': {
+                        'example': {
+                            k: up if k == 'up' else {} for k in health_keys
+                        },
+                        'schema': schema.object(
+                            additional_properties=schema.object(
+                                additional_properties=True,
+                                up=schema.enum(up)
+                            ),
+                            up=schema.enum(up)
+                        )
+                    }
+                }
+            } for up in [True, False]
+        },
+        'tags': ['Auxiliary']
+    }
 
 
 def health_controller():
@@ -242,32 +297,59 @@ def health_controller():
 
 
 @app.route('/health', methods=['GET'], cors=True, method_spec={
-    **health_spec,
-    'summary': 'List health information for webservice'
+    'summary': 'Complete health check',
+    'description': format_description('''
+        Health check of the service and all resources it depends on. This may
+        take long time to complete and exerts considerable load on the service.
+        For that reason it should not be requested frequently or by automated
+        monitoring facilities that would be better served by the
+        [`/health/fast`](#operations-Auxiliary-get_health_fast) endpoint.
+    '''),
+    **health_spec(health_all_keys)
 })
 def health():
     return health_controller().full_response()
 
 
 @app.route('/health/basic', methods=['GET'], cors=True, method_spec={
-    **health_spec,
-    'summary': 'Check Azul service is reachable'
+    'summary': 'Basic health check',
+    'description': format_description('''
+        Health check of only the REST API itself, excluding other resources
+        the service depends on. A 200 response indicates that the service is
+        reachable via HTTP(S) but nothing more.
+    '''),
+    **health_spec(health_up_key)
 })
 def basic_health():
     return health_controller().basic_response()
 
 
 @app.route('/health/cached', methods=['GET'], cors=True, method_spec={
-    **health_spec,
-    'summary': 'Minute updates of Azul service health'
+    'summary': 'Cached health check for continuous monitoring',
+    'description': format_description('''
+        Return a cached copy of the
+        [`/health/fast`](#operations-Auxiliary-get_health_fast) response.
+        This endpoint is optimized for continuously running distributed health
+        monitoring facilities such as AWS CloudWatch. The caching ensures that
+        this service is not overloaded by those facilities. The cache is updated
+        every minute.
+    '''),
+    **health_spec(health_service_keys)
 })
 def cached_health():
     return health_controller().cached_response()
 
 
 @app.route('/health/fast', methods=['GET'], cors=True, method_spec={
-    **health_spec,
-    'summary': 'Live Azul service health'
+    'summary': 'Fast health check',
+    'description': format_description('''
+        Performance-optimized health check of the REST API and critical
+        resources the service depends on. This endpoint can be requested more
+        frequently than [`/health`](#operations-Auxiliary-get_health) but
+        periodic and automated requests should be made to
+        [`/health/fast`](#operations-Auxiliary-get_health_fast).
+    '''),
+    **health_spec(health_service_keys)
 })
 def fast_health():
     return health_controller().fast_response()
@@ -279,13 +361,21 @@ def fast_health():
             'name': 'keys',
             'in': 'path',
             'required': True,
-            'schema': {'type': 'string'}
+            'description': f'Available keys to query health status: {[*health_controller().all_keys]}',
+            'schema': schema.array(str,
+                                   pattern=f'^({"|".join(health_controller().all_keys)})'
+                                           f'(,({"|".join(health_controller().all_keys)}))*$')
         }
     ],
 }, method_spec={
-    **health_spec,
-    'summary': 'List health information for a specific key',
-    'description': 'List health information for a specific key, or all keys if `/health/` is used.'
+    'summary': 'Custom health check',
+    'description': format_description('''
+        Health check of client-provided subset of resources. This endpoint
+        allows clients to request a health check on a specific set of resources.
+        Each resource is identified by a *key*. The key is what identifies the
+        resource in a /health response.
+    '''),
+    **health_spec(health_all_keys)
 })
 def health_by_keys(keys: Optional[str] = None):
     return health_controller().response(keys)
