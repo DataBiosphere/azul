@@ -245,6 +245,34 @@ def health_controller():
     **health_spec,
     'summary': 'List health information for webservice'
 })
+def health():
+    return health_controller().full_response()
+
+
+@app.route('/health/basic', methods=['GET'], cors=True, method_spec={
+    **health_spec,
+    'summary': 'Check Azul service is reachable'
+})
+def basic_health():
+    return health_controller().basic_response()
+
+
+@app.route('/health/cached', methods=['GET'], cors=True, method_spec={
+    **health_spec,
+    'summary': 'Minute updates of Azul service health'
+})
+def cached_health():
+    return health_controller().cached_response()
+
+
+@app.route('/health/fast', methods=['GET'], cors=True, method_spec={
+    **health_spec,
+    'summary': 'Live Azul service health'
+})
+def fast_health():
+    return health_controller().fast_response()
+
+
 @app.route('/health/{keys}', methods=['GET'], cors=True, path_spec={
     'parameters': [
         {
@@ -259,7 +287,7 @@ def health_controller():
     'summary': 'List health information for a specific key',
     'description': 'List health information for a specific key, or all keys if `/health/` is used.'
 })
-def health(keys: Optional[str] = None):
+def health_by_keys(keys: Optional[str] = None):
     return health_controller().response(keys)
 
 

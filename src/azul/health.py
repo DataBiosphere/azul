@@ -75,7 +75,7 @@ class HealthController:
         return self.as_json(self.keys_by_service[self.lambda_name])
 
     def fast_response(self):
-        return self.as_json_fast()
+        return self._http_response(self.as_json_fast())
 
     @cachedproperty
     def other_lambdas(self):
@@ -164,17 +164,11 @@ class HealthController:
             }
 
     def full_response(self):
-        return self.as_json(self.all_keys)
+        return self._http_response(self.as_json(self.all_keys))
 
     def response(self, keys):
         if keys is None:
-            body = self.full_response()
-        elif keys == 'basic':
-            body = self.basic_response()
-        elif keys == 'cached':
-            body = self.cached_response()
-        elif keys == 'fast':
-            body = self.fast_response()
+            body = self.as_json(self.all_keys)
         elif isinstance(keys, str):
             assert keys  # Chalice maps empty string to None
             keys = keys.split(',')
@@ -184,13 +178,7 @@ class HealthController:
                 body = {'Message': 'Invalid health keys'}
         else:
             body = {'Message': 'Invalid health keys'}
-        try:
-            up = body['up']
-        except KeyError:
-            status = 400
-        else:
-            status = 200 if up else 503
-        return Response(body=json.dumps(body), status_code=status)
+        return self._http_response(body)
 
     def generate_cache(self):
         health_object = dict(time=time.time(), health=self.as_json_fast())
@@ -210,4 +198,13 @@ class HealthController:
         return body
 
     def basic_response(self):
-        return {'up': True}
+        return self._http_response({'up': True})
+
+    def _http_response(self, body):
+        try:
+            up = body['up']
+        except KeyError:
+            status = 400
+        else:
+            status = 200 if up else 503
+        return Response(body=json.dumps(body), status_code=status)

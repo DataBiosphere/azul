@@ -65,8 +65,27 @@ def version():
 
 
 @app.route('/health', methods=['GET'], cors=True)
+def health():
+    return health_controller().full_response()
+
+
+@app.route('/health/basic', methods=['GET'], cors=True)
+def basic_health():
+    return health_controller().basic_response()
+
+
+@app.route('/health/cached', methods=['GET'], cors=True)
+def cached_health():
+    return health_controller().cached_response()
+
+
+@app.route('/health/fast', methods=['GET'], cors=True)
+def fast_health():
+    return health_controller().fast_response()
+
+
 @app.route('/health/{keys}', methods=['GET'], cors=True)
-def health(keys: Optional[str] = None):
+def health_by_key(keys: Optional[str] = None):
     return health_controller().response(keys)
 
 
