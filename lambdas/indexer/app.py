@@ -67,10 +67,11 @@ def version():
 @app.route('/health', methods=['GET'], cors=True)
 @app.route('/health/{keys}', methods=['GET'], cors=True)
 def health(keys: Optional[str] = None):
-    controller = HealthController(lambda_name='indexer',
-                                  keys=keys,
-                                  request_path=app.current_request.context['path'])
-    return controller.response()
+    return health_controller().response(keys)
+
+
+def health_controller():
+    return HealthController(lambda_name='indexer')
 
 
 @app.schedule('rate(1 minute)', name=config.indexer_cache_health_lambda_basename)

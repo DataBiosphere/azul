@@ -237,6 +237,10 @@ health_spec = {
 }
 
 
+def health_controller():
+    return HealthController(lambda_name='service')
+
+
 @app.route('/health', methods=['GET'], cors=True, method_spec={
     **health_spec,
     'summary': 'List health information for webservice'
@@ -256,10 +260,7 @@ health_spec = {
     'description': 'List health information for a specific key, or all keys if `/health/` is used.'
 })
 def health(keys: Optional[str] = None):
-    controller = HealthController(lambda_name='service',
-                                  keys=keys,
-                                  request_path=app.current_request.context['path'])
-    return controller.response()
+    return health_controller().response(keys)
 
 
 @app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
