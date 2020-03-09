@@ -4,6 +4,7 @@ from concurrent.futures import (
 )
 from functools import lru_cache
 from logging import getLogger
+from threading import BoundedSemaphore
 import time
 from typing import (
     Mapping,
@@ -21,6 +22,10 @@ logger = getLogger(__name__)
 AWS_S3_DEFAULT_MINIMUM_PART_SIZE = 5242880  # 5 MB; see https://docs.aws.amazon.com/AmazonS3/latest/dev/qfacts.html
 
 MULTIPART_UPLOAD_MAX_WORKERS = 4
+
+# The amount of pending tasks that can be queued for execution. A value of 0
+# allows no tasks to be queued, only running tasks allowed in the thread pool.
+MULTIPART_UPLOAD_MAX_PENDING_PARTS = 4
 
 Tagging = Mapping[str, str]
 
@@ -156,6 +161,7 @@ class MultipartUploadHandler:
         self.parts = []
         self.futures = []
         self.thread_pool = None
+        self.semaphore = None
 
     def __enter__(self):
         api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,
@@ -164,6 +170,7 @@ class MultipartUploadHandler:
         self.upload_id = api_response['UploadId']
         self.mp_upload = boto3.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
         self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
+        self.semaphore = BoundedSemaphore(MULTIPART_UPLOAD_MAX_PENDING_PARTS + MULTIPART_UPLOAD_MAX_WORKERS)
         return self
 
     def __exit__(self, etype, value, traceback):
@@ -206,9 +213,21 @@ class MultipartUploadHandler:
         self.thread_pool.shutdown(wait=False)
         logger.warning('Upload %s: Aborted', self.upload_id)
 
+    def _submit(self, fn, *args, **kwargs):
+        # Method obtained from https://www.bettercodebytes.com/theadpoolexecutor-with-a-bounded-queue-in-python/
+        self.semaphore.acquire()
+        try:
+            future = self.thread_pool.submit(fn, *args, **kwargs)
+        except Exception as e:
+            self.semaphore.release()
+            raise e
+        else:
+            future.add_done_callback(lambda _future: self.semaphore.release())
+            return future
+
     def push(self, data: bytes):
         part = self._create_new_part(data)
-        self.futures.append(self.thread_pool.submit(self._upload_part, part))
+        self.futures.append(self._submit(self._upload_part, part))
 
     def _create_new_part(self, data: bytes):
         part = Part(part_number=self.next_part_number, etag=None, content=data)
