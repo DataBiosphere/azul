@@ -200,7 +200,7 @@ def swagger_ui():
     'tags': ['Auxiliary']
 })
 def openapi():
-    gateway_id = os.environ['api_gateway_id']
+    gateway_id = app.current_request.context['apiId']
     spec = annotated_specs(gateway_id, app, openapi_spec)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},

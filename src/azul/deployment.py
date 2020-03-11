@@ -125,12 +125,9 @@ class AWS:
             es_domain_status = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
             return es_domain_status['DomainStatus']['ElasticsearchClusterConfig']['InstanceCount']
 
-    def lambda_env(self, function_name) -> Mapping[str, str]:
-        gateway_id = self.api_gateway_id(function_name, validate=True)
-        return {
-            **config.lambda_env(self.es_endpoint, self.es_instance_count),
-            **({} if gateway_id is None else {'api_gateway_id': gateway_id})
-        }
+    @property
+    def lambda_env(self) -> Mapping[str, str]:
+        return config.lambda_env(self.es_endpoint, self.es_instance_count)
 
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
