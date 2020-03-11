@@ -1368,6 +1368,41 @@ class TestResponse(WebServiceTestCase):
             self.assertEqual(hit_sort_values['asc'], sorted(hit_sort_values['asc']))
             self.assertEqual(hit_sort_values['desc'], sorted(hit_sort_values['desc'], reverse=True))
 
+    def test_disease_facet(self):
+        """
+        Verify the values of the different types of disease facets
+        """
+        url = self.base_url + "/repository/projects"
+        test_data = {
+            # disease specified in donor, specimen, and sample (the specimen)
+            '627cb0ba-b8a1-405a-b58f-0add82c3d635': {
+                'disease': [{'term': 'H syndrome', 'count': 1}],
+                'donorDisease': [{'term': 'H syndrome', 'count': 1}],
+                'specimenDisease': [{'term': 'H syndrome', 'count': 1}],
+            },
+            # disease specified in donor only
+            '250aef61-a15b-4d97-b8b4-54bb997c1d7d': {
+                'disease': [{'term': None, 'count': 1}],
+                'donorDisease': [{'term': 'isolated hip osteoarthritis', 'count': 1}],
+                'specimenDisease': [{'term': None, 'count': 1}],
+            },
+            # disease specified in donor and specimen, not in sample (the cell line)
+            'c765e3f9-7cfc-4501-8832-79e5f7abd321': {
+                'disease': [{'term': None, 'count': 1}],
+                'donorDisease': [{'term': 'normal', 'count': 1}],
+                'specimenDisease': [{'term': 'normal', 'count': 1}]
+            }
+        }
+        for project_id, facet_data in test_data.items():
+            with self.subTest(project_id=project_id):
+                params = {'filters': json.dumps({'projectId': {'is': [project_id]}})}
+                response = requests.get(url, params=params)
+                response.raise_for_status()
+                response_json = response.json()
+                facets = response_json['termFacets']
+                for facet_name, facet_value in facet_data.items():
+                    self.assertEqual(facets[facet_name]['terms'], facet_value)
+
 
 class TestResponseSummary(WebServiceTestCase):
     maxDiff = None
