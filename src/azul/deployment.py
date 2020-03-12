@@ -86,6 +86,7 @@ class AWS:
         return json.load(response['body'])
 
     def api_gateway_id(self, function_name: str, validate=True) -> Optional[str]:
+        # TODO: Delete this once #1626 is merged
         try:
             response = self.lambda_.get_policy(FunctionName=function_name)
         except self.lambda_.exceptions.ResourceNotFoundException:
@@ -103,6 +104,7 @@ class AWS:
             return api_gateway_id
 
     def api_gateway_endpoint(self, function_name: str, api_gateway_stage: str) -> Optional[str]:
+        # TODO: Delete this once #1626 is merged
         api_gateway_id = self.api_gateway_id(function_name)
         if api_gateway_id is None:
             return None

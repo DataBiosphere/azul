@@ -19,6 +19,8 @@ key = f'azul-{app_name}-{config.deployment_stage}/deployed.json'
 
 s3 = boto3.client('s3')
 
+# TODO: Delete this whole file. But first, all deployments should be configured
+# to deploy with Terraform.
 if command == 'download':
     logger.info(f"Downloading s3://{bucket_name}/{key} to {file_path}")
     os.makedirs(os.path.dirname(file_path), exist_ok=True)

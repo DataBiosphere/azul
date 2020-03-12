@@ -22,6 +22,8 @@ Solution found at https://github.com/aws/chalice/issues/1103#issuecomment-530158
 log = logging.getLogger(__name__)
 
 
+# TODO: Delete this whole file. But first, all deployments should be configured
+# to deploy with Terraform.
 def main(argv):
     configure_script_logging(log)
     parser = argparse.ArgumentParser(description='Manage lambda IAM roles')
