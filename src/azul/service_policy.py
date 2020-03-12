@@ -160,7 +160,7 @@ service_policy = {
             ],
             "Resource": [
                 f"arn:aws:apigateway:{aws.region_name}::"
-                f"/restapis/{aws.api_gateway_id(config.service_name)}/stages/{config.deployment_stage}/exports/oas30"
+                "/restapis/${module.chalice_service.rest_api_id}/stages/%s/exports/oas30" % config.deployment_stage
             ]
         },
         {

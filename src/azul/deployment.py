@@ -11,7 +11,6 @@ from typing import (
 
 import boto3
 import botocore.session
-from more_itertools import one
 
 from azul import (
     Netloc,
@@ -84,32 +83,6 @@ class AWS:
                                               exportType='oas30',
                                               accepts='application/json')
         return json.load(response['body'])
-
-    def api_gateway_id(self, function_name: str, validate=True) -> Optional[str]:
-        # TODO: Delete this once #1626 is merged
-        try:
-            response = self.lambda_.get_policy(FunctionName=function_name)
-        except self.lambda_.exceptions.ResourceNotFoundException:
-            return None
-        else:
-            policy = json.loads(response['Policy'])
-            # For unknown reasons, Chalice may create more than one statement. We should fail if that's the case.
-            api_stage_arn = one(policy['Statement'])['Condition']['ArnLike']['AWS:SourceArn']
-            api_gateway_id = api_stage_arn.split(':')[-1].split('/', 1)[0]
-            if validate:
-                try:
-                    self.apigateway.get_rest_api(restApiId=api_gateway_id)
-                except self.apigateway.exceptions.NotFoundException:
-                    return None
-            return api_gateway_id
-
-    def api_gateway_endpoint(self, function_name: str, api_gateway_stage: str) -> Optional[str]:
-        # TODO: Delete this once #1626 is merged
-        api_gateway_id = self.api_gateway_id(function_name)
-        if api_gateway_id is None:
-            return None
-        else:
-            return f"https://{api_gateway_id}.execute-api.{self.region_name}.amazonaws.com/{api_gateway_stage}/"
 
     @property
     def es_endpoint(self) -> Netloc:
