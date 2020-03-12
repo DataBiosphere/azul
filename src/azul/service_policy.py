@@ -1,10 +1,9 @@
 from azul import config
 from azul.deployment import aws
-from azul.template import emit
 
 direct_access_role = config.dss_direct_access_role(lambda_name='service')
 
-emit({
+service_policy = {
     "Version": "2012-10-17",
     "Statement": [
         {
@@ -184,4 +183,4 @@ emit({
             ]
         )
     ]
-})
+}

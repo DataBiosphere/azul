@@ -1,3 +1,4 @@
+import json
 import shlex
 from typing import List
 
@@ -9,6 +10,16 @@ from azul.deployment import (
     emit_tf,
 )
 from azul.objects import InternMeta
+from azul.indexer_policy import indexer_policy
+from azul.service_policy import service_policy
+
+service_direct_access_role = config.dss_direct_access_role(lambda_name='service')
+indexer_direct_access_role = config.dss_direct_access_role(lambda_name='indexer')
+
+policies = {
+    'indexer': indexer_policy,
+    'service': service_policy
+}
 
 
 @dataclass(frozen=True)
@@ -17,17 +28,17 @@ class Lambda:
     Represents a AWS Lambda function fronted by an AWS API Gateway.
     """
     name: str  # the name of the Lambda, e.g. 'service'
-    gateway_id: str  # the ID of the API Gateway fronting the service
     domains: List[str]  # a list of public domain names that the Lambda should be exposed at
+    policy: str  # AWS Policy for the lambda function
 
     @classmethod
     def for_name(cls, name):
         return cls(name=name,
-                   gateway_id=aws.api_gateway_id(config.qualified_resource_name(name)),
                    domains=[
                        config.api_lambda_domain(name),
                        *config.api_lambda_domain_aliases(name)
-                   ])
+                   ],
+                   policy=json.dumps(policies[name]))
 
 
 lambdas = [
@@ -81,13 +92,13 @@ emit_tf({
         {
             "aws_api_gateway_deployment": {
                 lambda_.name: {
-                    "rest_api_id": lambda_.gateway_id,
+                    "rest_api_id": "${module.chalice_%s.rest_api_id}" % lambda_.name,
                     "stage_name": config.deployment_stage
                 }
             },
             "aws_api_gateway_base_path_mapping": {
                 f"{lambda_.name}_{i}": {
-                    "api_id": lambda_.gateway_id,
+                    "api_id": "${module.chalice_%s.rest_api_id}" % lambda_.name,
                     "stage_name": "${aws_api_gateway_deployment.%s.stage_name}" % lambda_.name,
                     "domain_name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (lambda_.name, i)
                 }
@@ -162,7 +173,7 @@ emit_tf({
                                     "command": ' '.join(map(shlex.quote, [
                                         "python",
                                         config.project_root + "/scripts/log_api_gateway.py",
-                                        lambda_.gateway_id,
+                                        "${module.chalice_%s.rest_api_id}" % lambda_.name,
                                         config.deployment_stage,
                                         "${aws_cloudwatch_log_group.%s.arn}" % lambda_.name
                                     ]))
@@ -172,7 +183,49 @@ emit_tf({
                     }
                 } if config.enable_monitoring else {
                 }
-            )
-        } for lambda_ in lambdas if lambda_.gateway_id
+            ),
+            "aws_iam_role": {
+                lambda_.name: {
+                    "name": config.qualified_resource_name(lambda_.name),
+                    "assume_role_policy": json.dumps({
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": "sts:AssumeRole",
+                                "Principal": {
+                                    "Service": "lambda.amazonaws.com"
+                                }
+                            },
+                            *(
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "sts:AssumeRole",
+                                    "Principal": {
+                                        "AWS": f"arn:aws:iam::{account}:root"
+                                    },
+                                    # Wildcards are not supported in `Principal`, but they are in `Condition`
+                                    "Condition": {
+                                        "StringLike": {
+                                            "aws:PrincipalArn": [f"arn:aws:iam::{account}:role/{role}"
+                                                                 for role in roles]
+                                        }
+                                    }
+                                }
+                                for account, roles in config.external_lambda_role_assumptors.items()
+                            )
+                        ]
+                    }),
+                    **aws.permissions_boundary_tf
+                }
+            },
+            "aws_iam_role_policy": {
+                lambda_.name: {
+                    "name": lambda_.name,
+                    "policy": lambda_.policy,
+                    "role": "${aws_iam_role.%s.id}" % lambda_.name
+                },
+            }
+        } for lambda_ in lambdas
     ]
 })
