@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 from http.server import (
@@ -5,11 +6,11 @@ from http.server import (
     SimpleHTTPRequestHandler,
 )
 
+import requests
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from azul import config
-from azul.deployment import aws
 from azul.modules import load_app_module
 from azul.openapi import annotated_specs
 
@@ -17,8 +18,8 @@ spec_file = 'openapi.json'
 parent_dir = os.path.realpath(os.path.dirname(__file__))
 
 
-def write_specs(gateway_id, app, openapi_spec):
-    specs = annotated_specs(gateway_id, app, openapi_spec)
+def write_specs(raw_specs, app, openapi_spec):
+    specs = annotated_specs(copy.copy(raw_specs), app, openapi_spec)
     with open(os.path.join(parent_dir, spec_file), 'w') as f:
         json.dump(specs, f, indent=4)
 
@@ -37,27 +38,27 @@ def main():
           'to be up to date with any new routes')
 
     service = load_app_module('service')
-    gateway_id = aws.api_gateway_id(config.service_name, validate=True)
-    event_handler = UpdateHandler(service, gateway_id)
+    raw_specs = requests.get(config.service_endpoint() + '/openapi/raw').json()
+    event_handler = UpdateHandler(service, raw_specs)
     observer = Observer()
     observer.schedule(event_handler, path=os.path.dirname(service.__file__), recursive=False)
     observer.start()
 
-    write_specs(gateway_id, service.app, service.openapi_spec)
+    write_specs(raw_specs, service.app, service.openapi_spec)
     httpd.serve_forever()
 
 
 class UpdateHandler(FileSystemEventHandler):
 
-    def __init__(self, service, gateway_id):
+    def __init__(self, service, raw_specs):
         self.service = service
-        self.gateway_id = gateway_id
+        self.raw_specs = raw_specs
         self.tracked_file = os.path.join(os.path.dirname(service.__file__), 'app.py')
 
     def on_modified(self, event):
         if event.src_path == self.tracked_file:
             self.service = load_app_module('service')
-            write_specs(self.gateway_id, self.service.app, self.service.openapi_spec)
+            write_specs(self.raw_specs, self.service.app, self.service.openapi_spec)
             print('Spec updated')
 
 
