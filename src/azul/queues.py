@@ -14,12 +14,12 @@ from typing import (
     Mapping,
 )
 
+from boltons.cacheutils import cachedproperty
 import boto3
 import more_itertools
 from more_itertools import one
 
 from azul import config
-from azul.decorators import memoized_property
 from azul.files import write_file_atomically
 from azul.lambdas import Lambdas
 
@@ -347,7 +347,7 @@ class Queues:
     def _manage_lambda(self, function_name, enable: bool):
         self._lambdas.manage_lambda(function_name, enable)
 
-    @memoized_property
+    @cachedproperty
     def _lambdas(self):
         return Lambdas()
 
