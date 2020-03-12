@@ -1,7 +1,5 @@
-/.chalice/deployments/
-/.chalice/venv/
-/.chalice/config.json
-/.chalice/deployed/*.json
+/.chalice/*
+!/.chalice/config.json.template.py
 /lambda-policy.json
 /vendor/*
 !/vendor/azul
