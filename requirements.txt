@@ -13,9 +13,9 @@ jsonobject==0.9.9
 Faker==0.8.11
 furl==2.0.0
 future==0.16.0
-hca==6.4.0
+hca==7.0.1
 git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
-git+git://github.com/DataBiosphere/hca-metadata-api@release/1.0b22#egg=hca-metadata-api
+git+git://github.com/DataBiosphere/hca-metadata-api@release/1.0b23#egg=hca-metadata-api
 pyasn1==0.4.4
 pyasn1-modules==0.2.2
 PyJWT==1.6.4
