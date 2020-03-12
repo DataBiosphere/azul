@@ -1,4 +1,3 @@
-import copy
 import json
 import os
 from http.server import (
@@ -19,7 +18,7 @@ parent_dir = os.path.realpath(os.path.dirname(__file__))
 
 
 def write_specs(raw_specs, app, openapi_spec):
-    specs = annotated_specs(copy.copy(raw_specs), app, openapi_spec)
+    specs = annotated_specs(raw_specs, app, openapi_spec)
     with open(os.path.join(parent_dir, spec_file), 'w') as f:
         json.dump(specs, f, indent=4)
 
