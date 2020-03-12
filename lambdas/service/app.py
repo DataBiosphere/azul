@@ -201,10 +201,20 @@ def swagger_ui():
 })
 def openapi():
     gateway_id = app.current_request.context['apiId']
-    spec = annotated_specs(gateway_id, app, openapi_spec)
+    raw_spec = aws.api_gateway_export(gateway_id)
+    spec = annotated_specs(raw_spec, app, openapi_spec)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
                     body=spec)
+
+
+@app.route('/openapi/raw')
+def openapi_raw():
+    gateway_id = app.current_request.context['apiId']
+    raw_spec = aws.api_gateway_export(gateway_id)
+    return Response(status_code=200,
+                    headers={"content-type": "application/json"},
+                    body=raw_spec)
 
 
 health_spec = {

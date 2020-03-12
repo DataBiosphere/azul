@@ -7,7 +7,6 @@ from typing import (
     Any,
 )
 
-from azul.deployment import aws
 from azul.strings import unwrap
 from azul.types import (
     JSON,
@@ -107,19 +106,18 @@ def openapi_spec(path: str, methods: List[str], path_spec: Optional[JSON] = None
     return spec_adder
 
 
-def annotated_specs(gateway_id, app, toplevel_spec) -> JSON:
+def annotated_specs(raw_specs, app, toplevel_spec) -> JSON:
     """
     Finds all routes in app that are decorated with @openapi_spec and adds this
     information into the api spec downloaded from API Gateway.
 
-    :param gateway_id: API Gateway ID corresponding to the Chalice app
+    :param raw_specs: Spec from API Gateway corresponding to the Chalice app
     :param app: App with annotated routes
     :param toplevel_spec: Top level OpenAPI info, definitions, etc.
     :return: The annotated specifications
     """
-    specs = aws.api_gateway_export(gateway_id)
-    clean_specs(specs)
-    specs = merge_dicts(toplevel_spec, specs, override=True)
+    clean_specs(raw_specs)
+    specs = merge_dicts(toplevel_spec, raw_specs, override=True)
     path_specs, method_specs = get_app_specs(app)
     return join_specs(specs, path_specs, method_specs)
 
