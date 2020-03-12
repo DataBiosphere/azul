@@ -2,7 +2,6 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
 )
-from functools import lru_cache
 from logging import getLogger
 import time
 from typing import (
@@ -11,6 +10,7 @@ from typing import (
 )
 from urllib.parse import urlencode
 
+from boltons.cacheutils import cachedproperty
 import boto3
 from dataclasses import dataclass
 
@@ -30,10 +30,7 @@ class StorageService:
     def __init__(self, bucket_name=config.s3_bucket):
         self.bucket_name = bucket_name
 
-    # FIXME: Use @memoized_property from azul.decorators
-
-    @property
-    @lru_cache(maxsize=1)
+    @cachedproperty
     def client(self):
         return boto3.client('s3')
 

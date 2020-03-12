@@ -8,6 +8,7 @@ from typing import (
     Iterable,
 )
 
+from boltons.cacheutils import cachedproperty
 import boto3
 import requests
 from botocore.exceptions import ClientError
@@ -17,7 +18,6 @@ from azul import (
     require,
     RequirementError,
 )
-from azul.decorators import memoized_property
 from azul.es import ESClientFactory
 from azul.service.storage_service import StorageService
 from azul.types import JSON
@@ -74,7 +74,7 @@ class Health:
         json['up'] = all(v['up'] for v in json.values())
         return json
 
-    @memoized_property
+    @cachedproperty
     def other_lambdas(self):
         response = {
             lambda_name: self._lambda(lambda_name)
@@ -84,7 +84,7 @@ class Health:
         response['up'] = all(v['up'] for v in response.values())
         return response
 
-    @memoized_property
+    @cachedproperty
     def queues(self):
         sqs = boto3.resource('sqs')
         response = {'up': True}
@@ -108,7 +108,7 @@ class Health:
                 }
         return response
 
-    @memoized_property
+    @cachedproperty
     def progress(self) -> JSON:
         return {
             'up': True,
@@ -126,7 +126,7 @@ class Health:
         else:
             return url, {'up': True}
 
-    @memoized_property
+    @cachedproperty
     def api_endpoints(self):
         endpoints = self.endpoints
         with ThreadPoolExecutor(len(endpoints)) as tpe:
@@ -134,13 +134,13 @@ class Health:
         status['up'] = all(v['up'] for v in status.values())
         return status
 
-    @memoized_property
+    @cachedproperty
     def elasticsearch(self):
         return {
             'up': ESClientFactory.get().ping(),
         }
 
-    @memoized_property
+    @cachedproperty
     def up(self):
         return all(getattr(self, k)['up'] for k in self.all_keys)
 
