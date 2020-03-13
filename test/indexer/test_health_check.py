@@ -25,8 +25,6 @@ class TestIndexerHealthCheck(HealthCheckTestCase):
     def test_elasticsearch_down(self):
         endpoint_states = self._make_endpoint_states(self.endpoints)
         documents = {
-            'up': False,
-            **self._expected_elasticsearch(False),
             **self._expected_queues(True),
             **self._expected_progress()
         }

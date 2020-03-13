@@ -149,6 +149,11 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             self.assertEqual(expected_response, response.json())
 
     def _test_elasticsearch_down(self, documents: JSON, endpoint_states: JSON):
+        documents = {
+            'up': False,
+            **self._expected_elasticsearch(False),
+            **documents
+        }
         self._create_mock_queues()
         mock_endpoint = ('nonexisting-index.com', 80)
         with mock.patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
