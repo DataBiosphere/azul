@@ -148,6 +148,16 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                 expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
             self.assertEqual(expected_response, response.json())
 
+    def _test_elasticsearch_down(self, documents: JSON, endpoint_states: JSON):
+        self._create_mock_queues()
+        mock_endpoint = ('nonexisting-index.com', 80)
+        with mock.patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
+                                                                  es_instance_count=1)):
+            response = self._test(endpoint_states, lambdas_up=True)
+            health_object = response.json()
+            self.assertEqual(503, response.status_code)
+            self.assertEqual(documents, health_object)
+
     def _expected_queues(self, up: bool) -> JSON:
         return {
             'queues': {
