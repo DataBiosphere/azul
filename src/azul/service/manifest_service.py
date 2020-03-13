@@ -527,7 +527,7 @@ class FullManifestGenerator(StreamingManifestGenerator):
         writer = csv.DictWriter(output, sources, dialect='excel-tab')
         writer.writeheader()
         project_short_names = set()
-        for hit in self._create_request().scan():
+        for hit in self._create_request().params(size=500).scan():
             doc = hit['contents'].to_dict()
             for metadata in list(doc['metadata']):
                 if len(project_short_names) < 2:
