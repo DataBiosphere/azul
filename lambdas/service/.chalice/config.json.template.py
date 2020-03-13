@@ -11,7 +11,7 @@ emit({
     'api_gateway_stage': config.deployment_stage,
     'manage_iam_role': False,
     'iam_role_arn': f'arn:aws:iam::{aws.account}:role/{config.service_name}',
-    'environment_variables': aws.lambda_env(config.service_name),
+    'environment_variables': aws.lambda_env,
     'lambda_timeout': config.api_gateway_timeout + config.api_gateway_timeout_padding,
     'lambda_memory_size': 1024,
     'stages': {
