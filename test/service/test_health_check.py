@@ -52,11 +52,7 @@ class TestServiceHealthCheck(HealthCheckTestCase):
     @mock_sqs
     def test_elasticsearch_down(self):
         endpoint_states = self._make_endpoint_states(self.endpoints)
-        documents = {
-            'up': False,
-            **self._expected_elasticsearch(False),
-            **self._expected_api_endpoints(endpoint_states),
-        }
+        documents = self._expected_api_endpoints(endpoint_states)
         self._test_elasticsearch_down(documents, endpoint_states)
 
 
