@@ -23,6 +23,7 @@ branches:
     - integration
     - staging
     - prod
+    - issues/achave11/1476-cache-bdbag-and-compact
 
 before_install:
   - (cd deployments && ln -snf dev .active)
