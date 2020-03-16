@@ -26,9 +26,18 @@ class AzulChaliceApp(Chalice):
 
         :param path: See https://chalice.readthedocs.io/en/latest/api.html#Chalice.route
 
-        :param method_spec: FIXME: https://github.com/DataBiosphere/azul/issues/1613
+        :param path_spec: Corresponds to an OpenAPI Paths Object. See
+                          https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#pathsObject
+                          If multiple `@app.route` invocations refer to the same
+                          path (but with different HTTP methods), only specify
+                          this argument for one of them, otherwise an
+                          AssertionError will be raised.
 
-        :param path_spec: FIXME: https://github.com/DataBiosphere/azul/issues/1613
+        :param method_spec: Corresponds to an OpenAPI Operation Object. See
+                            https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#operationObject
+                            This should be specified for every `@app.route`
+                            invocation.
+
 
         :param enabled: If False, do not route any requests to the decorated
                         view function. The application will behave as if the
