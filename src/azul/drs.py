@@ -4,12 +4,7 @@ import time
 from typing import (
     Optional,
     Tuple,
-)
-from urllib.parse import (
-    SplitResult,
-    urlencode,
-    urlsplit,
-    urlunsplit,
+    Mapping,
 )
 
 from furl import furl
@@ -36,11 +31,12 @@ def object_url(file_uuid: str,
                      current deployment will be used.
     """
     scheme, netloc = _endpoint(base_url)
-    return urlunsplit(SplitResult(scheme='drs',
-                                  netloc=netloc,
-                                  path=file_uuid,
-                                  query=_url_query(file_version),
-                                  fragment=''))
+    return furl(
+        scheme='drs',
+        netloc=netloc,
+        path=file_uuid,
+        args=_url_query(file_version)
+    ).url
 
 
 def dos_http_object_url(file_uuid: str,
@@ -58,11 +54,12 @@ def dos_http_object_url(file_uuid: str,
                      current deployment will be used.
     """
     scheme, netloc = _endpoint(base_url)
-    return urlunsplit(SplitResult(scheme=scheme,
-                                  netloc=netloc,
-                                  path=dos_http_object_path(file_uuid),
-                                  query=_url_query(file_version),
-                                  fragment=''))
+    return furl(
+        scheme=scheme,
+        netloc=netloc,
+        path=dos_http_object_path(file_uuid),
+        args=_url_query(file_version)
+    ).url
 
 
 def http_object_url(file_uuid: str,
@@ -82,11 +79,12 @@ def http_object_url(file_uuid: str,
                       supplied
     """
     scheme, netloc = _endpoint(base_url)
-    return urlunsplit(SplitResult(scheme=scheme,
-                                  netloc=netloc,
-                                  path=drs_http_object_path(file_uuid, access_id=access_id),
-                                  query=_url_query(file_version),
-                                  fragment=''))
+    return furl(
+        scheme=scheme,
+        netloc=netloc,
+        path=drs_http_object_path(file_uuid, access_id=access_id),
+        args=_url_query(file_version),
+    ).url
 
 
 def drs_http_object_path(file_uuid: str, access_id: str = None) -> str:
@@ -108,12 +106,12 @@ def dos_http_object_path(file_uuid: str) -> str:
 def _endpoint(base_url: Optional[str]) -> Tuple[str, str]:
     if base_url is None:
         base_url = config.drs_endpoint()
-    base_url = urlsplit(base_url)
+    base_url = furl(base_url)
     return base_url.scheme, base_url.netloc
 
 
-def _url_query(file_version: Optional[str]) -> str:
-    return urlencode({'version': file_version} if file_version else {})
+def _url_query(file_version: Optional[str]) -> Mapping[str, str]:
+    return {'version': file_version} if file_version else {}
 
 
 def encode_access_id(token_str: str) -> str:

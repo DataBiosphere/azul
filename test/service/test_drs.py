@@ -131,8 +131,8 @@ class DRSTest(WebServiceTestCase):
                         ],
                         'created_time': '2018-11-02T11:33:44.698028Z',
                         'id': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                        'self_uri': drs.object_url('7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
-                                                   '?version=2018-11-02T113344.698028Z'),
+                        'self_uri': drs.object_url(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                                                   file_version='2018-11-02T113344.698028Z'),
                         'size': '195142097',
                         'version': '2018-11-02T113344.698028Z',
                     }
