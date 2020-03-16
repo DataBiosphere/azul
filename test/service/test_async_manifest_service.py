@@ -145,7 +145,7 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     mock_uuid.return_value = execution_name
                     step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
                     format_ = 'compact'
-                    filters = {'file': {'organ': {'is': ['lymph node']}}}
+                    filters = {'organ': {'is': ['lymph node']}}
                     params = {'filters': json.dumps(filters), 'format': format_}
                     if fetch:
                         response = requests.get(self.base_url + '/fetch/manifest/files',
