@@ -334,6 +334,13 @@ configure PyCharm for Azul:
    folders by right-clicking each folder name and selecting *Mark Directory as*
    → *Excluded*.
 
+Newer versions of PyCharm install another `sitecustomize` module which attempts 
+to wrap the user-provided one, in our case `envhook.py`. This usually works 
+unless `envhook.py` tries to report an error. PyCharm's `sitecustomize` swallows 
+the exception and, due to a bug, raises different one. The original exception 
+is lost, making diagnosing the problem harder. Luckily, the `sitecustomize` 
+module is part of a rarely used feature that can be disabled by unchecking 
+*Show plots in tool window* under *Settings* — *Tools* — *Python Scientific*. 
 
 # 3. Deployment
 
