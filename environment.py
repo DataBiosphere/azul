@@ -26,6 +26,13 @@ def env() -> Mapping[str, Optional[str]]:
         # FIXME: can't use '{project_root}' due to https://github.com/DataBiosphere/azul/issues/1645
         'azul_home': os.environ['project_root'],
 
+        # The region of the Azul deployment. This variable is primarily used by
+        # the AWS CLI, by TerraForm, botocore and boto3 but Azul references it
+        # too. This variable is typically set in deployment-specific
+        # environments.
+        #
+        'AWS_DEFAULT_REGION': None,
+
         # Only variables whose names start in `AZUL_` will be published to a deployed
         # Lambda. Note that by implication, `azul_` variables will not be published,
         # even though they are considered part of Azul. For secret values that should
@@ -171,14 +178,25 @@ def env() -> Mapping[str, Optional[str]]:
         # https://forums.aws.amazon.com/thread.jspa?threadID=233378
         'AZUL_ES_TIMEOUT': '60',
 
-        # The prefix of the name of the bucket where Terraform and Chalice maintain
-        # their state, allowing multiple developers to collaboratively use those
-        # frameworks on a single Azul deployment. The full bucket name is the
-        # combination of this value and the AWS region name. The bucket is specific
-        # to an AWS region to ensure that the bucket is in the same region as the
-        # Azul deployment thereby avoiding complications in conjunction with
-        # STS AssumeRole credentials (which are specific to a region).
-        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-singlecell-azul-config-dev',
+        # The name of the bucket where Terraform and Chalice maintain their
+        # state, allowing multiple developers to collaboratively use those
+        # frameworks on a single Azul deployment.
+        #
+        # If your developers assume a role via Amazon STS, the bucket should
+        # reside in the same region as the Azul deployment. This is because
+        # temporary STS AssumeRole credentials are specific to a region and
+        # won't be recognized by an S3 region that's different from the one
+        # the temporary credentials were issued in:
+        #
+        # AuthorizationHeaderMalformed: The authorization header is malformed;
+        # the region 'us-east-1' is wrong; expecting 'us-west-2' status code:
+        # 400.
+        #
+        # To account for the region specificity of the bucket, you may want to
+        # include the region name at then end of the bucket name. That way you
+        # can have consistent bucket names across regions.
+        #
+        'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-singlecell-azul-config-dev.{AWS_DEFAULT_REGION}',
 
         # The number of workers pulling files from DSS. There is one such set of DSS
         # workers per index worker!

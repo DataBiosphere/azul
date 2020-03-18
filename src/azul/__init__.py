@@ -341,11 +341,7 @@ class Config:
 
     @property
     def versioned_bucket(self):
-        bucket_name = os.environ['AZUL_VERSIONED_BUCKET']
-        reject('.' in bucket_name,
-               'AZUL_VERSIONED_BUCKET must not contain period (".") characters',
-               bucket_name)
-        return bucket_name + '.' + self.region
+        return os.environ['AZUL_VERSIONED_BUCKET']
 
     @property
     def enable_monitoring(self) -> bool:
