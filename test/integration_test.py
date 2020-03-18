@@ -26,6 +26,7 @@ from unittest import mock
 import uuid
 from zipfile import ZipFile
 
+from boltons.cacheutils import cachedproperty
 import boto3
 from furl import furl
 from hca.util import SwaggerAPIException
@@ -45,7 +46,6 @@ from azul.azulclient import (
     AzulClient,
     FQID,
 )
-from azul.decorators import memoized_property
 import azul.dss
 from azul.drs import (
     drs_http_object_path,
@@ -253,7 +253,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                  env_var_name, env_var_value, function_name)
         client.update_function_configuration(FunctionName=function_name, Environment=environment)
 
-    @memoized_property
+    @cachedproperty
     def _requests(self) -> requests.Session:
         return requests_session_with_retry_after()
 

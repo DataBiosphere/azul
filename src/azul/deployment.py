@@ -9,6 +9,7 @@ from typing import (
     Optional,
 )
 
+from boltons.cacheutils import cachedproperty
 import boto3
 import botocore.session
 from more_itertools import one
@@ -17,7 +18,6 @@ from azul import (
     Netloc,
     config,
 )
-from azul.decorators import memoized_property
 from azul.template import emit
 from azul.types import JSON
 
@@ -32,45 +32,45 @@ class AWS:
         super().__init__()
         self._per_thread = self._PerThread()
 
-    @memoized_property
+    @cachedproperty
     def profile(self):
         session = botocore.session.Session()
         profile_name = session.get_config_variable('profile')
         return {} if profile_name is None else session.full_config['profiles'][profile_name]
 
-    @memoized_property
+    @cachedproperty
     def region_name(self):
         return self.sts.meta.region_name
 
-    @memoized_property
+    @cachedproperty
     def sts(self):
         return boto3.client('sts')
 
-    @memoized_property
+    @cachedproperty
     def lambda_(self):
         return boto3.client('lambda')
 
-    @memoized_property
+    @cachedproperty
     def apigateway(self):
         return boto3.client('apigateway')
 
-    @memoized_property
+    @cachedproperty
     def account(self):
         return self.sts.get_caller_identity()['Account']
 
-    @memoized_property
+    @cachedproperty
     def es(self):
         return boto3.client('es')
 
-    @memoized_property
+    @cachedproperty
     def stepfunctions(self):
         return boto3.client('stepfunctions')
 
-    @memoized_property
+    @cachedproperty
     def iam(self):
         return boto3.client('iam')
 
-    @memoized_property
+    @cachedproperty
     def secretsmanager(self):
         return boto3.client('secretsmanager')
 
@@ -132,18 +132,18 @@ class AWS:
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
 
-    @memoized_property
+    @cachedproperty
     def permissions_boundary_arn(self) -> str:
         return f'arn:aws:iam::{self.account}:policy/{config.permissions_boundary_name}'
 
-    @memoized_property
+    @cachedproperty
     def permissions_boundary(self):
         try:
             return self.iam.get_policy(PolicyArn=self.permissions_boundary_arn)['Policy']
         except self.iam.exceptions.NoSuchEntityException:
             return None
 
-    @memoized_property
+    @cachedproperty
     def permissions_boundary_tf(self) -> Mapping[str, str]:
         return {} if self.permissions_boundary is None else {
             'permissions_boundary': self.permissions_boundary['Arn']
