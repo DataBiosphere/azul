@@ -159,7 +159,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     @mock_sqs
     def test_elasticsearch_down(self):
         self._create_mock_queues()
-        mock_endpoint = ('nonexisting-index.com', 80)
+        mock_endpoint = ('7c9f2ddb-74ca-46a3-9438-24ce1fe7050e.com', 80)
         endpoint_states = self._endpoint_states()
         with patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
                                                              es_instance_count=1)):
