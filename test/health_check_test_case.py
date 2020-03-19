@@ -10,13 +10,13 @@ from typing import (
     Mapping,
     Tuple,
 )
-from unittest import (
-    TestSuite,
-    mock,
+from unittest import TestSuite
+from unittest.mock import (
+    MagicMock,
+    patch,
 )
 
 import boto3
-from mock import MagicMock
 from moto import (
     mock_s3,
     mock_sqs,
@@ -131,7 +131,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         future_time = time.time() + 3 * 60
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
-            with mock.patch('time.time', new=lambda: future_time):
+            with patch('time.time', new=lambda: future_time):
                 response = requests.get(self.base_url + '/health/cached')
                 self.assertEqual(500, response.status_code)
                 self.assertEqual({'Message': 'Cached health object is stale'}, response.json())
@@ -161,8 +161,8 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         self._create_mock_queues()
         mock_endpoint = ('nonexisting-index.com', 80)
         endpoint_states = self._endpoint_states()
-        with mock.patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
-                                                                  es_instance_count=1)):
+        with patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
+                                                             es_instance_count=1)):
             response = self._test(endpoint_states, lambdas_up=True)
             self.assertEqual(503, response.status_code)
             self.assertEqual(self._expected_health(endpoint_states, es_up=False), response.json())
@@ -253,7 +253,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                                           status=200 if endpoint_up else 503,
                                           json={}))
         # boto3.resource('sqs') requires an AWS region to be set
-        with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+        with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
             yield
 
     def _mock_other_lambdas(self, helper: ResponsesHelper, up: bool):
