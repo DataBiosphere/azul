@@ -49,6 +49,7 @@ deploy:
   extends: .base
   stage: deploy
   script:
+    - terraform version
     - make -C terraform plan auto_apply
     - make deploy
     - make -C terraform plan auto_apply
