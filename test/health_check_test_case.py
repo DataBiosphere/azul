@@ -65,7 +65,6 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         self._create_mock_queues()
         endpoint_states = self._endpoint_states()
         response = self._test(endpoint_states, lambdas_up=True, path='/health/')
-        health_object = response.json()
         self.assertEqual(200, response.status_code)
         self.assertEqual({
             'up': True,
@@ -74,7 +73,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             **self._expected_other_lambdas(True),
             **self._expected_api_endpoints(endpoint_states),
             **self._expected_progress()
-        }, health_object)
+        }, response.json())
 
     @mock_sts
     @mock_sqs
@@ -148,10 +147,8 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             # The use of subTests ensures that we see the result of both
             # assertions. In the case of the health endpoint, the body of a 503
             # may carry a body with additional information.
-            with self.subTest('status_code'):
-                self.assertEqual(200, response.status_code)
-            with self.subTest('response'):
-                expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
+            self.assertEqual(200, response.status_code)
+            expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
             self.assertEqual(expected_response, response.json())
 
     @abstractmethod
@@ -167,9 +164,8 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         with mock.patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
                                                                   es_instance_count=1)):
             response = self._test(endpoint_states, lambdas_up=True)
-            health_object = response.json()
             self.assertEqual(503, response.status_code)
-            self.assertEqual(self._expected_health(endpoint_states, es_up=False), health_object)
+            self.assertEqual(self._expected_health(endpoint_states, es_up=False), response.json())
 
     def _expected_queues(self, up: bool) -> JSON:
         return {

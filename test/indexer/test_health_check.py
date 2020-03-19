@@ -36,9 +36,8 @@ class TestIndexerHealthCheck(HealthCheckTestCase):
     def test_queues_down(self):
         endpoint_states = self._endpoint_states()
         response = self._test(endpoint_states, lambdas_up=True)
-        health_object = response.json()
         self.assertEqual(503, response.status_code)
-        self.assertEqual(self._expected_health(endpoint_states), health_object)
+        self.assertEqual(self._expected_health(endpoint_states), response.json())
 
 
 del HealthCheckTestCase

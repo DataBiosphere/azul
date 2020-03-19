@@ -35,9 +35,8 @@ class TestServiceHealthCheck(HealthCheckTestCase):
         endpoint_states = self._endpoint_states(up_endpoints=(),
                                                 down_endpoints=self.endpoints)
         response = self._test(endpoint_states, lambdas_up=True)
-        health_object = response.json()
         self.assertEqual(503, response.status_code)
-        self.assertEqual(self._expected_health(endpoint_states), health_object)
+        self.assertEqual(self._expected_health(endpoint_states), response.json())
 
     @mock_sts
     @mock_sqs
@@ -46,9 +45,8 @@ class TestServiceHealthCheck(HealthCheckTestCase):
         endpoint_states = self._endpoint_states(up_endpoints=self.endpoints[1:],
                                                 down_endpoints=self.endpoints[:1])
         response = self._test(endpoint_states, lambdas_up=True)
-        health_object = response.json()
         self.assertEqual(503, response.status_code)
-        self.assertEqual(self._expected_health(endpoint_states), health_object)
+        self.assertEqual(self._expected_health(endpoint_states), response.json())
 
 
 del HealthCheckTestCase
