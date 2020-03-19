@@ -1,4 +1,7 @@
-from abc import ABCMeta
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from contextlib import contextmanager
 import os
 from typing import (
@@ -147,6 +150,23 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             with self.subTest('response'):
                 expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
             self.assertEqual(expected_response, response.json())
+
+    @abstractmethod
+    def _expected_health(self, endpoint_states: Mapping[str, bool], es_up: bool = True):
+        raise NotImplementedError()
+
+    @mock_sts
+    @mock_sqs
+    def test_elasticsearch_down(self):
+        self._create_mock_queues()
+        mock_endpoint = ('nonexisting-index.com', 80)
+        endpoint_states = self._make_endpoint_states(self.endpoints)
+        with mock.patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
+                                                                  es_instance_count=1)):
+            response = self._test(endpoint_states, lambdas_up=True)
+            health_object = response.json()
+            self.assertEqual(503, response.status_code)
+            self.assertEqual(self._expected_health(endpoint_states, es_up=False), health_object)
 
     def _expected_queues(self, up: bool) -> JSON:
         return {

@@ -1,13 +1,11 @@
-import os
+from typing import Mapping
 import unittest
-from unittest import mock
 
 from moto import (
-    mock_sts,
     mock_sqs,
+    mock_sts,
 )
 
-from azul import config
 from azul.logging import configure_test_logging
 from health_check_test_case import HealthCheckTestCase
 
@@ -23,6 +21,13 @@ class TestServiceHealthCheck(HealthCheckTestCase):
     def lambda_name(cls) -> str:
         return 'service'
 
+    def _expected_health(self, endpoint_states: Mapping[str, bool], es_up: bool = True):
+        return {
+            'up': False,
+            **self._expected_elasticsearch(es_up),
+            **self._expected_api_endpoints(endpoint_states),
+        }
+
     @mock_sts
     @mock_sqs
     def test_all_api_endpoints_down(self):
@@ -31,11 +36,7 @@ class TestServiceHealthCheck(HealthCheckTestCase):
         response = self._test(endpoint_states, lambdas_up=True)
         health_object = response.json()
         self.assertEqual(503, response.status_code)
-        self.assertEqual({
-            'up': False,
-            **self._expected_elasticsearch(True),
-            **self._expected_api_endpoints(endpoint_states),
-        }, health_object)
+        self.assertEqual(self._expected_health(endpoint_states), health_object)
 
     @mock_sts
     @mock_sqs
@@ -45,29 +46,7 @@ class TestServiceHealthCheck(HealthCheckTestCase):
         response = self._test(endpoint_states, lambdas_up=True)
         health_object = response.json()
         self.assertEqual(503, response.status_code)
-        self.assertEqual({
-            'up': False,
-            **self._expected_elasticsearch(True),
-            **self._expected_api_endpoints(endpoint_states),
-        }, health_object)
-
-    @mock_sts
-    @mock_sqs
-    def test_elasticsearch_down(self):
-        self._create_mock_queues()
-        mock_endpoint = ('nonexisting-index.com', 80)
-        endpoint_states = self._make_endpoint_states(self.endpoints)
-        with mock.patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
-                                                                  es_instance_count=1)):
-            response = self._test(endpoint_states, lambdas_up=True)
-            health_object = response.json()
-            self.assertEqual(503, response.status_code)
-            documents_ = {
-                'up': False,
-                **self._expected_elasticsearch(False),
-                **self._expected_api_endpoints(endpoint_states),
-            }
-            self.assertEqual(documents_, health_object)
+        self.assertEqual(self._expected_health(endpoint_states), health_object)
 
 
 del HealthCheckTestCase
