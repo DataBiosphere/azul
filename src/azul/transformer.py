@@ -47,8 +47,6 @@ from azul.types import (
     JSON,
 )
 
-MIN_INT = -sys.maxsize - 1
-
 logger = logging.getLogger(__name__)
 
 Entities = List[JSON]
@@ -120,25 +118,35 @@ class Document:
         :param forward: If we should translate forward or backward (aka un-translate)
         :return: The translated value
         """
+        # Note that the replacement values for `None` used for each data type
+        # ensure that `None` values are placed at the end of a sorted list.
+        null_string = '~null'
+        # Maximum int that can be represented as a 64-bit int and double IEEE
+        # floating point number. This prevents loss when converting between the two.
+        null_int = sys.maxsize - 1023
+        assert null_int == int(float(null_int))
+        bool_translation_forward = {False: 0, True: 1, None: null_int}
+        bool_translation_backward = {0: False, 1: True, null_int: None}
+
         if field_type is bool:
             if forward:
-                return {None: -1, False: 0, True: 1}[value]
+                return bool_translation_forward[value]
             else:
-                return {-1: None, 0: False, 1: True}[value]
+                return bool_translation_backward[value]
         elif field_type is int or field_type is float:
             if forward:
                 if value is None:
-                    return MIN_INT
+                    return null_int
             else:
-                if value == MIN_INT:
+                if value == null_int:
                     return None
             return value
         elif field_type is str:
             if forward:
                 if value is None:
-                    return config.null_keyword
+                    return null_string
             else:
-                if value == config.null_keyword:
+                if value == null_string:
                     return None
             return value
         elif field_type is dict:
@@ -154,14 +162,17 @@ class Document:
     def translate_fields(cls,
                          doc: AnyJSON,
                          field_types: Union[FieldType, FieldTypes],
-                         forward: bool = True) -> AnyMutableJSON:
+                         forward: bool = True,
+                         path: list = None) -> AnyMutableJSON:
         """
         Traverse a document to translate field values for insert into Elasticsearch, or to translate back
         response data. This is done to support None/null values since Elasticsearch does not index these values.
+        Values that are empty lists ([]) and lists of None ([None]) are both forward converted to [null_string]
 
         :param doc: A document dict of values
         :param field_types: A mapping of field paths to field type
         :param forward: If we should translate forward or backward (aka un-translate)
+        :param path:
         :return: A copy of the original document with values translated according to their type
         """
         if field_types is None:
@@ -169,6 +180,8 @@ class Document:
         elif isinstance(doc, dict):
             new_dict = {}
             for key, val in doc.items():
+                if path is None:
+                    path = []
                 # Shadow copy fields should only be present during a reverse translation and we skip over to remove them
                 if key.endswith('_'):
                     assert not forward
@@ -179,13 +192,22 @@ class Document:
                         raise KeyError(f'Key {key} not defined in field_types')
                     except TypeError:
                         raise TypeError(f'Key {key} not defined in field_types')
-                    new_dict[key] = cls.translate_fields(val, field_type, forward=forward)
+                    new_dict[key] = cls.translate_fields(val, field_type, forward=forward, path=path + [key])
                     if forward and field_type in (int, float):
                         # Add a non-translated shadow copy of this field's numeric value for sum aggregations
                         new_dict[key + '_'] = val
             return new_dict
         elif isinstance(doc, list):
-            return [cls.translate_fields(val, field_types, forward=forward) for val in doc]
+            # Translate an empty list to a list containing a single None value
+            # (and then further translate that None value according to the field
+            # type), but do so only at the field level (to avoid case of
+            # contents['organoids'] == []).
+            if doc or isinstance(field_types, dict):
+                return [cls.translate_fields(val, field_types, forward=forward, path=path) for val in doc]
+            else:
+                assert len(doc) == 0 and isinstance(doc, list) and isinstance(field_types, type)
+                assert forward, path
+                return cls.translate_fields([None], field_types, path=path)
         else:
             return cls.translate_field(doc, field_types, forward=forward)
 
@@ -234,6 +256,9 @@ class Document:
 
     @classmethod
     def from_index(cls, field_types, hit: JSON) -> 'Document':
+        if 'contents' in hit['_source']:
+            content_descriptions = [file['content_description'] for file in hit['_source']['contents']['files']]
+            assert [] not in content_descriptions, 'Found empty list as content_description value'
         source = cls.translate_fields(hit['_source'], field_types, forward=False)
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
@@ -485,7 +510,7 @@ class SetAccumulator(Accumulator):
         super().__init__()
         self.value = set()
         self.max_size = max_size
-        self.key = none_safe_key if key is None else key
+        self.key = none_safe_key(none_last=True) if key is None else key
 
     def accumulate(self, value) -> bool:
         """

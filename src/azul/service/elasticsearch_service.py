@@ -105,7 +105,7 @@ class ElasticsearchService(AbstractService):
         for facet, values in filters.items():
             relation, value = one(values.items())
             if relation == 'is':
-                # Note that at this point None values in filters have already been translated eg. {'is': ['__null__']}
+                # Note that at this point None values in filters have already been translated eg. {'is': ['~null']}
                 # and if the filter has a None our query needs to find fields with None values as well as missing fields
                 field_type = self.plugin.field_type(tuple(facet.split('.')))
                 if Document.translate_field(None, field_type) in value:
@@ -340,7 +340,7 @@ class ElasticsearchService(AbstractService):
             # hits are reverse sorted
             if count > pagination['size']:
                 # There is an extra hit, indicating a previous page.
-                count = count - 1
+                count -= 1
                 search_before = es_hits[count - 1]['sort']
             else:
                 # No previous page
@@ -350,7 +350,7 @@ class ElasticsearchService(AbstractService):
             # hits are normal sorted
             if count > pagination['size']:
                 # There is an extra hit, indicating a next page.
-                count = count - 1
+                count -= 1
                 search_after = es_hits[count - 1]['sort']
             else:
                 # No next page
@@ -359,10 +359,18 @@ class ElasticsearchService(AbstractService):
                 search_before = es_hits[0]['sort']
             else:
                 search_before = [None, None]
+
+        # To return the type along with the value, return pagination variables
+        # 'search_after' and 'search_before' as JSON formatted strings
+        if search_after[0] is not None:
+            search_after[0] = json.dumps(search_after[0])
+        if search_before[0] is not None:
+            search_before[0] = json.dumps(search_before[0])
+
         next_ = page_link(search_after=search_after[0],
-                          search_after_uid=search_after[1]) if search_after[0] else None
+                          search_after_uid=search_after[1]) if search_after[1] else None
         previous = page_link(search_before=search_before[0],
-                             search_before_uid=search_before[1]) if search_before[0] else None
+                             search_before_uid=search_before[1]) if search_before[1] else None
         page_field = {
             'count': count,
             'total': es_response['hits']['total'],

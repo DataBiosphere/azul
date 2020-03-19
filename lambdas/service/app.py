@@ -123,9 +123,9 @@ def _get_pagination(current_request, entity_type):
     sb_uid = query_params.get('search_before_uid')
 
     if not sb and sa:
-        pagination['search_after'] = [sa, sa_uid]
+        pagination['search_after'] = [json.loads(sa), sa_uid]
     elif not sa and sb:
-        pagination['search_before'] = [sb, sb_uid]
+        pagination['search_before'] = [json.loads(sb), sb_uid]
     elif sa and sb:
         raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
     pagination['_self_url'] = self_url()  # For `_generate_paging_dict()`
