@@ -4,9 +4,11 @@ from abc import (
 )
 from contextlib import contextmanager
 import os
+import time
 from typing import (
     List,
     Mapping,
+    Tuple,
 )
 from unittest import (
     TestSuite,
@@ -14,20 +16,19 @@ from unittest import (
 )
 
 import boto3
+from mock import MagicMock
 from moto import (
+    mock_s3,
     mock_sqs,
     mock_sts,
-    mock_s3,
 )
-from mock import MagicMock
 import requests
 import responses
-import time
 
 from app_test_case import LocalAppTestCase
+from azul import config
 from azul.modules import load_app_module
 from azul.service.storage_service import StorageService
-from azul import config
 from azul.types import JSON
 from es_test_case import ElasticsearchTestCase
 from retorts import ResponsesHelper
@@ -41,10 +42,12 @@ def load_tests(loader, tests, pattern):
 
 
 class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABCMeta):
-    endpoints = ['/repository/files?size=1',
-                 '/repository/projects?size=1',
-                 '/repository/samples?size=1',
-                 '/repository/bundles?size=1']
+    endpoints = (
+        '/repository/files?size=1',
+        '/repository/projects?size=1',
+        '/repository/samples?size=1',
+        '/repository/bundles?size=1'
+    )
 
     def test_basic(self):
         response = requests.get(self.base_url + '/health/basic')
@@ -60,7 +63,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     @mock_sqs
     def test_health_all_ok(self):
         self._create_mock_queues()
-        endpoint_states = self._make_endpoint_states(self.endpoints)
+        endpoint_states = self._endpoint_states()
         response = self._test(endpoint_states, lambdas_up=True, path='/health/')
         health_object = response.json()
         self.assertEqual(200, response.status_code)
@@ -76,7 +79,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     @mock_sts
     @mock_sqs
     def test_health_endpoint_keys(self):
-        endpoint_states = self._make_endpoint_states(self.endpoints)
+        endpoint_states = self._endpoint_states()
         expected = {
             keys: {
                 'up': True,
@@ -116,7 +119,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
 
         # A successful response is obtained when all the systems are functional
         self._create_mock_queues()
-        endpoint_states = self._make_endpoint_states(self.endpoints)
+        endpoint_states = self._endpoint_states()
         app = load_app_module(self.lambda_name())
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
@@ -160,7 +163,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     def test_elasticsearch_down(self):
         self._create_mock_queues()
         mock_endpoint = ('nonexisting-index.com', 80)
-        endpoint_states = self._make_endpoint_states(self.endpoints)
+        endpoint_states = self._endpoint_states()
         with mock.patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
                                                                   es_instance_count=1)):
             response = self._test(endpoint_states, lambdas_up=True)
@@ -269,8 +272,11 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         for queue_name in config.all_queue_names:
             sqs.create_queue(QueueName=queue_name)
 
-    def _make_endpoint_states(self, up_endpoints: List[str], down_endpoints: List[str] = None) -> Mapping[str, bool]:
+    def _endpoint_states(self,
+                         up_endpoints: Tuple[str, ...] = endpoints,
+                         down_endpoints: Tuple[str, ...] = ()
+                         ) -> Mapping[str, bool]:
         return {
-            **({endpoint: True for endpoint in up_endpoints}),
-            **({endpoint: False for endpoint in down_endpoints} if down_endpoints else {})
+            **{endpoint: True for endpoint in up_endpoints},
+            **{endpoint: False for endpoint in down_endpoints}
         }

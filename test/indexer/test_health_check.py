@@ -1,4 +1,6 @@
-from typing import Mapping
+from typing import (
+    Mapping,
+)
 import unittest
 
 from moto import (
@@ -32,7 +34,7 @@ class TestIndexerHealthCheck(HealthCheckTestCase):
     @mock_sts
     @mock_sqs
     def test_queues_down(self):
-        endpoint_states = self._make_endpoint_states(self.endpoints)
+        endpoint_states = self._endpoint_states()
         response = self._test(endpoint_states, lambdas_up=True)
         health_object = response.json()
         self.assertEqual(503, response.status_code)

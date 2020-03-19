@@ -32,7 +32,8 @@ class TestServiceHealthCheck(HealthCheckTestCase):
     @mock_sqs
     def test_all_api_endpoints_down(self):
         self._create_mock_queues()
-        endpoint_states = self._make_endpoint_states([], down_endpoints=self.endpoints)
+        endpoint_states = self._endpoint_states(up_endpoints=(),
+                                                down_endpoints=self.endpoints)
         response = self._test(endpoint_states, lambdas_up=True)
         health_object = response.json()
         self.assertEqual(503, response.status_code)
@@ -42,7 +43,8 @@ class TestServiceHealthCheck(HealthCheckTestCase):
     @mock_sqs
     def test_one_api_endpoint_down(self):
         self._create_mock_queues()
-        endpoint_states = self._make_endpoint_states(self.endpoints[1:], down_endpoints=self.endpoints[:1])
+        endpoint_states = self._endpoint_states(up_endpoints=self.endpoints[1:],
+                                                down_endpoints=self.endpoints[:1])
         response = self._test(endpoint_states, lambdas_up=True)
         health_object = response.json()
         self.assertEqual(503, response.status_code)
