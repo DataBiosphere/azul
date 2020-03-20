@@ -1,6 +1,6 @@
 from azul.openapi import (
+    format_description_key,
     schema,
-    unwrap_description,
 )
 from azul.openapi.schema import (
     TYPE,
@@ -25,7 +25,7 @@ def header(type_: TYPE, **kwargs: PrimitiveJSON) -> JSON:
         "description": "futz"
     }
     """
-    unwrap_description(kwargs)
+    format_description_key(kwargs)
     return {
         'schema': schema.make_type(type_),
         **kwargs
