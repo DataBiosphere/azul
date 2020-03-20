@@ -157,13 +157,9 @@ class AzulClient(object):
     def list_dss_bundles(self) -> List[FQID]:
         logger.info('Listing bundles in prefix %s.', self.prefix)
         bundle_fqids = []
-        # FIXME: get_bundles_all.iterate returns empty result due to bug in hca 6.4.0
-        #        Fixed by https://github.com/HumanCellAtlas/dcp-cli/commit/b963d284957a6ccedf16d61278f04b151ff2f46c
-        #        Switch to get_bundles_all.iterate() when upgrading to 6.5.1 or later
-        #        https://github.com/DataBiosphere/azul/issues/1486
-        response = self.dss_client.get_bundles_all.paginate(prefix=self.prefix, replica='aws', per_page=500)
-        for page in response:
-            bundle_fqids.extend((bundle['uuid'], bundle['version']) for bundle in page['bundles'])
+        response = self.dss_client.get_bundles_all.iterate(prefix=self.prefix, replica='aws', per_page=500)
+        for bundle in response:
+            bundle_fqids.append((bundle['uuid'], bundle['version']))
         logger.info('Prefix %s contains %i bundle(s).', self.prefix, len(bundle_fqids))
         return bundle_fqids
 
