@@ -1,30 +1,34 @@
-from abc import ABCMeta
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from contextlib import contextmanager
 import os
+import time
 from typing import (
     List,
     Mapping,
+    Tuple,
 )
-from unittest import (
-    TestSuite,
-    mock,
+from unittest import TestSuite
+from unittest.mock import (
+    MagicMock,
+    patch,
 )
 
 import boto3
 from moto import (
+    mock_s3,
     mock_sqs,
     mock_sts,
-    mock_s3,
 )
-from mock import MagicMock
 import requests
 import responses
-import time
 
 from app_test_case import LocalAppTestCase
+from azul import config
 from azul.modules import load_app_module
 from azul.service.storage_service import StorageService
-from azul import config
 from azul.types import JSON
 from es_test_case import ElasticsearchTestCase
 from retorts import ResponsesHelper
@@ -38,10 +42,12 @@ def load_tests(loader, tests, pattern):
 
 
 class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABCMeta):
-    endpoints = ['/repository/files?size=1',
-                 '/repository/projects?size=1',
-                 '/repository/samples?size=1',
-                 '/repository/bundles?size=1']
+    endpoints = (
+        '/repository/files?size=1',
+        '/repository/projects?size=1',
+        '/repository/samples?size=1',
+        '/repository/bundles?size=1'
+    )
 
     def test_basic(self):
         response = requests.get(self.base_url + '/health/basic')
@@ -57,9 +63,8 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     @mock_sqs
     def test_health_all_ok(self):
         self._create_mock_queues()
-        endpoint_states = self._make_endpoint_states(self.endpoints)
+        endpoint_states = self._endpoint_states()
         response = self._test(endpoint_states, lambdas_up=True, path='/health/')
-        health_object = response.json()
         self.assertEqual(200, response.status_code)
         self.assertEqual({
             'up': True,
@@ -68,12 +73,12 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             **self._expected_other_lambdas(True),
             **self._expected_api_endpoints(endpoint_states),
             **self._expected_progress()
-        }, health_object)
+        }, response.json())
 
     @mock_sts
     @mock_sqs
     def test_health_endpoint_keys(self):
-        endpoint_states = self._make_endpoint_states(self.endpoints)
+        endpoint_states = self._endpoint_states()
         expected = {
             keys: {
                 'up': True,
@@ -113,7 +118,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
 
         # A successful response is obtained when all the systems are functional
         self._create_mock_queues()
-        endpoint_states = self._make_endpoint_states(self.endpoints)
+        endpoint_states = self._endpoint_states()
         app = load_app_module(self.lambda_name())
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
@@ -126,7 +131,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         future_time = time.time() + 3 * 60
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
-            with mock.patch('time.time', new=lambda: future_time):
+            with patch('time.time', new=lambda: future_time):
                 response = requests.get(self.base_url + '/health/cached')
                 self.assertEqual(500, response.status_code)
                 self.assertEqual({'Message': 'Cached health object is stale'}, response.json())
@@ -142,11 +147,25 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             # The use of subTests ensures that we see the result of both
             # assertions. In the case of the health endpoint, the body of a 503
             # may carry a body with additional information.
-            with self.subTest('status_code'):
-                self.assertEqual(200, response.status_code)
-            with self.subTest('response'):
-                expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
+            self.assertEqual(200, response.status_code)
+            expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
             self.assertEqual(expected_response, response.json())
+
+    @abstractmethod
+    def _expected_health(self, endpoint_states: Mapping[str, bool], es_up: bool = True):
+        raise NotImplementedError()
+
+    @mock_sts
+    @mock_sqs
+    def test_elasticsearch_down(self):
+        self._create_mock_queues()
+        mock_endpoint = ('7c9f2ddb-74ca-46a3-9438-24ce1fe7050e.com', 80)
+        endpoint_states = self._endpoint_states()
+        with patch.dict(os.environ, **config.es_endpoint_env(es_endpoint=mock_endpoint,
+                                                             es_instance_count=1)):
+            response = self._test(endpoint_states, lambdas_up=True)
+            self.assertEqual(503, response.status_code)
+            self.assertEqual(self._expected_health(endpoint_states, es_up=False), response.json())
 
     def _expected_queues(self, up: bool) -> JSON:
         return {
@@ -234,7 +253,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                                           status=200 if endpoint_up else 503,
                                           json={}))
         # boto3.resource('sqs') requires an AWS region to be set
-        with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
+        with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
             yield
 
     def _mock_other_lambdas(self, helper: ResponsesHelper, up: bool):
@@ -249,8 +268,11 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         for queue_name in config.all_queue_names:
             sqs.create_queue(QueueName=queue_name)
 
-    def _make_endpoint_states(self, up_endpoints: List[str], down_endpoints: List[str] = None) -> Mapping[str, bool]:
+    def _endpoint_states(self,
+                         up_endpoints: Tuple[str, ...] = endpoints,
+                         down_endpoints: Tuple[str, ...] = ()
+                         ) -> Mapping[str, bool]:
         return {
-            **({endpoint: True for endpoint in up_endpoints}),
-            **({endpoint: False for endpoint in down_endpoints} if down_endpoints else {})
+            **{endpoint: True for endpoint in up_endpoints},
+            **{endpoint: False for endpoint in down_endpoints}
         }
