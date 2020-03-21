@@ -398,8 +398,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def _project_removed_from_index(self):
         results_empty = [len(self._get_entities_by_project(entity, self.test_name)) == 0
                          for entity in ['files', 'projects', 'samples', 'bundles']]
-        log.info("Project removed from index files: {}, projects: {}, "
-                 "specimens: {}, bundles: {}".format(*results_empty))
+        log.info('Project removed from index files: %d, projects: %d, '
+                 'specimens: %d, bundles: %d', *results_empty)
         return all(results_empty)
 
     def _get_entities_by_project(self, entity_type, project_short_name):
