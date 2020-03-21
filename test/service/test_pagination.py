@@ -91,7 +91,7 @@ class PaginationTestCase(WebServiceTestCase):
         Tests that search_after pagination works for the first returned page.
         :return:
         """
-        content = requests.get("{}?sort=entryId&order=desc".format(self.get_base_url())).content
+        content = requests.get(self.get_base_url() + '?sort=entryId&order=desc').content
         json_response = json.loads(content)
         self.assert_page1_correct(json_response)
 
@@ -101,7 +101,7 @@ class PaginationTestCase(WebServiceTestCase):
         passes from and size variables.
         :return:
         """
-        content = requests.get("{}?sort=entryId&size=10&order=desc".format(self.get_base_url())).content
+        content = requests.get(self.get_base_url() + '?sort=entryId&size=10&order=desc').content
         json_response = json.loads(content)
         self.assert_page1_correct(json_response)
 
@@ -111,16 +111,18 @@ class PaginationTestCase(WebServiceTestCase):
         :return:
         """
         # Fetch and check first page.
-        content = requests.get("{}?sort=entryId&order=desc".format(self.get_base_url())).content
+        content = requests.get(self.get_base_url() + '?sort=entryId&order=desc').content
         json_response = json.loads(content)
         self.assert_page1_correct(json_response)
 
         # Fetch the second page using search_after
         search_after = json_response['pagination']['search_after']
         search_after_uid = json_response['pagination']['search_after_uid']
-        url = "{}?sort=entryId&order=desc&search_after={}&search_after_uid={}".format(self.get_base_url(),
-                                                                                      search_after, search_after_uid)
-        content = requests.get(url).content
+        content = requests.get(self.get_base_url() +
+                               f'?sort=entryId'
+                               f'&order=desc'
+                               f'&search_after={search_after}'
+                               f'&search_after_uid={search_after_uid}').content
         json_response_second = json.loads(content)
         self.assert_page2_correct(json_response, json_response_second, "desc")
 
@@ -129,26 +131,29 @@ class PaginationTestCase(WebServiceTestCase):
         Tests that the last page returned in search_after pagination mode is correct.
         :return:
         """
-        content = requests.get("{}?sort=entryId&order=asc".format(self.get_base_url())).content
+        content = requests.get(self.get_base_url() + '?sort=entryId&order=asc').content
         json_response = json.loads(content)
         self.assert_page1_correct(json_response)
         # Store the search_after for the last result of the first page.
         search_after_lrfp = json_response['pagination']['search_after']
         search_after_lrfp_uid = json_response['pagination']['search_after_uid']
-        content = requests.get("{}?sort=entryId&order=asc&search_after={}&search_after_uid={}"
-                               .format(self.get_base_url(), search_after_lrfp, search_after_lrfp_uid)).content
+        content = requests.get(self.get_base_url() +
+                               f'?sort=entryId'
+                               f'&order=asc'
+                               f'&search_after={search_after_lrfp}'
+                               f'&search_after_uid={search_after_lrfp_uid}').content
         json_response_second = json.loads(content)
         self.assert_page2_correct(json_response, json_response_second, "asc")
 
         search_after = json_response_second['pagination']['search_before']
         search_after_uid = json_response_second['pagination']['search_before_uid']
 
-        content = requests.get(f"{self.get_base_url()}"
-                               f"?sort=entryId"
-                               f"&order=desc"
-                               f"&search_after={search_after}"
-                               f"&search_after_uid={search_after_uid}"
-                               f"&order=desc").content
+        content = requests.get(self.get_base_url() +
+                               f'?sort=entryId'
+                               f'&order=desc'
+                               f'&search_after={search_after}'
+                               f'&search_after_uid={search_after_uid}'
+                               f'&order=desc').content
         json_response = json.loads(content)
         if 'search_before' in json_response['pagination']:
             self.assertEqual(json_response['pagination']['search_before'], search_after_lrfp,
@@ -172,7 +177,7 @@ class PaginationTestCase(WebServiceTestCase):
         :return:
         """
         # Fetch and check first page.
-        content = requests.get("{}?sort=entryId&order=desc".format(self.get_base_url())).content
+        content = requests.get(self.get_base_url() + '?sort=entryId&order=desc').content
         json_response = json.loads(content)
         self.assert_page1_correct(json_response)
 

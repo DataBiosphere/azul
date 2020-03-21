@@ -36,16 +36,16 @@ class Queues:
 
     def list(self):
         logger.info('Listing queues')
-        print('\n{:<35s}{:^20s}{:^20s}{:^18s}\n'.format('Queue Name',
-                                                        'Messages Available',
-                                                        'Messages in Flight',
-                                                        'Messages Delayed'))
+        print(f'\n{"Queue Name":<35s}'
+              f'{"Messages Available":^20s}'
+              f'{"Messages In Flight":^20s}'
+              f'{"Messages Delayed":^18s}\n')
         queues = self.azul_queues()
         for queue_name, queue in queues.items():
-            print('{:<35s}{:^20s}{:^20s}{:^18s}'.format(queue_name,
-                                                        queue.attributes['ApproximateNumberOfMessages'],
-                                                        queue.attributes['ApproximateNumberOfMessagesNotVisible'],
-                                                        queue.attributes['ApproximateNumberOfMessagesDelayed']))
+            print(f'{queue_name:<35s}'
+                  f'{queue.attributes["ApproximateNumberOfMessages"]:^20s}'
+                  f'{queue.attributes["ApproximateNumberOfMessagesNotVisible"]:^20s}'
+                  f'{queue.attributes["ApproximateNumberOfMessagesDelayed"]:^18s}')
 
     def dump(self, queue_name, path):
         sqs = boto3.resource('sqs')
