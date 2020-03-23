@@ -49,7 +49,7 @@ def setUpModule():
     configure_test_logging(logger)
 
 
-class TestManifestEndpoints(WebServiceTestCase):
+class ManifestTestCase(WebServiceTestCase):
 
     def setUp(self):
         super().setUp()
@@ -81,6 +81,9 @@ class TestManifestEndpoints(WebServiceTestCase):
     def _get_manifest_url(self, format_, filters):
         service = ManifestService(StorageService())
         return service.get_manifest(format_, filters)
+
+
+class TestManifestEndpoints(ManifestTestCase):
 
     @mock_sts
     @mock_s3
@@ -975,6 +978,54 @@ class TestManifestEndpoints(WebServiceTestCase):
             self.assertGreater(len(intersection), 0)
             self.assertGreater(len(symmetric_diff), 0)
 
+    def test_manifest_format_validation(self):
+        url = self.base_url + '/manifest/files?format=invalid-type'
+        response = requests.get(url)
+        self.assertEqual(400, response.status_code, response.content)
+
+    @mock_sts
+    @mock_s3
+    @mock.patch.object(ManifestService, '_can_use_cached_manifest')
+    def test_manifest_content_disposition_header(self, _can_use_cached_manifest):
+        # prevent individual subtests from reusing the cached manifest
+        _can_use_cached_manifest.return_value = False
+        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        with mock.patch.object(manifest_service, 'datetime') as mock_response:
+            mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+            for filters, expected_name in [
+                # For a single project, the content disposition file name should
+                # be the project name followed by the date and time
+                (
+                    {'project': {'is': ['Single of human pancreas']}},
+                    'Single of human pancreas 1985-10-25 01.21'
+                ),
+                # In all other cases, the standard content disposition file name
+                # should be "hca-manifest-" followed by the manifest key, a
+                # v5 UUID deterministically derived from the filter and
+                (
+                    {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                    'hca-manifest-d6a11cb8-2c79-5231-8119-f0fae5fa4b25',
+                ),
+                (
+                    {},
+                    'hca-manifest-3966f5d9-b5a9-59a4-b217-d07f2914aaf0'
+                )
+            ]:
+                for single_part in True, False:
+                    with self.subTest(filters=filters, single_part=single_part):
+                        with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
+                            assert config.disable_multipart_manifests is single_part
+                            url = self._get_manifest_url('full', filters)
+                            query = urlparse(url).query
+                            expected_cd = f'attachment;filename="{expected_name}.tsv"'
+                            actual_cd = one(parse_qs(query).get('response-content-disposition'))
+                            self.assertEqual(actual_cd, expected_cd)
+
+
+class TestManifestCache(ManifestTestCase):
+
     @mock_sts
     @mock_s3
     @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
@@ -1041,51 +1092,6 @@ class TestManifestEndpoints(WebServiceTestCase):
                         self.assertEqual(file_names.keys(), set(project_ids))
                         self.assertEqual([2, 2], list(map(len, file_names.values())))
                         self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
-
-    def test_manifest_format_validation(self):
-        url = self.base_url + '/manifest/files?format=invalid-type'
-        response = requests.get(url)
-        self.assertEqual(400, response.status_code, response.content)
-
-    @mock_sts
-    @mock_s3
-    @mock.patch.object(ManifestService, '_can_use_cached_manifest')
-    def test_manifest_content_disposition_header(self, _can_use_cached_manifest):
-        # prevent individual subtests from reusing the cached manifest
-        _can_use_cached_manifest.return_value = False
-        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
-        with mock.patch.object(manifest_service, 'datetime') as mock_response:
-            mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
-            storage_service = StorageService()
-            storage_service.create_bucket()
-            for filters, expected_name in [
-                # For a single project, the content disposition file name should
-                # be the project name followed by the date and time
-                (
-                    {'project': {'is': ['Single of human pancreas']}},
-                    'Single of human pancreas 1985-10-25 01.21'
-                ),
-                # In all other cases, the standard content disposition file name
-                # should be "hca-manifest-" followed by the manifest key, a
-                # v5 UUID deterministically derived from the filter and
-                (
-                    {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                    'hca-manifest-d6a11cb8-2c79-5231-8119-f0fae5fa4b25',
-                ),
-                (
-                    {},
-                    'hca-manifest-3966f5d9-b5a9-59a4-b217-d07f2914aaf0'
-                )
-            ]:
-                for single_part in True, False:
-                    with self.subTest(filters=filters, single_part=single_part):
-                        with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                            assert config.disable_multipart_manifests is single_part
-                            url = self._get_manifest_url('full', filters)
-                            query = urlparse(url).query
-                            expected_cd = f'attachment;filename="{expected_name}.tsv"'
-                            actual_cd = one(parse_qs(query).get('response-content-disposition'))
-                            self.assertEqual(actual_cd, expected_cd)
 
     @mock_sts
     @mock_s3
