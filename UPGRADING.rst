@@ -10,6 +10,18 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#1272 Use Lambda layers to speed up ``make deploy``
+===================================================
+
+Upgrading with these changes should work as expected.
+
+If downgrading, however, you may encounter a Terraform cycle. This can be
+resolved by running ::
+
+    cd terraform
+    make init
+    terraform destroy -target aws_lambda_layer_version.dependency_layer
+
 
 #1577 Switch all deployments to DSS ``prod``
 ============================================

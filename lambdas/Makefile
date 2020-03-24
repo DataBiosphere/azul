@@ -1,6 +1,9 @@
-all: indexer service
+all: layer indexer service
 
 include ../common.mk
+
+layer:
+	$(MAKE) -C layer deploy
 
 indexer:
 	$(MAKE) -C indexer deploy
@@ -12,4 +15,4 @@ clean:
 	$(MAKE) -C indexer clean
 	$(MAKE) -C service clean
 
-.PHONY: all indexer service clean
+.PHONY: all layer indexer service clean
