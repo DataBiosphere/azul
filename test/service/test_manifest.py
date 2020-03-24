@@ -10,8 +10,12 @@ import json
 import logging
 import os
 from tempfile import TemporaryDirectory
-from typing import List
+from typing import (
+    List,
+    Optional,
+)
 from unittest import mock
+import unittest.result
 from urllib.parse import (
     parse_qs,
     urlparse,
@@ -84,6 +88,12 @@ class ManifestTestCase(WebServiceTestCase):
 
 
 class TestManifestEndpoints(ManifestTestCase):
+
+    def run(self, result: Optional[unittest.result.TestResult] = ...) -> Optional[unittest.result.TestResult]:
+        # Suppress caching of manifests to prevent false assertion positives
+        with mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest') as m:
+            m.return_value = False
+            return super().run(result)
 
     @mock_sts
     @mock_s3
@@ -985,10 +995,7 @@ class TestManifestEndpoints(ManifestTestCase):
 
     @mock_sts
     @mock_s3
-    @mock.patch.object(ManifestService, '_can_use_cached_manifest')
-    def test_manifest_content_disposition_header(self, _can_use_cached_manifest):
-        # prevent individual subtests from reusing the cached manifest
-        _can_use_cached_manifest.return_value = False
+    def test_manifest_content_disposition_header(self):
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
@@ -1101,41 +1108,50 @@ class TestManifestCache(ManifestTestCase):
 
     @mock_sts
     @mock_s3
-    def test_full_hash_validity(self):
+    def test_hash_validity(self):
         self.maxDiff = None
         old_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")
         self._index_canned_bundle(old_bundle)
-
-        # When a new bundle is indexed and its full manifest cached,
-        # a matching object_key is generated ...
         filters = {'project': {'is': ['Single of human pancreas']}}
-        format_ = 'full'
-
+        old_object_keys = {}
         service = ManifestService(StorageService())
-        generator = manifest_service.FullManifestGenerator(service, filters)
-        old_bundle_object_key = service._derive_manifest_key(format_, filters, generator.manifest_content_hash)
-
-        # and should remain valid ...
-        new_generator = manifest_service.FullManifestGenerator(service, filters)
-        self.assertEqual(old_bundle_object_key,
-                         service._derive_manifest_key(format_, filters, new_generator.manifest_content_hash))
+        for format_ in ['compact', 'full', 'terra.bdbag']:
+            with self.subTest(msg='indexing new bundle', format_=format_):
+                # When a new bundle is indexed and its full manifest cached,
+                # a matching object_key is generated ...
+                generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
+                old_bundle_object_key = service._derive_manifest_key(format_, filters,
+                                                                     generator.manifest_content_hash)
+                # and should remain valid ...
+                new_generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
+                self.assertEqual(old_bundle_object_key,
+                                 service._derive_manifest_key(format_, filters,
+                                                              new_generator.manifest_content_hash))
+                old_object_keys[format_] = old_bundle_object_key
 
         # ... until a new bundle belonging to the same project is indexed, at which point a manifest request
         # will generate a different object_key ...
         new_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z")
         self._index_canned_bundle(new_bundle)
-        generator = manifest_service.FullManifestGenerator(service, filters)
-        new_bundle_object_key = service._derive_manifest_key(format_, filters, generator.manifest_content_hash)
-
-        # ... invalidating the cached object previously used for the same filter.
-        self.assertNotEqual(old_bundle_object_key, new_bundle_object_key)
+        new_object_keys = {}
+        for format_ in ['compact', 'full', 'terra.bdbag']:
+            with self.subTest(msg='indexing second bundle', format_=format_):
+                generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
+                new_bundle_object_key = service._derive_manifest_key(format_, filters,
+                                                                     generator.manifest_content_hash)
+                # ... invalidating the cached object previously used for the same filter.
+                self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
+                new_object_keys[format_] = new_bundle_object_key
 
         # Updates or additions, unrelated to that project do not affect object key generation
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
-        generator = manifest_service.FullManifestGenerator(service, filters)
-        latest_bundle_object_key = service._derive_manifest_key(format_, filters, generator.manifest_content_hash)
+        for format_ in ['compact', 'full', 'terra.bdbag']:
+            with self.subTest(msg='indexing unrelated bundle', format_=format_):
+                generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
+                latest_bundle_object_key = service._derive_manifest_key(format_, filters,
+                                                                        generator.manifest_content_hash)
 
-        self.assertEqual(latest_bundle_object_key, new_bundle_object_key)
+                self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
 
 class TestManifestResponse(AzulTestCase):
