@@ -191,8 +191,10 @@ class ManifestService(ElasticsearchService):
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
         filter_string = repr(sort_frozen(freeze(filters)))
         content_hash = str(content_hash)
-        assert not any(',' in param for param in (git_commit, format_, content_hash))
-        return str(uuid.uuid5(manifest_namespace, ','.join((git_commit, format_, content_hash, filter_string))))
+        disable_multipart = str(config.disable_multipart_manifests)
+        manifest_key_params = (git_commit, format_, content_hash, disable_multipart, filter_string)
+        assert not any(',' in param for param in manifest_key_params[:-1])
+        return str(uuid.uuid5(manifest_namespace, ','.join(manifest_key_params)))
 
     _date_diff_margin = 10  # seconds
 

@@ -994,26 +994,32 @@ class TestManifestEndpoints(ManifestTestCase):
             mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
             storage_service = StorageService()
             storage_service.create_bucket()
-            for filters, expected_name in [
-                # For a single project, the content disposition file name should
-                # be the project name followed by the date and time
-                (
-                    {'project': {'is': ['Single of human pancreas']}},
-                    'Single of human pancreas 1985-10-25 01.21'
-                ),
-                # In all other cases, the standard content disposition file name
-                # should be "hca-manifest-" followed by the manifest key, a
-                # v5 UUID deterministically derived from the filter and
-                (
-                    {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                    'hca-manifest-d6a11cb8-2c79-5231-8119-f0fae5fa4b25',
-                ),
-                (
-                    {},
-                    'hca-manifest-3966f5d9-b5a9-59a4-b217-d07f2914aaf0'
-                )
-            ]:
-                for single_part in True, False:
+            for single_part in True, False:
+                for filters, expected_name in [
+                    # For a single project, the content disposition file name should
+                    # be the project name followed by the date and time
+                    (
+                        {'project': {'is': ['Single of human pancreas']}},
+                        'Single of human pancreas 1985-10-25 01.21'
+                    ),
+                    # In all other cases, the standard content disposition file name
+                    # should be "hca-manifest-" followed by the manifest key, a
+                    # v5 UUID deterministically derived from the filter and
+                    (
+                        {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                        'hca-manifest-' + (
+                            '4ad2e5aa-dcbd-5fed-ac3e-17bcd82c8c0f' if single_part
+                            else '525cebc4-b96a-5f75-b329-8268fe947788'
+                        ),
+                    ),
+                    (
+                        {},
+                        'hca-manifest-' + (
+                            '4a5cd62a-8c55-5ddf-94e5-86c51f7603cd' if single_part
+                            else '585ac408-338e-5e3e-a856-e4df962509b6'
+                        ),
+                    )
+                ]:
                     with self.subTest(filters=filters, single_part=single_part):
                         with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                             assert config.disable_multipart_manifests is single_part
