@@ -11,6 +11,10 @@ from azul.types import (
 )
 
 
+def wrap_json_schema_content(json):
+    return {'content': {'application/json': {'schema': json}}}
+
+
 def header(type_: TYPE, **kwargs: PrimitiveJSON) -> JSON:
     """
     Returns the schema and description for a response header.
