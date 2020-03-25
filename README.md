@@ -597,6 +597,8 @@ deploy`) in the affected deployment.
 
 # 6. Branch flow & development process
 
+**This section should be considered a draft. It describes a future extension to the current branching flow.**
+
 The section below describes the flow we want to get to eventually, not the one
 we are currently using while this repository recovers from the aftermath of its
 inception.
