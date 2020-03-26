@@ -1134,17 +1134,19 @@ def dss_files(uuid):
     'responses': {
         '200': {
             'description': format_description('''
-                DSS checkout with status report, emulating the response code and
-                headers of the `/dss/files/` endpoint. Note that the actual HTTP
-                response will have status 200 while the `Status` field of the
-                body will be 301 or 302. The intent is to emulate HTTP while
-                bypassing the default client behavior, which (in most web
-                browsers) is to ignore `Retry-After`. The response described
-                here is intended to be processed by client-side Javascript such
-                that the recommended delay in `Retry-After` can be handled in
-                Javascript rather that relying on the native implementation by
-                the web browser. See `/dss/files` for the meaning of the
-                response elements.
+                Emulates the response code and headers of the
+                [`/dss/files/`](#operations-DSS-get_dss_files__uuid_) endpoint
+                using JSON (response elements are documented there). Note that
+                the actual HTTP response will have status 200 while the `Status`
+                field of the body will be 301 or 302.
+
+                The intent behind this dual-endpoint scheme is to emulate HTTP
+                while bypassing the default client behavior, which (in most web
+                browsers) is to ignore the `Retry-After` header. The response
+                described here is intended to be processed by client-side
+                Javascript such that the recommended delay in `Retry-After` can
+                be handled in Javascript rather than relying on the native
+                implementation by the web browser.
             '''),
             'content': {
                 'application/json': {
