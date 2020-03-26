@@ -31,6 +31,7 @@ _preauth () {
 	eval $(
 		python - <<- "EOF"
 			from pathlib import Path
+			import sys
 			import botocore.session
 			import botocore.credentials
 
@@ -55,9 +56,20 @@ _preauth () {
 			print(f'export AWS_ACCESS_KEY_ID={credentials.access_key}')
 			print(f'export AWS_SECRET_ACCESS_KEY={credentials.secret_key}')
 			print(f'export AWS_SESSION_TOKEN={credentials.token}')
+
+			print("All AWS interactions initiated in this shell will use temporary "
+			      "session credentials from now on. Use '_deauth' or run 'source "
+			      "environment' again to revert the effect of this command.",
+			      file=sys.stderr)
 		EOF
 	)
 }
+
+_deauth () {
+  export -n AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+}
+
+_deauth
 
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
 # `export_environment.py`, too. We could also pass -S to `python3` but that
