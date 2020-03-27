@@ -64,6 +64,10 @@ def version():
     }
 
 
+def health_controller():
+    return HealthController(lambda_name='indexer')
+
+
 @app.route('/health', methods=['GET'], cors=True)
 def health():
     return health_controller().full_response()
@@ -89,14 +93,9 @@ def health_by_key(keys: Optional[str] = None):
     return health_controller().response(keys)
 
 
-def health_controller():
-    return HealthController(lambda_name='indexer')
-
-
 @app.schedule('rate(1 minute)', name=config.indexer_cache_health_lambda_basename)
 def generate_health_object(_event: chalice.app.CloudWatchEvent):
-    controller = HealthController(lambda_name='indexer')
-    controller.generate_cache()
+    health_controller().generate_cache()
 
 
 @app.route('/', cors=True)

@@ -40,9 +40,9 @@ from azul.logging import configure_app_logging
 from azul.openapi import (
     annotated_specs,
     format_description,
-    schema,
     params,
     responses,
+    schema,
 )
 from azul.plugin import Plugin
 from azul.portal_service import PortalService
@@ -222,42 +222,37 @@ def openapi_raw():
                     body=raw_spec)
 
 
+def health_controller():
+    return HealthController(lambda_name='service')
+
+
 health_up_key = {
-    'up': 'Indicates with a boolean value if the service is reachable.',
+    'up': format_description('''
+        indicates the overall result of the health check
+    '''),
 }
 
 health_service_keys = {
     'elasticsearch': format_description('''
-        Indicates whether service can establish a connection with Elasticsearch,
-        ensuring that indexed documents can be access through Elasticsearch.
+        indicates whether the service can establish a connection with the
+        Elasticsearch index
     '''),
     'api_endpoints': format_description('''
-        Shows a list of service API endpoints being requested by service,
-        confirming that a client making a similar request will obtain a OK
-        response.
+        indicates whether important service API endpoints are operational
     '''),
     **health_up_key
 }
 
 health_all_keys = {
     'queues': format_description('''
-        Lists queues utilized by indexer to process transactions and index
-        documents into Elasticsearch. A queue is denoted as healthy if queue
-        stats can be collected, stats are then displayed for each available
-        queue.
+        lists information about the SQS queues used by the indexer
     '''),
     'other_lambdas': format_description('''
-        Represent other server-less applications used by Azul in order to make
-        web service available, index is an example. Index processes data and
-        indexes it into Elasticsearch. Indexed data is then available for
-        service to search through via Elasticsearch. The status check for other
-        lambdas is obtained by getting a response from their `health/basic`
-        endpoints, ensuring that the application is reachable.
+        indicates whether the companion REST API responds to HTTP requests
     '''),
     'progress': format_description('''
-        Is a more concrete version of __queues__. Progress indicates the
-        remainder of transactions and documents to be indexed. Which gives the
-        client insight into the progress of indexing.
+        indicates the number of Data Store bundles pending to be indexed and
+        the number of index documents in need of updating
     '''),
     **health_service_keys
 }
@@ -268,10 +263,20 @@ def health_spec(health_keys: dict):
         'responses': {
             f'{200 if up else 503}': {
                 'description': format_description(f'''
-                    Service component is {'' if up else 'un'}reachable.
+                    {'The' if up else 'At least one of the'} checked resources
+                    {'are' if up else 'is not'} healthy.
 
-                    Response keys:
-                ''') + ''.join(f'* __{k}__ {v}' for k, v in health_keys.items()),
+                    The response consists of the following keys:
+
+                ''') + ''.join(f'* `{k}` {v}' for k, v in health_keys.items()) + format_description(f'''
+
+                    The top-level `up` key of the response is
+                    `{'true' if up else 'false'}`.
+
+                ''') + (format_description(f'''
+                    {'All' if up else 'At least one'} of the nested `up` keys
+                    {'are `true`' if up else 'is `false`'}.
+                ''') if len(health_keys) > 1 else ''),
                 'content': {
                     'application/json': {
                         'example': {
@@ -292,10 +297,6 @@ def health_spec(health_keys: dict):
     }
 
 
-def health_controller():
-    return HealthController(lambda_name='service')
-
-
 @app.route('/health', methods=['GET'], cors=True, method_spec={
     'summary': 'Complete health check',
     'description': format_description('''
@@ -303,7 +304,8 @@ def health_controller():
         take long time to complete and exerts considerable load on the service.
         For that reason it should not be requested frequently or by automated
         monitoring facilities that would be better served by the
-        [`/health/fast`](#operations-Auxiliary-get_health_fast) endpoint.
+        [`/health/fast`](#operations-Auxiliary-get_health_fast) or
+        [`/health/cached`](#operations-Auxiliary-get_health_cached) endpoints.
     '''),
     **health_spec(health_all_keys)
 })
@@ -329,10 +331,10 @@ def basic_health():
     'description': format_description('''
         Return a cached copy of the
         [`/health/fast`](#operations-Auxiliary-get_health_fast) response.
-        This endpoint is optimized for continuously running distributed health
-        monitoring facilities such as AWS CloudWatch. The caching ensures that
-        this service is not overloaded by those facilities. The cache is updated
-        every minute.
+        This endpoint is optimized for continuously running, distributed health
+        monitors such as Route 53 health checks. The cache ensures that the
+        service is not overloaded by these types of health monitors. The cache
+        is updated every minute.
     '''),
     **health_spec(health_service_keys)
 })
@@ -343,11 +345,11 @@ def cached_health():
 @app.route('/health/fast', methods=['GET'], cors=True, method_spec={
     'summary': 'Fast health check',
     'description': format_description('''
-        Performance-optimized health check of the REST API and critical
+        Performance-optimized health check of the REST API and other critical
         resources the service depends on. This endpoint can be requested more
         frequently than [`/health`](#operations-Auxiliary-get_health) but
-        periodic and automated requests should be made to
-        [`/health/fast`](#operations-Auxiliary-get_health_fast).
+        periodically scheduled, automated requests should be made to
+        [`/health/cached`](#operations-Auxiliary-get_health_cached).
     '''),
     **health_spec(health_service_keys)
 })
@@ -355,27 +357,25 @@ def fast_health():
     return health_controller().fast_response()
 
 
-@app.route('/health/{keys}', methods=['GET'], cors=True, path_spec={
-    'parameters': [
-        {
-            'name': 'keys',
-            'in': 'path',
-            'required': True,
-            'description': f'Available keys to query health status: {[*health_controller().all_keys]}',
-            'schema': schema.array(str,
-                                   pattern=f'^({"|".join(health_controller().all_keys)})'
-                                           f'(,({"|".join(health_controller().all_keys)}))*$')
-        }
-    ],
-}, method_spec={
-    'summary': 'Custom health check',
+@app.route('/health/{keys}', methods=['GET'], cors=True, method_spec={
+    'summary': 'Selective health check',
     'description': format_description('''
-        Health check of client-provided subset of resources. This endpoint
-        allows clients to request a health check on a specific set of resources.
-        Each resource is identified by a *key*. The key is what identifies the
-        resource in a /health response.
+        This endpoint allows clients to request a health check on a specific set
+        of resources. Each resource is identified by a *key*, the same key
+        under which the resource appears in a
+        [`/health`](#operations-Auxiliary-get_health) response.
     '''),
     **health_spec(health_all_keys)
+}, path_spec={
+    'parameters': [
+        params.path(
+            'keys',
+            type_=schema.array(schema.enum(*sorted(HealthController.all_keys))),
+            description=f'''
+                A comma-separated list of keys selecting the health checks to be
+                performed. Each key corresponds to an entry in the response.
+        ''')
+    ],
 })
 def health_by_keys(keys: Optional[str] = None):
     return health_controller().response(keys)
@@ -383,8 +383,7 @@ def health_by_keys(keys: Optional[str] = None):
 
 @app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
 def generate_health_object(_event: chalice.app.CloudWatchEvent):
-    controller = HealthController(lambda_name='service')
-    controller.generate_cache()
+    health_controller().generate_cache()
 
 
 @app.route('/version', methods=['GET'], cors=True, method_spec={
