@@ -33,6 +33,16 @@ ifneq ($(shell python -c "import wheel as w; \
 $(error Looks like the `wheel` package is outdated or missing. See README for instructions on how to fix this.)
 endif
 
+# This check should not occur within CI environments, where AWS Credentials might not be supplied
+ifneq ($(shell python -c "import os, sys; \
+                          import boto3 as b; \
+                          print(os.environ.get('TRAVIS') == 'true' or \
+                          b.client('sts').get_caller_identity()['Account'] == os.environ['AZUL_AWS_ACCOUNT_ID'])\
+                          "),True)
+$(error Looks like there is a mismatch between AZUL_AWS_ACCOUNT_ID and the currently active AWS credentials. \
+        Check the output from 'aws sts get-caller-identity' against the value of that environment variable.))
+endif
+
 check_branch:
 	python $(azul_home)/scripts/check_branch.py
 
