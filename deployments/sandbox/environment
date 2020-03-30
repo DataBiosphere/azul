@@ -39,6 +39,8 @@ _set AZUL_DEBUG 1
 
 _set AZUL_OWNER hannes@ucsc.edu
 
+_set AZUL_AWS_ACCOUNT_ID 122796619775
+
 export AWS_DEFAULT_REGION=us-east-1
 
 export GOOGLE_PROJECT="human-cell-atlas-travis-test"

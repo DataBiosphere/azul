@@ -545,6 +545,8 @@ make delete
 
 # 4. Running indexer or service locally
 
+**Ensure infrastructure for lambda(s) are deployed before trying to run locally. See Sections: [2](#2-getting-started), [3](#3-deployment)**
+
 1. As usual, activate the virtual environment and `source environment` if you
    haven't done so already
 
