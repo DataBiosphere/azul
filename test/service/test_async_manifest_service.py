@@ -206,12 +206,20 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 400)
 
+    @mock.patch.object(ManifestService, '__init__')
+    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
     @patch_current_request
-    def test_manifest_endpoint_boto_error(self, _current_request, step_function_helper):
+    def test_manifest_endpoint_boto_error(self,
+                                          _current_request,
+                                          step_function_helper,
+                                          get_cached_manifest,
+                                          __init__):
         """
         Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
         """
+        __init__.return_value = None
+        get_cached_manifest.return_value = None
         params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -223,13 +231,21 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 500)
 
+    @mock.patch.object(ManifestService, '__init__')
+    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
     @patch_current_request
-    def test_manifest_endpoint_execution_error(self, _current_request, step_function_helper):
+    def test_manifest_endpoint_execution_error(self,
+                                               _current_request,
+                                               step_function_helper,
+                                               get_cached_manifest,
+                                               __init__):
         """
         Manifest status check should return a generic error (500 status code)
         if the execution errored.
         """
+        __init__.return_value = None
+        get_cached_manifest.return_value = None
         params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
