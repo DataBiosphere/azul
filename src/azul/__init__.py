@@ -65,6 +65,10 @@ class Config:
         }
 
     @property
+    def aws_account_id(self) -> str:
+        return os.environ['AZUL_AWS_ACCOUNT_ID']
+
+    @property
     def project_root(self) -> str:
         return os.environ['azul_home']
 

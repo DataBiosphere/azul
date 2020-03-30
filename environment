@@ -6,6 +6,9 @@
 # before publishing a variable containing a secret.
 
 azul_vars=(
+    # The Account ID number for AWS
+    AZUL_AWS_ACCOUNT_ID
+
     # The path to the root directory of the project
     azul_home
 
