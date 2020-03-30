@@ -29,6 +29,7 @@ from elasticsearch.helpers import (
     parallel_bulk,
     scan,
     streaming_bulk,
+    ScanError,
 )
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
@@ -37,6 +38,7 @@ from azul import config
 import azul.dss
 from azul.deployment import aws
 from azul.es import ESClientFactory
+from azul.retry import retry
 from azul.transformer import (
     Aggregate,
     AggregatingTransformer,
@@ -301,7 +303,9 @@ class BaseIndexer(ABC):
                 num_contributions = total_hits
         if hits is None:
             log.info('Reading %i expected contribution(s) using scan().', num_contributions)
-            hits = scan(es_client, index=index, query=query, size=page_size, doc_type=Document.type)
+            for attempt in retry(delays=(1,), max_tries=3, predicate=lambda e: isinstance(e, ScanError)):
+                with attempt:
+                    hits = scan(es_client, index=index, query=query, size=page_size, doc_type=Document.type)
         contributions = [Contribution.from_index(self.field_types(), hit) for hit in hits]
 
         entity_key = attrgetter('entity')

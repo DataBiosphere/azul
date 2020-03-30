@@ -17,6 +17,7 @@ import azul.openapi.schema
 import azul.openapi.params
 import azul.openapi.responses
 import azul.project.hca.metadata_generator
+import azul.retry
 import azul.service.elasticsearch_service
 import azul.strings
 import azul.threads
@@ -41,6 +42,7 @@ def load_tests(_loader, tests, _ignore):
     tests.addTests(doctest.DocTestSuite(azul.openapi.schema))
     tests.addTests(doctest.DocTestSuite(azul.openapi.params))
     tests.addTests(doctest.DocTestSuite(azul.openapi.responses))
+    tests.addTests(doctest.DocTestSuite(azul.retry))
     tests.addTests(doctest.DocTestSuite(azul.strings))
     tests.addTests(doctest.DocTestSuite(azul.threads))
     tests.addTests(doctest.DocTestSuite(azul.time))
