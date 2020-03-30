@@ -548,6 +548,10 @@ make delete
 
 # 4. Running indexer or service locally
 
+While this method *does* run the service or indexer locally on your machine, it
+still requires that the cloud resources used by them are already deployed.
+See sections [2](#2-getting-started) and [3](#3-deployment) on how to do that.
+ 
 1. As usual, activate the virtual environment and `source environment` if you
    haven't done so already
 
