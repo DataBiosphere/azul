@@ -4,7 +4,6 @@ import sys
 import git
 
 from azul import config
-import azul.deployment
 
 """
 Ensure that the currently checked out branch matches the selected deployment
@@ -13,59 +12,36 @@ Ensure that the currently checked out branch matches the selected deployment
 
 def check_branch(branch, stage):
     """
-    >>> from unittest.mock import patch
+    >>> check_branch('dev', 'develop')
 
-    >>> with patch.object(azul.deployment, 'aws') as aws:
-    ...     aws.account = '123'
-    ...     check_branch('develop', 'dev')
+    >>> check_branch('feature/foo', 'prod')
     Traceback (most recent call last):
     ...
-    RuntimeError: Protected branch 'develop' should be deployed to AWS account '122796619775', not '123'
+    RuntimeError: Non-protected branch 'feature/foo' can't be deployed to main deployment 'prod'
 
-    >>> with patch.object(azul.deployment, 'aws') as aws:
-    ...     aws.account = '122796619775'
-    ...     check_branch('develop', 'dev')
-
-    >>> with patch.object(azul.deployment, 'aws') as aws:
-    ...     aws.account = '122796619775'
-    ...     check_branch('issues/foo', 'prod')
+    >>> check_branch('staging', 'hannes.local')
     Traceback (most recent call last):
     ...
-    RuntimeError: Non-protected branch 'issues/foo' can't be deployed to main deployment 'prod'
+    RuntimeError: Protected branch 'staging' should be deployed to 'staging', not 'hannes.local'
 
-    >>> with patch.object(azul.deployment, 'aws') as aws:
-    ...     aws.account = '122796619775'
-    ...     check_branch('hca/staging', 'hannes.local')
+    >>> check_branch('staging', 'integration')
     Traceback (most recent call last):
     ...
-    RuntimeError: Protected branch 'hca/staging' should be deployed to 'staging', not 'hannes.local'
-
-    >>> with patch.object(azul.deployment, 'aws') as aws:
-    ...     aws.account = '122796619775'
-    ...     check_branch('hca/staging', 'hca/integration')
-    Traceback (most recent call last):
-    ...
-    RuntimeError: Protected branch 'hca/staging' should be deployed to 'staging', not 'hca/integration'
+    RuntimeError: Protected branch 'staging' should be deployed to 'staging', not 'integration'
     """
     stage_by_branch = config.main_deployments_by_branch
-    account = azul.deployment.aws.account
     try:
-        expected_account, expected_stage = stage_by_branch[branch]
+        expected_stage = stage_by_branch[branch]
     except KeyError:
-        if stage in [s for _, s in stage_by_branch.values()]:
+        if stage in stage_by_branch.values():
             raise RuntimeError(f"Non-protected branch '{branch}' can't be deployed to main deployment '{stage}'")
     else:
         if stage != expected_stage:
             raise RuntimeError(f"Protected branch '{branch}' should be deployed to '{expected_stage}', not '{stage}'")
-        elif account != expected_account:
-            raise RuntimeError(
-                f"Protected branch '{branch}' should be deployed to AWS account '{expected_account}', not '{account}'"
-            )
 
 
 def expected_stage(branch):
-    account, stage = config.main_deployments_by_branch.get(branch, (None, None))
-    return stage
+    return config.main_deployments_by_branch.get(branch)
 
 
 def current_branch():

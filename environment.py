@@ -26,6 +26,9 @@ def env() -> Mapping[str, Optional[str]]:
         # FIXME: can't use '{project_root}' due to https://github.com/DataBiosphere/azul/issues/1645
         'azul_home': os.environ['project_root'],
 
+        # The Account ID number for AWS
+        'AZUL_AWS_ACCOUNT_ID': None,
+
         # The region of the Azul deployment. This variable is primarily used by
         # the AWS CLI, by TerraForm, botocore and boto3 but Azul references it
         # too. This variable is typically set in deployment-specific
