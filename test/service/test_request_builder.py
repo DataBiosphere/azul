@@ -48,14 +48,14 @@ class TestRequestBuilder(WebServiceTestCase):
         Print the two outputs along with a diff of the two
         """
         print("Comparing the two dictionaries built.")
-        print('{}... => {}...'.format(actual_output[:20], expected_output[:20]))
+        print(f'{actual_output[:20]}... => {expected_output[:20]}...')
         for i, s in enumerate(difflib.ndiff(actual_output, expected_output)):
             if s[0] == ' ':
                 continue
             elif s[0] == '-':
-                print(u'Delete "{}" from position {}'.format(s[-1], i))
+                print(f'Delete "{s[-1]}" from position {i}')
             elif s[0] == '+':
-                print(u'Add "{}" to position {}'.format(s[-1], i))
+                print(f'Add "{s[-1]}" to position {i}')
 
     def test_create_request(self):
         """

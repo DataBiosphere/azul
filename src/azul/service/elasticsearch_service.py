@@ -281,7 +281,7 @@ class ElasticsearchService(AbstractService):
         search_field = field_mapping[search_field] if search_field in field_mapping else search_field
         es_filter_query = self._create_query(filters)
         es_search = es_search.post_filter(es_filter_query)
-        es_search = es_search.query(Q('prefix', **{'{}'.format(search_field): _query}))
+        es_search = es_search.query(Q('prefix', **{str(search_field): _query}))
         return es_search
 
     def _apply_paging(self, es_search, pagination):
@@ -438,7 +438,7 @@ class ElasticsearchService(AbstractService):
         ):
             es_search.aggs.metric(
                 agg_name, 'cardinality',
-                field='{}.keyword'.format(cardinality),
+                field=cardinality + '.keyword',
                 precision_threshold="40000")
 
         self._annotate_aggs_for_translation(es_search)
