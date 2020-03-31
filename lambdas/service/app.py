@@ -232,29 +232,20 @@ health_up_key = {
     '''),
 }
 
-health_service_keys = {
-    'elasticsearch': format_description('''
-        indicates whether the service can establish a connection with the
-        Elasticsearch index
-    '''),
-    'api_endpoints': format_description('''
-        indicates whether important service API endpoints are operational
-    '''),
+fast_health_keys = {
+    **{
+        prop.key: format_description(prop.description)
+        for prop in HealthController.fast_properties['service']
+    },
     **health_up_key
 }
 
 health_all_keys = {
-    'queues': format_description('''
-        lists information about the SQS queues used by the indexer
-    '''),
-    'other_lambdas': format_description('''
-        indicates whether the companion REST API responds to HTTP requests
-    '''),
-    'progress': format_description('''
-        indicates the number of Data Store bundles pending to be indexed and
-        the number of index documents in need of updating
-    '''),
-    **health_service_keys
+    **{
+        prop.key: format_description(prop.description)
+        for prop in HealthController.all_properties
+    },
+    **health_up_key
 }
 
 
@@ -310,7 +301,7 @@ def health_spec(health_keys: dict):
     **health_spec(health_all_keys)
 })
 def health():
-    return health_controller().full_response()
+    return health_controller().health()
 
 
 @app.route('/health/basic', methods=['GET'], cors=True, method_spec={
@@ -323,7 +314,7 @@ def health():
     **health_spec(health_up_key)
 })
 def basic_health():
-    return health_controller().basic_response()
+    return health_controller().basic_health()
 
 
 @app.route('/health/cached', methods=['GET'], cors=True, method_spec={
@@ -336,10 +327,10 @@ def basic_health():
         service is not overloaded by these types of health monitors. The cache
         is updated every minute.
     '''),
-    **health_spec(health_service_keys)
+    **health_spec(fast_health_keys)
 })
 def cached_health():
-    return health_controller().cached_response()
+    return health_controller().cached_health()
 
 
 @app.route('/health/fast', methods=['GET'], cors=True, method_spec={
@@ -351,10 +342,10 @@ def cached_health():
         periodically scheduled, automated requests should be made to
         [`/health/cached`](#operations-Auxiliary-get_health_cached).
     '''),
-    **health_spec(health_service_keys)
+    **health_spec(fast_health_keys)
 })
 def fast_health():
-    return health_controller().fast_response()
+    return health_controller().fast_health()
 
 
 @app.route('/health/{keys}', methods=['GET'], cors=True, method_spec={
@@ -377,13 +368,13 @@ def fast_health():
         ''')
     ],
 })
-def health_by_keys(keys: Optional[str] = None):
-    return health_controller().response(keys)
+def custom_health(keys: Optional[str] = None):
+    return health_controller().custom_health(keys)
 
 
 @app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
-def generate_health_object(_event: chalice.app.CloudWatchEvent):
-    health_controller().generate_cache()
+def update_health_cache(_event: chalice.app.CloudWatchEvent):
+    health_controller().update_cache()
 
 
 @app.route('/version', methods=['GET'], cors=True, method_spec={
