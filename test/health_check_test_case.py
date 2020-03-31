@@ -123,7 +123,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             with self._mock_service_endpoints(helper, endpoint_states):
-                app.generate_health_object(MagicMock(), MagicMock())
+                app.update_health_cache(MagicMock(), MagicMock())
                 response = requests.get(self.base_url + '/health/cached')
                 self.assertEqual(200, response.status_code)
 

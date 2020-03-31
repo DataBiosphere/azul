@@ -70,32 +70,32 @@ def health_controller():
 
 @app.route('/health', methods=['GET'], cors=True)
 def health():
-    return health_controller().full_response()
+    return health_controller().health()
 
 
 @app.route('/health/basic', methods=['GET'], cors=True)
 def basic_health():
-    return health_controller().basic_response()
+    return health_controller().basic_health()
 
 
 @app.route('/health/cached', methods=['GET'], cors=True)
 def cached_health():
-    return health_controller().cached_response()
+    return health_controller().cached_health()
 
 
 @app.route('/health/fast', methods=['GET'], cors=True)
 def fast_health():
-    return health_controller().fast_response()
+    return health_controller().fast_health()
 
 
 @app.route('/health/{keys}', methods=['GET'], cors=True)
 def health_by_key(keys: Optional[str] = None):
-    return health_controller().response(keys)
+    return health_controller().custom_health(keys)
 
 
 @app.schedule('rate(1 minute)', name=config.indexer_cache_health_lambda_basename)
-def generate_health_object(_event: chalice.app.CloudWatchEvent):
-    health_controller().generate_cache()
+def update_health_cache(_event: chalice.app.CloudWatchEvent):
+    health_controller().update_cache()
 
 
 @app.route('/', cors=True)

@@ -1,29 +1,49 @@
-import json
-import time
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
+import json
+import time
 from typing import (
-    Tuple,
     Iterable,
+    Mapping,
+    Set,
+    Tuple,
 )
 
 from boltons.cacheutils import cachedproperty
+from boltons.typeutils import classproperty
 import boto3
-import requests
 from botocore.exceptions import ClientError
+from chalice import (
+    ChaliceViewError,
+    Response,
+)
+import requests
 
 from azul import (
+    RequirementError,
     config,
     require,
-    RequirementError,
 )
 from azul.es import ESClientFactory
 from azul.service.storage_service import StorageService
 from azul.types import JSON
-from chalice import (
-    Response,
-    ChaliceViewError,
-)
+
+
+# noinspection PyPep8Naming
+class health_property(cachedproperty):
+    """
+    Use this to decorate any methods you would like to be automatically
+    returned by HealthController.as_json(). Be sure to provide a docstring in
+    the decorated method.
+    """
+
+    @property
+    def key(self):
+        return self.func.__name__
+
+    @property
+    def description(self):
+        return self.func.__doc__
 
 
 class HealthController:
@@ -33,29 +53,6 @@ class HealthController:
     class does not examine any resources, only accessing the individual
     properties does, or using the `to_json` method.
     """
-
-    all_keys = {
-        'elasticsearch',
-        'queues',
-        'progress',
-        'api_endpoints',
-        'other_lambdas',
-    }
-
-    keys_by_service = {
-        'indexer': {
-            'elasticsearch',
-            'queues',
-            'progress'
-        },
-        'service': {
-            'elasticsearch',
-            'api_endpoints',
-        }
-    }
-
-    endpoints = [f'/repository/{entity_type}?size=1'
-                 for entity_type in ('projects', 'samples', 'files', 'bundles')]
 
     def __init__(self, lambda_name: str):
         self.lambda_name = lambda_name
@@ -71,14 +68,11 @@ class HealthController:
         json['up'] = all(v['up'] for v in json.values())
         return json
 
-    def as_json_fast(self):
-        return self.as_json(self.keys_by_service[self.lambda_name])
-
-    def fast_response(self):
-        return self._http_response(self.as_json_fast())
-
-    @cachedproperty
+    @health_property
     def other_lambdas(self):
+        """
+        Indicates whether the companion REST API responds to HTTP requests.
+        """
         response = {
             lambda_name: self._lambda(lambda_name)
             for lambda_name in config.lambda_names()
@@ -87,8 +81,11 @@ class HealthController:
         response['up'] = all(v['up'] for v in response.values())
         return response
 
-    @cachedproperty
+    @health_property
     def queues(self):
+        """
+        Returns information about the SQS queues used by the indexer.
+        """
         sqs = boto3.resource('sqs')
         response = {'up': True}
         for queue in config.all_queue_names:
@@ -111,8 +108,12 @@ class HealthController:
                 }
         return response
 
-    @cachedproperty
+    @health_property
     def progress(self) -> JSON:
+        """
+        The number of Data Store bundles pending to be indexed and the number
+        of index documents in need of updating.
+        """
         return {
             'up': True,
             'unindexed_bundles': sum(self.queues[config.notify_queue_name].get('messages', {}).values()),
@@ -129,23 +130,28 @@ class HealthController:
         else:
             return url, {'up': True}
 
-    @cachedproperty
+    @health_property
     def api_endpoints(self):
-        endpoints = self.endpoints
+        """
+        Indicates whether important service API endpoints are operational.
+        """
+        endpoints = [
+            f'/repository/{entity_type}?size=1'
+            for entity_type in ('projects', 'samples', 'files', 'bundles')
+        ]
         with ThreadPoolExecutor(len(endpoints)) as tpe:
             status = dict(tpe.map(self._api_endpoint, endpoints))
         status['up'] = all(v['up'] for v in status.values())
         return status
 
-    @cachedproperty
+    @health_property
     def elasticsearch(self):
+        """
+        Indicates whether the Elasticsearch cluster is responsive.
+        """
         return {
             'up': ESClientFactory.get().ping(),
         }
-
-    @cachedproperty
-    def up(self):
-        return all(getattr(self, k)['up'] for k in self.all_keys)
 
     @lru_cache()
     def _lambda(self, lambda_name) -> JSON:
@@ -163,10 +169,22 @@ class HealthController:
                 'up': up,
             }
 
-    def full_response(self):
-        return self._http_response(self.as_json(self.all_keys))
+    def _make_response(self, body: JSON) -> Response:
+        try:
+            up = body['up']
+        except KeyError:
+            status = 400
+        else:
+            status = 200 if up else 503
+        return Response(body=json.dumps(body), status_code=status)
 
-    def response(self, keys):
+    def basic_health(self) -> Response:
+        return self._make_response({'up': True})
+
+    def health(self) -> Response:
+        return self._make_response(self.as_json(self.all_keys))
+
+    def custom_health(self, keys) -> Response:
         if keys is None:
             body = self.as_json(self.all_keys)
         elif isinstance(keys, str):
@@ -178,13 +196,12 @@ class HealthController:
                 body = {'Message': 'Invalid health keys'}
         else:
             body = {'Message': 'Invalid health keys'}
-        return self._http_response(body)
+        return self._make_response(body)
 
-    def generate_cache(self):
-        health_object = dict(time=time.time(), health=self.as_json_fast())
-        self.storage_service.put(object_key=f'health/{self.lambda_name}', data=json.dumps(health_object))
+    def fast_health(self) -> Response:
+        return self._make_response(self._as_json_fast())
 
-    def cached_response(self):
+    def cached_health(self) -> JSON:
         try:
             cache = json.loads(self.storage_service.get(f'health/{self.lambda_name}'))
         except self.storage_service.client.exceptions.NoSuchKey:
@@ -197,14 +214,30 @@ class HealthController:
                 body = cache['health']
         return body
 
-    def basic_response(self):
-        return self._http_response({'up': True})
+    fast_properties: Mapping[str, Set[health_property]] = {
+        'indexer': {
+            elasticsearch,
+            queues,
+            progress
+        },
+        'service': {
+            elasticsearch,
+            api_endpoints,
+        }
+    }
 
-    def _http_response(self, body):
-        try:
-            up = body['up']
-        except KeyError:
-            status = 400
-        else:
-            status = 200 if up else 503
-        return Response(body=json.dumps(body), status_code=status)
+    def _as_json_fast(self) -> JSON:
+        return self.as_json(p.key for p in self.fast_properties[self.lambda_name])
+
+    def update_cache(self) -> None:
+        health_object = dict(time=time.time(), health=self._as_json_fast())
+        self.storage_service.put(object_key=f'health/{self.lambda_name}', data=json.dumps(health_object))
+
+    all_properties: Set[health_property] = {
+        p for p in locals().values() if isinstance(p, health_property)
+    }
+
+    # noinspection PyMethodParameters
+    @classproperty
+    def all_keys(cls) -> Set[str]:
+        return {p.key for p in cls.all_properties}
