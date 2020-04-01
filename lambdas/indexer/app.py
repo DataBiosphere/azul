@@ -64,19 +64,38 @@ def version():
     }
 
 
+def health_controller():
+    return HealthController(lambda_name='indexer')
+
+
 @app.route('/health', methods=['GET'], cors=True)
+def health():
+    return health_controller().health()
+
+
+@app.route('/health/basic', methods=['GET'], cors=True)
+def basic_health():
+    return health_controller().basic_health()
+
+
+@app.route('/health/cached', methods=['GET'], cors=True)
+def cached_health():
+    return health_controller().cached_health()
+
+
+@app.route('/health/fast', methods=['GET'], cors=True)
+def fast_health():
+    return health_controller().fast_health()
+
+
 @app.route('/health/{keys}', methods=['GET'], cors=True)
-def health(keys: Optional[str] = None):
-    controller = HealthController(lambda_name='indexer',
-                                  keys=keys,
-                                  request_path=app.current_request.context['path'])
-    return controller.response()
+def health_by_key(keys: Optional[str] = None):
+    return health_controller().custom_health(keys)
 
 
 @app.schedule('rate(1 minute)', name=config.indexer_cache_health_lambda_basename)
-def generate_health_object(_event: chalice.app.CloudWatchEvent):
-    controller = HealthController(lambda_name='indexer')
-    controller.generate_cache()
+def update_health_cache(_event: chalice.app.CloudWatchEvent):
+    health_controller().update_cache()
 
 
 @app.route('/', cors=True)
@@ -215,7 +234,7 @@ document_batch_size = 10
 # The maximum number of tokens to be processed by a single Lambda invocation. This should be at least 2 to allow for
 # token recombination to occur (two smaller tokens being merged into one) and to increase the chance that the
 # combined token value is 10. It must be at most 10 because of a limit imposed by SQS and Lambda. The higher this
-# value, the more token reconcilation will occur at the expense of increased token churn (unused token value being
+# value, the more token reconciliation will occur at the expense of increased token churn (unused token value being
 # returned to the queue). One token can be at most document_batch_size in value, and one Lambda invocation consumes
 # at most document_batch_size in token value so retrieving ten tokens may cause nine tokens to be returned.
 #
@@ -245,7 +264,7 @@ def write(event: chalice.app.SQSEvent):
         # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
         # queues try to put as many messages from the same message group in a reception batch, a single message per
         # group may indicate that that message is the last one in the group. Inversely, multiple messages per group
-        # in a batch are a likely indidicator for the presence of even more queued messages in that group. The more
+        # in a batch are a likely indicator for the presence of even more queued messages in that group. The more
         # bundle contributions we defer, the higher the amortized savings on aggregation become. Aggregating bundle
         # contributions is a costly operation for any entity with many contributions e.g., a large project.
         #

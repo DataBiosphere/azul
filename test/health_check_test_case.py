@@ -114,7 +114,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             helper.add_passthru(self.base_url)
             response = requests.get(self.base_url + '/health/cached')
             self.assertEqual(500, response.status_code)
-            self.assertEqual({'Message': 'Cached health object does not exist'}, response.json())
+            self.assertEqual('ChaliceViewError: Cached health object does not exist', response.json()['Message'])
 
         # A successful response is obtained when all the systems are functional
         self._create_mock_queues()
@@ -123,7 +123,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             with self._mock_service_endpoints(helper, endpoint_states):
-                app.generate_health_object(MagicMock(), MagicMock())
+                app.update_health_cache(MagicMock(), MagicMock())
                 response = requests.get(self.base_url + '/health/cached')
                 self.assertEqual(200, response.status_code)
 
@@ -134,7 +134,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             with patch('time.time', new=lambda: future_time):
                 response = requests.get(self.base_url + '/health/cached')
                 self.assertEqual(500, response.status_code)
-                self.assertEqual({'Message': 'Cached health object is stale'}, response.json())
+                self.assertEqual('ChaliceViewError: Cached health object is stale', response.json()['Message'])
 
     @responses.activate
     def test_laziness(self):
@@ -238,7 +238,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             }
         }
 
-    def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health'):
+    def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health/fast'):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             self._mock_other_lambdas(helper, lambdas_up)
