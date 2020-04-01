@@ -162,21 +162,21 @@ class Queues:
             logger.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
                          queue_name, queue_length, *message_counts)
             total_message_count += queue_length
-        logger.info('Counting %i message(s) in %i queue(s).', total_message_count, len(queues))
         return total_message_count
 
     @classmethod
-    def wait_for_queue_level(cls, queue_names, empty: bool = True, num_bundles: int = None):
+    def wait_for_queue_level(cls, empty: bool = True, num_bundles: int = None):
         """
-        Wait until the total count of queued messages reaches the desired level
+        Wait until the total count of messages in the notify and document queues
+        reaches the desired level
 
-        :param queue_names: The names of the queues to check messages counts in
         :param empty: True to wait until the queues are empty, False to wait until not empty.
         :param num_bundles: Number of bundles being indexed (None = many bundles)
         """
         sleep_time = 5
         deque_size = 10 if empty else 1
-        queues = cls.get_queues(queue_names)
+        queues = cls.get_queues((config.notify_queue_name, config.document_queue_name))
+        additional_queues = cls.get_queues((config.token_queue_name,))  # log count of but don't wait for
         queue_size_history = deque(maxlen=deque_size)
         wait_start_time = time.time()
 
@@ -195,6 +195,8 @@ class Queues:
                     timeout, len(queues), 'empty' if empty else 'not be empty')
         while True:
             total_message_count = cls.count_messages(queues)
+            logger.info('Counting %i total message(s) in %i queue(s).', total_message_count, len(queues))
+            cls.count_messages(additional_queues)
             queue_wait_time_elapsed = (time.time() - wait_start_time)
             queue_size_history.append(total_message_count)
             cumulative_queue_size = sum(queue_size_history)
@@ -205,7 +207,7 @@ class Queues:
                 logger.info('The queue(s) are at the desired level.')
                 break
             else:
-                logger.info('The most recently sampled queue sizes are %r.', queue_size_history)
+                logger.info('The most recently sampled queue totals are %r.', queue_size_history)
             time.sleep(5)
 
     def feed(self, path, queue_name, force=False):

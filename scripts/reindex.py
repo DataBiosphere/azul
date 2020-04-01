@@ -118,8 +118,8 @@ def main(argv: List[str]):
             azul_client.reindex()
         if args.wait:
             # Total wait time for queues must be less than timeout in `.gitlab-ci.yml`
-            queue_manager.wait_for_queue_level(queues.keys(), empty=False)
-            queue_manager.wait_for_queue_level(queues.keys(), empty=True)
+            queue_manager.wait_for_queue_level(empty=False)
+            queue_manager.wait_for_queue_level(empty=True)
 
 
 if __name__ == "__main__":
