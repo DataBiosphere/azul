@@ -76,13 +76,27 @@ class ManifestService(ElasticsearchService):
         super().__init__()
         self.storage_service = storage_service
 
-    def get_manifest(self, format_: str, filters: Filters):
+    def get_manifest(self, format_: str, filters: Filters) -> Tuple[str, bool]:
+        """
+        Returns a tuple in which the first element is pre-signed URL to a
+        manifest in the given format and of the file entities matching the given
+        filter. If a suitable manifest already exists, its location will be
+        returned. Otherwise, a new manifest will be generated and its location
+        returned. Subsequent invocations of this method with the same arguments
+        are likely to reuse that manifest, skipping the time-consuming manifest
+        generation.
+
+        The second element of the returned tuple is True if an existing
+        manifest was reused and False if a new manifest was generated.
+        """
         generator = ManifestGenerator.for_format(format_, self, filters)
         object_key, presigned_url = self._get_cached_manifest(generator, format_, filters)
         if presigned_url is None:
             file_name = self._generate_manifest(generator, object_key)
             presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
-        return presigned_url
+            return presigned_url, False
+        else:
+            return presigned_url, True
 
     def get_cached_manifest(self, format_: str, filters: Filters) -> Optional[str]:
         generator = ManifestGenerator.for_format(format_, self, filters)
