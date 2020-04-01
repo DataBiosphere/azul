@@ -56,6 +56,7 @@ class AWS:
 
     @cachedproperty
     def account(self):
+        assert self.sts.get_caller_identity()['Account'] == config.aws_account_id
         return self.sts.get_caller_identity()['Account']
 
     @cachedproperty
