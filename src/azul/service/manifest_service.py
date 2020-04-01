@@ -79,8 +79,9 @@ class ManifestService(ElasticsearchService):
     def get_manifest(self, format_: str, filters: Filters):
         generator = ManifestGenerator.for_format(format_, self, filters)
         object_key, presigned_url = self._get_cached_manifest(generator, format_, filters)
-        file_name = self._generate_manifest(generator, object_key)
-        presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
+        if presigned_url is None:
+            file_name = self._generate_manifest(generator, object_key)
+            presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
         return presigned_url
 
     def get_cached_manifest(self, format_: str, filters: Filters) -> Optional[str]:
