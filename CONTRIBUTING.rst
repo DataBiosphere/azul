@@ -583,7 +583,7 @@ Pull Requests
   
 * At times it may be necessary to temporarily add a commit to a PR branch e.g.,
   to facilitate testing. These commits should be removed prior to landing the
-  PR and their title is prefixed with ``drop! ``.
+  PR and their title is prefixed with ``drop!``.
   
 * The reviewer may ask the author to consolidate long PR branches in order to
   simplify conflict resolution during rebasing. Consolidation means squashing
