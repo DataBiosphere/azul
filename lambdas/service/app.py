@@ -1144,7 +1144,7 @@ def generate_manifest(event, context):
     :return: The URL to the generated manifest
     """
     service = ManifestService(StorageService())
-    presigned_url = service.get_manifest(event['format'], event['filters'])
+    presigned_url, was_cached = service.get_manifest(event['format'], event['filters'])
     return {'Location': presigned_url}
 
 

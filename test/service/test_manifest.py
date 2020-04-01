@@ -13,6 +13,7 @@ from tempfile import TemporaryDirectory
 from typing import (
     List,
     Optional,
+    Tuple,
 )
 from unittest import mock
 import unittest.result
@@ -79,10 +80,10 @@ class ManifestTestCase(WebServiceTestCase):
         os.environ.pop('azul_git_dirty')
 
     def _get_manifest(self, format_: str, filters: JSON, stream=False):
-        url = self._get_manifest_url(format_, filters)
+        url, was_cached = self._get_manifest_url(format_, filters)
         return requests.get(url, stream=stream)
 
-    def _get_manifest_url(self, format_, filters):
+    def _get_manifest_url(self, format_: str, filters: JSON) -> Tuple[str, bool]:
         service = ManifestService(StorageService())
         return service.get_manifest(format_, filters)
 
@@ -90,10 +91,25 @@ class ManifestTestCase(WebServiceTestCase):
 class TestManifestEndpoints(ManifestTestCase):
 
     def run(self, result: Optional[unittest.result.TestResult] = ...) -> Optional[unittest.result.TestResult]:
-        # Suppress caching of manifests to prevent false assertion positives
+        # Disable caching of manifests to prevent false assertion positives
         with mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest') as m:
             m.return_value = False
             return super().run(result)
+
+    @mock_sts
+    @mock_s3
+    def test_manifest_not_cached(self):
+        """
+        Assert that the patch to disable caching is effective.
+        """
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+            for i in range(2):
+                with self.subTest(i=i):
+                    url, was_cached = self._get_manifest_url('compact', {})
+                    self.assertFalse(was_cached)
 
     @mock_sts
     @mock_s3
@@ -1030,7 +1046,8 @@ class TestManifestEndpoints(ManifestTestCase):
                     with self.subTest(filters=filters, single_part=single_part):
                         with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                             assert config.disable_multipart_manifests is single_part
-                            url = self._get_manifest_url('full', filters)
+                            url, was_cached = self._get_manifest_url('full', filters)
+                            self.assertFalse(was_cached)
                             query = urlparse(url).query
                             expected_cd = f'attachment;filename="{expected_name}.tsv"'
                             actual_cd = one(parse_qs(query).get('response-content-disposition'))
