@@ -175,8 +175,7 @@ class Queues:
         """
         sleep_time = 5
         deque_size = 10 if empty else 1
-        queues = cls.get_queues((config.notify_queue_name, config.document_queue_name))
-        additional_queues = cls.get_queues((config.token_queue_name,))  # log count of but don't wait for
+        queues = cls.get_queues(config.work_queue_names)
         queue_size_history = deque(maxlen=deque_size)
         wait_start_time = time.time()
 
@@ -196,7 +195,6 @@ class Queues:
         while True:
             total_message_count = cls.count_messages(queues)
             logger.info('Counting %i total message(s) in %i queue(s).', total_message_count, len(queues))
-            cls.count_messages(additional_queues)
             queue_wait_time_elapsed = (time.time() - wait_start_time)
             queue_size_history.append(total_message_count)
             cumulative_queue_size = sum(queue_size_history)
@@ -340,7 +338,7 @@ class Queues:
                 if queue_name == config.notify_queue_name:
                     futures.append(tpe.submit(self._manage_lambda, config.indexer_name, enable))
                     futures.append(tpe.submit(self._manage_sqs_push, config.indexer_name + '-index', queue, enable))
-                elif queue_name == config.token_queue_name:
+                elif queue_name == config.document_queue_name:
                     futures.append(tpe.submit(self._manage_sqs_push, config.indexer_name + '-write', queue, enable))
             self._handle_futures(futures)
             futures = [tpe.submit(self._wait_for_queue_idle, queue) for queue in queues.values()]

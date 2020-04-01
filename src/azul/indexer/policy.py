@@ -45,7 +45,6 @@ policy = {
             "Resource": [
                 f"arn:aws:sqs:{aws.region_name}:{aws.account}:{name}"
                 for name in (config.notify_queue_name,
-                             config.token_queue_name,
                              config.document_queue_name)
             ]
         },
