@@ -2,15 +2,11 @@
 Chalice application module to receive and process DSS event notifications.
 """
 from collections import (
-    Counter,
-    defaultdict,
+    defaultdict
 )
-from datetime import datetime
 import http
-from itertools import chain
 import json
 import logging
-import random
 import time
 from typing import (
     List,
@@ -22,14 +18,13 @@ import uuid
 import boto3
 # noinspection PyPackageRequirements
 import chalice
+from chalice.app import SQSRecord
 from dataclasses import (
-    asdict,
     dataclass,
     replace,
 )
 from more_itertools import (
-    chunked,
-    partition,
+    chunked
 )
 
 from azul import (
@@ -41,7 +36,6 @@ from azul.chalice import AzulChaliceApp
 from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.plugin import Plugin
-from azul.time import RemainingLambdaContextTime
 from azul.transformer import EntityReference
 from azul.types import JSON
 
@@ -212,10 +206,8 @@ def index(event: chalice.app.SQSEvent):
 
                 log.info("Queueing %i entities for aggregating a total of %i contributions.",
                          len(tallies), sum(tally.num_contributions for tally in tallies))
-                token_queue = queue(config.token_queue_name)
                 document_queue = queue(config.document_queue_name)
                 for batch in chunked(tallies, document_batch_size):
-                    token_queue.send_message(MessageBody=json.dumps(Token.mint(len(batch)).to_json()))
                     document_queue.send_messages(Entries=[dict(tally.to_message(), Id=str(i))
                                                           for i, tally in enumerate(batch)])
         except BaseException:
@@ -231,95 +223,49 @@ def index(event: chalice.app.SQSEvent):
 #
 document_batch_size = 10
 
-# The maximum number of tokens to be processed by a single Lambda invocation. This should be at least 2 to allow for
-# token recombination to occur (two smaller tokens being merged into one) and to increase the chance that the
-# combined token value is 10. It must be at most 10 because of a limit imposed by SQS and Lambda. The higher this
-# value, the more token reconciliation will occur at the expense of increased token churn (unused token value being
-# returned to the queue). One token can be at most document_batch_size in value, and one Lambda invocation consumes
-# at most document_batch_size in token value so retrieving ten tokens may cause nine tokens to be returned.
-#
-token_batch_size = 2
 
-token_lifetime: float = 60 * 60
-
-
-@app.on_sqs_message(queue=config.token_queue_name, batch_size=token_batch_size)
+@app.on_sqs_message(queue=config.document_queue_name, batch_size=document_batch_size)
 def write(event: chalice.app.SQSEvent):
-    remaining_time = RemainingLambdaContextTime(app.lambda_context)
-    tokens = [Token.from_json(json.loads(token.body)) for token in event]
-    total = sum(token.value for token in tokens)
-    assert 0 < total <= document_batch_size * token_batch_size
     document_queue = queue(config.document_queue_name)
-    messages = document_queue.receive_messages(WaitTimeSeconds=20,
-                                               AttributeNames=['ApproximateReceiveCount', 'MessageGroupId'],
-                                               VisibilityTimeout=round(remaining_time.get()) + 10,
-                                               MaxNumberOfMessages=document_batch_size)
-    log.info('Received %i messages for %i token(s) with a total value of %i',
-             len(messages), len(tokens), total)
-    assert len(messages) <= document_batch_size
 
-    if messages:
-        _log_document_grouping(messages)
+    # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
+    # queues try to put as many messages from the same message group in a reception batch, a single message per
+    # group may indicate that that message is the last one in the group. Inversely, multiple messages per group
+    # in a batch are a likely indicator for the presence of even more queued messages in that group. The more
+    # bundle contributions we defer, the higher the amortized savings on aggregation become. Aggregating bundle
+    # contributions is a costly operation for any entity with many contributions e.g., a large project.
+    #
+    tallies_by_id: MutableMapping[EntityReference, List[DocumentTally]] = defaultdict(list)
 
-        # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
-        # queues try to put as many messages from the same message group in a reception batch, a single message per
-        # group may indicate that that message is the last one in the group. Inversely, multiple messages per group
-        # in a batch are a likely indicator for the presence of even more queued messages in that group. The more
-        # bundle contributions we defer, the higher the amortized savings on aggregation become. Aggregating bundle
-        # contributions is a costly operation for any entity with many contributions e.g., a large project.
-        #
-        tallies_by_id: MutableMapping[EntityReference, List[DocumentTally]] = defaultdict(list)
-        for message in messages:
-            tally = DocumentTally.from_message(message)
-            log.info('Attempt %i of handling %i contribution(s) for entity %s/%s',
-                     tally.attempts, tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-            tallies_by_id[tally.entity].append(tally)
-        deferrals, referrals = [], []
-        for tallies in tallies_by_id.values():
-            if len(tallies) == 1:
-                referrals.append(tallies[0])
-            elif len(tallies) > 1:
-                deferrals.append(tallies[0].consolidate(tallies[1:]))
-            else:
-                assert False
+    for record in event:
+        tally = DocumentTally.from_sqs_record(record)
+        log.info('Attempt %i of handling %i contribution(s) for entity %s/%s',
+                 tally.attempts, tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+        tallies_by_id[tally.entity].append(tally)
+    deferrals, referrals = [], []
+    for tallies in tallies_by_id.values():
+        if len(tallies) == 1:
+            referrals.append(tallies[0])
+        elif len(tallies) > 1:
+            deferrals.append(tallies[0].consolidate(tallies[1:]))
+        else:
+            assert False
 
-        if referrals:
-            for tally in referrals:
-                log.info('Aggregating %i contribution(s) to entity %s/%s',
-                         tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-            indexer_cls = plugin.indexer_class()
-            indexer = indexer_cls()
-            tallies = {tally.entity: tally.num_contributions for tally in referrals}
-            indexer.aggregate(tallies)
+    if referrals:
+        for tally in referrals:
+            log.info('Aggregating %i contribution(s) to entity %s/%s',
+                     tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+        indexer_cls = plugin.indexer_class()
+        indexer = indexer_cls()
+        tallies = {tally.entity: tally.num_contributions for tally in referrals}
+        indexer.aggregate(tallies)
 
-        if deferrals:
-            for tally in deferrals:
-                log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
-                         tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-            document_queue.send_messages(Entries=[dict(tally.to_message(), Id=str(i))
-                                                  for i, tally in enumerate(deferrals)])
-
-        document_queue.delete_messages(Entries=[dict(Id=str(i), ReceiptHandle=message.receipt_handle)
-                                                for i, message in enumerate(chain(messages))])
-        total -= len(messages)
-        total += len(deferrals)
-    else:
-        tokens, expired_tokens = map(list, partition(Token.expired, tokens))
-        if expired_tokens:
-            expired_total = sum(token.value for token in expired_tokens)
-            log.info('Expiring %i token(s) with a total value of %i', len(expired_tokens), expired_total)
-            total -= expired_total
-
-    if total > 0:
-        expiration = max(token.expiration for token in tokens)
-        tokens = Token.mint_many(total, expiration=expiration)
-        delay = 0 if messages else round(random.uniform(30, 90))
-        log.info('Recirculating %i token(s), after a delay of %is, for a total value of %i, expiring at %s',
-                 len(tokens), delay, total, datetime.utcfromtimestamp(expiration).isoformat(timespec='seconds') + 'Z')
-        _send_tokens(tokens, delay=delay)
-    elif total < 0:
-        # Discarding token deficit will lead to an overall surplus of token value which will expire at some point.
-        log.info("Discarding token deficit of %i.", total)
+    if deferrals:
+        for tally in deferrals:
+            log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
+                     tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+        document_queue.send_messages(Entries=[dict(tally.to_message(), Id=str(i))
+                                              for i, tally in enumerate(deferrals)])
 
 
 @dataclass(frozen=True)
@@ -334,12 +280,13 @@ class DocumentTally:
     attempts: int
 
     @classmethod
-    def from_message(cls, message) -> 'DocumentTally':
-        body = json.loads(message.body)
+    def from_sqs_record(cls, record: SQSRecord) -> 'DocumentTally':
+        body = json.loads(record.body)
+        attributes = record.to_dict()['attributes']
         return cls(entity=EntityReference(entity_type=body['entity_type'],
                                           entity_id=body['entity_id']),
                    num_contributions=body['num_contributions'],
-                   attempts=int(message.attributes['ApproximateReceiveCount']))
+                   attempts=int(attributes['ApproximateReceiveCount']))
 
     @classmethod
     def for_entity(cls, entity: EntityReference, num_contributions: int) -> 'DocumentTally':
@@ -363,118 +310,3 @@ class DocumentTally:
         assert all(self.entity == other.entity for other in others)
         return replace(self, num_contributions=sum((other.num_contributions for other in others),
                                                    self.num_contributions))
-
-
-@dataclass(frozen=True)
-class Token:
-    """
-    >>> Token.mint(0)
-    Traceback (most recent call last):
-    ...
-    ValueError: 0
-
-    >>> Token.mint(11)
-    Traceback (most recent call last):
-    ...
-    ValueError: 11
-
-    >>> Token.mint(5) # doctest: +ELLIPSIS
-    Token(uuid='...', value=5, expiration=...)
-
-    >>> [t.value for t in Token.mint_many(0)]
-    []
-
-    >>> [t.value for t in Token.mint_many(10)]
-    [10]
-
-    >>> [t.value for t in Token.mint_many(11)]
-    [10, 1]
-
-    >>> Token.mint(10, expiration=time.time()).expired()
-    True
-
-    >>> Token.mint(10, expiration=time.time()+100).expired()
-    False
-
-    >>> t = Token.mint(5)
-    >>> c = Token.from_json(t.to_json())
-    >>> c == t, c is t
-    (True, False)
-    """
-    uuid: str
-    value: int
-    expiration: float
-
-    @classmethod
-    def mint(cls, value, expiration=None) -> 'Token':
-        if value < 1 or value > document_batch_size:
-            raise ValueError(value)
-        if expiration is None:
-            expiration = time.time() + token_lifetime
-        return cls(uuid=str(uuid.uuid4()), value=value, expiration=expiration)
-
-    @classmethod
-    def from_json(cls, json: JSON) -> 'Token':
-        return cls(**json)
-
-    def to_json(self) -> JSON:
-        return asdict(self)
-
-    @classmethod
-    def mint_many(cls, total, expiration=None) -> List['Token']:
-        return [cls.mint(value, expiration=expiration)
-                for value in _dispense_tokens(document_batch_size, total)]
-
-    def expired(self):
-        return self.expiration <= time.time()
-
-
-def _dispense_tokens(size, total):
-    """
-    >>> _dispense_tokens(3, 0)
-    []
-    >>> _dispense_tokens(3, 1)
-    [1]
-    >>> _dispense_tokens(3, 3)
-    [3]
-    >>> _dispense_tokens(3, 4)
-    [3, 1]
-    """
-    return [min(i, size) for i in range(total, 0, -size)]
-
-
-def _send_tokens(tokens, delay=0):
-    queue(config.token_queue_name).send_messages(Entries=[dict(Id=str(i),
-                                                               DelaySeconds=delay,
-                                                               MessageBody=json.dumps(token.to_json()))
-                                                          for i, token in enumerate(tokens)])
-
-
-def _log_document_grouping(messages):
-    message_group_sizes = Counter()
-    for message in messages:
-        message_group_sizes[message.attributes['MessageGroupId']] += 1
-    log.info('Document grouping for messages received: %r', dict(message_group_sizes))
-
-
-@app.schedule('rate(10 minutes)')
-def nudge(event: chalice.app.CloudWatchEvent):
-    """
-    Work around token deficit. The hypothesis is that SQS trigger is dropping messages because I cannot see any other
-    way in which the current implementation could result in a token deficit. There are two places where tokens are
-    sent: index() and write(). In index() tokens are sent before documents, so a crash or exception would result in a
-    token surplus. In write(), they are sent after the document messages have been deleted, to recirculate unused
-    token value. But if an exception or crash prevents that from happening, SQS trigger should return all tokens,
-    used and unused ones, which should also result in a token surplus.
-
-    So what we do here is periodically check if more tokens are needed and mint them if necessary.
-    """
-    assert event is not None  # avoid linter warning
-    num_tokens, num_documents = (sum(int(queue(queue_name).attributes['ApproximateNumberOfMessages' + k])
-                                     for k in ('', 'Delayed', 'NotVisible'))
-                                 for queue_name in (config.token_queue_name, config.document_queue_name))
-    if num_documents and not num_tokens:
-        tokens = Token.mint_many(num_documents)
-        log.info('Nudging queue with %i token(s) for a total value of %i', len(tokens), num_documents)
-        for batch in chunked(tokens, 10):
-            _send_tokens(batch)

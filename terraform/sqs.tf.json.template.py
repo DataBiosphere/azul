@@ -17,15 +17,6 @@ emit_tf(
                             "deadLetterTargetArn": "${aws_sqs_queue.failure_queue.arn}"
                         })
                     },
-                    "token_queue": {
-                        "name": config.token_queue_name,
-                        "visibility_timeout_seconds": config.indexer_lambda_timeout + 10,
-                        "message_retention_seconds": 24 * 60 * 60,
-                        "redrive_policy": json.dumps({
-                            "maxReceiveCount": 10,
-                            "deadLetterTargetArn": "${aws_sqs_queue.failure_queue.arn}"
-                        })
-                    },
                     "document_queue": {
                         "name": config.document_queue_name,
                         "fifo_queue": True,
