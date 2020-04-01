@@ -36,9 +36,9 @@ endif
 # This check should not occur within CI environments, where AWS Credentials might not be supplied
 ifneq ($(shell python -c "import os, sys; \
                           import boto3 as b; \
-                          print(True) if os.getenv('CI') else \
-                          print(b.client('sts').get_caller_identity()['Account'] == \
-                          os.environ['AZUL_AWS_ACCOUNT_ID'])"),True)
+                          print(os.environ.get('CI') == 'true' or \
+                          b.client('sts').get_caller_identity()['Account'] == os.environ['AZUL_AWS_ACCOUNT_ID'])\
+                          "),True)
 $(error Looks like there is a mismatch between the AWS account you have configured, and what the deployment expects. \
         Compare output from 'aws sts get-caller-identity' and the deployment environment file)
 endif
