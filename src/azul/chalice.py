@@ -1,13 +1,21 @@
 import json
 import logging
+from typing import (
+    Dict,
+    Tuple,
+    Optional,
+    Iterable,
+)
 
 from chalice import Chalice
 from chalice.app import Request
 
 from azul import config
 from azul.json import json_head
-from azul.openapi import openapi_spec
-from azul.types import LambdaContext
+from azul.types import (
+    LambdaContext,
+    JSON,
+)
 
 log = logging.getLogger(__name__)
 
@@ -16,9 +24,16 @@ class AzulChaliceApp(Chalice):
 
     def __init__(self, app_name, unit_test=False):
         self.unit_test = unit_test
+        self.path_specs: Dict[str, JSON] = {}
+        self.method_specs: Dict[Tuple[str, str], JSON] = {}
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
 
-    def route(self, path, enabled=True, path_spec=None, method_spec=None, **kwargs):
+    def route(self,
+              path: str,
+              enabled: bool = True,
+              path_spec: Optional[JSON] = None,
+              method_spec: Optional[JSON] = None,
+              **kwargs):
         """
         Decorates a view handler function in a Chalice application.
 
@@ -44,17 +59,17 @@ class AzulChaliceApp(Chalice):
                         view function wasn't decorated.
         """
         if enabled:
-            methods = kwargs.get('methods')
-            decorator = super().route(path, **kwargs)
+            methods = kwargs.get('methods', ())
+            chalice_decorator = super().route(path, **kwargs)
 
-            def _decorator(view_func):
-                view_func = openapi_spec(path, methods, path_spec=path_spec, method_spec=method_spec)(view_func)
+            def decorator(view_func):
+                self._register_spec(path, path_spec, method_spec, methods)
                 # Stash the URL path a view function is bound to as an attribute of
                 # the function itself.
                 view_func.path = path
-                return decorator(view_func)
+                return chalice_decorator(view_func)
 
-            return _decorator
+            return decorator
         else:
             return lambda view_func: view_func
 
@@ -63,6 +78,26 @@ class AzulChaliceApp(Chalice):
         A route that's only enabled during unit tests.
         """
         return self.route(*args, enabled=self.unit_test, **kwargs)
+
+    def _register_spec(self,
+                       path: str,
+                       path_spec: Optional[JSON],
+                       method_spec: Optional[JSON],
+                       methods: Iterable[str]):
+
+        if path_spec is not None:
+            assert path not in self.path_specs, 'Only specify path_spec once per route path'
+            self.path_specs[path] = path_spec
+
+        if method_spec is not None:
+            new_method_specs = {
+                # Method names in OpenAPI routes must be lower case
+                (path, method.lower()): method_spec
+                for method in methods
+            }
+            no_duplicates = set(new_method_specs.keys()).isdisjoint(set(self.method_specs.keys()))
+            assert no_duplicates, 'Only specify method_spec once per route path and method'
+            self.method_specs.update(new_method_specs)
 
     def _get_view_function_response(self, view_function, function_args):
         self._log_request()

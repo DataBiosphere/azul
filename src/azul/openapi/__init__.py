@@ -5,105 +5,12 @@ from typing import (
     List,
     cast,
     MutableMapping,
-    Optional,
 )
 
 from azul.types import (
     JSON,
     MutableJSON,
 )
-
-
-def openapi_spec(path: str, methods: List[str], path_spec: Optional[JSON] = None, method_spec: Optional[JSON] = None):
-    """
-    Add description to decorated function at specified route.
-
-    >>> @openapi_spec('/foo', ['GET'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
-    ... def foo():
-    ...     pass
-
-    >>> foo.path_specs
-    {'/foo': {'a': 'b'}}
-
-    >>> foo.method_specs
-    {('/foo', 'get'): {'c': 'd'}}
-
-    One of path_spec or method_spec maybe unspecified
-
-    >>> @openapi_spec('/foo', ['GET'], method_spec={'c': 'd'})
-    ... def foo():
-    ...     pass
-
-    >>> @openapi_spec('/foo', ['GET'], path_spec={'a': 'b'})
-    ... def foo():
-    ...     pass
-
-    Although a valid, documented endpoint should not allow both to be none, we
-    have to allow this behavior to prevent breakages from all currently
-    undocumented endpoints.
-
-    >>> @openapi_spec('/foo', ['GET'])
-    ... def foo():
-    ...     pass
-
-    Multiple routes can be made for the same function
-
-    >>> @openapi_spec('/foo', ['GET', 'PUT'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
-    ... @openapi_spec('/foo/too', ['GET'], method_spec={'e': 'f'})
-    ... def foo():
-    ...     pass
-
-    >>> foo.path_specs
-    {'/foo': {'a': 'b'}}
-
-    >>> foo.method_specs
-    {('/foo/too', 'get'): {'e': 'f'}, ('/foo', 'get'): {'c': 'd'}, ('/foo', 'put'): {'c': 'd'}}
-
-    Only one route should define the top level spec
-
-    >>> @openapi_spec('/bar', ['PUT'], path_spec={'bad, duplicate': 'path spec'}, method_spec={'e': 'f'})
-    ... @openapi_spec('/bar', ['GET'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
-    ... def bar():
-    ...     pass
-    Traceback (most recent call last):
-    ...
-    AssertionError: Only specify path_spec once per route path
-
-    At this point we can only validate duplicate specs if they occur on the same
-    method. Unfortunately, this succeeds:
-
-    >>> @openapi_spec('/bar', ['PUT'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
-    ... def foo():
-    ...     pass
-    >>> @openapi_spec('/bar', ['GET'], path_spec={'e', 'f'}, method_spec={'g': 'h'})
-    ... def bar():
-    ...     pass
-    """
-
-    def spec_adder(func):
-        try:
-            func.path_specs
-        except AttributeError:
-            func.path_specs = {}
-        try:
-            func.method_specs
-        except AttributeError:
-            func.method_specs = {}
-
-        assert path not in func.path_specs, 'Only specify path_spec once per route path'
-        if path_spec:
-            func.path_specs[path] = path_spec
-
-        if method_spec:
-            for method in methods:
-                # OpenAPI routes must be lower case
-                method = method.lower()
-                # No need to worry about duplicate method_specs since Chalice
-                # will complain in that case
-                func.method_specs[path, method] = method_spec
-        return func
-
-    return spec_adder
 
 
 def annotated_specs(raw_specs, app, toplevel_spec) -> JSON:
@@ -150,24 +57,12 @@ def get_app_specs(app):
     """
     Extract OpenAPI specs from a Chalice app object.
     """
-    path_specs = {}
-    method_specs = {}
-    for entries in app.routes.values():
-        func = next(iter(entries.values())).view_function
-        func_path_specs = getattr(func, 'path_specs', None)
-        if func_path_specs:
-            for path, spec in func_path_specs.items():
-                if path in path_specs:
-                    assert spec == path_specs[path], f'Path spec for {spec} already exists'
-            path_specs.update(func.path_specs)
-        else:
-            # TODO (jesse): raise if route is undocumented
-            pass
-        func_method_specs = getattr(func, 'method_specs', None)
-        if func_method_specs:
-            method_specs.update(func_method_specs)
+    undocumented = app.routes.keys() - app.path_specs.keys()
+    if undocumented:
+        # TODO (jesse): raise if route is undocumented (https://github.com/DataBiosphere/azul/issues/1450)
+        pass
 
-    return path_specs, method_specs
+    return app.path_specs, app.method_specs
 
 
 def join_specs(toplevel_spec: JSON,
