@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 import csv
 from datetime import (
     datetime,
@@ -16,6 +17,7 @@ from urllib.parse import (
     parse_qs,
     urlparse,
 )
+import uuid
 from zipfile import ZipFile
 
 from more_itertools import (
@@ -34,7 +36,10 @@ from azul.logging import configure_test_logging
 from azul.service import (
     manifest_service,
 )
-from azul.service.manifest_service import ManifestService
+from azul.service.manifest_service import (
+    ManifestService,
+    BDBagManifestGenerator,
+)
 from azul.service.storage_service import StorageService
 from azul.types import JSON
 from azul_test_case import AzulTestCase
@@ -504,6 +509,106 @@ class TestManifestEndpoints(WebServiceTestCase):
                     '__fastq_read2__drs_url',
                     '__fastq_read2__file_url',
                 ], reader.fieldnames)
+
+    def test_bdbag_manifest_remove_redundant_entries(self):
+        """
+        Test BDBagManifestGenerator._remove_redundant_entries() directly with a
+        large set of sample data
+        """
+        bundles = {}
+        now = datetime.utcnow()
+        # Create sample data that can be passed to BDBagManifestGenerator._remove_redundant_entries()
+        # Each entry is given a timestamp 1 second later than the previous entry to have variety in the entries
+        num_of_entries = 100_000
+        for i in range(num_of_entries):
+            bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=i)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+            bundles[bundle_fqid] = {
+                'bam': [
+                    {'file': {'file_uuid': uuid.uuid4()}},
+                    {'file': {'file_uuid': uuid.uuid4()}},
+                    {'file': {'file_uuid': uuid.uuid4()}}
+                ]
+            }
+        fqids = {}
+        keys = list(bundles.keys())
+        # Add an entry with the same set of files as another entry though with a later timestamp
+        bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=num_of_entries + 1)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+        bundles[bundle_fqid] = deepcopy(bundles[keys[100]])  # An arbitrary entry in bundles
+        fqids['equal'] = bundle_fqid, keys[100]  # With same set of files [1] will be removed (earlier timestamp)
+        # Add an entry with a subset of files compared to another entry
+        bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=num_of_entries + 2)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+        bundles[bundle_fqid] = deepcopy(bundles[keys[200]])  # An arbitrary entry in bundles
+        del bundles[bundle_fqid]['bam'][2]
+        fqids['subset'] = bundle_fqid, keys[200]  # [0] will be removed as it has a subset of files that [1] has
+        # Add an entry with a superset of files compared to another entry
+        bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=num_of_entries + 3)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+        bundles[bundle_fqid] = deepcopy(bundles[keys[300]])  # An arbitrary entry in bundles
+        bundles[bundle_fqid]['bam'].append({'file': {'file_uuid': uuid.uuid4()}})
+        fqids['superset'] = bundle_fqid, keys[300]  # [0] has a superset of files that [0] has so [0] wil be removed
+
+        self.assertEqual(len(bundles), num_of_entries + 3)  # the generated entries plus 3 redundant entries
+        self.assertIn(fqids['equal'][0], bundles)
+        self.assertIn(fqids['equal'][1], bundles)
+        self.assertIn(fqids['subset'][0], bundles)
+        self.assertIn(fqids['subset'][1], bundles)
+        self.assertIn(fqids['superset'][0], bundles)
+        self.assertIn(fqids['superset'][1], bundles)
+
+        BDBagManifestGenerator._remove_redundant_entries(bundles)
+
+        self.assertEqual(len(bundles), num_of_entries)  # 3 redundant entries removed
+        self.assertNotIn(fqids['equal'][1], bundles)  # Removed for a duplicate file set with an earlier timestamp
+        self.assertIn(fqids['equal'][0], bundles)
+        self.assertNotIn(fqids['subset'][0], bundles)  # Removed for having a subset of files as another entry
+        self.assertIn(fqids['subset'][1], bundles)
+        self.assertIn(fqids['superset'][0], bundles)
+        self.assertNotIn(fqids['superset'][1], bundles)  # Removed for having a subset of files as another entry
+
+    @mock_sts
+    @mock_s3
+    def test_bdbag_manifest_for_redundant_entries(self):
+        """
+        Test that redundant bundles are removed from the terra.bdbag manifest response
+        """
+        self.maxDiff = None
+        # Primary bundle cfab8304 has the files:
+        # - d879f732-d8d4-4251-a2ca-a91a852a034b
+        # - 1e14d503-31b1-4db6-82ba-f8d83bd85b9b
+        # and derived analysis bundle f0731ab4 has the same files and more.
+        self._index_canned_bundle(('cfab8304-dc9f-439e-af29-f8eb75b0729d', '2019-07-18T212820.595913Z'))
+        self._index_canned_bundle(('f0731ab4-6b80-4eed-97c9-4984de81a47c', '2019-07-23T062120.663434Z'))
+
+        # In both subtests below we expect the primary bundle to be omitted from
+        # the results as it is redundant compared to the analysis bundle.
+        expected_bundle_uuids = {
+            'f0731ab4-6b80-4eed-97c9-4984de81a47c',  # analysis bundle
+            'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'  # bundle with no shared files (added by WebServiceTestCase)
+        }
+        # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
+        # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
+        with ResponsesHelper() as helper, TemporaryDirectory() as zip_dir:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+            for filters in [
+                # With a filter limiting to fastq both the primary and analysis
+                # bundles will have the same set of files when compared.
+                {'fileFormat': {'is': ['fastq.gz']}},
+                # With no filter the primary bundle will contain a subset of
+                # files when compared to its analysis bundle.
+                {}
+            ]:
+                with self.subTest(filters=filters):
+                    response = self._get_manifest('terra.bdbag', filters=filters, stream=True)
+                    self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                    with ZipFile(BytesIO(response.content), 'r') as zip_fh:
+                        zip_fh.extractall(zip_dir)
+                        self.assertTrue(all(['manifest' == first(name.split('/')) for name in zip_fh.namelist()]))
+                        zip_fname = os.path.dirname(first(zip_fh.namelist()))
+                    with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
+                        reader = csv.DictReader(fh, delimiter='\t')
+                        bundle_uuids = {row['bundle_uuid'] for row in reader}
+                        self.assertEqual(bundle_uuids, expected_bundle_uuids)
 
     @mock_sts
     @mock_s3
