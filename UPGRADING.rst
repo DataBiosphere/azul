@@ -14,26 +14,31 @@ have too many entries in this file.
 #1637 Refactor handling of environment for easier reuse
 =======================================================
 
-1) Run ::
+1. Run ::
 
-      scripts/convert_environment.py deployments/foo.local/environment{,.local}
+      python scripts/convert_environment.py deployments/foo.local/environment{,.local}
 
    where ``foo.local`` is the name of your personal deployment. This should
    create ``environment.py`` and possibly ``environment.local.py`` with
    essentially the same settings, but in Python syntax.
 
-2) Close the shell, start a new one and activate your venv
+2. Close the shell, start a new one and activate your venv
 
-3) Run ``source environment``
+3. Run ``source environment``
 
-4) Run ``_select foo.local``
+4. Run ``_select foo.local``
 
-5) If you use ``envhook.py``
+5. If you use ``envhook.py``
 
-   * Confirm that PyCharm picks up the new files via ``envhook.py`` by starting a
-     Python console inside PyCharm or running a unit test
+   i)   Reinstall it ::
 
-   * Confirm that running ``python`` from a shell picks up the new files via
-     ``envhook.py``
+          python scripts/envhook.py remove
+          python scripts/envhook.py install
 
-7) Confirm that ``make deploy`` and ``make terraform`` still work
+   ii)  Confirm that PyCharm picks up the new files via ``envhook.py`` by starting a Python console inside PyCharm or
+        running a unit test
+
+   iii) Confirm that running ``python`` from a shell picks up the new files via
+        ``envhook.py``
+
+6. Confirm that ``make deploy`` and ``make terraform`` still work
