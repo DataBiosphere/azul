@@ -334,6 +334,13 @@ configure PyCharm for Azul:
    folders by right-clicking each folder name and selecting *Mark Directory as*
    → *Excluded*.
 
+Newer versions of PyCharm install another `sitecustomize` module which attempts 
+to wrap the user-provided one, in our case `envhook.py`. This usually works 
+unless `envhook.py` tries to report an error. PyCharm's `sitecustomize` swallows 
+the exception and, due to a bug, raises different one. The original exception 
+is lost, making diagnosing the problem harder. Luckily, the `sitecustomize` 
+module is part of a rarely used feature that can be disabled by unchecking 
+*Show plots in tool window* under *Settings* — *Tools* — *Python Scientific*. 
 
 # 3. Deployment
 
@@ -347,10 +354,14 @@ per AWS account, before the first Azul deployment in that account. Additional
 deployments do not require this step.
 
 Create an S3 bucket for shared Terraform and Chalice state. That bucket should 
-have versioning enabled and must not be publicly accessible since Terraform 
-state may include secrets. The name of that bucket is the concatenation of the 
-`AZUL_VERSIONED_BUCKET` and `AWS_DEFAULT_REGION` environment variables,
-with a period in between.
+have object versioning enabled and must not be publicly accessible since 
+Terraform state may include secrets. If your developers assume a role via 
+Amazon STS, the bucket should reside in the same region as the Azul deployment. 
+This is because temporary STS AssumeRole credentials are specific to a region 
+and won't be recognized by an S3 region that's different from the one the 
+temporary credentials were issued in. To account for the region specificity of 
+the bucket, you may want to include the region name at then end of the bucket 
+name. That way you can have consistent bucket names across regions.
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple 
 deployments  can share a hosted zone but they don't have to. The name of the 

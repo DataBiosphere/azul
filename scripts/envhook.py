@@ -1,13 +1,10 @@
-#! /usr/bin/env python3
-
-import errno
 from importlib.abc import (
     MetaPathFinder,
 )
+import importlib.util
 from itertools import chain
 import os
-from pathlib import Path
-import subprocess
+import pathlib
 import sys
 from typing import (
     Mapping,
@@ -24,91 +21,108 @@ def main(argv):
     parser = argparse.ArgumentParser(description='Install a hook into Python that automatically sources `environment`')
     parser.add_argument('action', choices=['install', 'remove'])
     options = parser.parse_args(argv)
-    if 'VIRTUAL_ENV' in os.environ:  # Confirm virtual environment is active `venv || virtualenv`
+
+    # Confirm virtual environment is active `venv || virtualenv`
+    if 'VIRTUAL_ENV' in os.environ:
         import site
         if hasattr(site, 'getsitepackages'):
             # Both plain Python and `venv` have `getsitepackages()`
-            sys_prefix = os.path.realpath(sys.prefix)
-            link_dir = next(p for p in site.getsitepackages() if os.path.realpath(p).startswith(sys_prefix))
+            sys_prefix = Path(sys.prefix).resolve()
+            link_dir = next(p for p in map(Path, site.getsitepackages())
+                            if sys_prefix.is_prefix_of(p))
         else:
             # virtualenv's `site` does not have getsitepackages()
-            link_dir = os.path.realpath(os.path.join(os.path.dirname(site.__file__), 'site-packages'))
+            link_dir = (Path(site.__file__).parent / 'site-packages').resolve()
     else:
-        raise RuntimeError('Need to be run from within a virtualenv')
-    dst = os.path.realpath(__file__)
-    try:
-        # noinspection PyUnresolvedReferences
-        import sitecustomize
-    except ImportError:
-        pass
-    else:
-        if os.path.realpath(sitecustomize.__file__) != dst:
-            raise RuntimeError(f'A different sitecustomize module already exists at {sitecustomize.__file__}')
-    link = os.path.join(link_dir, 'sitecustomize.py')
-    rel_dst = os.path.relpath(dst, link_dir)
-    try:
-        cur_dst = os.readlink(link)
-    except FileNotFoundError:
-        cur_dst = None
-    except OSError as e:
-        if e.errno == errno.EINVAL:
-            raise RuntimeError(f"{link} is not a symbolic link. It may be a 3rd party file and we won't touch it")
+        raise NoActiveVirtualenv()
+
+    dst = Path(__file__).absolute()
+
+    # This is the least invasive way of looking up `sitecustomize`, AFAIK. The
+    # alternative is `import sitecustomize` which would propagate exceptions
+    # occurring in that module and trigger the side effects of loading that
+    # module. This approach is really only safe when that module was already
+    # loaded which is not the case if -S was passed or PYTHONNOUSERSITE is set.
+    # We really only want to know if it's us or a different module. Another
+    # alternative would be sys.modules.get('sitecustomize') but that would yield
+    # None with -S or PYTHONNOUSERSITE even when there is a sitecustomize.py,
+    # potentially one different from us.
+    sitecustomize = importlib.util.find_spec('sitecustomize')
+    if sitecustomize is not None:
+        sitecustomize = Path(sitecustomize.origin)
+        if sitecustomize.resolve() != dst.resolve():
+            raise ThirdPartySiteCustomize(sitecustomize)
+
+    link = link_dir / 'sitecustomize.py'
+    if link.exists():
+        if link.is_symlink():
+            cur_dst = link.follow()
         else:
-            raise
+            raise NotASymbolicLinkError(link)
+    else:
+        cur_dst = None
+
     if options.action == 'install':
         if cur_dst is None:
-            os.symlink(rel_dst, link)
-        elif rel_dst == cur_dst:
-            pass
+            _print(f'Installing by creating symbolic link from {link} to {dst}.')
+            link.symlink_to(dst)
+        elif dst == cur_dst:
+            _print(f'Already installed. Symbolic link from {link} to {dst} exists.')
         else:
-            raise RuntimeError(f'{link} points somewhere unexpected ({cur_dst})')
+            raise BadSymlinkDestination(link, cur_dst, dst)
     elif options.action == 'remove':
         if cur_dst is None:
-            pass
-        elif cur_dst == rel_dst:
-            os.unlink(link)
+            _print(f'Not currently installed. Symbolic link {link} does not exist.')
+        elif cur_dst == dst:
+            _print(f'Uninstalling by removing {link}.')
+            link.unlink()
         else:
-            raise RuntimeError(f'{link} points somewhere unexpected ({cur_dst})')
+            raise BadSymlinkDestination(link, cur_dst, dst)
     else:
         assert False
 
 
 def setenv():
-    self = Path(__file__).resolve()
-    project = self.parent.parent
-    environment = project.joinpath('environment')
-    old = _parse(_run('env'))
-    new = _parse(_run(f'source {environment} && env'))
+    export_environment = _import_export_environment()
+    redact = export_environment.redact
+    new = export_environment.resolve_env(export_environment.load_env())
+    old = os.environ
     pycharm_hosted = bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
-
-    def sanitize(k, v):
-        return 'REDACTED' if any(s in k.lower() for s in ('secret', 'password', 'token')) else v
 
     for k, (o, n) in sorted(zip_dict(old, new).items()):
         if o is None:
             if pycharm_hosted:
-                _print(f"{self.name}: Setting {k} to '{sanitize(k, n)}'")
+                _print(f"Setting {k} to '{redact(k, n)}'")
                 os.environ[k] = n
             else:
-                _print(f"{self.name}: Warning: {k} is not set but should be {sanitize(k, n)}, "
-                       f"you must run `source environment`")
+                _print(f"Warning: {k} is not set but should be {redact(k, n)}, "
+                       f"you should run `source environment`")
         elif n is None:
-            if pycharm_hosted:
-                _print(f"{self.name}: Removing {k}, was set to '{sanitize(k, o)}'")
-                del os.environ[k]
-            else:
-                _print(f"{self.name}: Warning: {k} is '{sanitize(k, o)}' but should not be set, "
-                       f"you must run `source environment`")
+            pass
         elif n != o:
             if k.startswith('PYTHON'):
-                _print(f"{self.name}: Ignoring change in {k} from '{sanitize(k, o)}' to '{sanitize(k, n)}'")
+                _print(f"Ignoring change in {k} from '{redact(k, o)}' to '{redact(k, n)}'")
             else:
                 if pycharm_hosted:
-                    _print(f"{self.name}: Changing {k} from '{sanitize(k, o)}' to '{sanitize(k, n)}'")
+                    _print(f"Changing {k} from '{redact(k, o)}' to '{redact(k, n)}'")
                     os.environ[k] = n
                 else:
-                    _print(f"{self.name}: Warning: {k} is '{sanitize(k, o)}' but should be '{sanitize(k, n)}', "
+                    _print(f"Warning: {k} is '{redact(k, o)}' but should be '{redact(k, n)}', "
                            f"you must run `source environment`")
+
+
+def _import_export_environment():
+    # When this module is loaded from the `sitecustomize.py` symbolic link, the
+    # directory containing the physical file may not be on the sys.path so we
+    # cannot use a normal import to load the `export_environment` module.
+    module_name = 'export_environment'
+    file_name = module_name + '.py'
+    parent_dir = Path(__file__).follow().parent
+    spec = importlib.util.spec_from_file_location(name=module_name,
+                                                  location=parent_dir / file_name)
+    export_environment = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(export_environment)
+    return export_environment
 
 
 K = TypeVar('K')
@@ -147,25 +161,7 @@ def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> MutableM
 
 
 def _print(msg):
-    print('envhook:', msg, file=sys.stderr)
-
-
-def _run(command) -> str:
-    bash = "/bin/bash"
-    try:
-        shell = os.environ['SHELL']
-    except KeyError:
-        shell = bash
-    else:
-        # allow a custom path to bash, but reject all other shells
-        if os.path.basename(shell) != 'bash':
-            shell = bash
-    args = [shell, '-c', command]
-    process = subprocess.run(args, stdout=subprocess.PIPE)
-    output = process.stdout.decode()
-    if process.returncode != 0:
-        raise RuntimeError(f'Running {args} failed with {process.returncode}:\n{output}')
-    return output
+    print(Path(__file__).resolve().name + ':', msg, file=sys.stderr)
 
 
 def _parse(env: str) -> MutableMapping[str, str]:
@@ -176,8 +172,11 @@ class SanitizingFinder(MetaPathFinder):
 
     def __init__(self) -> None:
         super().__init__()
-        self.bad_path = str(Path(__file__).resolve().parent.parent / 'src' / 'azul')
-        self.name = Path(__file__).resolve().name
+        assert __name__ == 'sitecustomize'
+        sitecustomize_py = Path(__file__)
+        assert sitecustomize_py.is_symlink()
+        envhook_py = sitecustomize_py.follow()
+        self.bad_path = str(envhook_py.parent.parent / 'src' / 'azul')
 
     def find_spec(self, *_args, **_kwargs):
         sys_path = sys.path
@@ -187,7 +186,7 @@ class SanitizingFinder(MetaPathFinder):
             except ValueError:
                 return None
             else:
-                _print(f"{self.name}: Sanitizing sys.path by removing entry {index} containing '{self.bad_path}'.")
+                _print(f"Sanitizing sys.path by removing entry {index} containing '{self.bad_path}'.")
                 del sys_path[index]
 
 
@@ -246,9 +245,124 @@ def share_aws_cli_credential_cache():
         boto3.setup_default_session(botocore_session=session)
 
 
+class Path(pathlib.PosixPath):
+
+    # Work around https://bugs.python.org/issue30618, fixed on 3.7+
+
+    def readlink(self) -> 'Path':
+        """
+        Return the path to which the symbolic link points.
+        """
+        path = self._accessor.readlink(self)
+        obj = self._from_parts((path,), init=False)
+        obj._init(template=self)
+        return obj
+
+    def follow(self) -> 'Path':
+        """
+        This methods performs one level of symbolic link resolution. For paths
+        representing a symbolic link with an absolute target, this methods is
+        equivalent to readlink(). For symbolic links with relative targets, this
+        method returns the result of appending the target to the parent of this
+        path. The returned path is always absolute.
+
+        Unless you need the target of the symbolic link verbatim, you should
+        prefer this method over readlink().
+        """
+        target = self.readlink()
+        if target.is_absolute():
+            return target
+        else:
+            return (self.parent / target).absolute()
+
+    # Sorely needed, added in 3.8
+
+    def link_to(self, target: 'Path'):
+        """
+        Create a hard link pointing to a path named target.
+        """
+        if self._closed:
+            self._raise_closed()
+        os.link(str(self), str(target))
+
+    def is_relative(self):
+        return not self.is_absolute()
+
+    def is_prefix_of(self, other: 'Path'):
+        """
+        >>> Path('/').is_prefix_of(Path('/'))
+        True
+
+        >>> Path('/').is_prefix_of(Path('/a'))
+        True
+
+        >>> Path('/a').is_prefix_of(Path('/'))
+        False
+
+        >>> Path('/a').is_prefix_of(Path('/a/b'))
+        True
+
+        >>> Path('/a/b').is_prefix_of(Path('/a'))
+        False
+        """
+        if self.is_relative():
+            raise ValueError('Need absolute path', self)
+        elif other.is_relative():
+            raise ValueError('Need absolute path', other)
+        else:
+            return other.parts[:len(self.parts)] == self.parts
+
+
+class EnvhookError(RuntimeError):
+    pass
+
+
+class NoActiveVirtualenv(EnvhookError):
+
+    def __init__(self) -> None:
+        super().__init__('Need to be run from within a virtualenv')
+
+
+class NotASymbolicLinkError(EnvhookError):
+
+    def __init__(self, link: Path) -> None:
+        super().__init__(
+            f'{link} is not a symbolic link. Make a backup of that file, '
+            f'remove the original and try again. Note that removing the file '
+            f'may break other, third-party site customizations.'
+        )
+
+
+class BadSymlinkDestination(EnvhookError):
+
+    def __init__(self, link: Path, actual: Path, expected: Path) -> None:
+        super().__init__(
+            f'Symbolic link {link} points to {actual} instead of {expected}. '
+            f'Try removing the symbolic link and try again.'
+        )
+
+
+class ThirdPartySiteCustomize(EnvhookError):
+
+    def __init__(self, sitecustomize: Path) -> None:
+        super().__init__(
+            f'A different `sitecustomize` module already exists at '
+            f'{sitecustomize}. Make a backup of that file, remove the original '
+            f'and try again. Note that removing the file may break other, '
+            f'third-party site customizations.'
+        )
+
+
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    try:
+        main(sys.argv[1:])
+    except EnvhookError as e:
+        _print(e.args[0])
+        sys.exit(1)
 elif __name__ == 'sitecustomize':
-    sanitize_sys_path()
-    setenv()
-    share_aws_cli_credential_cache()
+    if int(os.environ.get('ENVHOOK', '1')) == 0:
+        _print(f'Currently disabled because the ENVHOOK environment variable is set to 0.')
+    else:
+        sanitize_sys_path()
+        setenv()
+        share_aws_cli_credential_cache()
