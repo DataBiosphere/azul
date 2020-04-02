@@ -23,6 +23,8 @@ changes and run ::
     cd ..
     make -C lambdas delete
 
+If the last command fails with a TooManyRequests error, wait 1min and rerun it.
+
 Switch back to your branch that includes these changes. Now use Chalice to
 generate the new Terraform config. Run ::
 
@@ -31,6 +33,8 @@ generate the new Terraform config. Run ::
 And finally ::
 
     make terraform
+
+If that command fails with a ResourceNotFoundException, wait 1min and rerun it.
 
 In the unlikely case that you need to downgrade, perform the steps below.
 
