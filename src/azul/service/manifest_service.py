@@ -76,14 +76,27 @@ class ManifestService(ElasticsearchService):
         super().__init__()
         self.storage_service = storage_service
 
-    def get_manifest(self, format_: str, filters: Filters):
+    def get_manifest(self, format_: str, filters: Filters) -> Tuple[str, bool]:
+        """
+        Returns a tuple in which the first element is pre-signed URL to a
+        manifest in the given format and of the file entities matching the given
+        filter. If a suitable manifest already exists, its location will be
+        returned. Otherwise, a new manifest will be generated and its location
+        returned. Subsequent invocations of this method with the same arguments
+        are likely to reuse that manifest, skipping the time-consuming manifest
+        generation.
+
+        The second element of the returned tuple is True if an existing
+        manifest was reused and False if a new manifest was generated.
+        """
         generator = ManifestGenerator.for_format(format_, self, filters)
         object_key, presigned_url = self._get_cached_manifest(generator, format_, filters)
         if presigned_url is None:
-            object_key = f'manifests/{uuid.uuid4()}.{generator.file_name_extension}' if not object_key else object_key
             file_name = self._generate_manifest(generator, object_key)
             presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
-        return presigned_url
+            return presigned_url, False
+        else:
+            return presigned_url, True
 
     def get_cached_manifest(self, format_: str, filters: Filters) -> Optional[str]:
         generator = ManifestGenerator.for_format(format_, self, filters)
@@ -94,19 +107,14 @@ class ManifestService(ElasticsearchService):
                              generator: 'ManifestGenerator',
                              format_: str,
                              filters: Filters,
-                             ) -> Tuple[Optional[str], Optional[str]]:
-        if generator.is_cacheable:
-            # Assertion to be removed in https://github.com/DataBiosphere/azul/issues/1476
-            assert isinstance(generator, FullManifestGenerator)
-            manifest_key = self._derive_manifest_key(format_, filters, generator.manifest_content_hash)
-            object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
-            if self._can_use_cached_manifest(object_key):
-                file_name = self._use_cached_manifest(generator, object_key)
-                return object_key, self.storage_service.get_presigned_url(object_key, file_name=file_name)
-            else:
-                return object_key, None
+                             ) -> Tuple[str, Optional[str]]:
+        manifest_key = self._derive_manifest_key(format_, filters, generator.manifest_content_hash)
+        object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
+        if self._can_use_cached_manifest(object_key):
+            file_name = self._use_cached_manifest(generator, object_key)
+            return object_key, self.storage_service.get_presigned_url(object_key, file_name=file_name)
         else:
-            return None, None
+            return object_key, None
 
     file_name_tag = 'azul_file_name'
 
@@ -191,8 +199,10 @@ class ManifestService(ElasticsearchService):
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
         filter_string = repr(sort_frozen(freeze(filters)))
         content_hash = str(content_hash)
-        assert not any(',' in param for param in (git_commit, format_, content_hash))
-        return str(uuid.uuid5(manifest_namespace, ','.join((git_commit, format_, content_hash, filter_string))))
+        disable_multipart = str(config.disable_multipart_manifests)
+        manifest_key_params = (git_commit, format_, content_hash, disable_multipart, filter_string)
+        assert not any(',' in param for param in manifest_key_params[:-1])
+        return str(uuid.uuid5(manifest_namespace, ','.join(manifest_key_params)))
 
     _date_diff_margin = 10  # seconds
 
@@ -257,13 +267,6 @@ class ManifestGenerator(metaclass=ABCMeta):
     # Note to implementors: all property getters in this class and its
     # descendants must be inexpensive. If a property getter performs and
     # expensive computation or I/O, it should cache its return value.
-
-    @property
-    def is_cacheable(self) -> bool:
-        """
-        True if output of this generator can be cached.
-        """
-        return False
 
     @property
     @abstractmethod
@@ -419,6 +422,35 @@ class ManifestGenerator(metaclass=ABCMeta):
         dss_url = config.dss_endpoint + '/' + path
         return dss_url
 
+    @cachedproperty
+    def manifest_content_hash(self) -> int:
+        es_search = self._create_request()
+        es_search.aggs.metric(
+            'hash',
+            'scripted_metric',
+            init_script='''
+                params._agg.fields = 0
+            ''',
+            map_script='''
+                for (bundle in params._source.bundles) {
+                    params._agg.fields += (bundle.uuid + bundle.version).hashCode()
+                }
+            ''',
+            combine_script='''
+                return params._agg.fields.hashCode()
+            ''',
+            reduce_script='''
+                int result = 0;
+                for (agg in params._aggs) {
+                    result += agg
+                }
+                return result
+          ''')
+        es_search = es_search.extra(size=0)
+        response = es_search.execute()
+        assert len(response.hits) == 0
+        return response.aggregations.hash.value
+
 
 class StreamingManifestGenerator(ManifestGenerator):
     """
@@ -503,10 +535,6 @@ class CompactManifestGenerator(StreamingManifestGenerator):
 class FullManifestGenerator(StreamingManifestGenerator):
 
     @property
-    def is_cacheable(self):
-        return True
-
-    @property
     def content_type(self) -> str:
         return 'text/tab-separated-values'
 
@@ -570,31 +598,6 @@ class FullManifestGenerator(StreamingManifestGenerator):
                 for value in sorted(response.aggregations.fields.value)
             }
         }
-
-    @cachedproperty
-    def manifest_content_hash(self) -> int:
-        es_search = self._create_request()
-        generate_hash_map_script = '''
-                for (bundle in params._source.bundles) {
-                    params._agg.fields += (bundle.uuid + bundle.version).hashCode()
-                }
-            '''
-        generate_hash_reduce_script = '''
-                int result = 0;
-                for (agg in params._aggs) {
-                    result += agg
-                }
-                return result
-            '''
-        es_search.aggs.metric('hash', 'scripted_metric',
-                              init_script='params._agg.fields = 0',
-                              map_script=generate_hash_map_script,
-                              combine_script='return params._agg.fields.hashCode()',
-                              reduce_script=generate_hash_reduce_script)
-        es_search = es_search.extra(size=0)
-        response = es_search.execute()
-        assert len(response.hits) == 0
-        return response.aggregations.hash.value
 
 
 class BDBagManifestGenerator(FileBasedManifestGenerator):

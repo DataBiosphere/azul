@@ -10,8 +10,13 @@ import json
 import logging
 import os
 from tempfile import TemporaryDirectory
-from typing import List
+from typing import (
+    List,
+    Optional,
+    Tuple,
+)
 from unittest import mock
+import unittest.result
 from urllib.parse import (
     parse_qs,
     urlparse,
@@ -49,7 +54,7 @@ def setUpModule():
     configure_test_logging(logger)
 
 
-class TestManifestEndpoints(WebServiceTestCase):
+class ManifestTestCase(WebServiceTestCase):
 
     def setUp(self):
         super().setUp()
@@ -75,12 +80,36 @@ class TestManifestEndpoints(WebServiceTestCase):
         os.environ.pop('azul_git_dirty')
 
     def _get_manifest(self, format_: str, filters: JSON, stream=False):
-        url = self._get_manifest_url(format_, filters)
+        url, was_cached = self._get_manifest_url(format_, filters)
         return requests.get(url, stream=stream)
 
-    def _get_manifest_url(self, format_, filters):
+    def _get_manifest_url(self, format_: str, filters: JSON) -> Tuple[str, bool]:
         service = ManifestService(StorageService())
         return service.get_manifest(format_, filters)
+
+
+class TestManifestEndpoints(ManifestTestCase):
+
+    def run(self, result: Optional[unittest.result.TestResult] = ...) -> Optional[unittest.result.TestResult]:
+        # Disable caching of manifests to prevent false assertion positives
+        with mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest') as m:
+            m.return_value = False
+            return super().run(result)
+
+    @mock_sts
+    @mock_s3
+    def test_manifest_not_cached(self):
+        """
+        Assert that the patch to disable caching is effective.
+        """
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+            for i in range(2):
+                with self.subTest(i=i):
+                    url, was_cached = self._get_manifest_url('compact', {})
+                    self.assertFalse(was_cached)
 
     @mock_sts
     @mock_s3
@@ -975,6 +1004,58 @@ class TestManifestEndpoints(WebServiceTestCase):
             self.assertGreater(len(intersection), 0)
             self.assertGreater(len(symmetric_diff), 0)
 
+    def test_manifest_format_validation(self):
+        url = self.base_url + '/manifest/files?format=invalid-type'
+        response = requests.get(url)
+        self.assertEqual(400, response.status_code, response.content)
+
+    @mock_sts
+    @mock_s3
+    def test_manifest_content_disposition_header(self):
+        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        with mock.patch.object(manifest_service, 'datetime') as mock_response:
+            mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
+            storage_service = StorageService()
+            storage_service.create_bucket()
+            for single_part in True, False:
+                for filters, expected_name in [
+                    # For a single project, the content disposition file name should
+                    # be the project name followed by the date and time
+                    (
+                        {'project': {'is': ['Single of human pancreas']}},
+                        'Single of human pancreas 1985-10-25 01.21'
+                    ),
+                    # In all other cases, the standard content disposition file name
+                    # should be "hca-manifest-" followed by the manifest key, a
+                    # v5 UUID deterministically derived from the filter and
+                    (
+                        {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                        'hca-manifest-' + (
+                            '4ad2e5aa-dcbd-5fed-ac3e-17bcd82c8c0f' if single_part
+                            else '525cebc4-b96a-5f75-b329-8268fe947788'
+                        ),
+                    ),
+                    (
+                        {},
+                        'hca-manifest-' + (
+                            '4a5cd62a-8c55-5ddf-94e5-86c51f7603cd' if single_part
+                            else '585ac408-338e-5e3e-a856-e4df962509b6'
+                        ),
+                    )
+                ]:
+                    with self.subTest(filters=filters, single_part=single_part):
+                        with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
+                            assert config.disable_multipart_manifests is single_part
+                            url, was_cached = self._get_manifest_url('full', filters)
+                            self.assertFalse(was_cached)
+                            query = urlparse(url).query
+                            expected_cd = f'attachment;filename="{expected_name}.tsv"'
+                            actual_cd = one(parse_qs(query).get('response-content-disposition'))
+                            self.assertEqual(actual_cd, expected_cd)
+
+
+class TestManifestCache(ManifestTestCase):
+
     @mock_sts
     @mock_s3
     @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
@@ -1042,88 +1123,52 @@ class TestManifestEndpoints(WebServiceTestCase):
                         self.assertEqual([2, 2], list(map(len, file_names.values())))
                         self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
 
-    def test_manifest_format_validation(self):
-        url = self.base_url + '/manifest/files?format=invalid-type'
-        response = requests.get(url)
-        self.assertEqual(400, response.status_code, response.content)
-
     @mock_sts
     @mock_s3
-    @mock.patch.object(ManifestService, '_can_use_cached_manifest')
-    def test_manifest_content_disposition_header(self, _can_use_cached_manifest):
-        # prevent individual subtests from reusing the cached manifest
-        _can_use_cached_manifest.return_value = False
-        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
-        with mock.patch.object(manifest_service, 'datetime') as mock_response:
-            mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
-            storage_service = StorageService()
-            storage_service.create_bucket()
-            for filters, expected_name in [
-                # For a single project, the content disposition file name should
-                # be the project name followed by the date and time
-                (
-                    {'project': {'is': ['Single of human pancreas']}},
-                    'Single of human pancreas 1985-10-25 01.21'
-                ),
-                # In all other cases, the standard content disposition file name
-                # should be "hca-manifest-" followed by the manifest key, a
-                # v5 UUID deterministically derived from the filter and
-                (
-                    {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                    'hca-manifest-d6a11cb8-2c79-5231-8119-f0fae5fa4b25',
-                ),
-                (
-                    {},
-                    'hca-manifest-3966f5d9-b5a9-59a4-b217-d07f2914aaf0'
-                )
-            ]:
-                for single_part in True, False:
-                    with self.subTest(filters=filters, single_part=single_part):
-                        with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                            assert config.disable_multipart_manifests is single_part
-                            url = self._get_manifest_url('full', filters)
-                            query = urlparse(url).query
-                            expected_cd = f'attachment;filename="{expected_name}.tsv"'
-                            actual_cd = one(parse_qs(query).get('response-content-disposition'))
-                            self.assertEqual(actual_cd, expected_cd)
-
-    @mock_sts
-    @mock_s3
-    def test_full_hash_validity(self):
+    def test_hash_validity(self):
         self.maxDiff = None
         old_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")
         self._index_canned_bundle(old_bundle)
-
-        # When a new bundle is indexed and its full manifest cached,
-        # a matching object_key is generated ...
         filters = {'project': {'is': ['Single of human pancreas']}}
-        format_ = 'full'
-
+        old_object_keys = {}
         service = ManifestService(StorageService())
-        generator = manifest_service.FullManifestGenerator(service, filters)
-        old_bundle_object_key = service._derive_manifest_key(format_, filters, generator.manifest_content_hash)
-
-        # and should remain valid ...
-        new_generator = manifest_service.FullManifestGenerator(service, filters)
-        self.assertEqual(old_bundle_object_key,
-                         service._derive_manifest_key(format_, filters, new_generator.manifest_content_hash))
+        for format_ in ['compact', 'full', 'terra.bdbag']:
+            with self.subTest(msg='indexing new bundle', format_=format_):
+                # When a new bundle is indexed and its full manifest cached,
+                # a matching object_key is generated ...
+                generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
+                old_bundle_object_key = service._derive_manifest_key(format_, filters,
+                                                                     generator.manifest_content_hash)
+                # and should remain valid ...
+                new_generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
+                self.assertEqual(old_bundle_object_key,
+                                 service._derive_manifest_key(format_, filters,
+                                                              new_generator.manifest_content_hash))
+                old_object_keys[format_] = old_bundle_object_key
 
         # ... until a new bundle belonging to the same project is indexed, at which point a manifest request
         # will generate a different object_key ...
         new_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z")
         self._index_canned_bundle(new_bundle)
-        generator = manifest_service.FullManifestGenerator(service, filters)
-        new_bundle_object_key = service._derive_manifest_key(format_, filters, generator.manifest_content_hash)
-
-        # ... invalidating the cached object previously used for the same filter.
-        self.assertNotEqual(old_bundle_object_key, new_bundle_object_key)
+        new_object_keys = {}
+        for format_ in ['compact', 'full', 'terra.bdbag']:
+            with self.subTest(msg='indexing second bundle', format_=format_):
+                generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
+                new_bundle_object_key = service._derive_manifest_key(format_, filters,
+                                                                     generator.manifest_content_hash)
+                # ... invalidating the cached object previously used for the same filter.
+                self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
+                new_object_keys[format_] = new_bundle_object_key
 
         # Updates or additions, unrelated to that project do not affect object key generation
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
-        generator = manifest_service.FullManifestGenerator(service, filters)
-        latest_bundle_object_key = service._derive_manifest_key(format_, filters, generator.manifest_content_hash)
+        for format_ in ['compact', 'full', 'terra.bdbag']:
+            with self.subTest(msg='indexing unrelated bundle', format_=format_):
+                generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
+                latest_bundle_object_key = service._derive_manifest_key(format_, filters,
+                                                                        generator.manifest_content_hash)
 
-        self.assertEqual(latest_bundle_object_key, new_bundle_object_key)
+                self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
 
 class TestManifestResponse(AzulTestCase):
