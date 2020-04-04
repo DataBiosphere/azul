@@ -872,6 +872,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "role": "${aws_iam_role.gitlab.name}",
                 "policy_arn": "${aws_iam_policy.gitlab_iam.arn}"
             },
+            # Since we are using the boundary as a policy Gitlab can explicitly
+            # do everything within the boundary
             "gitlab_boundary": {
                 "role": "${aws_iam_role.gitlab.name}",
                 "policy_arn": "${aws_iam_policy.gitlab_boundary.arn}"
