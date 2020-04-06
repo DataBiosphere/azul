@@ -1197,7 +1197,7 @@ For more advanced usage refer to the official [Locust documentation].
 
 # 9. Continuous deployment and integration
 
-We use to automated deployments performed on a project-specific EC2 instance 
+We use two automated deployments performed on a project-specific EC2 instance 
 running Gitlab. There is currently one such instance for the `dev`, 
 `integration` and `staging` deployments and another one for `prod`.
 
