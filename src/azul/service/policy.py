@@ -1,10 +1,9 @@
 from azul import config
 from azul.deployment import aws
-from azul.template import emit
 
 direct_access_role = config.dss_direct_access_role(lambda_name='service')
 
-emit({
+policy = {
     "Version": "2012-10-17",
     "Statement": [
         {
@@ -161,7 +160,7 @@ emit({
             ],
             "Resource": [
                 f"arn:aws:apigateway:{aws.region_name}::"
-                f"/restapis/{aws.api_gateway_id(config.service_name)}/stages/{config.deployment_stage}/exports/oas30"
+                "/restapis/${module.chalice_service.rest_api_id}/stages/%s/exports/oas30" % config.deployment_stage
             ]
         },
         {
@@ -184,4 +183,4 @@ emit({
             ]
         )
     ]
-})
+}

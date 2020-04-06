@@ -2,25 +2,17 @@ all: deploy
 
 include ../../common.mk
 
-config: .chalice/config.json lambda-policy.json
-
-state: check_branch config
-	python $(azul_home)/scripts/manage_chalice_deployed.py indexer download
+config: .chalice/config.json
 
 wheels:
 	rm -rf vendor/jsonobject*
 	unzip $(azul_home)/lambdas/.wheels/jsonobject-0.9.9-cp36-cp36m-linux_x86_64.whl -d vendor
 
-deploy: state wheels
+# TODO: Rename target: https://github.com/DataBiosphere/azul/issues/1654
+deploy: config wheels
 	python -m azul.changelog vendor
-	python $(azul_home)/scripts/manage_lambda_iam_role.py create indexer lambda-policy.json
-	chalice deploy --stage $(AZUL_DEPLOYMENT_STAGE)
-	python $(azul_home)/scripts/manage_chalice_deployed.py indexer upload
-
-delete: state
-	chalice delete --stage $(AZUL_DEPLOYMENT_STAGE)
-	python $(azul_home)/scripts/manage_lambda_iam_role.py delete indexer
-	python $(azul_home)/scripts/manage_chalice_deployed.py indexer upload
+	chalice package --stage $(AZUL_DEPLOYMENT_STAGE) --pkg-format terraform .chalice/terraform
+	python $(azul_home)/scripts/prepare_lambda_deployment.py indexer
 
 local: config
 	chalice local
@@ -28,4 +20,4 @@ local: config
 clean:
 	git clean -Xdf
 
-.PHONY: all config state deploy delete local clean
+.PHONY: all config deploy local clean

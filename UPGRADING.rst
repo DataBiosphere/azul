@@ -10,6 +10,59 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#558 Deploying lambdas with Terraform
+=====================================
+
+To deploy lambdas with Terraform you will need to remove the currently deployed
+lambda resources using Chalice. Checkout the most recent commit *before* these
+changes and run ::
+
+    cd terraform
+    make init
+    terraform destroy $(terraform state list | grep aws_api_gateway_base_path_mapping | sed 's/^/-target /')
+    cd ..
+    make -C lambdas delete
+
+If the last command fails with a TooManyRequests error, wait 1min and rerun it.
+
+Switch back to your branch that includes these changes. Now use Chalice to
+generate the new Terraform config. Run ::
+
+    make deploy
+
+And finally ::
+
+    make terraform
+
+If that command fails with a ResourceNotFoundException, wait 1min and rerun it.
+
+In the unlikely case that you need to downgrade, perform the steps below.
+
+Switch to the new branch you want to deploy. Run ::
+
+    cd terraform
+    rm -r indexer/ service/
+    make init
+    terraform destroy $(terraform state list | grep aws_api_gateway_base_path_mapping | sed 's/^/-target /')
+    cd ..
+    make terraform
+
+This will remove the Lambda resources provisioned by Terraform. Now run ::
+
+    make deploy
+
+to set up the Lambdas again, and finally ::
+
+    make terraform
+
+To complete the API Gateway domain mappings, etc.
+
+Run ::
+
+    make deploy
+
+a final time out work around a bug with OpenAPI spec generation.
+
 
 #1637 Refactor handling of environment for easier reuse
 =======================================================
