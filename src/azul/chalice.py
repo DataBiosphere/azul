@@ -10,8 +10,15 @@ from typing import (
 from chalice import Chalice
 from chalice.app import Request
 
-from azul import config
+from azul import (
+    config,
+)
 from azul.json import json_head
+from azul.openapi import (
+    clean_specs,
+    merge_dicts,
+    join_specs,
+)
 from azul.types import (
     LambdaContext,
     JSON,
@@ -78,6 +85,19 @@ class AzulChaliceApp(Chalice):
         A route that's only enabled during unit tests.
         """
         return self.route(*args, enabled=self.unit_test, **kwargs)
+
+    def annotated_specs(self, raw_specs, toplevel_spec) -> JSON:
+        """
+        Finds all routes in app that are decorated with @AzulChaliceApp.route and adds this
+        information into the api spec downloaded from API Gateway.
+
+        :param raw_specs: Spec from API Gateway corresponding to the Chalice app
+        :param toplevel_spec: Top level OpenAPI info, definitions, etc.
+        :return: The annotated specifications
+        """
+        clean_specs(raw_specs)
+        specs = merge_dicts(toplevel_spec, raw_specs, override=True)
+        return join_specs(specs, self.path_specs, self.method_specs)
 
     def _register_spec(self,
                        path: str,

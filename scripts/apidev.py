@@ -11,14 +11,13 @@ from watchdog.observers import Observer
 
 from azul import config
 from azul.modules import load_app_module
-from azul.openapi import annotated_specs
 
 spec_file = 'openapi.json'
 parent_dir = os.path.realpath(os.path.dirname(__file__))
 
 
 def write_specs(raw_specs, app, openapi_spec):
-    specs = annotated_specs(raw_specs, app, openapi_spec)
+    specs = app.annotated_specs(raw_specs, openapi_spec)
     with open(os.path.join(parent_dir, spec_file), 'w') as f:
         json.dump(specs, f, indent=4)
 

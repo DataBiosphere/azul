@@ -1,9 +1,11 @@
 from collections import defaultdict
-from unittest import mock
+from unittest import (
+    mock,
+    skip,
+)
 
 from azul.chalice import AzulChaliceApp
 from azul.openapi import (
-    get_app_specs,
     schema,
 )
 from azul_test_case import AzulTestCase
@@ -11,29 +13,30 @@ from azul_test_case import AzulTestCase
 
 class TestGetAppSpecs(AzulTestCase):
 
+    @skip('https://github.com/DataBiosphere/azul/issues/1450')
     def test_unannotated(self):
-        # TODO: Once all endpoints are documented, this test should assert failure
         app = self._mock_app_object()
         self._mock_app_route(app, '/foo')
-        get_app_specs(app)
+        undocumented = app.routes.keys() - app.path_specs.keys()
+        self.assertEqual(set(), undocumented)
 
     def test_just_method_spec(self):
         app = self._mock_app_object()
         self._mock_app_route(app, '/foo', methods=['GET'], method_spec={'a': 'b'})
-        specs = get_app_specs(app)
-        self.assertEqual(specs, ({}, {('/foo', 'get'): {'a': 'b'}}))
+        self.assertEqual(app.path_specs, {})
+        self.assertEqual(app.method_specs, {('/foo', 'get'): {'a': 'b'}})
 
     def test_just_path_spec(self):
         app = self._mock_app_object()
         self._mock_app_route(app, '/foo', methods=['GET'], path_spec={'a': 'b'})
-        specs = get_app_specs(app)
-        self.assertEqual(specs, ({'/foo': {'a': 'b'}}, {}))
+        self.assertEqual(app.path_specs, {'/foo': {'a': 'b'}})
+        self.assertEqual(app.method_specs, {})
 
     def test_fully_annotated(self):
         app = self._mock_app_object()
         self._mock_app_route(app, '/foo', methods=['GET'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
-        specs = get_app_specs(app)
-        self.assertEqual(specs, ({'/foo': {'a': 'b'}}, {('/foo', 'get'): {'c': 'd'}}))
+        self.assertEqual(app.path_specs, {'/foo': {'a': 'b'}})
+        self.assertEqual(app.method_specs, {('/foo', 'get'): {'c': 'd'}})
 
     @mock.patch('chalice.Chalice.route')
     def test_multiple_routes(self, mock_route):
@@ -46,10 +49,11 @@ class TestGetAppSpecs(AzulTestCase):
 
         self.assertEqual(mock_route.call_count, 2)
 
-        specs = get_app_specs(app)
-        self.assertEqual(specs,
-                         ({'/foo': {'a': 'b'}, '/foo/too': {'e': 'f'}},
-                          {('/foo', 'get'): {'c': 'd'}, ('/foo', 'put'): {'c': 'd'}, ('/foo/too', 'get'): {'g': 'h'}}))
+        self.assertEqual(app.path_specs, {'/foo': {'a': 'b'},
+                                          '/foo/too': {'e': 'f'}})
+        self.assertEqual(app.method_specs, {('/foo', 'get'): {'c': 'd'},
+                                            ('/foo', 'put'): {'c': 'd'},
+                                            ('/foo/too', 'get'): {'g': 'h'}})
 
     @mock.patch('chalice.Chalice.route')
     def test_duplicate_method_specs(self, mock_route):
@@ -63,8 +67,8 @@ class TestGetAppSpecs(AzulTestCase):
 
         self.assertEqual(mock_route.call_count, 2)
         # Decorators are applied from the bottom up
-        specs = get_app_specs(app)
-        self.assertEqual(specs, ({}, {('/foo', 'get'): {'a': 'XXX'}}))
+        self.assertEqual(app.path_specs, {})
+        self.assertEqual(app.method_specs, {('/foo', 'get'): {'a': 'XXX'}})
 
     @mock.patch('chalice.Chalice.route')
     def test_duplicate_path_specs(self, mock_route):
@@ -80,8 +84,8 @@ class TestGetAppSpecs(AzulTestCase):
                 pass
 
         self.assertEqual(mock_route.call_count, 2)
-        specs = get_app_specs(app)
-        self.assertEqual(specs, ({'/foo': {'a': 'XXX'}}, {}))
+        self.assertEqual(app.path_specs, {'/foo': {'a': 'XXX'}})
+        self.assertEqual(app.method_specs, {})
 
     @mock.patch('chalice.Chalice.route')
     def _mock_app_route(self, app, path, mock_route, methods=None, path_spec=None, method_spec=None):

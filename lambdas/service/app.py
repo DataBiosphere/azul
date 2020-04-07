@@ -38,7 +38,6 @@ from azul.deployment import aws
 from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.openapi import (
-    annotated_specs,
     format_description,
     params,
     responses,
@@ -207,7 +206,7 @@ def swagger_ui():
 def openapi():
     gateway_id = app.current_request.context['apiId']
     raw_spec = aws.api_gateway_export(gateway_id)
-    spec = annotated_specs(raw_spec, app, openapi_spec)
+    spec = app.annotated_specs(raw_spec, openapi_spec)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
                     body=spec)
