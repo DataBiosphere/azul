@@ -5,28 +5,14 @@ from typing import (
     List,
     cast,
     MutableMapping,
+    Tuple,
+    Mapping,
 )
 
 from azul.types import (
     JSON,
     MutableJSON,
 )
-
-
-def annotated_specs(raw_specs, app, toplevel_spec) -> JSON:
-    """
-    Finds all routes in app that are decorated with @openapi_spec and adds this
-    information into the api spec downloaded from API Gateway.
-
-    :param raw_specs: Spec from API Gateway corresponding to the Chalice app
-    :param app: App with annotated routes
-    :param toplevel_spec: Top level OpenAPI info, definitions, etc.
-    :return: The annotated specifications
-    """
-    clean_specs(raw_specs)
-    specs = merge_dicts(toplevel_spec, raw_specs, override=True)
-    path_specs, method_specs = get_app_specs(app)
-    return join_specs(specs, path_specs, method_specs)
 
 
 def clean_specs(specs):
@@ -53,21 +39,9 @@ def clean_specs(specs):
     specs.pop('servers')
 
 
-def get_app_specs(app):
-    """
-    Extract OpenAPI specs from a Chalice app object.
-    """
-    undocumented = app.routes.keys() - app.path_specs.keys()
-    if undocumented:
-        # TODO (jesse): raise if route is undocumented (https://github.com/DataBiosphere/azul/issues/1450)
-        pass
-
-    return app.path_specs, app.method_specs
-
-
 def join_specs(toplevel_spec: JSON,
                path_specs: JSON,
-               method_specs: JSON) -> MutableJSON:
+               method_specs: Mapping[Tuple[str, str], JSON]) -> MutableJSON:
     """
     Join the specifications, potentially overwriting with specs from a lower
     level.
