@@ -61,7 +61,7 @@ Run ::
 
     make deploy
 
-a final time out work around a bug with OpenAPI spec generation.
+a final time to work around a bug with OpenAPI spec generation.
 
 
 #1637 Refactor handling of environment for easier reuse
