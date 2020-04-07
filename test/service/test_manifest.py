@@ -1009,6 +1009,11 @@ class TestManifestEndpoints(ManifestTestCase):
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.content)
 
+    def test_manifest_filter_validation(self):
+        url = self.base_url + '/manifest/files?format=compact&filters={"fileFormat":["pdf"]}'
+        response = requests.get(url)
+        self.assertEqual(400, response.status_code, response.content)
+
     @mock_sts
     @mock_s3
     def test_manifest_content_disposition_header(self):

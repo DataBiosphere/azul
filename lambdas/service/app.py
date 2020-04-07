@@ -1105,11 +1105,13 @@ def handle_manifest_generation_request():
     """
     query_params = app.current_request.query_params or {}
     validate_params(query_params, filters=str, format=str, token=str)
+    filters = query_params.get('filters', '{}')
+    validate_filters(filters)
     format_ = query_params.get('format', 'compact')
     if format_ not in ('compact', 'terra.bdbag', 'full'):
         raise BadRequestError(f'{format_} is not a valid manifest format.')
     service = ManifestService(StorageService())
-    filters = service.parse_filters(query_params.get('filters'))
+    filters = service.parse_filters(filters)
     presigned_url = service.get_cached_manifest(format_, filters)
     if presigned_url is None:
         token = query_params.get('token')
