@@ -30,6 +30,7 @@ from azul import (
 )
 from azul.collections import (
     compose_keys,
+    none_safe_key,
     none_safe_tuple_key,
 )
 from azul.project.hca.metadata_generator import MetadataGenerator
@@ -256,7 +257,8 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'total_estimated_cells': cell_suspension.estimated_cell_count,
             'selected_cell_type': sorted(cell_suspension.selected_cell_types),
             'organ': sorted(organs),
-            'organ_part': sorted(organ_parts)
+            # With multiple samples it is possible to have str and None values
+            'organ_part': sorted(organ_parts, key=none_safe_key(none_last=True))
         }
 
     @classmethod
