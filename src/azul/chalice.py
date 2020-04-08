@@ -1,8 +1,6 @@
 import json
 import logging
 from typing import (
-    Dict,
-    Tuple,
     Optional,
     Iterable,
 )
@@ -13,15 +11,14 @@ from chalice.app import Request
 from azul import (
     config,
 )
-from azul.json import json_head
-from azul.openapi import (
-    clean_specs,
-    merge_dicts,
-    join_specs,
+from azul.json import (
+    copy_json,
+    json_head,
 )
 from azul.types import (
     LambdaContext,
     JSON,
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -29,10 +26,14 @@ log = logging.getLogger(__name__)
 
 class AzulChaliceApp(Chalice):
 
-    def __init__(self, app_name, unit_test=False):
+    def __init__(self, app_name, unit_test=False, spec=None):
         self.unit_test = unit_test
-        self.path_specs: Dict[str, JSON] = {}
-        self.method_specs: Dict[Tuple[str, str], JSON] = {}
+        if spec is not None:
+            assert 'paths' not in spec, 'The top-level spec must not define paths'
+            self.specs: Optional[MutableJSON] = copy_json(spec)
+            self.specs['paths'] = {}
+        else:
+            self.specs: Optional[MutableJSON] = None
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
 
     def route(self,
@@ -86,38 +87,28 @@ class AzulChaliceApp(Chalice):
         """
         return self.route(*args, enabled=self.unit_test, **kwargs)
 
-    def annotated_specs(self, raw_specs, toplevel_spec) -> JSON:
-        """
-        Finds all routes in app that are decorated with @AzulChaliceApp.route and adds this
-        information into the api spec downloaded from API Gateway.
-
-        :param raw_specs: Spec from API Gateway corresponding to the Chalice app
-        :param toplevel_spec: Top level OpenAPI info, definitions, etc.
-        :return: The annotated specifications
-        """
-        clean_specs(raw_specs)
-        specs = merge_dicts(toplevel_spec, raw_specs, override=True)
-        return join_specs(specs, self.path_specs, self.method_specs)
-
     def _register_spec(self,
                        path: str,
                        path_spec: Optional[JSON],
                        method_spec: Optional[JSON],
                        methods: Iterable[str]):
-
+        """
+        Add a route's specifications to the specification object.
+        """
         if path_spec is not None:
-            assert path not in self.path_specs, 'Only specify path_spec once per route path'
-            self.path_specs[path] = path_spec
+            assert path not in self.specs['paths'], 'Only specify path_spec once per route path'
+            self.specs['paths'][path] = copy_json(path_spec)
 
         if method_spec is not None:
-            new_method_specs = {
-                # Method names in OpenAPI routes must be lower case
-                (path, method.lower()): method_spec
-                for method in methods
-            }
-            no_duplicates = set(new_method_specs.keys()).isdisjoint(set(self.method_specs.keys()))
-            assert no_duplicates, 'Only specify method_spec once per route path and method'
-            self.method_specs.update(new_method_specs)
+            for method in methods:
+                # OpenAPI requires HTTP method names be lower case
+                method = method.lower()
+                # This may override duplicate specs from path_specs
+                if path not in self.specs['paths']:
+                    self.specs['paths'][path] = {}
+                assert method not in self.specs['paths'][path], \
+                    'Only specify method_spec once per route path and method'
+                self.specs['paths'][path][method] = copy_json(method_spec)
 
     def _get_view_function_response(self, view_function, function_args):
         self._log_request()
