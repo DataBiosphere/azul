@@ -542,7 +542,7 @@ Pull Requests
 
 * … we don't eagerly squash them. Changes that address the outcome of a review
   should appear as separate commit. We prefix the title of those commits with
-  ``fixup! `` and follow that with the title of an earlier commit that the
+  ``fixup! `` and follow that with the title of an earlier commit that the
   current commit should be squashed with. A convenient way to create those
   commits is by using the ``--fixup`` option to ``git commit``.
   
