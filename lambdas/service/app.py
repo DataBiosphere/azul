@@ -1112,24 +1112,25 @@ def handle_manifest_generation_request():
         raise BadRequestError(f'{format_} is not a valid manifest format.')
     service = ManifestService(StorageService())
     filters = service.parse_filters(filters)
-    presigned_url = service.get_cached_manifest(format_, filters)
-    if presigned_url is None:
-        token = query_params.get('token')
-        retry_url = self_url()
-        async_service = AsyncManifestService()
-        try:
-            return async_service.start_or_inspect_manifest_generation(retry_url,
-                                                                      token=token,
-                                                                      format_=format_,
-                                                                      filters=filters)
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
-                raise BadRequestError('Invalid token given')
-            raise
-        except ValueError as e:
-            raise BadRequestError(e.args)
-    else:
-        return 0, presigned_url
+
+    token = query_params.get('token')
+    if token is None:
+        presigned_url = service.get_cached_manifest(format_, filters)
+        if presigned_url is not None:
+            return 0, presigned_url
+    retry_url = self_url()
+    async_service = AsyncManifestService()
+    try:
+        return async_service.start_or_inspect_manifest_generation(retry_url,
+                                                                  token=token,
+                                                                  format_=format_,
+                                                                  filters=filters)
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
+            raise BadRequestError('Invalid token given')
+        raise
+    except ValueError as e:
+        raise BadRequestError(e.args)
 
 
 # noinspection PyUnusedLocal
