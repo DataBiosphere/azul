@@ -95,7 +95,7 @@ class ManifestTestCase(WebServiceTestCase):
 
 class TestManifestEndpoints(ManifestTestCase):
 
-    def run(self, result: Optional[unittest.result.TestResult] = ...) -> Optional[unittest.result.TestResult]:
+    def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
         # Disable caching of manifests to prevent false assertion positives
         with mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest') as m:
             m.return_value = False
