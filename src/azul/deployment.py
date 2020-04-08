@@ -2,6 +2,9 @@ from contextlib import (
     contextmanager,
 )
 import inspect
+from itertools import (
+    chain,
+)
 import json
 import logging
 import os
@@ -9,11 +12,17 @@ from pathlib import (
     Path,
 )
 import re
+import subprocess
 import tempfile
 import threading
 from typing import (
+    Dict,
+    Iterable,
     Mapping,
     Optional,
+    Sequence,
+    Tuple,
+    Union,
     cast,
 )
 from unittest.mock import (
@@ -29,12 +38,15 @@ from azul import (
     cache,
     cached_property,
     config,
+    require,
 )
 from azul.template import (
     emit,
 )
 from azul.types import (
+    AnyJSON,
     JSON,
+    JSONs,
 )
 
 log = logging.getLogger(__name__)
@@ -378,6 +390,63 @@ del AWS
 del _cache
 
 
+class Terraform:
+
+    @cached_property
+    def taggable_resources(self) -> Sequence[str]:
+        require(self.tracked_schema['format_version'] == '0.1')
+        resources = chain.from_iterable(
+            self.tracked_schema['provider_schemas'][provider]['resource_schemas'].items()
+            for provider in self.tracked_schema['provider_schemas']
+        )
+        return [
+            resource_type
+            for resource_type, resource in resources
+            if 'tags' in resource['block']['attributes']
+        ]
+
+    def run(self, *args: str) -> str:
+        terraform_dir = Path(config.project_root) / 'terraform'
+        cmd = subprocess.run(['terraform', *args],
+                             cwd=terraform_dir,
+                             check=True,
+                             stdout=subprocess.PIPE,
+                             text=True,
+                             shell=False)
+        return cmd.stdout
+
+    def versions(self) -> str:
+        # `terraform -version` prints a warning if you are not running the latest
+        # release of Terraform; we discard it, otherwise, we would need to update
+        # the tracked schema every time a new version of Terraform is released
+        versions, footer = self.run('-version').split('\n\n')
+        return versions
+
+    def write_tracked_schema(self) -> None:
+        schema = self.run('providers', 'schema', '-json')
+        tracked = {
+            'versions': self.versions(),
+            'schema': json.loads(schema)
+        }
+        with config.tracked_terraform_schema.open('w') as f:
+            json.dump(tracked, f, indent=4)
+
+    def _tracked_schema_json(self) -> JSON:
+        with config.tracked_terraform_schema.open() as f:
+            return json.load(f)
+
+    @property
+    def tracked_versions(self) -> str:
+        return self._tracked_schema_json()['versions']
+
+    @property
+    def tracked_schema(self) -> JSON:
+        return self._tracked_schema_json()['schema']
+
+
+terraform = Terraform()
+
+
 def _sanitize_tf(tf_config: JSON) -> JSON:
     """
     Avoid errors like
@@ -393,5 +462,126 @@ def _sanitize_tf(tf_config: JSON) -> JSON:
     return {k: v for k, v in tf_config.items() if v}
 
 
+def _normalize_tf(tf_config: Union[JSON, JSONs]) -> Iterable[Tuple[str, AnyJSON]]:
+    """
+    Certain levels of a Terraform JSON structure can either be a single
+    dictionary or a list of dictionaries. For example, these are equivalent:
+
+        {"resource": {"resource_type": {"resource_id": {"foo": ...}}}}
+        {"resource": [{"resource_type": {"resource_id": {"foo": ...}}}]}
+
+    So are these:
+
+        {"resource": {"type": {"id": {"foo": ...}, "id2": {"bar": ...}}}}
+        {"resource": {"type": [{"id": {"foo": ...}}, {"id2": {"bar": ...}}]}}
+
+    This function normalizes input to prefer the second form of both cases to
+    make parsing Terraform configuration simpler. It returns an iterator of the
+    dictionary entries in the argument, regardless which form is used.
+
+    >>> list(_normalize_tf({'foo': 'bar'}))
+    [('foo', 'bar')]
+
+    >>> list(_normalize_tf([{'foo': 'bar'}]))
+    [('foo', 'bar')]
+
+    >>> list(_normalize_tf({"foo": "bar", "baz": "qux"}))
+    [('foo', 'bar'), ('baz', 'qux')]
+
+    >>> list(_normalize_tf([{"foo": "bar"}, {"baz": "qux"}]))
+    [('foo', 'bar'), ('baz', 'qux')]
+
+    >>> list(_normalize_tf([{"foo": "bar", "baz": "qux"}]))
+    [('foo', 'bar'), ('baz', 'qux')]
+    """
+    if isinstance(tf_config, dict):
+        return tf_config.items()
+    elif isinstance(tf_config, list):
+        return chain.from_iterable(d.items() for d in tf_config)
+    else:
+        assert False, type(tf_config)
+
+
+def populate_tags(tf_config: JSON) -> JSON:
+    """
+    Add tags to all taggable resources and change the `name` tag to `Name`
+    for tagged AWS resources.
+    """
+    try:
+        resources = tf_config['resource']
+    except KeyError:
+        return tf_config
+    else:
+        return {
+            k: v if k != 'resource' else [
+                {
+                    resource_type: [
+                        {
+                            resource_name: {
+                                **arguments,
+                                'tags': _adjust_name_tag(resource_type,
+                                                         _tags(resource_name, **arguments.get('tags', {})))
+                            } if resource_type in terraform.taggable_resources else arguments
+                        }
+                        for resource_name, arguments in _normalize_tf(resource)
+                    ]
+                }
+                for resource_type, resource in _normalize_tf(resources)
+            ]
+            for k, v in tf_config.items()
+        }
+
+
 def emit_tf(tf_config: Optional[JSON]):
-    return emit(tf_config) if tf_config is None else emit(_sanitize_tf(tf_config))
+    if tf_config is None:
+        return emit(tf_config)
+    else:
+        return emit(_sanitize_tf(populate_tags(tf_config)))
+
+
+def _tags(resource_name: str, **overrides: str) -> Dict[str, str]:
+    """
+    Return tags named for cloud resources based on :class:`azul.Config`.
+
+    :param resource_name: The Terraform name of the resource.
+
+    :param overrides: Additional tags that override the defaults.
+
+    >>> from azul.doctests import assert_json
+    >>> assert_json(_tags('service'))  #doctest: +ELLIPSIS
+    {
+        "project": "dcp",
+        "service": "azul",
+        "deployment": "...",
+        "owner": ...,
+        "name": "azul-service-...",
+        "component": "azul-service"
+    }
+
+    >>> from azul.doctests import assert_json
+    >>> assert_json(_tags('service', project='foo'))  #doctest: +ELLIPSIS
+    {
+        "project": "foo",
+        "service": "azul",
+        "deployment": "...",
+        "owner": ...,
+        "name": "azul-service-...",
+        "component": "azul-service"
+    }
+    """
+    return {
+        'project': 'dcp',
+        'service': config.resource_prefix,
+        'deployment': config.deployment_stage,
+        'owner': config.owner,
+        'name': config.qualified_resource_name(resource_name),
+        'component': f'{config.resource_prefix}-{resource_name}',
+        **overrides
+    }
+
+
+def _adjust_name_tag(resource_type: str, tags: Dict[str, str]) -> Dict[str, str]:
+    return {
+        'Name' if k == 'name' and resource_type.startswith('aws_') else k: v
+        for k, v in tags.items()
+    }

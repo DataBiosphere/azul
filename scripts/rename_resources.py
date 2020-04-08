@@ -34,6 +34,16 @@ renamed = {
     'null_resource.hmac-secret': 'null_resource.hmac_secret'
 }
 
+rename_chalice = [
+    'module.chalice_service.aws_cloudwatch_event_rule.indexercachehealth-event',
+    'module.chalice_service.aws_cloudwatch_event_target.indexercachehealth-event',
+    'module.chalice_service.aws_lambda_permission.indexercachehealth-event',
+    'module.chalice_service.aws_cloudwatch_event_rule.servicecachehealth-event',
+    'module.chalice_service.aws_cloudwatch_event_target.servicecachehealth-event',
+    'module.chalice_service.aws_lambda_permission.servicecachehealth-event'
+]
+renamed.update({name: name.split('-')[0] for name in rename_chalice})
+
 
 def terraform_state(command: str, *args: str) -> bytes:
     proc = subprocess.run(['terraform', 'state', command, *args],

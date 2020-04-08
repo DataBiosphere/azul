@@ -4,6 +4,7 @@ import unittest
 import azul
 import azul.azulclient
 import azul.collections
+import azul.deployment
 import azul.doctests
 import azul.dss
 import azul.exceptions
@@ -51,6 +52,7 @@ def load_tests(_loader, tests, _ignore):
         azul,
         azul.azulclient,
         azul.collections,
+        azul.deployment,
         azul.doctests,
         azul.dss,
         azul.exceptions,
@@ -79,10 +81,12 @@ def load_tests(_loader, tests, _ignore):
         retorts,
         load_app_module('service'),
         load_script('check_branch'),
+        load_script('prepare_lambda_deployment'),
         load_script('envhook'),
         load_script('export_environment'),
         load_script('velocity'),
-        load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8')
+        load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8'),
+        load_module(root + '/test/test_tagging.py', 'test_tagging')
     ]:
         suite = doctest.DocTestSuite(module)
         assert suite.countTestCases() > 0, module

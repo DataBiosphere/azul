@@ -60,6 +60,7 @@ deploy:
   stage: deploy
   script:
     - terraform version
+    - make -C terraform check_schema
     - make package
     - make auto_deploy
     - make create

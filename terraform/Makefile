@@ -64,3 +64,11 @@ taint_dependencies_layer: init
 .PHONY: clean
 clean: check_env
 	rm -f *.tf.json
+
+.PHONY: schema
+schema: init
+	python $(project_root)/scripts/terraform_schema.py generate
+
+.PHONY: check_schema
+check_schema: check_terraform
+	python $(project_root)/scripts/terraform_schema.py check
