@@ -15,8 +15,6 @@ from azul import (
 )
 from azul.json import json_head
 from azul.openapi import (
-    clean_specs,
-    merge_dicts,
     join_specs,
 )
 from azul.types import (
@@ -86,18 +84,17 @@ class AzulChaliceApp(Chalice):
         """
         return self.route(*args, enabled=self.unit_test, **kwargs)
 
-    def annotated_specs(self, raw_specs, toplevel_spec) -> JSON:
+    def annotated_specs(self, toplevel_spec) -> JSON:
         """
         Finds all routes in app that are decorated with @AzulChaliceApp.route and adds this
         information into the api spec downloaded from API Gateway.
 
-        :param raw_specs: Spec from API Gateway corresponding to the Chalice app
         :param toplevel_spec: Top level OpenAPI info, definitions, etc.
         :return: The annotated specifications
         """
-        clean_specs(raw_specs)
-        specs = merge_dicts(toplevel_spec, raw_specs, override=True)
-        return join_specs(specs, self.path_specs, self.method_specs)
+        assert 'paths' not in toplevel_spec
+        toplevel_spec['paths'] = {}
+        return join_specs(toplevel_spec, self.path_specs, self.method_specs)
 
     def _register_spec(self,
                        path: str,
