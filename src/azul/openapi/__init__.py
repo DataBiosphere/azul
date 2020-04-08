@@ -15,30 +15,6 @@ from azul.types import (
 )
 
 
-def clean_specs(specs):
-    """
-    Adjust specs from API Gateway so they pass linting.
-
-    >>> spec = {
-    ...     'paths': {
-    ...         'get': {},
-    ...         'options': {}
-    ...     },
-    ...     'servers': ['a', 'b']
-    ... }
-
-    >>> clean_specs(spec)
-
-    >>> spec
-    {'paths': {'get': {}, 'options': {}}}
-    """
-    # Filter out 'options' since it causes linting errors
-    for path in specs['paths'].values():
-        path.pop('options', None)
-    # Remove listed servers since API Gateway give false results
-    specs.pop('servers')
-
-
 def join_specs(toplevel_spec: JSON,
                path_specs: JSON,
                method_specs: Mapping[Tuple[str, str], JSON]) -> MutableJSON:
@@ -84,11 +60,12 @@ def join_specs(toplevel_spec: JSON,
     specs = cast(MutableJSON, copy.deepcopy(toplevel_spec))
 
     for path, path_spec in path_specs.items():
-        # This may override entries from API Gateway with the same path
         specs['paths'][path] = path_spec
 
     for (path, method), method_spec in method_specs.items():
-        # This may override duplicate specs from path_specs or API Gateway
+        # This may override duplicate specs from path_specs
+        if path not in specs['paths']:
+            specs['paths'][path] = {}
         specs['paths'][path][method] = method_spec
 
     return specs

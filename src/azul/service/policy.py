@@ -156,16 +156,6 @@ policy = {
         {
             "Effect": "Allow",
             "Action": [
-                "apigateway:GET"
-            ],
-            "Resource": [
-                f"arn:aws:apigateway:{aws.region_name}::"
-                "/restapis/${module.chalice_service.rest_api_id}/stages/%s/exports/oas30" % config.deployment_stage
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
                 "ssm:GetParameter"
             ],
             "Resource": [

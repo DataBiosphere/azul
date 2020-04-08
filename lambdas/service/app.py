@@ -84,7 +84,9 @@ app = AzulChaliceApp(app_name=config.service_name,
 configure_app_logging(app, log)
 
 openapi_spec = {
+    'openapi': '3.0.1',
     'info': {
+        'title': config.service_name,
         'description': 'This should probably be really long',
         # Version should be updated in any PR tagged API with a major version
         # update for breaking changes, and a minor version otherwise
@@ -204,21 +206,10 @@ def swagger_ui():
     'tags': ['Auxiliary']
 })
 def openapi():
-    gateway_id = app.current_request.context['apiId']
-    raw_spec = aws.api_gateway_export(gateway_id)
-    spec = app.annotated_specs(raw_spec, openapi_spec)
+    spec = app.annotated_specs(openapi_spec)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
                     body=spec)
-
-
-@app.route('/openapi/raw')
-def openapi_raw():
-    gateway_id = app.current_request.context['apiId']
-    raw_spec = aws.api_gateway_export(gateway_id)
-    return Response(status_code=200,
-                    headers={"content-type": "application/json"},
-                    body=raw_spec)
 
 
 def health_controller():
