@@ -1463,26 +1463,7 @@ To run the script, activate your virtual environment, then run
 ```
 python scripts/apidev.py
 ```
-The script gives you a url where your current version of the documentation
-is visible. Change the docs in `azul/service/app.py`, save, and refresh the page and
-your changes will appear immediately along with any warnings or errors they introduce.
-
-Some changes to `app.py` won't take effect with this script unless the changes
-are deployed in the active deployment. Specifically, changes to
-
-- the global OpenAPI spec
-- the OpenAPI spec within the `spec` parameter to the `route` decorator
-- the *body* of pre-existing route functions
-
-will **not** require redeployment. Any other changes **will**, such as
-
-- adding/removing routes
-- adding/removing parameters to the route functions
-- most anything else
-
-To redeploy, run
-```
-make -C lambdas/service deploy  # deploy to service only
-```
-with your personal deployment selected. Then refresh the web page from the
-script.
+The script serves the Swagger editor locally at a URL where your current version
+of the API documentation is visible. Change the docs in `azul/service/app.py`,
+save, and refresh the page and your changes will appear immediately along with
+any warnings or errors they may introduce.

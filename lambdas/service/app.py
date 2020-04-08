@@ -79,13 +79,15 @@ from azul.strings import (
 
 log = logging.getLogger(__name__)
 
-app = AzulChaliceApp(app_name=config.service_name,
-                     unit_test=globals().get('unit_test', False))  # see LocalAppTestCase.setUpClass()
-configure_app_logging(app, log)
-
-openapi_spec = {
-    'info': {
-        'description': format_description('''
+app = AzulChaliceApp(
+    app_name=config.service_name,
+    # see LocalAppTestCase.setUpClass()
+    unit_test=globals().get('unit_test', False),
+    spec={
+        'openapi': '3.0.1',
+        'info': {
+            'title': config.service_name,
+            'description': format_description('''
 
             # Overview
 
@@ -177,24 +179,26 @@ openapi_spec = {
             index, the corresponding entity will always be a singleton like
             this.
         '''),
-        # Version should be updated in any PR tagged API with a major version
-        # update for breaking changes, and a minor version otherwise
-        'version': '1.0'
-    },
-    'tags': [
-        {
-            'name': 'Auxiliary',
-            'description': 'Describes various aspects of the Azul service'
+            # Version should be updated in any PR tagged API with a major version
+            # update for breaking changes, and a minor version otherwise
+            'version': '1.0'
         },
-        {
-            'name': 'Manifests',
-            'description': 'Complete listing of files matching a given filter in TSV and other formats'
-        }
-    ],
-    'servers': [
-        {'url': config.service_endpoint()}
-    ],
-}
+        'tags': [
+            {
+                'name': 'Auxiliary',
+                'description': 'Describes various aspects of the Azul service'
+            },
+            {
+                'name': 'Manifests',
+                'description': 'Complete listing of files matching a given filter in TSV and other formats'
+            }
+        ],
+        'servers': [
+            {'url': config.service_endpoint()}
+        ],
+    },
+)
+configure_app_logging(app, log)
 
 sort_defaults = {
     'files': ('fileName', 'asc'),
@@ -295,21 +299,9 @@ def swagger_ui():
     'tags': ['Auxiliary']
 })
 def openapi():
-    gateway_id = app.current_request.context['apiId']
-    raw_spec = aws.api_gateway_export(gateway_id)
-    spec = app.annotated_specs(raw_spec, openapi_spec)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
-                    body=spec)
-
-
-@app.route('/openapi/raw')
-def openapi_raw():
-    gateway_id = app.current_request.context['apiId']
-    raw_spec = aws.api_gateway_export(gateway_id)
-    return Response(status_code=200,
-                    headers={"content-type": "application/json"},
-                    body=raw_spec)
+                    body=app.specs)
 
 
 def health_controller():

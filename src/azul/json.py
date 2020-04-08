@@ -1,7 +1,28 @@
+import copy
 from io import StringIO
 import json
+from typing import cast
 
-from azul.types import AnyJSON
+from azul.types import (
+    AnyJSON,
+    JSON,
+    MutableJSON,
+)
+
+
+def copy_json(o: JSON) -> MutableJSON:
+    """
+    Make a new, mutable copy of a JSON object.
+
+    >>> a = {'a': [1, 2]}
+    >>> b = copy_json(a)
+    >>> b['a'].append(3)
+    >>> b
+    {'a': [1, 2, 3]}
+    >>> a
+    {'a': [1, 2]}
+    """
+    return cast(MutableJSON, copy.deepcopy(o))
 
 
 def json_head(n: int, o: AnyJSON) -> str:
