@@ -37,8 +37,19 @@ def join_specs(toplevel_spec: JSON,
     Method specs may overwrite parts of path specs.
 
     >>> method_specs = {('/foo', 'get'): {'a': 'XXX'}}
-    >>> join_specs(toplevel_spec, path_specs, method_specs)
+    >>> joined = join_specs(toplevel_spec, path_specs, method_specs)
+    >>> joined
     {'description': 'make widgets', 'paths': {'/foo': {'get': {'a': 'XXX'}}}}
+
+    Input arguments are unchanged by overwriting.
+
+    >>> toplevel_spec
+    {'description': 'make widgets'}
+    >>> path_specs
+    {'/foo': {'get': {'a': 'b'}}}
+    >>> joined['paths']['/foo']['get']['a'] = 'ZZZ'
+    >>> method_specs
+    {('/foo', 'get'): {'a': 'XXX'}}
 
     Method specs for the same path won't conflict,
 
@@ -60,12 +71,14 @@ def join_specs(toplevel_spec: JSON,
     specs['paths'] = {}
 
     for path, path_spec in path_specs.items():
+        path_spec = cast(MutableJSON, copy.deepcopy(path_spec))
         specs['paths'][path] = path_spec
 
     for (path, method), method_spec in method_specs.items():
         # This may override duplicate specs from path_specs
         if path not in specs['paths']:
             specs['paths'][path] = {}
+        method_spec = cast(MutableJSON, copy.deepcopy(method_spec))
         specs['paths'][path][method] = method_spec
 
     return specs
