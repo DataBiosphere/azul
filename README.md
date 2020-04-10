@@ -344,7 +344,7 @@ module is part of a rarely used feature that can be disabled by unchecking
 ## 3.1 One-time provisioning of shared cloud resources
 
 Most of the cloud resources used by a particular deployment (personal or shared) 
-are provisioned automatically by `make terraform` and `make deploy`. A handful 
+are provisioned automatically by `make deploy` and `make terraform`. A handful 
 of  resources must be created manually before invoking thise Makefile targets 
 for the first time in a particular AWS account. This only needs to be done once 
 per AWS account, before the first Azul deployment in that account. Additional 
