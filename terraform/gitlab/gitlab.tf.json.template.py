@@ -265,17 +265,14 @@ def remove_inconsequential_statements(statements: List[JSON]) -> List[JSON]:
     return [s for s in statements if s['actions'] and s['resources']]
 
 
-# FIXME: Generalize. This is currently specific to HCA dev account:
-#        https://github.com/DataBiosphere/azul/issues/1561
-
 dss_direct_access_policy_statement = {
     "actions": [
         "sts:AssumeRole",
     ],
-    "resources": [
-        "arn:aws:iam::861229788715:role/azul-indexer-*",
-        "arn:aws:iam::861229788715:role/azul-service-*"
-    ]
+    "resources": list(filter(None, (
+        config.dss_direct_access_role(lambda_name, stage='*')
+        for lambda_name in ('service', 'indexer')
+    )))
 }
 
 emit_tf({} if config.terraform_component != 'gitlab' else {

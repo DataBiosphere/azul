@@ -97,6 +97,14 @@ def env() -> Mapping[str, Optional[str]]:
         # lambda in the foreign deployment, while the native service lambda assumes
         # the role of the foreign service lambda.
         #
+        # If specified, this ARN must be of the following form:
+        #
+        # arn:aws:iam::ACCOUNT_ID:role/azul-{lambda_name}-DEPLOYMENT
+        #
+        # The only free variables are ACCOUNT and DEPLOYMENT which are the
+        # AWS account ID and the deployment stage of the Azul deployment that's
+        # providing the role to be assumed.
+        #
         'AZUL_DSS_DIRECT_ACCESS_ROLE': None,
 
         # The name of the hosted zone in Route 53 in which to create user friendly
