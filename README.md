@@ -399,6 +399,17 @@ make terraform
 which will display a plan and ask you to confirm it. Please consult the 
 Terraform documentation for details.
 
+Unless a deployment uses the Elasticsearch domain of another one
+(see AZUL_SHARE_ES_DOMAIN), you need to run
+
+```
+make deploy terraform
+```
+
+again. If you don't, the deployment will work but it will run slower and incur
+extra cost. Running the `deploy` and `terraform` targets twice is only necessary
+ when the deployment is first created.
+
 Any time you wish to change the code running in the lambdas you will need to 
 run `make deploy` followed by `make terraform`. 
 
