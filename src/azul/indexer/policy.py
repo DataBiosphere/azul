@@ -1,7 +1,7 @@
 from azul import config
 from azul.deployment import aws
 
-direct_access_role = config.dss_direct_access_role(lambda_name='indexer')
+direct_access_role = config.dss_direct_access_role('indexer')
 
 policy = {
     "Version": "2012-10-17",
