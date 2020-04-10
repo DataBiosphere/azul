@@ -86,20 +86,42 @@ class AWS:
         return json.load(response['body'])
 
     @property
-    def es_endpoint(self) -> Netloc:
+    def es_endpoint(self) -> Optional[Netloc]:
         if config.es_endpoint:
             return config.es_endpoint
         else:
-            es_domain_status = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
-            return es_domain_status['DomainStatus']['Endpoint'], 443
+            self._es_config_warning('endpoint')
+            return self._describe_es_domain_status['Endpoint'], 443
 
     @property
-    def es_instance_count(self) -> int:
+    def es_instance_count(self) -> Optional[int]:
         if config.es_endpoint:
             return config.es_instance_count
         else:
-            es_domain_status = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
-            return es_domain_status['DomainStatus']['ElasticsearchClusterConfig']['InstanceCount']
+            self._es_config_warning('instance count')
+            return self._describe_es_domain_status['ElasticsearchClusterConfig']['InstanceCount']
+
+    @property
+    def _describe_es_domain_status(self) -> Optional[Mapping]:
+        """
+        Look up the status of the Elasticsearch domain, if available
+        """
+        try:
+            es_domain = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                return None
+            else:
+                raise
+        else:
+            return es_domain['DomainStatus']
+
+    def _es_config_warning(self, property_name):
+        log.warning('The Elasticsearch %s is not configured statically. This '
+                    'is normal during a deployment but if it occurs in a '
+                    'Lambda function, frequent dynamic look-ups are required. '
+                    'To eliminate that inefficiency, simply run `make deploy` '
+                    'followed by `make terraform` again.', property_name)
 
     @property
     def lambda_env(self) -> Mapping[str, str]:
