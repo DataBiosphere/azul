@@ -43,6 +43,7 @@ from azul.openapi import (
     params,
     responses,
     schema,
+    application_json,
 )
 from azul.plugins import (
     MetadataPlugin,
@@ -316,14 +317,12 @@ def swagger_ui():
     'responses': {
         '200': {
             'description': '200 response',
-            'content': {
-                'application/json': {
-                    'schema': schema.object(
-                        openapi=str,
-                        **{k: schema.object() for k in ['info', 'tags', 'servers', 'paths', 'components']}
-                    )
-                }
-            }
+            **responses.json_content(
+                schema.object(
+                    openapi=str,
+                    **{k: schema.object() for k in ['info', 'tags', 'servers', 'paths', 'components']}
+                )
+            )
         }
     },
     'tags': ['Auxiliary']
@@ -376,20 +375,18 @@ def health_spec(health_keys: dict):
                     {'All' if up else 'At least one'} of the nested `up` keys
                     {'are `true`' if up else 'is `false`'}.
                 ''') if len(health_keys) > 1 else ''),
-                'content': {
-                    'application/json': {
-                        'example': {
-                            k: up if k == 'up' else {} for k in health_keys
-                        },
-                        'schema': schema.object(
-                            additional_properties=schema.object(
-                                additional_properties=True,
-                                up=schema.enum(up)
-                            ),
+                **responses.json_content(
+                    schema.object(
+                        additional_properties=schema.object(
+                            additional_properties=True,
                             up=schema.enum(up)
-                        )
+                        ),
+                        up=schema.enum(up)
+                    ),
+                    example={
+                        k: up if k == 'up' else {} for k in health_keys
                     }
-                }
+                )
             } for up in [True, False]
         },
         'tags': ['Auxiliary']
@@ -491,24 +488,22 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
     'responses': {
         '200': {
             'description': 'Version endpoint is reachable.',
-            'content': {
-                'application/json': {
-                    'schema': schema.object(
-                        git=schema.object(
-                            commit=str,
-                            dirty=bool
-                        ),
-                        changes=schema.array(
-                            schema.object(
-                                title=str,
-                                issues=schema.array(str),
-                                upgrade=schema.array(str),
-                                notes=schema.optional(str)
-                            )
+            **responses.json_content(
+                schema.object(
+                    git=schema.object(
+                        commit=str,
+                        dirty=bool
+                    ),
+                    changes=schema.array(
+                        schema.object(
+                            title=str,
+                            issues=schema.array(str),
+                            upgrade=schema.array(str),
+                            notes=schema.optional(str)
                         )
                     )
-                }
-            }
+                )
+            )
         }
     }
 })
@@ -787,8 +782,7 @@ def filters_param_spec(facets):
     return params.query(
         'filters',
         schema.optional(
-            params.json_type(
-                'filters',
+            application_json(
                 schema.object(**{
                     facet: schema.optional(
                         schema.object(**{
@@ -870,7 +864,7 @@ def repository_search_spec(entity_type):
                     Not every nested field is tabulated, but the set of
                     tabulated fields is consistent between entity types.
                 '''),
-                **responses.wrap_json_schema_content(page_spec)
+                **responses.json_content(page_spec)
             }
         }
     }
@@ -901,7 +895,7 @@ def repository_id_spec(entity_type: str):
                     perfectly consistent, since they may represent either
                     singleton entities or aggregations depending on context.
                 '''),
-                **responses.wrap_json_schema_content(hit_spec)
+                **responses.json_content(hit_spec)
             }
         }
     }
@@ -973,18 +967,16 @@ def get_project_data(project_id=None):
                 entity types such as projects and tissue donors. These values
                 are not grouped/aggregated.
             '''),
-            'content': {
-                'application/json': {
-                    'schema': schema.object(
-                        additional_properties=True,
-                        organTypes=schema.array(str),
-                        totalFileSize=int,
-                        fileTypeSummaries=array_of_object_spec,
-                        totalCellCount=int,
-                        cellCountSummaries=array_of_object_spec
-                    )
-                }
-            }
+            **responses.json_content(
+                schema.object(
+                    additional_properties=True,
+                    organTypes=schema.array(str),
+                    totalFileSize=int,
+                    fileTypeSummaries=array_of_object_spec,
+                    totalCellCount=int,
+                    cellCountSummaries=array_of_object_spec
+                )
+            )
         }
     }
 }, cors=True)
@@ -1195,17 +1187,13 @@ def start_manifest_generation():
     '''),
     'responses': {
         '200': {
-            **{
-                'content': {
-                    'application/json': {
-                        'schema': schema.object(
-                            Status=int,
-                            Location={'type': 'string', 'format': 'url'},
-                            **{'Retry-After': schema.optional(int)}
-                        )
-                    }
-                }
-            },
+            **responses.json_content(
+                schema.object(
+                    Status=int,
+                    Location={'type': 'string', 'format': 'url'},
+                    **{'Retry-After': schema.optional(int)}
+                )
+            ),
             'description': format_description('''
                 Manifest generation with status report, emulating the response
                 code and headers of the `/manifest/files` endpoint. Note that
@@ -1401,15 +1389,13 @@ def dss_files(uuid):
                 be handled in Javascript rather than relying on the native
                 implementation by the web browser.
             '''),
-            'content': {
-                'application/json': {
-                    'schema': schema.object(
-                        Status=int,
-                        Location=str,
-                        **{'Retry-After': schema.optional(int)}
-                    )
-                }
-            }
+            **responses.json_content(
+                schema.object(
+                    Status=int,
+                    Location=str,
+                    **{'Retry-After': schema.optional(int)}
+                )
+            )
         }
     }
 })

@@ -5,26 +5,14 @@ from typing import (
 from azul.openapi import (
     format_description_key,
     schema,
-    responses,
 )
 from azul.openapi.schema import (
     TYPE,
 )
 from azul.types import (
-    JSON,
     AnyJSON,
+    JSON,
 )
-
-
-def json_type(name: str, schema_: JSON):
-    """
-    Create a new type to represent a specific JSON schema.
-    Useful for describing openapi parameters that use the `content` property
-    to describe a JSON schema.
-    :param name: The __name__ attribute of the new type.
-    :param schema_: The openapi schema to be typified.
-    """
-    return type(name, (JSON.__origin__,), {'schema': schema_})
 
 
 def path(name: str, type_: TYPE, **kwargs: AnyJSON) -> JSON:
@@ -70,14 +58,13 @@ def _make_param(name: str, in_: str, type_: Union[TYPE, schema.optional], **kwar
     is_optional = isinstance(type_, schema.optional)
     if is_optional:
         type_ = type_.type_
-    type_property = (responses.wrap_json_schema_content(type_.schema)
-                     if isinstance(type_, type) and issubclass(type_, JSON.__origin__) else
-                     {'schema': schema.make_type(type_)})
     format_description_key(kwargs)
+    schema_or_content = schema.make_type(type_)
     return {
         'name': name,
         'in': in_,
         'required': not is_optional,
-        **type_property,
+        # https://swagger.io/docs/specification/describing-parameters/#schema-vs-content
+        'content' if 'application/json' in schema_or_content else 'schema': schema_or_content,
         **kwargs
     }

@@ -4,6 +4,11 @@ from typing import (
     MutableMapping,
 )
 
+from azul.types import (
+    AnyJSON,
+    JSON,
+)
+
 
 def format_description(string: str) -> str:
     """
@@ -55,3 +60,12 @@ def format_description_key(kwargs: MutableMapping[str, Any]) -> None:
         pass
     else:
         kwargs['description'] = unwrapped
+
+
+def application_json(schema: JSON, **kwargs: AnyJSON) -> JSON:
+    return {
+        'application/json': {
+            'schema': schema,
+            **kwargs
+        }
+    }
