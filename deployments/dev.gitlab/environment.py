@@ -21,5 +21,5 @@ def env() -> Mapping[str, Optional[str]]:
     usually more specific environment.py files should provide the value.
     """
     return {
-        'azul_terraform_component': 'gitlab',
+        'azul_terraform_component_suffix': 'gitlab',
     }
