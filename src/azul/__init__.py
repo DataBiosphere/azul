@@ -634,8 +634,8 @@ class Config:
         return os.environ['azul_grafana_endpoint']
 
     @property
-    def terraform_component(self):
-        return self._term_from_env('azul_terraform_component', optional=True)
+    def terraform_component_suffix(self):
+        return self._term_from_env('azul_terraform_component_suffix', optional=True)
 
     permissions_boundary_name = 'azul-boundary'
 

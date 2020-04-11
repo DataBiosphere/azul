@@ -6,10 +6,10 @@ from azul import (
 )
 from azul.deployment import emit_tf
 
-expected_component_path = Path(config.project_root) / 'terraform' / config.terraform_component
+expected_component_path = Path(config.project_root) / 'terraform' / config.terraform_component_suffix
 actual_component_path = Path(__file__).absolute().parent
 require(expected_component_path.samefile(actual_component_path),
-        f"The current Terraform component is set to '{config.terraform_component}'. "
+        f"The current Terraform component is set to '{config.terraform_component_suffix}'. "
         f"You should therefore be in '{expected_component_path}'")
 
 emit_tf({

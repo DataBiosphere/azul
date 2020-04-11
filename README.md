@@ -1197,23 +1197,33 @@ For more advanced usage refer to the official [Locust documentation].
 
 # 9. Continuous deployment and integration
 
-We use two automated deployments performed on a project-specific EC2 instance 
-running Gitlab. There is currently one such instance for the `dev`, 
-`integration` and `staging` deployments and another one for `prod`.
+We use automated deployments performed on project-specific EC2 instances that
+run Gitlab. There is currently one such instance for the `dev`,  `integration`
+and `staging` deployments and another one for `prod`.
 
-The Gitlab instances are provisioned through Terraform but its resource
-definitions reside in a separate *Terraform component*. A *Terraform component*
-is a set of related resources. Each deployment has at least a main component
-and zero or more subcomponents. The main component is identified by the empty
-string for a name, child components have a non-empty name. The `dev` component
-has a subcomponent `dev.gitlab`. To terraform the main component of the `dev`
-deployment, one selects the `dev` deployment and runs `make apply` from
-`${azul_home}/terraform`. To deploy the `gitlab` subcomponent of the `dev`
-deployment, one selects `dev.gitlab` and runs `make apply` from
-`${azul_home}/terraform/gitlab`. The `dev.gitlab` subcomponent provides a
-single Gitlab EC2 instance that serves our CI/CD needs not only for `dev` but
-for `integration` and `staging` as well. The `prod.gitlab` subcomponent
-provides the Gitlab EC2 instance for `prod`.
+Our Gitlab instances are provisioned through Terraform. The resource
+definitions reside in an auxiliary Terraform *component*. A *Terraform
+component* is a set of related cloud resources that are always provisioned
+simultaneously. Although similar to Terraform's *module* concept, components
+are specific to Azul and orthogonal to modules.
+
+Each deployment consists of a main component and zero or more auxiliary
+components. The name of the main component is the name of the deployment. The
+name of an auxiliary component is that of the corresponding main component
+followed by a period and a non-empty suffix. For each auxiliary component
+there is a directory of the same name under `${azul_home}/deployments`. The
+Terraform templates for an auxiliary component reside under
+`${azul_home}/terraform/${suffix}`. In other words, the auxiliary components
+`dev.gitlab` and `prod.gitlab` share the Terraform templates located in the
+`terraform/gitlab` directory. 
+
+To provision the main component of the `dev` deployment, one selects `dev` and
+runs `make apply` from `${azul_home}/terraform`. To provision the auxiliary
+`dev.gitlab` component, one selects `dev.gitlab` and runs `make apply` from
+`${azul_home}/terraform/gitlab`. The `dev.gitlab` component provides a single
+Gitlab EC2 instance that serves our CI/CD needs not only for the `dev`
+deployment but for `integration` and `staging` as well. The `prod.gitlab`
+component provides the Gitlab EC2 instance for the `prod` deployment.
 
 To access the web UI of the Gitlab instance for `dev`, visit
 `https://gitlab.dev.explore.…/`, authenticating yourself with your GitHub

@@ -313,7 +313,7 @@ def env() -> Mapping[str, Optional[str]]:
         # their own directory under `deployments`. The main component is identified
         # by the empty string and its resources are defined in the `terraform`
         # directory.
-        'azul_terraform_component': '',
+        'azul_terraform_component_suffix': '',
 
         # The slug of a the Github repository hosting this fork of Azul
         'azul_github_project': 'DataBiosphere/azul',

@@ -68,11 +68,11 @@ class InvalidActiveDeployment(RuntimeError):
         )
 
 
-class BadParentDeployment(RuntimeError):
+class BadMainDeployment(RuntimeError):
 
-    def __init__(self, parent: Path, component: Path) -> None:
+    def __init__(self, main: Path, auxiliary: Path) -> None:
         super().__init__(
-            f"Component {component} refers to non-existent parent deployment {parent}"
+            f"Component {auxiliary} refers to non-existent main component {main}"
         )
 
 
@@ -111,11 +111,11 @@ def load_env() -> Environment:
     relative_active_deployment_dir = active_deployment_dir.relative_to(deployments_dir)
     prefix, _, suffix = str(relative_active_deployment_dir).partition('.')
     if suffix and suffix != 'local':
-        parent_deployment_dir = deployments_dir / prefix
-        if not parent_deployment_dir.exists():
-            raise BadParentDeployment(parent_deployment_dir, active_deployment_dir)
+        main_deployment_dir = deployments_dir / prefix
+        if not main_deployment_dir.exists():
+            raise BadMainDeployment(main_deployment_dir, active_deployment_dir)
     else:
-        parent_deployment_dir = None
+        main_deployment_dir = None
 
     def _load(dir_path: Path, local: bool = False) -> Optional[EnvironmentModule]:
         """
@@ -138,8 +138,8 @@ def load_env() -> Environment:
     modules = [
         _load(active_deployment_dir, local=True),
         _load(active_deployment_dir),
-        _load(parent_deployment_dir, local=True) if parent_deployment_dir else None,
-        _load(parent_deployment_dir) if parent_deployment_dir else None,
+        _load(main_deployment_dir, local=True) if main_deployment_dir else None,
+        _load(main_deployment_dir) if main_deployment_dir else None,
         _load(root_dir, local=True),
         _load(root_dir)
     ]

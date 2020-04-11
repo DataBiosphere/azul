@@ -278,7 +278,7 @@ dss_direct_access_policy_statement = {
     ]
 }
 
-emit_tf({} if config.terraform_component != 'gitlab' else {
+emit_tf({} if config.terraform_component_suffix != 'gitlab' else {
     "data": {
         "aws_availability_zones": {
             "available": {}
