@@ -108,7 +108,8 @@ def load_env() -> Environment:
         active_deployment_dir = deployments_dir / active_deployment_dir
     if not active_deployment_dir.is_dir():
         raise InvalidActiveDeployment(active_deployment_dir)
-    prefix, _, suffix = active_deployment_dir.name.partition('.')
+    relative_active_deployment_dir = active_deployment_dir.relative_to(deployments_dir)
+    prefix, _, suffix = str(relative_active_deployment_dir).partition('.')
     if suffix and suffix != 'local':
         parent_deployment_dir = deployments_dir / prefix
         if not parent_deployment_dir.exists():
