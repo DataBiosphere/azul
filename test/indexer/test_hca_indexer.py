@@ -870,6 +870,26 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (child_cell_line)'])
                 self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [self.translated_str_null])
 
+    def test_multiple_samples(self):
+        """
+        Index a bundle with a specimen_from_organism and a cell_line input into
+        a cell_suspension resulting in two samples of different entity_type
+        """
+        self._index_canned_bundle(('1b6d8348-d6e9-406a-aa6a-7ee886e52bf9', '2019-10-03T105524.911627Z'))
+        sample_entity_types = ['cell_lines', 'specimens']
+        hits = self._get_all_hits()
+        for hit in hits:
+            contents = hit['_source']['contents']
+            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            cell_suspension = one(contents['cell_suspensions'])
+            self.assertEqual(cell_suspension['organ'], ['embryo', 'immune system'])
+            self.assertEqual(cell_suspension['organ_part'], ['skin epidermis', self.translated_str_null])
+            if aggregate and entity_type != 'samples':
+                self.assertEqual(one(contents['samples'])['entity_type'], sample_entity_types)
+            else:
+                for sample in contents['samples']:
+                    self.assertIn(sample['entity_type'], sample_entity_types)
+
     def test_files_content_description(self):
         self._index_canned_bundle(('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'))
         hits = self._get_all_hits()
