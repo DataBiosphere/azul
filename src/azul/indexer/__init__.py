@@ -16,9 +16,9 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSet,
-    Union,
-    Tuple,
     Optional,
+    Tuple,
+    Union,
 )
 
 from elasticsearch import (
@@ -34,19 +34,19 @@ from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
 from azul import config
-import azul.dss
 from azul.deployment import aws
+import azul.dss
 from azul.es import ESClientFactory
 from azul.transformer import (
     Aggregate,
     AggregatingTransformer,
+    BundleUUID,
     Contribution,
     Document,
     DocumentCoordinates,
     EntityReference,
     FieldTypes,
     Transformer,
-    BundleUUID,
     VersionType,
 )
 from azul.types import JSON
@@ -303,14 +303,16 @@ class BaseIndexer(ABC):
             log.info('Reading %i expected contribution(s) using scan().', num_contributions)
             hits = scan(es_client, index=index, query=query, size=page_size, doc_type=Document.type)
         contributions = [Contribution.from_index(self.field_types(), hit) for hit in hits]
-
-        entity_key = attrgetter('entity')
-        log.info('Read %i contribution(s). Breakdown by entity: %s',
-                 len(contributions),
-                 {
-                     f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
-                     for entity, contribution_group in groupby(sorted(contributions, key=entity_key), key=entity_key)
-                 })
+        log.info('Read %i contribution(s). ', len(contributions))
+        if log.isEnabledFor(logging.DEBUG):
+            entity_key = attrgetter('entity')
+            log.debug(
+                'Number of contributions read, by entity: %r',
+                {
+                    f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
+                    for entity, contribution_group in groupby(sorted(contributions, key=entity_key), key=entity_key)
+                }
+            )
         return contributions
 
     def _aggregate(self, contributions: List[Contribution]) -> List[Aggregate]:
@@ -334,6 +336,16 @@ class BaseIndexer(ABC):
                     assert entity == contribution.entity
                     contributions_by_entity[entity].append(contribution)
                     break
+        log.info('Selected %i contribution(s) to be aggregated.',
+                 sum(len(contributions) for contributions in contributions_by_entity.values()))
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug(
+                'Number of contributions selected for aggregation, by entity: %r',
+                {
+                    f'{entity.entity_type}/{entity.entity_id}': len(contributions)
+                    for entity, contributions in sorted(contributions_by_entity.items())
+                }
+            )
 
         # Create lookup for transformer by entity type
         transformers = {t.entity_type(): t for t in self.transformers() if isinstance(t, AggregatingTransformer)}
@@ -341,8 +353,6 @@ class BaseIndexer(ABC):
         # Aggregate contributions for the same entity
         aggregates = []
         for entity, contributions in contributions_by_entity.items():
-            log.info('Selected %i contributions to be aggregated for entity %s/%s.',
-                     len(contributions), entity.entity_type, entity.entity_id)
             transformer = transformers[entity.entity_type]
             contents = transformer.aggregate(contributions)
             bundles = [dict(uuid=c.bundle_uuid, version=c.bundle_version) for c in contributions]
