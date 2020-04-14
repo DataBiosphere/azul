@@ -12,9 +12,6 @@ from azul.deployment import (
 )
 from azul.objects import InternMeta
 
-service_direct_access_role = config.dss_direct_access_role(lambda_name='service')
-indexer_direct_access_role = config.dss_direct_access_role(lambda_name='indexer')
-
 
 @dataclass(frozen=True)
 class Lambda:

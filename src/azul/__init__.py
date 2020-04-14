@@ -159,8 +159,30 @@ class Config:
     def dss_direct_access(self) -> bool:
         return self._boolean(os.environ['AZUL_DSS_DIRECT_ACCESS'])
 
-    def dss_direct_access_role(self, lambda_name: str) -> Optional[str]:
-        return os.environ.get('AZUL_DSS_DIRECT_ACCESS_ROLE').format(lambda_name=lambda_name)
+    def dss_direct_access_role(self, lambda_name: str, stage: Optional[str] = None) -> Optional[str]:
+        key = 'AZUL_DSS_DIRECT_ACCESS_ROLE'
+        try:
+            role_arn = os.environ[key]
+        except KeyError:
+            return None
+        else:
+            arn, partition, service, region, account_id, resource = role_arn.split(':')
+            require(arn == 'arn')
+            require(partition == 'aws')
+            require(service == 'iam')
+            require(region == '')
+            require(account_id)
+            resource_type, resource_id = resource.split('/')
+            require(resource_type == 'role')
+            # This would fail if the syntax for qualified resource name were
+            # different between the Azul deployment that's assuming the role and
+            # the Azul deployment whose role is being assumed.
+            lambda_name_template, default_stage = self.unqualified_resource_name(resource_id)
+            require(lambda_name_template == '{lambda_name}')
+            if stage is None:
+                stage = default_stage
+            role_name = self.qualified_resource_name(lambda_name, stage=stage)
+            return f'arn:aws:iam::{account_id}:role/{role_name}'
 
     @property
     def num_dss_workers(self) -> int:
@@ -240,9 +262,11 @@ class Config:
     def _resource_prefix(self):
         return self._term_from_env('AZUL_RESOURCE_PREFIX')
 
-    def qualified_resource_name(self, resource_name, suffix=''):
+    def qualified_resource_name(self, resource_name, suffix='', stage=None):
         self._validate_term(resource_name)
-        return f"{self._resource_prefix}-{resource_name}-{self.deployment_stage}{suffix}"
+        if stage is None:
+            stage = self.deployment_stage
+        return f"{self._resource_prefix}-{resource_name}-{stage}{suffix}"
 
     def unqualified_resource_name(self, qualified_resource_name: str, suffix: str = '') -> tuple:
         """
