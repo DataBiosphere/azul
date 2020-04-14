@@ -16,9 +16,9 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSet,
-    Union,
-    Tuple,
     Optional,
+    Tuple,
+    Union,
 )
 
 from elasticsearch import (
@@ -34,19 +34,19 @@ from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
 from azul import config
-import azul.dss
 from azul.deployment import aws
+import azul.dss
 from azul.es import ESClientFactory
 from azul.transformer import (
     Aggregate,
     AggregatingTransformer,
+    BundleUUID,
     Contribution,
     Document,
     DocumentCoordinates,
     EntityReference,
     FieldTypes,
     Transformer,
-    BundleUUID,
     VersionType,
 )
 from azul.types import JSON
@@ -306,12 +306,13 @@ class BaseIndexer(ABC):
         log.info('Read %i contribution(s). ', len(contributions))
         if log.isEnabledFor(logging.DEBUG):
             entity_key = attrgetter('entity')
-            log.debug('Contribution entity counts: %s',
-                      {
-                          f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
-                          for entity, contribution_group in
-                          groupby(sorted(contributions, key=entity_key), key=entity_key)
-                      })
+            log.debug(
+                'Number of contributions read, by entity: %r',
+                {
+                    f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
+                    for entity, contribution_group in groupby(sorted(contributions, key=entity_key), key=entity_key)
+                }
+            )
         return contributions
 
     def _aggregate(self, contributions: List[Contribution]) -> List[Aggregate]:
@@ -338,11 +339,13 @@ class BaseIndexer(ABC):
         log.info('Selected %i contribution(s) to be aggregated.',
                  sum(len(contributions) for contributions in contributions_by_entity.values()))
         if log.isEnabledFor(logging.DEBUG):
-            log.debug('Contribution entity counts: %s',
-                      {
-                          f'{entity.entity_type}/{entity.entity_id}': len(contributions)
-                          for entity, contributions in sorted(contributions_by_entity.items())
-                      })
+            log.debug(
+                'Number of contributions selected for aggregation, by entity: %r',
+                {
+                    f'{entity.entity_type}/{entity.entity_id}': len(contributions)
+                    for entity, contributions in sorted(contributions_by_entity.items())
+                }
+            )
 
         # Create lookup for transformer by entity type
         transformers = {t.entity_type(): t for t in self.transformers() if isinstance(t, AggregatingTransformer)}
