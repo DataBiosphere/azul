@@ -100,7 +100,7 @@ emit_tf(None if config.share_es_domain else {
                         } for log, (log_type, enabled) in logs.items()
                     ],
                     "snapshot_options": {
-                        "automated_snapshot_start_hour": 23
+                        "automated_snapshot_start_hour": 8  # midnight PST
                     }
                 }
             }
