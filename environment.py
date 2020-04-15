@@ -23,8 +23,7 @@ def env() -> Mapping[str, Optional[str]]:
     """
     return {
         # FIXME: remove (https://github.com/DataBiosphere/azul/issues/1644)
-        # FIXME: can't use '{project_root}' due to https://github.com/DataBiosphere/azul/issues/1645
-        'azul_home': os.environ['project_root'],
+        'azul_home': '{project_root}',
 
         # The Account ID number for AWS
         'AZUL_AWS_ACCOUNT_ID': None,
@@ -94,7 +93,7 @@ def env() -> Mapping[str, Optional[str]]:
         # deployment's indexer to assume for direct access. Presumably that other
         # indexer has sufficient privileges to directly access the DSS buckets.
         #
-        # The string {lambda_name} will be replaced with the name of the lambda
+        # The character '*' will be replaced with the name of the lambda
         # wishing to gain access. This parameterization can be used to have the
         # indexer lambda in the native deployment assume the role of the indexer
         # lambda in the foreign deployment, while the native service lambda assumes
@@ -102,9 +101,9 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # If specified, this ARN must be of the following form:
         #
-        # arn:aws:iam::ACCOUNT_ID:role/azul-{lambda_name}-DEPLOYMENT
+        # arn:aws:iam::ACCOUNT_ID:role/azul-*-DEPLOYMENT
         #
-        # The only free variables are ACCOUNT and DEPLOYMENT which are the
+        # The only free variables are ACCOUNT_ID and DEPLOYMENT which are the
         # AWS account ID and the deployment stage of the Azul deployment that's
         # providing the role to be assumed.
         #
@@ -148,10 +147,10 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DRS_DOMAIN_NAME': '',
 
         # A template for the name of the Route 53 record set in the hosted zone
-        # specified by AZUL_DOMAIN_NAME. The string {lambda_name} in the template
+        # specified by AZUL_DOMAIN_NAME. The character '*' in the template
         # will be substituted with the name of the Lambda function, e.g. `indexer`
         # or `service`. May contain periods.
-        'AZUL_SUBDOMAIN_TEMPLATE': '{{lambda_name}}',
+        'AZUL_SUBDOMAIN_TEMPLATE': '*',
 
         # A prefix to be prepended to the names of AWS Lambda functions and
         # associated resources. Must not contain periods.

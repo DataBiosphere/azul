@@ -10,6 +10,7 @@ import importlib.util
 from io import StringIO
 import os
 from pathlib import Path
+from re import compile
 import shlex
 import sys
 from typing import (
@@ -87,15 +88,6 @@ def load_env() -> Environment:
     """
     root_dir = this_module.parent.parent
 
-    # FIXME: Remove as part of https://github.com/DataBiosphere/azul/issues/1645
-    try:
-        project_root = os.environ['project_root']
-    except KeyError:
-        project_root = str(root_dir)
-        os.environ['project_root'] = project_root
-    else:
-        assert str(root_dir) == project_root
-
     deployments_dir = root_dir / 'deployments'
     active_deployment_dir = deployments_dir / '.active'
     if not active_deployment_dir.is_dir() or not active_deployment_dir.is_symlink():
@@ -146,7 +138,7 @@ def load_env() -> Environment:
     # Note that ChainMap looks only considers the second mapping in the chain
     # if a key is absent from the first one. IOW, the earlier mappings in the
     # chain take precedence over later ones.
-    env = ChainMap(dict(project_root=project_root))
+    env = ChainMap(dict(project_root=str(root_dir)))
     for module in modules:
         if module is not None:
             env.maps.append(filter_env(module.env()))
@@ -170,32 +162,67 @@ def resolve_env(env: Environment) -> Environment:
     >>> resolve_env({'x': '{y}', 'y': '42'})
     {'x': '42', 'y': '42'}
 
-    Literal curly braces need to be escaped:
+    Unmatched curly braces and curly braces that do not surround valid syntax
+    keywords will be ignored:
 
-    >>> resolve_env({'x': '{{', 'y': '}}', 'z': '{{x}}'})
-    {'x': '{', 'y': '}', 'z': '{x}'}
+    >>> resolve_env({'x': '{{', 'y': '{ z }', 'z': '{42}'})
+    {'x': '{{', 'y': '{ z }', 'z': '{42}'}
 
-    Does not support transitive references:
+    Transitive references are supported:
 
     >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '42'})
-    {'x': '{z}', 'y': '42', 'z': '42'}
-
-    Transitive resolution would yield
-
     {'x': '42', 'y': '42', 'z': '42'}
 
-    Does not support generative ones (references formed during resolution):
+    Generative references formed during resolution are supported:
 
-    >>> resolve_env({'x': '{y}}}', 'y': '{{z', 'z': '42'})
-    {'x': '{{z}', 'y': '{z', 'z': '42'}
-
-    which could be
-
+    >>> resolve_env({'x': '{y}}', 'y': '{z', 'z': '42'})
     {'x': '42', 'y': '{z', 'z': '42'}
+
+    Consistent with a $missing_var in the shell a references to a missing key
+    yields an empty string replacement:
+
+    >>> resolve_env({'x': 'y is {y}'})
+    {'x': 'y is '}
+
+    A circular reference causes an exception:
+
+    >>> resolve_env({'x': '{y}', 'y': '{x}'})
+    Traceback (most recent call last):
+    ...
+    ValueError: Circular reference not allowed.
     """
-    # `{missing_var}` references in values should yield the empty string,
-    # consistent with $missing_var in the shell.
-    return {k: v.format_map(defaultdict(str, env)) for k, v in env.items()}
+    while True:
+        resolved_env = {k: _custom_format_map(k, v, env) for k, v in env.items()}
+        if env == resolved_env:
+            return resolved_env
+        else:
+            env = resolved_env
+
+
+def _custom_format_map(key: str, val: str, mapping: Mapping[str, str]) -> str:
+    """
+    Works like `val.format_map(mapping)` but ignores curly braces that
+    do not wrap valid syntax keywords (e.g. contain spaces, unmatched), and
+    replaces curly brace wrapped keywords with an empty string when a matching
+    key is not found in the mapping.
+    """
+    pattern = compile(r'{[^{}\s]+}')  # matches '{FOO}' and not '{F OO}' or '{}'
+    match = pattern.search(val)
+    while match is not None:
+        start, end = match.span()
+        substring = match.group()
+        if f'{{{key}}}' == substring:
+            raise ValueError('Circular reference not allowed.')
+        try:
+            substring = substring.format_map(defaultdict(str, mapping))
+        except ValueError:
+            # skip over keywords not supported by format_map()
+            start_at = end
+        else:
+            val = val[0:start] + substring + val[end:]
+            start_at = start + len(substring)
+        match = pattern.search(val, pos=start_at)
+    return val
 
 
 def export_env(env: Environment, output: Optional[TextIO]) -> None:

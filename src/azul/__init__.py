@@ -183,7 +183,7 @@ class Config:
             require(resource_type == 'role')
             try:
                 lambda_name_template, default_stage = self.unqualified_resource_name(resource_id)
-                require(lambda_name_template == '{lambda_name}')
+                require(lambda_name_template == '*')
                 if stage is None:
                     stage = default_stage
                 role_name = self.qualified_resource_name(lambda_name, stage=stage)
@@ -319,7 +319,7 @@ class Config:
             return None, None
 
     def subdomain(self, lambda_name):
-        return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].format(lambda_name=lambda_name)
+        return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].replace('*', lambda_name)
 
     def api_lambda_domain(self, lambda_name: str) -> str:
         return self.subdomain(lambda_name) + "." + self.domain_name

@@ -20,15 +20,11 @@ def env() -> Mapping[str, Optional[str]]:
     return {
         # Set variables for the `dev` (short for development) deployment here.
         #
-        # To define an AZUL_… variable use `_set AZUL_FOO bar`. For all other
-        # variables use `export BAR=baz`.
-        #
         # Only modify this file if you intend to commit those changes. To change the
         # environment with a setting that's specific to you AND the deployment, create
-        # a environment.local right next to this file and make your changes there. In
-        # that file the same rules apply with regard to `_set` vs `export`. Settings
-        # applicable to all environments but specific to you go into environment.local
-        # at the project root.
+        # a environment.local.py right next to this file and make your changes there.
+        # Settings applicable to all environments but specific to you go into
+        # environment.local.py at the project root.
         
         'AZUL_DEPLOYMENT_STAGE': 'dev',
         
