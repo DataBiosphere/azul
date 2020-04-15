@@ -1,6 +1,8 @@
 import datetime
 import json
+from typing import Optional
 from unittest import mock
+import unittest.result
 
 from botocore.exceptions import ClientError
 from moto import mock_sts
@@ -10,7 +12,6 @@ from app_test_case import LocalAppTestCase
 from azul import config
 from azul.logging import configure_test_logging
 from azul.service.async_manifest_service import AsyncManifestService
-from azul.service.manifest_service import ManifestService
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
@@ -118,6 +119,14 @@ class TestAsyncManifestService(AzulTestCase):
 
 class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
 
+    def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
+        # Suppress generate manifests functionality to prevent false assertion positives
+        with mock.patch('azul.service.manifest_service.ManifestService.__init__') as __init__:
+            __init__.return_value = None
+            with mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest') as get_cached_manifest:
+                get_cached_manifest.return_value = None, None
+                return super().run(result)
+
     @classmethod
     def lambda_name(cls) -> str:
         return 'service'
@@ -125,18 +134,14 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
     patch_current_request = mock.patch('lambdas.service.app.app.current_request')
 
     @mock_sts
-    @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
     @mock.patch('uuid.uuid4')
-    def test_manifest_endpoint_start_execution(self, mock_uuid, step_function_helper, get_cached_manifest, __init__):
+    def test_manifest_endpoint_start_execution(self, mock_uuid, step_function_helper):
         """
         Calling start manifest generation without a token should start an
         execution and return a response with Retry-After and Location in the
         headers.
         """
-        __init__.return_value = None
-        get_cached_manifest.return_value = None
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             for fetch in True, False:
@@ -166,16 +171,12 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     step_function_helper.describe_execution.assert_called_once()
                     step_function_helper.reset_mock()
 
-    @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
-    def test_manifest_endpoint_check_status(self, step_function_helper, get_cached_manifest, __init__):
+    def test_manifest_endpoint_check_status(self, step_function_helper):
         """
         Calling start manifest generation with a token should check the status
         without starting an execution.
         """
-        __init__.return_value = None
-        get_cached_manifest.return_value = None
         params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -185,16 +186,12 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
         step_function_helper.start_execution.assert_not_called()
         step_function_helper.describe_execution.assert_called_once()
 
-    @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
-    def test_manifest_endpoint_execution_not_found(self, step_function_helper, get_cached_manifest, __init__):
+    def test_manifest_endpoint_execution_not_found(self, step_function_helper):
         """
         Manifest status check should raise a BadRequestError (400 status code)
         if execution cannot be found.
         """
-        __init__.return_value = None
-        get_cached_manifest.return_value = None
         params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -206,20 +203,12 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 400)
 
-    @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
     @patch_current_request
-    def test_manifest_endpoint_boto_error(self,
-                                          _current_request,
-                                          step_function_helper,
-                                          get_cached_manifest,
-                                          __init__):
+    def test_manifest_endpoint_boto_error(self, _current_request, step_function_helper):
         """
         Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
         """
-        __init__.return_value = None
-        get_cached_manifest.return_value = None
         params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -231,21 +220,13 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 500)
 
-    @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_step_function_helper
     @patch_current_request
-    def test_manifest_endpoint_execution_error(self,
-                                               _current_request,
-                                               step_function_helper,
-                                               get_cached_manifest,
-                                               __init__):
+    def test_manifest_endpoint_execution_error(self, _current_request, step_function_helper):
         """
         Manifest status check should return a generic error (500 status code)
         if the execution errored.
         """
-        __init__.return_value = None
-        get_cached_manifest.return_value = None
         params = {
             'token': 'eyJleGVjdXRpb25faWQiOiAiN2M4OGNjMjktOTFjNi00NzEyLTg4MGYtZTQ3ODNlMmE0ZDllIn0='
         }
@@ -253,15 +234,11 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 500)
 
-    @mock.patch.object(ManifestService, '__init__')
-    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
     @patch_current_request
-    def test_manifest_endpoint_invalid_token(self, _current_request, get_cached_manifest, __init__):
+    def test_manifest_endpoint_invalid_token(self, _current_request):
         """
         Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
         """
-        __init__.return_value = None
-        get_cached_manifest.return_value = None
         params = {'token': 'Invalid base64'}
         response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
         self.assertEqual(response.status_code, 400)
