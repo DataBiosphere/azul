@@ -53,7 +53,8 @@ class AsyncManifestService(AbstractService):
                                              self_url,
                                              token: Optional[str] = None,
                                              format_: Optional[str] = None,
-                                             filters: Optional[Filters] = None
+                                             filters: Optional[Filters] = None,
+                                             object_key: Optional[str] = None
                                              ) -> Tuple[int, str]:
         """
         If token is None, start a manifest generation process and returns its
@@ -70,7 +71,7 @@ class AsyncManifestService(AbstractService):
         """
         if token is None:
             execution_id = str(uuid.uuid4())
-            self._start_manifest_generation(format_, filters, execution_id)
+            self._start_manifest_generation(format_, filters, execution_id, object_key)
             token = {'execution_id': execution_id}
         else:
             token = self.decode_token(token)
@@ -85,7 +86,12 @@ class AsyncManifestService(AbstractService):
         else:
             assert False
 
-    def _start_manifest_generation(self, format_: str, filters: JSON, execution_id: str) -> None:
+    def _start_manifest_generation(self,
+                                   format_: str,
+                                   filters: JSON,
+                                   execution_id: str,
+                                   object_key: Optional[str]
+                                   ) -> None:
         """
         Start the execution of a state machine generating the manifest
 
@@ -95,7 +101,8 @@ class AsyncManifestService(AbstractService):
         self.step_function_helper.start_execution(config.manifest_state_machine_name,
                                                   execution_id,
                                                   execution_input=dict(format=format_,
-                                                                       filters=filters))
+                                                                       filters=filters,
+                                                                       object_key=object_key))
 
     def _get_next_wait_time(self, request_index: int) -> int:
         wait_times = [1, 1, 4, 6, 10]

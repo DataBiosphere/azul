@@ -167,7 +167,8 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
                                                                                  execution_name,
                                                                                  execution_input=dict(format=format_,
-                                                                                                      filters=filters))
+                                                                                                      filters=filters,
+                                                                                                      object_key=None))
                     step_function_helper.describe_execution.assert_called_once()
                     step_function_helper.reset_mock()
 
