@@ -85,7 +85,98 @@ configure_app_logging(app, log)
 
 openapi_spec = {
     'info': {
-        'description': 'This should probably be really long',
+        'description': format_description('''
+
+            # Overview
+
+            Azul is a REST web service for querying metadata associated with
+            both experimental and analysis data stored in the [HCA Data Store
+            (DSS)](https://github.com/HumanCellAtlas/data-store). In order to
+            deliver response times that make it suitable for interactive use
+            cases, the set of metadata properties that it exposes for sorting,
+            filtering, and aggregation is limited. Azul provides a uniform view
+            of the metadata over a range of diverse schemas, effectively
+            shielding clients from changes in the schema as they occur over
+            time. It does so, however, at the expense of detail in the set of
+            metadata properties it exposes and in the accuracy with which it
+            aggregates them.
+
+            Azul denormalizes and aggregates metadata into several different
+            indices for selected entity types:
+
+             - [projects](#operations-Repository-get_repository_projects)
+
+             - [samples](#operations-Repository-get_repository_samples)
+
+             - [files](#operations-Repository-get_repository_files)
+
+             - [bundles](#operations-Repository-get_repository_bundles)
+
+            Azul provides the ability to download metadata in tabular form via
+            the [Manifests](#/Manifests) endpoints. The resulting manifests
+            include links to associated data files and can be used by the
+            [DCP CLI](https://github.com/HumanCellAtlas/dcp-cli) to download the
+            listed files. Manifests can be generated for a selection of files
+            using filters. These filters are interchangeable with the filters
+            used by the [Repository](#/Repository) endpoints.
+
+            Azul also provides a
+            [summary](#operations-Repository-get_repository_summary) view of
+            indexed data.
+
+            ## Data model
+
+            Any index, when queried, returns a JSON array of hits. Each hit
+            represents a metadata entity. Nested in each hit is a summary of the
+            properties of entities associated with the hit. An entity is
+            associated either by a direct edge in the original metadata graph,
+            or indirectly as a series of edges. The nested properties are
+            grouped by the type of the associated entity. The properties of all
+            data files associated with a particular sample, for example, are
+            listed under `hits[*].files` in a `/repository/samples` response. It
+            is important to note that while each _hit_ represents a discrete
+            entity, the properties nested within that hit are the result of an
+            aggregation over potentially many associated entities.
+
+            To illustrate this, consider a data file that is part of two
+            projects (a project is a group of related experiments, typically by
+            one laboratory, institution or consortium). Querying the `files`
+            index for this file yields a hit looking something like:
+
+            ```
+            {
+                "projects": [
+                    {
+                        "projectTitle": "Project One"
+                        "laboratory": ...,
+                        ...
+                    },
+                    {
+                        "projectTitle": "Project Two"
+                        "laboratory": ...,
+                        ...
+                    }
+                ],
+                "files": [
+                    {
+                        "format": "pdf",
+                        "name": "Team description.pdf",
+                        ...
+                    }
+                ]
+            }
+            ```
+
+            This example hit contains two kinds of nested entities (a hit in
+            an actual Azul response will contain more): There are the two
+            projects entities, and the file itself. These nested entities
+            contain selected metadata properties extracted in a consistent way.
+            This makes filtering and sorting simple.
+
+            Also notice that there is only one file. When querying a particular
+            index, the corresponding entity will always be a singleton like
+            this.
+        '''),
         # Version should be updated in any PR tagged API with a major version
         # update for breaking changes, and a minor version otherwise
         'version': '1.0'
