@@ -51,9 +51,9 @@ class AsyncManifestService(AbstractService):
 
     def start_or_inspect_manifest_generation(self,
                                              self_url,
+                                             format_: str,
+                                             filters: Filters,
                                              token: Optional[str] = None,
-                                             format_: Optional[str] = None,
-                                             filters: Optional[Filters] = None,
                                              object_key: Optional[str] = None
                                              ) -> Tuple[int, str]:
         """
@@ -88,7 +88,7 @@ class AsyncManifestService(AbstractService):
 
     def _start_manifest_generation(self,
                                    format_: str,
-                                   filters: JSON,
+                                   filters: Filters,
                                    execution_id: str,
                                    object_key: Optional[str]
                                    ) -> None:

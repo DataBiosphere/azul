@@ -1122,9 +1122,9 @@ def handle_manifest_generation_request():
     async_service = AsyncManifestService()
     try:
         return async_service.start_or_inspect_manifest_generation(retry_url,
-                                                                  token=token,
                                                                   format_=format_,
                                                                   filters=filters,
+                                                                  token=token,
                                                                   object_key=object_key)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
