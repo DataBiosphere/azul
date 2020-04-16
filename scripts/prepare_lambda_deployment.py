@@ -34,17 +34,19 @@ def transform_tf(input_json):
     assert 'lifecycle' not in input_json['resource']['aws_api_gateway_deployment']['rest_api']
     input_json['resource']['aws_api_gateway_deployment']['rest_api']['lifecycle'] = {'create_before_destroy': True}
 
-    # Currently, Chalice fails to prefix these resources, but Gitlab can only
-    # provision resources whose name starts with 'azul-'.
-    for rule in input_json['resource']['aws_cloudwatch_event_rule'].values():
-        assert not rule['name'].startswith('azul-')
-        rule['name'] = 'azul-' + rule['name']
+    def patch_cloudwatch_resource(resource_type_name, property_name):
+        # Currently, Chalice fails to prefix the names of some resources. We
+        # need them to be prefixed with `azul-` to allow for limiting the
+        # scope of certain IAM permissions for Gitlab and, more importantly,
+        # the deployment stage so these resources are segregated by deployment.
+        for resource in input_json['resource'][resource_type_name].values():
+            function_name, _, suffix = resource[property_name].partition('-')
+            assert suffix == 'event', suffix
+            assert function_name, function_name
+            resource[property_name] = config.qualified_resource_name(function_name)
 
-    # Prefixing 'azul-' isn't necessary here as it was for CW rules, since
-    # target_id just a unique identifier, but it keeps the labels consistent.
-    for target in input_json['resource']['aws_cloudwatch_event_target'].values():
-        assert not target['target_id'].startswith('azul-')
-        target['target_id'] = 'azul-' + target['target_id']
+    patch_cloudwatch_resource('aws_cloudwatch_event_rule', 'name')
+    patch_cloudwatch_resource('aws_cloudwatch_event_target', 'target_id')
 
     return input_json
 
