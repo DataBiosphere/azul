@@ -48,11 +48,13 @@ def current_branch():
     try:
         # Gitlab checks out a specific commit which results in a detached HEAD
         # (no active branch). Extract the branch name from the runner environment.
-        branch = os.environ['CI_COMMIT_REF_NAME']
+        branch_name = os.environ['CI_COMMIT_REF_NAME']
     except KeyError:
+        # Detached head may also occur outside of the gitlab environment, in
+        # which case it is only allowed for personal deployments.
         repo = git.Repo(config.project_root)
-        branch = repo.active_branch.name
-    return branch
+        branch_name = 'DETACHED HEAD' if repo.head.is_detached else repo.active_branch.name
+    return branch_name
 
 
 def main(argv):
