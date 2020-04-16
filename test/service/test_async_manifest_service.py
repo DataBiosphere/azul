@@ -65,7 +65,9 @@ class TestAsyncManifestService(AzulTestCase):
         step_function_helper.describe_execution.return_value = execution_success_output
         manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
-        wait_time, location = manifest_service.start_or_inspect_manifest_generation('', token)
+        format_ = 'compact'
+        filters = manifest_service.parse_filters('{}')
+        wait_time, location = manifest_service.start_or_inspect_manifest_generation('', format_, filters, token)
         self.assertEqual(type(wait_time), int)
         self.assertEqual(wait_time, 0)
         self.assertEqual(manifest_url, location)
@@ -89,7 +91,9 @@ class TestAsyncManifestService(AzulTestCase):
         manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
         retry_url = config.service_endpoint() + '/manifest/files'
-        wait_time, location = manifest_service.start_or_inspect_manifest_generation(retry_url, token)
+        format_ = 'compact'
+        filters = manifest_service.parse_filters('{}')
+        wait_time, location = manifest_service.start_or_inspect_manifest_generation(retry_url, format_, filters, token)
         self.assertEqual(type(wait_time), int)
         self.assertEqual(wait_time, 1)
         expected_token = manifest_service.encode_token({'execution_id': execution_id, 'request_index': 1})
@@ -114,7 +118,10 @@ class TestAsyncManifestService(AzulTestCase):
         step_function_helper.describe_execution.return_value = execution_failed_output
         manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
-        self.assertRaises(StateMachineError, manifest_service.start_or_inspect_manifest_generation, '', token)
+        format_ = 'compact'
+        filters = manifest_service.parse_filters('{}')
+        self.assertRaises(StateMachineError,
+                          manifest_service.start_or_inspect_manifest_generation, '', format_, filters, token)
 
 
 class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
