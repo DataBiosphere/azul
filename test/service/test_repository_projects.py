@@ -1,3 +1,4 @@
+from more_itertools import one
 import requests
 
 from azul.logging import configure_test_logging
@@ -23,21 +24,18 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         cls._teardown_indices()
         super().tearDownClass()
 
-    @staticmethod
-    def get_project_detail_properties():
-        """Get a list of properties that are only returned in the /repository/projects/{id} response"""
-        return ['contributors', 'projectDescription', 'publications']
+    def test_projects_response(self):
+        """
+        Verify some basic properties of the /repository/projects response and
+        that each hit in the response is equal to the single hit response of a
+        a request for one project (eg. /repository/projects/{uuid})
+        """
 
-    def test_list_response(self):
-        """
-        Make call to endpoint that returns multiple projects
-        A list of hits should be returned
-        Certain fields should not be in the project object
-        """
-        url = self.base_url + '/repository/projects'
-        response = requests.get(url)
-        response.raise_for_status()
-        response_json = response.json()
+        def get_response_json(uuid=None):
+            url = f'{self.base_url}/repository/projects/{uuid if uuid else ""}'
+            response = requests.get(url)
+            response.raise_for_status()
+            return response.json()
 
         def assert_file_type_summaries(hit):
             self.assertEqual(len(hit['fileTypeSummaries']), 1)
@@ -45,46 +43,41 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             self.assertGreater(hit['fileTypeSummaries'][0]['count'], 0)
             self.assertGreater(hit['fileTypeSummaries'][0]['totalSize'], 0)
 
+        hit_properties = {
+            'protocols',
+            'entryId',
+            'projects',
+            'samples',
+            'specimens',
+            'cellLines',
+            'donorOrganisms',
+            'organoids',
+            'cellSuspensions',
+            'fileTypeSummaries'
+        }
+        projects_properties = {
+            'projectTitle',
+            'projectShortname',
+            'laboratory',
+            'projectDescription',
+            'contributors',
+            'publications',
+            'arrayExpressAccessions',
+            'geoSeriesAccessions',
+            'insdcProjectAccessions',
+            'insdcStudyAccessions',
+            'supplementaryLinks'
+        }
+        response_json = get_response_json()
         self.assertIn('hits', response_json)
         self.assertGreater(len(response_json['hits']), 0)
         for hit in response_json['hits']:
-            self.assertIn('protocols', hit)
-            self.assertIn('entryId', hit)
+            self.assertEqual(hit_properties, set(hit.keys()))
+            self.assertEqual(projects_properties, set(one(hit['projects']).keys()))
             assert_file_type_summaries(hit)
-            self.assertIn('projects', hit)
-            self.assertIn('specimens', hit)
             self.assertNotIn('projectSummary', hit)
             self.assertNotIn('files', hit)
-            for project in hit['projects']:
-                for prop in RepositoryProjectsEndpointTest.get_project_detail_properties():
-                    self.assertNotIn(prop, project)
-            self._test_detail_response(hit['entryId'])
+            single_hit = get_response_json(hit['entryId'])
+            self.assertEqual(hit, single_hit)
         self.assertIn('pagination', response_json)
         self.assertIn('termFacets', response_json)
-
-    def _test_detail_response(self, uuid):
-        """
-        Make call to endpoint that returns a single project
-        A single hit should be returned
-        Certain fields should be in the project object
-        """
-        url = self.base_url + '/repository/projects/' + uuid
-        response = requests.get(url)
-        response.raise_for_status()
-        hit = response.json()
-
-        self.assertEqual(len(hit['fileTypeSummaries']), 1)
-        self.assertIn('fileType', hit['fileTypeSummaries'][0])
-        self.assertGreater(hit['fileTypeSummaries'][0]['count'], 0)
-        self.assertGreater(hit['fileTypeSummaries'][0]['totalSize'], 0)
-
-        self.assertIn('protocols', hit)
-        self.assertIn('entryId', hit)
-        self.assertIn('projects', hit)
-        self.assertIn('specimens', hit)
-        self.assertNotIn('projectSummary', hit)
-        self.assertNotIn('files', hit)
-
-        for project in hit['projects']:
-            for prop in RepositoryProjectsEndpointTest.get_project_detail_properties():
-                self.assertIn(prop, project)

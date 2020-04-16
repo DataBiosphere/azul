@@ -58,13 +58,6 @@ class RepositoryService(ElasticsearchService):
 
     def _get_items(self, entity_type, pagination, filters: Filters, file_url_func):
         response = self._get_data(entity_type, pagination, filters, file_url_func)
-        if entity_type == 'projects':
-            # Filter out certain fields if getting *list* of projects
-            for hit in response['hits']:
-                for project in hit['projects']:
-                    project.pop('contributors')
-                    project.pop('projectDescription')
-                    project.pop('publications')
         return response
 
     def get_data(self, entity_type, pagination, filters: str, item_id, file_url_func: FileUrlFunc):
