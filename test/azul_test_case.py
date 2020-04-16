@@ -1,5 +1,8 @@
 import os
 from unittest import TestCase
+from unittest.mock import (
+    patch,
+)
 
 import boto3.session
 from botocore.credentials import Credentials
@@ -53,6 +56,9 @@ class AzulTestCase(TestCase):
     get_credentials_boto3 = None
     _saved_boto3_default_session = None
     aws_account_id = None
+    # We almost certainly won't have access to this region
+    _aws_test_region = 'us-gov-west-1'
+    _aws_region_mock = None
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -94,8 +100,15 @@ class AzulTestCase(TestCase):
         botocore.session.Session.get_credentials = dummy_get_credentials
         boto3.session.Session.get_credentials = dummy_get_credentials
 
+        # Ensure that mock leakages fail by targeting a region we don't have acces to.
+        # Subclasses can override the selected region if moto rejects the default one.
+        cls._aws_region_mock = patch.dict(os.environ, AWS_DEFAULT_REGION=cls._aws_test_region)
+        print(cls._aws_test_region)
+        cls._aws_region_mock.start()
+
     @classmethod
     def tearDownClass(cls) -> None:
+        cls._aws_region_mock.stop()
         boto3.session.Session.get_credentials = cls.get_credentials_boto3
         botocore.session.Session.get_credentials = cls.get_credentials_botocore
         boto3.DEFAULT_SESSION = cls._saved_boto3_default_session

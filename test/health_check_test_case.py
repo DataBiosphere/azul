@@ -252,9 +252,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                                           url=config.service_endpoint() + endpoint,
                                           status=200 if endpoint_up else 503,
                                           json={}))
-        # boto3.resource('sqs') requires an AWS region to be set
-        with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
-            yield
+        yield
 
     def _mock_other_lambdas(self, helper: ResponsesHelper, up: bool):
         for lambda_name in self._other_lambda_names():
@@ -264,7 +262,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                                           json={'up': up}))
 
     def _create_mock_queues(self):
-        sqs = boto3.resource('sqs', region_name='us-east-1')
+        sqs = boto3.resource('sqs')
         for queue_name in config.all_queue_names:
             sqs.create_queue(QueueName=queue_name)
 

@@ -1182,16 +1182,15 @@ class TestValidNotificationRequests(LocalAppTestCase):
             helper.add_passthru(self.base_url)
             hmac_creds = {'key': b'good key', 'key_id': 'the id'}
             with patch('azul.deployment.aws.get_hmac_key_and_id', return_value=hmac_creds):
-                with patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
-                    if valid_auth:
-                        auth = hmac.prepare()
-                    else:
-                        auth = HTTPSignatureAuth(key=b'bad key', key_id='the id')
-                    return requests.post(self.base_url + endpoint, json=body, auth=auth)
+                if valid_auth:
+                    auth = hmac.prepare()
+                else:
+                    auth = HTTPSignatureAuth(key=b'bad key', key_id='the id')
+                return requests.post(self.base_url + endpoint, json=body, auth=auth)
 
     @staticmethod
     def _create_mock_notify_queue():
-        sqs = boto3.resource('sqs', region_name='us-east-1')
+        sqs = boto3.resource('sqs')
         sqs.create_queue(QueueName=config.notify_queue_name)
 
 
