@@ -10,6 +10,8 @@ from azul_test_case import AzulTestCase
 
 @mock_dynamodb2
 class VersionTableTestCase(AzulTestCase):
+    # Moto's dynamodb backend doesn't support government regions.
+    _aws_test_region = 'ap-south-1'
 
     def setUp(self):
         self.ddb_client = boto3.client('dynamodb')
