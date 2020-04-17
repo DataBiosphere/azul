@@ -1,8 +1,11 @@
-from unittest.mock import MagicMock
+from collections import defaultdict
+from unittest import (
+    mock,
+    skip,
+)
 
+from azul.chalice import AzulChaliceApp
 from azul.openapi import (
-    get_app_specs,
-    openapi_spec,
     schema,
 )
 from azul_test_case import AzulTestCase
@@ -10,82 +13,100 @@ from azul_test_case import AzulTestCase
 
 class TestGetAppSpecs(AzulTestCase):
 
+    @skip('https://github.com/DataBiosphere/azul/issues/1450')
     def test_unannotated(self):
-        # TODO: Once all endpoints are documented, this test should assert failure
-        app = self._mock_app_object([lambda x: x])
-        get_app_specs(app)
+        app = self._mock_app_object()
+        self._mock_app_route(app, '/foo')
+        undocumented = app.routes.keys() - app.path_specs.keys()
+        self.assertEqual(set(), undocumented)
 
     def test_just_method_spec(self):
-        route = self._annotate_func('/foo', ['GET'], method_spec={'a': 'b'})
-        app = self._mock_app_object([route])
-        specs = get_app_specs(app)
-        self.assertEqual(specs, ({}, {('/foo', 'get'): {'a': 'b'}}))
+        app = self._mock_app_object()
+        self._mock_app_route(app, '/foo', methods=['GET'], method_spec={'a': 'b'})
+        self.assertEqual(app.path_specs, {})
+        self.assertEqual(app.method_specs, {('/foo', 'get'): {'a': 'b'}})
 
     def test_just_path_spec(self):
-        route = self._annotate_func('/foo', ['GET'], path_spec={'a': 'b'})
-        app = self._mock_app_object([route])
-        specs = get_app_specs(app)
-        self.assertEqual(specs, ({'/foo': {'a': 'b'}}, {}))
+        app = self._mock_app_object()
+        self._mock_app_route(app, '/foo', methods=['GET'], path_spec={'a': 'b'})
+        self.assertEqual(app.path_specs, {'/foo': {'a': 'b'}})
+        self.assertEqual(app.method_specs, {})
 
     def test_fully_annotated(self):
-        route = self._annotate_func('/foo', ['GET'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
-        app = self._mock_app_object([route])
-        specs = get_app_specs(app)
-        self.assertEqual(specs, ({'/foo': {'a': 'b'}}, {('/foo', 'get'): {'c': 'd'}}))
+        app = self._mock_app_object()
+        self._mock_app_route(app, '/foo', methods=['GET'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
+        self.assertEqual(app.path_specs, {'/foo': {'a': 'b'}})
+        self.assertEqual(app.method_specs, {('/foo', 'get'): {'c': 'd'}})
 
-    def test_duplicate_method_specs(self):
-        """
-        This doesn't fail because we expect Chalice to disallow duplicate specs
-        like this inside of app.py
-        """
+    @mock.patch('chalice.Chalice.route')
+    def test_multiple_routes(self, mock_route):
+        app = self._mock_app_object()
 
-        @openapi_spec('/foo', ['GET'], method_spec={'a': 'XXX'})
-        @openapi_spec('/foo', ['GET'], method_spec={'a': 'b'})
+        @app.route('/foo', methods=['GET', 'PUT'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
+        @app.route('/foo/too', methods=['GET'], path_spec={'e': 'f'}, method_spec={'g': 'h'})
         def route():
             pass
 
-        app = self._mock_app_object([route])
-        specs = get_app_specs(app)
-        self.assertEqual(specs, ({}, {('/foo', 'get'): {'a': 'XXX'}}))
+        self.assertEqual(mock_route.call_count, 2)
 
-    def test_duplicate_path_specs(self):
-        """
-        We have to catch this manually in get_app_specs
-        """
+        self.assertEqual(app.path_specs, {'/foo': {'a': 'b'},
+                                          '/foo/too': {'e': 'f'}})
+        self.assertEqual(app.method_specs, {('/foo', 'get'): {'c': 'd'},
+                                            ('/foo', 'put'): {'c': 'd'},
+                                            ('/foo/too', 'get'): {'g': 'h'}})
 
-        @openapi_spec('/foo', ['PUT'], path_spec={'a': 'XXX'})
+    @mock.patch('chalice.Chalice.route')
+    def test_duplicate_method_specs(self, mock_route):
+        app = self._mock_app_object()
+
+        with self.assertRaises(AssertionError):
+            @app.route('/foo', methods=['GET'], method_spec={'a': 'b'})
+            @app.route('/foo', methods=['GET'], method_spec={'a': 'XXX'})
+            def route():
+                pass
+
+        self.assertEqual(mock_route.call_count, 2)
+        # Decorators are applied from the bottom up
+        self.assertEqual(app.path_specs, {})
+        self.assertEqual(app.method_specs, {('/foo', 'get'): {'a': 'XXX'}})
+
+    @mock.patch('chalice.Chalice.route')
+    def test_duplicate_path_specs(self, mock_route):
+        app = self._mock_app_object()
+
+        @app.route('/foo', ['PUT'], path_spec={'a': 'XXX'})
         def route1():
             pass
 
-        @openapi_spec('/foo', ['GET'], path_spec={'a': 'b'})
-        def route2():
-            pass
-
-        app = self._mock_app_object([route1, route2])
         with self.assertRaises(AssertionError):
-            get_app_specs(app)
+            @app.route('/foo', ['GET'], path_spec={'a': 'b'})
+            def route2():
+                pass
 
-    def _annotate_func(self, route, methods, path_spec=None, method_spec=None):
-        @openapi_spec(route, methods, path_spec=path_spec, method_spec=method_spec)
-        def route():
+        self.assertEqual(mock_route.call_count, 2)
+        self.assertEqual(app.path_specs, {'/foo': {'a': 'XXX'}})
+        self.assertEqual(app.method_specs, {})
+
+    @mock.patch('chalice.Chalice.route')
+    def _mock_app_route(self, app, path, mock_route, methods=None, path_spec=None, method_spec=None):
+        @app.route(path, methods=methods, path_spec=path_spec, method_spec=method_spec)
+        def route_func():
             pass
 
-        return route
+        mock_route.assert_called_once()
+        return route_func
 
-    def _mock_app_object(self, funcs):
+    @mock.patch('chalice.Chalice.__init__')
+    def _mock_app_object(self, mock_init):
         """
         Takes a list of functions and mocks the structure of an Chalice app
         object that contains them
         """
-        app = MagicMock()
-        mock_routes = []
-        for f in funcs:
-            route = MagicMock()
-            route.view_function = f
-            route_wrapper = MagicMock()
-            route_wrapper.values.return_value = [route]
-            mock_routes.append(route_wrapper)
-        app.routes.values.return_value = mock_routes
+        app = AzulChaliceApp('testing')
+        mock_init.assert_called_once()
+
+        # Provide attribute that's missing due to mocked superclass init
+        app.routes = defaultdict(dict)
         return app
 
 
