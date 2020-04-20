@@ -112,6 +112,9 @@ class HealthController:
 
     @health_property
     def failures(self):
+        """
+        Returns message data from the error sqs queues.
+        """
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(config.dynamo_failure_message_table_name)
         bundle_key_condition = {
@@ -132,7 +135,7 @@ class HealthController:
             'other_failed_messages': num_other_failed
         }
 
-    @memoized_property
+    @health_property
     def progress(self) -> JSON:
         """
         The number of Data Store bundles pending to be indexed and the number

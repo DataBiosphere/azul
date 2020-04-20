@@ -4,6 +4,7 @@ from typing import Mapping
 import unittest
 
 import boto3
+import mock
 from moto import (
     mock_sqs,
     mock_sts,
@@ -11,6 +12,7 @@ from moto import (
 )
 import requests
 
+from azul import config
 from azul.logging import configure_test_logging
 from health_check_test_case import HealthCheckTestCase
 from retorts import ResponsesHelper

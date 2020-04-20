@@ -1,5 +1,4 @@
 from functools import cached_property
-import json
 import logging
 from typing import (
     Optional,
@@ -16,7 +15,7 @@ from azul.chalice import AzulChaliceApp
 from azul.health import HealthController
 from azul.indexer.index_controller import IndexController
 from azul.logging import configure_app_logging
-from azul.queues import Queues
+from azul.time import RemainingLambdaContextTime
 
 log = logging.getLogger(__name__)
 
