@@ -19,45 +19,45 @@ def join_specs(toplevel_spec: JSON,
                path_specs: JSON,
                method_specs: Mapping[Tuple[str, str], JSON]) -> MutableJSON:
     """
-    Join the specifications, potentially overwriting with specs from a lower
-    level.
+    Join the specifications
 
-    Arguments are given in descending order of level.
-
-    >>> toplevel_spec = {'paths': {}}
+    >>> toplevel_spec = {'description': 'make widgets'}
     >>> path_specs = {'/foo': {'get': {'a': 'b'}}}
     >>> method_specs = {}
-
-    paths_specs are inserted into toplevel_spec ...
-
     >>> join_specs(toplevel_spec, path_specs, method_specs)
-    {'paths': {'/foo': {'get': {'a': 'b'}}}}
+    {'description': 'make widgets', 'paths': {'/foo': {'get': {'a': 'b'}}}}
 
-    ... but may overwrite preexisting spec ...
+    Toplevel specs should not have paths.
 
-    >>> toplevel_spec['paths']['/foo'] = {'get': 'XXX'}
-    >>> join_specs(toplevel_spec, path_specs, method_specs)
-    {'paths': {'/foo': {'get': {'a': 'b'}}}}
+    >>> join_specs({'paths': {}}, path_specs, method_specs)
+    Traceback (most recent call last):
+    ...
+    AssertionError
 
-    ... which may be further overwritten by method_spec.
+    Method specs may overwrite parts of path specs.
 
     >>> method_specs = {('/foo', 'get'): {'a': 'XXX'}}
     >>> join_specs(toplevel_spec, path_specs, method_specs)
-    {'paths': {'/foo': {'get': {'a': 'XXX'}}}}
+    {'description': 'make widgets', 'paths': {'/foo': {'get': {'a': 'XXX'}}}}
 
-    Method specs for the same path won't conflict
+    Method specs for the same path won't conflict,
 
     >>> method_specs[('/foo', 'put')] = {'c': 'd'}
     >>> join_specs(toplevel_spec, path_specs, method_specs)
-    {'paths': {'/foo': {'get': {'a': 'XXX'}, 'put': {'c': 'd'}}}}
+    {'description': 'make widgets', 'paths': {'/foo': {'get': {'a': 'XXX'}, 'put': {'c': 'd'}}}}
 
     nor will path specs for different paths
 
     >>> path_specs['/bar'] = {'summary': {'Drink': 'up'}}
-    >>> join_specs(toplevel_spec, path_specs, method_specs)
-    {'paths': {'/foo': {'get': {'a': 'XXX'}, 'put': {'c': 'd'}}, '/bar': {'summary': {'Drink': 'up'}}}}
+    >>> join_specs(toplevel_spec, path_specs, method_specs) # doctest: +NORMALIZE_WHITESPACE
+    {'description': 'make widgets',
+     'paths': {'/foo': {'get': {'a': 'XXX'},
+     'put': {'c': 'd'}},
+     '/bar': {'summary': {'Drink': 'up'}}}}
     """
+    assert 'paths' not in toplevel_spec
     specs = cast(MutableJSON, copy.deepcopy(toplevel_spec))
+    specs['paths'] = {}
 
     for path, path_spec in path_specs.items():
         specs['paths'][path] = path_spec

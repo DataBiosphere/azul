@@ -86,14 +86,12 @@ class AzulChaliceApp(Chalice):
 
     def annotated_specs(self, toplevel_spec) -> JSON:
         """
-        Finds all routes in app that are decorated with @AzulChaliceApp.route and adds this
-        information into the api spec downloaded from API Gateway.
+        Finds all routes in app that are decorated with @AzulChaliceApp.route
+        and adds this information into the api spec downloaded from API Gateway.
 
         :param toplevel_spec: Top level OpenAPI info, definitions, etc.
         :return: The annotated specifications
         """
-        assert 'paths' not in toplevel_spec
-        toplevel_spec['paths'] = {}
         return join_specs(toplevel_spec, self.path_specs, self.method_specs)
 
     def _register_spec(self,
