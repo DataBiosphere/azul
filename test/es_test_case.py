@@ -26,7 +26,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        es_endpoint = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:5.5.3',
+        es_endpoint = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:6.8.0',
                                             container_port=9200,
                                             environment=['xpack.security.enabled=false',
                                                          'discovery.type=single-node',
@@ -40,16 +40,6 @@ class ElasticsearchTestCase(DockerContainerTestCase):
         except BaseException:  # no coverage
             cls._kill_containers()
             raise
-        else:
-            # By default `max_compilations_per_minute` is set to 15, we must increase that threshold in order to execute
-            # dynamic header row and HashCode generation for test_full_hash_validity.
-            # If this also happens in production code, we should move this code to be run as part of `make deploy`,
-            # as a provisioner, for example. Or we can precompile the Painless scripts as part of `make package`.
-            cls.es_client.cluster.put_settings(body={
-                'persistent': {
-                    'script.max_compilations_per_minute': 60
-                }
-            })
 
     @classmethod
     def _wait_for_es(cls):

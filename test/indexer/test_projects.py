@@ -64,6 +64,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
                 else:
                     document_id = Contribution.make_document_id(entity_id, *bundle_fqid, bundle_deleted=False)
                 result = self.es_client.get(index=config.es_index_name('samples', aggregate=aggregate),
+                                            doc_type='_all',
                                             id=document_id)
                 files = result['_source']['contents']['files']
                 num_files = 2  # fastqs

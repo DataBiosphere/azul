@@ -78,9 +78,6 @@ class TestRequestBuilder(WebServiceTestCase):
                         }
                     ]
                 }
-            },
-            "query": {
-                "match_all": {}
             }
         }
         sample_filter = {"entity_id": {"is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]}}
@@ -134,9 +131,6 @@ class TestRequestBuilder(WebServiceTestCase):
                         }
                     ]
                 }
-            },
-            "query": {
-                "match_all": {}
             }
         }
         sample_filter = {
@@ -191,9 +185,6 @@ class TestRequestBuilder(WebServiceTestCase):
                         }
                     ]
                 }
-            },
-            "query": {
-                "match_all": {}
             }
         }
         # Create a filter for missing values
@@ -271,9 +262,6 @@ class TestRequestBuilder(WebServiceTestCase):
                         }
                     ]
                 }
-            },
-            "query": {
-                "match_all": {}
             }
         }
         # Create a filter for missing values
