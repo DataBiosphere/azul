@@ -5,6 +5,7 @@ from collections import (
 from concurrent.futures import ThreadPoolExecutor
 import copy
 from copy import deepcopy
+import http
 import logging
 import os
 import re
@@ -13,6 +14,7 @@ from typing import (
     Tuple,
 )
 import unittest
+from unittest import mock
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -101,6 +103,7 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_all_hits()
         self.assertElasticsearchResultsEqual(expected_hits, hits)
 
+    @mock.patch.object(http.client, '_MAXHEADERS', new=1000)  # https://stackoverflow.com/questions/23055378
     def test_deletion(self):
         """
         Delete a bundle and check that the index contains the appropriate flags

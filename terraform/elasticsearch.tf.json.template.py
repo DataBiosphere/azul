@@ -91,7 +91,7 @@ emit_tf(None if config.share_es_domain else {
                         "volume_size": config.es_volume_size,
                         "volume_type": "gp2"
                     },
-                    "elasticsearch_version": "5.5",
+                    "elasticsearch_version": "6.8",
                     "log_publishing_options": [
                         {
                             "cloudwatch_log_group_arn": "${aws_cloudwatch_log_group.azul_" + log + "_log.arn}",

@@ -6,8 +6,8 @@ boto3==1.10.19
 botocore==1.13.19
 cffi==1.14.0
 cryptography==2.3.1
-elasticsearch>=5.0.0,<6.0.0
-elasticsearch-dsl>=5.0.0,<6.0.0
+elasticsearch==6.8.1
+elasticsearch-dsl==6.4.0
 jsonobject==0.9.9
 Faker==0.8.11
 furl==2.0.0
