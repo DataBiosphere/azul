@@ -63,6 +63,4 @@ def env() -> Mapping[str, Optional[str]]:
         'AWS_DEFAULT_REGION': 'us-east-1',
         
         'GOOGLE_PROJECT': 'human-cell-atlas-travis-test',
-        
-        'AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS': '122796619775,administrator,developer,azul-gitlab,azul-service-*,azul-indexer-*',
     }
