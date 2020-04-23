@@ -76,7 +76,9 @@ class ManifestService(ElasticsearchService):
         super().__init__()
         self.storage_service = storage_service
 
-    def get_manifest(self, format_: str, filters: Filters) -> Tuple[str, bool]:
+    # FIXME: make format_ an enum. https://github.com/databiosphere/azul/issues/1723
+
+    def get_manifest(self, format_: str, filters: Filters, object_key: Optional[str] = None) -> Tuple[str, bool]:
         """
         Returns a tuple in which the first element is pre-signed URL to a
         manifest in the given format and of the file entities matching the given
@@ -88,9 +90,23 @@ class ManifestService(ElasticsearchService):
 
         The second element of the returned tuple is True if an existing
         manifest was reused and False if a new manifest was generated.
+
+        :param format_: The desired format of the manifest.
+
+        :param filters: The filters by which to restrict the contents of the
+                        manifest.
+
+        :param object_key: An optional S3 object key of the cached manifest. If
+                           None, the key will be computed dynamically. This may
+                           take a few seconds. If a valid cached manifest exists
+                           under that key, it will be used. Otherwise, a new
+                           manifest will be created and stored at the given key.
         """
         generator = ManifestGenerator.for_format(format_, self, filters)
-        object_key, presigned_url = self._get_cached_manifest(generator, format_, filters)
+
+        if object_key is None:
+            object_key = self._compute_object_key(generator, format_, filters)
+        presigned_url = self._get_cached_manifest(generator, object_key)
         if presigned_url is None:
             file_name = self._generate_manifest(generator, object_key)
             presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
@@ -98,23 +114,29 @@ class ManifestService(ElasticsearchService):
         else:
             return presigned_url, True
 
-    def get_cached_manifest(self, format_: str, filters: Filters) -> Optional[str]:
+    def get_cached_manifest(self, format_: str, filters: Filters) -> Tuple[str, Optional[str]]:
         generator = ManifestGenerator.for_format(format_, self, filters)
-        _, presigned_url = self._get_cached_manifest(generator, format_, filters)
-        return presigned_url
+        object_key = self._compute_object_key(generator, format_, filters)
+        presigned_url = self._get_cached_manifest(generator, object_key)
+        return object_key, presigned_url
+
+    def _compute_object_key(self,
+                            generator: 'ManifestGenerator',
+                            format_: str,
+                            filters: Filters) -> str:
+        manifest_key = self._derive_manifest_key(format_, filters, generator.manifest_content_hash)
+        object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
+        return object_key
 
     def _get_cached_manifest(self,
                              generator: 'ManifestGenerator',
-                             format_: str,
-                             filters: Filters,
-                             ) -> Tuple[str, Optional[str]]:
-        manifest_key = self._derive_manifest_key(format_, filters, generator.manifest_content_hash)
-        object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
+                             object_key: str
+                             ) -> Optional[str]:
         if self._can_use_cached_manifest(object_key):
             file_name = self._use_cached_manifest(generator, object_key)
-            return object_key, self.storage_service.get_presigned_url(object_key, file_name=file_name)
+            return self.storage_service.get_presigned_url(object_key, file_name=file_name)
         else:
-            return object_key, None
+            return None
 
     file_name_tag = 'azul_file_name'
 

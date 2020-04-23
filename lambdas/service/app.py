@@ -1112,18 +1112,20 @@ def handle_manifest_generation_request():
     service = ManifestService(StorageService())
     filters = service.parse_filters(filters)
 
+    object_key = None
     token = query_params.get('token')
     if token is None:
-        presigned_url = service.get_cached_manifest(format_, filters)
+        object_key, presigned_url = service.get_cached_manifest(format_, filters)
         if presigned_url is not None:
             return 0, presigned_url
     retry_url = self_url()
     async_service = AsyncManifestService()
     try:
         return async_service.start_or_inspect_manifest_generation(retry_url,
-                                                                  token=token,
                                                                   format_=format_,
-                                                                  filters=filters)
+                                                                  filters=filters,
+                                                                  token=token,
+                                                                  object_key=object_key)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
             raise BadRequestError('Invalid token given')
@@ -1146,7 +1148,7 @@ def generate_manifest(event, context):
     :return: The URL to the generated manifest
     """
     service = ManifestService(StorageService())
-    presigned_url, was_cached = service.get_manifest(event['format'], event['filters'])
+    presigned_url, was_cached = service.get_manifest(event['format'], event['filters'], event['object_key'])
     return {'Location': presigned_url}
 
 
