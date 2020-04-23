@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 
 import boto3.session
@@ -51,10 +52,21 @@ class AzulTestCase(TestCase):
     get_credentials_botocore = None
     get_credentials_boto3 = None
     _saved_boto3_default_session = None
+    aws_account_id = None
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+
+        # Set AZUL_AWS_ACCOUNT_ID to what the Moto is using. This circumvents
+        # assertion errors in azul.deployment.aws.account.
+        cls.aws_account_id = os.environ['AZUL_AWS_ACCOUNT_ID']
+        # The fake Moto account ID is defined as a constant in a Moto module
+        # but we cannot import any Moto modules since doing so has a bad side
+        # effect: https://github.com/spulec/moto/issues/2058.
+        # FIXME: Switch to overriding MOTO_ACCOUNT_ID as part of
+        #        https://github.com/DataBiosphere/azul/issues/1718
+        os.environ['AZUL_AWS_ACCOUNT_ID'] = '123456789012'
 
         # Save and then reset the default boto3session. This overrides any
         # session customizations such as those performed by envhook.py which
@@ -87,6 +99,7 @@ class AzulTestCase(TestCase):
         boto3.session.Session.get_credentials = cls.get_credentials_boto3
         botocore.session.Session.get_credentials = cls.get_credentials_botocore
         boto3.DEFAULT_SESSION = cls._saved_boto3_default_session
+        os.environ['AZUL_AWS_ACCOUNT_ID'] = cls.aws_account_id
         super().tearDownClass()
 
 

@@ -65,6 +65,10 @@ class Config:
         }
 
     @property
+    def aws_account_id(self) -> str:
+        return os.environ['AZUL_AWS_ACCOUNT_ID']
+
+    @property
     def project_root(self) -> str:
         return os.environ['azul_home']
 
@@ -451,18 +455,15 @@ class Config:
         return os.environ['AZUL_DOMAIN_NAME']
 
     main_deployments_by_branch = {
-        'develop': ('122796619775', 'dev'),
-        'hca/develop': ('861229788715', 'dev'),
-        'hca/integration': ('861229788715', 'integration'),
-        'hca/staging': ('861229788715', 'staging'),
-        'hca/prod': ('109067257620', 'prod')
+        'develop': 'dev',
+        'integration': 'integration',
+        'staging': 'staging',
+        'prod': 'prod'
     }
 
     @property
     def is_main_deployment(self):
-        current_deployment = self.deployment_stage
-        return any(current_deployment == main_deployment
-                   for account, main_deployment in self.main_deployments_by_branch.values())
+        return self.deployment_stage in self.main_deployments_by_branch.values()
 
     @property
     def _git_status(self) -> Mapping[str, str]:
