@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Optional
 
 import git
 
@@ -10,7 +11,7 @@ Ensure that the currently checked out branch matches the selected deployment
 """
 
 
-def check_branch(branch, stage):
+def check_branch(branch: Optional[str], stage: str) -> None:
     """
     >>> check_branch('dev', 'develop')
 
@@ -28,31 +29,42 @@ def check_branch(branch, stage):
     Traceback (most recent call last):
     ...
     RuntimeError: Protected branch 'staging' should be deployed to 'staging', not 'integration'
+
+    >>> check_branch(None, 'dev')
+    Traceback (most recent call last):
+    ...
+    RuntimeError: Can't deploy to main deployment 'dev' from a detached head.'
     """
     stage_by_branch = config.main_deployments_by_branch
     try:
         expected_stage = stage_by_branch[branch]
     except KeyError:
         if stage in stage_by_branch.values():
-            raise RuntimeError(f"Non-protected branch '{branch}' can't be deployed to main deployment '{stage}'")
+            raise RuntimeError(
+                f"Can't deploy to main deployment '{stage}' from a detached head.'"
+                if branch is None else
+                f"Non-protected branch '{branch}' can't be deployed to main deployment '{stage}'"
+            )
     else:
+        assert branch is not None
         if stage != expected_stage:
             raise RuntimeError(f"Protected branch '{branch}' should be deployed to '{expected_stage}', not '{stage}'")
 
 
-def expected_stage(branch):
+def expected_stage(branch: Optional[str]) -> Optional[str]:
     return config.main_deployments_by_branch.get(branch)
 
 
-def current_branch():
+def current_branch() -> Optional[str]:
     try:
         # Gitlab checks out a specific commit which results in a detached HEAD
         # (no active branch). Extract the branch name from the runner environment.
-        branch = os.environ['CI_COMMIT_REF_NAME']
+        return os.environ['CI_COMMIT_REF_NAME']
     except KeyError:
+        # Detached head may also occur outside of Gitlab, in which case it is
+        # only allowed for personal deployments.
         repo = git.Repo(config.project_root)
-        branch = repo.active_branch.name
-    return branch
+        return None if repo.head.is_detached else repo.active_branch.name
 
 
 def main(argv):
