@@ -652,7 +652,7 @@ def validate_params(query_params: Mapping[str, str],
     >>> validate_params({'size': 'foo'}, size=int)
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Invalid input type for `size`
+    chalice.app.BadRequestError: BadRequestError: Invalid input value for `size`
 
     >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str)
     Traceback (most recent call last):
@@ -697,7 +697,7 @@ def validate_params(query_params: Mapping[str, str],
         try:
             validator(param_value)
         except (TypeError, ValueError):
-            raise BadRequestError(msg=f'Invalid input type for `{param_name}`')
+            raise BadRequestError(msg=f'Invalid input value for `{param_name}`')
 
 
 @app.route('/integrations', methods=['GET'], cors=True)
@@ -1376,7 +1376,17 @@ def fetch_dss_files(uuid):
 
 def _dss_files(uuid, fetch=True):
     query_params = app.current_request.query_params or {}
-    validate_params(query_params, True, fileName=str, wait=int, requestIndex=int)
+
+    def validate_replica(replica):
+        if replica != 'aws':
+            raise ValueError
+
+    validate_params(query_params,
+                    allow_extra_params=True,
+                    fileName=str,
+                    wait=int,
+                    requestIndex=int,
+                    replica=Mandatory(validate_replica))
     dss_endpoint = config.dss_endpoint
     url = dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
     file_name = query_params.pop('fileName', None)
