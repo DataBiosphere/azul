@@ -18,7 +18,7 @@ from azul.files import file_sha1
 log = logging.getLogger(__name__)
 
 
-class DependencyLayer:
+class DependenciesLayer:
     layer_dir = Path(config.project_root) / 'lambdas' / 'layer'
     out_dir = layer_dir / '.chalice' / 'terraform'
 
@@ -31,7 +31,7 @@ class DependencyLayer:
         try:
             # Since the object is content-addressed, just checking for the
             # object's presence is sufficient
-            self.s3.head_object(Bucket=config.layer_bucket, Key=self.object_key)
+            self.s3.head_object(Bucket=config.lambda_layer_bucket, Key=self.object_key)
         except self.s3.exceptions.ClientError as e:
             if e.response['Error']['Code'] == '404':
                 return True
@@ -41,18 +41,18 @@ class DependencyLayer:
             return False
 
     def update_layer(self, force: bool = False):
-        log.info('Using dependency layer package at s3://%s/%s.', config.layer_bucket, self.object_key)
+        log.info('Using dependencies layer package at s3://%s/%s.', config.lambda_layer_bucket, self.object_key)
         if force or self._update_required():
             log.info('Staging layer package ...')
             input_zip = self.out_dir / 'deployment.zip'
             layer_zip = self.out_dir / 'layer.zip'
             if force:
                 log.info('Tainting current lambda layer resource to force update')
-                command = ['terraform', 'taint', 'aws_lambda_layer_version.dependencies']
-                subprocess.run(command, cwd=Path(config.project_root) / 'terraform')
+                command = ['make', 'taint_dependencies_layer']
+                subprocess.run(command, cwd=Path(config.project_root) / 'terraform').check_returncode()
             self._build_package(input_zip, layer_zip)
             log.info('Uploading layer package to S3 ...')
-            self.s3.upload_file(str(layer_zip), config.layer_bucket, self.object_key)
+            self.s3.upload_file(str(layer_zip), config.lambda_layer_bucket, self.object_key)
             log.info('Successfully staged updated layer package.')
         else:
             log.info('Layer package already up-to-date.')

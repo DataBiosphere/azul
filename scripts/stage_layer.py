@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 import logging
 import sys
 
-from azul.lambda_layer import DependencyLayer
+from azul.lambda_layer import DependenciesLayer
 from azul.logging import configure_script_logging
 
 log = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ def main(argv):
                              'the corresponding Terraform resource to ensure '
                              'that Terraform re-provisions the Lambda layer.')
     options = parser.parse_args(argv)
-    layer = DependencyLayer()
+    layer = DependenciesLayer()
     layer.update_layer(force=options.force)
 
 

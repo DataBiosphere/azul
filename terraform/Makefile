@@ -41,6 +41,9 @@ auto_destroy: validate
 	@echo '!!! All resources will be deleted in 10s, hit Ctrl-C to cancel !!!'; sleep 10
 	terraform destroy -auto-approve
 
+taint_dependencies_layer: init
+	terraform taint -allow-missing aws_lambda_layer_version.dependencies
+
 clean:
 	rm -f *.tf.json
 
