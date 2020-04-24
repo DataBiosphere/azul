@@ -1,8 +1,8 @@
 from azul import config
 from azul.deployment import emit_tf
-from azul.lambda_layer import DependencyLayer
+from azul.lambda_layer import DependenciesLayer
 
-layer = DependencyLayer()
+layer = DependenciesLayer()
 
 emit_tf({
     "resource": [

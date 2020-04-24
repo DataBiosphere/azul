@@ -20,7 +20,7 @@ resolved by running ::
 
     cd terraform
     make init
-    terraform destroy -target aws_lambda_layer_version.dependency_layer
+    terraform destroy -target aws_lambda_layer_version.dependencies_layer
 
 
 #1577 Switch all deployments to DSS ``prod``
