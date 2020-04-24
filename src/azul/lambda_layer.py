@@ -18,23 +18,16 @@ from azul.files import file_sha1
 log = logging.getLogger(__name__)
 
 
-class LayerBuilder:
+class DependencyLayer:
     layer_dir = Path(config.project_root) / 'lambdas' / 'layer'
     out_dir = layer_dir / '.chalice' / 'terraform'
 
-    def __init__(self):
-        self.s3 = boto3.client('s3')
+    @cachedproperty
+    def s3(self):
+        return boto3.client('s3')
 
-    def update_layer_if_necessary(self):
-        log.info('Updating layer in bucket: %s with key %s', config.layer_bucket, self.object_key)
-        if self.update_required():
-            log.info('Updating layer.zip')
-            self.update_layer()
-        else:
-            log.info('No update necessary')
-
-    def update_required(self) -> bool:
-        log.info('Checking if layer.zip needs to be updated')
+    def _update_required(self) -> bool:
+        log.info('Checking if layer package needs updating ...')
         try:
             # Since the object is content-addressed, just checking for the
             # object's presence is sufficient
@@ -48,23 +41,29 @@ class LayerBuilder:
             return False
 
     def update_layer(self, force: bool = False):
-        input_zip = self.out_dir / 'deployment.zip'
-        layer_zip = self.out_dir / 'layer.zip'
-        if force:
-            log.info('Tainting current lambda layer resource to force update')
-            command = ['terraform', 'taint', 'aws_lambda_layer_version.dependencies']
-            subprocess.run(command, cwd=Path(config.project_root) / 'terraform')
-        self.build_layer_zip(layer_zip, input_zip)
-        log.info('Uploading layer ZIP to S3')
-        self.s3.upload_file(str(layer_zip), config.layer_bucket, self.object_key)
+        log.info('Using dependency layer package at s3://%s/%s.', config.layer_bucket, self.object_key)
+        if force or self._update_required():
+            log.info('Staging layer package ...')
+            input_zip = self.out_dir / 'deployment.zip'
+            layer_zip = self.out_dir / 'layer.zip'
+            if force:
+                log.info('Tainting current lambda layer resource to force update')
+                command = ['terraform', 'taint', 'aws_lambda_layer_version.dependencies']
+                subprocess.run(command, cwd=Path(config.project_root) / 'terraform')
+            self._build_package(input_zip, layer_zip)
+            log.info('Uploading layer package to S3 ...')
+            self.s3.upload_file(str(layer_zip), config.layer_bucket, self.object_key)
+            log.info('Successfully staged updated layer package.')
+        else:
+            log.info('Layer package already up-to-date.')
 
-    def build_layer_zip(self, destination, input_zip):
+    def _build_package(self, input_zip, output_zip):
         command = ['chalice', 'package', self.out_dir]
-        log.info('Running: %s', command)
+        log.info('Running %r', command)
         subprocess.run(command, cwd=self.layer_dir).check_returncode()
-        log.info('Packaging %s', destination)
+        log.info('Packaging %s', output_zip)
         with ZipFile(input_zip, 'r') as deployment_zip:
-            with ZipFile(destination, 'w') as layer_zip:
+            with ZipFile(output_zip, 'w') as layer_zip:
                 for src_zip_info in deployment_zip.infolist():
                     if src_zip_info.filename != 'app.py':
                         # ZipFile doesn't copy permissions. Setting permissions
@@ -79,4 +78,6 @@ class LayerBuilder:
 
     @cachedproperty
     def object_key(self):
-        return config.layer_object_key(file_sha1(Path(config.project_root) / 'requirements.txt'))
+        path = Path(config.project_root) / 'requirements.txt'
+        sha1 = file_sha1(path)
+        return f'{config.lambda_layer_key}/{sha1}.zip'

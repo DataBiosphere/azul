@@ -683,11 +683,12 @@ class Config:
         return f'azul/{self.deployment_stage}/portals/{self.dss_deployment_stage(self.dss_endpoint)}-db.json'
 
     @property
-    def layer_bucket(self) -> str:
+    def lambda_layer_bucket(self) -> str:
         return self.versioned_bucket
 
-    def layer_object_key(self, requirements_hash) -> str:
-        return f'azul/lambda_layers/{requirements_hash}.zip'
+    @property
+    def lambda_layer_key(self) -> str:
+        return f'azul/lambda_layer'
 
     @property
     def dynamo_object_version_table_name(self) -> str:
