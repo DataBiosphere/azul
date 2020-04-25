@@ -10,6 +10,15 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#1577 Switch all deployments to DSS ``prod``
+============================================
+
+Please switch your personal deployments to point at the production instance of
+the DSS. See the example configuration files in ``deployments/.example.local``
+for the necessary configuration changes.
+
+
 #556 Deploying lambdas with Terraform
 =====================================
 
