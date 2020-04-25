@@ -163,6 +163,14 @@ other_public_keys = [
     )
 ]
 
+# AWS accounts we trust enough to assume roles in
+#
+friend_accounts = {
+    861229788715: 'hca-dev',
+    109067257620: 'hca-prod',
+    122796619775: 'platform-sc'
+}
+
 ingress_egress_block = {
     "cidr_blocks": None,
     "ipv6_cidr_blocks": None,
@@ -269,10 +277,10 @@ dss_direct_access_policy_statement = {
     "actions": [
         "sts:AssumeRole",
     ],
-    "resources": list(filter(None, (
-        config.dss_direct_access_role(lambda_name, stage='*')
-        for lambda_name in ('service', 'indexer')
-    )))
+    "resources": [
+        f"arn:aws:iam::{account}:role/azul-*"
+        for account in friend_accounts.keys()
+    ]
 }
 
 emit_tf({} if config.terraform_component != 'gitlab' else {

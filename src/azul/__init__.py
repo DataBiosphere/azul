@@ -178,15 +178,17 @@ class Config:
             require(account_id)
             resource_type, resource_id = resource.split('/')
             require(resource_type == 'role')
-            # This would fail if the syntax for qualified resource name were
-            # different between the Azul deployment that's assuming the role and
-            # the Azul deployment whose role is being assumed.
-            lambda_name_template, default_stage = self.unqualified_resource_name(resource_id)
-            require(lambda_name_template == '{lambda_name}')
-            if stage is None:
-                stage = default_stage
-            role_name = self.qualified_resource_name(lambda_name, stage=stage)
-            return f'arn:aws:iam::{account_id}:role/{role_name}'
+            try:
+                lambda_name_template, default_stage = self.unqualified_resource_name(resource_id)
+                require(lambda_name_template == '{lambda_name}')
+                if stage is None:
+                    stage = default_stage
+                role_name = self.qualified_resource_name(lambda_name, stage=stage)
+                return f'arn:aws:iam::{account_id}:role/{role_name}'
+            except RequirementError:
+                # If we fail to parse the role name, we can't parameterize it
+                # and must return the ARN verbatim.
+                return role_arn
 
     @property
     def num_dss_workers(self) -> int:
