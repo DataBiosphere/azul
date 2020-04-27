@@ -1,6 +1,7 @@
 from azul.chalice import AzulChaliceApp
 from azul.openapi import (
     schema,
+    params,
 )
 from azul_test_case import AzulTestCase
 
@@ -119,6 +120,29 @@ class TestAppSpecs(AzulTestCase):
             def route2():
                 pass
         self.assertEqual(str(cm.exception), 'Only specify path_spec once per route path')
+
+    def test_shared_path_spec(self):
+        """
+        Assert that, when sharing the path_spec, routes don't overwrite each
+        other's properties.
+        """
+        app = AzulChaliceApp('testing', spec={'foo': 'bar'})
+        shared_path_spec = {
+            'parameters': [
+                params.query('foo', schema.optional({'type': 'string'})),
+            ]
+        }
+        for i in range(2):
+            @app.route(f'/swagger-test-{i}',
+                       methods=['GET'],
+                       cors=True,
+                       path_spec=shared_path_spec,
+                       method_spec={'summary': f'Swagger test {i}'})
+            def swagger_test():
+                pass
+
+        method_specs = app.specs['paths'].values()
+        self.assertNotEqual(*method_specs)
 
 
 class TestSchemaHelpers(AzulTestCase):
