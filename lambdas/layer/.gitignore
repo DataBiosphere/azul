@@ -1,0 +1,2 @@
+/.chalice/*
+!/.chalice/config.json.template.py

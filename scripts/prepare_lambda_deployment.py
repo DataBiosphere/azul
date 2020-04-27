@@ -17,7 +17,10 @@ def transform_tf(input_json):
     del input_json['provider']
 
     assert 'variable' not in input_json
-    input_json['variable'] = {'role_arn': {}}
+    input_json['variable'] = {
+        'role_arn': {},
+        'layer_arn': {}
+    }
 
     input_json['output']['rest_api_id'] = {
         'value': '${aws_api_gateway_rest_api.rest_api.id}'
@@ -28,6 +31,8 @@ def transform_tf(input_json):
         func['source_code_hash'] = '${filebase64sha256("${path.module}/deployment.zip")}'
         assert func['filename'] == "./deployment.zip"
         func['filename'] = "${path.module}/deployment.zip"
+        assert 'layers' not in func
+        func['layers'] = ["${var.layer_arn}"]
 
     # TODO: Remove when https://github.com/aws/chalice/issues/1237 is merged.
     # This is tracked in https://github.com/DataBiosphere/azul/issues/1659

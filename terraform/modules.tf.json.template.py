@@ -7,11 +7,13 @@ emit_tf({
         # https://www.terraform.io/docs/modules/sources.html#local-paths
         "chalice_indexer": {
             "source": "./indexer",
-            "role_arn": "${aws_iam_role.indexer.arn}"
+            "role_arn": "${aws_iam_role.indexer.arn}",
+            "layer_arn": "${aws_lambda_layer_version.dependencies.arn}"
         },
         "chalice_service": {
             "source": "./service",
-            "role_arn": "${aws_iam_role.service.arn}"
+            "role_arn": "${aws_iam_role.service.arn}",
+            "layer_arn": "${aws_lambda_layer_version.dependencies.arn}"
         }
     }
 })
