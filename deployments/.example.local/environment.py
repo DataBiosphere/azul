@@ -32,9 +32,9 @@ def env() -> Mapping[str, Optional[str]]:
         
         'AZUL_DEPLOYMENT_STAGE': '<yourname>',
         
-        'AZUL_DSS_ENDPOINT': 'https://dss.staging.data.humancellatlas.org/v1',
+        'AZUL_DSS_ENDPOINT': 'https://dss.data.humancellatlas.org/v1',
         'AZUL_DSS_DIRECT_ACCESS': '1',
-        'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::861229788715:role/azul-{{lambda_name}}-staging',
+        'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
         
         # A personal deployment uses a subdomain of the `dev` deployment's domain.
         #
