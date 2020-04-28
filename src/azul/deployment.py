@@ -91,7 +91,8 @@ class AWS:
             return config.es_endpoint
         else:
             self._es_config_warning('endpoint')
-            return self._describe_es_domain_status['Endpoint'], 443
+            status = self._describe_es_domain_status
+            return None if status is None else (status['Endpoint'], 443)
 
     @property
     def es_instance_count(self) -> Optional[int]:
@@ -99,10 +100,11 @@ class AWS:
             return config.es_instance_count
         else:
             self._es_config_warning('instance count')
-            return self._describe_es_domain_status['ElasticsearchClusterConfig']['InstanceCount']
+            status = self._describe_es_domain_status
+            return None if status is None else status['ElasticsearchClusterConfig']['InstanceCount']
 
     @property
-    def _describe_es_domain_status(self) -> Optional[Mapping]:
+    def _describe_es_domain_status(self) -> Optional[JSON]:
         """
         Look up the status of the Elasticsearch domain, if available
         """
