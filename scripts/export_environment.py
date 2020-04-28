@@ -4,16 +4,15 @@ from abc import (
 )
 from collections import (
     ChainMap,
-    defaultdict,
 )
 import importlib.util
 from io import StringIO
 import os
 from pathlib import Path
-from re import compile
 import shlex
 import sys
 from typing import (
+    Iterator as Iterator,
     Mapping,
     Optional,
     TextIO,
@@ -154,75 +153,106 @@ def filter_env(env: DraftEnvironment) -> Environment:
     return {k: v for k, v in env.items() if v is not None}
 
 
+class ResolvedEnvironment(Environment):
+
+    def __init__(self, env: Environment) -> None:
+        super().__init__()
+        self.env = env
+
+    def __getitem__(self, k: str) -> str:
+        try:
+            v = self.env[k]
+        except KeyError:
+            return ''
+        else:
+            return v.format_map(self)
+
+    def __len__(self) -> int:
+        return len(self.env)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.env)
+
+    def __repr__(self) -> str:
+        return repr(dict(self))
+
+    __str__ = __repr__
+
+
 def resolve_env(env: Environment) -> Environment:
     """
     Resolve references to other variables among all values in the given
     environment.
 
+    Literal variable value:
+
+    >>> resolve_env({'x': '42'})
+    {'x': '42'}
+
+    Value referencing another variable:
+
     >>> resolve_env({'x': '{y}', 'y': '42'})
     {'x': '42', 'y': '42'}
 
-    Unmatched curly braces and curly braces that do not surround valid syntax
-    keywords will be ignored:
+    A reference to a missing value yields an empty string, similar to Unix
+    shell variable interpolation.
 
-    >>> resolve_env({'x': '{{', 'y': '{ z }', 'z': '{42}'})
-    {'x': '{{', 'y': '{ z }', 'z': '{42}'}
+    >>> resolve_env({'x': '{y}'})
+    {'x': ''}
 
-    Transitive references are supported:
+    Transitive reference:
 
     >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '42'})
     {'x': '42', 'y': '42', 'z': '42'}
 
-    Generative references formed during resolution are supported:
+    Circular references, direct or indirect are not supported:
 
-    >>> resolve_env({'x': '{y}}', 'y': '{z', 'z': '42'})
-    {'x': '42', 'y': '{z', 'z': '42'}
-
-    Consistent with a $missing_var in the shell a references to a missing key
-    yields an empty string replacement:
-
-    >>> resolve_env({'x': 'y is {y}'})
-    {'x': 'y is '}
-
-    A circular reference causes an exception:
-
+    >>> resolve_env({'x': '{x}'})
+    Traceback (most recent call last):
+    ...
+    RecursionError: maximum recursion depth exceeded while calling a Python object
     >>> resolve_env({'x': '{y}', 'y': '{x}'})
     Traceback (most recent call last):
     ...
-    ValueError: Circular reference not allowed.
-    """
-    while True:
-        resolved_env = {k: _custom_format_map(k, v, env) for k, v in env.items()}
-        if env == resolved_env:
-            return resolved_env
-        else:
-            env = resolved_env
+    RecursionError: maximum recursion depth exceeded while calling a Python object
+    >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '{x}'})
+    Traceback (most recent call last):
+    ...
+    RecursionError: maximum recursion depth exceeded while calling a Python object
 
+    Literal (escaped) curly braces:
 
-def _custom_format_map(key: str, val: str, mapping: Mapping[str, str]) -> str:
+    >>> resolve_env({'o': '{{', 'c': '}}', 'oc': '{{}}'})
+    {'o': '{', 'c': '}', 'oc': '{}'}
+
+    Generated references are not resolved:
+
+    >>> resolve_env({'x': '{o}y{c}', 'y': '42', 'o': '{{', 'c': '}}'})
+    {'x': '{y}', 'y': '42', 'o': '{', 'c': '}'}
+
+    If they were, the result would be:
+
+    {'x': '42', 'y': '42', 'o': '{', 'c': '}'}
+
+    Dangling braces are not supported:
+
+    >>> resolve_env({'x': '{'})
+    Traceback (most recent call last):
+    ...
+    ValueError: Single '{' encountered in format string
+    >>> resolve_env({'x': '}'})
+    Traceback (most recent call last):
+    ...
+    ValueError: Single '}' encountered in format string
+
+    And an empty pair of braces isn't either:
+
+    >>> resolve_env({'x': '{}'})
+    Traceback (most recent call last):
+    ...
+    ValueError: Format string contains positional fields
     """
-    Works like `val.format_map(mapping)` but ignores curly braces that
-    do not wrap valid syntax keywords (e.g. contain spaces, unmatched), and
-    replaces curly brace wrapped keywords with an empty string when a matching
-    key is not found in the mapping.
-    """
-    pattern = compile(r'{[^{}\s]+}')  # matches '{FOO}' and not '{F OO}' or '{}'
-    match = pattern.search(val)
-    while match is not None:
-        start, end = match.span()
-        substring = match.group()
-        if f'{{{key}}}' == substring:
-            raise ValueError('Circular reference not allowed.')
-        try:
-            substring = substring.format_map(defaultdict(str, mapping))
-        except ValueError:
-            # skip over keywords not supported by format_map()
-            start_at = end
-        else:
-            val = val[0:start] + substring + val[end:]
-            start_at = start + len(substring)
-        match = pattern.search(val, pos=start_at)
-    return val
+    return dict(ResolvedEnvironment(env))
 
 
 def export_env(env: Environment, output: Optional[TextIO]) -> None:
