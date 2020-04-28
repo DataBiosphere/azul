@@ -93,14 +93,14 @@ def main(argv: List[str]):
                              dss_url=args.dss_url,
                              prefix=args.prefix,
                              num_workers=args.num_workers)
-    queue_manager = Queues()
-    queues = queue_manager.get_queues(config.work_queue_names)
+    queues = Queues()
+    work_queues = queues.get_queues(config.work_queue_names)
 
     if args.purge:
         logger.info('Disabling lambdas ...')
-        queue_manager.manage_lambdas(queues, enable=False)
-        logger.info('Purging queues: %s', ', '.join(queues.keys()))
-        queue_manager.purge_queues_unsafely(queues)
+        queues.manage_lambdas(work_queues, enable=False)
+        logger.info('Purging queues: %s', ', '.join(work_queues.keys()))
+        queues.purge_queues_unsafely(work_queues)
 
     if args.delete:
         logger.info('Deleting indices ...')
@@ -108,7 +108,7 @@ def main(argv: List[str]):
 
     if args.purge:
         logger.info('Re-enabling lambdas ...')
-        queue_manager.manage_lambdas(queues, enable=True)
+        queues.manage_lambdas(work_queues, enable=True)
 
     if args.index:
         logger.info('Queuing notifications for reindexing ...')
@@ -118,8 +118,8 @@ def main(argv: List[str]):
             azul_client.reindex()
         if args.wait:
             # Total wait time for queues must be less than timeout in `.gitlab-ci.yml`
-            queue_manager.wait_for_queue_level(empty=False)
-            queue_manager.wait_for_queue_level(empty=True)
+            queues.wait_for_queue_level(empty=False)
+            queues.wait_for_queue_level(empty=True)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ import os
 import time
 from typing import (
     Any,
-    List,
+    Iterable,
     Mapping,
 )
 
@@ -48,9 +48,12 @@ class Queues:
                   f'{queue.attributes["ApproximateNumberOfMessagesDelayed"]:^18s}')
 
     def dump(self, queue_name, path):
-        sqs = boto3.resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName=queue_name)
+        queue = self.sqs.get_queue_by_name(QueueName=queue_name)
         self._dump(queue, path)
+
+    @cachedproperty
+    def sqs(self):
+        return boto3.resource('sqs')
 
     def dump_all(self):
         for queue_name, queue in self.azul_queues().items():
@@ -140,13 +143,13 @@ class Queues:
     def azul_queues(self):
         return self.get_queues(config.all_queue_names)
 
-    @classmethod
-    def get_queues(cls, queue_names: List[str]) -> Mapping[str, Any]:
-        sqs = boto3.resource('sqs')
-        return {queue_name: sqs.get_queue_by_name(QueueName=queue_name) for queue_name in queue_names}
+    def get_queues(self, queue_names: Iterable[str]) -> Mapping[str, Queue]:
+        return {
+            queue_name: self.sqs.get_queue_by_name(QueueName=queue_name)
+            for queue_name in queue_names
+        }
 
-    @classmethod
-    def count_messages(cls, queues: Mapping[str, Any]) -> int:
+    def count_messages(self, queues: Mapping[str, Queue]) -> int:
         """
         Count the number of messages in the given queues
 
@@ -164,8 +167,7 @@ class Queues:
             total_message_count += queue_length
         return total_message_count
 
-    @classmethod
-    def wait_for_queue_level(cls, empty: bool = True, num_bundles: int = None):
+    def wait_for_queue_level(self, empty: bool = True, num_bundles: int = None):
         """
         Wait until the total count of messages in the notify and document queues
         reaches the desired level
@@ -175,7 +177,7 @@ class Queues:
         """
         sleep_time = 5
         deque_size = 10 if empty else 1
-        queues = cls.get_queues(config.work_queue_names)
+        queues = self.get_queues(config.work_queue_names)
         queue_size_history = deque(maxlen=deque_size)
         wait_start_time = time.time()
 
@@ -193,7 +195,7 @@ class Queues:
         logger.info('Waiting up to %s seconds for %s queues to %s ...',
                     timeout, len(queues), 'empty' if empty else 'not be empty')
         while True:
-            total_message_count = cls.count_messages(queues)
+            total_message_count = self.count_messages(queues)
             logger.info('Counting %i total message(s) in %i queue(s).', total_message_count, len(queues))
             queue_wait_time_elapsed = (time.time() - wait_start_time)
             queue_size_history.append(total_message_count)
@@ -213,8 +215,7 @@ class Queues:
             content = json.load(file)
             orig_queue = content['queue']
             messages = content['messages']
-        sqs = boto3.resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName=queue_name)
+        queue = self.sqs.get_queue_by_name(QueueName=queue_name)
         logger.info('Writing messages from file "%s" to queue "%s"', path, queue.url)
         if orig_queue != queue.url:
             if force:
@@ -253,8 +254,7 @@ class Queues:
                 os.unlink(path)
 
     def purge(self, queue_name):
-        sqs = boto3.resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName=queue_name)
+        queue = self.sqs.get_queue_by_name(QueueName=queue_name)
         self.purge_queues_safely({queue_name: queue})
 
     def purge_all(self):
