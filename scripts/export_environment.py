@@ -4,7 +4,6 @@ from abc import (
 )
 from collections import (
     ChainMap,
-    defaultdict,
 )
 import importlib.util
 from io import StringIO
@@ -13,6 +12,7 @@ from pathlib import Path
 import shlex
 import sys
 from typing import (
+    Iterator as Iterator,
     Mapping,
     Optional,
     TextIO,
@@ -87,15 +87,6 @@ def load_env() -> Environment:
     """
     root_dir = this_module.parent.parent
 
-    # FIXME: Remove as part of https://github.com/DataBiosphere/azul/issues/1645
-    try:
-        project_root = os.environ['project_root']
-    except KeyError:
-        project_root = str(root_dir)
-        os.environ['project_root'] = project_root
-    else:
-        assert str(root_dir) == project_root
-
     deployments_dir = root_dir / 'deployments'
     active_deployment_dir = deployments_dir / '.active'
     if not active_deployment_dir.is_dir() or not active_deployment_dir.is_symlink():
@@ -146,7 +137,7 @@ def load_env() -> Environment:
     # Note that ChainMap looks only considers the second mapping in the chain
     # if a key is absent from the first one. IOW, the earlier mappings in the
     # chain take precedence over later ones.
-    env = ChainMap(dict(project_root=project_root))
+    env = ChainMap(dict(project_root=str(root_dir)))
     for module in modules:
         if module is not None:
             env.maps.append(filter_env(module.env()))
@@ -162,40 +153,106 @@ def filter_env(env: DraftEnvironment) -> Environment:
     return {k: v for k, v in env.items() if v is not None}
 
 
+class ResolvedEnvironment(Environment):
+
+    def __init__(self, env: Environment) -> None:
+        super().__init__()
+        self.env = env
+
+    def __getitem__(self, k: str) -> str:
+        try:
+            v = self.env[k]
+        except KeyError:
+            return ''
+        else:
+            return v.format_map(self)
+
+    def __len__(self) -> int:
+        return len(self.env)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.env)
+
+    def __repr__(self) -> str:
+        return repr(dict(self))
+
+    __str__ = __repr__
+
+
 def resolve_env(env: Environment) -> Environment:
     """
     Resolve references to other variables among all values in the given
     environment.
 
+    Literal variable value:
+
+    >>> resolve_env({'x': '42'})
+    {'x': '42'}
+
+    Value referencing another variable:
+
     >>> resolve_env({'x': '{y}', 'y': '42'})
     {'x': '42', 'y': '42'}
 
-    Literal curly braces need to be escaped:
+    A reference to a missing value yields an empty string, similar to Unix
+    shell variable interpolation.
 
-    >>> resolve_env({'x': '{{', 'y': '}}', 'z': '{{x}}'})
-    {'x': '{', 'y': '}', 'z': '{x}'}
+    >>> resolve_env({'x': '{y}'})
+    {'x': ''}
 
-    Does not support transitive references:
+    Transitive reference:
 
     >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '42'})
-    {'x': '{z}', 'y': '42', 'z': '42'}
-
-    Transitive resolution would yield
-
     {'x': '42', 'y': '42', 'z': '42'}
 
-    Does not support generative ones (references formed during resolution):
+    Circular references, direct or indirect are not supported:
 
-    >>> resolve_env({'x': '{y}}}', 'y': '{{z', 'z': '42'})
-    {'x': '{{z}', 'y': '{z', 'z': '42'}
+    >>> resolve_env({'x': '{x}'})
+    Traceback (most recent call last):
+    ...
+    RecursionError: maximum recursion depth exceeded while calling a Python object
+    >>> resolve_env({'x': '{y}', 'y': '{x}'})
+    Traceback (most recent call last):
+    ...
+    RecursionError: maximum recursion depth exceeded while calling a Python object
+    >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '{x}'})
+    Traceback (most recent call last):
+    ...
+    RecursionError: maximum recursion depth exceeded while calling a Python object
 
-    which could be
+    Literal (escaped) curly braces:
 
-    {'x': '42', 'y': '{z', 'z': '42'}
+    >>> resolve_env({'o': '{{', 'c': '}}', 'oc': '{{}}'})
+    {'o': '{', 'c': '}', 'oc': '{}'}
+
+    Generated references are not resolved:
+
+    >>> resolve_env({'x': '{o}y{c}', 'y': '42', 'o': '{{', 'c': '}}'})
+    {'x': '{y}', 'y': '42', 'o': '{', 'c': '}'}
+
+    If they were, the result would be:
+
+    {'x': '42', 'y': '42', 'o': '{', 'c': '}'}
+
+    Dangling braces are not supported:
+
+    >>> resolve_env({'x': '{'})
+    Traceback (most recent call last):
+    ...
+    ValueError: Single '{' encountered in format string
+    >>> resolve_env({'x': '}'})
+    Traceback (most recent call last):
+    ...
+    ValueError: Single '}' encountered in format string
+
+    And an empty pair of braces isn't either:
+
+    >>> resolve_env({'x': '{}'})
+    Traceback (most recent call last):
+    ...
+    ValueError: Format string contains positional fields
     """
-    # `{missing_var}` references in values should yield the empty string,
-    # consistent with $missing_var in the shell.
-    return {k: v.format_map(defaultdict(str, env)) for k, v in env.items()}
+    return dict(ResolvedEnvironment(env))
 
 
 def export_env(env: Environment, output: Optional[TextIO]) -> None:

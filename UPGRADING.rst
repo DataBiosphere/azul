@@ -10,6 +10,21 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#1645 Rethink template config variable mechanism
+================================================
+
+The format of environment variable 'AZUL_SUBDOMAIN_TEMPLATE' has been changed
+and will need to be updated in personal deployment's 'environment.py' file.
+
+Change ::
+
+    'AZUL_SUBDOMAIN_TEMPLATE': '{{lambda_name}}.{AZUL_DEPLOYMENT_STAGE}',
+
+to ::
+
+    'AZUL_SUBDOMAIN_TEMPLATE': '*.{AZUL_DEPLOYMENT_STAGE}',
+
+
 #1272 Use Lambda layers to speed up ``make deploy``
 ===================================================
 
