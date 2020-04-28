@@ -554,10 +554,6 @@ class Config:
         return self.qualified_resource_name('notify')
 
     @property
-    def token_queue_name(self):
-        return config.qualified_resource_name('documents')
-
-    @property
     def document_queue_name(self):
         return config.qualified_resource_name('documents', suffix='.fifo')
 
@@ -579,7 +575,7 @@ class Config:
 
     @property
     def work_queue_names(self):
-        return self.notify_queue_name, self.token_queue_name, self.document_queue_name
+        return self.notify_queue_name, self.document_queue_name
 
     manifest_lambda_basename = 'manifest'
 
