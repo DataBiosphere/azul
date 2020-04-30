@@ -355,7 +355,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         return {
             'content-type': file.manifest_entry.content_type,
             'indexed': file.manifest_entry.indexed,
-            'name': file.manifest_entry.name,
+            'name': file.manifest_entry.name.replace('!', '/'),
             'sha256': file.manifest_entry.sha256,
             'size': file.manifest_entry.size,
             'uuid': file.manifest_entry.uuid,
@@ -566,6 +566,8 @@ class FileTransformer(Transformer):
                             manifest=manifest,
                             metadata_files=metadata_files)
         project = self._get_project(bundle)
+        for file in bundle.files.values():
+            file.manifest_entry.name = file.manifest_entry.name.replace('!', '/')
         zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(bundle.files.values())
         for file in bundle.files.values():
             file_name = file.manifest_entry.name
