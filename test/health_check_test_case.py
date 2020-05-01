@@ -18,6 +18,7 @@ from unittest.mock import (
 
 import boto3
 from moto import (
+    mock_dynamodb2,
     mock_s3,
     mock_sqs,
     mock_sts,
@@ -31,6 +32,7 @@ from azul.modules import load_app_module
 from azul.service.storage_service import StorageService
 from azul.types import JSON
 from es_test_case import ElasticsearchTestCase
+from health_failures_test_case import TestHealthFailures
 from retorts import ResponsesHelper
 
 
@@ -61,8 +63,10 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
 
     @mock_sts
     @mock_sqs
+    @mock_dynamodb2
     def test_health_all_ok(self):
         self._create_mock_queues()
+        self._create_mock_dynamodb()
         endpoint_states = self._endpoint_states()
         response = self._test(endpoint_states, lambdas_up=True, path='/health/')
         self.assertEqual(200, response.status_code)
@@ -70,6 +74,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             'up': True,
             **self._expected_elasticsearch(True),
             **self._expected_queues(True),
+            **self._expected_failures(True),
             **self._expected_other_lambdas(True),
             **self._expected_api_endpoints(endpoint_states),
             **self._expected_progress()
@@ -238,6 +243,15 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             }
         }
 
+    def _expected_failures(self, up: bool) -> JSON:
+        return {
+            'failures': {
+                'up': up,
+                'failed_bundle_notifications': [],
+                'other_failed_messages': 0,
+            }
+        }
+
     def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health/fast'):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
@@ -265,6 +279,10 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         sqs = boto3.resource('sqs')
         for queue_name in config.all_queue_names:
             sqs.create_queue(QueueName=queue_name)
+
+    def _create_mock_dynamodb(self):
+        dynamodb = boto3.resource('dynamodb')
+        dynamodb.create_table(**TestHealthFailures.dynamo_failure_message_table_settings())
 
     def _endpoint_states(self,
                          up_endpoints: Tuple[str, ...] = endpoints,

@@ -34,10 +34,9 @@ class TestHealthFailures(LocalAppTestCase):
     def lambda_name(cls) -> str:
         return 'service'
 
-    @contextmanager
-    def _make_database(self):
-        database = boto3.resource('dynamodb', region_name='us-east-1')
-        table_settings = {
+    @classmethod
+    def dynamo_failure_message_table_settings(cls):
+        return {
             'TableName': config.dynamo_failure_message_table_name,
             'KeySchema': [
                 {
@@ -64,12 +63,16 @@ class TestHealthFailures(LocalAppTestCase):
                 'WriteCapacityUnits': 5
             }
         }
-        database.create_table(**table_settings)
+
+    @contextmanager
+    def _make_database(self):
+        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+        dynamodb.create_table(**self.dynamo_failure_message_table_settings())
         with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
             try:
                 yield
             finally:
-                table = database.Table(config.dynamo_failure_message_table_name)
+                table = dynamodb.Table(config.dynamo_failure_message_table_name)
                 table.delete()
 
     @mock_sts
@@ -80,7 +83,7 @@ class TestHealthFailures(LocalAppTestCase):
         sqs = boto3.resource('sqs', region_name='us-east-1')
         sqs.create_queue(QueueName=config.fail_queue_name)
         fail_queue = sqs.get_queue_by_name(QueueName=config.fail_queue_name)
-        with patch('azul.time.RemainingLambdaContextTime.get', return_value=1000):
+        with patch('azul.time.RemainingLambdaContextTime.get', return_value=1):
             with patch.object(HealthController, 'receive_message_wait_time', 0):
                 with ResponsesHelper() as helper:
                     helper.add_passthru(self.base_url)
@@ -105,12 +108,16 @@ class TestHealthFailures(LocalAppTestCase):
                                 ]
                                 fail_queue.send_messages(Entries=items)
                             expected_response = sort_frozen(freeze({
-                                "failed_bundle_notifications": bundle_notifications,
-                                "other_failed_messages": num_other
+                                'failures': {
+                                    'failed_bundle_notifications': bundle_notifications,
+                                    'other_failed_messages': num_other,
+                                    'up': True
+                                },
+                                'up': True
                             }))
                             with self.subTest(num_bundles=num_bundles,
                                               num_other=num_other):
-                                indexer_app.retrieve_failure_messages(MagicMock(), MagicMock())
+                                indexer_app.retrieve_fail_messages(MagicMock(), MagicMock())
                                 response = requests.get(self.base_url + '/health/failures')
                                 self.assertEqual(200, response.status_code)
                                 actual_response = sort_frozen(freeze(response.json()))

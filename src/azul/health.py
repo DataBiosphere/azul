@@ -131,6 +131,7 @@ class HealthController:
         }
         num_other_failed = table.query(KeyConditions=other_key_condition, Select='COUNT')['Count']
         return {
+            'up': True,
             'failed_bundle_notifications': failed_bundle_notifications,
             'other_failed_messages': num_other_failed
         }
@@ -271,6 +272,15 @@ class HealthController:
     @classmethod
     def all_keys(cls) -> Set[str]:
         return {p.key for p in cls.all_properties}
+
+    # noinspection PyMethodParameters
+    @classproperty
+    def receive_message_wait_time(cls) -> int:
+        """
+        The number of seconds to wait for a message to arrive in the fail queue
+        before accepting that there are zero messages to be received.
+        """
+        return 5
 
     def archive_fail_messages(self, remaining_context_time):
         client = boto3.client('dynamodb')
