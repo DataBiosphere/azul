@@ -31,7 +31,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DSS_ENDPOINT': 'https://dss.data.humancellatlas.org/v1',
         'AZUL_DSS_DIRECT_ACCESS': '1',
         'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
-        'AZUL_SUBSCRIBE_TO_DSS': '1',
+        'AZUL_SUBSCRIBE_TO_DSS': '0',
         
         'AZUL_DRS_DOMAIN_NAME': 'drs.dev.singlecell.gi.ucsc.edu',
         
