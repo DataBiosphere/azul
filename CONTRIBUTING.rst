@@ -523,6 +523,28 @@ Issue Tracking
   assigned to the assisting person. Once assistance was provided, the ticket
   should be assigned back to the original assignee.
 
+* We use Zenhub dependencies between issues to express constraints on the
+  order in which those issues can be worked on.  If issue ``#1`` blocks
+  ``#2``, then work on ``#2`` can't begin before work on ``#1`` has completed.
+  For issues that are resolved by a commit, work is considered complete when
+  that commit appears on the ``develop`` branch. Issues must not block PRs and
+  PRs must not block issues. The only express relation we use between issues
+  and PRs is Zenhub's *Link to issue* feature.
+
+* Freebies: If the resolution to one issue implicitly resolves another one,
+  that second issue is called a *freebee*. Freebies are assigned to the
+  assignee of the primary issue and their estimate is set to zero. A freebee
+  is moved manually, through the Zenhub pipelines, in tandem with its
+  respective primary issue. Freebee resolution is demonstrated independently. 
+
+  Freebies should be used sparingly. Preferably, separate issues are resolved
+  in separate PRs. A commit that addresses a primary issue and a freebee have
+  a title that lists them both e.g., ``Fix foo (#1, #2)``. 
+
+  Note that dedicating a commit to a freebie on a PR branch is a bad smell. If
+  the issue can be resolved in a separate commit, it may as well be resolved
+  on a separate branch.
+
 
 Pull Requests
 =============
@@ -627,6 +649,27 @@ Pull Requests
   represents the main feature or fix while other commits are preparatory
   refactorings or minor unrelated changes. The title of merge commit in this
   case usually matches that of the main commit.
+
+* We use Zenhub dependencies between PRs to define constraints on the order in
+  which they can be merged into ``develop``. If PR ``#3`` blocks ``#4``, then
+  ``#3`` must be merged before ``#4``. Issues must not block PRs and PRs must
+  not block issues. The only express relation we use between issues and PRs is
+  Zenhub's *Link to issue* feature. Note that an explicit dependency between
+  two issues implies a dependency between the PRs linked to the issues: if
+  issue ``#1`` blocks issue ``#2`` and PR ``#3`` is linked to ``#1`` while PR
+  ``#4`` is linked to ``#2``, then PR ``#4`` must be merged after ``#3``.
+
+* Chained PRs: If two PRs touch the same area of code, they can be chained to
+  avoid  excessive merge conflicts. To chain PR ``#3`` and ``#4``, base the
+  source branch for ``#4`` on that for ``#3``, set the target branch of ``#4``
+  to the source branch of ``#3``, label ``#3`` as ``chain`` and mark ``#4`` as
+  blocked by ``#3``.  This allows the primary reviewer to break the chain when
+  they merge ``#3``. The label catches their attention, the dependency lets
+  them follow the chain and the target branch setting allows reviewers to
+  ignore changes in the base branch. Note that you'd typically chain PRs if
+  their issues are independent: if they were dependent, they shouldn't be
+  worked on simultaneously.
+
 
 .. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
   
