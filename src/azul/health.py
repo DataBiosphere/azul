@@ -56,6 +56,8 @@ class HealthController:
     properties does, or using the `to_json` method.
     """
 
+    receive_message_wait_time = 5
+
     def __init__(self, lambda_name: str):
         self.lambda_name = lambda_name
         self.storage_service = StorageService()
@@ -116,7 +118,7 @@ class HealthController:
         Returns message data from the error sqs queues.
         """
         dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table(config.dynamo_failure_message_table_name)
+        table = dynamodb.Table(config.dynamo_failures_table_name)
         bundle_key_condition = {
             'MessageType': {
                 'AttributeValueList': ['bundle'], 'ComparisonOperator': 'EQ'
@@ -273,19 +275,10 @@ class HealthController:
     def all_keys(cls) -> Set[str]:
         return {p.key for p in cls.all_properties}
 
-    # noinspection PyMethodParameters
-    @classproperty
-    def receive_message_wait_time(cls) -> int:
-        """
-        The number of seconds to wait for a message to arrive in the fail queue
-        before accepting that there are zero messages to be received.
-        """
-        return 5
-
     def archive_fail_messages(self, remaining_context_time):
         client = boto3.client('dynamodb')
         fail_queue = boto3.resource('sqs').get_queue_by_name(QueueName=config.fail_queue_name)
-        while remaining_context_time.get() > 0:
+        while remaining_context_time.get() >= self.receive_message_wait_time + 2:  # 2 second margin for db actions
             received_messages = fail_queue.receive_messages(AttributeNames=['All'],
                                                             MaxNumberOfMessages=10,
                                                             WaitTimeSeconds=self.receive_message_wait_time,
@@ -308,11 +301,11 @@ class HealthController:
                         }
                     } for message in received_messages
                 ]
-                items = {config.dynamo_failure_message_table_name: message_batch}
+                items = {config.dynamo_failures_table_name: message_batch}
                 response = client.batch_write_item(RequestItems=items)
                 unprocessed_items = response['UnprocessedItems']
                 if unprocessed_items:
-                    assert len(unprocessed_items) == 1 and unprocessed_items[config.dynamo_failure_message_table_name]
+                    assert len(unprocessed_items) == 1 and unprocessed_items[config.dynamo_failures_table_name]
                     raise ConnectionError('Unable to write all messages to DynamoDB table.')
                 else:
                     fail_queue.delete_messages(Entries=[

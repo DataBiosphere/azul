@@ -656,8 +656,8 @@ class Config:
     access_token_issuer = "https://humancellatlas.auth0.com"
 
     @property
-    def dynamo_failure_message_table_name(self):
-        return self.qualified_resource_name('failuremessages')
+    def dynamo_failures_table_name(self):
+        return self.qualified_resource_name('failures')
 
     @property
     def access_token_audience_list(self):

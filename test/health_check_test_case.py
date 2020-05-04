@@ -66,7 +66,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     @mock_dynamodb2
     def test_health_all_ok(self):
         self._create_mock_queues()
-        self._create_mock_dynamodb()
+        self._mock_failures_table()
         endpoint_states = self._endpoint_states()
         response = self._test(endpoint_states, lambdas_up=True, path='/health/')
         self.assertEqual(200, response.status_code)
@@ -280,9 +280,9 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         for queue_name in config.all_queue_names:
             sqs.create_queue(QueueName=queue_name)
 
-    def _create_mock_dynamodb(self):
+    def _mock_failures_table(self):
         dynamodb = boto3.resource('dynamodb')
-        dynamodb.create_table(**TestHealthFailures.dynamo_failure_message_table_settings())
+        dynamodb.create_table(**TestHealthFailures.dynamo_failures_table_settings)
 
     def _endpoint_states(self,
                          up_endpoints: Tuple[str, ...] = endpoints,

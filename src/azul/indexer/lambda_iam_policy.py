@@ -112,7 +112,7 @@ policy = {
                 "dynamodb:DescribeTable"
             ],
             "Resource": [
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_failure_message_table_name}",
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_failures_table_name}",
             ]
         },
         {

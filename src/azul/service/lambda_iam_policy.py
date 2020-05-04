@@ -129,7 +129,7 @@ policy = {
                 f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_table_name}/index/*",
                 f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_item_table_name}/index/*",
                 f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_user_table_name}/index/*",
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_failure_message_table_name}",
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_failures_table_name}",
             ]
         },
         {

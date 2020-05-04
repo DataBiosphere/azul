@@ -1,7 +1,5 @@
 from contextlib import contextmanager
-import os
 import json
-from unittest import mock
 from uuid import uuid4
 
 import boto3
@@ -29,51 +27,46 @@ from retorts import ResponsesHelper
 
 
 class TestHealthFailures(LocalAppTestCase):
+    dynamo_failures_table_settings = {
+        'TableName': config.dynamo_failures_table_name,
+        'KeySchema': [
+            {
+                'AttributeName': 'MessageType',
+                'KeyType': 'HASH'
+            },
+            {
+                'AttributeName': 'SentTimeMessageId',
+                'KeyType': 'RANGE'
+            }
+        ],
+        'AttributeDefinitions': [
+            {
+                'AttributeName': 'MessageType',
+                'AttributeType': 'S'
+            },
+            {
+                'AttributeName': 'SentTimeMessageId',
+                'AttributeType': 'S'
+            }
+        ],
+        'ProvisionedThroughput': {
+            'ReadCapacityUnits': 5,
+            'WriteCapacityUnits': 5
+        }
+    }
 
     @classmethod
     def lambda_name(cls) -> str:
         return 'service'
 
-    @classmethod
-    def dynamo_failure_message_table_settings(cls):
-        return {
-            'TableName': config.dynamo_failure_message_table_name,
-            'KeySchema': [
-                {
-                    'AttributeName': 'MessageType',
-                    'KeyType': 'HASH'
-                },
-                {
-                    'AttributeName': 'SentTimeMessageId',
-                    'KeyType': 'RANGE'
-                }
-            ],
-            'AttributeDefinitions': [
-                {
-                    'AttributeName': 'MessageType',
-                    'AttributeType': 'S'
-                },
-                {
-                    'AttributeName': 'SentTimeMessageId',
-                    'AttributeType': 'S'
-                }
-            ],
-            'ProvisionedThroughput': {
-                'ReadCapacityUnits': 5,
-                'WriteCapacityUnits': 5
-            }
-        }
-
     @contextmanager
-    def _make_database(self):
+    def _mock_failures_table(self):
         dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-        dynamodb.create_table(**self.dynamo_failure_message_table_settings())
-        with mock.patch.dict(os.environ, AWS_DEFAULT_REGION='us-east-1'):
-            try:
-                yield
-            finally:
-                table = dynamodb.Table(config.dynamo_failure_message_table_name)
-                table.delete()
+        table = dynamodb.create_table(**self.dynamo_failures_table_settings)
+        try:
+            yield
+        finally:
+            table.delete()
 
     @mock_sts
     @mock_sqs
@@ -83,7 +76,7 @@ class TestHealthFailures(LocalAppTestCase):
         sqs = boto3.resource('sqs', region_name='us-east-1')
         sqs.create_queue(QueueName=config.fail_queue_name)
         fail_queue = sqs.get_queue_by_name(QueueName=config.fail_queue_name)
-        with patch('azul.time.RemainingLambdaContextTime.get', return_value=1):
+        with patch('azul.time.RemainingLambdaContextTime.get', return_value=2):
             with patch.object(HealthController, 'receive_message_wait_time', 0):
                 with ResponsesHelper() as helper:
                     helper.add_passthru(self.base_url)
@@ -91,7 +84,7 @@ class TestHealthFailures(LocalAppTestCase):
                     # The max number of messages in a batch is 10 and this sub-test populates the queue with 11
                     # messages.
                     for num_bundles, num_other in ((0, 0), (1, 0), (0, 1), (10, 1), (10, 0)):
-                        with self._make_database():
+                        with self._mock_failures_table():
                             bundle_notifications = [
                                 {
                                     'action': 'add',

@@ -78,8 +78,8 @@ emit_tf(
                             }
                         ]
                     },
-                    "failed_messages_table": {
-                        "name": config.dynamo_failure_message_table_name,
+                    "failures_table": {
+                        "name": config.dynamo_failures_table_name,
                         "billing_mode": "PAY_PER_REQUEST",
                         "hash_key": "MessageType",
                         "range_key": "SentTimeMessageId",
