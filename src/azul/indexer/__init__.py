@@ -243,7 +243,10 @@ class BaseIndexer(ABC):
             # Read all contributions from Elasticsearch
             contributions = self._read_contributions(total_tallies)
             actual_tallies = Counter(contribution.entity for contribution in contributions)
-            assert len(tallies) == len(actual_tallies)
+            if tallies.keys() != actual_tallies.keys():
+                message = 'Could not find all expected contributions.'
+                args = (tallies, actual_tallies) if config.debug else ()
+                raise EventualConsistencyException(message, *args)
             assert all(tallies[entity] <= actual_tally for entity, actual_tally in actual_tallies.items())
             # Combine the contributions into old_aggregates, one per entity
             new_aggregates = self._aggregate(contributions)
@@ -286,7 +289,7 @@ class BaseIndexer(ABC):
         }
         index = sorted(list({config.es_index_name(e.entity_type, aggregate=False) for e in tallies.keys()}))
         # scan() uses a server-side cursor and is expensive. Only use it if the number of contributions is large
-        page_size = 100
+        page_size = 1000  # page size of 100 caused excessive ScanError occurrences
         num_contributions = sum(tallies.values())
         hits = None
         if num_contributions <= page_size:
@@ -295,7 +298,9 @@ class BaseIndexer(ABC):
             total_hits = response['hits']['total']
             if total_hits <= page_size:
                 hits = response['hits']['hits']
-                assert len(hits) == total_hits
+                if len(hits) != total_hits:
+                    message = f'Search returned {len(hits)} hits but reports total to be {total_hits}'
+                    raise EventualConsistencyException(message)
             else:
                 log.info('Expected only %i contribution(s) but got %i.', num_contributions, total_hits)
                 num_contributions = total_hits
@@ -305,12 +310,12 @@ class BaseIndexer(ABC):
         contributions = [Contribution.from_index(self.field_types(), hit) for hit in hits]
         log.info('Read %i contribution(s). ', len(contributions))
         if log.isEnabledFor(logging.DEBUG):
-            entity_key = attrgetter('entity')
+            entity_ref = attrgetter('entity')
             log.debug(
                 'Number of contributions read, by entity: %r',
                 {
                     f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
-                    for entity, contribution_group in groupby(sorted(contributions, key=entity_key), key=entity_key)
+                    for entity, contribution_group in groupby(sorted(contributions, key=entity_ref), key=entity_ref)
                 }
             )
         return contributions
@@ -528,3 +533,7 @@ class IndexWriter:
             log.warning('Conflicts: %r', self.conflicts)
             raise RuntimeError('Failed to index documents. Failures: %i, conflicts: %i.' %
                                (len(self.errors), len(self.conflicts)))
+
+
+class EventualConsistencyException(RuntimeError):
+    pass
