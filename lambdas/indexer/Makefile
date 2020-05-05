@@ -1,23 +1,27 @@
+.PHONY: all
 all: deploy
 
 include ../../common.mk
 
+.PHONY: config
 config: .chalice/config.json
 
-wheels:
+.PHONY: wheels
+wheels: check_env
 	rm -rf vendor/jsonobject*
 	unzip $(azul_home)/lambdas/.wheels/jsonobject-0.9.9-cp36-cp36m-linux_x86_64.whl -d vendor
 
+.PHONY: deploy
 # TODO: Rename target: https://github.com/DataBiosphere/azul/issues/1654
-deploy: config wheels
+deploy: check_branch check_python check_aws config wheels
 	python -m azul.changelog vendor
 	chalice package --stage $(AZUL_DEPLOYMENT_STAGE) --pkg-format terraform .chalice/terraform
 	python $(azul_home)/scripts/prepare_lambda_deployment.py indexer
 
-local: config
+.PHONY: local
+local: check_python config
 	chalice local
 
-clean:
+.PHONY: clean
+clean: check_env
 	git clean -Xdf
-
-.PHONY: all config deploy local clean
