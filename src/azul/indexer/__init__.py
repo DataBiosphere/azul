@@ -286,7 +286,7 @@ class BaseIndexer(ABC):
         }
         index = sorted(list({config.es_index_name(e.entity_type, aggregate=False) for e in tallies.keys()}))
         # scan() uses a server-side cursor and is expensive. Only use it if the number of contributions is large
-        page_size = 100
+        page_size = 1000  # page size of 100 caused excessive ScanError occurrences
         num_contributions = sum(tallies.values())
         hits = None
         if num_contributions <= page_size:
