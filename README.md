@@ -99,10 +99,7 @@ generic with minimal need for project-specific behavior.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
-- [git-secrets] must be installed
-
 [install terraform]: https://www.terraform.io/intro/getting-started/install.html
-[git-secrets]: https://github.com/awslabs/git-secrets
 [Docker]: https://docs.docker.com/install/overview/
 
 ## 2.2 Runtime Prerequisites (Infrastructure)
@@ -160,37 +157,7 @@ end.
 
    Examine the output.
 
-5. If you have push access to the remote, you'll need to install [git-secrets],
-   enable the commit hooks for it and configure patterns for AWS and Google:
-
-   ```
-   git secrets --install
-   git secrets --register-aws
-   git secrets --add '[-]----BEGIN.PRIVATE.KEY-----'
-   ```
-
-   The `[-]` at the beginning is to bypass the command line parser from
-   interpreting the pattern as an option. The use of period instead of space
-   works around a bug in `git secrets` which treats a pattern with a space as
-   two independent patterns.
-
-   macOS users who installed git-secrets via Homebrew may get
-
-   ```
-   git: 'secrets' is not a git command. See 'git --help'.
-   ```
-
-   when they try to commit with Atlassian Sourcetree. If that's the case,
-   configure Sourcetree (Preferences – Git) to use the *System Git* at
-   `/usr/local/bin/git`. Then run
-
-   ```
-   sudo launchctl config user path /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-   ```
-
-   and reboot.
-
-6. Run `make`. It should say `Looking good!` If one of the sanity checks fails,
+5. Run `make`. It should say `Looking good!` If one of the sanity checks fails,
    address the complaint and repeat. The various sanity checks are defined in
    `common.mk`.
    
@@ -198,7 +165,7 @@ end.
    be asked to authenticate. Using SSH is recommended, but for the purposes of
    this check the credentials may be left blank.
 
-7. Make sure Docker is running without root access. Run the following command 
+6. Make sure Docker is running without root access. Run the following command 
    *without `sudo`*:
    
    ```

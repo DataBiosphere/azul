@@ -66,12 +66,6 @@ tag: check_branch
 integration_test: check_branch
 	python -m unittest -v integration_test
 
-check_trufflehog:
-	@hash trufflehog || ( echo 'Please install trufflehog using "pip install trufflehog"' ; false )
-
-trufflehog: check_trufflehog
-	trufflehog --regex --rules .trufflehog.json --entropy=False file:///$$azul_home
-
 check_clean:
 	git diff --exit-code  && git diff --cached --exit-code
 
@@ -98,5 +92,4 @@ check_autosquash:
         tag \
         pep8 \
         test integration_test \
-        check_trufflehog trufflehog \
         check_clean check_autosquash
