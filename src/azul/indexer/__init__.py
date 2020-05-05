@@ -243,7 +243,10 @@ class BaseIndexer(ABC):
             # Read all contributions from Elasticsearch
             contributions = self._read_contributions(total_tallies)
             actual_tallies = Counter(contribution.entity for contribution in contributions)
-            assert len(tallies) == len(actual_tallies)
+            if tallies.keys() != actual_tallies.keys():
+                message = 'Could not find all expected contributions.'
+                args = (tallies, actual_tallies) if config.debug else ()
+                raise EventualConsistencyException(message, *args)
             assert all(tallies[entity] <= actual_tally for entity, actual_tally in actual_tallies.items())
             # Combine the contributions into old_aggregates, one per entity
             new_aggregates = self._aggregate(contributions)
@@ -295,7 +298,9 @@ class BaseIndexer(ABC):
             total_hits = response['hits']['total']
             if total_hits <= page_size:
                 hits = response['hits']['hits']
-                assert len(hits) == total_hits
+                if len(hits) != total_hits:
+                    message = f'Search returned {len(hits)} hits but reports total to be {total_hits}'
+                    raise EventualConsistencyException(message)
             else:
                 log.info('Expected only %i contribution(s) but got %i.', num_contributions, total_hits)
                 num_contributions = total_hits
