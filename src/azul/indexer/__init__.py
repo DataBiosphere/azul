@@ -310,12 +310,12 @@ class BaseIndexer(ABC):
         contributions = [Contribution.from_index(self.field_types(), hit) for hit in hits]
         log.info('Read %i contribution(s). ', len(contributions))
         if log.isEnabledFor(logging.DEBUG):
-            entity_key = attrgetter('entity')
+            entity_ref = attrgetter('entity')
             log.debug(
                 'Number of contributions read, by entity: %r',
                 {
                     f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
-                    for entity, contribution_group in groupby(sorted(contributions, key=entity_key), key=entity_key)
+                    for entity, contribution_group in groupby(sorted(contributions, key=entity_ref), key=entity_ref)
                 }
             )
         return contributions
@@ -533,3 +533,7 @@ class IndexWriter:
             log.warning('Conflicts: %r', self.conflicts)
             raise RuntimeError('Failed to index documents. Failures: %i, conflicts: %i.' %
                                (len(self.errors), len(self.conflicts)))
+
+
+class EventualConsistencyException(RuntimeError):
+    pass
