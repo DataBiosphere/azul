@@ -29,8 +29,8 @@ before_install:
   - source environment
 
 install:
-  - pip install -U setuptools==40.1.0 wheel==0.32.3
-  - pip install -Ur requirements.dev.txt
+  # Travis already sets up a virtualenv (not using `python -m venv`, but `virtualenv`)
+  - make requirements
   - pip install coveralls codecov
 
 script:

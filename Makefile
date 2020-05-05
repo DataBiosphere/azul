@@ -3,6 +3,22 @@ all: hello
 
 include common.mk
 
+.PHONY: virtualenv
+virtualenv: check_env
+	@if test -s "$$VIRTUAL_ENV"; then echo -e "\nRun 'deactivate' first\n"; false; fi
+	if test -e .venv; then rm -rf .venv/; fi
+	python3.6 -m venv .venv
+	@echo -e "\nRun 'source .venv/bin/activate' now!\n"
+
+.PHONY: envhook
+envhook: check_venv
+	python scripts/envhook.py install
+
+.PHONY: requirements
+requirements: check_venv
+	pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3
+	pip install -Ur requirements.dev.txt
+
 .PHONY: hello
 hello: check_python
 	@echo Looking good!

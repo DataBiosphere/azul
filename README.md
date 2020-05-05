@@ -120,15 +120,14 @@ end.
 
    ```
    cd azul
-   python3.6 -m venv .venv
+   make virtualenv
    source .venv/bin/activate
    ```
 
 2. Install the development prerequisites:
 
    ```
-   pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3
-   pip install -Ur requirements.dev.txt
+   make requirements
    ```
 
    Newer versions of pip are incompatible with some of our requirements, hence
@@ -157,8 +156,8 @@ end.
 
    Examine the output.
 
-5. Run `make`. It should say `Looking good!` If one of the sanity checks fails,
-   address the complaint and repeat. The various sanity checks are defined in
+5. Run `make`. It should say `Looking good!` If one of the check target fails,
+   address the failure and repeat. Most check targets are defined in
    `common.mk`.
    
    Some checks utilize `git`. If the repository was cloned using HTTP, you may

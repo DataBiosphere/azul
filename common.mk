@@ -19,12 +19,20 @@ check_venv: check_env
 
 .PHONY: check_python
 check_python: check_venv
+	@if test "$$VIRTUAL_ENV/bin/python" != "$$(hash python && hash -t python)"; then \
+  		echo -e "\nPATH lookup yields a 'python' executable from outside the virtualenv\n"; \
+		false; \
+	fi
+	@if test "$$VIRTUAL_ENV/bin/pip" != "$$(hash pip && hash -t pip)"; then \
+  		echo -e "\nPATH lookup yields a 'pip' executable from outside the virtualenv\n"; \
+		false; \
+	fi
 	@if ! python -c "import sys; sys.exit(0 if sys.version_info[0:2] == (3, 6) else 1)"; then \
 		echo -e "\nLooks like Python 3.6 is not installed or active in the current virtualenv\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys; exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \
-		echo -e "\nLooks like some or all requirements is missing. Please run 'pip install -r requirements.dev.txt'\n"; \
+		echo -e "\nLooks like some or all requirements is missing. Please run 'make requirements'\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys, wheel as w; \
@@ -37,7 +45,7 @@ check_python: check_venv
                      from chalice import chalice_version as v; \
 		             from pkg_resources import parse_version as p; \
 		             sys.exit(0 if p(v) == p('1.12.0') else 1)"; then \
-		echo -e "\nLooks like chalice is out of date. Please run 'pip install -Ur requirements.dev.txt'\n"; \
+		echo -e "\nLooks like chalice is out of date. Please run 'make requirements'\n"; \
 		false; \
 	fi
 
