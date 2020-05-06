@@ -291,7 +291,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             sqs.create_queue(QueueName=queue_name)
 
     def _mock_failures_table(self):
-        dynamodb = boto3.resource('dynamodb')  # , region_name=self._aws_test_region)
+        dynamodb = boto3.resource('dynamodb')
         dynamodb.create_table(**TestHealthFailures.dynamo_failures_table_settings)
 
     def _endpoint_states(self,

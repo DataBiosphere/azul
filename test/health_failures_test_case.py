@@ -64,7 +64,7 @@ class TestHealthFailures(LocalAppTestCase):
 
     @contextmanager
     def _mock_failures_table(self):
-        dynamodb = boto3.resource('dynamodb')  # , region_name=self._aws_test_region)
+        dynamodb = boto3.resource('dynamodb')
         table = dynamodb.create_table(**self.dynamo_failures_table_settings)
         try:
             yield
