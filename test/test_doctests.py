@@ -35,31 +35,34 @@ def setupModule():
 
 
 def load_tests(_loader, tests, _ignore):
-    tests.addTests(doctest.DocTestSuite(azul))
-    tests.addTests(doctest.DocTestSuite(azul.collections))
-    tests.addTests(doctest.DocTestSuite(azul.doctests))
-    tests.addTests(doctest.DocTestSuite(azul.dss))
-    tests.addTests(doctest.DocTestSuite(azul.files))
-    tests.addTests(doctest.DocTestSuite(azul.json))
-    tests.addTests(doctest.DocTestSuite(azul.json_freeze))
-    tests.addTests(doctest.DocTestSuite(azul.objects))
-    tests.addTests(doctest.DocTestSuite(azul.openapi))
-    tests.addTests(doctest.DocTestSuite(azul.openapi.schema))
-    tests.addTests(doctest.DocTestSuite(azul.openapi.params))
-    tests.addTests(doctest.DocTestSuite(azul.openapi.responses))
-    tests.addTests(doctest.DocTestSuite(azul.strings))
-    tests.addTests(doctest.DocTestSuite(azul.threads))
-    tests.addTests(doctest.DocTestSuite(azul.time))
-    tests.addTests(doctest.DocTestSuite(azul.transformer))
-    tests.addTests(doctest.DocTestSuite(azul.vendored.frozendict))
-    tests.addTests(doctest.DocTestSuite(azul.azulclient))
-    tests.addTests(doctest.DocTestSuite(retorts))
-    tests.addTests(doctest.DocTestSuite(azul.project.hca.metadata_generator))
-    tests.addTests(doctest.DocTestSuite(load_app_module('service')))
     root = azul.config.project_root
-    tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/envhook.py', 'envhook')))
-    tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/export_environment.py', 'export_environment'))),
-    tests.addTests(doctest.DocTestSuite(load_module(root + '/scripts/check_branch.py', 'check_branch')))
+    for module in [azul,
+                   azul.collections,
+                   azul.doctests,
+                   azul.dss,
+                   azul.files,
+                   azul.json,
+                   azul.json_freeze,
+                   azul.objects,
+                   azul.openapi,
+                   azul.openapi.schema,
+                   azul.openapi.params,
+                   azul.openapi.responses,
+                   azul.strings,
+                   azul.threads,
+                   azul.time,
+                   azul.transformer,
+                   azul.vendored.frozendict,
+                   azul.azulclient,
+                   retorts,
+                   azul.project.hca.metadata_generator,
+                   load_app_module('service'),
+                   load_module(root + '/scripts/envhook.py', 'envhook'),
+                   load_module(root + '/scripts/export_environment.py', 'export_environment'),
+                   load_module(root + '/scripts/check_branch.py', 'check_branch')]:
+        suite = doctest.DocTestSuite(module)
+        assert suite.countTestCases() > 0, module
+        tests.addTests(suite)
     return tests
 
 
