@@ -366,6 +366,16 @@ health_all_keys = {
     **health_up_key
 }
 
+health_failures_keys = {
+    'failed_bundle_notifications': format_description('''
+        A list of failed bundle notifications
+    '''),
+    'other_failed_messages': format_description('''
+        A count of other failed notification messages
+    '''),
+    **health_up_key
+}
+
 
 def health_spec(health_keys: dict):
     return {
@@ -462,6 +472,18 @@ def cached_health():
 })
 def fast_health():
     return app.health_controller.fast_health()
+
+
+@app.route('/health/failures', methods=['GET'], cors=True, method_spec={
+    'summary': 'Notification failures health check',
+    'description': format_description('''
+        This endpoint returns information about failed notification messages
+        found in the fail queues.
+    '''),
+    **health_spec(health_failures_keys)
+})
+def failures_health():
+    return health_controller().failures()
 
 
 @app.route('/health/{keys}', methods=['GET'], cors=True, method_spec={

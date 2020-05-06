@@ -22,6 +22,8 @@ def setUpModule():
 
 
 class TestServiceHealthCheck(HealthCheckTestCase):
+    # Moto's dynamodb backend doesn't support government regions.
+    _aws_test_region = 'ap-south-1'
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -75,12 +77,9 @@ class TestServiceHealthCheck(HealthCheckTestCase):
                 } for i in range(doc_notification_count)
             ]
             expected_response = {
-                'failures': {
-                    'up': True,
-                    'failed_bundle_notifications': bundle_notifications,
-                    'other_failed_messages': len(document_notifications)
-                },
                 'up': True,
+                'failed_bundle_notifications': bundle_notifications,
+                'other_failed_messages': len(document_notifications)
             }
             test_notifications = bundle_notifications + document_notifications
             with table.batch_writer() as writer:

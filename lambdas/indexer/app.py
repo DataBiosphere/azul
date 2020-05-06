@@ -15,10 +15,7 @@ from azul.chalice import AzulChaliceApp
 from azul.health import HealthController
 from azul.indexer.index_controller import IndexController
 from azul.logging import configure_app_logging
-from azul.time import (
-    RemainingLambdaContextTime,
-    seconds_to_string,
-)
+from azul.time import RemainingLambdaContextTime
 
 log = logging.getLogger(__name__)
 
@@ -76,6 +73,11 @@ def fast_health():
     return app.health_controller.fast_health()
 
 
+@app.route('/health/failures', methods=['GET'], cors=True)
+def failures_health():
+    return app.health_controller.failures()
+
+
 @app.route('/health/{keys}', methods=['GET'], cors=True)
 def health_by_key(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
@@ -131,7 +133,7 @@ def aggregate_retry(event: chalice.app.SQSEvent):
     app.index_controller.aggregate(event, retry=True)
 
 
-@app.schedule(f'rate({seconds_to_string(int(config.indexer_lambda_timeout * 1.1))})')
+@app.schedule(f'rate({(config.indexer_lambda_timeout + 60) // 60} minutes)')
 def retrieve_fail_messages(_event: chalice.app.CloudWatchEvent):
     """
     Get all the messages from the fail queue and save them in the the DynamoDB failure message table.

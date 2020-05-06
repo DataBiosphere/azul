@@ -51,6 +51,9 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         '/index/bundles?size=1'
     )
 
+    # Moto's dynamodb backend doesn't support government regions.
+    _aws_test_region = 'ap-south-1'
+
     def test_basic(self):
         response = requests.get(self.base_url + '/health/basic')
         self.assertEqual(200, response.status_code)
@@ -64,9 +67,19 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     @mock_sts
     @mock_sqs
     @mock_dynamodb2
-    def test_health_all_ok(self):
+    def test_health_failures(self):
         self._create_mock_queues()
         self._mock_failures_table()
+        with ResponsesHelper() as helper:
+            helper.add_passthru(self.base_url)
+            response = requests.get(self.base_url + '/health/failures')
+            self.assertEqual(200, response.status_code)
+            self.assertEqual(self._expected_failures(True), response.json())
+
+    @mock_sts
+    @mock_sqs
+    def test_health_all_ok(self):
+        self._create_mock_queues()
         endpoint_states = self._endpoint_states()
         response = self._test(endpoint_states, lambdas_up=True, path='/health/')
         self.assertEqual(200, response.status_code)
@@ -74,7 +87,6 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             'up': True,
             **self._expected_elasticsearch(True),
             **self._expected_queues(True),
-            **self._expected_failures(True),
             **self._expected_other_lambdas(True),
             **self._expected_api_endpoints(endpoint_states),
             **self._expected_progress()
@@ -245,11 +257,9 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
 
     def _expected_failures(self, up: bool) -> JSON:
         return {
-            'failures': {
-                'up': up,
-                'failed_bundle_notifications': [],
-                'other_failed_messages': 0,
-            }
+            'up': up,
+            'failed_bundle_notifications': [],
+            'other_failed_messages': 0,
         }
 
     def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health/fast'):
@@ -281,7 +291,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             sqs.create_queue(QueueName=queue_name)
 
     def _mock_failures_table(self):
-        dynamodb = boto3.resource('dynamodb')
+        dynamodb = boto3.resource('dynamodb')  # , region_name=self._aws_test_region)
         dynamodb.create_table(**TestHealthFailures.dynamo_failures_table_settings)
 
     def _endpoint_states(self,

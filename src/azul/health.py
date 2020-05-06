@@ -112,10 +112,9 @@ class HealthController:
                 }
         return response
 
-    @health_property
     def failures(self):
         """
-        Returns message data from the error sqs queues.
+        Returns message data from the fail sqs queues.
         """
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(config.dynamo_failures_table_name)
@@ -132,11 +131,13 @@ class HealthController:
             }
         }
         num_other_failed = table.query(KeyConditions=other_key_condition, Select='COUNT')['Count']
-        return {
-            'up': True,
-            'failed_bundle_notifications': failed_bundle_notifications,
-            'other_failed_messages': num_other_failed
-        }
+        return self._make_response(
+            {
+                'up': True,
+                'failed_bundle_notifications': failed_bundle_notifications,
+                'other_failed_messages': num_other_failed
+            }
+        )
 
     @health_property
     def progress(self) -> JSON:

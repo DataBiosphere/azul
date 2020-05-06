@@ -55,13 +55,16 @@ class TestHealthFailures(LocalAppTestCase):
         }
     }
 
+    # Moto's dynamodb backend doesn't support government regions.
+    _aws_test_region = 'ap-south-1'
+
     @classmethod
     def lambda_name(cls) -> str:
         return 'service'
 
     @contextmanager
     def _mock_failures_table(self):
-        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+        dynamodb = boto3.resource('dynamodb')  # , region_name=self._aws_test_region)
         table = dynamodb.create_table(**self.dynamo_failures_table_settings)
         try:
             yield
@@ -73,7 +76,7 @@ class TestHealthFailures(LocalAppTestCase):
     @mock_dynamodb2
     def test_failures_endpoint(self):
         indexer_app = load_app_module('indexer')
-        sqs = boto3.resource('sqs', region_name='us-east-1')
+        sqs = boto3.resource('sqs')
         sqs.create_queue(QueueName=config.fail_queue_name)
         fail_queue = sqs.get_queue_by_name(QueueName=config.fail_queue_name)
         with patch('azul.time.RemainingLambdaContextTime.get', return_value=2):
@@ -101,11 +104,8 @@ class TestHealthFailures(LocalAppTestCase):
                                 ]
                                 fail_queue.send_messages(Entries=items)
                             expected_response = sort_frozen(freeze({
-                                'failures': {
-                                    'failed_bundle_notifications': bundle_notifications,
-                                    'other_failed_messages': num_other,
-                                    'up': True
-                                },
+                                'failed_bundle_notifications': bundle_notifications,
+                                'other_failed_messages': num_other,
                                 'up': True
                             }))
                             with self.subTest(num_bundles=num_bundles,
