@@ -59,7 +59,7 @@ logger = logging.getLogger(__name__)
 class IndexNotFoundError(Exception):
 
     def __init__(self, missing_index: str):
-        super().__init__(f'{missing_index} is not a valid uuid.')
+        super().__init__(f'Index `{missing_index}` was not found')
 
 
 class ElasticsearchService(AbstractService):
