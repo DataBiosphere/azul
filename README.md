@@ -99,10 +99,7 @@ generic with minimal need for project-specific behavior.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
-- [git-secrets] must be installed
-
 [install terraform]: https://www.terraform.io/intro/getting-started/install.html
-[git-secrets]: https://github.com/awslabs/git-secrets
 [Docker]: https://docs.docker.com/install/overview/
 
 ## 2.2 Runtime Prerequisites (Infrastructure)
@@ -123,26 +120,28 @@ end.
 
    ```
    cd azul
-   python3.6 -m venv .venv
+   make virtualenv
    source .venv/bin/activate
    ```
 
 2. Install the development prerequisites:
 
    ```
-   pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3
-   pip install -Ur requirements.dev.txt
+   make requirements
    ```
 
-   Newer versions of pip are incompatible with some of our requirements, hence
-   the pin on the 10.0.1 version.
-   
-   Ubuntu users using their system's default Python installation must install
-   `python3-dev` before the requirements can be built.
-   
+   Linux users whose distribution does not offer Python 3.6 should consider 
+   installing [pyenv] and then Python 3.6 using `pyenv install 3.6.9` and 
+   setting `PYENV_VERSION` to `3.6.9`.
+
+   Ubuntu users using their system's default Python 3.6 installation must 
+   install `python3-dev` before the wheel requirements can be built.
+
    ```
    sudo apt install python3-dev
    ```
+
+   [pyenv]: https://github.com/pyenv/pyenv
 
 3. Activate the `dev` deployment:
 
@@ -160,64 +159,37 @@ end.
 
    Examine the output.
 
-5. If you have push access to the remote, you'll need to install [git-secrets],
-   enable the commit hooks for it and configure patterns for AWS and Google:
-
-   ```
-   git secrets --install
-   git secrets --register-aws
-   git secrets --add '[-]----BEGIN.PRIVATE.KEY-----'
-   ```
-
-   The `[-]` at the beginning is to bypass the command line parser from
-   interpreting the pattern as an option. The use of period instead of space
-   works around a bug in `git secrets` which treats a pattern with a space as
-   two independent patterns.
-
-   macOS users who installed git-secrets via Homebrew may get
-
-   ```
-   git: 'secrets' is not a git command. See 'git --help'.
-   ```
-
-   when they try to commit with Atlassian Sourcetree. If that's the case,
-   configure Sourcetree (Preferences – Git) to use the *System Git* at
-   `/usr/local/bin/git`. Then run
-
-   ```
-   sudo launchctl config user path /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-   ```
-
-   and reboot.
-
-6. Run `make`. It should say `Looking good!` If one of the sanity checks fails,
-   address the complaint and repeat. The various sanity checks are defined in
-   `common.mk`.
+5. Run `make`. It should say `Looking good!` If one of the check target fails,
+   address the failure and repeat. Most check targets are defined in `common.mk`.
    
-   Some checks utilize `git`. If the repository was cloned using HTTP, you may
-   be asked to authenticate. Using SSH is recommended, but for the purposes of
-   this check the credentials may be left blank.
-
-7. Make sure Docker is running without root access. Run the following command 
-   *without `sudo`*:
+6. Make sure Docker works without explicit root access. Run the following 
+   command *without `sudo`*:
    
    ```
    docker ps
    ```
+   
+   If that fails, you're on your own.
 
-8. Confirm proper configuration. Run the following:
+8. Finally, confirm that everything is configured properly on your machine by 
+   running the unit tests:
 
    ```
    make test
    ```
-
+   
 ### 2.3.1 AWS credentials
 
-```
-TBD
-```
+You should have been issued AWS credentials. Typically, those credentials 
+require assuming a role in an account other than the one defining your IAM user. 
+Just set that up normally in `~/.aws/config` and `~/.aws/credentials`. If the 
+assumed role additionally requires an MFA token, you should run `_preauth` 
+immediately after running `source environment` or switching deployments with 
+`_select`.
 
 ### 2.3.2 Google credentials
+
+The following is HCA DCP v1 specific:
 
 1. Ask to be invited to the Google Cloud project `human-cell-atlas-travis-test`
 
@@ -304,12 +276,14 @@ deploying to.
 ## 2.4 PyCharm
 
 Running tests from PyCharm requires `environment` to be sourced. The easiest way
-to do this is to install `envhook.py`, a helper script that injects the
-environment variables from `environment` into the Python interpreter process
-started from the project's virtual environment in `.venv`:
+to do this automatically is by installing `envhook.py`, a helper script that 
+injects the environment variables from `environment` into the Python interpreter 
+process started from the project's virtual environment in `.venv`.
+
+To install `envhook.py` run
 
 ```
-python scripts/envhook.py install
+make envhook
 ```
 
 The script works by adding a `sitecustomize.py` file to your virtual 

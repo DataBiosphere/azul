@@ -1,18 +1,21 @@
+.PHONY: all
 all: layer indexer service
 
 include ../common.mk
 
-layer:
+.PHONY: layer
+layer: check_env
 	$(MAKE) -C layer deploy
 
-indexer:
+.PHONY: indexer
+indexer: check_env
 	$(MAKE) -C indexer deploy
 
-service:
+.PHONY: service
+service: check_env
 	$(MAKE) -C service deploy
 
-clean:
+.PHONY: clean
+clean: check_env
 	$(MAKE) -C indexer clean
 	$(MAKE) -C service clean
-
-.PHONY: all layer indexer service clean

@@ -1,66 +1,87 @@
 SHELL=/bin/bash
 
-ifndef azul_home
-$(error Please run "source environment" from the project root directory before running make commands)
-endif
+# Every phony target must directly or indirectly depend on this target. This
+# implies that only targets that have no other dependencies must explicitly
+# list this target as a dependency:
+#
+.PHONY: check_env
+	@if ! test -n "$$azul_home"; then \
+		echo -e "\nPlease run 'source environment' from the project root\n"; \
+		false; \
+	fi
 
-ifneq ($(shell python -c "import os; print('VIRTUAL_ENV' in os.environ)"),True)
-$(error Looks like no virtualenv is active)
-endif
+.PHONY: check_venv
+check_venv: check_env
+	@if ! test -n "$$VIRTUAL_ENV"; then \
+		echo -e "\nError: Run 'source .venv/bin/activate' first\n"; \
+		false; \
+	fi
 
-ifneq ($(shell python -c "import sys; print(sys.version_info[0:2] == (3,6))"),True)
-$(error Looks like Python 3.6 is not installed or active in the current virtualenv)
-endif
+.PHONY: check_python
+check_python: check_venv
+	@if test "$$VIRTUAL_ENV/bin/python" != "$$(hash python && hash -t python)"; then \
+  		echo -e "\nPATH lookup yields a 'python' executable from outside the virtualenv\n"; \
+		false; \
+	fi
+	@if test "$$VIRTUAL_ENV/bin/pip" != "$$(hash pip && hash -t pip)"; then \
+  		echo -e "\nPATH lookup yields a 'pip' executable from outside the virtualenv\n"; \
+		false; \
+	fi
+	@if ! python -c "import sys; sys.exit(0 if sys.version_info[0:2] == (3, 6) else 1)"; then \
+		echo -e "\nLooks like Python 3.6 is not installed or active in the current virtualenv\n"; \
+		false; \
+	fi
+	@if ! python -c "import sys; exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \
+		echo -e "\nLooks like some or all requirements is missing. Please run 'make requirements'\n"; \
+		false; \
+	fi
+	@if ! python -c "import sys, wheel as w; \
+		           from pkg_resources import parse_version as p; \
+		           sys.exit(0 if p(w.__version__) >= p('0.32.3') else 1)"; then \
+		echo -e "\nLooks like the `wheel` package is outdated or missing. See README for instructions on how to fix this.\n"; \
+		false; \
+	fi
+	@if ! python -c "import sys; \
+                     from chalice import chalice_version as v; \
+		             from pkg_resources import parse_version as p; \
+		             sys.exit(0 if p(v) == p('1.12.0') else 1)"; then \
+		echo -e "\nLooks like chalice is out of date. Please run 'make requirements'\n"; \
+		false; \
+	fi
 
-ifneq ($(shell python -c "exec('try: import chalice\nexcept: print(False)\nelse: print(True)')"),True)
-$(error Looks like some or all requirements is missing. Please run 'pip install -r requirements.dev.txt')
-endif
+.PHONY: check_terraform
+check_terraform: check_env
+	@if ! hash terraform; then \
+		echo -e "\nLooks like Terraform is not installed.\n"; \
+		false; \
+	fi
 
-ifneq ($(shell python -c "from chalice import chalice_version as v; \
-                          from pkg_resources import parse_version as p; \
-                          print(p(v) >= p('1.6.0'))"),True)
-$(error Looks like chalice is out of date. Please run 'pip install -Ur requirements.dev.txt')
-endif
+.PHONY: check_docker
+check_docker: check_env
+	@if ! hash docker; then \
+		echo -e "\nLooks like Docker is not installed.\n"; \
+		false; \
+	fi
 
-ifeq ($(shell which terraform),)
-$(warning Looks like TerraForm is not installed. This is ok as long as you're not trying to create a new deployment. \
-          Deploying new lambdas is still possible with `make deploy` but `make terraform` will not work.)
-endif
+.PHONY: check_aws
+check_aws: check_python
+	@if ! python -c "import os, sys, boto3 as b; \
+		sys.exit(0 if os.environ.get('TRAVIS') == 'true' or \
+		         b.client('sts').get_caller_identity()['Account'] == os.environ['AZUL_AWS_ACCOUNT_ID'] else 1)"; then \
+		echo -e "\nLooks like there is a mismatch between AZUL_AWS_ACCOUNT_ID and the currently active AWS credentials. \
+		         \nCheck the output from 'aws sts get-caller-identity' against the value of that environment variable.\n"; \
+		false; \
+	fi
 
-ifneq ($(shell python -c "import wheel as w; \
-                          from pkg_resources import parse_version as p; \
-                          print(p(w.__version__) >= p('0.32.3'))"),True)
-$(error Looks like the `wheel` package is outdated or missing. See README for instructions on how to fix this.)
-endif
-
-# This check should not occur within CI environments, where AWS Credentials might not be supplied
-ifneq ($(shell python -c "import os, sys; \
-                          import boto3 as b; \
-                          print(os.environ.get('TRAVIS') == 'true' or \
-                          b.client('sts').get_caller_identity()['Account'] == os.environ['AZUL_AWS_ACCOUNT_ID'])\
-                          "),True)
-$(error Looks like there is a mismatch between AZUL_AWS_ACCOUNT_ID and the currently active AWS credentials. \
-        Check the output from 'aws sts get-caller-identity' against the value of that environment variable.))
-endif
-
-check_branch:
+.PHONY: check_branch
+check_branch: check_python
 	python $(azul_home)/scripts/check_branch.py
 
-check_branch_personal:
+.PHONY: check_branch_personal
+check_branch_personal: check_python
 	python $(azul_home)/scripts/check_branch.py --personal
 
-ifeq ($(shell git push --dry-run 2> /dev/null && echo yes),yes)
-ifeq ($(shell git secrets --list | grep -- --aws-provider),)
-$(error Please install and configure git-secrets. See README.md for details)
-endif
-ifneq ($(shell grep -Fo 'git secrets' `git rev-parse --git-dir`/hooks/pre-commit),git secrets)
-$(error Looks like the git-secrets hooks are not installed. Please run 'git secrets --install')
-endif
-endif
-
-.PHONY: check_branch check_branch_personal
-
-%: %.template.py .FORCE
+%: %.template.py check_python .FORCE
 	python $< $@
 .FORCE:
 

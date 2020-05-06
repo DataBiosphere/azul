@@ -13,13 +13,14 @@ RUN mkdir terraform \
         && mv terraform /usr/local/bin/) \
     ; rm -rf terraform
 
-COPY requirements.txt .
-COPY requirements.dev.txt .
-RUN python3.6 -m venv .venv \
+ENV azul_home /build
+
+COPY requirements.txt requirements.dev.txt common.mk Makefile ./
+
+RUN make virtualenv \
     && source .venv/bin/activate \
-    && pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3 \
-    && pip install -Ur requirements.dev.txt \
-    ; rm requirements.txt requirements.dev.txt
+    && make requirements \
+    && rm requirements.txt requirements.dev.txt common.mk Makefile
 
 # Install `docker` client binary. Installing from distribution packages (.deb)
 # is too much of a hassle. The version should roughly match that of the docker
