@@ -137,7 +137,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.queues = Queues()
         self.test_uuid = str(uuid.uuid4())
         self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
-        self.num_bundles = 0
+        self.queue_wait_time = 10 * 60
         self._set_test_mode(True)
 
     def tearDown(self):
@@ -163,7 +163,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                                                                                 test_uuid=self.test_uuid,
                                                                                 max_bundles=self.max_bundles)
         self.num_bundles = len(self.expected_fqids)
-        self.queues.wait_for_queue_level(empty=True, num_bundles=self.num_bundles)
+        self.queues.wait_for_queue_level(empty=True, num_bundles=self.num_bundles, min_timeout=self.queue_wait_time)
         azul_client._index(self.test_notifications)
         # Index some bundles again to test that we handle duplicate additions.
         # Note: random.choices() may pick the same element multiple times so
@@ -239,7 +239,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         if notifications:
             self.azul_client.delete_notification(notifications)
         self.queues.wait_for_queue_level(empty=False, num_bundles=self.num_bundles)
-        self.queues.wait_for_queue_level(empty=True, num_bundles=self.num_bundles)
+        self.queues.wait_for_queue_level(empty=True, num_bundles=self.num_bundles, min_timeout=self.queue_wait_time)
 
     def _set_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -364,7 +364,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                  test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
         log.debug('Expected bundles %s ', sorted(self.expected_fqids))
         self.queues.wait_for_queue_level(empty=False, num_bundles=self.num_bundles)
-        self.queues.wait_for_queue_level(empty=True, num_bundles=self.num_bundles)
+        self.queues.wait_for_queue_level(empty=True, num_bundles=self.num_bundles, min_timeout=self.queue_wait_time)
         log.info('Checking if bundles are referenced by the service response ...')
         retries = 0
         deadline = time.time() + service_check_timeout

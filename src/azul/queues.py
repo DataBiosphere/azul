@@ -15,6 +15,7 @@ from typing import (
     Any,
     Iterable,
     Mapping,
+    Optional,
 )
 
 from boltons.cacheutils import cachedproperty
@@ -156,7 +157,7 @@ class Queues:
             for queue_name in queue_names
         }
 
-    def count_messages(self, queues: Mapping[str, Queue]) -> int:
+    def count_messages(self, queues: Mapping[str, Queue]) -> Mapping[str, int]:
         """
         Count the number of messages in the given queues
 
@@ -164,24 +165,52 @@ class Queues:
         :return: Total count of available, in flight, and delayed messages
         """
         attribute_names = ['ApproximateNumberOfMessages' + suffix for suffix in ('', 'NotVisible', 'Delayed')]
-        total_message_count = 0
+        queue_message_count = {'total_message_count': 0}
         for queue_name, queue in queues.items():
             queue.reload()
             message_counts = [int(queue.attributes[attribute_name]) for attribute_name in attribute_names]
             queue_length = sum(message_counts)
             logger.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
                          queue_name, queue_length, *message_counts)
-            total_message_count += queue_length
-        return total_message_count
+            queue_message_count[queue_name] = queue_length
+            queue_message_count['total_message_count'] += queue_length
+        return queue_message_count
 
-    def wait_for_queue_level(self, empty: bool = True, num_bundles: int = None):
+    def wait_for_queue_level(self,
+                             empty: bool = True,
+                             num_bundles: Optional[int] = None,
+                             min_timeout: Optional[int] = None,
+                             max_timeout: Optional[int] = None):
         """
         Wait until the total count of messages in the notify and document queues
         reaches the desired level
 
         :param empty: True to wait until the queues are empty, False to wait until not empty.
         :param num_bundles: Number of bundles being indexed (None = many bundles)
+        :param min_timeout: Specifies minimum wait time for queues to process
+                            index notifications.
+        :param max_timeout: Specifies maximum wait time for queues to process
+                            index notifications.
         """
+
+        def _compute_timeout(num_bundles):
+            # It takes approx. 6 seconds per worker to process a bundle.
+            timeout = 6 * num_bundles / config.indexer_concurrency
+            if max_timeout is not None and timeout > max_timeout:
+                timeout = max_timeout
+            if min_timeout is not None and timeout < min_timeout:
+                timeout = min_timeout
+            if min_timeout is not None and max_timeout is not None and min_timeout > max_timeout:
+                raise Exception('Specified `min_timeout` is greater than `max_timeout`')
+            return timeout
+
+        def _log_message(timeout):
+            if timeout is not None:
+                logger.info('Waiting up to %s seconds for %s queues to %s ...',
+                            timeout, len(queues), 'empty' if empty else 'not be empty')
+            else:
+                logger.info('Determining wait time for %s queues to empty from available bundles ...', len(queues))
+
         sleep_time = 5
         deque_size = 10 if empty else 1
         queues = self.get_queues(config.work_queue_names)
@@ -190,32 +219,36 @@ class Queues:
 
         if not empty:
             timeout = 2 * 60
-        elif num_bundles is None:
-            timeout = 60 * 60
+        elif num_bundles is not None:
+            timeout = _compute_timeout(num_bundles)
         else:
-            # calculate timeout for queues to empty with a given number of bundles
-            time_to_clear_deque = deque_size * sleep_time
-            time_processing_bundles = num_bundles * 5  # small time per bundle
-            timeout = max(time_processing_bundles + time_to_clear_deque, 60)  # at least 1 min
-            timeout = min(timeout, 60 * 60)  # at most 60 min
+            timeout = None
 
-        logger.info('Waiting up to %s seconds for %s queues to %s ...',
-                    timeout, len(queues), 'empty' if empty else 'not be empty')
+        _log_message(timeout)
         while True:
-            total_message_count = self.count_messages(queues)
+            queue_message_count = self.count_messages(queues)
+            if timeout is None:
+                num_bundles = queue_message_count[config.notify_queue_name]
+                timeout = _compute_timeout(num_bundles)
+                _log_message(timeout)
+            if num_bundles is not None and num_bundles < queue_message_count[config.notify_queue_name]:
+                num_bundles = queue_message_count[config.notify_queue_name]
+                timeout = _compute_timeout(num_bundles)
+                logger.info('Wait time set to %s, determined from number of available bundles.', timeout)
+
+            total_message_count = queue_message_count['total_message_count']
             logger.info('Counting %i total message(s) in %i queue(s).', total_message_count, len(queues))
             queue_wait_time_elapsed = (time.time() - wait_start_time)
             queue_size_history.append(total_message_count)
             cumulative_queue_size = sum(queue_size_history)
-            if (cumulative_queue_size == 0) == empty and len(queue_size_history) == deque_size:
+            if queue_wait_time_elapsed > timeout:
+                raise Exception('The queue(s) are NOT at the desired level.')
+            elif (cumulative_queue_size == 0) == empty and len(queue_size_history) == deque_size:
                 logger.info('The queue(s) are at the desired level.')
-                break
-            elif queue_wait_time_elapsed > timeout:
-                logger.error('The queue(s) are NOT at the desired level.')
                 break
             else:
                 logger.info('The most recently sampled queue totals are %r.', queue_size_history)
-            time.sleep(5)
+            time.sleep(sleep_time)
 
     def feed(self, path, queue_name, force=False):
         with open(path) as file:
