@@ -488,7 +488,8 @@ class Config:
 
     def lambda_env(self, es_endpoint: Optional[Netloc], es_instance_count: Optional[int]):
         """
-        A dictionary with the enviroment variables to be used by a deployed AWS Lambda function or `chalice local`
+        A dictionary with the environment variables to be used by a deployed AWS
+        Lambda function or `chalice local`
         """
         return {
             **{k: v for k, v in os.environ.items() if k.startswith('AZUL_')},

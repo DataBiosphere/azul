@@ -1055,7 +1055,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
 
     @mock_sts
     @mock_sqs
-    def test_succesful_notifications(self):
+    def test_successful_notifications(self):
         self._create_mock_notify_queue()
         body = {
             'match': {
