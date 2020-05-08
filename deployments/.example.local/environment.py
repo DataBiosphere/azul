@@ -51,6 +51,7 @@ def env() -> Mapping[str, Optional[str]]:
         
         'AZUL_OWNER': '<your_email>',
         
+        'AZUL_AWS_ACCOUNT_ID': '122796619775',
         'AWS_DEFAULT_REGION': 'us-east-1',
         
         # Indexer Lambdas in personal deployments do not require default reserved concurrency
