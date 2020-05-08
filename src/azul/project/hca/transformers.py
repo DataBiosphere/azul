@@ -16,7 +16,6 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
-    Sequence,
     Set,
     Union,
 )
@@ -37,9 +36,10 @@ from azul.project.hca.metadata_generator import MetadataGenerator
 from azul.transformer import (
     Accumulator,
     AggregatingTransformer,
+    BundleUUID,
+    BundleVersion,
     Contribution,
     DistinctAccumulator,
-    Document,
     EntityReference,
     FieldTypes,
     FrequencySetAccumulator,
@@ -62,6 +62,34 @@ assert Sample.__args__ == sample_types  # since we can't use * in generic types
 
 
 class Transformer(AggregatingTransformer, metaclass=ABCMeta):
+
+    @abstractmethod
+    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
+        raise NotImplementedError()
+
+    def transform(self,
+                  uuid: BundleUUID,
+                  version: BundleVersion,
+                  deleted: bool,
+                  manifest: List[JSON],
+                  metadata_files: Mapping[str, JSON]) -> Iterable[Contribution]:
+        bundle = api.Bundle(uuid=uuid,
+                            version=version,
+                            manifest=manifest,
+                            metadata_files=metadata_files)
+        for file in bundle.files.values():
+            # Note that this only patches the file name in a manifest entry.
+            # It does not modify the `file_core.file_name` metadata property,
+            # thereby breaking the important invariant that the two be the
+            # same. There are two places where this invariant matters: in the
+            # `api.File` constructor and in `metadata_generator.py`. The
+            # former has already been invoked at this point and the latter is
+            # not affected by this patch because the patch occurs on copies of
+            # the manifest entries whereas `metadata_generator` consumes the
+            # originals for which the invariant still holds. Furthermore,
+            # `metadata_generator` performs it's own ! to / conversion.
+            file.manifest_entry.name = file.manifest_entry.name.replace('!', '/')
+        return self._transform(bundle, deleted)
 
     def get_aggregator(self, entity_type):
         if entity_type == 'files':
@@ -355,7 +383,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         return {
             'content-type': file.manifest_entry.content_type,
             'indexed': file.manifest_entry.indexed,
-            'name': file.manifest_entry.name.replace('!', '/'),
+            'name': file.manifest_entry.name,
             'sha256': file.manifest_entry.sha256,
             'size': file.manifest_entry.size,
             'uuid': file.manifest_entry.uuid,
@@ -554,20 +582,8 @@ class FileTransformer(Transformer):
     def entity_type(self) -> str:
         return 'files'
 
-    def transform(self,
-                  uuid: str,
-                  version: str,
-                  deleted: bool,
-                  manifest: List[JSON],
-                  metadata_files: Mapping[str, JSON]
-                  ) -> Iterable[Document]:
-        bundle = api.Bundle(uuid=uuid,
-                            version=version,
-                            manifest=manifest,
-                            metadata_files=metadata_files)
+    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
         project = self._get_project(bundle)
-        for file in bundle.files.values():
-            file.manifest_entry.name = file.manifest_entry.name.replace('!', '/')
         zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(bundle.files.values())
         for file in bundle.files.values():
             file_name = file.manifest_entry.name
@@ -613,17 +629,7 @@ class CellSuspensionTransformer(Transformer):
     def entity_type(self) -> str:
         return 'cell_suspensions'
 
-    def transform(self,
-                  uuid: str,
-                  version: str,
-                  deleted: bool,
-                  manifest: List[JSON],
-                  metadata_files: Mapping[str, JSON]
-                  ) -> Iterable[Document]:
-        bundle = api.Bundle(uuid=uuid,
-                            version=version,
-                            manifest=manifest,
-                            metadata_files=metadata_files)
+    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
         project = self._get_project(bundle)
         for cell_suspension in bundle.biomaterials.values():
             if isinstance(cell_suspension, api.CellSuspension):
@@ -649,17 +655,7 @@ class SampleTransformer(Transformer):
     def entity_type(self) -> str:
         return 'samples'
 
-    def transform(self,
-                  uuid: str,
-                  version: str,
-                  deleted: bool,
-                  manifest: List[JSON],
-                  metadata_files: Mapping[str, JSON]
-                  ) -> Sequence[Document]:
-        bundle = api.Bundle(uuid=uuid,
-                            version=version,
-                            manifest=manifest,
-                            metadata_files=metadata_files)
+    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
         project = self._get_project(bundle)
         samples: MutableMapping[str, Sample] = dict()
         for file in bundle.files.values():
@@ -686,17 +682,7 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
     def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
         raise NotImplementedError()
 
-    def transform(self,
-                  uuid: str,
-                  version: str,
-                  deleted: bool,
-                  manifest: List[JSON],
-                  metadata_files: Mapping[str, JSON]
-                  ) -> Sequence[Document]:
-        bundle = api.Bundle(uuid=uuid,
-                            version=version,
-                            manifest=manifest,
-                            metadata_files=metadata_files)
+    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
         # Project entities are not explicitly linked in the graph. The mere presence of project metadata in a bundle
         # indicates that all other entities in that bundle belong to that project. Because of that we can't rely on a
         # visitor to collect the related entities but have to enumerate the explicitly:
@@ -749,12 +735,12 @@ class BundleTransformer(BundleProjectTransformer):
         return 'bundles'
 
     def transform(self,
-                  uuid: str,
-                  version: str,
+                  uuid: BundleUUID,
+                  version: BundleVersion,
                   deleted: bool,
                   manifest: List[JSON],
                   metadata_files: Mapping[str, JSON]
-                  ) -> Sequence[Document]:
+                  ) -> Iterable[Contribution]:
         for contrib in super().transform(uuid, version, deleted, manifest, metadata_files):
             # noinspection PyArgumentList
             if 'project.json' in metadata_files:

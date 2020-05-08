@@ -944,7 +944,7 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertIn('related_files', file)
 
         # … but that it can't be used for queries
-        zattrs_file = "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr!.zattrs"
+        zattrs_file = "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zattrs"
         hits = self.es_client.search(index=index,
                                      body={
                                          "query": {
