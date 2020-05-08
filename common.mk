@@ -28,8 +28,8 @@ check_python: check_venv
   		echo -e "\nPATH lookup yields a 'pip' executable from outside the virtualenv\n"; \
 		false; \
 	fi
-	@if ! python -c "import sys; sys.exit(0 if sys.version_info[0:2] == (3, 6) else 1)"; then \
-		echo -e "\nLooks like Python 3.6 is not installed or active in the current virtualenv\n"; \
+	@if ! python -c "import sys; sys.exit(0 if sys.version_info[0:2] == (3, 8) else 1)"; then \
+		echo -e "\nLooks like Python 3.8 is not installed or active in the current virtualenv\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys; exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \

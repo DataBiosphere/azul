@@ -197,7 +197,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                         'error': (
                             "HTTPError('503 Server Error: "
                             "Service Unavailable for url: "
-                            f"{config.service_endpoint() + endpoint}',)")
+                            f"{config.service_endpoint() + endpoint}')")
                     } for endpoint, up in endpoint_states.items()
                 })
             }

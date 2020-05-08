@@ -127,7 +127,7 @@ class DeferredTaskExecutor(metaclass=ABCMeta):
 
     >>> e = MyExecutor()
     >>> e.run()  # err() raises an exception
-    [ValueError(123,)]
+    [ValueError(123)]
 
     >>> 1.23 <= e.delta < 2 # set() runs after the given delay, but not much later
     True

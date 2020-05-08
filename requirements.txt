@@ -4,7 +4,7 @@ bdbag==1.5.1
 boto==2.49.0
 boto3==1.10.19
 botocore==1.13.19
-cffi==1.11.5
+cffi==1.14.0
 cryptography==2.3.1
 dataclasses<=0.6
 elasticsearch>=5.0.0,<6.0.0
