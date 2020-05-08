@@ -14,7 +14,7 @@ import logging
 import boto3
 
 from azul import config
-from azul.plugin import Plugin
+from azul.plugins import Plugin
 from azul.types import (
     JSONs,
     JSON,

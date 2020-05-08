@@ -8,7 +8,7 @@ import requests
 
 import azul.changelog
 from azul.logging import configure_test_logging
-from azul.plugin import Plugin
+from azul.plugins import Plugin
 from service import WebServiceTestCase
 
 

@@ -33,7 +33,7 @@ from azul import (
     hmac,
 )
 from azul.es import ESClientFactory
-from azul.plugin import Plugin
+from azul.plugins import Plugin
 
 logger = logging.getLogger(__name__)
 

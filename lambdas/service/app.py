@@ -43,7 +43,7 @@ from azul.openapi import (
     responses,
     schema,
 )
-from azul.plugin import Plugin
+from azul.plugins import Plugin
 from azul.portal_service import PortalService
 from azul.security.authenticator import (
     AuthenticationError,

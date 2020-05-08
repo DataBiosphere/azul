@@ -35,7 +35,7 @@ from azul.azulclient import AzulClient
 from azul.chalice import AzulChaliceApp
 from azul.health import HealthController
 from azul.logging import configure_app_logging
-from azul.plugin import Plugin
+from azul.plugins import Plugin
 from azul.indexer.transformer import EntityReference
 from azul.types import JSON
 

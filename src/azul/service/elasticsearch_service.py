@@ -31,7 +31,7 @@ from more_itertools import one
 
 from azul import config
 from azul.es import ESClientFactory
-from azul.plugin import (
+from azul.plugins import (
     Plugin,
     ServiceConfig,
 )

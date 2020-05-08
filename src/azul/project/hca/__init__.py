@@ -5,12 +5,12 @@ from typing import (
 from urllib.parse import quote
 
 from azul.indexer import BaseIndexer
-import azul.plugin
+import azul.plugins
 from azul.project.hca.indexer import Indexer
 from azul.types import JSON
 
 
-class Plugin(azul.plugin.Plugin):
+class Plugin(azul.plugins.Plugin):
 
     def indexer_class(self) -> Type[BaseIndexer]:
         return Indexer
@@ -63,8 +63,8 @@ class Plugin(azul.plugin.Plugin):
             }
         ] if prefix else []
 
-    def service_config(self) -> azul.plugin.ServiceConfig:
-        return azul.plugin.ServiceConfig(
+    def service_config(self) -> azul.plugins.ServiceConfig:
+        return azul.plugins.ServiceConfig(
             translation={
                 "fileFormat": "contents.files.file_format",
                 "fileName": "contents.files.name",

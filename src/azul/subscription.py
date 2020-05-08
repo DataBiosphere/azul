@@ -10,7 +10,7 @@ from azul.json_freeze import (
     freeze,
     thaw,
 )
-from azul.plugin import Plugin
+from azul.plugins import Plugin
 from hca.dss import DSSClient
 
 logger = logging.getLogger(__name__)
