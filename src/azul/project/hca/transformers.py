@@ -17,11 +17,11 @@ from typing import (
     MutableMapping,
     Optional,
     Set,
+    Tuple,
     Union,
 )
 
 from humancellatlas.data.metadata import api
-from more_itertools import one
 
 from azul import (
     reject,
@@ -518,16 +518,15 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
 
-def _parse_zarr_file_name(file_name):
-    delimiter = [delim for delim in ('.zarr!', '.zarr/') if delim in file_name]
-    try:
-        delimiter = one(delimiter)
-        zarr_name, sub_name = file_name.split(delimiter)
-    except ValueError:
-        # Both one() and unpacking will raise ValueError for an unexpected
-        # number of items. In either case we have an invalid zarr
-        zarr_name, sub_name = None, None
-    return zarr_name, sub_name
+def _parse_zarr_file_name(file_name: str) -> Tuple[bool, Optional[str], Optional[str]]:
+    file_name = file_name.split('.zarr/')
+    if len(file_name) == 1:
+        return False, None, None
+    elif len(file_name) == 2:
+        zarr_name, sub_name = file_name
+        return True, zarr_name, sub_name
+    else:
+        assert False
 
 
 class TransformerVisitor(api.EntityVisitor):
@@ -570,10 +569,9 @@ class TransformerVisitor(api.EntityVisitor):
         elif isinstance(entity, api.File):
             # noinspection PyDeprecation
             file_name = entity.manifest_entry.name
-            zarr_name, sub_name = _parse_zarr_file_name(file_name)
-            zarr = zarr_name and sub_name
-            # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
-            if not zarr or sub_name.endswith('.zattrs'):
+            is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
+            # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/623 is resolved
+            if not is_zarr or sub_name.endswith('.zattrs'):
                 self.files[entity.document_id] = entity
 
 
@@ -587,11 +585,10 @@ class FileTransformer(Transformer):
         zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(bundle.files.values())
         for file in bundle.files.values():
             file_name = file.manifest_entry.name
-            zarr_name, sub_name = _parse_zarr_file_name(file_name)
-            zarr = zarr_name and sub_name
+            is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
             # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
-            if not zarr or sub_name.endswith('.zattrs'):
-                if zarr:
+            if not is_zarr or sub_name.endswith('.zattrs'):
+                if is_zarr:
                     # This is the representative file, so add the related files
                     related_files = zarr_stores[zarr_name]
                 else:
@@ -616,8 +613,8 @@ class FileTransformer(Transformer):
         zarr_stores = defaultdict(list)
         for file in files:
             file_name = file.manifest_entry.name
-            zarr_name, sub_name = _parse_zarr_file_name(file_name)
-            if zarr_name and sub_name:
+            is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
+            if is_zarr:
                 # Leave the representative file out of the list since it's already in the manifest
                 if not sub_name.startswith('.zattrs'):
                     zarr_stores[zarr_name].append(file)
