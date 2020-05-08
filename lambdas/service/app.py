@@ -43,7 +43,7 @@ from azul.openapi import (
     responses,
     schema,
 )
-from azul.plugins import Plugin
+from azul.plugins import MetadataPlugin
 from azul.portal_service import PortalService
 from azul.security.authenticator import (
     AuthenticationError,
@@ -602,7 +602,7 @@ def validate_facet(value):
     ...
     chalice.app.BadRequestError: BadRequestError: Invalid parameter `fooBar`
     """
-    translation = Plugin.load().service_config().translation
+    translation = MetadataPlugin.load().service_config().translation
     if value not in translation:
         raise BadRequestError(msg=f'Invalid parameter `{value}`')
 
@@ -1024,7 +1024,7 @@ def get_order():
     """
     Return the ordering on facets
     """
-    return {'order': Plugin.load().service_config().order_config}
+    return {'order': MetadataPlugin.load().service_config().order_config}
 
 
 manifest_path_spec = {
@@ -1034,7 +1034,7 @@ manifest_path_spec = {
             schema.optional(schema.object(
                 **{
                     facet_name: schema.object(**{'is': schema.array(str)})
-                    for facet_name in Plugin.load().service_config().translation.keys()
+                    for facet_name in MetadataPlugin.load().service_config().translation.keys()
                 }
             )),
             description='Filters to be applied when generating the manifest',

@@ -37,7 +37,7 @@ from azul import (
 import azul.indexer
 from azul.indexer import IndexWriter
 from azul.logging import configure_test_logging
-from azul.plugins import Plugin
+from azul.plugins import MetadataPlugin
 from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
 from azul.threads import Latch
 from azul.indexer.transformer import (
@@ -112,7 +112,7 @@ class TestHCAIndexer(IndexerTestCase):
                                      size=258)
         self.assertTrue(small_bundle.size < IndexWriter.bulk_threshold < large_bundle.size)
 
-        field_types = Plugin.load().field_types()
+        field_types = MetadataPlugin.load().field_types()
 
         for bundle, size in small_bundle, large_bundle:
             with self.subTest(size=size):

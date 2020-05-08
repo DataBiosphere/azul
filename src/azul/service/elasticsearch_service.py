@@ -32,7 +32,7 @@ from more_itertools import one
 from azul import config
 from azul.es import ESClientFactory
 from azul.plugins import (
-    Plugin,
+    MetadataPlugin,
     ServiceConfig,
 )
 from azul.service import (
@@ -65,7 +65,7 @@ class IndexNotFoundError(Exception):
 class ElasticsearchService(AbstractService):
 
     def __init__(self, service_config: Optional[ServiceConfig] = None):
-        self.plugin = Plugin.load()
+        self.plugin = MetadataPlugin.load()
         self.es_client = ESClientFactory.get()
         if service_config is None:
             service_config = self.plugin.service_config()

@@ -35,7 +35,7 @@ from azul.azulclient import AzulClient
 from azul.chalice import AzulChaliceApp
 from azul.health import HealthController
 from azul.logging import configure_app_logging
-from azul.plugins import Plugin
+from azul.plugins import MetadataPlugin
 from azul.indexer.transformer import EntityReference
 from azul.types import JSON
 
@@ -46,7 +46,7 @@ app = AzulChaliceApp(app_name=config.indexer_name,
 
 configure_app_logging(app, log)
 
-plugin = Plugin.load()
+plugin = MetadataPlugin.load()
 
 
 @app.route('/version', methods=['GET'], cors=True)

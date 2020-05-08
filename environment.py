@@ -1,4 +1,3 @@
-import os
 from typing import (
     Mapping,
     Optional,
@@ -24,6 +23,14 @@ def env() -> Mapping[str, Optional[str]]:
     return {
         # FIXME: remove (https://github.com/DataBiosphere/azul/issues/1644)
         'azul_home': '{project_root}',
+
+        # The name of the plugin that encapsulates metadata indexing.
+        #
+        'AZUL_METADATA_PLUGIN': 'hca',
+
+        # The name of the package that encapsulates metadata retrieval.
+        #
+        'AZUL_REPOSITORY_PLUGIN': 'dss',
 
         # The Account ID number for AWS
         'AZUL_AWS_ACCOUNT_ID': None,

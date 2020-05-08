@@ -14,7 +14,7 @@ import logging
 import boto3
 
 from azul import config
-from azul.plugins import Plugin
+from azul.plugins import RepositoryPlugin
 from azul.types import (
     JSONs,
     JSON,
@@ -145,7 +145,7 @@ class PortalService:
         Write hardcoded portal integrations DB to S3.
         :return: Newly created DB and accompanying version.
         """
-        plugin = Plugin.load()
+        plugin = RepositoryPlugin.load()
         db = self.demultiplex(plugin.portal_db())
         version = self._write_db(db, None)
         return db, version

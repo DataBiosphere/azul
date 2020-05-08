@@ -10,7 +10,7 @@ from azul.json_freeze import (
     freeze,
     thaw,
 )
-from azul.plugins import Plugin
+from azul.plugins import RepositoryPlugin
 from hca.dss import DSSClient
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ def manage_subscriptions(dss_client: DSSClient, subscribe=True):
     key, key_id = deployment.aws.get_hmac_key_and_id()
 
     if subscribe:
-        plugin = Plugin.load()
+        plugin = RepositoryPlugin.load()
         base_url = config.indexer_endpoint()
         prefix = config.dss_query_prefix
         new_subscriptions = [freeze(dict(replica='aws',
