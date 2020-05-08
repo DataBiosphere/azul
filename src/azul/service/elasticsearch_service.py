@@ -48,7 +48,7 @@ from azul.service.hca_response_v5 import (
     SummaryResponse,
 )
 from azul.service.utilities import json_pp
-from azul.transformer import Document
+from azul.indexer.transformer import Document
 from azul.types import (
     JSON,
 )

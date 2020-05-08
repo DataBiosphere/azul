@@ -37,7 +37,7 @@ from azul import config
 from azul.deployment import aws
 import azul.dss
 from azul.es import ESClientFactory
-from azul.transformer import (
+from azul.indexer.transformer import (
     Aggregate,
     AggregatingTransformer,
     BundleUUID,

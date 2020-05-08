@@ -8,7 +8,7 @@ from azul.project.hca.transformers import (
     ProjectTransformer,
     BundleTransformer,
 )
-from azul.transformer import Transformer
+from azul.indexer.transformer import Transformer
 from azul.types import JSON
 
 

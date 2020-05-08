@@ -33,7 +33,7 @@ from azul.collections import (
     none_safe_tuple_key,
 )
 from azul.project.hca.metadata_generator import MetadataGenerator
-from azul.transformer import (
+from azul.indexer.transformer import (
     Accumulator,
     AggregatingTransformer,
     BundleUUID,

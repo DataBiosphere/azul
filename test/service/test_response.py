@@ -14,7 +14,7 @@ from azul.service.hca_response_v5 import (
     FileSearchResponse,
     KeywordSearchResponse,
 )
-from azul.transformer import Document
+from azul.indexer.transformer import Document
 from service import WebServiceTestCase
 
 

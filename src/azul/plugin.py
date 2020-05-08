@@ -16,7 +16,7 @@ from typing import (
 
 from azul import config
 from azul.indexer import BaseIndexer
-from azul.transformer import (
+from azul.indexer.transformer import (
     Document,
     FieldType,
     FieldTypes,
