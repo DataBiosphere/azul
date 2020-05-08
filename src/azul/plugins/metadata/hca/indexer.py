@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from azul.indexer import BaseIndexer
-from azul.project.hca.transformers import (
+from azul.plugins.metadata.hca.transformers import (
     FileTransformer,
     CellSuspensionTransformer,
     SampleTransformer,

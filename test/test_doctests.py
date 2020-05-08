@@ -19,7 +19,7 @@ import azul.openapi
 import azul.openapi.schema
 import azul.openapi.params
 import azul.openapi.responses
-import azul.project.hca.metadata_generator
+import azul.plugins.metadata.hca.metadata_generator
 import azul.service.elasticsearch_service
 import azul.strings
 import azul.threads
@@ -55,7 +55,7 @@ def load_tests(_loader, tests, _ignore):
                    azul.vendored.frozendict,
                    azul.azulclient,
                    retorts,
-                   azul.project.hca.metadata_generator,
+                   azul.plugins.metadata.hca.metadata_generator,
                    load_app_module('service'),
                    load_module(root + '/scripts/envhook.py', 'envhook'),
                    load_module(root + '/scripts/export_environment.py', 'export_environment'),

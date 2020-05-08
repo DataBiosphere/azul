@@ -16,7 +16,7 @@ from azul.indexer import (
     Tallies,
 )
 from azul.plugins import Plugin
-from azul.project.hca import Indexer
+from azul.plugins.metadata.hca.indexer import Indexer
 from azul.types import (
     AnyJSON,
     JSON,

@@ -539,7 +539,7 @@ class Config:
 
     @property
     def plugin_name(self) -> str:
-        return 'azul.project.' + os.environ.get('AZUL_PROJECT', 'hca')
+        return 'azul.plugins.metadata.' + os.environ.get('AZUL_PROJECT', 'hca')
 
     @property
     def subscribe_to_dss(self):

@@ -6,7 +6,7 @@ from urllib.parse import quote
 
 from azul.indexer import BaseIndexer
 import azul.plugins
-from azul.project.hca.indexer import Indexer
+from azul.plugins.metadata.hca.indexer import Indexer
 from azul.types import JSON
 
 

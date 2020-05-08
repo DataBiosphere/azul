@@ -38,7 +38,7 @@ import azul.indexer
 from azul.indexer import IndexWriter
 from azul.logging import configure_test_logging
 from azul.plugins import Plugin
-from azul.project.hca.metadata_generator import MetadataGenerator
+from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
 from azul.threads import Latch
 from azul.indexer.transformer import (
     Aggregate,
