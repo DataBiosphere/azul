@@ -43,6 +43,7 @@ from azul.threads import Latch
 from azul.transformer import (
     Aggregate,
     Contribution,
+    Document,
 )
 from indexer import IndexerTestCase
 from retorts import ResponsesHelper
@@ -57,10 +58,12 @@ def setUpModule():
 class TestHCAIndexer(IndexerTestCase):
 
     def _get_all_hits(self):
-        hits = scan(client=self.es_client,
-                    index=','.join(self.get_hca_indexer().index_names()),
-                    doc_type="doc")
-        return list(hits)
+        hits = list(scan(client=self.es_client,
+                         index=','.join(self.get_hca_indexer().index_names()),
+                         doc_type="doc"))
+        for hit in hits:
+            self._verify_sorted_lists(hit)
+        return hits
 
     def tearDown(self):
         self._delete_indices()
@@ -72,6 +75,12 @@ class TestHCAIndexer(IndexerTestCase):
 
     old_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")
     new_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z")
+
+    translated_str_null = Document.translate_field(None, str)
+    translated_int_null = Document.translate_field(None, int)
+    translated_bool_null = Document.translate_field(None, bool)
+    translated_bool_true = Document.translate_field(True, bool)
+    translated_bool_false = Document.translate_field(False, bool)
 
     def test_indexing(self):
         """
@@ -606,9 +615,15 @@ class TestHCAIndexer(IndexerTestCase):
                 if aggregate:
                     bundles = hit['_source']['bundles']
                     self.assertEqual(1, len(bundles))
-                    self.assertEqual(one(contents['protocols'])['paired_end'], [True])
+                    self.assertEqual(one(contents['protocols'])['paired_end'], [
+                        self.translated_bool_true,
+                        self.translated_bool_null
+                    ])
                 else:
-                    self.assertEqual({p.get('paired_end') for p in contents['protocols']}, {True, None})
+                    self.assertEqual({p.get('paired_end') for p in contents['protocols']}, {
+                        self.translated_bool_true,
+                        self.translated_bool_null
+                    })
                 specimens = contents['specimens']
                 for specimen in specimens:
                     self.assertEqual({'bone marrow', 'temporal lobe'}, set(specimen['organ_part']))
@@ -644,9 +659,15 @@ class TestHCAIndexer(IndexerTestCase):
                 # Both bundles refer to the same specimen and project, so the cell count for those should be 2.
                 expected_cells = 1 if entity_type in ('files', 'cell_suspensions', 'bundles') else 2
                 self.assertEqual(expected_cells, cell_suspensions[0]['total_estimated_cells'])
-                self.assertEqual(one(one(contents['protocols'])['workflow']), 'smartseq2_v2.1.0')
+                self.assertEqual(one(contents['protocols'])['workflow'], [
+                    'smartseq2_v2.1.0',
+                    self.translated_str_null
+                ])
             else:
-                self.assertEqual({p.get('workflow') for p in contents['protocols']}, {'smartseq2_v2.1.0', None})
+                self.assertEqual({p['workflow'] for p in contents['protocols']}, {
+                    'smartseq2_v2.1.0',
+                    self.translated_str_null
+                })
 
     def test_pooled_specimens(self):
         """
@@ -697,9 +718,14 @@ class TestHCAIndexer(IndexerTestCase):
                                  contributor_values['institution'])
                 self.assertEqual({'Prof. Ido Amit', 'Human Cell Atlas Data Coordination Platform'},
                                  contributor_values['laboratory'])
-                self.assertEqual({False, True}, contributor_values['corresponding_contributor'])
-                self.assertEqual({'Human Cell Atlas wrangler', config.null_keyword},
-                                 contributor_values['project_role'])
+                self.assertEqual(contributor_values['corresponding_contributor'], {
+                    self.translated_bool_false,
+                    self.translated_bool_true
+                })
+                self.assertEqual(contributor_values['project_role'], {
+                    'Human Cell Atlas wrangler',
+                    self.translated_str_null
+                })
 
     def test_diseases_field(self):
         """
@@ -743,7 +769,7 @@ class TestHCAIndexer(IndexerTestCase):
 
             for organoid in contents['organoids']:
                 self.assertEqual(['Brain'] if aggregate else 'Brain', organoid['model_organ'])
-                self.assertEqual([config.null_keyword] if aggregate else config.null_keyword,
+                self.assertEqual([self.translated_str_null] if aggregate else self.translated_str_null,
                                  organoid['model_organ_part'])
 
         projects = 1
@@ -837,7 +863,7 @@ class TestHCAIndexer(IndexerTestCase):
                     cell_lines_model_organ = {cl['model_organ'] for cl in contents['cell_lines']}
                 self.assertEqual(cell_lines_model_organ, {'blood (parent_cell_line)', 'blood (child_cell_line)'})
                 self.assertEqual(one(contents['cell_suspensions'])['organ'], ['blood (child_cell_line)'])
-                self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [config.null_keyword])
+                self.assertEqual(one(contents['cell_suspensions'])['organ_part'], [self.translated_str_null])
 
     def test_files_content_description(self):
         self._index_canned_bundle(('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'))

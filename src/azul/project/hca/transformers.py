@@ -3,10 +3,12 @@ from abc import (
     abstractmethod,
 )
 from collections import (
+    ChainMap,
     Counter,
     defaultdict,
 )
 import logging
+from operator import itemgetter
 from typing import (
     Any,
     Iterable,
@@ -26,6 +28,10 @@ from azul import (
     reject,
     require,
 )
+from azul.collections import (
+    compose_keys,
+    none_safe_tuple_key,
+)
 from azul.project.hca.metadata_generator import MetadataGenerator
 from azul.transformer import (
     Accumulator,
@@ -37,13 +43,13 @@ from azul.transformer import (
     FieldTypes,
     FrequencySetAccumulator,
     GroupingAggregator,
-    SingleValueAccumulator,
     ListAccumulator,
     SetAccumulator,
-    UniqueValueCountAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
+    SingleValueAccumulator,
     SumAccumulator,
+    UniqueValueCountAccumulator,
 )
 from azul.types import JSON
 
@@ -174,18 +180,18 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'project_title': project.project_title,
             'project_description': project.project_description,
             'project_short_name': project.project_short_name,
-            'laboratory': list(laboratories),
-            'institutions': list(institutions),
-            'contact_names': list(contact_names),
+            'laboratory': sorted(laboratories),
+            'institutions': sorted(institutions),
+            'contact_names': sorted(contact_names),
             'contributors': list(map(self._contact, project.contributors)),
             'document_id': str(project.document_id),
-            'publication_titles': list(publication_titles),
+            'publication_titles': sorted(publication_titles),
             'publications': list(map(self._publication, project.publications)),
-            'insdc_project_accessions': list(project.insdc_project_accessions),
-            'geo_series_accessions': list(project.geo_series_accessions),
-            'array_express_accessions': list(project.array_express_accessions),
-            'insdc_study_accessions': list(project.insdc_study_accessions),
-            'supplementary_links': list(project.supplementary_links),
+            'insdc_project_accessions': sorted(project.insdc_project_accessions),
+            'geo_series_accessions': sorted(project.geo_series_accessions),
+            'array_express_accessions': sorted(project.array_express_accessions),
+            'insdc_study_accessions': sorted(project.insdc_study_accessions),
+            'supplementary_links': sorted(project.supplementary_links),
             '_type': 'project'
         }
 
@@ -210,9 +216,9 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             '_source': api.schema_names[type(specimen)],
             'document_id': str(specimen.document_id),
             'biomaterial_id': specimen.biomaterial_id,
-            'disease': list(specimen.diseases),
+            'disease': sorted(specimen.diseases),
             'organ': specimen.organ,
-            'organ_part': list(specimen.organ_parts),
+            'organ_part': sorted(specimen.organ_parts),
             'storage_method': specimen.storage_method,
             'preservation_method': specimen.preservation_method,
             '_type': 'specimen'
@@ -248,9 +254,9 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         return {
             'document_id': str(cell_suspension.document_id),
             'total_estimated_cells': cell_suspension.estimated_cell_count,
-            'selected_cell_type': list(cell_suspension.selected_cell_types),
-            'organ': list(organs),
-            'organ_part': list(organ_parts)
+            'selected_cell_type': sorted(cell_suspension.selected_cell_types),
+            'organ': sorted(organs),
+            'organ_part': sorted(organ_parts)
         }
 
     @classmethod
@@ -290,8 +296,8 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'document_id': str(donor.document_id),
             'biomaterial_id': donor.biomaterial_id,
             'biological_sex': donor.sex,
-            'genus_species': list(donor.genus_species),
-            'diseases': list(donor.diseases),
+            'genus_species': sorted(donor.genus_species),
+            'diseases': sorted(donor.diseases),
             'organism_age': donor.organism_age,
             'organism_age_unit': donor.organism_age_unit,
             **(
@@ -354,7 +360,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'version': file.manifest_entry.version,
             'document_id': str(file.document_id),
             'file_format': file.file_format,
-            'content_description': list(file.content_description),
+            'content_description': sorted(file.content_description),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -397,20 +403,22 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     def _protocol(self, protocol: api.Protocol) -> JSON:
-        protocol_ = {'document_id': protocol.document_id}
-        if isinstance(protocol, api.LibraryPreparationProtocol):
-            # noinspection PyDeprecation
-            protocol_['library_construction_approach'] = protocol.library_construction_approach
-        elif isinstance(protocol, api.SequencingProtocol):
-            protocol_['instrument_manufacturer_model'] = protocol.instrument_manufacturer_model
-            protocol_['paired_end'] = protocol.paired_end
-        elif isinstance(protocol, api.AnalysisProtocol):
-            protocol_['workflow'] = protocol.protocol_id
-        elif isinstance(protocol, api.ImagingProtocol):
-            protocol_['assay_type'] = dict(Counter(target.assay_type for target in protocol.target))
-        else:
-            assert False
-        return protocol_
+        # Note that `protocol` inner entities are constructed with all possible
+        # protocol fields, and not just the fields relating to one specific
+        # protocol. This is required for Elasticsearch searching and sorting.
+        return {
+            'document_id': protocol.document_id,
+            'library_construction_approach': protocol.library_construction_method
+            if isinstance(protocol, api.LibraryPreparationProtocol) else None,
+            'instrument_manufacturer_model': protocol.instrument_manufacturer_model
+            if isinstance(protocol, api.SequencingProtocol) else None,
+            'paired_end': protocol.paired_end
+            if isinstance(protocol, api.SequencingProtocol) else None,
+            'workflow': protocol.protocol_id
+            if isinstance(protocol, api.AnalysisProtocol) else None,
+            'assay_type': dict(Counter(target.assay_type for target in protocol.target))
+            if isinstance(protocol, api.ImagingProtocol) else None,
+        }
 
     @classmethod
     def _sample_types(cls) -> FieldTypes:
@@ -423,7 +431,16 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     def _sample(self, sample: api.Biomaterial) -> JSON:
-        entity_type, sample_ = (
+        # Start construction of a `sample` inner entity by including all fields
+        # possible from any entities that can be a sample. This is done to
+        # have consistency of fields between various sample inner entities
+        # to allow Elasticsearch to search and sort against these entities.
+        sample_ = dict.fromkeys(ChainMap(
+            self._cell_line_types(),
+            self._organoid_types(),
+            self._specimen_types()
+        ).keys())
+        entity_type, entity_dict = (
             'cell_lines', self._cell_line(sample)
         ) if isinstance(sample, api.CellLine) else (
             'organoids', self._organoid(sample)
@@ -432,6 +449,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         ) if isinstance(sample, api.SpecimenFromOrganism) else (
             require(False, sample), None
         )
+        sample_.update(entity_dict)
         sample_['entity_type'] = entity_type
         assert hasattr(sample, 'organ') != hasattr(sample, 'model_organ')
         sample_['effective_organ'] = sample.organ if hasattr(sample, 'organ') else sample.model_organ
@@ -821,7 +839,8 @@ class DonorOrganismAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'organism_age_range':
-            return SetOfDictAccumulator(max_size=100)
+            return SetOfDictAccumulator(max_size=100,
+                                        key=compose_keys(none_safe_tuple_key(none_last=True), itemgetter('lte', 'gte')))
         elif field == 'donor_count':
             return UniqueValueCountAccumulator()
         else:

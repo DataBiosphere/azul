@@ -104,7 +104,7 @@ class ElasticsearchService(AbstractService):
         for facet, values in filters.items():
             relation, value = one(values.items())
             if relation == 'is':
-                # Note that at this point None values in filters have already been translated eg. {'is': ['__null__']}
+                # Note that at this point None values in filters have already been translated eg. {'is': ['~null']}
                 # and if the filter has a None our query needs to find fields with None values as well as missing fields
                 field_type = self.plugin.field_type(tuple(facet.split('.')))
                 if Document.translate_field(None, field_type) in value:
@@ -299,15 +299,15 @@ class ElasticsearchService(AbstractService):
         # Using search_after/search_before pagination
         if 'search_after' in pagination:
             es_search = es_search.extra(search_after=pagination['search_after'])
-            es_search = es_search.sort({_sort: {"order": _order}},
+            es_search = es_search.sort({_sort: {"order": _order, "mode": 'min'}},
                                        {'_uid': {"order": 'desc'}})
         elif 'search_before' in pagination:
             es_search = es_search.extra(search_after=pagination['search_before'])
             rev_order = 'asc' if _order == 'desc' else 'desc'
-            es_search = es_search.sort({_sort: {"order": rev_order}},
+            es_search = es_search.sort({_sort: {"order": rev_order, "mode": 'min'}},
                                        {'_uid': {"order": 'asc'}})
         else:
-            es_search = es_search.sort({_sort: {"order": _order}},
+            es_search = es_search.sort({_sort: {"order": _order, "mode": 'min'}},
                                        {'_uid': {"order": 'desc'}})
 
         # fetch one more than needed to see if there's a "next page".
@@ -332,7 +332,7 @@ class ElasticsearchService(AbstractService):
             # hits are reverse sorted
             if count > pagination['size']:
                 # There is an extra hit, indicating a previous page.
-                count = count - 1
+                count -= 1
                 search_before = es_hits[count - 1]['sort']
             else:
                 # No previous page
@@ -342,12 +342,19 @@ class ElasticsearchService(AbstractService):
             # hits are normal sorted
             if count > pagination['size']:
                 # There is an extra hit, indicating a next page.
-                count = count - 1
+                count -= 1
                 search_after = es_hits[count - 1]['sort']
             else:
                 # No next page
                 search_after = [None, None]
             search_before = es_hits[0]['sort'] if 'search_after' in pagination else [None, None]
+
+        # To return the type along with the value, return pagination variables
+        # 'search_after' and 'search_before' as JSON formatted strings
+        if search_after[0] is not None:
+            search_after[0] = json.dumps(search_after[0])
+        if search_before[0] is not None:
+            search_before[0] = json.dumps(search_before[0])
 
         page_field = {
             'count': count,
@@ -409,7 +416,7 @@ class ElasticsearchService(AbstractService):
             ('contents.donors.genus_species', 'speciesCount'),
             ('contents.files.uuid', 'fileCount'),
             ('contents.donors.document_id', 'donorCount'),
-            ('contents.projects.laboratory', 'labCount'),  # FIXME Possible +1 error due to '__null__' value (#1188)
+            ('contents.projects.laboratory', 'labCount'),
             ('contents.projects.document_id', 'projectCount')
         ):
             es_search.aggs.metric(
