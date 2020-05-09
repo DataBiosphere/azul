@@ -180,6 +180,8 @@ class MetadataGenerator:
             }
 
             described_by = parse.urlparse(self._deep_get(metadata_file, 'describedBy'))
+            # FIXME: https://github.com/DataBiosphere/azul/issues/1783
+            # noinspection PyTypeChecker
             _, _, schema_type = described_by.path.rpartition('/')
             if schema_type in self.blocked_file_type:
                 continue
