@@ -34,15 +34,30 @@ from azul import (
 from azul.azulclient import AzulClient
 from azul.chalice import AzulChaliceApp
 from azul.health import HealthController
+from azul.indexer.transformer import EntityReference
 from azul.logging import configure_app_logging
 from azul.plugins import MetadataPlugin
-from azul.indexer.transformer import EntityReference
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
 
-app = AzulChaliceApp(app_name=config.indexer_name,
-                     unit_test=globals().get('unit_test', False))  # see LocalAppTestCase.setUpClass()
+
+class IndexerApp(AzulChaliceApp):
+
+    @property
+    def health_controller(self):
+        # Don't cache. Health controller is meant to be short-lived since it
+        # applies it's own caching. If we cached the controller, we'd never
+        # observe any changes in health.
+        return HealthController(lambda_name='indexer')
+
+    def __init__(self):
+        super().__init__(app_name=config.indexer_name,
+                         # see LocalAppTestCase.setUpClass()
+                         unit_test=globals().get('unit_test', False))
+
+
+app = IndexerApp()
 
 configure_app_logging(app, log)
 
@@ -58,38 +73,34 @@ def version():
     }
 
 
-def health_controller():
-    return HealthController(lambda_name='indexer')
-
-
 @app.route('/health', methods=['GET'], cors=True)
 def health():
-    return health_controller().health()
+    return app.health_controller.health()
 
 
 @app.route('/health/basic', methods=['GET'], cors=True)
 def basic_health():
-    return health_controller().basic_health()
+    return app.health_controller.basic_health()
 
 
 @app.route('/health/cached', methods=['GET'], cors=True)
 def cached_health():
-    return health_controller().cached_health()
+    return app.health_controller.cached_health()
 
 
 @app.route('/health/fast', methods=['GET'], cors=True)
 def fast_health():
-    return health_controller().fast_health()
+    return app.health_controller.fast_health()
 
 
 @app.route('/health/{keys}', methods=['GET'], cors=True)
 def health_by_key(keys: Optional[str] = None):
-    return health_controller().custom_health(keys)
+    return app.health_controller.custom_health(keys)
 
 
 @app.schedule('rate(1 minute)', name=config.indexer_cache_health_lambda_basename)
 def update_health_cache(_event: chalice.app.CloudWatchEvent):
-    health_controller().update_cache()
+    app.health_controller.update_cache()
 
 
 @app.route('/', cors=True)
