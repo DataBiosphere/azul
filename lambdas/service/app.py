@@ -66,7 +66,10 @@ from azul.service.elasticsearch_service import (
     ElasticsearchService,
     IndexNotFoundError,
 )
-from azul.service.manifest_service import ManifestService
+from azul.service.manifest_service import (
+    ManifestFormat,
+    ManifestService,
+)
 from azul.service.repository_service import (
     EntityNotFoundError,
     InvalidUUIDError,
@@ -1041,7 +1044,7 @@ manifest_path_spec = {
         ),
         params.query(
             'format',
-            schema.optional(schema.enum('compact', 'full', 'terra.bdbag', type_=str)),
+            schema.optional(schema.enum(*[format_.value for format_ in ManifestFormat], type_=str)),
             description='''
                 The desired format of the output.
 
@@ -1186,12 +1189,10 @@ def handle_manifest_generation_request():
     a retry URL for the view function to handle.
     """
     query_params = app.current_request.query_params or {}
-    validate_params(query_params, filters=str, format=str, token=str)
+    validate_params(query_params, filters=str, format=ManifestFormat, token=str)
     filters = query_params.get('filters', '{}')
     validate_filters(filters)
-    format_ = query_params.get('format', 'compact')
-    if format_ not in ('compact', 'terra.bdbag', 'full'):
-        raise BadRequestError(f'{format_} is not a valid manifest format.')
+    format_ = ManifestFormat(query_params.get('format', ManifestFormat.compact.value))
     service = ManifestService(StorageService())
     filters = service.parse_filters(filters)
 
@@ -1231,7 +1232,9 @@ def generate_manifest(event, context):
     :return: The URL to the generated manifest
     """
     service = ManifestService(StorageService())
-    presigned_url, was_cached = service.get_manifest(event['format'], event['filters'], event['object_key'])
+    presigned_url, was_cached = service.get_manifest(ManifestFormat(event['format']),
+                                                     event['filters'],
+                                                     event['object_key'])
     return {'Location': presigned_url}
 
 

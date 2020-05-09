@@ -11,6 +11,9 @@ from datetime import (
     timezone,
 )
 import email.utils
+from enum import (
+    Enum,
+)
 from io import (
     StringIO,
     TextIOWrapper,
@@ -70,15 +73,22 @@ from azul.types import (
 logger = logging.getLogger(__name__)
 
 
+class ManifestFormat(Enum):
+    compact = 'compact'
+    full = 'full'
+    terra_bdbag = 'terra.bdbag'
+
+
 class ManifestService(ElasticsearchService):
 
     def __init__(self, storage_service: StorageService):
         super().__init__()
         self.storage_service = storage_service
 
-    # FIXME: make format_ an enum. https://github.com/databiosphere/azul/issues/1723
-
-    def get_manifest(self, format_: str, filters: Filters, object_key: Optional[str] = None) -> Tuple[str, bool]:
+    def get_manifest(self,
+                     format_: ManifestFormat,
+                     filters: Filters,
+                     object_key: Optional[str] = None) -> Tuple[str, bool]:
         """
         Returns a tuple in which the first element is pre-signed URL to a
         manifest in the given format and of the file entities matching the given
@@ -114,7 +124,7 @@ class ManifestService(ElasticsearchService):
         else:
             return presigned_url, True
 
-    def get_cached_manifest(self, format_: str, filters: Filters) -> Tuple[str, Optional[str]]:
+    def get_cached_manifest(self, format_: ManifestFormat, filters: Filters) -> Tuple[str, Optional[str]]:
         generator = ManifestGenerator.for_format(format_, self, filters)
         object_key = self._compute_object_key(generator, format_, filters)
         presigned_url = self._get_cached_manifest(generator, object_key)
@@ -122,7 +132,7 @@ class ManifestService(ElasticsearchService):
 
     def _compute_object_key(self,
                             generator: 'ManifestGenerator',
-                            format_: str,
+                            format_: ManifestFormat,
                             filters: Filters) -> str:
         manifest_key = self._derive_manifest_key(format_, filters, generator.manifest_content_hash)
         object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
@@ -210,7 +220,7 @@ class ManifestService(ElasticsearchService):
             file_name = None
         return file_name
 
-    def _derive_manifest_key(self, format_: str, filters: Filters, content_hash: int) -> str:
+    def _derive_manifest_key(self, format_: ManifestFormat, filters: Filters, content_hash: int) -> str:
         """
         Return a manifest key deterministically derived from the arguments and
         the current commit hash. The same arguments will always produce the same
@@ -222,7 +232,7 @@ class ManifestService(ElasticsearchService):
         filter_string = repr(sort_frozen(freeze(filters)))
         content_hash = str(content_hash)
         disable_multipart = str(config.disable_multipart_manifests)
-        manifest_key_params = (git_commit, format_, content_hash, disable_multipart, filter_string)
+        manifest_key_params = (git_commit, format_.value, content_hash, disable_multipart, filter_string)
         assert not any(',' in param for param in manifest_key_params[:-1])
         return str(uuid.uuid5(manifest_namespace, ','.join(manifest_key_params)))
 
@@ -350,13 +360,13 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @classmethod
     def for_format(cls,
-                   format_: str,
+                   format_: ManifestFormat,
                    service: ManifestService,
                    filters: Filters) -> 'ManifestGenerator':
         """
         Return a generator instance for the given format and filters.
 
-        :param format_: a string describing the format
+        :param format_: format specifying which generator to use
 
         :param filters: the filter to use when querying the index for the documents
                         to be transformed
@@ -366,14 +376,14 @@ class ManifestGenerator(metaclass=ABCMeta):
         :return: a ManifestGenerator instance. Note that the protocol used for
                  consuming the generator output is defined in subclasses.
         """
-        if format_ == 'compact':
+        if format_ is ManifestFormat.compact:
             return CompactManifestGenerator(service, filters)
-        elif format_ == 'full':
+        elif format_ is ManifestFormat.full:
             return FullManifestGenerator(service, filters)
-        elif format_ == 'terra.bdbag':
+        elif format_ is ManifestFormat.terra_bdbag:
             return BDBagManifestGenerator(service, filters)
         else:
-            assert False
+            assert False, format_
 
     def __init__(self, service: ManifestService, filters: Filters) -> None:
         super().__init__()
@@ -673,7 +683,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     column_path_separator = '__'
 
     @classmethod
-    def _remove_redundant_entries(cls, bundles: Mapping[Tuple[uuid.UUID, str], Any]):
+    def _remove_redundant_entries(cls, bundles: MutableMapping[Tuple[uuid.UUID, str], Any]):
         """
         Remove bundle entries from dict that are redundant based on the set of
         files it contains (eg. a primary bundle is made redundant by its derived

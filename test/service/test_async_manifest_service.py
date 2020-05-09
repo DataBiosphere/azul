@@ -12,6 +12,7 @@ from app_test_case import LocalAppTestCase
 from azul import config
 from azul.logging import configure_test_logging
 from azul.service.async_manifest_service import AsyncManifestService
+from azul.service.manifest_service import ManifestFormat
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
@@ -65,7 +66,7 @@ class TestAsyncManifestService(AzulTestCase):
         step_function_helper.describe_execution.return_value = execution_success_output
         manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
-        format_ = 'compact'
+        format_ = ManifestFormat.compact
         filters = manifest_service.parse_filters('{}')
         wait_time, location = manifest_service.start_or_inspect_manifest_generation('', format_, filters, token)
         self.assertEqual(type(wait_time), int)
@@ -91,7 +92,7 @@ class TestAsyncManifestService(AzulTestCase):
         manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
         retry_url = config.service_endpoint() + '/manifest/files'
-        format_ = 'compact'
+        format_ = ManifestFormat.compact
         filters = manifest_service.parse_filters('{}')
         wait_time, location = manifest_service.start_or_inspect_manifest_generation(retry_url, format_, filters, token)
         self.assertEqual(type(wait_time), int)
@@ -118,7 +119,7 @@ class TestAsyncManifestService(AzulTestCase):
         step_function_helper.describe_execution.return_value = execution_failed_output
         manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
-        format_ = 'compact'
+        format_ = ManifestFormat.compact
         filters = manifest_service.parse_filters('{}')
         self.assertRaises(StateMachineError,
                           manifest_service.start_or_inspect_manifest_generation, '', format_, filters, token)
@@ -156,7 +157,7 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     execution_name = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
                     mock_uuid.return_value = execution_name
                     step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
-                    format_ = 'compact'
+                    format_ = ManifestFormat.compact.value
                     filters = {'organ': {'is': ['lymph node']}}
                     params = {'filters': json.dumps(filters), 'format': format_}
                     if fetch:

@@ -16,6 +16,7 @@ from azul.service import (
     AbstractService,
     Filters,
 )
+from azul.service.manifest_service import ManifestFormat
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
@@ -51,7 +52,7 @@ class AsyncManifestService(AbstractService):
 
     def start_or_inspect_manifest_generation(self,
                                              self_url,
-                                             format_: str,
+                                             format_: ManifestFormat,
                                              filters: Filters,
                                              token: Optional[str] = None,
                                              object_key: Optional[str] = None
@@ -87,7 +88,7 @@ class AsyncManifestService(AbstractService):
             assert False
 
     def _start_manifest_generation(self,
-                                   format_: str,
+                                   format_: ManifestFormat,
                                    filters: Filters,
                                    execution_id: str,
                                    object_key: Optional[str]
@@ -100,7 +101,7 @@ class AsyncManifestService(AbstractService):
         """
         self.step_function_helper.start_execution(config.manifest_state_machine_name,
                                                   execution_id,
-                                                  execution_input=dict(format=format_,
+                                                  execution_input=dict(format=format_.value,
                                                                        filters=filters,
                                                                        object_key=object_key))
 

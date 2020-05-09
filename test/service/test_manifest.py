@@ -42,6 +42,7 @@ from azul.service import (
     manifest_service,
 )
 from azul.service.manifest_service import (
+    ManifestFormat,
     ManifestService,
     BDBagManifestGenerator,
 )
@@ -73,7 +74,7 @@ class ManifestTestCase(WebServiceTestCase):
 
     def _setup_git_commit(self):
         """
-        Set git variables required to generate the object key of format='full' type manifests
+        Set git variables required to derive the manifest object key
         """
         assert 'azul_git_commit' not in os.environ
         assert 'azul_git_dirty' not in os.environ
@@ -84,11 +85,11 @@ class ManifestTestCase(WebServiceTestCase):
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
-    def _get_manifest(self, format_: str, filters: JSON, stream=False):
+    def _get_manifest(self, format_: ManifestFormat, filters: JSON, stream=False):
         url, was_cached = self._get_manifest_url(format_, filters)
         return requests.get(url, stream=stream)
 
-    def _get_manifest_url(self, format_: str, filters: JSON) -> Tuple[str, bool]:
+    def _get_manifest_url(self, format_: ManifestFormat, filters: JSON) -> Tuple[str, bool]:
         service = ManifestService(StorageService())
         return service.get_manifest(format_, filters)
 
@@ -113,7 +114,7 @@ class TestManifestEndpoints(ManifestTestCase):
             storage_service.create_bucket()
             for i in range(2):
                 with self.subTest(i=i):
-                    url, was_cached = self._get_manifest_url('compact', {})
+                    url, was_cached = self._get_manifest_url(ManifestFormat.compact, {})
                     self.assertFalse(was_cached)
 
     @mock_sts
@@ -214,7 +215,7 @@ class TestManifestEndpoints(ManifestTestCase):
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                        response = self._get_manifest('compact', {})
+                        response = self._get_manifest(ManifestFormat.compact, {})
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
                         self._assert_tsv(expected, response)
 
@@ -252,7 +253,7 @@ class TestManifestEndpoints(ManifestTestCase):
             for single_part in False, True:
                 with self.subTest(is_single_part=single_part):
                     with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                        response = self._get_manifest('compact', filters)
+                        response = self._get_manifest(ManifestFormat.compact, filters)
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
                         # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
                         lines = response.content.decode('utf-8').splitlines()
@@ -440,7 +441,7 @@ class TestManifestEndpoints(ManifestTestCase):
             storage_service = StorageService()
             storage_service.create_bucket()
             filters = {'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}
-            response = self._get_manifest('terra.bdbag', filters, stream=True)
+            response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
@@ -624,7 +625,7 @@ class TestManifestEndpoints(ManifestTestCase):
                 {}
             ]:
                 with self.subTest(filters=filters):
-                    response = self._get_manifest('terra.bdbag', filters=filters, stream=True)
+                    response = self._get_manifest(ManifestFormat.terra_bdbag, filters=filters, stream=True)
                     self.assertEqual(200, response.status_code, 'Unable to download manifest')
                     with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                         zip_fh.extractall(zip_dir)
@@ -646,7 +647,7 @@ class TestManifestEndpoints(ManifestTestCase):
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            response = self._get_manifest('full', {})
+            response = self._get_manifest(ManifestFormat.full, {})
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
             expected = [
@@ -1088,7 +1089,7 @@ class TestManifestEndpoints(ManifestTestCase):
             storage_service.create_bucket()
 
             filters = {'project': {'is': ['Single of human pancreas']}}
-            response = self._get_manifest('full', filters)
+            response = self._get_manifest(ManifestFormat.full, filters)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
             lines = response.content.decode('utf-8').splitlines()
@@ -1096,7 +1097,7 @@ class TestManifestEndpoints(ManifestTestCase):
             fieldnames1 = set(next(tsv_file1))
 
             filters = {'project': {'is': ['Mouse Melanoma']}}
-            response = self._get_manifest('full', filters)
+            response = self._get_manifest(ManifestFormat.full, filters)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
             lines = response.content.decode('utf-8').splitlines()
@@ -1156,7 +1157,7 @@ class TestManifestEndpoints(ManifestTestCase):
                     with self.subTest(filters=filters, single_part=single_part):
                         with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                             assert config.disable_multipart_manifests is single_part
-                            url, was_cached = self._get_manifest_url('full', filters)
+                            url, was_cached = self._get_manifest_url(ManifestFormat.full, filters)
                             self.assertFalse(was_cached)
                             query = urlparse(url).query
                             expected_cd = f'attachment;filename="{expected_name}.tsv"'
@@ -1184,7 +1185,7 @@ class TestManifestCache(ManifestTestCase):
                 filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
                 from azul.service.manifest_service import logger as logger_
                 with self.assertLogs(logger=logger_, level='INFO') as logs:
-                    response = self._get_manifest('full', filters)
+                    response = self._get_manifest(ManifestFormat.full, filters)
                     self.assertEqual(200, response.status_code, 'Unable to download manifest')
                     logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
                     return logs.output
@@ -1224,7 +1225,7 @@ class TestManifestCache(ManifestTestCase):
 
                         # Run the generation of manifests twice to verify generated file names are the same when re-run
                         for project_id in project_ids * 2:
-                            response = self._get_manifest('full', {'projectId': {'is': [project_id]}})
+                            response = self._get_manifest(ManifestFormat.full, {'projectId': {'is': [project_id]}})
                             self.assertEqual(200, response.status_code, 'Unable to download manifest')
                             file_name = urlparse(response.url).path
                             file_names[project_id].append(file_name)
@@ -1242,7 +1243,7 @@ class TestManifestCache(ManifestTestCase):
         filters = {'project': {'is': ['Single of human pancreas']}}
         old_object_keys = {}
         service = ManifestService(StorageService())
-        for format_ in ['compact', 'full', 'terra.bdbag']:
+        for format_ in ManifestFormat:
             with self.subTest(msg='indexing new bundle', format_=format_):
                 # When a new bundle is indexed and its full manifest cached,
                 # a matching object_key is generated ...
@@ -1261,7 +1262,7 @@ class TestManifestCache(ManifestTestCase):
         new_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z")
         self._index_canned_bundle(new_bundle)
         new_object_keys = {}
-        for format_ in ['compact', 'full', 'terra.bdbag']:
+        for format_ in ManifestFormat:
             with self.subTest(msg='indexing second bundle', format_=format_):
                 generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
                 new_bundle_object_key = service._derive_manifest_key(format_, filters,
@@ -1272,7 +1273,7 @@ class TestManifestCache(ManifestTestCase):
 
         # Updates or additions, unrelated to that project do not affect object key generation
         self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
-        for format_ in ['compact', 'full', 'terra.bdbag']:
+        for format_ in ManifestFormat:
             with self.subTest(msg='indexing unrelated bundle', format_=format_):
                 generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)
                 latest_bundle_object_key = service._derive_manifest_key(format_, filters,
