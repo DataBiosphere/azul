@@ -250,7 +250,7 @@ class TestManifestEndpoints(ManifestTestCase):
             helper.add_passthru(self.base_url)
             storage_service = StorageService()
             storage_service.create_bucket()
-            response = requests.get(self.base_url + '/repository/files',
+            response = requests.get(self.base_url + '/index/files',
                                     params=dict(filters=json.dumps(filters)))
             hits = response.json()['hits']
             self.assertEqual(len(hits), 1)

@@ -39,7 +39,7 @@ class FacetNameValidationTest(WebServiceTestCase):
                             self.assertEqual(response.json()['git'], expected_json)
 
     def test_bad_single_filter_facet_of_sample(self):
-        url = self.base_url + '/repository/samples'
+        url = self.base_url + '/index/samples'
         params = {
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}}),
@@ -49,7 +49,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_bad_multiple_filter_facet_of_sample(self):
-        url = self.base_url + '/repository/samples'
+        url = self.base_url + '/index/samples'
         params = {
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}, 'bad-facet2': {'is': ['fake-val2']}}),
@@ -59,7 +59,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_mixed_multiple_filter_facet_of_sample(self):
-        url = self.base_url + '/repository/samples'
+        url = self.base_url + '/index/samples'
         params = {
             'size': 1,
             'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-facet': {'is': ['fake-val']}}),
@@ -69,7 +69,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_of_sample(self):
-        url = self.base_url + '/repository/samples'
+        url = self.base_url + '/index/samples'
         params = {
             'size': 1,
             'filters': json.dumps({}),
@@ -81,7 +81,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_and_filter_facet_of_sample(self):
-        url = self.base_url + '/repository/samples'
+        url = self.base_url + '/index/samples'
         params = {
             'size': 15,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}}),
@@ -93,7 +93,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertTrue(response.json() in [self.facet_message, self.facet_message])
 
     def test_valid_sort_facet_but_bad_filter_facet_of_sample(self):
-        url = self.base_url + '/repository/samples'
+        url = self.base_url + '/index/samples'
         params = {
             'size': 15,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}}),
@@ -105,7 +105,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_but_valid_filter_facet_of_sample(self):
-        url = self.base_url + '/repository/samples'
+        url = self.base_url + '/index/samples'
         params = {
             'size': 15,
             'filters': json.dumps({'organPart': {'is': ['fake-val2']}}),
@@ -117,7 +117,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_bad_single_filter_facet_of_file(self):
-        url = self.base_url + '/repository/files'
+        url = self.base_url + '/index/files'
         params = {
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val2']}}),
@@ -127,7 +127,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_bad_multiple_filter_facet_of_file(self):
-        url = self.base_url + '/repository/files'
+        url = self.base_url + '/index/files'
         params = {
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}, 'bad-facet2': {'is': ['fake-val2']}}),
@@ -137,7 +137,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_mixed_multiple_filter_facet_of_file(self):
-        url = self.base_url + '/repository/files'
+        url = self.base_url + '/index/files'
         params = {
             'size': 1,
             'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-facet': {'is': ['fake-val']}}),
@@ -147,7 +147,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_of_file(self):
-        url = self.base_url + '/repository/files'
+        url = self.base_url + '/index/files'
         params = {
             'size': 15,
             'sort': 'bad-facet',
@@ -159,7 +159,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertEqual(self.facet_message, response.json())
 
     def test_bad_sort_facet_and_filter_facet_of_file(self):
-        url = self.base_url + '/repository/files'
+        url = self.base_url + '/index/files'
         params = {
             'size': 15,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val2']}}),
@@ -169,7 +169,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         self.assertTrue(response.json() in [self.facet_message, self.facet_message])
 
     def test_bad_sort_facet_but_valid_filter_facet_of_file(self):
-        url = self.base_url + '/repository/files'
+        url = self.base_url + '/index/files'
         params = {
             'size': 15,
             'sort': 'bad-facet',
@@ -182,7 +182,7 @@ class FacetNameValidationTest(WebServiceTestCase):
 
     def test_valid_sort_facet_but_bad_filter_facet_of_file(self):
 
-        url = self.base_url + '/repository/files'
+        url = self.base_url + '/index/files'
         params = {
             'size': 15,
             'sort': 'organPart',
@@ -200,12 +200,12 @@ class FacetNameValidationTest(WebServiceTestCase):
                                           ('FOO', 400)]:
             for entity_type in entity_types:
                 with self.subTest(entity_name=entity_type, error_code=expected_error_code, uuid=uuid):
-                    url = self.base_url + f'/repository/{entity_type}/{uuid}'
+                    url = self.base_url + f'/index/{entity_type}/{uuid}'
                     response = requests.get(url)
                     self.assertEqual(expected_error_code, response.status_code)
 
     def test_file_order(self):
-        url = self.base_url + '/repository/files/order'
+        url = self.base_url + '/index/files/order'
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.json())
         actual_field_order = response.json()['order']
@@ -224,7 +224,7 @@ class FacetNameValidationTest(WebServiceTestCase):
             self.assertEqual(code + ': ' + message, response['Message'])
 
         for entity_type in ('files', 'bundles', 'samples'):
-            url = self.base_url + f'/repository/{entity_type}'
+            url = self.base_url + f'/index/{entity_type}'
             with self.subTest(entity_type=entity_type):
                 with self.subTest(test='extra parameter'):
                     test(url,
