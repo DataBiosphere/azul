@@ -122,8 +122,8 @@ class AWS:
         log.warning('The Elasticsearch %s is not configured statically. This '
                     'is normal during a deployment but if it occurs in a '
                     'Lambda function, frequent dynamic look-ups are required. '
-                    'To eliminate that inefficiency, simply run `make deploy` '
-                    'followed by `make terraform` again.', property_name)
+                    'To eliminate that inefficiency, simply run `make package` '
+                    'followed by `make deploy` again.', property_name)
 
     @property
     def lambda_env(self) -> Mapping[str, str]:

@@ -50,7 +50,7 @@ deploy:
   stage: deploy
   script:
     - terraform version
-    - make deploy
+    - make package
     - make -C terraform plan auto_apply
 
 subscribe:
