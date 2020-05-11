@@ -103,7 +103,6 @@ class AzulTestCase(TestCase):
         # Ensure that mock leakages fail by targeting a region we don't have acces to.
         # Subclasses can override the selected region if moto rejects the default one.
         cls._aws_region_mock = patch.dict(os.environ, AWS_DEFAULT_REGION=cls._aws_test_region)
-        print(cls._aws_test_region)
         cls._aws_region_mock.start()
 
     @classmethod

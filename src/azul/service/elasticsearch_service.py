@@ -31,8 +31,8 @@ from more_itertools import one
 
 from azul import config
 from azul.es import ESClientFactory
-from azul.plugin import (
-    Plugin,
+from azul.plugins import (
+    MetadataPlugin,
     ServiceConfig,
 )
 from azul.service import (
@@ -48,7 +48,7 @@ from azul.service.hca_response_v5 import (
     SummaryResponse,
 )
 from azul.service.utilities import json_pp
-from azul.transformer import Document
+from azul.indexer.transformer import Document
 from azul.types import (
     JSON,
 )
@@ -65,7 +65,7 @@ class IndexNotFoundError(Exception):
 class ElasticsearchService(AbstractService):
 
     def __init__(self, service_config: Optional[ServiceConfig] = None):
-        self.plugin = Plugin.load()
+        self.plugin = MetadataPlugin.load()
         self.es_client = ESClientFactory.get()
         if service_config is None:
             service_config = self.plugin.service_config()

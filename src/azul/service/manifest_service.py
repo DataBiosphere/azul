@@ -51,7 +51,7 @@ from azul.json_freeze import (
     freeze,
     sort_frozen,
 )
-from azul.plugin import (
+from azul.plugins import (
     ColumnMapping,
     ManifestConfig,
     MutableManifestConfig,

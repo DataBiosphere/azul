@@ -8,7 +8,7 @@ import requests
 
 import azul.changelog
 from azul.logging import configure_test_logging
-from azul.plugin import Plugin
+from azul.plugins import MetadataPlugin
 from service import WebServiceTestCase
 
 
@@ -209,7 +209,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.json())
         actual_field_order = response.json()['order']
-        expected_field_order = Plugin.load().service_config().order_config
+        expected_field_order = MetadataPlugin.load().service_config().order_config
         self.assertEqual(expected_field_order, actual_field_order)
 
     def test_bad_query_params(self):

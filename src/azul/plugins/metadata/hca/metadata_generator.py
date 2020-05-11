@@ -229,7 +229,7 @@ class MissingSchemaTypeError(Error):
     >>> raise MissingSchemaTypeError()
     Traceback (most recent call last):
     ...
-    azul.project.hca.metadata_generator.MissingSchemaTypeError: Metadata document lacks `schema_type` property
+    azul.plugins.metadata.hca.metadata_generator.MissingSchemaTypeError: Metadata document lacks `schema_type` property
     """
     msg = 'Metadata document lacks `schema_type` property'
 

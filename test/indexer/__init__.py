@@ -15,8 +15,8 @@ from azul.indexer import (
     IndexWriter,
     Tallies,
 )
-from azul.plugin import Plugin
-from azul.project.hca import Indexer
+from azul.plugins import MetadataPlugin
+from azul.plugins.metadata.hca.indexer import Indexer
 from azul.types import (
     AnyJSON,
     JSON,
@@ -33,7 +33,7 @@ class IndexerTestCase(ElasticsearchTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        plugin = Plugin.load()
+        plugin = MetadataPlugin.load()
 
         # noinspection PyAbstractClass
         class _Indexer(plugin.indexer_class()):

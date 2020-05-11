@@ -33,7 +33,10 @@ from azul import (
     hmac,
 )
 from azul.es import ESClientFactory
-from azul.plugin import Plugin
+from azul.plugins import (
+    MetadataPlugin,
+    RepositoryPlugin,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +57,7 @@ class AzulClient(object):
 
     @lru_cache()
     def query(self):
-        return Plugin.load().dss_subscription_query(self.prefix)
+        return RepositoryPlugin.load().dss_subscription_query(self.prefix)
 
     def post_bundle(self, indexer_url, notification):
         """
@@ -245,7 +248,7 @@ class AzulClient(object):
 
     def delete_all_indices(self):
         es_client = ESClientFactory.get()
-        plugin = Plugin.load()
+        plugin = MetadataPlugin.load()
         indexer_cls = plugin.indexer_class()
         indexer = indexer_cls()
         for index_name in indexer.index_names():

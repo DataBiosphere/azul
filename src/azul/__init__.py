@@ -537,9 +537,8 @@ class Config:
         except KeyError:
             return self.qualified_resource_name('indexer')
 
-    @property
-    def plugin_name(self) -> str:
-        return 'azul.project.' + os.environ.get('AZUL_PROJECT', 'hca')
+    def plugin_name(self, plugin_type: str) -> str:
+        return os.environ[f'AZUL_{plugin_type.upper()}_PLUGIN']
 
     @property
     def subscribe_to_dss(self):

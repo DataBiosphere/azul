@@ -10,7 +10,7 @@ from moto import (
 
 from azul import config
 from azul.logging import configure_test_logging
-from azul.plugin import Plugin
+from azul.plugins import RepositoryPlugin
 from azul.portal_service import PortalService
 from azul.types import JSONs
 from azul.version_service import NoSuchObjectVersion
@@ -32,7 +32,7 @@ class TestPortalService(VersionTableTestCase):
             }
         ]
 
-        hardcoded = Plugin.load().portal_db()
+        hardcoded = RepositoryPlugin.load().portal_db()
 
         multiplex = [
             {

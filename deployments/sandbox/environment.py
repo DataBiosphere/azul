@@ -55,7 +55,7 @@ def env() -> Mapping[str, Optional[str]]:
         
         'AZUL_OWNER': 'hannes@ucsc.edu',
 
-        'AZUL_AWS_ACCOUNT_ID': "122796619775",
+        'AZUL_AWS_ACCOUNT_ID': '122796619775',
         'AWS_DEFAULT_REGION': 'us-east-1',
         
         'GOOGLE_PROJECT': 'human-cell-atlas-travis-test',
