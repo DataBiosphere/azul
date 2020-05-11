@@ -16,7 +16,10 @@ from azul.indexer import (
 )
 from azul.plugin import Plugin
 from azul.project.hca import Indexer
-from azul.types import JSON
+from azul.types import (
+    AnyJSON,
+    JSON,
+)
 from es_test_case import ElasticsearchTestCase
 
 
@@ -131,3 +134,36 @@ class IndexerTestCase(ElasticsearchTestCase):
             with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
                 contributions = indexer.transform(notification, delete=False)
                 return indexer.contribute(contributions)
+
+    def _verify_sorted_lists(self, data: AnyJSON):
+        """
+        Traverse through an index document or service response to verify all
+        lists of primitives are sorted. Fails if no lists to check are found.
+        """
+
+        def verify_sorted_lists(data_: AnyJSON, path: Tuple[str] = ()) -> int:
+            if isinstance(data_, dict):
+                return sum(verify_sorted_lists(val, path + (key,))
+                           for key, val in data_.items())
+            elif isinstance(data_, list):
+                if data_:
+                    if isinstance(data_[0], dict):
+                        return sum(verify_sorted_lists(v, path + (k,))
+                                   for val in data_
+                                   for k, v in val.items())
+                    elif isinstance(data_[0], (type(None), bool, int, float, str)):
+                        self.assertEqual(data_,
+                                         sorted(data_, key=lambda x: (x is None, x)),
+                                         msg=f'Value at {path} is not sorted: {data_}')
+                        return 1
+                    else:
+                        assert False, str(type(data_[0]))
+                else:
+                    return 0
+            elif isinstance(data_, (type(None), bool, int, float, str)):
+                return 0
+            else:
+                assert False, str(type(data_))
+
+        num_lists_counted = verify_sorted_lists(data)
+        self.assertGreater(num_lists_counted, 0)
