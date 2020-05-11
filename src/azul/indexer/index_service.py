@@ -56,7 +56,7 @@ log = logging.getLogger(__name__)
 Tallies = Mapping[EntityReference, int]
 
 
-class BaseIndexer(ABC):
+class IndexService(ABC):
     """
     The base indexer class provides the framework to do indexing.
     """

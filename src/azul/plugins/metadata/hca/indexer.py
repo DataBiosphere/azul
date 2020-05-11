@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from azul.indexer.index_service import BaseIndexer
+from azul.indexer.index_service import IndexService
 from azul.plugins.metadata.hca.transformers import (
     FileTransformer,
     CellSuspensionTransformer,
@@ -12,7 +12,7 @@ from azul.indexer.transformer import Transformer
 from azul.types import JSON
 
 
-class Indexer(BaseIndexer):
+class Indexer(IndexService):
 
     def mapping(self) -> JSON:
         return {

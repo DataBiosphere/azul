@@ -2,7 +2,7 @@ from typing import (
     Type,
 )
 
-from azul.indexer.index_service import BaseIndexer
+from azul.indexer.index_service import IndexService
 from azul.plugins import (
     MetadataPlugin,
     ServiceConfig,
@@ -12,7 +12,7 @@ from azul.plugins.metadata.hca.indexer import Indexer
 
 class Plugin(MetadataPlugin):
 
-    def indexer_class(self) -> Type[BaseIndexer]:
+    def indexer_class(self) -> Type[IndexService]:
         return Indexer
 
     def service_config(self) -> ServiceConfig:

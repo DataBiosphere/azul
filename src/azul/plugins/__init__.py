@@ -17,7 +17,7 @@ from typing import (
 )
 
 from azul import config
-from azul.indexer.index_service import BaseIndexer
+from azul.indexer.index_service import IndexService
 from azul.indexer.transformer import (
     Document,
     FieldType,
@@ -97,7 +97,7 @@ class MetadataPlugin(Plugin):
         return 'metadata'
 
     @abstractmethod
-    def indexer_class(self) -> Type[BaseIndexer]:
+    def indexer_class(self) -> Type[IndexService]:
         raise NotImplementedError()
 
     @lru_cache(maxsize=None)
