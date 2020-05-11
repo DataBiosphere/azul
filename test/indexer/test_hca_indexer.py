@@ -35,7 +35,8 @@ from azul import (
     hmac,
 )
 import azul.indexer
-from azul.indexer import IndexWriter
+from azul.indexer.index_service import IndexWriter
+import azul.indexer.index_service
 from azul.logging import configure_test_logging
 from azul.plugins import MetadataPlugin
 from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
@@ -160,7 +161,7 @@ class TestHCAIndexer(IndexerTestCase):
         manifest, metadata = self._load_canned_bundle(self.new_bundle)
         tallies = dict(self._write_contributions(self.new_bundle, manifest, metadata))
 
-        with self.assertLogs(logger=azul.indexer.log, level='WARNING') as logs:
+        with self.assertLogs(logger=azul.indexer.index_service.log, level='WARNING') as logs:
             # Writing again simulates a duplicate notification being processed
             tallies.update(self._write_contributions(self.new_bundle, manifest, metadata))
         message_re = re.compile(r'^WARNING:azul\.indexer:Writing document .* requires overwrite\. Possible causes '

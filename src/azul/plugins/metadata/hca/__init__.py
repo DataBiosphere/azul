@@ -2,7 +2,7 @@ from typing import (
     Type,
 )
 
-from azul.indexer import BaseIndexer
+from azul.indexer.index_service import BaseIndexer
 from azul.plugins import (
     MetadataPlugin,
     ServiceConfig,

@@ -17,7 +17,7 @@ from typing import (
 )
 
 from azul import config
-from azul.indexer import BaseIndexer
+from azul.indexer.index_service import BaseIndexer
 from azul.indexer.transformer import (
     Document,
     FieldType,

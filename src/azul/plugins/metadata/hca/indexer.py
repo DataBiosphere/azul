@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from azul.indexer import BaseIndexer
+from azul.indexer.index_service import BaseIndexer
 from azul.plugins.metadata.hca.transformers import (
     FileTransformer,
     CellSuspensionTransformer,

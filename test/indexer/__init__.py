@@ -11,7 +11,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from azul import config
-from azul.indexer import (
+from azul.indexer.index_service import (
     IndexWriter,
     Tallies,
 )

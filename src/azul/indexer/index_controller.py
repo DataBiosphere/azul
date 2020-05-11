@@ -27,7 +27,7 @@ from azul import (
     hmac,
 )
 from azul.azulclient import AzulClient
-from azul.indexer import EntityReference
+from azul.indexer.transformer import EntityReference
 from azul.plugins import MetadataPlugin
 from azul.types import JSON
 
