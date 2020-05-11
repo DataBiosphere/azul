@@ -44,15 +44,15 @@ class ServiceTaskSet(TaskSet):
 
     def projects_page(self):
         with parallel_requests() as group:
-            group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%7D'))
-            group.spawn(lambda: self.client.get('/repository/projects?filters=%7B%7D&size=15'))
+            group.spawn(lambda: self.client.get('/index/summary?filters=%7B%7D'))
+            group.spawn(lambda: self.client.get('/index/projects?filters=%7B%7D&size=15'))
 
     @task
     def filter_mtx_files(self):
         with parallel_requests() as group:
-            group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22fileFormat'
+            group.spawn(lambda: self.client.get('/index/summary?filters=%7B%22file%22%3A%7B%22fileFormat'
                                                 '%22%3A%7B%22is%22%3A%5B%22mtx%22%5D%7D%7D%7D'))
-            group.spawn(lambda: self.client.get('/repository/projects?filters=%7B%22file%22%3A%7B%22fileFormat'
+            group.spawn(lambda: self.client.get('/index/projects?filters=%7B%22file%22%3A%7B%22fileFormat'
                                                 '%22%3A%7B%22is%22%3A%5B%22mtx%22%5D%7D%7D%7D'
                                                 '&size=15&sort=sampleId&order=desc'))
 
@@ -69,24 +69,24 @@ class ServiceTaskSet(TaskSet):
 
         def files_page(self):
             with parallel_requests() as group:
-                group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%7D'))
-                group.spawn(lambda: self.client.get('/repository/files?filters=%7B%7D&size=15'))
+                group.spawn(lambda: self.client.get('/index/summary?filters=%7B%7D'))
+                group.spawn(lambda: self.client.get('/index/files?filters=%7B%7D&size=15'))
 
         @seq_task(1)
         @task(15)
         def filter_organ_part(self):
             """Select temporal lobe since it's shared between most deployments"""
             with parallel_requests() as group:
-                group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22organPart'
+                group.spawn(lambda: self.client.get('/index/summary?filters=%7B%22file%22%3A%7B%22organPart'
                                                     '%22%3A%7B%22is%22%3A%5B%22temporal%20lobe%22%5D%7D%7D%7D'))
-                group.spawn(lambda: self.client.get('/repository/files?filters=%7B%22file%22%3A%7B%22organPart'
+                group.spawn(lambda: self.client.get('/index/files?filters=%7B%22file%22%3A%7B%22organPart'
                                                     '%22%3A%7B%22is%22%3A%5B%22temporal%20lobe%22%5D%7D%7D%7D'
                                                     '&size=15&sort=sampleId&order=desc'))
 
         @seq_task(2)
         @task(1)
         def download_manifest(self):
-            self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22organPart%22%3A%7B%22'
+            self.client.get('/index/summary?filters=%7B%22file%22%3A%7B%22organPart%22%3A%7B%22'
                             'is%22%3A%5B%22temporal%20lobe%22%5D%7D%7D%7D')
             export_url = ('/manifest/files?filters=%7B%22file%22%3A%7B%22organPart%22%3A%7B%22is%22%3A%5B%22'
                           'temporal%20lobe%22%5D%7D%2C%22fileFormat%22%3A%7B%22is%22%3A%5B%22fastq.gz%22%2C%22'
@@ -115,21 +115,21 @@ class ServiceTaskSet(TaskSet):
 
         def samples_page(self):
             with parallel_requests() as group:
-                group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%7D'))
-                group.spawn(lambda: self.client.get('/repository/samples?filters=%7B%7D&size=15'))
+                group.spawn(lambda: self.client.get('/index/summary?filters=%7B%7D'))
+                group.spawn(lambda: self.client.get('/index/samples?filters=%7B%7D&size=15'))
 
         @seq_task(1)
         def select_brain(self):
             with parallel_requests() as group:
-                group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22organ%22'
+                group.spawn(lambda: self.client.get('/index/summary?filters=%7B%22file%22%3A%7B%22organ%22'
                                                     '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D'))
-                group.spawn(lambda: self.client.get('/repository/samples?filters=%7B%22file%22%3A%7B%22organ%22'
+                group.spawn(lambda: self.client.get('/index/samples?filters=%7B%22file%22%3A%7B%22organ%22'
                                                     '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D'
                                                     '&size=15&sort=sampleId&order=desc'))
 
         @seq_task(2)
         def next_page_1(self):
-            self.client.get('/repository/samples?filters=%7B%22file%22%3A%7B%22organ%22'
+            self.client.get('/index/samples?filters=%7B%22file%22%3A%7B%22organ%22'
                             '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D&size=15'
                             '&sort=sampleId&order=desc&search_after=Q4_DEMO-'
                             'sample_SAMN02797092&search_after_uid=doc'
@@ -137,7 +137,7 @@ class ServiceTaskSet(TaskSet):
 
         @seq_task(3)
         def next_page_2(self):
-            self.client.get('/repository/samples?filters=%7B%22file%22%3A%7B%22organ%22%'
+            self.client.get('/index/samples?filters=%7B%22file%22%3A%7B%22organ%22%'
                             '3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D&size=15'
                             '&sort=sampleId&order=desc&search_after=Q4_DEMO-'
                             'sample_SAMN02797092&search_after_uid=doc'

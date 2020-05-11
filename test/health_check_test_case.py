@@ -43,10 +43,10 @@ def load_tests(loader, tests, pattern):
 
 class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABCMeta):
     endpoints = (
-        '/repository/files?size=1',
-        '/repository/projects?size=1',
-        '/repository/samples?size=1',
-        '/repository/bundles?size=1'
+        '/index/files?size=1',
+        '/index/projects?size=1',
+        '/index/samples?size=1',
+        '/index/bundles?size=1'
     )
 
     def test_basic(self):

@@ -136,7 +136,7 @@ class HealthController:
         Indicates whether important service API endpoints are operational.
         """
         endpoints = [
-            f'/repository/{entity_type}?size=1'
+            f'/index/{entity_type}?size=1'
             for entity_type in ('projects', 'samples', 'files', 'bundles')
         ]
         with ThreadPoolExecutor(len(endpoints)) as tpe:

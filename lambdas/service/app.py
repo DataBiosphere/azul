@@ -109,13 +109,13 @@ spec = {
             Azul denormalizes and aggregates metadata into several different
             indices for selected entity types:
 
-             - [projects](#operations-Repository-get_repository_projects)
+             - [projects](#operations-Index-get_index_projects)
 
-             - [samples](#operations-Repository-get_repository_samples)
+             - [samples](#operations-Index-get_index_samples)
 
-             - [files](#operations-Repository-get_repository_files)
+             - [files](#operations-Index-get_index_files)
 
-             - [bundles](#operations-Repository-get_repository_bundles)
+             - [bundles](#operations-Index-get_index_bundles)
 
             Azul provides the ability to download metadata in tabular form via
             the [Manifests](#operations-tag-Manifests) endpoints. The resulting
@@ -123,11 +123,10 @@ spec = {
             the [DCP CLI](https://github.com/HumanCellAtlas/dcp-cli) to download
             the listed files. Manifests can be generated for a selection of
             files using filters. These filters are interchangeable with the
-            filters used by the [Repository](#operations-tag-Repository)
-            endpoints.
+            filters used by the [Index](#/operations-tag-Index) endpoints.
 
             Azul also provides a
-            [summary](#operations-Repository-get_repository_summary) view of
+            [summary](#operations-Index-get_index_summary) view of
             indexed data.
 
             ## Data model
@@ -139,7 +138,7 @@ spec = {
             or indirectly as a series of edges. The nested properties are
             grouped by the type of the associated entity. The properties of all
             data files associated with a particular sample, for example, are
-            listed under `hits[*].files` in a `/repository/samples` response. It
+            listed under `hits[*].files` in a `/index/samples` response. It
             is important to note that while each _hit_ represents a discrete
             entity, the properties nested within that hit are the result of an
             aggregation over potentially many associated entities.
@@ -763,8 +762,8 @@ def repository_search(entity_type: str, item_id: str):
         raise NotFoundError(msg=e)
 
 
-@app.route('/repository/files', methods=['HEAD', 'GET'], cors=True)
-@app.route('/repository/files/{file_id}', methods=['GET'], cors=True)
+@app.route('/index/files', methods=['HEAD', 'GET'], cors=True)
+@app.route('/index/files/{file_id}', methods=['GET'], cors=True)
 def get_data(file_id=None):
     """
     Returns a dictionary with entries that can be used by the browser
@@ -810,8 +809,8 @@ def get_data(file_id=None):
     return repository_search('files', file_id)
 
 
-@app.route('/repository/samples', methods=['HEAD', 'GET'], cors=True)
-@app.route('/repository/samples/{sample_id}', methods=['GET'], cors=True)
+@app.route('/index/samples', methods=['HEAD', 'GET'], cors=True)
+@app.route('/index/samples/{sample_id}', methods=['GET'], cors=True)
 def get_sample_data(sample_id=None):
     """
     Returns a dictionary with entries that can be used by the browser
@@ -857,8 +856,8 @@ def get_sample_data(sample_id=None):
     return repository_search('samples', sample_id)
 
 
-@app.route('/repository/bundles', methods=['HEAD', 'GET'], cors=True)
-@app.route('/repository/bundles/{bundle_uuid}', methods=['GET'], cors=True)
+@app.route('/index/bundles', methods=['HEAD', 'GET'], cors=True)
+@app.route('/index/bundles/{bundle_uuid}', methods=['GET'], cors=True)
 def get_bundle_data(bundle_uuid=None):
     """
     Returns a dictionary with entries that can be used by the browser
@@ -904,8 +903,8 @@ def get_bundle_data(bundle_uuid=None):
     return repository_search('bundles', bundle_uuid)
 
 
-@app.route('/repository/projects', methods=['HEAD', 'GET'], cors=True)
-@app.route('/repository/projects/{project_id}', methods=['GET'], cors=True)
+@app.route('/index/projects', methods=['HEAD', 'GET'], cors=True)
+@app.route('/index/projects/{project_id}', methods=['GET'], cors=True)
 def get_project_data(project_id=None):
     """
     Returns a dictionary with entries that can be used by the browser
@@ -951,7 +950,7 @@ def get_project_data(project_id=None):
     return repository_search('projects', project_id)
 
 
-@app.route('/repository/summary', methods=['HEAD', 'GET'], cors=True)
+@app.route('/index/summary', methods=['HEAD', 'GET'], cors=True)
 def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
@@ -1045,7 +1044,7 @@ def get_search():
     return service.get_search(entity_type, pagination, filters, _query, field)
 
 
-@app.route('/repository/files/order', methods=['GET'], cors=True)
+@app.route('/index/files/order', methods=['GET'], cors=True)
 def get_order():
     """
     Return the ordering on facets
