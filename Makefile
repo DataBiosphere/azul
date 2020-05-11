@@ -23,13 +23,13 @@ requirements: check_venv
 hello: check_python
 	@echo Looking good!
 
-.PHONY: terraform
-terraform: check_env
-	$(MAKE) -C terraform
+.PHONY: package
+package: check_env
+	$(MAKE) -C lambdas
 
 .PHONY: deploy
 deploy: check_env
-	$(MAKE) -C lambdas
+	$(MAKE) -C terraform
 
 .PHONY: subscribe
 subscribe: check_python check_branch

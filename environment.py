@@ -118,7 +118,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The name of the hosted zone in Route 53 in which to create user friendly
         # domain names for various API gateways. This hosted zone will have to be
-        # created manually prior to running `make terraform`. The value is typically
+        # created manually prior to running `make deploy`. The value is typically
         # not deployment specific. A subdomain will automatically be created for
         # each deployment.
         'AZUL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu',
@@ -220,12 +220,12 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DSS_WORKERS': '8',
 
         # Whether to create a subscription to DSS during deployment. Set this
-        # variable to 1 to enable `make deploy` to subscribe the indexer in the
+        # variable to 1 to enable `make subscribe` to subscribe the indexer in the
         # active deployment to DSS bundle events. Making a subscription requires
         # authenticating against DSS using a Google service account specific to this
         # deployment.
         #
-        # If making the subscription is enabled, `make terraform` will automatically
+        # If making the subscription is enabled, `make deploy` will automatically
         # set up the Google service account for the indexer and deposit its
         # credentials into AWS secrets manager. For this to work you need to
         # configure your *personal* service account credentials in
@@ -242,7 +242,7 @@ def env() -> Mapping[str, Optional[str]]:
         # `scripts/subscribe.py -U` for that.
         #
         # If you set this variable back from 1 to 0 on an existing deployment, be
-        # sure to run `make terraform` right afterwards so the Google cloud
+        # sure to run `make deploy` right afterwards so the Google cloud
         # resources are physically deleted. After that you may also unset the
         # GOOGLE_.. variables in your environment.
         'AZUL_SUBSCRIBE_TO_DSS': '0',
@@ -270,7 +270,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         # Name of the Route 53 zone used for shortened URLs.
         # This hosted zone will have to be created manually prior to running
-        # `make terraform`. Personal deployments typically share a zone with the
+        # `make deploy`. Personal deployments typically share a zone with the
         # `dev` deployment.
         # If this variable is empty, a route 53 record will not be created and it
         # is assumed that the record and zone have been created manually.  This is

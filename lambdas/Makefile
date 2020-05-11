@@ -5,15 +5,15 @@ include ../common.mk
 
 .PHONY: layer
 layer: check_env
-	$(MAKE) -C layer deploy
+	$(MAKE) -C layer package
 
 .PHONY: indexer
 indexer: check_env
-	$(MAKE) -C indexer deploy
+	$(MAKE) -C indexer package
 
 .PHONY: service
 service: check_env
-	$(MAKE) -C service deploy
+	$(MAKE) -C service package
 
 .PHONY: clean
 clean: check_env
