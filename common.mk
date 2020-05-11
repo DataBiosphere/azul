@@ -5,6 +5,7 @@ SHELL=/bin/bash
 # list this target as a dependency:
 #
 .PHONY: check_env
+check_env:
 	@if ! test -n "$$azul_home"; then \
 		echo -e "\nPlease run 'source environment' from the project root\n"; \
 		false; \
