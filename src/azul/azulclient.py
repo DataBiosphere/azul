@@ -1,40 +1,40 @@
-import json
-import logging
-import uuid
 from collections import defaultdict
 from concurrent.futures import (
     Future,
     ThreadPoolExecutor,
 )
 from functools import (
-    partial,
     lru_cache,
+    partial,
 )
 from itertools import (
-    product,
     groupby,
+    product,
 )
+import json
+import logging
 from pprint import PrettyPrinter
 from typing import (
-    List,
     Iterable,
+    List,
     Tuple,
 )
 from urllib.parse import (
     urlparse,
 )
+import uuid
 
-import requests
 from more_itertools import chunked
+import requests
 
-import azul.dss
 from azul import (
     config,
     hmac,
 )
+import azul.dss
 from azul.es import ESClientFactory
+from azul.indexer.index_service import IndexService
 from azul.plugins import (
-    MetadataPlugin,
     RepositoryPlugin,
 )
 
@@ -248,10 +248,8 @@ class AzulClient(object):
 
     def delete_all_indices(self):
         es_client = ESClientFactory.get()
-        plugin = MetadataPlugin.load()
-        indexer_cls = plugin.indexer_class()
-        indexer = indexer_cls()
-        for index_name in indexer.index_names():
+        service = IndexService()
+        for index_name in service.index_names():
             if es_client.indices.exists(index_name):
                 es_client.indices.delete(index=index_name)
 

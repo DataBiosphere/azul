@@ -35,17 +35,16 @@ from azul import (
     hmac,
 )
 import azul.indexer
-from azul.indexer.index_service import IndexWriter
 import azul.indexer.index_service
-from azul.logging import configure_test_logging
-from azul.plugins import MetadataPlugin
-from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
-from azul.threads import Latch
+from azul.indexer.index_service import IndexWriter
 from azul.indexer.transformer import (
     Aggregate,
     Contribution,
     Document,
 )
+from azul.logging import configure_test_logging
+from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
+from azul.threads import Latch
 from azul.types import (
     JSONs,
 )
@@ -64,7 +63,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def _get_all_hits(self):
         hits = list(scan(client=self.es_client,
-                         index=','.join(self.get_hca_indexer().index_names()),
+                         index=','.join(self.index_service().index_names()),
                          doc_type="doc"))
         for hit in hits:
             self._verify_sorted_lists(hit)
@@ -75,7 +74,7 @@ class TestHCAIndexer(IndexerTestCase):
         super().tearDown()
 
     def _delete_indices(self):
-        for index_name in self.get_hca_indexer().index_names():
+        for index_name in self.index_service().index_names():
             self.es_client.indices.delete(index=index_name, ignore=[400, 404])
 
     old_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")
@@ -113,7 +112,7 @@ class TestHCAIndexer(IndexerTestCase):
                                      size=258)
         self.assertTrue(small_bundle.size < IndexWriter.bulk_threshold < large_bundle.size)
 
-        field_types = MetadataPlugin.load().field_types()
+        field_types = self.index_service().field_types()
 
         for bundle, size in small_bundle, large_bundle:
             with self.subTest(size=size):
@@ -171,7 +170,7 @@ class TestHCAIndexer(IndexerTestCase):
         for message in logs.output:
             self.assertRegex(message, message_re)
         # Tallies should not be inflated despite indexing document twice
-        self.get_hca_indexer().aggregate(tallies)
+        self.index_service().aggregate(tallies)
         self._assert_new_bundle()
 
     def test_zero_tallies(self):
@@ -185,7 +184,7 @@ class TestHCAIndexer(IndexerTestCase):
             tallies[tally] = 0
         # Aggregating should not be a non-op even though tally counts are all zero
         with self.assertLogs(elasticsearch.client.logger, level='INFO') as logs:
-            self.get_hca_indexer().aggregate(tallies)
+            self.index_service().aggregate(tallies)
         doc_ids = {
             '70d1af4a-82c8-478a-8960-e9028b3616ca',
             'a21dc760-a500-4236-bcff-da34a0e873d2',

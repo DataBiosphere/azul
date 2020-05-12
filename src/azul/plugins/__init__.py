@@ -2,30 +2,24 @@ from abc import (
     ABC,
     abstractmethod,
 )
-from functools import lru_cache
 import importlib
 from inspect import isabstract
 from typing import (
+    Iterable,
     Mapping,
     MutableMapping,
     NamedTuple,
     Sequence,
-    Tuple,
     Type,
     TypeVar,
     Union,
 )
 
 from azul import config
-from azul.indexer.index_service import IndexService
 from azul.indexer.transformer import (
-    Document,
-    FieldType,
-    FieldTypes,
+    Transformer,
 )
 from azul.types import (
-    AnyJSON,
-    AnyMutableJSON,
     JSON,
 )
 
@@ -97,32 +91,16 @@ class MetadataPlugin(Plugin):
         return 'metadata'
 
     @abstractmethod
-    def indexer_class(self) -> Type[IndexService]:
+    def mapping(self) -> JSON:
         raise NotImplementedError()
 
-    @lru_cache(maxsize=None)
-    def field_type(self, path: Tuple[str, ...]) -> FieldType:
-        """
-        Get the field type of a field specified by the full field name split on '.'
-        :param path: A tuple of keys to traverse down the field_types dict
-        """
-        field_types = self.field_types()
-        for p in path:
-            try:
-                field_types = field_types[p]
-            except KeyError:
-                raise KeyError(f'Path {path} not represented in field_types')
-            except TypeError:
-                raise TypeError(f'Path {path} not represented in field_types')
-            if field_types is None:
-                return None
-        return field_types
+    @abstractmethod
+    def transformers(self) -> Iterable[Transformer]:
+        raise NotImplementedError()
 
-    def field_types(self) -> FieldTypes:
-        return self.indexer_class().field_types()
-
-    def translate_fields(self, doc: AnyJSON, forward: bool = True) -> AnyMutableJSON:
-        return Document.translate_fields(doc, self.field_types(), forward)
+    @abstractmethod
+    def entities(self) -> Iterable[str]:
+        raise NotImplementedError()
 
     @abstractmethod
     def service_config(self) -> ServiceConfig:

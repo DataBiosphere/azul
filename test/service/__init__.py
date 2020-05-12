@@ -31,7 +31,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
 
     @classmethod
     def _teardown_indices(cls):
-        for index_name in cls.get_hca_indexer().index_names():
+        for index_name in cls.index_service().index_names():
             cls.es_client.indices.delete(index=index_name, ignore=[400, 404])
 
     @classmethod

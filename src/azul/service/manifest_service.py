@@ -402,7 +402,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                                             entity_type=self.entity_type)
 
     def _hit_to_doc(self, hit: Hit) -> JSON:
-        return self.service.plugin.translate_fields(hit.to_dict(), forward=False)
+        return self.service.index_service.translate_fields(hit.to_dict(), forward=False)
 
     column_joiner = ' || '
 

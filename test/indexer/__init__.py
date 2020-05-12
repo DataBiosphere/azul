@@ -12,11 +12,10 @@ from uuid import uuid4
 
 from azul import config
 from azul.indexer.index_service import (
+    IndexService,
     IndexWriter,
     Tallies,
 )
-from azul.plugins import MetadataPlugin
-from azul.plugins.metadata.hca.indexer import Indexer
 from azul.types import (
     AnyJSON,
     JSON,
@@ -26,6 +25,17 @@ from azul.types import (
 from es_test_case import ElasticsearchTestCase
 
 
+class ForcedRefreshIndexService(IndexService):
+
+    def _create_writer(self) -> IndexWriter:
+        writer = super()._create_writer()
+        # With a single client thread, refresh=True is faster than refresh="wait_for". The latter would limit
+        # the request rate to 1/refresh_interval. That's only one request per second with refresh_interval
+        # being 1s.
+        writer.refresh = True
+        return writer
+
+
 class IndexerTestCase(ElasticsearchTestCase):
     indexer_cls = None
     per_thread = None
@@ -33,31 +43,17 @@ class IndexerTestCase(ElasticsearchTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        plugin = MetadataPlugin.load()
-
-        # noinspection PyAbstractClass
-        class _Indexer(plugin.indexer_class()):
-
-            def _create_writer(self) -> IndexWriter:
-                writer = super()._create_writer()
-                # With a single client thread, refresh=True is faster than refresh="wait_for". The latter would limit
-                # the request rate to 1/refresh_interval. That's only one request per second with refresh_interval
-                # being 1s.
-                writer.refresh = True
-                return writer
-
-        cls.indexer_cls = _Indexer
         cls.per_thread = threading.local()
 
     @classmethod
-    def get_hca_indexer(cls) -> Indexer:
+    def index_service(cls) -> IndexService:
         try:
             # One of the indexer tests uses multiple threads to facilitate concurrent indexing. Each of these threads
             # must use its own indexer instance because each one needs to be mock.patch'ed to a different canned
             # bundle.
             indexer = cls.per_thread.indexer
         except AttributeError:
-            indexer = cls.indexer_cls()
+            indexer = ForcedRefreshIndexService()
             cls.per_thread.indexer = indexer
         return indexer
 
@@ -120,7 +116,7 @@ class IndexerTestCase(ElasticsearchTestCase):
 
         notification = cls._make_fake_notification(bundle_fqid)
         with patch('azul.dss.client'):
-            indexer = cls.get_hca_indexer()
+            indexer = cls.index_service()
             with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
                 method = indexer.delete if delete else indexer.index
                 method(notification)
@@ -131,7 +127,7 @@ class IndexerTestCase(ElasticsearchTestCase):
             assert bundle_fqid == (bundle_uuid, bundle_version)
             return deepcopy(manifest), deepcopy(metadata)
 
-        indexer = cls.get_hca_indexer()
+        indexer = cls.index_service()
         notification = cls._make_fake_notification(bundle_fqid)
         with patch('azul.dss.client'):
             with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):

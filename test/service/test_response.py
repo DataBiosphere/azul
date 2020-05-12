@@ -3,18 +3,19 @@ import unittest
 from unittest import mock
 import urllib.parse
 
+from boltons.cacheutils import cachedproperty
 from more_itertools import one
 import requests
 
 from app_test_case import LocalAppTestCase
 from azul import config
+from azul.indexer.index_service import IndexService
+from azul.indexer.transformer import Document
 from azul.logging import configure_test_logging
-from azul.plugins import MetadataPlugin
 from azul.service.hca_response_v5 import (
     FileSearchResponse,
     KeywordSearchResponse,
 )
-from azul.indexer.transformer import Document
 from service import WebServiceTestCase
 
 
@@ -57,7 +58,11 @@ class TestResponse(WebServiceTestCase):
         }
         # Tests are assumed to only ever run with the azul dev index
         results = self.es_client.search(index=config.es_index_name(entity_type, aggregate=True), body=body)
-        return MetadataPlugin.load().translate_fields([results['hits']['hits'][0]['_source']], forward=False)
+        return self._index_service.translate_fields([results['hits']['hits'][0]['_source']], forward=False)
+
+    @cachedproperty
+    def _index_service(self):
+        return IndexService()
 
     def test_key_search_files_response(self):
         """

@@ -1,11 +1,8 @@
-from abc import (
-    ABC,
-    abstractmethod,
-)
 from collections import (
     Counter,
     defaultdict,
 )
+from functools import lru_cache
 from itertools import groupby
 import logging
 from operator import attrgetter
@@ -21,6 +18,7 @@ from typing import (
     Union,
 )
 
+from boltons.cacheutils import cachedproperty
 from elasticsearch import (
     ConflictError,
     ElasticsearchException,
@@ -45,25 +43,30 @@ from azul.indexer.transformer import (
     Document,
     DocumentCoordinates,
     EntityReference,
+    FieldType,
     FieldTypes,
-    Transformer,
     VersionType,
 )
-from azul.types import JSON
+from azul.plugins import MetadataPlugin
+from azul.types import (
+    AnyJSON,
+    AnyMutableJSON,
+    JSON,
+)
 
 log = logging.getLogger(__name__)
 
 Tallies = Mapping[EntityReference, int]
 
 
-class IndexService(ABC):
+class IndexService:
     """
     The base indexer class provides the framework to do indexing.
     """
 
-    @abstractmethod
-    def mapping(self) -> JSON:
-        raise NotImplementedError()
+    @cachedproperty
+    def metadata_plugin(self):
+        return MetadataPlugin.load()
 
     def settings(self, index_name) -> JSON:
         # Setting a large number of shards for the contributions indexes (i.e. not aggregate) greatly speeds up indexing
@@ -81,34 +84,45 @@ class IndexService(ABC):
             }
         }
 
-    @classmethod
-    @abstractmethod
-    def transformers(cls) -> Iterable[Transformer]:
-        raise NotImplementedError()
+    @lru_cache(maxsize=None)
+    def field_type(self, path: Tuple[str, ...]) -> FieldType:
+        """
+        Get the field type of a field specified by the full field name split on '.'
+        :param path: A tuple of keys to traverse down the field_types dict
+        """
+        field_types = self.field_types()
+        for p in path:
+            try:
+                field_types = field_types[p]
+            except KeyError:
+                raise KeyError(f'Path {path} not represented in field_types')
+            except TypeError:
+                raise TypeError(f'Path {path} not represented in field_types')
+            if field_types is None:
+                return None
+        return field_types
 
-    @abstractmethod
-    def entities(self) -> Iterable[str]:
-        raise NotImplementedError()
-
-    @classmethod
-    def field_types(cls) -> FieldTypes:
+    def field_types(self) -> FieldTypes:
         """
         Returns a mapping of fields to field types
 
         :return: dict with nested keys matching Elasticsearch fields and values with the field's type
         """
         field_types = {}
-        for transformer in cls.transformers():
+        for transformer in self.metadata_plugin.transformers():
             field_types.update(transformer.field_types())
         return {
             **Contribution.field_types(field_types),
             **Aggregate.field_types(field_types)
         }
 
+    def translate_fields(self, doc: AnyJSON, forward: bool = True) -> AnyMutableJSON:
+        return Document.translate_fields(doc, self.field_types(), forward)
+
     def index_names(self, aggregate=None) -> List[str]:
         aggregates = (False, True) if aggregate is None else (aggregate,)
         return [config.es_index_name(entity, aggregate=aggregate)
-                for entity in self.entities()
+                for entity in self.metadata_plugin.entities()
                 for aggregate in aggregates]
 
     def index(self, dss_notification: JSON) -> None:
@@ -143,7 +157,7 @@ class IndexService(ABC):
             # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
             self._create_indices()
             log.info('Transforming metadata for bundle %s, version %s.', bundle_uuid, bundle_version)
-            for transformer in self.transformers():
+            for transformer in self.metadata_plugin.transformers():
                 contributions.extend(transformer.transform(uuid=bundle_uuid,
                                                            version=bundle_version,
                                                            deleted=delete,
@@ -159,7 +173,7 @@ class IndexService(ABC):
             es_client.indices.create(index=index_name,
                                      ignore=[400],
                                      body=dict(settings=self.settings(index_name),
-                                               mappings=dict(doc=self.mapping())))
+                                               mappings=dict(doc=self.metadata_plugin.mapping())))
 
     def _get_bundle(self, bundle_uuid, bundle_version):
         now = time.time()
@@ -192,7 +206,7 @@ class IndexService(ABC):
             # When indexing a test bundle we want to change its UUID so that we
             # can delete it later. We change the version to ensure that the test
             # bundle will always be selected to contribute to a shared entity
-            # (the test bunde version was set to the current time when the
+            # (the test bundle version was set to the current time when the
             # notification is sent).
             return dss_notification['test_bundle_uuid'], dss_notification['test_bundle_version']
 
@@ -353,7 +367,11 @@ class IndexService(ABC):
             )
 
         # Create lookup for transformer by entity type
-        transformers = {t.entity_type(): t for t in self.transformers() if isinstance(t, AggregatingTransformer)}
+        transformers = {
+            t.entity_type(): t
+            for t in self.metadata_plugin.transformers()
+            if isinstance(t, AggregatingTransformer)
+        }
 
         # Aggregate contributions for the same entity
         aggregates = []
@@ -440,7 +458,6 @@ class IndexWriter:
 
         :param documents: Documents to index
         """
-        # documents.sort(key=attrgetter('coordinates'))
         self.retries = set()
         if len(documents) < self.bulk_threshold:
             self._write_individually(documents)

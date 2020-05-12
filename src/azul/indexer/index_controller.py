@@ -27,8 +27,8 @@ from azul import (
     hmac,
 )
 from azul.azulclient import AzulClient
+from azul.indexer.index_service import IndexService
 from azul.indexer.transformer import EntityReference
-from azul.plugins import MetadataPlugin
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -110,16 +110,16 @@ class IndexController:
                     AzulClient.do_remote_reindex(message)
                 else:
                     notification = message['notification']
-                    indexer = self._create_indexer()
+                    service = IndexService()
                     if action == 'add':
-                        contributions = indexer.transform(notification, delete=False)
+                        contributions = service.transform(notification, delete=False)
                     elif action == 'delete':
-                        contributions = indexer.transform(notification, delete=True)
+                        contributions = service.transform(notification, delete=True)
                     else:
                         assert False
 
                     log.info("Writing %i contributions to index.", len(contributions))
-                    tallies = indexer.contribute(contributions)
+                    tallies = service.contribute(contributions)
                     tallies = [DocumentTally.for_entity(entity, num_contributions)
                                for entity, num_contributions in tallies.items()]
 
@@ -161,24 +161,15 @@ class IndexController:
             for tally in referrals:
                 log.info('Aggregating %i contribution(s) to entity %s/%s',
                          tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-            indexer = self._create_indexer()
+            service = IndexService()
             tallies = {tally.entity: tally.num_contributions for tally in referrals}
-            indexer.aggregate(tallies)
+            service.aggregate(tallies)
         if deferrals:
             for tally in deferrals:
                 log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
                          tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
             entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
             self._document_queue.send_messages(Entries=entries)
-
-    def _create_indexer(self):
-        indexer_cls = self._plugin.indexer_class()
-        indexer = indexer_cls()
-        return indexer
-
-    @cachedproperty
-    def _plugin(self):
-        return MetadataPlugin.load()
 
     @cachedproperty
     def _sqs(self):
