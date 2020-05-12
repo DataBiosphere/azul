@@ -42,9 +42,10 @@ from azul.service import (
     manifest_service,
 )
 from azul.service.manifest_service import (
+    BDBagManifestGenerator,
+    Bundles,
     ManifestFormat,
     ManifestService,
-    BDBagManifestGenerator,
 )
 from azul.service.storage_service import StorageService
 from azul.types import JSON
@@ -541,35 +542,42 @@ class TestManifestEndpoints(ManifestTestCase):
         Test BDBagManifestGenerator._remove_redundant_entries() directly with a
         large set of sample data
         """
-        bundles = {}
         now = datetime.utcnow()
+
+        def v(i):
+            return (now + timedelta(seconds=i)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+
+        def u():
+            return str(uuid.uuid4())
+
+        bundles: Bundles = {}
         # Create sample data that can be passed to BDBagManifestGenerator._remove_redundant_entries()
         # Each entry is given a timestamp 1 second later than the previous entry to have variety in the entries
         num_of_entries = 100_000
         for i in range(num_of_entries):
-            bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=i)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+            bundle_fqid = u(), v(i)
             bundles[bundle_fqid] = {
                 'bam': [
-                    {'file': {'file_uuid': uuid.uuid4()}},
-                    {'file': {'file_uuid': uuid.uuid4()}},
-                    {'file': {'file_uuid': uuid.uuid4()}}
+                    {'file': {'file_uuid': u()}},
+                    {'file': {'file_uuid': u()}},
+                    {'file': {'file_uuid': u()}}
                 ]
             }
         fqids = {}
         keys = list(bundles.keys())
         # Add an entry with the same set of files as another entry though with a later timestamp
-        bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=num_of_entries + 1)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+        bundle_fqid = u(), v(num_of_entries + 1)
         bundles[bundle_fqid] = deepcopy(bundles[keys[100]])  # An arbitrary entry in bundles
         fqids['equal'] = bundle_fqid, keys[100]  # With same set of files [1] will be removed (earlier timestamp)
         # Add an entry with a subset of files compared to another entry
-        bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=num_of_entries + 2)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+        bundle_fqid = u(), v(num_of_entries + 2)
         bundles[bundle_fqid] = deepcopy(bundles[keys[200]])  # An arbitrary entry in bundles
         del bundles[bundle_fqid]['bam'][2]
         fqids['subset'] = bundle_fqid, keys[200]  # [0] will be removed as it has a subset of files that [1] has
         # Add an entry with a superset of files compared to another entry
-        bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=num_of_entries + 3)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+        bundle_fqid = u(), v(num_of_entries + 3)
         bundles[bundle_fqid] = deepcopy(bundles[keys[300]])  # An arbitrary entry in bundles
-        bundles[bundle_fqid]['bam'].append({'file': {'file_uuid': uuid.uuid4()}})
+        bundles[bundle_fqid]['bam'].append({'file': {'file_uuid': u()}})
         fqids['superset'] = bundle_fqid, keys[300]  # [0] has a superset of files that [0] has so [0] wil be removed
 
         self.assertEqual(len(bundles), num_of_entries + 3)  # the generated entries plus 3 redundant entries
