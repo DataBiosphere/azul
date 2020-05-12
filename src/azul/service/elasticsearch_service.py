@@ -34,12 +34,11 @@ from more_itertools import one
 
 from azul import config
 from azul.es import ESClientFactory
-from azul.indexer.index_service import IndexService
+from azul.indexer.document_service import DocumentService
 from azul.indexer.transformer import (
     Document,
 )
 from azul.plugins import (
-    MetadataPlugin,
     ServiceConfig,
 )
 from azul.service import (
@@ -68,20 +67,14 @@ class IndexNotFoundError(Exception):
         super().__init__(f'Index `{missing_index}` was not found')
 
 
-class ElasticsearchService(AbstractService):
-
-    @cachedproperty
-    def index_service(self) -> IndexService:
-        return IndexService()
+class ElasticsearchService(DocumentService, AbstractService):
 
     @cachedproperty
     def es_client(self) -> ESClientFactory:
         return ESClientFactory.get()
 
     def __init__(self, service_config: Optional[ServiceConfig] = None):
-        if service_config is None:
-            service_config = MetadataPlugin.load().service_config()
-        self.service_config = service_config
+        self.service_config = service_config or self.metadata_plugin.service_config()
 
     def _translate_filters(self, filters: Filters, field_mapping: JSON) -> MutableFilters:
         """
@@ -101,7 +94,7 @@ class ElasticsearchService(AbstractService):
             # Replace the value in the filter with the value translated for None values
             assert isinstance(value, dict)
             assert isinstance(one(value.values()), list)
-            field_type = self.index_service.field_type(tuple(key.split('.')))
+            field_type = self.field_type(tuple(key.split('.')))
             value = {key: [Document.translate_field(v, field_type) for v in val] for key, val in value.items()}
             translated_filters[key] = value
         return translated_filters
@@ -119,7 +112,7 @@ class ElasticsearchService(AbstractService):
             if relation == 'is':
                 # Note that at this point None values in filters have already been translated eg. {'is': ['~null']}
                 # and if the filter has a None our query needs to find fields with None values as well as missing fields
-                field_type = self.index_service.field_type(tuple(facet.split('.')))
+                field_type = self.field_type(tuple(facet.split('.')))
                 if Document.translate_field(None, field_type) in value:
                     filter_list.append(Q('bool', should=[
                         Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}),
@@ -207,7 +200,7 @@ class ElasticsearchService(AbstractService):
 
         def translate(agg: AggResponse):
             if isinstance(agg, FieldBucketData):
-                field_type = self.index_service.field_type(tuple(agg.meta['path']))
+                field_type = self.field_type(tuple(agg.meta['path']))
                 for bucket in agg:
                     bucket['key'] = Document.translate_field(bucket['key'], field_type, forward=False)
                     translate(bucket)
@@ -511,7 +504,7 @@ class ElasticsearchService(AbstractService):
             self._translate_response_aggs(es_response)
             es_response_dict = es_response.to_dict()
             hits = [hit['_source'] for hit in es_response_dict['hits']['hits']]
-            hits = self.index_service.translate_fields(hits, forward=False)
+            hits = self.translate_fields(hits, forward=False)
             final_response = KeywordSearchResponse(hits, entity_type)
         else:
             # It's a full file search
@@ -537,7 +530,7 @@ class ElasticsearchService(AbstractService):
             else:
                 hits = es_hits[0:len(es_hits) - list_adjustment]
             hits = [hit['_source'] for hit in hits]
-            hits = self.index_service.translate_fields(hits, forward=False)
+            hits = self.translate_fields(hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination['sort'] = inverse_translation[pagination['sort']]
