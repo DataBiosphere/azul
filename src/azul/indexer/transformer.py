@@ -257,7 +257,11 @@ class Document:
     @classmethod
     def from_index(cls, field_types, hit: JSON) -> 'Document':
         if 'contents' in hit['_source']:
-            content_descriptions = [file['content_description'] for file in hit['_source']['contents']['files']]
+            file: JSON
+            content_descriptions = [
+                file['content_description']
+                for file in hit['_source']['contents']['files']
+            ]
             assert [] not in content_descriptions, 'Found empty list as content_description value'
         source = cls.translate_fields(hit['_source'], field_types, forward=False)
         # noinspection PyArgumentList
@@ -499,7 +503,7 @@ class SetAccumulator(Accumulator):
 
     def __init__(self, max_size=None, key=None) -> None:
         """
-        :param max_size: the maximum number of elemens to retain
+        :param max_size: the maximum number of elements to retain
 
         :param key: The key to be used for sorting the accumulated set of
                     values. If this value is None, a default None-safe key will
